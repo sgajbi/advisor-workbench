@@ -134,6 +134,34 @@ const readyResponse: DpmConstructionGatewayResponse = {
                 "EXTERNAL_ELIGIBLE_HEDGE_INSTRUMENTS_FAIL_CLOSED",
               ],
             },
+            execution_acknowledgement_context: {
+              supportability_status: "BLOCKED",
+              source_system: "lotus-core",
+              source_product_name: "ExternalOrderExecutionAcknowledgement",
+              source_product_version: "v1",
+              source_id: "sha256:external-order-execution-acknowledgement",
+              content_hash:
+                "sha256:external-order-execution-acknowledgement-content",
+              acknowledgement_count: 0,
+              missing_data_families: [
+                "external_oms_order_execution_acknowledgement",
+              ],
+              blocked_capabilities: [
+                "order_generation",
+                "venue_routing",
+                "best_execution",
+                "oms_acknowledgement",
+                "fills",
+                "settlement",
+                "execution_status_certification",
+                "autonomous_execution",
+              ],
+              acknowledgements: [],
+              reason_codes: [
+                "EXTERNAL_OMS_SOURCE_NOT_INGESTED",
+                "EXTERNAL_ORDER_EXECUTION_ACKNOWLEDGEMENT_FAIL_CLOSED",
+              ],
+            },
           },
         },
       },
@@ -207,7 +235,7 @@ describe("ConstructionAlternativesPanel", () => {
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Apply Selection" })).toBeEnabled();
-    expect(screen.getByText("Currency Overlay Evidence")).toBeInTheDocument();
+    expect(screen.getByText("Construction Authority Evidence")).toBeInTheDocument();
     expect(screen.getByText("ExternalHedgePolicy v1")).toBeInTheDocument();
     expect(screen.getByText("sha256:external-hedge-policy")).toBeInTheDocument();
     expect(screen.getByText("sha256:external-hedge-policy-content")).toBeInTheDocument();
@@ -224,12 +252,31 @@ describe("ConstructionAlternativesPanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Instrument rows: 0")).toBeInTheDocument();
+    expect(screen.getByText("OMS acknowledgement posture")).toBeInTheDocument();
+    expect(
+      screen.getByText("ExternalOrderExecutionAcknowledgement v1"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Source id: sha256:external-order-execution-acknowledgement"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Evidence hash: sha256:external-order-execution-acknowledgement-content",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Acknowledgement rows: 0")).toBeInTheDocument();
     expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
     expect(screen.getByText("Eligible Instrument Selection")).toBeInTheDocument();
     expect(screen.getByText("Product Recommendation")).toBeInTheDocument();
+    expect(screen.getByText("External OMS Order Execution Acknowledgement")).toBeInTheDocument();
+    expect(screen.getByText("Autonomous Execution")).toBeInTheDocument();
     expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
     expect(
       screen.getByText("External Eligible Hedge Instruments Fail Closed"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("External OMS Source Not Ingested")).toBeInTheDocument();
+    expect(
+      screen.getByText("External Order Execution Acknowledgement Fail Closed"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",

@@ -91,6 +91,19 @@ export type ConstructionEligibleInstrumentEvidence = {
   instruments: string[];
 };
 
+export type ConstructionExecutionAcknowledgementEvidence = {
+  state: string;
+  sourceProductName: string;
+  sourceProductVersion: string;
+  sourceId: string;
+  contentHash: string;
+  acknowledgementCount: string;
+  acknowledgements: string[];
+  missingDataFamilies: string[];
+  blockedCapabilities: string[];
+  reasonCodes: string[];
+};
+
 export type ConstructionPanelModel = {
   state: ConstructionPanelState;
   supportabilityState: string;
@@ -114,6 +127,7 @@ export type ConstructionPanelModel = {
   constraints: ConstructionConstraintRow[];
   sourceReadiness: ConstructionSourceReadinessRow[];
   currencyOverlayEvidence: ConstructionCurrencyOverlayEvidence | null;
+  executionAcknowledgementEvidence: ConstructionExecutionAcknowledgementEvidence | null;
 };
 
 export function buildConstructionPanelModel(
@@ -148,6 +162,7 @@ export function buildConstructionPanelModel(
       constraints: [],
       sourceReadiness: [],
       currencyOverlayEvidence: null,
+      executionAcknowledgementEvidence: null,
     };
   }
 
@@ -207,6 +222,7 @@ export function buildConstructionPanelModel(
     constraints: buildConstraintRows(response.data, records),
     sourceReadiness: buildSourceReadinessRows(response.data),
     currencyOverlayEvidence: buildCurrencyOverlayEvidence(selectedRecord),
+    executionAcknowledgementEvidence: buildExecutionAcknowledgementEvidence(selectedRecord),
   };
 }
 
@@ -493,6 +509,57 @@ function buildEligibleInstrumentEvidence(
       context.external_eligible_hedge_instrument_count,
     ),
     instruments,
+  };
+}
+
+function buildExecutionAcknowledgementEvidence(
+  record: Record<string, unknown> | null,
+): ConstructionExecutionAcknowledgementEvidence | null {
+  if (!record) {
+    return null;
+  }
+  const diagnostics = readRecord(record.diagnostics);
+  const authorityContext = readRecord(diagnostics.authority_context);
+  const context = readRecord(authorityContext.execution_acknowledgement_context);
+  if (Object.keys(context).length === 0) {
+    return null;
+  }
+  const sourceProductName = readString(context, "source_product_name");
+  const sourceProductVersion = readString(context, "source_product_version");
+  const sourceId = readString(context, "source_id");
+  const contentHash = readString(context, "content_hash");
+  const acknowledgements = extractDisplayArray(context.acknowledgements);
+  const missingDataFamilies = extractStringArray(context.missing_data_families);
+  const blockedCapabilities = extractStringArray(context.blocked_capabilities);
+  const reasonCodes = extractStringArray(context.reason_codes);
+
+  if (
+    !sourceProductName &&
+    !sourceProductVersion &&
+    !sourceId &&
+    !contentHash &&
+    acknowledgements.length === 0 &&
+    missingDataFamilies.length === 0 &&
+    blockedCapabilities.length === 0 &&
+    reasonCodes.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    state:
+      readString(context, "supportability_status") ||
+      readString(context, "state") ||
+      "UNKNOWN",
+    sourceProductName: sourceProductName || "External order execution acknowledgement",
+    sourceProductVersion: sourceProductVersion || "N/A",
+    sourceId: sourceId || "N/A",
+    contentHash: contentHash || "N/A",
+    acknowledgementCount: readCountLabel(context.acknowledgement_count),
+    acknowledgements,
+    missingDataFamilies,
+    blockedCapabilities,
+    reasonCodes,
   };
 }
 
