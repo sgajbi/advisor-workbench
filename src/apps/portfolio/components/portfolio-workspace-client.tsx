@@ -11,6 +11,7 @@ import {
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "../api";
+import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
   buildPortfolioActiveFilterChips,
@@ -51,12 +52,6 @@ export default function PortfolioWorkspaceClient({
     buildInitialPortfolioControls(initialWorkspace)
   );
   const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
-  const [, setShellLoading] = useState<boolean>(
-    Boolean(selectedPortfolioId && !initialWorkspace)
-  );
-  const [, setSummaryDetailsLoading] = useState<boolean>(
-    Boolean(selectedPortfolioId && initialWorkspace)
-  );
   const [interactiveReady, setInteractiveReady] = useState(false);
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const context = useMemo(
@@ -70,8 +65,6 @@ export default function PortfolioWorkspaceClient({
 
   useEffect(() => {
     setWorkspaceState(initialWorkspace);
-    setShellLoading(Boolean(selectedPortfolioId && !initialWorkspace));
-    setSummaryDetailsLoading(Boolean(initialWorkspace && selectedPortfolioId));
     summaryRequestRef.current = null;
   }, [initialWorkspace, selectedPortfolioId]);
 
@@ -80,11 +73,9 @@ export default function PortfolioWorkspaceClient({
 
     async function loadShellWorkspace() {
       if (!selectedPortfolioId || workspaceState || initialWorkspace) {
-        setShellLoading(false);
         return;
       }
 
-      setShellLoading(true);
       const shellWorkspace = await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
       if (cancelled) {
         return;
@@ -100,7 +91,6 @@ export default function PortfolioWorkspaceClient({
         });
       }
       setWorkspaceState(shellWorkspace);
-      setShellLoading(false);
     }
 
     void loadShellWorkspace();
@@ -115,26 +105,20 @@ export default function PortfolioWorkspaceClient({
 
     async function loadSummaryDetails() {
       if (!selectedPortfolioId || !workspaceState) {
-        setSummaryDetailsLoading(false);
         return;
       }
 
-      const requestKey = `${selectedPortfolioId}:${context.selectedAsOfDate}:${context.selectedReportingCurrency}:${context.timeWindow}:${context.effectivePeriodStartDate}:${context.effectivePeriodEndDate}:${context.usesCustomDateRange}`;
-      if (summaryRequestRef.current?.key === requestKey) {
+      const request = buildPortfolioSummaryDetailsRequest(selectedPortfolioId, context);
+      if (summaryRequestRef.current?.key === request.key) {
         return;
       }
 
-      summaryRequestRef.current = { key: requestKey, status: "loading" };
-      setSummaryDetailsLoading(true);
-      const details = await getPortfolioWorkspaceSummaryDetailsOnce(requestKey, selectedPortfolioId, {
-        asOfDate: context.selectedAsOfDate,
-        reportingCurrency: context.selectedReportingCurrency,
-        includeProjected: false,
-        timeWindow: context.timeWindow,
-        reportStartDate: context.effectivePeriodStartDate,
-        reportEndDate: context.effectivePeriodEndDate,
-        usesCustomDateRange: context.usesCustomDateRange,
-      });
+      summaryRequestRef.current = { key: request.key, status: "loading" };
+      const details = await getPortfolioWorkspaceSummaryDetailsOnce(
+        request.key,
+        selectedPortfolioId,
+        request.params
+      );
       if (cancelled) {
         return;
       }
@@ -144,8 +128,7 @@ export default function PortfolioWorkspaceClient({
           current ? mergePortfolioWorkspace(current, details) : current
         );
       }
-      summaryRequestRef.current = { key: requestKey, status: "loaded" };
-      setSummaryDetailsLoading(false);
+      summaryRequestRef.current = { key: request.key, status: "loaded" };
     }
 
     void loadSummaryDetails();
@@ -154,12 +137,7 @@ export default function PortfolioWorkspaceClient({
       cancelled = true;
     };
   }, [
-    context.effectivePeriodEndDate,
-    context.effectivePeriodStartDate,
-    context.selectedAsOfDate,
-    context.selectedReportingCurrency,
-    context.timeWindow,
-    context.usesCustomDateRange,
+    context,
     selectedPortfolioId,
     workspaceState,
   ]);
