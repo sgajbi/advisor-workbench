@@ -44,7 +44,6 @@ export function buildPortfolioRecordEvidenceRailViewModel({
   const sourcePostureItems = buildSourcePostureItems({
     screen,
     workspace,
-    portfolioId,
     reportingReady,
   });
 
@@ -54,10 +53,9 @@ export function buildPortfolioRecordEvidenceRailViewModel({
       tone: workspace.partial_failures.length ? "warn" : "success",
     },
     facts: [
-      { label: "Portfolio", value: portfolioId },
       { label: "Client", value: workspace.portfolio.client_id ?? "N/A" },
-      { label: "Book Currency", value: workspace.portfolio.base_currency },
-      { label: "Screen", value: formatStatus(screen) },
+      { label: "Currency", value: workspace.portfolio.base_currency },
+      { label: "Review Area", value: formatStatus(screen) },
     ],
     sourcePostureItems,
     adjacentWorkflows: buildAdjacentWorkflows(portfolioId),
@@ -67,16 +65,14 @@ export function buildPortfolioRecordEvidenceRailViewModel({
 function buildSourcePostureItems({
   screen,
   workspace,
-  portfolioId,
   reportingReady,
 }: {
   screen: PortfolioRecordScreenKind;
   workspace: PortfolioWorkspace;
-  portfolioId: string;
   reportingReady: boolean;
 }): PortfolioRecordSourcePosture[] {
   if (screen === "transactions") {
-    return buildTransactionSourcePosture(workspace, portfolioId, reportingReady);
+    return buildTransactionSourcePosture(workspace, reportingReady);
   }
 
   if (screen === "income") {
@@ -93,7 +89,6 @@ function buildSourcePostureItems({
 
   return buildPositionSourcePosture({
     workspace,
-    portfolioId,
     reportingReady,
   });
 }
@@ -217,11 +212,9 @@ function buildCashflowSourcePosture(
 
 function buildPositionSourcePosture({
   workspace,
-  portfolioId,
   reportingReady,
 }: {
   workspace: PortfolioWorkspace;
-  portfolioId: string;
   reportingReady: boolean;
 }): PortfolioRecordSourcePosture[] {
   const unpricedCount = workspace.positions.filter(
@@ -247,7 +240,7 @@ function buildPositionSourcePosture({
     {
       label: "Positions Ledger",
       source: "Core positions inventory",
-      detail: `${formatCount(workspace.positions.length, "position")} loaded for ${portfolioId}`,
+      detail: `${formatCount(workspace.positions.length, "position")} available for review`,
       tone: workspace.readiness.has_positions ? "success" : "default",
       status: workspace.readiness.has_positions ? "Reconciled" : "Empty",
     },
@@ -267,7 +260,6 @@ function buildPositionSourcePosture({
 
 function buildTransactionSourcePosture(
   workspace: PortfolioWorkspace,
-  portfolioId: string,
   reportingReady: boolean
 ): PortfolioRecordSourcePosture[] {
   const transactionCount = workspace.recent_transactions.length;
@@ -286,7 +278,7 @@ function buildTransactionSourcePosture(
     {
       label: "Source System",
       source: sourceSystems.length ? sourceSystems.join(", ") : "Core transaction ledger",
-      detail: `${formatCount(transactionCount, "event")} loaded for ${portfolioId}`,
+      detail: `${formatCount(transactionCount, "event")} available in the review window`,
       tone: transactionCount ? "success" : "default",
       status: transactionCount ? "Available" : "Empty",
     },

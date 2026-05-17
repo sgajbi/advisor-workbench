@@ -42,9 +42,9 @@ describe("PortfolioRecordEvidenceRail", () => {
     );
 
     expect(screen.getByText("Data Readiness")).toBeInTheDocument();
-    expect(screen.getByText("PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(screen.getByText("1 holding missing price or valuation")).toBeInTheDocument();
-    expect(screen.getByText("2 positions loaded for PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getByText("2 positions available for review")).toBeInTheDocument();
     expect(screen.getByText("1 flag on positions, 1 stale key")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute(
       "href",
@@ -100,7 +100,7 @@ describe("PortfolioRecordEvidenceRail", () => {
     );
 
     expect(screen.getByText("Core Banking")).toBeInTheDocument();
-    expect(screen.getByText("2 events loaded for PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getByText("2 events available in the review window")).toBeInTheDocument();
     expect(screen.getByText("1 settled event of 2 events")).toBeInTheDocument();
     expect(screen.getByText("1 component type represented in the current window")).toBeInTheDocument();
     expect(screen.getByText("Review")).toBeInTheDocument();
