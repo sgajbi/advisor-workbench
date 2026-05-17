@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionButton,
   AnalyticsTable,
@@ -11,13 +11,16 @@ import {
   Text,
 } from "@/design-system";
 import {
+  getExternalOrderExecutionAcknowledgement,
   generateDpmConstructionAlternatives,
   selectDpmConstructionAlternative,
 } from "@/features/workbench/api";
 import type {
   DpmConstructionGatewayResponse,
+  ExternalOrderExecutionAcknowledgementResponse,
   WorkbenchPortfolio360,
 } from "@/features/workbench/types";
+import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
   buildConstructionPanelModel,
   type ConstructionPanelState,
@@ -99,30 +102,33 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   );
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [
+    executionAcknowledgementResponse,
+    setExecutionAcknowledgementResponse,
+  ] = useState<ExternalOrderExecutionAcknowledgementResponse | null>(null);
+  const [executionAcknowledgementLoading, setExecutionAcknowledgementLoading] =
+    useState(false);
+  const [executionAcknowledgementError, setExecutionAcknowledgementError] =
+    useState<string | null>(null);
   const model = buildConstructionPanelModel(response);
   const portfolioId = portfolio.portfolio.portfolio_id;
   const stateCopy = statePanelCopy(model.state, portfolioId);
   const selectedAlternative = model.selectedAlternative;
   const eligibleInstrumentEvidence =
     model.currencyOverlayEvidence?.eligibleInstrumentEvidence;
-  const executionAcknowledgementEvidence =
-    model.executionAcknowledgementEvidence;
   const authorityMissingDataFamilies = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.missingDataFamilies ?? []),
-      ...(executionAcknowledgementEvidence?.missingDataFamilies ?? []),
     ]),
   );
   const authorityBlockedCapabilities = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.blockedCapabilities ?? []),
-      ...(executionAcknowledgementEvidence?.blockedCapabilities ?? []),
     ]),
   );
   const authorityReasonCodes = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.reasonCodes ?? []),
-      ...(executionAcknowledgementEvidence?.reasonCodes ?? []),
     ]),
   );
   const canSelectSelectedAlternative = Boolean(
@@ -139,6 +145,36 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     model.state === "unsupported" ||
     model.state === "unavailable" ||
     Boolean(actionError);
+
+  useEffect(() => {
+    let cancelled = false;
+    setExecutionAcknowledgementLoading(true);
+    setExecutionAcknowledgementError(null);
+    void getExternalOrderExecutionAcknowledgement({ portfolio })
+      .then((nextResponse) => {
+        if (!cancelled) {
+          setExecutionAcknowledgementResponse(nextResponse);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setExecutionAcknowledgementResponse(null);
+          setExecutionAcknowledgementError(
+            error instanceof Error
+              ? error.message
+              : "External OMS acknowledgement supportability could not be loaded.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setExecutionAcknowledgementLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [portfolio]);
 
   async function generateAlternatives() {
     if (generatePending) {
@@ -262,6 +298,12 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
           ))}
         </div>
       ) : null}
+
+      <ExecutionAcknowledgementSupportabilityPanel
+        response={executionAcknowledgementResponse}
+        loading={executionAcknowledgementLoading}
+        error={executionAcknowledgementError}
+      />
 
       <div className="construction-alternatives-grid">
         <div className="construction-alternatives-primary">
@@ -424,7 +466,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     body="Constraint rows are not available for the selected alternative."
                   />
                 )}
-                {model.currencyOverlayEvidence || executionAcknowledgementEvidence ? (
+                {model.currencyOverlayEvidence ? (
                   <section className="construction-currency-overlay-evidence">
                     <div className="construction-currency-overlay-header">
                       <Text as="h3" variant="subsectionTitle">
@@ -489,36 +531,6 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                           ? eligibleInstrumentEvidence.instruments.map((instrument, index) => (
                               <span key={`${instrument}-${index}`}>
                                 {instrument}
-                              </span>
-                            ))
-                          : null}
-                      </div>
-                    ) : null}
-                    {executionAcknowledgementEvidence ? (
-                      <div className="construction-currency-overlay-list">
-                        <strong>OMS acknowledgement posture</strong>
-                        <SemanticBadge tone={badgeTone(executionAcknowledgementEvidence.state)}>
-                          {businessStateLabel(executionAcknowledgementEvidence.state)}
-                        </SemanticBadge>
-                        <span>
-                          {executionAcknowledgementEvidence.sourceProductName}{" "}
-                          {executionAcknowledgementEvidence.sourceProductVersion}
-                        </span>
-                        <span>
-                          Source id: {executionAcknowledgementEvidence.sourceId}
-                        </span>
-                        <span>
-                          Evidence hash:{" "}
-                          {executionAcknowledgementEvidence.contentHash}
-                        </span>
-                        <span>
-                          Acknowledgement rows:{" "}
-                          {executionAcknowledgementEvidence.acknowledgementCount}
-                        </span>
-                        {executionAcknowledgementEvidence.acknowledgements.length > 0
-                          ? executionAcknowledgementEvidence.acknowledgements.map((acknowledgement, index) => (
-                              <span key={`${acknowledgement}-${index}`}>
-                                {acknowledgement}
                               </span>
                             ))
                           : null}

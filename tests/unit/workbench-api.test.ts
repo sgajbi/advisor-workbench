@@ -23,6 +23,7 @@ import {
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityScoreRuns,
   getDpmConstructionAlternativeSet,
+  getExternalOrderExecutionAcknowledgement,
   getDpmProofPack,
   getDpmProofPackAiEvidenceInput,
   getDpmProofPackMarkdown,
@@ -2728,6 +2729,71 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("construction-selection");
     expect(metricEventsJson).not.toContain("cas_1");
     expect(metricEventsJson).not.toContain("alt_1");
+  });
+
+  it("loads external OMS acknowledgement supportability through the Gateway source-product route", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            product_name: "ExternalOrderExecutionAcknowledgement",
+            product_version: "v1",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            order_reference_ids: [],
+            acknowledgements: [],
+            data_quality_status: "MISSING",
+            supportability: {
+              state: "UNAVAILABLE",
+              reason: "EXTERNAL_OMS_SOURCE_NOT_INGESTED",
+              acknowledgement_count: 0,
+              missing_data_families: [
+                "external_oms_order_execution_acknowledgement",
+              ],
+              blocked_capabilities: [
+                "oms_acknowledgement",
+                "fills",
+                "settlement",
+              ],
+            },
+            lineage: {
+              runtime_posture: "fail_closed",
+              integration_status: "not_ingested",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getExternalOrderExecutionAcknowledgement({
+      portfolio: constructionPortfolio(),
+      orderReferenceIds: ["order-ref-001"],
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${expectedBaseUrl}/source-products/portfolios/PB_SG_GLOBAL_BAL_001/external-order-execution-acknowledgement`
+    );
+    const options = fetchMock.mock.calls[0][1];
+    const headers = new Headers(options.headers);
+    expect(options.method).toBe("POST");
+    expect(headers.get("Content-Type")).toBe("application/json");
+    expect(headers.get("X-Correlation-Id")).toBe(
+      "corr-workbench-execution-acknowledgement-PB_SG_GLOBAL_BAL_001"
+    );
+    expect(JSON.parse(options.body)).toEqual({
+      as_of_date: "2026-02-24",
+      tenant_id: "tenant-sg",
+      mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+      order_reference_ids: ["order-ref-001"],
+    });
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain(
+      "source-products.external-order-execution-acknowledgement.get"
+    );
+    expect(metricEventsJson).toContain("execution-acknowledgement-supportability");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
   });
 
   it("uses Gateway PM operating quality routes including fairness-analysis lifecycle reads", async () => {

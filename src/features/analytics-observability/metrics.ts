@@ -226,6 +226,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "execution-acknowledgement-supportability",
+    operation: "source-products.external-order-execution-acknowledgement.get",
+  },
+  {
+    route: "workbench.manage",
     panel: "proof-pack-generate",
     operation: "dpm.proof-pack.generate",
   },

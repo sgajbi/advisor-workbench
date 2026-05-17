@@ -1309,6 +1309,28 @@ export type DpmConstructionGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type ExternalOrderExecutionAcknowledgementSupportability = {
+  state: "UNAVAILABLE" | string;
+  reason: string;
+  acknowledgement_count: number;
+  missing_data_families: string[];
+  blocked_capabilities: string[];
+};
+
+export type ExternalOrderExecutionAcknowledgementResponse = {
+  product_name: "ExternalOrderExecutionAcknowledgement" | string;
+  product_version: "v1" | string;
+  portfolio_id: string;
+  client_id?: string | null;
+  mandate_id?: string | null;
+  execution_intent_id?: string | null;
+  order_reference_ids: string[];
+  acknowledgements: Array<Record<string, unknown>>;
+  supportability: ExternalOrderExecutionAcknowledgementSupportability;
+  lineage: Record<string, unknown>;
+  data_quality_status?: string | null;
+};
+
 export type DpmProofPackSupportability = {
   source_service: string;
   authority: string;

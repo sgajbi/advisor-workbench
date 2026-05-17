@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ConstructionAlternativesPanel from "../../src/features/workbench/components/construction-alternatives-panel";
 import type {
@@ -7,11 +7,13 @@ import type {
   WorkbenchPortfolio360,
 } from "../../src/features/workbench/types";
 import {
+  getExternalOrderExecutionAcknowledgement,
   generateDpmConstructionAlternatives,
   selectDpmConstructionAlternative,
 } from "../../src/features/workbench/api";
 
 vi.mock("../../src/features/workbench/api", () => ({
+  getExternalOrderExecutionAcknowledgement: vi.fn(),
   generateDpmConstructionAlternatives: vi.fn(),
   selectDpmConstructionAlternative: vi.fn(),
 }));
@@ -192,12 +194,52 @@ const readyResponse: DpmConstructionGatewayResponse = {
   },
 };
 
+const executionAcknowledgementResponse = {
+  product_name: "ExternalOrderExecutionAcknowledgement",
+  product_version: "v1",
+  portfolio_id: "PB_SG_GLOBAL_BAL_001",
+  order_reference_ids: [],
+  acknowledgements: [],
+  data_quality_status: "MISSING",
+  supportability: {
+    state: "UNAVAILABLE",
+    reason: "EXTERNAL_OMS_SOURCE_NOT_INGESTED",
+    acknowledgement_count: 0,
+    missing_data_families: [
+      "external_oms_order_execution_acknowledgement",
+    ],
+    blocked_capabilities: [
+      "order_generation",
+      "venue_routing",
+      "best_execution",
+      "oms_acknowledgement",
+      "fills",
+      "settlement",
+      "execution_status_certification",
+      "autonomous_execution",
+    ],
+  },
+  lineage: {
+    source_system: "external-bank-oms",
+    source_table: "not_ingested",
+    contract_version: "rfc_042_external_order_execution_acknowledgement_v1",
+    integration_status: "not_ingested",
+    runtime_posture: "fail_closed",
+  },
+};
+
 describe("ConstructionAlternativesPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("starts idle and does not claim alternatives before Gateway generation", () => {
+  beforeEach(() => {
+    vi.mocked(getExternalOrderExecutionAcknowledgement).mockResolvedValue(
+      executionAcknowledgementResponse,
+    );
+  });
+
+  it("starts idle and does not claim alternatives before Gateway generation", async () => {
     render(<ConstructionAlternativesPanel portfolio={portfolio} />);
 
     expect(
@@ -210,6 +252,41 @@ describe("ConstructionAlternativesPanel", () => {
       screen.getByRole("button", { name: "Generate alternatives" }),
     ).toBeEnabled();
     expect(screen.getAllByText("Not Generated").length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(getExternalOrderExecutionAcknowledgement).toHaveBeenCalledWith({
+        portfolio,
+      });
+    });
+  });
+
+  it("renders external OMS acknowledgement supportability through Gateway only", async () => {
+    render(<ConstructionAlternativesPanel portfolio={portfolio} />);
+
+    await waitFor(() => {
+      expect(getExternalOrderExecutionAcknowledgement).toHaveBeenCalledWith({
+        portfolio,
+      });
+    });
+    expect(
+      screen.getByText("Execution Acknowledgement Supportability"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("ExternalOrderExecutionAcknowledgement v1"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.getByText("Missing")).toBeInTheDocument();
+    expect(screen.getByText(/External OMS Source Not Ingested/)).toBeInTheDocument();
+    expect(screen.getByText("External OMS Order Execution Acknowledgement")).toBeInTheDocument();
+    expect(screen.getByText("Order Generation")).toBeInTheDocument();
+    expect(screen.getByText("OMS Acknowledgement")).toBeInTheDocument();
+    expect(screen.getByText("Fills")).toBeInTheDocument();
+    expect(screen.getByText("Settlement")).toBeInTheDocument();
+    expect(screen.getByText("Runtime Posture")).toBeInTheDocument();
+    expect(screen.getByText("fail_closed")).toBeInTheDocument();
+    expect(screen.getByText(/does not treat this portfolio as OMS-acknowledged/i)).toBeInTheDocument();
+    expect(screen.queryByText("Execution ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filled")).not.toBeInTheDocument();
+    expect(screen.queryByText("Settled")).not.toBeInTheDocument();
   });
 
   it("generates alternatives and renders backed construction methods", async () => {
@@ -252,31 +329,12 @@ describe("ConstructionAlternativesPanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Instrument rows: 0")).toBeInTheDocument();
-    expect(screen.getByText("OMS acknowledgement posture")).toBeInTheDocument();
-    expect(
-      screen.getByText("ExternalOrderExecutionAcknowledgement v1"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Source id: sha256:external-order-execution-acknowledgement"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Evidence hash: sha256:external-order-execution-acknowledgement-content",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Acknowledgement rows: 0")).toBeInTheDocument();
     expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
     expect(screen.getByText("Eligible Instrument Selection")).toBeInTheDocument();
     expect(screen.getByText("Product Recommendation")).toBeInTheDocument();
-    expect(screen.getByText("External OMS Order Execution Acknowledgement")).toBeInTheDocument();
-    expect(screen.getByText("Autonomous Execution")).toBeInTheDocument();
     expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
     expect(
       screen.getByText("External Eligible Hedge Instruments Fail Closed"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("External OMS Source Not Ingested")).toBeInTheDocument();
-    expect(
-      screen.getByText("External Order Execution Acknowledgement Fail Closed"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",

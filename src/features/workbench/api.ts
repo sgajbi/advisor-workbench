@@ -20,6 +20,7 @@ import {
   DpmCampaignDefinitionGatewayResponse,
   DpmConstructionGatewayResponse,
   DpmExceptionSummaryResponse,
+  ExternalOrderExecutionAcknowledgementResponse,
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
   DpmOutcomeReviewNarrativeResponse,
@@ -1888,6 +1889,45 @@ export async function selectDpmConstructionAlternative(params: {
               comment: params.comment ?? "Selected from Workbench construction lab.",
             },
           }),
+        }
+      )
+  );
+}
+
+export async function getExternalOrderExecutionAcknowledgement(params: {
+  portfolio: WorkbenchPortfolio360;
+  executionIntentId?: string;
+  orderReferenceIds?: string[];
+}): Promise<ExternalOrderExecutionAcknowledgementResponse> {
+  const portfolioId = params.portfolio.portfolio.portfolio_id;
+  const callerContext = resolveDefaultCallerContext();
+  const dpmContext = resolveDefaultDpmContext();
+  const body: Record<string, unknown> = {
+    as_of_date: params.portfolio.as_of_date,
+    tenant_id: callerContext.tenantId,
+    mandate_id: dpmContext.mandateId,
+    order_reference_ids: params.orderReferenceIds ?? [],
+  };
+  if (params.executionIntentId) {
+    body.execution_intent_id = params.executionIntentId;
+  }
+
+  return await observeWorkbenchResource(
+    "source-products.external-order-execution-acknowledgement.get",
+    async () =>
+      await fetchWorkbenchJson<ExternalOrderExecutionAcknowledgementResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/source-products/portfolios/${encodeURIComponent(portfolioId)}/external-order-execution-acknowledgement`
+        ),
+        "external OMS acknowledgement supportability",
+        {
+          method: "POST",
+          headers: buildAnalyticsUiCorrelationHeaders({
+            "Content-Type": "application/json",
+            "X-Correlation-Id": `corr-workbench-execution-acknowledgement-${portfolioId}`,
+          }),
+          body: JSON.stringify(body),
         }
       )
   );
