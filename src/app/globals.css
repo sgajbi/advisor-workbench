@@ -16558,6 +16558,12 @@ a:hover {
   white-space: nowrap;
 }
 
+@media (max-width: 520px) {
+  .app-page-shell.portfolio-page .portfolio-workspace-toolbar-period-control.workbench-segmented-control {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .app-page-shell.portfolio-page .portfolio-workspace-toolbar-sidecar {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
