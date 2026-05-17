@@ -38,8 +38,12 @@ describe("portfolio record evidence view model", () => {
     });
 
     expect(viewModel.status).toEqual({ label: "Ready", tone: "success" });
-    expect(viewModel.facts).toContainEqual({ label: "Portfolio", value: "PB_SG_GLOBAL_BAL_001" });
-    expect(viewModel.facts).toContainEqual({ label: "Book Currency", value: "USD" });
+    expect(viewModel.facts).not.toContainEqual({
+      label: "Portfolio",
+      value: "PB_SG_GLOBAL_BAL_001",
+    });
+    expect(viewModel.facts).toContainEqual({ label: "Currency", value: "USD" });
+    expect(viewModel.facts).toContainEqual({ label: "Review Area", value: "Positions" });
     expect(viewModel.sourcePostureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -47,6 +51,10 @@ describe("portfolio record evidence view model", () => {
           detail: "1 holding missing price or valuation",
           status: "Partial",
           tone: "warn",
+        }),
+        expect.objectContaining({
+          label: "Positions Ledger",
+          detail: "2 positions available for review",
         }),
         expect.objectContaining({
           label: "Reprocessing",
