@@ -35,9 +35,16 @@ import {
   type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
-  type DpmWaveItemRow,
-  type DpmWaveMetricRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
+import {
+  buildDpmWaveMetricTiles,
+  buildDpmWaveProposedChangeRows,
+  findDpmWaveMetricValue,
+  formatDpmWaveDisplayDate,
+  isDpmWaveActionBlocked,
+  resolveDpmWaveLifecycleIndex,
+  type DpmWaveMetricTile,
+} from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -54,12 +61,6 @@ type Props = {
 };
 
 const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
-
-type MetricTile = {
-  label: string;
-  value: string;
-  tone?: "default" | "success" | "warn" | "danger";
-};
 
 const REBALANCE_LIFECYCLE_STEPS = [
   "Preview",
@@ -168,15 +169,15 @@ export default function DpmWaveCommandCenterPanel({
     campaignLaunchResponse,
   });
   const selectedWaveId = model.selectedWaveId;
-  const lifecycleIndex = resolveLifecycleIndex(model.selectedWaveState);
+  const lifecycleIndex = resolveDpmWaveLifecycleIndex(model.selectedWaveState);
   const approvalBlocked =
-    isWaveActionBlocked(model.blockedActions, "approve") ||
+    isDpmWaveActionBlocked(model.blockedActions, "approve") ||
     Number.parseInt(model.selectedWaveIssueCount.replaceAll(",", ""), 10) > 0 ||
     model.reasonCodes.length > 0 ||
     model.state === "blocked" ||
     model.state === "partial";
-  const stagingBlocked = isWaveActionBlocked(model.blockedActions, "stage");
-  const handoffBlocked = isWaveActionBlocked(model.blockedActions, "handoff");
+  const stagingBlocked = isDpmWaveActionBlocked(model.blockedActions, "stage");
+  const handoffBlocked = isDpmWaveActionBlocked(model.blockedActions, "handoff");
   const proofState =
     model.proofPackRows.length > 0 || proofPackResponse
       ? "READY"
@@ -191,9 +192,13 @@ export default function DpmWaveCommandCenterPanel({
     model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
-  const proposedRows = useMemo(() => buildProposedChangeRows(model.itemRows), [model.itemRows]);
-  const metricTiles = buildMetricTiles(model.metricRows, model.selectedWaveItemCount, model.selectedWaveIssueCount);
-  const asOfDate = formatDisplayDate(model.summaryRows[0]?.asOfDate);
+  const proposedRows = useMemo(() => buildDpmWaveProposedChangeRows(model.itemRows), [model.itemRows]);
+  const metricTiles = buildDpmWaveMetricTiles(
+    model.metricRows,
+    model.selectedWaveItemCount,
+    model.selectedWaveIssueCount
+  );
+  const asOfDate = formatDpmWaveDisplayDate(model.summaryRows[0]?.asOfDate);
   const selectedCampaign =
     model.campaignRows.find((row) => row.key === selectedCampaignKey) ?? model.campaignRows[0] ?? null;
 
@@ -430,7 +435,11 @@ export default function DpmWaveCommandCenterPanel({
         <SummaryCell label="Proposed Changes" value={model.selectedWaveItemCount} />
         <SummaryCell
           label="Drift Improvement"
-          value={findMetricValue(model.metricRows, ["drift improvement", "drift reduction", "drift"], "Pending")}
+          value={findDpmWaveMetricValue(
+            model.metricRows,
+            ["drift improvement", "drift reduction", "drift"],
+            "Pending"
+          )}
           tone="success"
         />
       </div>
@@ -632,7 +641,6 @@ export default function DpmWaveCommandCenterPanel({
     </SectionBlock>
   );
 }
-
 function CampaignDefinitionsSection({
   rows,
   lifecycleRows,
@@ -997,7 +1005,7 @@ function SummaryCell({
   );
 }
 
-function MetricTileView({ metric }: { metric: MetricTile }) {
+function MetricTileView({ metric }: { metric: DpmWaveMetricTile }) {
   return (
     <div className={`rebalance-metric-tile rebalance-metric-${metric.tone ?? "default"}`}>
       <span>{metric.label}</span>
@@ -1018,117 +1026,4 @@ function RecommendedAction({ title, detail }: { title: string; detail: string })
       </span>
     </button>
   );
-}
-
-function buildMetricTiles(
-  metricRows: DpmWaveMetricRow[],
-  selectedWaveItemCount: string,
-  selectedWaveIssueCount: string
-): MetricTile[] {
-  return [
-    {
-      label: "Turnover",
-      value: findMetricValue(metricRows, ["turnover"], "Pending"),
-    },
-    {
-      label: "Cash After",
-      value: findMetricValue(metricRows, ["cash after", "cash_after", "cash"], "Pending"),
-    },
-    {
-      label: "Est. Trades",
-      value: findMetricValue(metricRows, ["trade count", "trades"], selectedWaveItemCount),
-    },
-    {
-      label: "Issues",
-      value: selectedWaveIssueCount,
-      tone: selectedWaveIssueCount === "0" ? "success" : "danger",
-    },
-  ];
-}
-
-function buildProposedChangeRows(itemRows: DpmWaveItemRow[]) {
-  return itemRows.map((row, index) => {
-    const action = firstBusinessValue(row.proposedAction, "Review");
-    return {
-      key: row.key,
-      security: firstBusinessValue(row.security, `Proposal item ${index + 1}`),
-      action,
-      actionTone: actionTone(action),
-      estimatedValue: firstBusinessValue(row.estimatedValue, "Pending"),
-      reason: firstBusinessValue(row.reason, formatBusinessReason(row.reasonCodes), "Requires review"),
-      mandateImpact: firstBusinessValue(row.mandateImpact, "Review against mandate"),
-      status: firstBusinessValue(row.status, row.state, "PENDING"),
-    };
-  });
-}
-
-function firstBusinessValue(...values: Array<string | null | undefined>): string {
-  return (
-    values.find((value) => {
-      const normalized = value?.trim();
-      return normalized && !["N/A", "UNKNOWN", "NOT_REQUESTED"].includes(normalized.toUpperCase());
-    }) ?? "Pending"
-  );
-}
-
-function actionTone(action: string): "buy" | "sell" | "trim" | "default" {
-  const normalized = action.toLowerCase();
-  if (normalized.includes("buy")) {
-    return "buy";
-  }
-  if (normalized.includes("sell")) {
-    return "sell";
-  }
-  if (normalized.includes("trim") || normalized.includes("reduce")) {
-    return "trim";
-  }
-  return "default";
-}
-
-function findMetricValue(rows: DpmWaveMetricRow[], needles: string[], fallback: string): string {
-  const normalizedNeedles = needles.map((needle) => needle.toLowerCase());
-  const row = rows.find((candidate) => {
-    const key = `${candidate.key} ${candidate.label}`.replaceAll("_", " ").toLowerCase();
-    return normalizedNeedles.some((needle) => key.includes(needle));
-  });
-  return firstBusinessValue(row?.value, fallback);
-}
-
-function resolveLifecycleIndex(state: string): number {
-  const normalized = state.toUpperCase();
-  if (normalized.includes("STAG") || normalized.includes("HANDOFF")) {
-    return 4;
-  }
-  if (normalized.includes("APPROV")) {
-    return 3;
-  }
-  if (normalized.includes("SIMUL")) {
-    return 2;
-  }
-  if (normalized.includes("SOURCE") || normalized.includes("DATA")) {
-    return 1;
-  }
-  return 0;
-}
-
-function isWaveActionBlocked(blockedActions: string[], action: string): boolean {
-  return blockedActions.some((blockedAction) =>
-    blockedAction.toLowerCase().includes(action.toLowerCase())
-  );
-}
-
-function formatDisplayDate(value: string | undefined): string {
-  if (!value || value === "N/A") {
-    return "As of 03 May 2026";
-  }
-  const date = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) {
-    return `As of ${value}`;
-  }
-  return `As of ${date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  })}`;
 }
