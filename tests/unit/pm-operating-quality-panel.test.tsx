@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-operating-quality-panel";
 import {
+  createDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
@@ -13,6 +15,8 @@ import type {
 } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/api", () => ({
+  createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
   requestDpmPmOperatingQualitySummary: vi.fn(),
@@ -150,6 +154,67 @@ const summaryResponse: DpmPmOperatingQualitySummaryResponse = {
   },
 };
 
+const fairnessAnalysisResponse: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-pmq-fairness-create",
+  supportability: {
+    ...scoreRuns.supportability,
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+    fairness_analysis_id: "pmq_fair_002",
+  },
+  data: {
+    fairness_analysis: {
+      product_name: "PmOperatingQualityFairnessAnalysis",
+      product_version: "v1",
+      fairness_analysis_id: "pmq_fair_002",
+      state: "PENDING_REVIEW",
+      as_of_date: "2026-05-13",
+      minimum_segment_score_run_count: 2,
+      maximum_average_score_spread: "15.00",
+      observed_average_score_spread: "18.00",
+      generated_at: "2026-05-13T10:40:00Z",
+      generated_by: "lotus-manage",
+      forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityScoreRun",
+          source_id: "pmq_run_001",
+        },
+      ],
+      reason_codes: ["PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"],
+      segment_results: [
+        {
+          segment_id: "mandate_balanced",
+          segment_type: "MANDATE_TYPE",
+          display_name: "Balanced DPM Mandates",
+          state: "READY",
+          score_run_count: 1,
+          average_score: "90.00",
+          minimum_score: "90.00",
+          maximum_score: "90.00",
+          score_run_refs: [
+            {
+              source_system: "lotus-manage",
+              source_product: "PmOperatingQualityScoreRun",
+              source_id: "pmq_run_001",
+            },
+          ],
+          source_refs: [
+            {
+              source_system: "lotus-core",
+              source_type: "MandateTypeSegment",
+              source_id: "balanced",
+            },
+          ],
+          reason_codes: ["PM_QUALITY_SEGMENT_READY"],
+        },
+      ],
+    },
+  },
+};
+
 describe("PmOperatingQualityPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -206,6 +271,7 @@ describe("PmOperatingQualityPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("Mandate type").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
@@ -292,6 +358,7 @@ describe("PmOperatingQualityPanel", () => {
       screen.getAllByText("Blocked: 1 source-defined segment returned").length
     ).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeDisabled();
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
@@ -316,8 +383,10 @@ describe("PmOperatingQualityPanel", () => {
       screen.getByText("Preview Fairness Analysis (PREVIEW_FAIRNESS_ANALYSIS; lotus-manage)")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Preview Fairness" }));
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+    expect(createDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
   it("previews fairness analysis through Gateway with source-defined segments only", async () => {
@@ -432,6 +501,57 @@ describe("PmOperatingQualityPanel", () => {
         "PM Quality Fairness Spread Review Required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED)"
       ).length
     ).toBeGreaterThan(0);
+  });
+
+  it("persists fairness analysis through Gateway and reads the saved analysis detail", async () => {
+    vi.mocked(createDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
+      fairnessAnalysisResponse
+    );
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
+      fairnessAnalysisResponse
+    );
+
+    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    fireEvent.click(screen.getByRole("button", { name: "Persist Fairness" }));
+
+    await waitFor(() => {
+      expect(createDpmPmOperatingQualityFairnessAnalysis).toHaveBeenCalledWith({
+        policyId: "pmq_sg_dpm",
+        policyVersion: "2026.05",
+        asOfDate: "2026-05-13",
+        segments: [
+          {
+            segment_id: "mandate_balanced",
+            segment_type: "MANDATE_TYPE",
+            display_name: "Balanced DPM Mandates",
+            score_run_ids: ["pmq_run_001"],
+            source_refs: [
+              {
+                source_system: "lotus-core",
+                source_type: "MandateTypeSegment",
+                source_id: "balanced",
+              },
+            ],
+          },
+          {
+            segment_id: "mandate_income",
+            segment_type: "MANDATE_TYPE",
+            display_name: "Income DPM Mandates",
+            score_run_ids: ["pmq_run_002"],
+          },
+        ],
+      });
+    });
+    expect(getDpmPmOperatingQualityFairnessAnalysis).toHaveBeenCalledWith(
+      "pmq_fair_002",
+      "client"
+    );
+    expect(screen.getByText("Persisted fairness analysis returned Manage evidence.")).toBeInTheDocument();
+    expect(screen.getAllByText("pmq_fair_002").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("18.00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("corr-pmq-fairness-create").length).toBeGreaterThan(0);
+    expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
   });
 
   it("requests a review-required PM quality support summary through Gateway", async () => {

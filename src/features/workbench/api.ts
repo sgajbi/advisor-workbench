@@ -1837,6 +1837,44 @@ export async function previewDpmPmOperatingQualityFairnessAnalysis(params: {
   );
 }
 
+export async function createDpmPmOperatingQualityFairnessAnalysis(params: {
+  policyId: string;
+  policyVersion: string;
+  asOfDate?: string;
+  actorId?: string;
+  segments: DpmPmOperatingQualityFairnessSegmentRequest[];
+  minimumSegmentScoreRunCount?: number;
+  maximumAverageScoreSpread?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const body: Record<string, unknown> = {
+    policy_id: params.policyId,
+    policy_version: params.policyVersion,
+    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
+    actor_id: params.actorId ?? "workbench-pm-operating-quality-operator",
+    segments: params.segments,
+  };
+  if (typeof params.minimumSegmentScoreRunCount === "number") {
+    body.minimum_segment_score_run_count = params.minimumSegmentScoreRunCount;
+  }
+  if (params.maximumAverageScoreSpread) {
+    body.maximum_average_score_spread = params.maximumAverageScoreSpread;
+  }
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.fairness-analyses.create",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/fairness-analyses"),
+        "create DPM PM operating quality fairness analysis",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
+          body: JSON.stringify({ body }),
+        }
+      )
+  );
+}
+
 export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
   policyId?: string;
   policyVersion?: string;
@@ -1872,13 +1910,14 @@ export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
 }
 
 export async function getDpmPmOperatingQualityFairnessAnalysis(
-  fairnessAnalysisId: string
+  fairnessAnalysisId: string,
+  target: WorkbenchRequestTarget = "server"
 ): Promise<DpmPmOperatingQualityGatewayResponse> {
   return await observeWorkbenchResource(
     "dpm.pm-operating-quality.fairness-analyses.get",
     async () =>
       await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
+        target,
         `/dpm/command-center/pm-operating-quality/fairness-analyses/${encodeURIComponent(
           fairnessAnalysisId
         )}`,
