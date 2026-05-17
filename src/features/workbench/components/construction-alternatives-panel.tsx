@@ -23,8 +23,15 @@ import type {
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
   buildConstructionPanelModel,
-  type ConstructionPanelState,
 } from "@/features/workbench/construction-alternatives-view-model";
+import {
+  buildConstructionAuthorityEvidenceSummary,
+  buildConstructionStatePanelCopy,
+  canSelectConstructionAlternative,
+  constructionBadgeTone,
+  resolveConstructionAlternativeLabel,
+  shouldShowConstructionStatePanel,
+} from "@/features/workbench/construction-alternatives-panel-helpers";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -33,65 +40,6 @@ import {
 type Props = {
   portfolio: WorkbenchPortfolio360;
 };
-
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (
-    normalized === "READY" ||
-    normalized === "SUPPORTED" ||
-    normalized === "SELECTED" ||
-    normalized === "PASS" ||
-    normalized.includes("WITHIN")
-  ) {
-    return "success";
-  }
-  if (
-    normalized === "DEGRADED" ||
-    normalized === "PENDING_REVIEW" ||
-    normalized.includes("REVIEW") ||
-    normalized.includes("PENDING") ||
-    normalized.includes("ACCEPTABLE")
-  ) {
-    return "warn";
-  }
-  if (
-    normalized === "BLOCKED" ||
-    normalized === "UNSUPPORTED" ||
-    normalized === "INFEASIBLE"
-  ) {
-    return "danger";
-  }
-  return "default";
-}
-
-function statePanelCopy(state: ConstructionPanelState, portfolioId: string) {
-  if (state === "idle") {
-    return {
-      kind: "empty" as const,
-      title: "Construction alternatives have not been generated",
-      body: `Request alternatives for ${portfolioId} when data readiness is sufficient for comparison.`,
-    };
-  }
-  if (state === "blocked") {
-    return {
-      kind: "permission_blocked" as const,
-      title: "Construction alternatives are blocked",
-      body: "Selection remains disabled until the blocking data issue is resolved.",
-    };
-  }
-  if (state === "unsupported") {
-    return {
-      kind: "unavailable" as const,
-      title: "Construction alternatives are unsupported",
-      body: "Construction alternatives are not available for the current mandate state.",
-    };
-  }
-  return {
-    kind: "partial" as const,
-    title: "Construction alternatives are unavailable",
-    body: "Construction alternatives are temporarily unavailable for this portfolio.",
-  };
-}
 
 export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   const [response, setResponse] =
@@ -112,48 +60,25 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     useState<string | null>(null);
   const model = buildConstructionPanelModel(response);
   const portfolioId = portfolio.portfolio.portfolio_id;
-  const stateCopy = statePanelCopy(model.state, portfolioId);
+  const stateCopy = buildConstructionStatePanelCopy(model.state, portfolioId);
   const selectedAlternative = model.selectedAlternative;
   const eligibleInstrumentEvidence =
     model.currencyOverlayEvidence?.eligibleInstrumentEvidence;
   const executionAcknowledgementEvidence =
     model.executionAcknowledgementEvidence;
-  const authorityEvidenceState =
-    model.currencyOverlayEvidence?.state ??
-    executionAcknowledgementEvidence?.state ??
-    "UNKNOWN";
-  const authorityMissingDataFamilies = Array.from(
-    new Set([
-      ...(model.currencyOverlayEvidence?.missingDataFamilies ?? []),
-      ...(executionAcknowledgementEvidence?.missingDataFamilies ?? []),
-    ]),
+  const authorityEvidenceSummary =
+    buildConstructionAuthorityEvidenceSummary(model);
+  const canSelectSelectedAlternative = canSelectConstructionAlternative({
+    selectedAlternative,
+    alternativeSetId: model.alternativeSetId,
+    state: model.state,
+    selectedAlternativeId: model.selectedAlternativeId,
+    selectionPendingId,
+  });
+  const shouldShowStatePanel = shouldShowConstructionStatePanel(
+    model.state,
+    actionError,
   );
-  const authorityBlockedCapabilities = Array.from(
-    new Set([
-      ...(model.currencyOverlayEvidence?.blockedCapabilities ?? []),
-      ...(executionAcknowledgementEvidence?.blockedCapabilities ?? []),
-    ]),
-  );
-  const authorityReasonCodes = Array.from(
-    new Set([
-      ...(model.currencyOverlayEvidence?.reasonCodes ?? []),
-      ...(executionAcknowledgementEvidence?.reasonCodes ?? []),
-    ]),
-  );
-  const canSelectSelectedAlternative = Boolean(
-    selectedAlternative &&
-      model.alternativeSetId !== "N/A" &&
-      model.state !== "blocked" &&
-      model.state !== "unsupported" &&
-      model.selectedAlternativeId !== selectedAlternative.alternativeId &&
-      !selectionPendingId,
-  );
-  const shouldShowStatePanel =
-    model.state === "idle" ||
-    model.state === "blocked" ||
-    model.state === "unsupported" ||
-    model.state === "unavailable" ||
-    Boolean(actionError);
 
   useEffect(() => {
     let cancelled = false;
@@ -221,9 +146,10 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     setSelectionPendingId(alternativeId);
     setActionError(null);
     setActionMessage(null);
-    const selectedLabel =
-      model.alternatives.find((alternative) => alternative.alternativeId === alternativeId)?.label ??
-      "construction path";
+    const selectedLabel = resolveConstructionAlternativeLabel(
+      model.alternatives,
+      alternativeId,
+    );
     try {
       const selected = await selectDpmConstructionAlternative({
         alternativeSetId: model.alternativeSetId,
@@ -249,7 +175,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
       className="construction-alternatives-panel"
       actions={
         <div className="construction-alternatives-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
+          <SemanticBadge tone={constructionBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
           <SemanticBadge tone="success">Evidence Available</SemanticBadge>
@@ -353,7 +279,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     alternative.turnoverPct,
                     alternative.cashAfterPct,
                     alternative.driftImprovementPct,
-                    <SemanticBadge key={`${alternative.alternativeId}-fit`} tone={badgeTone(alternative.mandateFit)}>
+                    <SemanticBadge key={`${alternative.alternativeId}-fit`} tone={constructionBadgeTone(alternative.mandateFit)}>
                       {alternative.mandateFit}
                     </SemanticBadge>,
                     <ActionButton
@@ -461,7 +387,7 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     {model.constraints.map((constraint) => (
                       <div key={constraint.key}>
                         <strong>{businessStateLabel(constraint.name)}</strong>
-                        <SemanticBadge tone={badgeTone(constraint.state)}>
+                        <SemanticBadge tone={constructionBadgeTone(constraint.state)}>
                           {businessStateLabel(constraint.state)}
                         </SemanticBadge>
                       </div>
@@ -475,14 +401,14 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     body="Constraint rows are not available for the selected alternative."
                   />
                 )}
-                {model.currencyOverlayEvidence || executionAcknowledgementEvidence ? (
+                {authorityEvidenceSummary.shouldRender ? (
                   <section className="construction-currency-overlay-evidence">
                     <div className="construction-currency-overlay-header">
                       <Text as="h3" variant="subsectionTitle">
                         Construction Authority Evidence
                       </Text>
-                      <SemanticBadge tone={badgeTone(authorityEvidenceState)}>
-                        {businessStateLabel(authorityEvidenceState)}
+                      <SemanticBadge tone={constructionBadgeTone(authorityEvidenceSummary.state)}>
+                        {businessStateLabel(authorityEvidenceSummary.state)}
                       </SemanticBadge>
                     </div>
                     {model.currencyOverlayEvidence ? (
@@ -572,8 +498,8 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     ) : null}
                     <div className="construction-currency-overlay-list">
                       <strong>Missing data</strong>
-                      {authorityMissingDataFamilies.length > 0 ? (
-                        authorityMissingDataFamilies.map((family) => (
+                      {authorityEvidenceSummary.missingDataFamilies.length > 0 ? (
+                        authorityEvidenceSummary.missingDataFamilies.map((family) => (
                           <SemanticBadge key={family} tone="warn">
                             {formatBusinessReason(family)}
                           </SemanticBadge>
@@ -584,8 +510,8 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     </div>
                     <div className="construction-currency-overlay-list">
                       <strong>Blocked capabilities</strong>
-                      {authorityBlockedCapabilities.length > 0 ? (
-                        authorityBlockedCapabilities.map((capability) => (
+                      {authorityEvidenceSummary.blockedCapabilities.length > 0 ? (
+                        authorityEvidenceSummary.blockedCapabilities.map((capability) => (
                           <SemanticBadge key={capability} tone="danger">
                             {formatBusinessReason(capability)}
                           </SemanticBadge>
@@ -594,10 +520,10 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                         <span>None reported</span>
                       )}
                     </div>
-                    {authorityReasonCodes.length > 0 ? (
+                    {authorityEvidenceSummary.reasonCodes.length > 0 ? (
                       <div className="construction-currency-overlay-list">
                         <strong>Reason codes</strong>
-                        {authorityReasonCodes.map((reason) => (
+                        {authorityEvidenceSummary.reasonCodes.map((reason) => (
                           <SemanticBadge key={reason} tone="warn">
                             {formatBusinessReason(reason)}
                           </SemanticBadge>
