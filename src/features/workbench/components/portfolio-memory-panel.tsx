@@ -15,8 +15,17 @@ import type { DpmPortfolioMemoryGatewayResponse } from "@/features/workbench/typ
 import {
   buildPortfolioMemoryPanelModel,
   type PortfolioMemoryEventRow,
-  type PortfolioMemoryPanelState,
 } from "@/features/workbench/portfolio-memory-view-model";
+import {
+  buildPortfolioMemoryFallbackSnapshotRows,
+  buildPortfolioMemoryStatePanelCopy,
+  filterPortfolioMemoryEvents,
+  portfolioMemoryBadgeTone,
+  portfolioMemoryEvidenceAvailability,
+  portfolioMemoryReviewPosture,
+  resolveSelectedPortfolioMemoryEvent,
+  shouldShowPortfolioMemoryStatePanel,
+} from "@/features/workbench/portfolio-memory-panel-helpers";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -27,71 +36,24 @@ type Props = {
   errorMessage?: string | null;
 };
 
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (normalized === "READY" || normalized === "COMPLETE" || normalized === "SUPPORTED") {
-    return "success";
-  }
-  if (normalized === "PARTIAL" || normalized === "DEGRADED" || normalized === "EMPTY" || normalized === "UNKNOWN") {
-    return "warn";
-  }
-  if (normalized === "BLOCKED" || normalized === "UNSUPPORTED" || normalized === "UNAVAILABLE") {
-    return "danger";
-  }
-  return "default";
-}
-
-function statePanelCopy(state: PortfolioMemoryPanelState) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No portfolio memory events returned",
-      body: "No portfolio memory timeline is currently available for this portfolio.",
-    };
-  }
-  if (state === "partial") {
-    return {
-      kind: "partial" as const,
-      title: "Portfolio memory is partial",
-      body: "Some rebalance, evidence, or review events are not yet available.",
-    };
-  }
-  if (state === "unsupported") {
-    return {
-      kind: "unavailable" as const,
-      title: "Portfolio memory is not supported",
-      body: "Portfolio memory is not available for the selected portfolio.",
-    };
-  }
-  return {
-    kind: "partial" as const,
-    title: "Portfolio memory is unavailable",
-    body: "Portfolio memory is temporarily unavailable.",
-  };
-}
-
 export default function PortfolioMemoryPanel({ response, errorMessage = null }: Props) {
   const model = buildPortfolioMemoryPanelModel(response);
   const [activeEventType, setActiveEventType] = useState<string>("ALL");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const filteredEvents = useMemo(
-    () =>
-      activeEventType === "ALL"
-        ? model.events
-        : model.events.filter((event) => event.eventType === activeEventType),
+    () => filterPortfolioMemoryEvents(model.events, activeEventType),
     [activeEventType, model.events],
   );
-  const selectedEvent =
-    filteredEvents.find((event) => event.eventId === selectedEventId) ??
-    filteredEvents[0] ??
-    model.selectedEvent;
-  const shouldShowStatePanel =
-    Boolean(errorMessage) ||
-    model.state === "empty" ||
-    model.state === "partial" ||
-    model.state === "unsupported" ||
-    model.state === "unavailable";
-  const stateCopy = statePanelCopy(model.state);
+  const selectedEvent = resolveSelectedPortfolioMemoryEvent({
+    filteredEvents,
+    selectedEventId,
+    fallbackEvent: model.selectedEvent,
+  });
+  const shouldShowStatePanel = shouldShowPortfolioMemoryStatePanel(
+    model.state,
+    errorMessage,
+  );
+  const stateCopy = buildPortfolioMemoryStatePanelCopy(model.state);
 
   return (
     <SectionBlock
@@ -100,7 +62,7 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
       className="portfolio-memory-panel"
       actions={
         <div className="portfolio-memory-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
+          <SemanticBadge tone={portfolioMemoryBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
           <SemanticBadge>Audit trail available</SemanticBadge>
@@ -126,7 +88,7 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
       {model.reasonCodes.length > 0 ? (
         <div className="portfolio-memory-reason-row">
           {model.reasonCodes.map((reason) => (
-            <SemanticBadge key={reason} tone={badgeTone(reason)}>
+            <SemanticBadge key={reason} tone={portfolioMemoryBadgeTone(reason)}>
               {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
@@ -191,7 +153,7 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
                 row.category,
                 row.businessImpact,
                 <SemanticBadge key={`${row.key}-evidence`} tone={row.artifactRefCount > 0 ? "success" : "default"}>
-                  {evidenceAvailability(row.artifactRefs)}
+                  {portfolioMemoryEvidenceAvailability(row.artifactRefs)}
                 </SemanticBadge>,
                 <ActionButton
                   key={`${row.key}-action`}
@@ -244,7 +206,7 @@ function SelectedEventDetail({
         <Text as="h3" variant="subsectionTitle">
           Details: {event?.eventLabel ?? "No event selected"}
         </Text>
-        <SemanticBadge tone={badgeTone(event?.status ?? "N/A")}>
+        <SemanticBadge tone={portfolioMemoryBadgeTone(event?.status ?? "N/A")}>
           {businessStateLabel(event?.status ?? "N/A")}
         </SemanticBadge>
       </div>
@@ -270,13 +232,13 @@ function SelectedEventDetail({
             Support Snapshot
           </Text>
           <div>
-            {(event?.metadataRows.length ? event.metadataRows : fallbackSnapshotRows(event)).map((row) => (
+            {(event?.metadataRows.length ? event.metadataRows : buildPortfolioMemoryFallbackSnapshotRows(event)).map((row) => (
               <DetailCell key={row.key} label={row.label} value={row.value} />
             ))}
           </div>
           <div className="portfolio-memory-readiness-callout">
             <strong>Review Posture</strong>
-            <span>{reviewPosture(event?.status ?? "N/A")}</span>
+            <span>{portfolioMemoryReviewPosture(event?.status ?? "N/A")}</span>
             <small>
               {event?.reasonCodes !== "N/A"
                 ? formatBusinessReason(event?.reasonCodes ?? "N/A")
@@ -310,27 +272,4 @@ function ArtifactPill({ label, enabled }: { label: string; enabled: boolean }) {
       {label}
     </span>
   );
-}
-
-function fallbackSnapshotRows(event: PortfolioMemoryEventRow | null) {
-  return [
-    { key: "status", label: "Status", value: businessStateLabel(event?.status ?? "N/A") },
-    { key: "category", label: "Category", value: event?.category ?? "N/A" },
-    { key: "evidence", label: "Evidence Items", value: String(event?.artifactRefCount ?? 0) },
-  ];
-}
-
-function reviewPosture(status: string): string {
-  const normalized = status.toUpperCase();
-  if (normalized === "READY" || normalized === "COMPLETE") {
-    return "Ready for advisor review";
-  }
-  if (normalized === "PENDING_REVIEW" || normalized === "BLOCKED" || normalized === "DEGRADED") {
-    return "Needs advisor attention";
-  }
-  return businessStateLabel(status);
-}
-
-function evidenceAvailability(value: string): string {
-  return value && value !== "N/A" ? "Available" : "Not available";
 }
