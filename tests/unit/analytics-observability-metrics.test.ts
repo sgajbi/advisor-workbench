@@ -376,6 +376,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "execution-acknowledgement-supportability",
+        "source-products.external-order-execution-acknowledgement.get",
+      ],
+      [
+        "workbench.manage",
         "proof-pack-generate",
         "dpm.proof-pack.generate",
       ],
