@@ -9,6 +9,7 @@ import {
   createSandboxSession,
   generateDpmConstructionAlternatives,
   generateDpmProofPackFromRun,
+  getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
@@ -37,6 +38,7 @@ import {
   listDpmCampaignDiscovery,
   listDpmCampaignDefinitions,
   listDpmWaves,
+  launchDpmCampaignDefinition,
   previewDpmWave,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityScoreRun,
@@ -2324,6 +2326,69 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-lifecycle");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign-lifecycle");
+  });
+
+  it("checks and launches DPM campaign definitions through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-launch",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0041",
+              state: "ready",
+              reason_codes: [],
+              blocked_actions: [],
+              wave_id: "dwv_campaign_launch_001",
+              wave_state: "CREATED",
+              item_count: 12,
+              issue_count: 0,
+            },
+            data: {
+              product_name: "BulkReviewCampaignDefinitionLaunchPackage",
+              launch_state: "READY",
+              wave: { wave_id: "dwv_campaign_launch_001", state: "CREATED" },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmCampaignDefinitionLaunchPackage({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      requestedAsOfDate: "2026-05-10",
+      actorId: "pm_sg_1",
+      correlationId: "corr-launch",
+    });
+    await launchDpmCampaignDefinition({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      requestedAsOfDate: "2026-05-10",
+      actorId: "pm_sg_1",
+      correlationId: "corr-launch",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/launch-package?requested_as_of_date=2026-05-10&actor_id=pm_sg_1&correlation_id=corr-launch"
+    );
+    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/launch"
+    );
+    expect(fetchMock.mock.calls[1][1]?.body).toContain('"requested_as_of_date":"2026-05-10"');
+    expect(fetchMock.mock.calls[1][1]?.body).toContain('"actor_id":"pm_sg_1"');
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-launch-package");
+    expect(metricEventsJson).toContain("wave-campaign-launch");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-launch");
   });
 
   it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {

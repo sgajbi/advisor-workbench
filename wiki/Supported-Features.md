@@ -12,7 +12,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
-| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, and active Manage-owned campaign-definition list rendering through Gateway only. |
+| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, lifecycle evidence, launch-package readiness, and READY-gated campaign launch through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}?mode=proof` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
 | DPM portfolio memory | `/workbench/{portfolioId}?mode=memory` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory. |
@@ -68,7 +68,10 @@ Implemented:
 9. opens read-only campaign lifecycle evidence through Gateway for a selected campaign definition
    without inferring lifecycle state, recalculating membership, or operating retire/supersede
    commands locally,
-10. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+10. checks campaign launch-package readiness through Gateway and enables launch only when Manage
+   returns `READY`, preserving durable wave and replay posture without recomputing membership,
+   readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
+11. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
    report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 
@@ -79,8 +82,9 @@ Not yet supported:
 3. item selection drawer,
 4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
 5. global campaign discovery or campaign-definition upsert UX,
-6. CIO approval workflow,
-7. external OMS/execution integration,
+6. campaign retire/supersede controls,
+7. CIO approval workflow,
+8. external OMS/execution integration,
 8. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
    operations-handoff summary, exception-summary narrative, or handoff calculation.
 

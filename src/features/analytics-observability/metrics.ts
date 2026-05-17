@@ -281,6 +281,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "wave-campaign-launch-package",
+    operation: "dpm.waves.campaign-definitions.launch-package",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-launch",
+    operation: "dpm.waves.campaign-definitions.launch",
+  },
+  {
+    route: "workbench.manage",
     panel: "wave-preview",
     operation: "dpm.waves.preview",
   },
