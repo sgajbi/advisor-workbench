@@ -1225,7 +1225,17 @@ export async function getDpmCampaignDefinitionLifecycleEvents(params: {
 export async function getDpmCampaignDefinitionLaunchHistory(params: {
   campaignId: string;
   campaignVersion: string;
+  limit?: number;
+  offset?: number;
 }): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params.offset !== undefined) {
+    searchParams.set("offset", String(params.offset));
+  }
+  const query = searchParams.toString();
   return await observeWorkbenchResource(
     "dpm.waves.campaign-definitions.launch-history",
     async () =>
@@ -1233,7 +1243,9 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
         "server",
         `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
           params.campaignId
-        )}/versions/${encodeURIComponent(params.campaignVersion)}/launch-history`,
+        )}/versions/${encodeURIComponent(params.campaignVersion)}/launch-history${
+          query ? `?${query}` : ""
+        }`,
         "DPM campaign-definition launch history"
       )
   );

@@ -95,8 +95,9 @@ must travel through Gateway-shaped contracts.
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`.
     Append-only launch history reaches Workbench only through Gateway
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`,
-    preserving Manage-recorded wave id, actor, requested as-of date, correlation id, and
-    idempotency key without local launch-state or idempotency reconstruction.
+    preserving Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+    correlation id, idempotency key, page counts, and operating boundaries without local
+    launch-state or idempotency reconstruction.
     Campaign launch-package readiness and durable launch also reach Workbench only through Gateway
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
     and
@@ -105,8 +106,9 @@ must travel through Gateway-shaped contracts.
     append-only launch history, campaign-discovery posture, and ready-only launch action but does
     not discover global campaign cohorts, recalculate membership or launch readiness, infer
     lifecycle state, reconstruct idempotency, render content hashes, operate retire/supersede
-    commands, operate maker-checker workflow, approve trades, stage orders, claim OMS execution,
-    or operate a campaign-definition upsert workflow locally. RFC-0039
+    commands, operate maker-checker workflow, approve trades, generate or stage orders, route
+    orders, claim fills, settlement, or OMS execution, or operate a campaign-definition upsert
+    workflow locally. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned
     and must reach Workbench through Gateway construction composition only. RFC-0042
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and

@@ -179,18 +179,28 @@ const campaignLaunchHistoryResponse: DpmCampaignDefinitionGatewayResponse = {
   source_service: "lotus-manage",
   upstream_status: 200,
   data: {
+    product_name: "BulkReviewCampaignDefinitionLaunchHistory",
     campaign_id: "campaign-holdings-202605",
     campaign_version: "2026.05",
     items: [
       {
         wave_id: "dwv_campaign_launch_001",
-        actor_id: "pm_sg_1",
+        launched_at: "2026-05-10T00:00:00Z",
+        launched_by: "pm_sg_1",
         requested_as_of_date: "2026-05-10",
         correlation_id: "corr-campaign-launch",
         idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
-        idempotent_replay: true,
-        reason_codes: ["campaign_definition_launch_replayed"],
       },
+    ],
+    limit: 10,
+    offset: 0,
+    count: 1,
+    total_count: 11,
+    operating_boundaries: [
+      "NO_MAKER_CHECKER_WORKFLOW",
+      "NO_TRADE_APPROVAL",
+      "NO_ORDER_GENERATION",
+      "NO_OMS_EXECUTION_CLAIM",
     ],
   },
 };
@@ -352,19 +362,61 @@ describe("DpmWaveCommandCenterPanel", () => {
       expect(getDpmCampaignDefinitionLaunchHistory).toHaveBeenCalledWith({
         campaignId: "campaign-holdings-202605",
         campaignVersion: "2026.05",
+        limit: 10,
+        offset: 0,
       }),
     );
 
     const table = screen.getByRole("table", { name: "DPM campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
-    expect(within(table).getByText("Replay preserved")).toBeInTheDocument();
-    expect(within(table).getByText("campaign_definition_launch_replayed")).toBeInTheDocument();
+    expect(within(table).getByText("2026-05-10T00:00:00Z")).toBeInTheDocument();
     expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(
       within(table).getByText("campaign-launch:campaign-holdings-202605:2026.05:abc"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "NO_MAKER_CHECKER_WORKFLOW, NO_TRADE_APPROVAL, NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLaunchHistory).toHaveBeenLastCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+        limit: 10,
+        offset: 10,
+      }),
+    );
     expect(screen.queryByText("corr-campaign-launch-history")).not.toBeInTheDocument();
+  });
+
+  it("renders an empty campaign launch-history page without execution claims", async () => {
+    vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValueOnce({
+      ...campaignLaunchHistoryResponse,
+      data: {
+        ...campaignLaunchHistoryResponse.data,
+        items: [],
+        count: 0,
+        total_count: 0,
+        operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+      },
+    });
+
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open History" }));
+
+    expect(await screen.findByText("No launch records")).toBeInTheDocument();
+    expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
   it("enables campaign launch only after Manage launch readiness is ready", async () => {

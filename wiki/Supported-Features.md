@@ -68,9 +68,11 @@ Implemented:
 9. opens read-only campaign lifecycle evidence through Gateway for a selected campaign definition
    without inferring lifecycle state, recalculating membership, or operating retire/supersede
    commands locally,
-10. opens append-only campaign launch history through Gateway and displays Manage-recorded wave id,
-   actor, requested as-of date, correlation id, and idempotency key without recomputing launch
-   state, membership, readiness, or idempotency,
+10. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
+   displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+   correlation id, idempotency key, page counts, and operating boundaries without recomputing launch
+   state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
+   routing, fills, settlement, or OMS execution,
 11. checks campaign launch-package readiness through Gateway and enables launch only when Manage
    returns `READY`, preserving durable wave and replay posture without recomputing membership,
    readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
