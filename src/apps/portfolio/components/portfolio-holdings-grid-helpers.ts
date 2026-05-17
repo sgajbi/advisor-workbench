@@ -1,0 +1,175 @@
+import type { PortfolioPositionView } from "../types";
+import { formatStatus } from "../formatters";
+
+export type HoldingsColumnKey =
+  | "instrument"
+  | "assetClass"
+  | "quantity"
+  | "price"
+  | "marketValue"
+  | "costBasis"
+  | "weight"
+  | "upl"
+  | "currency"
+  | "status"
+  | "sector"
+  | "heldSince"
+  | "isin";
+
+export type HoldingsRow = {
+  securityId: string;
+  instrument: string;
+  assetClass: string;
+  quantity: number;
+  price: number | null;
+  marketValue: number | null;
+  costBasis: number | null;
+  weight: number | null;
+  upl: number | null;
+  currency: string;
+  status?: string | null;
+  sector: string;
+  heldSince: string | null;
+  isin: string | null;
+  raw: PortfolioPositionView;
+};
+
+export const DEFAULT_HOLDINGS_COLUMN_VISIBILITY: Record<HoldingsColumnKey, boolean> = {
+  instrument: true,
+  assetClass: true,
+  quantity: true,
+  price: true,
+  marketValue: true,
+  costBasis: true,
+  weight: true,
+  upl: true,
+  currency: true,
+  status: true,
+  sector: false,
+  heldSince: false,
+  isin: false,
+};
+
+export const HOLDINGS_COLUMN_LABELS: Record<HoldingsColumnKey, string> = {
+  instrument: "Instrument",
+  assetClass: "Asset Class",
+  quantity: "Quantity",
+  price: "Price",
+  marketValue: "Market Value",
+  costBasis: "Cost Basis",
+  weight: "Weight",
+  upl: "Unrealized P&L",
+  currency: "Currency",
+  status: "Status",
+  sector: "Sector",
+  heldSince: "Held Since",
+  isin: "ISIN",
+};
+
+export function buildDefaultHoldingsColumnVisibility(
+  columnMode: "essential" | "expanded",
+): Record<HoldingsColumnKey, boolean> {
+  return columnMode === "essential"
+    ? { ...DEFAULT_HOLDINGS_COLUMN_VISIBILITY, sector: false, heldSince: false, isin: false }
+    : { ...DEFAULT_HOLDINGS_COLUMN_VISIBILITY, sector: true, heldSince: true };
+}
+
+export function buildExpandedHoldingsColumnVisibility(): Record<HoldingsColumnKey, boolean> {
+  return {
+    ...DEFAULT_HOLDINGS_COLUMN_VISIBILITY,
+    sector: true,
+    heldSince: true,
+    isin: true,
+  };
+}
+
+export function buildHoldingsRows(
+  positions: PortfolioPositionView[],
+  baseCurrency: string,
+): HoldingsRow[] {
+  return positions.map((position) => ({
+    securityId: position.security_id,
+    instrument: position.instrument_name,
+    assetClass: formatStatus(position.asset_class),
+    quantity: position.quantity,
+    price: position.market_price ?? null,
+    marketValue: position.market_value_base ?? null,
+    costBasis: position.cost_basis_base ?? null,
+    weight: position.weight_pct ?? null,
+    upl: position.unrealized_gain_loss_base ?? null,
+    currency: position.currency ?? baseCurrency,
+    status: position.reprocessing_status ?? null,
+    sector: formatStatus(position.sector),
+    heldSince: position.held_since_date ?? null,
+    isin: position.isin ?? null,
+    raw: position,
+  }));
+}
+
+export function countUnpricedHoldings(positions: PortfolioPositionView[]): number {
+  return positions.filter(
+    (position) => position.market_price == null || position.market_value_base == null,
+  ).length;
+}
+
+export function sumHoldingsMarketValue(rows: HoldingsRow[]): number {
+  return rows.reduce((total, row) => total + (row.marketValue ?? 0), 0);
+}
+
+export function buildHoldingsExportRows(
+  rows: HoldingsRow[],
+  visibility: Record<HoldingsColumnKey, boolean>,
+  baseCurrency: string,
+): Record<string, string | number>[] {
+  const visibleColumns = (Object.keys(HOLDINGS_COLUMN_LABELS) as HoldingsColumnKey[]).filter(
+    (key) => visibility[key],
+  );
+
+  return rows.map((row) => {
+    const output: Record<string, string | number> = {};
+    visibleColumns.forEach((key) => {
+      switch (key) {
+        case "instrument":
+          output["Instrument"] = row.instrument;
+          break;
+        case "assetClass":
+          output["Asset Class"] = row.assetClass;
+          break;
+        case "quantity":
+          output["Quantity"] = row.quantity;
+          break;
+        case "price":
+          output["Price"] = row.price ?? "";
+          break;
+        case "marketValue":
+          output[`Market Value (${baseCurrency})`] = row.marketValue ?? "";
+          break;
+        case "costBasis":
+          output[`Cost Basis (${baseCurrency})`] = row.costBasis ?? "";
+          break;
+        case "weight":
+          output["Weight %"] = row.weight ?? "";
+          break;
+        case "upl":
+          output[`Unrealized P&L (${baseCurrency})`] = row.upl ?? "";
+          break;
+        case "currency":
+          output["Currency"] = row.currency;
+          break;
+        case "status":
+          output["Status"] = row.status ? formatStatus(row.status) : "Current";
+          break;
+        case "sector":
+          output["Sector"] = row.sector;
+          break;
+        case "heldSince":
+          output["Held Since"] = row.heldSince ?? "";
+          break;
+        case "isin":
+          output["ISIN"] = row.isin ?? "";
+          break;
+      }
+    });
+    return output;
+  });
+}
