@@ -31,6 +31,14 @@ import {
   formatBusinessReason,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
+import {
+  buildPmQualityActionError,
+  buildPmQualityBlockedActionError,
+  buildPmQualityFairnessCreateEvidence,
+  readPmQualityFairnessAnalysisId,
+  type PmQualityActionError,
+  type PmQualityFairnessCreateEvidence,
+} from "@/features/workbench/pm-operating-quality-actions";
 
 type Props = {
   policies: DpmPmOperatingQualityGatewayResponse | null;
@@ -41,20 +49,6 @@ type Props = {
   scoreRunsError?: string | null;
   fairnessAnalysesError?: string | null;
   fairnessAnalysisDetailError?: string | null;
-};
-
-type PmQualityActionError = {
-  body: string;
-  status: string;
-  statusClass: string;
-  source: string;
-};
-
-type FairnessCreateEvidence = {
-  fairnessAnalysisId: string;
-  correlationId: string;
-  sourceService: string;
-  upstreamStatus: string;
 };
 
 function statePanelCopy(state: PmOperatingQualityPanelState) {
@@ -98,43 +92,6 @@ function formatReasonCodeList(value: string): string {
     .join(", ");
 }
 
-function buildActionError(error: unknown, fallback: string): PmQualityActionError {
-  const message = error instanceof Error ? error.message : fallback;
-  const status = resolveErrorStatus(message);
-  return {
-    body: message,
-    status: status ?? "N/A",
-    statusClass: status ? classifyStatus(status) : "unknown",
-    source: "Gateway PM operating quality route",
-  };
-}
-
-function buildBlockedActionError(message: string): PmQualityActionError {
-  return {
-    body: message,
-    status: "N/A",
-    statusClass: "blocked",
-    source: "Manage action register via Gateway supportability",
-  };
-}
-
-function resolveErrorStatus(message: string): string | null {
-  return message.match(/\((\d{3})\)$/)?.[1] ?? null;
-}
-
-function classifyStatus(status: string): string {
-  if (status === "401" || status === "403") {
-    return "permission blocked";
-  }
-  if (status === "404" || status === "409" || status === "422") {
-    return "business blocked";
-  }
-  if (status.startsWith("5")) {
-    return "upstream unavailable";
-  }
-  return "request failed";
-}
-
 export default function PmOperatingQualityPanel({
   policies,
   scoreRuns,
@@ -152,7 +109,7 @@ export default function PmOperatingQualityPanel({
   const [createdFairnessAnalysisResponse, setCreatedFairnessAnalysisResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [fairnessCreateEvidence, setFairnessCreateEvidence] =
-    useState<FairnessCreateEvidence | null>(null);
+    useState<PmQualityFairnessCreateEvidence | null>(null);
   const [summaryResponse, setSummaryResponse] =
     useState<DpmPmOperatingQualitySummaryResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
@@ -187,7 +144,7 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.scoreRunPreviewReadinessState !== "READY") {
-      setActionError(buildBlockedActionError(model.scoreRunPreviewReadiness));
+      setActionError(buildPmQualityBlockedActionError(model.scoreRunPreviewReadiness));
       return;
     }
     setPendingAction(true);
@@ -201,7 +158,7 @@ export default function PmOperatingQualityPanel({
       setPreviewResponse(response);
       setActionMessage("Preview returned Manage operating-quality evidence.");
     } catch (error) {
-      setActionError(buildActionError(error, "PM operating quality preview failed"));
+      setActionError(buildPmQualityActionError(error, "PM operating quality preview failed"));
     } finally {
       setPendingAction(false);
     }
@@ -212,12 +169,12 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.fairnessPreviewReadinessState !== "READY") {
-      setActionError(buildBlockedActionError(model.fairnessPreviewReadiness));
+      setActionError(buildPmQualityBlockedActionError(model.fairnessPreviewReadiness));
       return;
     }
     if (model.policyId === "N/A" || model.policyVersion === "N/A") {
       setActionError(
-        buildBlockedActionError(
+        buildPmQualityBlockedActionError(
           "PM operating quality policy id/version is required for fairness preview."
         )
       );
@@ -237,7 +194,7 @@ export default function PmOperatingQualityPanel({
       setActionMessage("Fairness preview returned Manage segment evidence.");
     } catch (error) {
       setActionError(
-        buildActionError(error, "PM operating quality fairness preview failed")
+        buildPmQualityActionError(error, "PM operating quality fairness preview failed")
       );
     } finally {
       setPendingFairnessAction(false);
@@ -249,12 +206,12 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.fairnessPreviewReadinessState !== "READY") {
-      setActionError(buildBlockedActionError(model.fairnessPreviewReadiness));
+      setActionError(buildPmQualityBlockedActionError(model.fairnessPreviewReadiness));
       return;
     }
     if (model.policyId === "N/A" || model.policyVersion === "N/A") {
       setActionError(
-        buildBlockedActionError(
+        buildPmQualityBlockedActionError(
           "PM operating quality policy id/version is required for fairness analysis persistence."
         )
       );
@@ -271,8 +228,8 @@ export default function PmOperatingQualityPanel({
         segments: model.fairnessSegmentRequests,
       });
       setCreatedFairnessAnalysisResponse(response);
-      setFairnessCreateEvidence(buildFairnessCreateEvidence(response));
-      const fairnessAnalysisId = readFairnessAnalysisId(response);
+      setFairnessCreateEvidence(buildPmQualityFairnessCreateEvidence(response));
+      const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
       if (fairnessAnalysisId) {
         const detail = await getDpmPmOperatingQualityFairnessAnalysis(
           fairnessAnalysisId,
@@ -283,7 +240,10 @@ export default function PmOperatingQualityPanel({
       setActionMessage("Persisted fairness analysis returned Manage evidence.");
     } catch (error) {
       setActionError(
-        buildActionError(error, "PM operating quality fairness analysis persistence failed")
+        buildPmQualityActionError(
+          error,
+          "PM operating quality fairness analysis persistence failed"
+        )
       );
     } finally {
       setPendingFairnessCreateAction(false);
@@ -295,7 +255,7 @@ export default function PmOperatingQualityPanel({
       return;
     }
     if (model.summaryRequestReadinessState !== "READY" || !model.selectedScoreRun) {
-      setActionError(buildBlockedActionError(model.summaryRequestReadiness));
+      setActionError(buildPmQualityBlockedActionError(model.summaryRequestReadiness));
       return;
     }
     setPendingSummaryAction(true);
@@ -309,7 +269,7 @@ export default function PmOperatingQualityPanel({
       setActionMessage("Support summary returned review-required PM quality evidence.");
     } catch (error) {
       setActionError(
-        buildActionError(error, "PM operating quality support summary request failed")
+        buildPmQualityActionError(error, "PM operating quality support summary request failed")
       );
     } finally {
       setPendingSummaryAction(false);
@@ -710,31 +670,4 @@ export default function PmOperatingQualityPanel({
       />
     </SectionBlock>
   );
-}
-
-function readFairnessAnalysisId(response: DpmPmOperatingQualityGatewayResponse): string | null {
-  if (response.supportability.fairness_analysis_id) {
-    return response.supportability.fairness_analysis_id;
-  }
-  const data = response.data;
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    return null;
-  }
-  const fairnessAnalysis = (data as Record<string, unknown>).fairness_analysis;
-  if (!fairnessAnalysis || typeof fairnessAnalysis !== "object" || Array.isArray(fairnessAnalysis)) {
-    return null;
-  }
-  const candidate = (fairnessAnalysis as Record<string, unknown>).fairness_analysis_id;
-  return typeof candidate === "string" && candidate ? candidate : null;
-}
-
-function buildFairnessCreateEvidence(
-  response: DpmPmOperatingQualityGatewayResponse
-): FairnessCreateEvidence {
-  return {
-    fairnessAnalysisId: readFairnessAnalysisId(response) ?? "N/A",
-    correlationId: response.correlation_id || "N/A",
-    sourceService: response.supportability.source_service || response.source_service || "N/A",
-    upstreamStatus: String(response.upstream_status ?? "N/A"),
-  };
 }
