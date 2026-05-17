@@ -116,19 +116,28 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   const selectedAlternative = model.selectedAlternative;
   const eligibleInstrumentEvidence =
     model.currencyOverlayEvidence?.eligibleInstrumentEvidence;
+  const executionAcknowledgementEvidence =
+    model.executionAcknowledgementEvidence;
+  const authorityEvidenceState =
+    model.currencyOverlayEvidence?.state ??
+    executionAcknowledgementEvidence?.state ??
+    "UNKNOWN";
   const authorityMissingDataFamilies = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.missingDataFamilies ?? []),
+      ...(executionAcknowledgementEvidence?.missingDataFamilies ?? []),
     ]),
   );
   const authorityBlockedCapabilities = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.blockedCapabilities ?? []),
+      ...(executionAcknowledgementEvidence?.blockedCapabilities ?? []),
     ]),
   );
   const authorityReasonCodes = Array.from(
     new Set([
       ...(model.currencyOverlayEvidence?.reasonCodes ?? []),
+      ...(executionAcknowledgementEvidence?.reasonCodes ?? []),
     ]),
   );
   const canSelectSelectedAlternative = Boolean(
@@ -466,17 +475,15 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     body="Constraint rows are not available for the selected alternative."
                   />
                 )}
-                {model.currencyOverlayEvidence ? (
+                {model.currencyOverlayEvidence || executionAcknowledgementEvidence ? (
                   <section className="construction-currency-overlay-evidence">
                     <div className="construction-currency-overlay-header">
                       <Text as="h3" variant="subsectionTitle">
                         Construction Authority Evidence
                       </Text>
-                      {model.currencyOverlayEvidence ? (
-                        <SemanticBadge tone={badgeTone(model.currencyOverlayEvidence.state)}>
-                          {businessStateLabel(model.currencyOverlayEvidence.state)}
-                        </SemanticBadge>
-                      ) : null}
+                      <SemanticBadge tone={badgeTone(authorityEvidenceState)}>
+                        {businessStateLabel(authorityEvidenceState)}
+                      </SemanticBadge>
                     </div>
                     {model.currencyOverlayEvidence ? (
                       <dl>
@@ -531,6 +538,33 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                           ? eligibleInstrumentEvidence.instruments.map((instrument, index) => (
                               <span key={`${instrument}-${index}`}>
                                 {instrument}
+                              </span>
+                            ))
+                          : null}
+                      </div>
+                    ) : null}
+                    {executionAcknowledgementEvidence ? (
+                      <div className="construction-currency-overlay-list">
+                        <strong>Execution acknowledgement evidence</strong>
+                        <span>
+                          {executionAcknowledgementEvidence.sourceProductName}{" "}
+                          {executionAcknowledgementEvidence.sourceProductVersion}
+                        </span>
+                        <span>
+                          Source id: {executionAcknowledgementEvidence.sourceId}
+                        </span>
+                        <span>
+                          Evidence hash:{" "}
+                          {executionAcknowledgementEvidence.contentHash}
+                        </span>
+                        <span>
+                          Acknowledgement rows:{" "}
+                          {executionAcknowledgementEvidence.acknowledgementCount}
+                        </span>
+                        {executionAcknowledgementEvidence.acknowledgements.length > 0
+                          ? executionAcknowledgementEvidence.acknowledgements.map((acknowledgement, index) => (
+                              <span key={`${acknowledgement}-${index}`}>
+                                {acknowledgement}
                               </span>
                             ))
                           : null}
