@@ -396,12 +396,16 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("hasAcceptedAdvisorBriefReviewPosture");
     expect(browserWorkflowModule).toContain("Supportability ACTION REQUIRED");
     expect(browserWorkflowModule).toContain("Supportability READY");
+    expect(browserWorkflowModule).toContain('"Portfolio Review"');
+    expect(browserWorkflowModule).toContain('"Portfolio decision review"');
+    expect(browserWorkflowModule).toContain('"Performance Snapshot" })).toHaveCount(0)');
+    expect(browserWorkflowModule).toContain('"Summary" })).toHaveCount(0)');
+    expect(browserWorkflowModule).toContain('"Detailed" })).toHaveCount(0)');
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Post-Trade Outcome Review"');
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Proof-Pack Evidence"');
-    expect(browserWorkflowModule).not.toContain('getByRole("tab", { name: "Summary"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(browserWorkflowModule).toContain("panel: panelId");

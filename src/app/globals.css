@@ -2324,6 +2324,14 @@ a:hover {
   cursor: not-allowed;
 }
 
+.workspace-tab-nav-link-disabled.workspace-tab-nav-link-active {
+  opacity: 1;
+  border-color: rgba(23, 32, 43, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--brand-strong);
+  box-shadow: 0 1px 2px rgba(23, 32, 43, 0.06);
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -14948,21 +14956,25 @@ a:hover {
 }
 
 .portfolio-page .portfolio-summary-band {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
   border-top: 1px solid var(--portfolio-ui-border);
 }
 
 .portfolio-page .portfolio-summary-band-item {
-  padding: 0.85rem 1rem 0 0;
+  min-width: 0;
+  padding: 0.85rem 0.75rem 0 0;
 }
 
 .portfolio-page .portfolio-summary-band-item strong {
   color: #06111f;
-  font-size: 1.45rem;
+  font-size: 1.16rem;
   font-weight: 735;
-  line-height: 1.75rem;
+  line-height: 1.35rem;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .portfolio-page .portfolio-summary-band-item small,
@@ -15269,6 +15281,10 @@ a:hover {
 .portfolio-page .portfolio-evidence-card .portfolio-workflow-entry-list .action-link {
   min-height: 28px;
   padding-inline: 0.55rem;
+}
+
+.portfolio-page .portfolio-evidence-card .portfolio-workflow-entry-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .portfolio-page .portfolio-context-card,
@@ -16526,6 +16542,31 @@ a:hover {
 
 .portfolio-page .portfolio-workspace-toolbar-period-control .workbench-segmented-control-button:nth-child(7) {
   grid-column: auto;
+}
+
+.app-page-shell.portfolio-page .portfolio-workspace-toolbar-period-control.workbench-segmented-control {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(3.25rem, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+
+.app-page-shell.portfolio-page .portfolio-workspace-toolbar-period-control .workbench-segmented-control-button {
+  justify-content: center;
+  min-width: 0;
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+
+.app-page-shell.portfolio-page .portfolio-workspace-toolbar-sidecar {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "period"
+    "actions";
+}
+
+.app-page-shell.portfolio-page .portfolio-workspace-toolbar-actions {
+  justify-self: start;
 }
 
 .portfolio-page .portfolio-decision-brief {

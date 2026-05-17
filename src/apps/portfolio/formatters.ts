@@ -11,12 +11,13 @@ export function formatPct(value: number | null | undefined): string {
 
 export function formatCurrency(
   value: number | null | undefined,
-  currency: string | undefined
+  currency: string | undefined,
+  maximumFractionDigits = 2
 ): string {
   return formatCurrencyValue(value, {
     currency: currency ?? "USD",
     display: "code",
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   });
 }
 
