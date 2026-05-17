@@ -417,6 +417,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open History" }));
 
     expect(await screen.findByText("No launch records")).toBeInTheDocument();
+    expect(screen.getByText("0 of 0")).toBeInTheDocument();
+    expect(screen.queryByText("1-0 of 0")).not.toBeInTheDocument();
     expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });

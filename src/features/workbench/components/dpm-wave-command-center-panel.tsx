@@ -883,9 +883,13 @@ function CampaignDefinitionsSection({
         <div className="rebalance-summary-strip" aria-label="Campaign launch history boundaries">
           <SummaryCell
             label="Page"
-            value={`${launchHistoryPage.offset + 1}-${launchHistoryPage.offset + launchHistoryPage.count} of ${
-              launchHistoryPage.totalCount
-            }`}
+            value={
+              launchHistoryPage.count > 0
+                ? `${launchHistoryPage.offset + 1}-${launchHistoryPage.offset + launchHistoryPage.count} of ${
+                    launchHistoryPage.totalCount
+                  }`
+                : `0 of ${launchHistoryPage.totalCount}`
+            }
           />
           <SummaryCell label="Page Size" value={String(launchHistoryPage.limit || CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)} />
           <SummaryCell
