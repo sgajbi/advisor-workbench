@@ -64,14 +64,36 @@ const readyResponse: DpmConstructionGatewayResponse = {
                 "sha256:external-hedge-policy-content",
               external_hedge_policy_rule_count: 0,
               external_hedge_policy_rules: [],
-              missing_data_families: ["external_hedge_policy"],
+              external_eligible_hedge_instrument_source_product_name:
+                "ExternalEligibleHedgeInstrument",
+              external_eligible_hedge_instrument_source_product_version: "v1",
+              external_eligible_hedge_instrument_source_id:
+                "sha256:external-eligible-hedge-instrument",
+              external_eligible_hedge_instrument_content_hash:
+                "sha256:external-eligible-hedge-instrument-content",
+              external_eligible_hedge_instrument_count: 0,
+              external_eligible_hedge_instruments: [],
+              missing_data_families: [
+                "external_hedge_policy",
+                "external_eligible_hedge_instrument",
+              ],
               blocked_capabilities: [
                 "hedge_policy_approval",
+                "eligible_instrument_selection",
+                "suitability_approval",
+                "product_recommendation",
                 "treasury_instruction",
                 "counterparty_selection",
+                "best_execution",
                 "oms_acknowledgement",
+                "fills",
+                "settlement",
+                "autonomous_treasury_action",
               ],
-              reason_codes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+              reason_codes: [
+                "EXTERNAL_HEDGE_POLICY_FAIL_CLOSED",
+                "EXTERNAL_ELIGIBLE_HEDGE_INSTRUMENTS_FAIL_CLOSED",
+              ],
             },
           },
           method_plan: { reason_codes: ["TARGET_METHOD_COMPARISON_AVAILABLE"] },
@@ -183,14 +205,35 @@ describe("construction alternatives view model", () => {
       contentHash: "sha256:external-hedge-policy-content",
       ruleCount: "0",
       rules: [],
-      missingDataFamilies: ["external_hedge_policy"],
+      eligibleInstrumentEvidence: {
+        sourceProductName: "ExternalEligibleHedgeInstrument",
+        sourceProductVersion: "v1",
+        sourceId: "sha256:external-eligible-hedge-instrument",
+        contentHash: "sha256:external-eligible-hedge-instrument-content",
+        instrumentCount: "0",
+        instruments: [],
+      },
+      missingDataFamilies: [
+        "external_hedge_policy",
+        "external_eligible_hedge_instrument",
+      ],
       blockedCapabilities: [
         "hedge_policy_approval",
+        "eligible_instrument_selection",
+        "suitability_approval",
+        "product_recommendation",
         "treasury_instruction",
         "counterparty_selection",
+        "best_execution",
         "oms_acknowledgement",
+        "fills",
+        "settlement",
+        "autonomous_treasury_action",
       ],
-      reasonCodes: ["EXTERNAL_HEDGE_POLICY_FAIL_CLOSED"],
+      reasonCodes: [
+        "EXTERNAL_HEDGE_POLICY_FAIL_CLOSED",
+        "EXTERNAL_ELIGIBLE_HEDGE_INSTRUMENTS_FAIL_CLOSED",
+      ],
     });
   });
 
