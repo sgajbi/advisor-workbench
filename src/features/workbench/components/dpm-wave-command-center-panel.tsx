@@ -11,6 +11,7 @@ import {
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
@@ -29,6 +30,7 @@ import type {
 import {
   buildDpmWaveCommandCenterModel,
   type DpmCampaignLaunchPosture,
+  type DpmCampaignLaunchHistoryRow,
   type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
@@ -132,15 +134,19 @@ export default function DpmWaveCommandCenterPanel({
   const [proofPackResponse, setProofPackResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
+  const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
+    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchPackageResponse, setCampaignLaunchPackageResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchResponse, setCampaignLaunchResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] = useState<string | null>(null);
+  const [pendingCampaignLaunchHistoryKey, setPendingCampaignLaunchHistoryKey] = useState<string | null>(null);
   const [pendingCampaignLaunchPackageKey, setPendingCampaignLaunchPackageKey] = useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
+  const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] = useState<string | null>(null);
   const [campaignLaunchError, setCampaignLaunchError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
@@ -154,6 +160,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignDefinitions,
     campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
+    campaignLaunchHistory: campaignLaunchHistoryResponse,
     campaignLaunchPackage: campaignLaunchPackageResponse,
     campaignLaunchResponse,
   });
@@ -311,6 +318,29 @@ export default function DpmWaveCommandCenterPanel({
     }
   }
 
+  async function loadCampaignLaunchHistory(row: DpmCampaignDefinitionRow) {
+    if (pendingCampaignLaunchHistoryKey) {
+      return;
+    }
+    setSelectedCampaignKey(row.key);
+    setPendingCampaignLaunchHistoryKey(row.key);
+    setCampaignLaunchHistoryError(null);
+    setCampaignLaunchHistoryResponse(null);
+    try {
+      const response = await getDpmCampaignDefinitionLaunchHistory({
+        campaignId: row.campaignId,
+        campaignVersion: row.campaignVersion,
+      });
+      setCampaignLaunchHistoryResponse(response);
+    } catch (error) {
+      setCampaignLaunchHistoryError(
+        error instanceof Error ? error.message : "Campaign launch history could not be loaded."
+      );
+    } finally {
+      setPendingCampaignLaunchHistoryKey(null);
+    }
+  }
+
   async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
     if (pendingCampaignLaunchPackageKey || pendingCampaignLaunchKey) {
       return;
@@ -403,16 +433,20 @@ export default function DpmWaveCommandCenterPanel({
       <CampaignDefinitionsSection
         rows={model.campaignRows}
         lifecycleRows={model.campaignLifecycleRows}
+        launchHistoryRows={model.campaignLaunchHistoryRows}
         launchPosture={model.campaignLaunchPosture}
         lifecycleError={campaignLifecycleError}
+        launchHistoryError={campaignLaunchHistoryError}
         launchError={campaignLaunchError}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
+        pendingLaunchHistoryKey={pendingCampaignLaunchHistoryKey}
         pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
         pendingLaunchKey={pendingCampaignLaunchKey}
         selectedCampaign={selectedCampaign}
         selectedCampaignKey={selectedCampaignKey}
         errorMessage={campaignDefinitionsError ?? campaignDiscoveryError}
         onLoadLifecycle={loadCampaignLifecycle}
+        onLoadLaunchHistory={loadCampaignLaunchHistory}
         onCheckLaunchReadiness={checkCampaignLaunchReadiness}
         onLaunchCampaign={launchCampaign}
       />
@@ -596,31 +630,39 @@ export default function DpmWaveCommandCenterPanel({
 function CampaignDefinitionsSection({
   rows,
   lifecycleRows,
+  launchHistoryRows,
   launchPosture,
   lifecycleError,
+  launchHistoryError,
   launchError,
   pendingLifecycleKey,
+  pendingLaunchHistoryKey,
   pendingLaunchPackageKey,
   pendingLaunchKey,
   selectedCampaign,
   selectedCampaignKey,
   errorMessage,
   onLoadLifecycle,
+  onLoadLaunchHistory,
   onCheckLaunchReadiness,
   onLaunchCampaign,
 }: {
   rows: DpmCampaignDefinitionRow[];
   lifecycleRows: DpmCampaignLifecycleEventRow[];
+  launchHistoryRows: DpmCampaignLaunchHistoryRow[];
   launchPosture: DpmCampaignLaunchPosture;
   lifecycleError?: string | null;
+  launchHistoryError?: string | null;
   launchError?: string | null;
   pendingLifecycleKey?: string | null;
+  pendingLaunchHistoryKey?: string | null;
   pendingLaunchPackageKey?: string | null;
   pendingLaunchKey?: string | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
   selectedCampaignKey?: string | null;
   errorMessage?: string | null;
   onLoadLifecycle: (row: DpmCampaignDefinitionRow) => void;
+  onLoadLaunchHistory: (row: DpmCampaignDefinitionRow) => void;
   onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
   onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
 }) {
@@ -661,6 +703,7 @@ function CampaignDefinitionsSection({
           { key: "purpose", label: "Purpose" },
           { key: "source", label: "Source Posture" },
           { key: "evidence", label: "Evidence" },
+          { key: "history", label: "Launch History" },
           { key: "launch", label: "Launch" },
         ]}
         rows={rows.map((row) => ({
@@ -694,6 +737,14 @@ function CampaignDefinitionsSection({
               disabled={Boolean(pendingLifecycleKey)}
             >
               {pendingLifecycleKey === row.key ? "Loading" : "Open Evidence"}
+            </ActionButton>,
+            <ActionButton
+              key={`${row.key}-launch-history`}
+              priority="secondary"
+              onClick={() => onLoadLaunchHistory(row)}
+              disabled={Boolean(pendingLaunchHistoryKey)}
+            >
+              {pendingLaunchHistoryKey === row.key ? "Loading" : "Open History"}
             </ActionButton>,
             <ActionButton
               key={`${row.key}-launch-readiness`}
@@ -740,8 +791,12 @@ function CampaignDefinitionsSection({
             { key: "event", label: "Lifecycle Event" },
             { key: "occurred", label: "Recorded" },
             { key: "actor", label: "Recorded By" },
+            { key: "wave", label: "Wave" },
+            { key: "reviewDate", label: "Review Date" },
             { key: "status", label: "Status" },
             { key: "reason", label: "Reason" },
+            { key: "correlation", label: "Correlation" },
+            { key: "idempotency", label: "Idempotency" },
           ]}
           rows={lifecycleRows.map((row) => ({
             key: row.key,
@@ -749,15 +804,72 @@ function CampaignDefinitionsSection({
               row.eventType,
               row.occurredAt,
               row.actor,
+              row.waveId,
+              row.requestedAsOfDate,
               <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
                 {businessStateLabel(row.status)}
               </SemanticBadge>,
               row.reason,
+              row.correlationId,
+              row.idempotencyKey,
             ],
           }))}
           emptyState={{
             title: "No lifecycle evidence loaded",
             body: "Open campaign evidence to review Manage-recorded lifecycle events.",
+          }}
+        />
+      </div>
+      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-history-title">
+        <div className="rebalance-table-heading">
+          <div>
+            <h4 id="campaign-launch-history-title">Campaign Launch History</h4>
+            <p>
+              {selectedCampaign
+                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
+                : "Select a campaign definition to inspect append-only launch history."}
+            </p>
+          </div>
+          <SemanticBadge tone={launchHistoryError ? "warn" : launchHistoryRows.length ? "success" : "default"}>
+            {launchHistoryError ? "Needs attention" : launchHistoryRows.length ? "Loaded" : "Not loaded"}
+          </SemanticBadge>
+        </div>
+        {launchHistoryError ? (
+          <ScreenStatePanel
+            kind="partial"
+            surface="portfolio"
+            title="Campaign launch history needs attention"
+            body={launchHistoryError}
+          />
+        ) : null}
+        <AnalyticsTable
+          ariaLabel="DPM campaign launch history"
+          variant="portfolio"
+          density="compact"
+          columns={[
+            { key: "wave", label: "Wave" },
+            { key: "actor", label: "Launched By" },
+            { key: "reviewDate", label: "Review Date" },
+            { key: "replay", label: "Replay Posture" },
+            { key: "reason", label: "Reason" },
+            { key: "correlation", label: "Correlation" },
+            { key: "idempotency", label: "Idempotency" },
+          ]}
+          rows={launchHistoryRows.map((row) => ({
+            key: row.key,
+            cells: [
+              row.waveId,
+              row.actor,
+              row.requestedAsOfDate,
+              row.replayPosture,
+              row.reason,
+              row.correlationId,
+              row.idempotencyKey,
+            ],
+          }))}
+          emptyState={{
+            title: "No launch history loaded",
+            body: "Open launch history to review Manage-recorded launch attempts and replay posture.",
           }}
         />
       </div>

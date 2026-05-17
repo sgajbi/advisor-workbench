@@ -63,7 +63,11 @@ promote dormant labels into product ownership just because historical route file
   selected campaign lifecycle evidence from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
   as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
-  supersede commands locally. It checks Manage-owned campaign launch readiness through
+  supersede commands locally. It also opens append-only launch history from
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`
+  and displays Manage-recorded wave id, actor, requested as-of date, correlation id, and
+  idempotency key without recomputing launch state, membership, readiness, or idempotency. It checks
+  Manage-owned campaign launch readiness through
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
   and exposes
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`

@@ -9,6 +9,7 @@ import {
   createSandboxSession,
   generateDpmConstructionAlternatives,
   generateDpmProofPackFromRun,
+  getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCommandCenter,
@@ -2285,35 +2286,65 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("corr-campaign-discovery");
   });
 
-  it("loads DPM campaign-definition lifecycle evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
+  it("loads DPM campaign-definition lifecycle and launch-history evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            correlation_id: "corr-campaign-lifecycle",
-            contract_version: "v1",
-            source_service: "lotus-manage",
-            upstream_status: 200,
-            data: {
-              campaign_id: "campaign-holdings-202605",
-              campaign_version: "2026.05",
-              events: [
-                {
-                  event_type: "CAMPAIGN_DEFINITION_CREATED",
-                  actor_id: "pm_sg_1",
-                  occurred_at: "2026-05-14T09:30:00Z",
-                  status: "RECORDED",
-                },
-              ],
-            },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
-      )
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = input.toString();
+        const payload = url.includes("/launch-history")
+          ? {
+              correlation_id: "corr-campaign-launch-history",
+              contract_version: "v1",
+              source_service: "lotus-manage",
+              upstream_status: 200,
+              data: {
+                campaign_id: "campaign-holdings-202605",
+                campaign_version: "2026.05",
+                launch_history: [
+                  {
+                    wave_id: "dwv_campaign_launch_001",
+                    actor_id: "pm_sg_1",
+                    requested_as_of_date: "2026-05-16",
+                    correlation_id: "corr-launch-audit",
+                    idempotency_key: "idem-launch-audit",
+                  },
+                ],
+              },
+            }
+          : {
+              correlation_id: "corr-campaign-lifecycle",
+              contract_version: "v1",
+              source_service: "lotus-manage",
+              upstream_status: 200,
+              data: {
+                campaign_id: "campaign-holdings-202605",
+                campaign_version: "2026.05",
+                events: [
+                  {
+                    event_type: "LAUNCHED",
+                    actor_id: "pm_sg_1",
+                    occurred_at: "2026-05-14T09:30:00Z",
+                    status: "RECORDED",
+                    wave_id: "dwv_campaign_launch_001",
+                    requested_as_of_date: "2026-05-16",
+                    correlation_id: "corr-launch-audit",
+                    idempotency_key: "idem-launch-audit",
+                  },
+                ],
+              },
+            };
+        return new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
     );
 
     await getDpmCampaignDefinitionLifecycleEvents({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    await getDpmCampaignDefinitionLaunchHistory({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
     });
@@ -2322,10 +2353,17 @@ describe("workbench api", () => {
     expect(requestedUrl).toContain(
       "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/lifecycle-events"
     );
+    const launchHistoryUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][0].toString();
+    expect(launchHistoryUrl).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/launch-history"
+    );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-campaign-lifecycle");
+    expect(metricEventsJson).toContain("wave-campaign-launch-history");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign-lifecycle");
+    expect(metricEventsJson).not.toContain("corr-campaign-launch-history");
+    expect(metricEventsJson).not.toContain("corr-launch-audit");
   });
 
   it("checks and launches DPM campaign definitions through the Gateway BFF", async () => {
