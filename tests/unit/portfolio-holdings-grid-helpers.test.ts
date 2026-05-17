@@ -1,0 +1,118 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  buildDefaultHoldingsColumnVisibility,
+  buildExpandedHoldingsColumnVisibility,
+  buildHoldingsExportRows,
+  buildHoldingsRows,
+  countUnpricedHoldings,
+  sumHoldingsMarketValue,
+} from "../../src/apps/portfolio/components/portfolio-holdings-grid-helpers";
+import type { PortfolioPositionView } from "../../src/apps/portfolio/types";
+
+const positions: PortfolioPositionView[] = [
+  {
+    security_id: "EQ_1",
+    instrument_name: "Apple Inc.",
+    asset_class: "EQUITY",
+    quantity: 700,
+    market_price: 210,
+    market_value_base: 147000,
+    cost_basis_base: 135000,
+    unrealized_gain_loss_base: 12000,
+    weight_pct: 14.67,
+    currency: "USD",
+    sector: "TECHNOLOGY",
+    held_since_date: "2026-03-10",
+    reprocessing_status: "STALE_PRICE",
+    isin: "US0378331005",
+  },
+  {
+    security_id: "FI_1",
+    instrument_name: "United States Treasury 3.875% 2030",
+    asset_class: "FIXED_INCOME",
+    quantity: 100,
+    market_price: null,
+    market_value_base: null,
+    cost_basis_base: 98000,
+    unrealized_gain_loss_base: null,
+    weight_pct: null,
+    currency: null,
+    sector: null,
+    held_since_date: null,
+    reprocessing_status: null,
+    isin: null,
+  },
+];
+
+describe("portfolio holdings grid helpers", () => {
+  it("builds holdings rows with front-office display values and base-currency fallback", () => {
+    const rows = buildHoldingsRows(positions, "USD");
+
+    expect(rows[0]).toMatchObject({
+      securityId: "EQ_1",
+      instrument: "Apple Inc.",
+      assetClass: "Equity",
+      marketValue: 147000,
+      sector: "Technology",
+      status: "STALE_PRICE",
+      isin: "US0378331005",
+    });
+    expect(rows[1]).toMatchObject({
+      securityId: "FI_1",
+      assetClass: "Fixed Income",
+      currency: "USD",
+      marketValue: null,
+      sector: "N/A",
+      status: null,
+    });
+  });
+
+  it("keeps valuation totals and incomplete pricing posture in pure helpers", () => {
+    const rows = buildHoldingsRows(positions, "USD");
+
+    expect(sumHoldingsMarketValue(rows)).toBe(147000);
+    expect(countUnpricedHoldings(positions)).toBe(1);
+  });
+
+  it("builds holdings export rows from visible column policy", () => {
+    const rows = buildHoldingsRows(positions, "USD");
+    const visibility = {
+      ...buildExpandedHoldingsColumnVisibility(),
+      costBasis: false,
+      isin: false,
+    };
+
+    expect(buildHoldingsExportRows(rows, visibility, "USD")[0]).toEqual({
+      Instrument: "Apple Inc.",
+      "Asset Class": "Equity",
+      Quantity: 700,
+      Price: 210,
+      "Market Value (USD)": 147000,
+      "Weight %": 14.67,
+      "Unrealized P&L (USD)": 12000,
+      Currency: "USD",
+      Status: "Stale Price",
+      Sector: "Technology",
+      "Held Since": "2026-03-10",
+    });
+  });
+
+  it("separates essential and expanded column defaults", () => {
+    expect(buildDefaultHoldingsColumnVisibility("essential")).toMatchObject({
+      sector: false,
+      heldSince: false,
+      isin: false,
+    });
+    expect(buildDefaultHoldingsColumnVisibility("expanded")).toMatchObject({
+      sector: true,
+      heldSince: true,
+      isin: false,
+    });
+    expect(buildExpandedHoldingsColumnVisibility()).toMatchObject({
+      sector: true,
+      heldSince: true,
+      isin: true,
+    });
+  });
+});

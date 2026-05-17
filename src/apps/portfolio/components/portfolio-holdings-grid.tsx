@@ -14,6 +14,17 @@ import * as XLSX from "xlsx";
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
 import {
+  buildDefaultHoldingsColumnVisibility,
+  buildExpandedHoldingsColumnVisibility,
+  buildHoldingsExportRows,
+  buildHoldingsRows,
+  countUnpricedHoldings,
+  HOLDINGS_COLUMN_LABELS,
+  type HoldingsColumnKey,
+  type HoldingsRow,
+  sumHoldingsMarketValue,
+} from "./portfolio-holdings-grid-helpers";
+import {
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
   shouldPinPortfolioGridLeadColumns,
@@ -21,21 +32,6 @@ import {
 import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
-
-type HoldingsColumnKey =
-  | "instrument"
-  | "assetClass"
-  | "quantity"
-  | "price"
-  | "marketValue"
-  | "costBasis"
-  | "weight"
-  | "upl"
-  | "currency"
-  | "status"
-  | "sector"
-  | "heldSince"
-  | "isin";
 
 type HoldingsGridProps = {
   portfolioId: string;
@@ -48,39 +44,7 @@ type HoldingsGridProps = {
   onRowSelect?: (row: HoldingsRow) => void;
 };
 
-export type HoldingsRow = {
-  securityId: string;
-  instrument: string;
-  assetClass: string;
-  quantity: number;
-  price: number | null;
-  marketValue: number | null;
-  costBasis: number | null;
-  weight: number | null;
-  upl: number | null;
-  currency: string;
-  status?: string | null;
-  sector: string;
-  heldSince: string | null;
-  isin: string | null;
-  raw: PortfolioPositionView;
-};
-
-const DEFAULT_COLUMN_VISIBILITY: Record<HoldingsColumnKey, boolean> = {
-  instrument: true,
-  assetClass: true,
-  quantity: true,
-  price: true,
-  marketValue: true,
-  costBasis: true,
-  weight: true,
-  upl: true,
-  currency: true,
-  status: true,
-  sector: false,
-  heldSince: false,
-  isin: false,
-};
+export type { HoldingsRow };
 
 export default function PortfolioHoldingsGrid({
   portfolioId,
@@ -96,36 +60,15 @@ export default function PortfolioHoldingsGrid({
   const [chooserAnchor, setChooserAnchor] = useState<HTMLElement | null>(null);
   const [quickSearch, setQuickSearch] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<Record<HoldingsColumnKey, boolean>>(() =>
-    columnMode === "essential"
-      ? { ...DEFAULT_COLUMN_VISIBILITY, sector: false, heldSince: false, isin: false }
-      : { ...DEFAULT_COLUMN_VISIBILITY, sector: true, heldSince: true }
+    buildDefaultHoldingsColumnVisibility(columnMode)
   );
   const pinImportantColumns = shouldPinPortfolioGridLeadColumns(columnMode);
 
   const rowData = useMemo<HoldingsRow[]>(
-    () =>
-      positions.map((position) => ({
-        securityId: position.security_id,
-        instrument: position.instrument_name,
-        assetClass: formatStatus(position.asset_class),
-        quantity: position.quantity,
-        price: position.market_price ?? null,
-        marketValue: position.market_value_base ?? null,
-        costBasis: position.cost_basis_base ?? null,
-        weight: position.weight_pct ?? null,
-        upl: position.unrealized_gain_loss_base ?? null,
-        currency: position.currency ?? baseCurrency,
-        status: position.reprocessing_status ?? null,
-        sector: formatStatus(position.sector),
-        heldSince: position.held_since_date ?? null,
-        isin: position.isin ?? null,
-        raw: position,
-      })),
+    () => buildHoldingsRows(positions, baseCurrency),
     [baseCurrency, positions]
   );
-  const unpricedCount = positions.filter(
-    (position) => position.market_price == null || position.market_value_base == null
-  ).length;
+  const unpricedCount = useMemo(() => countUnpricedHoldings(positions), [positions]);
 
   const columnDefs = useMemo<ColDef<HoldingsRow>[]>(
     () => [
@@ -252,7 +195,7 @@ export default function PortfolioHoldingsGrid({
       title="Holdings"
       description={`As of ${formatDate(asOfDate)} in ${baseCurrency}`}
       summaryLabel={formatCount(rowData.length, "position")}
-      summaryValue={formatCurrency(sumMarketValue(rowData), baseCurrency)}
+      summaryValue={formatCurrency(sumHoldingsMarketValue(rowData), baseCurrency)}
       searchControl={
         <TextField
           size="small"
@@ -296,14 +239,7 @@ export default function PortfolioHoldingsGrid({
             size="small"
             variant="outlined"
             aria-label="Show expanded holdings columns"
-            onClick={() =>
-              setColumnVisibility({
-                ...DEFAULT_COLUMN_VISIBILITY,
-                sector: true,
-                heldSince: true,
-                isin: true,
-              })
-            }
+            onClick={() => setColumnVisibility(buildExpandedHoldingsColumnVisibility())}
           >
             Expand
           </Button>
@@ -393,22 +329,6 @@ export default function PortfolioHoldingsGrid({
   );
 }
 
-const HOLDINGS_COLUMN_LABELS: Record<HoldingsColumnKey, string> = {
-  instrument: "Instrument",
-  assetClass: "Asset Class",
-  quantity: "Quantity",
-  price: "Price",
-  marketValue: "Market Value",
-  costBasis: "Cost Basis",
-  weight: "Weight",
-  upl: "Unrealized P&L",
-  currency: "Currency",
-  status: "Status",
-  sector: "Sector",
-  heldSince: "Held Since",
-  isin: "ISIN",
-};
-
 function buildHoldingsColumn(
   config: ColDef<HoldingsRow> & { key: HoldingsColumnKey }
 ): ColDef<HoldingsRow> {
@@ -449,10 +369,6 @@ function holdingsStatusCellRenderer(params: ICellRendererParams<HoldingsRow, str
   );
 }
 
-function sumMarketValue(rows: HoldingsRow[]) {
-  return rows.reduce((total, row) => total + (row.marketValue ?? 0), 0);
-}
-
 function toggleHoldingsColumn(
   key: HoldingsColumnKey,
   setColumnVisibility: Dispatch<SetStateAction<Record<HoldingsColumnKey, boolean>>>
@@ -465,56 +381,7 @@ function exportHoldingsXlsx(
   visibility: Record<HoldingsColumnKey, boolean>,
   baseCurrency: string
 ) {
-  const visibleColumns = (Object.keys(HOLDINGS_COLUMN_LABELS) as HoldingsColumnKey[]).filter(
-    (key) => visibility[key]
-  );
-  const exportRows = rows.map((row) => {
-    const output: Record<string, string | number> = {};
-    visibleColumns.forEach((key) => {
-      switch (key) {
-        case "instrument":
-          output["Instrument"] = row.instrument;
-          break;
-        case "assetClass":
-          output["Asset Class"] = row.assetClass;
-          break;
-        case "quantity":
-          output["Quantity"] = row.quantity;
-          break;
-        case "price":
-          output["Price"] = row.price ?? "";
-          break;
-        case "marketValue":
-          output[`Market Value (${baseCurrency})`] = row.marketValue ?? "";
-          break;
-        case "costBasis":
-          output[`Cost Basis (${baseCurrency})`] = row.costBasis ?? "";
-          break;
-        case "weight":
-          output["Weight %"] = row.weight ?? "";
-          break;
-        case "upl":
-          output[`Unrealized P&L (${baseCurrency})`] = row.upl ?? "";
-          break;
-        case "currency":
-          output["Currency"] = row.currency;
-          break;
-        case "status":
-          output["Status"] = row.status ? formatStatus(row.status) : "Current";
-          break;
-        case "sector":
-          output["Sector"] = row.sector;
-          break;
-        case "heldSince":
-          output["Held Since"] = row.heldSince ?? "";
-          break;
-        case "isin":
-          output["ISIN"] = row.isin ?? "";
-          break;
-      }
-    });
-    return output;
-  });
+  const exportRows = buildHoldingsExportRows(rows, visibility, baseCurrency);
 
   const worksheet = XLSX.utils.json_to_sheet(exportRows);
   const workbook = XLSX.utils.book_new();
