@@ -73,7 +73,7 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
   and exposes
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
-  only when the launch package is `READY`, preserving durable wave response and replay posture
+  only when the launch package is `READY`, preserving durable wave response and idempotency evidence
   without recalculating membership or readiness. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and

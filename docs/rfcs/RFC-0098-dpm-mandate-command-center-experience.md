@@ -460,7 +460,7 @@ Workbench must consume these Gateway wave routes when implemented:
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` audit posture for a selected campaign definition |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and replay posture for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and idempotency evidence for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
 
 Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
@@ -485,7 +485,7 @@ or operating retire/supersede commands locally. It checks launch-package readine
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
 and exposes campaign launch through Gateway
 `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
-only when Manage returns `READY`, preserving durable wave response and replay posture without
+only when Manage returns `READY`, preserving durable wave response and idempotency evidence without
 recomputing membership, launch readiness, idempotency, maker-checker workflow, trade approval,
 staging, or OMS execution locally. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,

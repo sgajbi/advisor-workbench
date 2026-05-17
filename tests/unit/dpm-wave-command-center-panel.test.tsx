@@ -241,6 +241,9 @@ const campaignLaunchPackageResponse: DpmCampaignDefinitionGatewayResponse = {
     actor_id: "pm_sg_1",
     launch_state: "READY",
     reason_codes: [],
+    create_headers: {
+      "Idempotency-Key": "campaign-launch:campaign-holdings-202605:2026.05:abc",
+    },
   },
 };
 
@@ -261,7 +264,6 @@ const campaignLaunchResponse: DpmWaveGatewayResponse = {
       trigger_type: "BULK_REVIEW_CAMPAIGN",
     },
     durable: true,
-    idempotent_replay: true,
   },
 };
 
@@ -453,7 +455,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     );
 
     expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
-    expect(screen.getByText("Replay preserved")).toBeInTheDocument();
+    expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
     expect(screen.queryByText("corr-campaign-launch")).not.toBeInTheDocument();
   });
 

@@ -107,7 +107,7 @@ export type DpmCampaignLaunchPosture = {
   requestedAsOfDate: string;
   actor: string;
   launchedWaveId: string;
-  replayPosture: string;
+  idempotencyEvidence: string;
 };
 
 export type DpmWaveCommandCenterPanelModel = {
@@ -250,6 +250,7 @@ function buildCampaignLaunchPosture(
 ): DpmCampaignLaunchPosture {
   const readiness = readRecord(launchPackage?.readiness);
   const createRequest = readRecord(launchPackage?.create_request);
+  const createHeaders = readRecord(launchPackage?.create_headers);
   const wave = readWaveRecord(launchResponse);
   const state = normalizeState(
     readString(launchPackage ?? {}, "launch_state") ||
@@ -259,7 +260,6 @@ function buildCampaignLaunchPosture(
   const reasonCodes = extractStringArray(
     launchPackage?.reason_codes ?? readiness.reason_codes ?? readiness.blocked_reason_codes
   );
-  const idempotentReplay = readValue(launchResponse ?? {}, "idempotent_replay");
   return {
     state,
     canLaunch: state === "READY",
@@ -273,12 +273,11 @@ function buildCampaignLaunchPosture(
       readString(createRequest, "actor_id") ||
       "N/A",
     launchedWaveId: readString(wave ?? {}, "wave_id") || "N/A",
-    replayPosture:
-      idempotentReplay === true
-        ? "Replay preserved"
-        : wave
-          ? "Launch recorded"
-          : "N/A",
+    idempotencyEvidence:
+      readString(createHeaders, "Idempotency-Key") ||
+      readString(createHeaders, "idempotency_key") ||
+      readString(createRequest, "idempotency_key") ||
+      "N/A",
   };
 }
 
@@ -529,25 +528,23 @@ function buildCampaignLifecycleEventRows(
 function buildCampaignLaunchHistoryRows(
   data: Record<string, unknown> | undefined
 ): DpmCampaignLaunchHistoryRow[] {
-  return extractRecordArray(data?.items ?? data?.launch_history ?? data?.history).map(
-    (record, index) => {
-      const waveId = readString(record, "wave_id") || `launch-${index + 1}`;
-      return {
-        key: [
-          waveId,
-          readString(record, "launched_at") || "launched",
-          readString(record, "requested_as_of_date") || String(index + 1),
-          readString(record, "idempotency_key") || "idempotency",
-        ].join(":"),
+  return extractRecordArray(data?.items).map((record, index) => {
+    const waveId = readString(record, "wave_id") || `launch-${index + 1}`;
+    return {
+      key: [
         waveId,
-        actor: readString(record, "launched_by") || readString(record, "actor_id") || "N/A",
-        launchedAt: readString(record, "launched_at") || "N/A",
-        requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
-        correlationId: readString(record, "correlation_id") || "N/A",
-        idempotencyKey: readString(record, "idempotency_key") || "N/A",
-      };
-    }
-  );
+        readString(record, "launched_at") || "launched",
+        readString(record, "requested_as_of_date") || String(index + 1),
+        readString(record, "idempotency_key") || "idempotency",
+      ].join(":"),
+      waveId,
+      actor: readString(record, "launched_by") || "N/A",
+      launchedAt: readString(record, "launched_at") || "N/A",
+      requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
+      correlationId: readString(record, "correlation_id") || "N/A",
+      idempotencyKey: readString(record, "idempotency_key") || "N/A",
+    };
+  });
 }
 
 function buildCampaignLaunchHistoryPage(
