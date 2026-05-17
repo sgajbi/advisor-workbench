@@ -329,12 +329,35 @@ describe("ConstructionAlternativesPanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Instrument rows: 0")).toBeInTheDocument();
+    expect(screen.getByText("Execution acknowledgement evidence")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("ExternalOrderExecutionAcknowledgement v1").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        "Source id: sha256:external-order-execution-acknowledgement",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Evidence hash: sha256:external-order-execution-acknowledgement-content",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Acknowledgement rows: 0")).toBeInTheDocument();
     expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
     expect(screen.getByText("Eligible Instrument Selection")).toBeInTheDocument();
     expect(screen.getByText("Product Recommendation")).toBeInTheDocument();
+    expect(screen.getAllByText("Order Generation").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("OMS Acknowledgement").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("External OMS Order Execution Acknowledgement").length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
     expect(
       screen.getByText("External Eligible Hedge Instruments Fail Closed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("External Order Execution Acknowledgement Fail Closed"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",
