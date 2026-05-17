@@ -459,6 +459,8 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and replay posture for a selected campaign definition |
+| `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
 
 Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
@@ -474,14 +476,21 @@ posture without rendering campaign content hashes or recalculating membership. T
 read-only selected campaign lifecycle evidence through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
 without inferring campaign lifecycle state, recalculating membership, or operating retire/supersede
-commands locally. The panel renders
+commands locally. It checks launch-package readiness through Gateway
+`GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
+and exposes campaign launch through Gateway
+`POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
+only when Manage returns `READY`, preserving durable wave response and replay posture without
+recomputing membership, launch readiness, maker-checker workflow, trade approval, staging, or OMS
+execution locally. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
 `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls,
 client-side readiness calculation, report-input construction, prompt construction, local memo
-narrative generation, local operations handoff-summary generation, campaign discovery, or
-membership calculation. Item-selection drawers, richer supportability drawers, dedicated
+narrative generation, local operations handoff-summary generation, campaign discovery, campaign
+membership calculation, maker-checker workflow, trade approval, staging, or OMS execution claims.
+Item-selection drawers, richer supportability drawers, dedicated
 `/dpm/waves` routes, PM-book discovery, global campaign discovery, campaign-definition upsert UX,
 CIO approval workflow, and external OMS execution remain future scope until Gateway/Manage and
 Workbench proof promote them.

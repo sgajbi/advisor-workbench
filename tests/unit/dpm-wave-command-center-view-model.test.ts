@@ -299,6 +299,47 @@ describe("DPM wave command-center view model", () => {
     });
   });
 
+  it("uses manage-owned launch package readiness without deriving launch state", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignLaunchPackage: {
+        correlation_id: "corr-campaign-launch-package",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          product_name: "BulkReviewCampaignDefinitionLaunchPackage",
+          launch_state: "READY",
+          requested_as_of_date: "2026-05-10",
+          actor_id: "pm_sg_1",
+          reason_codes: [],
+        },
+      },
+      campaignLaunchResponse: {
+        ...waveListResponse,
+        upstream_status: 201,
+        data: {
+          wave: {
+            wave_id: "dwv_campaign_launch_001",
+            state: "CREATED",
+            trigger_type: "BULK_REVIEW_CAMPAIGN",
+          },
+          idempotent_replay: true,
+        },
+      },
+    });
+
+    expect(model.campaignLaunchPosture).toEqual({
+      state: "READY",
+      canLaunch: true,
+      reason: "Ready",
+      requestedAsOfDate: "2026-05-10",
+      actor: "pm_sg_1",
+      launchedWaveId: "dwv_campaign_launch_001",
+      replayPosture: "Replay preserved",
+    });
+  });
+
   it("does not infer readiness from a present wave when manage supportability is blocked", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: {

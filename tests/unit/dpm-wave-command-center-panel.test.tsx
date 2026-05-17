@@ -5,10 +5,12 @@ import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/d
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
+  launchDpmCampaignDefinition,
   previewDpmWave,
   simulateDpmWave,
   sourceCheckDpmWave,
@@ -22,10 +24,12 @@ import type {
 vi.mock("../../src/features/workbench/api", () => ({
   approveDpmWave: vi.fn(),
   createDpmWave: vi.fn(),
+  getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
+  launchDpmCampaignDefinition: vi.fn(),
   previewDpmWave: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
@@ -186,10 +190,49 @@ const campaignDiscoveryResponse: DpmCampaignDefinitionGatewayResponse = {
   },
 };
 
+const campaignLaunchPackageResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-launch-package",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    product_name: "BulkReviewCampaignDefinitionLaunchPackage",
+    campaign_id: "campaign-holdings-202605",
+    campaign_version: "2026.05",
+    requested_as_of_date: "2026-05-10",
+    actor_id: "pm_sg_1",
+    launch_state: "READY",
+    reason_codes: [],
+  },
+};
+
+const campaignLaunchResponse: DpmWaveGatewayResponse = {
+  ...waveResponse,
+  correlation_id: "corr-campaign-launch",
+  upstream_status: 201,
+  supportability: {
+    ...waveResponse.supportability,
+    state: "ready",
+    wave_id: "dwv_campaign_launch_001",
+    wave_state: "CREATED",
+  },
+  data: {
+    wave: {
+      wave_id: "dwv_campaign_launch_001",
+      state: "CREATED",
+      trigger_type: "BULK_REVIEW_CAMPAIGN",
+    },
+    durable: true,
+    idempotent_replay: true,
+  },
+};
+
 describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(campaignLifecycleResponse);
+    vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(campaignLaunchPackageResponse);
+    vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
   });
 
   afterEach(() => {
@@ -217,6 +260,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByText("rebalance_review")).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "Proposed rebalance changes" });
@@ -254,6 +299,44 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
     expect(within(table).getByText("source_backed_candidate_set")).toBeInTheDocument();
     expect(screen.queryByText("corr-campaign-lifecycle")).not.toBeInTheDocument();
+  });
+
+  it("enables campaign launch only after Manage launch readiness is ready", async () => {
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
+      />,
+    );
+
+    const launchButton = screen.getByRole("button", { name: "Launch Campaign" });
+    expect(launchButton).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
+
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+        requestedAsOfDate: "2026-05-10",
+      }),
+    );
+
+    expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
+
+    await waitFor(() =>
+      expect(launchDpmCampaignDefinition).toHaveBeenCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+        requestedAsOfDate: "2026-05-10",
+      }),
+    );
+
+    expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
+    expect(screen.getByText("Replay preserved")).toBeInTheDocument();
+    expect(screen.queryByText("corr-campaign-launch")).not.toBeInTheDocument();
   });
 
   it("routes bounded workflow actions through Gateway helpers", async () => {

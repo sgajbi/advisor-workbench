@@ -63,13 +63,19 @@ promote dormant labels into product ownership just because historical route file
   selected campaign lifecycle evidence from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
   as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
-  supersede commands locally. It
+  supersede commands locally. It checks Manage-owned campaign launch readiness through
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
+  and exposes
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
+  only when the launch package is `READY`, preserving durable wave response and replay posture
+  without recalculating membership or readiness. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
   readiness calculation, local report-input construction, prompt construction, memo narrative
-  generation, operations handoff-summary generation, campaign discovery, or campaign membership
-  calculation. Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, global
+  generation, operations handoff-summary generation, campaign discovery, campaign membership
+  calculation, maker-checker workflow, trade approval, staging, or OMS execution claims.
+  Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, global
   campaign discovery, campaign-definition upsert UX, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.
 - RFC-0098/RFC-0038 mandate command-center cockpit rendering is implemented on the Manage

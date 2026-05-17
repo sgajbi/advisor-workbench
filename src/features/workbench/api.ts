@@ -1222,6 +1222,79 @@ export async function getDpmCampaignDefinitionLifecycleEvents(params: {
   );
 }
 
+export async function getDpmCampaignDefinitionLaunchPackage(params: {
+  campaignId: string;
+  campaignVersion: string;
+  requestedAsOfDate?: string;
+  actorId?: string;
+  correlationId?: string;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  const requestedAsOfDate = params.requestedAsOfDate ?? dpmContext.commandCenterAsOfDate;
+  const actorId = params.actorId ?? callerContext.actorId;
+  const query = new URLSearchParams();
+  query.set("requested_as_of_date", requestedAsOfDate);
+  query.set("actor_id", actorId);
+  if (params.correlationId) {
+    query.set("correlation_id", params.correlationId);
+  }
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.launch-package",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+          params.campaignId
+        )}/versions/${encodeURIComponent(params.campaignVersion)}/launch-package`,
+        "DPM campaign-definition launch readiness",
+        query
+      )
+  );
+}
+
+export async function launchDpmCampaignDefinition(params: {
+  campaignId: string;
+  campaignVersion: string;
+  requestedAsOfDate?: string;
+  actorId?: string;
+  correlationId?: string;
+}): Promise<DpmWaveGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  const requestedAsOfDate = params.requestedAsOfDate ?? dpmContext.commandCenterAsOfDate;
+  const actorId = params.actorId ?? callerContext.actorId;
+  const correlationId =
+    params.correlationId ||
+    ["workbench-campaign-launch", params.campaignId, params.campaignVersion, requestedAsOfDate].join(
+      "-"
+    );
+  return await observeWorkbenchMutation(
+    "dpm.waves.campaign-definitions.launch",
+    async () =>
+      await fetchWorkbenchMutation<DpmWaveGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+            params.campaignId
+          )}/versions/${encodeURIComponent(params.campaignVersion)}/launch`
+        ),
+        "launch DPM campaign-definition wave",
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(actorId),
+          body: JSON.stringify({
+            body: {
+              requested_as_of_date: requestedAsOfDate,
+              actor_id: actorId,
+              correlation_id: correlationId,
+            },
+          }),
+        }
+      )
+  );
+}
+
 export async function previewDpmWave(params: {
   portfolioId: string;
   asOfDate?: string;

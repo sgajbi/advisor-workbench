@@ -11,10 +11,12 @@ import {
 import {
   approveDpmWave,
   createDpmWave,
+  getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
+  launchDpmCampaignDefinition,
   previewDpmWave,
   simulateDpmWave,
   sourceCheckDpmWave,
@@ -26,6 +28,7 @@ import type {
 } from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
+  type DpmCampaignLaunchPosture,
   type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
@@ -129,10 +132,16 @@ export default function DpmWaveCommandCenterPanel({
   const [proofPackResponse, setProofPackResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
+  const [campaignLaunchPackageResponse, setCampaignLaunchPackageResponse] =
+    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
+  const [campaignLaunchResponse, setCampaignLaunchResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] = useState<string | null>(null);
+  const [pendingCampaignLaunchPackageKey, setPendingCampaignLaunchPackageKey] = useState<string | null>(null);
+  const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
+  const [campaignLaunchError, setCampaignLaunchError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
   const [selectedCampaignKey, setSelectedCampaignKey] = useState<string | null>(null);
@@ -145,6 +154,8 @@ export default function DpmWaveCommandCenterPanel({
     campaignDefinitions,
     campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
+    campaignLaunchPackage: campaignLaunchPackageResponse,
+    campaignLaunchResponse,
   });
   const selectedWaveId = model.selectedWaveId;
   const lifecycleIndex = resolveLifecycleIndex(model.selectedWaveState);
@@ -300,6 +311,53 @@ export default function DpmWaveCommandCenterPanel({
     }
   }
 
+  async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
+    if (pendingCampaignLaunchPackageKey || pendingCampaignLaunchKey) {
+      return;
+    }
+    setSelectedCampaignKey(row.key);
+    setPendingCampaignLaunchPackageKey(row.key);
+    setCampaignLaunchError(null);
+    setCampaignLaunchPackageResponse(null);
+    setCampaignLaunchResponse(null);
+    try {
+      const response = await getDpmCampaignDefinitionLaunchPackage({
+        campaignId: row.campaignId,
+        campaignVersion: row.campaignVersion,
+        requestedAsOfDate: row.asOfDate === "N/A" ? undefined : row.asOfDate,
+      });
+      setCampaignLaunchPackageResponse(response);
+    } catch (error) {
+      setCampaignLaunchError(
+        error instanceof Error ? error.message : "Campaign launch readiness could not be loaded."
+      );
+    } finally {
+      setPendingCampaignLaunchPackageKey(null);
+    }
+  }
+
+  async function launchCampaign(row: DpmCampaignDefinitionRow) {
+    if (pendingCampaignLaunchKey || !model.campaignLaunchPosture.canLaunch) {
+      return;
+    }
+    setSelectedCampaignKey(row.key);
+    setPendingCampaignLaunchKey(row.key);
+    setCampaignLaunchError(null);
+    try {
+      const response = await launchDpmCampaignDefinition({
+        campaignId: row.campaignId,
+        campaignVersion: row.campaignVersion,
+        requestedAsOfDate: row.asOfDate === "N/A" ? undefined : row.asOfDate,
+      });
+      setCampaignLaunchResponse(response);
+      setActionResponse(response);
+    } catch (error) {
+      setCampaignLaunchError(error instanceof Error ? error.message : "Campaign launch failed.");
+    } finally {
+      setPendingCampaignLaunchKey(null);
+    }
+  }
+
   return (
     <SectionBlock
       title="Rebalance"
@@ -345,12 +403,18 @@ export default function DpmWaveCommandCenterPanel({
       <CampaignDefinitionsSection
         rows={model.campaignRows}
         lifecycleRows={model.campaignLifecycleRows}
+        launchPosture={model.campaignLaunchPosture}
         lifecycleError={campaignLifecycleError}
+        launchError={campaignLaunchError}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
+        pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
+        pendingLaunchKey={pendingCampaignLaunchKey}
         selectedCampaign={selectedCampaign}
         selectedCampaignKey={selectedCampaignKey}
         errorMessage={campaignDefinitionsError ?? campaignDiscoveryError}
         onLoadLifecycle={loadCampaignLifecycle}
+        onCheckLaunchReadiness={checkCampaignLaunchReadiness}
+        onLaunchCampaign={launchCampaign}
       />
 
       <div className="rebalance-main-grid">
@@ -532,22 +596,35 @@ export default function DpmWaveCommandCenterPanel({
 function CampaignDefinitionsSection({
   rows,
   lifecycleRows,
+  launchPosture,
   lifecycleError,
+  launchError,
   pendingLifecycleKey,
+  pendingLaunchPackageKey,
+  pendingLaunchKey,
   selectedCampaign,
   selectedCampaignKey,
   errorMessage,
   onLoadLifecycle,
+  onCheckLaunchReadiness,
+  onLaunchCampaign,
 }: {
   rows: DpmCampaignDefinitionRow[];
   lifecycleRows: DpmCampaignLifecycleEventRow[];
+  launchPosture: DpmCampaignLaunchPosture;
   lifecycleError?: string | null;
+  launchError?: string | null;
   pendingLifecycleKey?: string | null;
+  pendingLaunchPackageKey?: string | null;
+  pendingLaunchKey?: string | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
   selectedCampaignKey?: string | null;
   errorMessage?: string | null;
   onLoadLifecycle: (row: DpmCampaignDefinitionRow) => void;
+  onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
+  onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
 }) {
+  const selectedLaunchPending = selectedCampaign?.key === pendingLaunchKey;
   return (
     <section className="rebalance-proposed-card" aria-labelledby="campaign-definitions-title">
       <div className="rebalance-table-heading">
@@ -584,6 +661,7 @@ function CampaignDefinitionsSection({
           { key: "purpose", label: "Purpose" },
           { key: "source", label: "Source Posture" },
           { key: "evidence", label: "Evidence" },
+          { key: "launch", label: "Launch" },
         ]}
         rows={rows.map((row) => ({
           key: row.key,
@@ -616,6 +694,14 @@ function CampaignDefinitionsSection({
               disabled={Boolean(pendingLifecycleKey)}
             >
               {pendingLifecycleKey === row.key ? "Loading" : "Open Evidence"}
+            </ActionButton>,
+            <ActionButton
+              key={`${row.key}-launch-readiness`}
+              priority="secondary"
+              onClick={() => onCheckLaunchReadiness(row)}
+              disabled={Boolean(pendingLaunchPackageKey || pendingLaunchKey)}
+            >
+              {pendingLaunchPackageKey === row.key ? "Checking" : "Check Readiness"}
             </ActionButton>,
           ],
         }))}
@@ -674,6 +760,50 @@ function CampaignDefinitionsSection({
             body: "Open campaign evidence to review Manage-recorded lifecycle events.",
           }}
         />
+      </div>
+      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-title">
+        <div className="rebalance-table-heading">
+          <div>
+            <h4 id="campaign-launch-title">Campaign Launch Posture</h4>
+            <p>
+              {selectedCampaign
+                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
+                : "Select a campaign definition to check launch readiness."}
+            </p>
+          </div>
+          <SemanticBadge tone={badgeTone(launchPosture.state)}>
+            {businessStateLabel(launchPosture.state)}
+          </SemanticBadge>
+        </div>
+        {launchError ? (
+          <ScreenStatePanel
+            kind="partial"
+            surface="portfolio"
+            title="Campaign launch needs attention"
+            body={launchError}
+          />
+        ) : null}
+        <div className="rebalance-summary-strip" aria-label="Campaign launch posture">
+          <SummaryCell
+            label="Launch Readiness"
+            value={businessStateLabel(launchPosture.state)}
+            tone={badgeTone(launchPosture.state)}
+          />
+          <SummaryCell label="Review Date" value={launchPosture.requestedAsOfDate} />
+          <SummaryCell label="Reviewed By" value={launchPosture.actor} />
+          <SummaryCell label="Durable Wave" value={launchPosture.launchedWaveId} />
+          <SummaryCell label="Replay Posture" value={launchPosture.replayPosture} />
+        </div>
+        <div className="rebalance-action-row">
+          <span>{formatBusinessReason(launchPosture.reason)}</span>
+          <ActionButton
+            priority="primary"
+            onClick={() => selectedCampaign && onLaunchCampaign(selectedCampaign)}
+            disabled={!selectedCampaign || !launchPosture.canLaunch || Boolean(pendingLaunchKey)}
+          >
+            {selectedLaunchPending ? "Launching" : "Launch Campaign"}
+          </ActionButton>
+        </div>
       </div>
     </section>
   );

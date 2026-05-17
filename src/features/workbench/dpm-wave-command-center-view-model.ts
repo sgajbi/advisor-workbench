@@ -73,6 +73,16 @@ export type DpmCampaignLifecycleEventRow = {
   reason: string;
 };
 
+export type DpmCampaignLaunchPosture = {
+  state: string;
+  canLaunch: boolean;
+  reason: string;
+  requestedAsOfDate: string;
+  actor: string;
+  launchedWaveId: string;
+  replayPosture: string;
+};
+
 export type DpmWaveCommandCenterPanelModel = {
   state: DpmWaveCommandCenterPanelState;
   sourceService: string;
@@ -96,6 +106,7 @@ export type DpmWaveCommandCenterPanelModel = {
   summaryRows: DpmWaveSummaryRow[];
   campaignRows: DpmCampaignDefinitionRow[];
   campaignLifecycleRows: DpmCampaignLifecycleEventRow[];
+  campaignLaunchPosture: DpmCampaignLaunchPosture;
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
   proofPackRows: DpmWaveMetricRow[];
@@ -114,6 +125,8 @@ export function buildDpmWaveCommandCenterModel(params: {
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignLaunchPackage?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignLaunchResponse?: DpmWaveGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -185,6 +198,10 @@ export function buildDpmWaveCommandCenterModel(params: {
       params.campaignDiscovery?.data
     ),
     campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
+    campaignLaunchPosture: buildCampaignLaunchPosture(
+      params.campaignLaunchPackage?.data,
+      params.campaignLaunchResponse?.data
+    ),
     metricRows: buildMetricRows(metricSource),
     itemRows,
     proofPackRows: buildProofPackRows(proofPackPosture, itemRows),
@@ -192,6 +209,44 @@ export function buildDpmWaveCommandCenterModel(params: {
     externalExecutionClaimed: formatValue(
       readValue(proofPackPosture, "external_execution_claimed")
     ),
+  };
+}
+
+function buildCampaignLaunchPosture(
+  launchPackage: Record<string, unknown> | undefined,
+  launchResponse: Record<string, unknown> | undefined
+): DpmCampaignLaunchPosture {
+  const readiness = readRecord(launchPackage?.readiness);
+  const createRequest = readRecord(launchPackage?.create_request);
+  const wave = readWaveRecord(launchResponse);
+  const state = normalizeState(
+    readString(launchPackage ?? {}, "launch_state") ||
+      readString(readiness, "state") ||
+      "NOT_CHECKED"
+  );
+  const reasonCodes = extractStringArray(
+    launchPackage?.reason_codes ?? readiness.reason_codes ?? readiness.blocked_reason_codes
+  );
+  const idempotentReplay = readValue(launchResponse ?? {}, "idempotent_replay");
+  return {
+    state,
+    canLaunch: state === "READY",
+    reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : state === "READY" ? "Ready" : "Not checked",
+    requestedAsOfDate:
+      readString(launchPackage ?? {}, "requested_as_of_date") ||
+      readString(createRequest, "as_of_date") ||
+      "N/A",
+    actor:
+      readString(launchPackage ?? {}, "actor_id") ||
+      readString(createRequest, "actor_id") ||
+      "N/A",
+    launchedWaveId: readString(wave ?? {}, "wave_id") || "N/A",
+    replayPosture:
+      idempotentReplay === true
+        ? "Replay preserved"
+        : wave
+          ? "Launch recorded"
+          : "N/A",
   };
 }
 
