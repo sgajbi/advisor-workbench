@@ -43,9 +43,12 @@ describe("PortfolioRecordEvidenceRail", () => {
 
     expect(screen.getByText("Data Readiness")).toBeInTheDocument();
     expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Book records").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Booked holdings inventory")).toBeInTheDocument();
     expect(screen.getByText("1 holding missing price or valuation")).toBeInTheDocument();
     expect(screen.getByText("2 positions available for review")).toBeInTheDocument();
     expect(screen.getByText("1 flag on positions, 1 stale key")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Positions" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute(
       "href",
       "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001"
@@ -104,6 +107,11 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText("1 settled event of 2 events")).toBeInTheDocument();
     expect(screen.getByText("1 component type represented in the current window")).toBeInTheDocument();
     expect(screen.getByText("Review")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Transactions" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Positions" })).toHaveAttribute(
+      "href",
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
   });
 
   it("renders income and activity source posture without local analytics claims", () => {
@@ -151,7 +159,8 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText(/1 income type and 3 income events through/i)).toBeInTheDocument();
     expect(screen.getByText("Activity Buckets")).toBeInTheDocument();
     expect(screen.getByText(/1 bucket and 1 activity event through/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Portfolio book record").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Book records").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Activity classification")).toBeInTheDocument();
     expect(screen.queryByText("Gateway portfolio workspace")).not.toBeInTheDocument();
   });
 });

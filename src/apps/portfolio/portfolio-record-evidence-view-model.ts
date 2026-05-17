@@ -22,6 +22,10 @@ export type PortfolioRecordAdjacentWorkflow = {
   href: string;
 };
 
+type PortfolioRecordWorkflowLink = PortfolioRecordAdjacentWorkflow & {
+  screen: PortfolioRecordScreenKind | "review" | "mandate";
+};
+
 export type PortfolioRecordEvidenceRailViewModel = {
   status: {
     label: string;
@@ -58,7 +62,7 @@ export function buildPortfolioRecordEvidenceRailViewModel({
       { label: "Review Area", value: formatStatus(screen) },
     ],
     sourcePostureItems,
-    adjacentWorkflows: buildAdjacentWorkflows(portfolioId),
+    adjacentWorkflows: buildAdjacentWorkflows(portfolioId, screen),
   };
 }
 
@@ -93,17 +97,24 @@ function buildSourcePostureItems({
   });
 }
 
-function buildAdjacentWorkflows(portfolioId: string): PortfolioRecordAdjacentWorkflow[] {
+function buildAdjacentWorkflows(
+  portfolioId: string,
+  currentScreen: PortfolioRecordScreenKind
+): PortfolioRecordAdjacentWorkflow[] {
   const encodedPortfolioId = encodeURIComponent(portfolioId);
-
-  return [
-    { label: "Portfolio Review", href: `/portfolio?portfolioId=${encodedPortfolioId}` },
-    { label: "Allocation", href: `/allocation?portfolioId=${encodedPortfolioId}` },
-    { label: "Transactions", href: `/transactions?portfolioId=${encodedPortfolioId}` },
-    { label: "Income & Activity", href: `/income?portfolioId=${encodedPortfolioId}` },
-    { label: "Cashflow", href: `/cashflow?portfolioId=${encodedPortfolioId}` },
-    { label: "Mandate Operations", href: `/workbench/${encodedPortfolioId}` },
+  const workflows: PortfolioRecordWorkflowLink[] = [
+    { screen: "review", label: "Portfolio Review", href: `/portfolio?portfolioId=${encodedPortfolioId}` },
+    { screen: "positions", label: "Positions", href: `/positions?portfolioId=${encodedPortfolioId}` },
+    { screen: "allocation", label: "Allocation", href: `/allocation?portfolioId=${encodedPortfolioId}` },
+    { screen: "transactions", label: "Transactions", href: `/transactions?portfolioId=${encodedPortfolioId}` },
+    { screen: "income", label: "Income & Activity", href: `/income?portfolioId=${encodedPortfolioId}` },
+    { screen: "cashflow", label: "Cashflow", href: `/cashflow?portfolioId=${encodedPortfolioId}` },
+    { screen: "mandate", label: "Mandate Operations", href: `/workbench/${encodedPortfolioId}` },
   ];
+
+  return workflows
+    .filter((workflow) => workflow.screen !== currentScreen)
+    .map(({ label, href }) => ({ label, href }));
 }
 
 function buildAllocationSourcePosture(
@@ -116,14 +127,14 @@ function buildAllocationSourcePosture(
   return [
     {
       label: "Allocation Views",
-      source: "Portfolio book record",
+      source: "Book records",
       detail: `${formatCount(dimensions, "dimension")} and ${formatCount(bucketCount, "bucket")} available`,
       tone: bucketCount ? "success" : "warn",
       status: bucketCount ? "Ready" : "Pending",
     },
     {
       label: "Holdings Coverage",
-      source: "Core positions inventory",
+      source: "Booked holdings inventory",
       detail: `${formatCount(workspace.positions.length, "position")} available for allocation review`,
       tone: workspace.positions.length ? "success" : "default",
       status: workspace.positions.length ? "Ready" : "Empty",
@@ -150,7 +161,7 @@ function buildIncomeActivitySourcePosture(
   return [
     {
       label: "Income Source",
-      source: "Portfolio book record",
+      source: "Book records",
       detail: income
         ? `${formatCount(incomeTypeCount, "income type")} and ${formatCount(
             incomeEventCount,
@@ -162,7 +173,7 @@ function buildIncomeActivitySourcePosture(
     },
     {
       label: "Activity Buckets",
-      source: "Source-defined activity classification",
+      source: "Activity classification",
       detail: activity
         ? `${formatCount(activityBucketCount, "bucket")} and ${formatCount(
             activityEventCount,
@@ -190,7 +201,7 @@ function buildCashflowSourcePosture(
   return [
     {
       label: "Projection Source",
-      source: "Portfolio book record",
+      source: "Book records",
       detail: cashflow
         ? `${formatCount(pointCount, "projected point")} through ${formatDate(cashflow.range_end_date)}`
         : "No projected cashflow outlook returned for this portfolio",
@@ -230,7 +241,7 @@ function buildPositionSourcePosture({
   return [
     {
       label: "Pricing Source",
-      source: "Portfolio book record",
+      source: "Book records",
       detail: unpricedCount
         ? `${formatCount(unpricedCount, "holding")} missing price or valuation`
         : "All visible holdings have price and valuation data",
@@ -239,7 +250,7 @@ function buildPositionSourcePosture({
     },
     {
       label: "Positions Ledger",
-      source: "Core positions inventory",
+      source: "Booked holdings inventory",
       detail: `${formatCount(workspace.positions.length, "position")} available for review`,
       tone: workspace.readiness.has_positions ? "success" : "default",
       status: workspace.readiness.has_positions ? "Reconciled" : "Empty",
@@ -277,7 +288,7 @@ function buildTransactionSourcePosture(
   return [
     {
       label: "Source System",
-      source: sourceSystems.length ? sourceSystems.join(", ") : "Core transaction ledger",
+      source: sourceSystems.length ? sourceSystems.join(", ") : "Booked transaction ledger",
       detail: `${formatCount(transactionCount, "event")} available in the review window`,
       tone: transactionCount ? "success" : "default",
       status: transactionCount ? "Available" : "Empty",
@@ -291,10 +302,10 @@ function buildTransactionSourcePosture(
     },
     {
       label: "Components",
-      source: "Strategic transaction model",
+      source: "Booked transaction model",
       detail: componentCount
         ? `${formatCount(componentCount, "component type")} represented in the current window`
-        : "No component taxonomy exposed for the current window",
+        : "No transaction component mix returned for the current window",
       tone: componentCount ? "success" : "default",
       status: componentCount ? "Validated" : "N/A",
     },
