@@ -14,8 +14,6 @@ describe("PortfolioSummaryHeaderSection", () => {
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace()}
         context={buildPortfolioWorkspaceContext()}
-        orderedWorkflowCues={[{ key: "performance", label: "Performance", href: "/performance" }]}
-        primaryWorkflowCueKey="performance"
         onOpenMetricDrawer={vi.fn()}
       />
     );
@@ -40,8 +38,6 @@ describe("PortfolioSummaryHeaderSection", () => {
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace()}
         context={buildPortfolioWorkspaceContext()}
-        orderedWorkflowCues={[]}
-        primaryWorkflowCueKey={null}
         onOpenMetricDrawer={onOpenMetricDrawer}
       />
     );

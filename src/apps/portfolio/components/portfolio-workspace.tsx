@@ -14,7 +14,6 @@ import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import {
   getPositionsNeedingPricing,
-  getOrderedWorkflowCues,
 } from "../view-model";
 import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
 import PortfolioExecutiveSummary from "./portfolio-executive-summary";
@@ -52,9 +51,7 @@ export default function PortfolioWorkspaceView({
   toolbar?: ReactNode;
 }) {
   const [detailDrawer, setDetailDrawer] = useState<PortfolioDetailDrawerState | null>(null);
-  const orderedWorkflowCues = workspace ? getOrderedWorkflowCues(workspace) : [];
   const setupActions = workspace?.workflow_actions ?? [];
-  const primaryWorkflowCue = orderedWorkflowCues.find((cue) => cue.key === "performance") ?? orderedWorkflowCues[0];
   const exceptionSummaries = workspace?.exception_summaries ?? [];
 
   const handlePricingExceptionDrilldown = () => {
@@ -140,8 +137,6 @@ export default function PortfolioWorkspaceView({
                         <PortfolioSummaryHeaderSection
                           workspace={workspace}
                           context={context}
-                          orderedWorkflowCues={orderedWorkflowCues}
-                          primaryWorkflowCueKey={primaryWorkflowCue?.key ?? null}
                           onOpenMetricDrawer={(metric) =>
                             setDetailDrawer(buildMetricDrawer(metric, workspace, context))
                           }

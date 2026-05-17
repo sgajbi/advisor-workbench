@@ -167,7 +167,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(screen.getByText("Workbench Screens")).toBeInTheDocument();
+    expect(screen.getByText("Review Workflow")).toBeInTheDocument();
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
       "href",

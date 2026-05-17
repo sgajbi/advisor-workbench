@@ -128,7 +128,7 @@ describe("PortfolioFoundationPage", () => {
       "portfolio-hero-label"
     );
     expect(within(hero as HTMLElement).queryByText("Portfolio book PORT_UI_1001")).not.toBeInTheDocument();
-    expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeTruthy();
+    expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeNull();
     expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("CIF_1001")).toBeInTheDocument();
     expect(within(hero as HTMLElement).getByText("Singapore")).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
       "href",
-      "/ignored"
+      expect.stringContaining("portfolioId=PORT_UI_1001")
     );
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
 

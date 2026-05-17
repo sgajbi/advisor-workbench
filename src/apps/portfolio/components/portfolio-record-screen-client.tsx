@@ -82,10 +82,6 @@ export default function PortfolioRecordScreenClient({
                 </DegradedStatePanel>
               ) : (
                 <>
-                  <div className="portfolio-record-context-bar">
-                    <span>{bookDisplayName}</span>
-                    <span>{copy.subtitle}</span>
-                  </div>
                   <section className="portfolio-record-standalone-header">
                     <div>
                       <span>{copy.kicker}</span>
