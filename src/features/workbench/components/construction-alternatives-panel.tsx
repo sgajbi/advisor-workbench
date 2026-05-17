@@ -105,6 +105,26 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
   const selectedAlternative = model.selectedAlternative;
   const eligibleInstrumentEvidence =
     model.currencyOverlayEvidence?.eligibleInstrumentEvidence;
+  const executionAcknowledgementEvidence =
+    model.executionAcknowledgementEvidence;
+  const authorityMissingDataFamilies = Array.from(
+    new Set([
+      ...(model.currencyOverlayEvidence?.missingDataFamilies ?? []),
+      ...(executionAcknowledgementEvidence?.missingDataFamilies ?? []),
+    ]),
+  );
+  const authorityBlockedCapabilities = Array.from(
+    new Set([
+      ...(model.currencyOverlayEvidence?.blockedCapabilities ?? []),
+      ...(executionAcknowledgementEvidence?.blockedCapabilities ?? []),
+    ]),
+  );
+  const authorityReasonCodes = Array.from(
+    new Set([
+      ...(model.currencyOverlayEvidence?.reasonCodes ?? []),
+      ...(executionAcknowledgementEvidence?.reasonCodes ?? []),
+    ]),
+  );
   const canSelectSelectedAlternative = Boolean(
     selectedAlternative &&
       model.alternativeSetId !== "N/A" &&
@@ -404,38 +424,42 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     body="Constraint rows are not available for the selected alternative."
                   />
                 )}
-                {model.currencyOverlayEvidence ? (
+                {model.currencyOverlayEvidence || executionAcknowledgementEvidence ? (
                   <section className="construction-currency-overlay-evidence">
                     <div className="construction-currency-overlay-header">
                       <Text as="h3" variant="subsectionTitle">
-                        Currency Overlay Evidence
+                        Construction Authority Evidence
                       </Text>
-                      <SemanticBadge tone={badgeTone(model.currencyOverlayEvidence.state)}>
-                        {businessStateLabel(model.currencyOverlayEvidence.state)}
-                      </SemanticBadge>
+                      {model.currencyOverlayEvidence ? (
+                        <SemanticBadge tone={badgeTone(model.currencyOverlayEvidence.state)}>
+                          {businessStateLabel(model.currencyOverlayEvidence.state)}
+                        </SemanticBadge>
+                      ) : null}
                     </div>
-                    <dl>
-                      <div>
-                        <dt>Hedge policy source</dt>
-                        <dd>
-                          {model.currencyOverlayEvidence.sourceProductName}{" "}
-                          {model.currencyOverlayEvidence.sourceProductVersion}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Source id</dt>
-                        <dd>{model.currencyOverlayEvidence.sourceId}</dd>
-                      </div>
-                      <div>
-                        <dt>Evidence hash</dt>
-                        <dd>{model.currencyOverlayEvidence.contentHash}</dd>
-                      </div>
-                      <div>
-                        <dt>Policy rules</dt>
-                        <dd>{model.currencyOverlayEvidence.ruleCount}</dd>
-                      </div>
-                    </dl>
-                    {model.currencyOverlayEvidence.rules.length > 0 ? (
+                    {model.currencyOverlayEvidence ? (
+                      <dl>
+                        <div>
+                          <dt>Hedge policy source</dt>
+                          <dd>
+                            {model.currencyOverlayEvidence.sourceProductName}{" "}
+                            {model.currencyOverlayEvidence.sourceProductVersion}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Source id</dt>
+                          <dd>{model.currencyOverlayEvidence.sourceId}</dd>
+                        </div>
+                        <div>
+                          <dt>Evidence hash</dt>
+                          <dd>{model.currencyOverlayEvidence.contentHash}</dd>
+                        </div>
+                        <div>
+                          <dt>Policy rules</dt>
+                          <dd>{model.currencyOverlayEvidence.ruleCount}</dd>
+                        </div>
+                      </dl>
+                    ) : null}
+                    {model.currencyOverlayEvidence?.rules.length ? (
                       <div className="construction-currency-overlay-list">
                         <strong>Returned rules</strong>
                         {model.currencyOverlayEvidence.rules.map((rule, index) => (
@@ -470,10 +494,40 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                           : null}
                       </div>
                     ) : null}
+                    {executionAcknowledgementEvidence ? (
+                      <div className="construction-currency-overlay-list">
+                        <strong>OMS acknowledgement posture</strong>
+                        <SemanticBadge tone={badgeTone(executionAcknowledgementEvidence.state)}>
+                          {businessStateLabel(executionAcknowledgementEvidence.state)}
+                        </SemanticBadge>
+                        <span>
+                          {executionAcknowledgementEvidence.sourceProductName}{" "}
+                          {executionAcknowledgementEvidence.sourceProductVersion}
+                        </span>
+                        <span>
+                          Source id: {executionAcknowledgementEvidence.sourceId}
+                        </span>
+                        <span>
+                          Evidence hash:{" "}
+                          {executionAcknowledgementEvidence.contentHash}
+                        </span>
+                        <span>
+                          Acknowledgement rows:{" "}
+                          {executionAcknowledgementEvidence.acknowledgementCount}
+                        </span>
+                        {executionAcknowledgementEvidence.acknowledgements.length > 0
+                          ? executionAcknowledgementEvidence.acknowledgements.map((acknowledgement, index) => (
+                              <span key={`${acknowledgement}-${index}`}>
+                                {acknowledgement}
+                              </span>
+                            ))
+                          : null}
+                      </div>
+                    ) : null}
                     <div className="construction-currency-overlay-list">
                       <strong>Missing data</strong>
-                      {model.currencyOverlayEvidence.missingDataFamilies.length > 0 ? (
-                        model.currencyOverlayEvidence.missingDataFamilies.map((family) => (
+                      {authorityMissingDataFamilies.length > 0 ? (
+                        authorityMissingDataFamilies.map((family) => (
                           <SemanticBadge key={family} tone="warn">
                             {formatBusinessReason(family)}
                           </SemanticBadge>
@@ -484,8 +538,8 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                     </div>
                     <div className="construction-currency-overlay-list">
                       <strong>Blocked capabilities</strong>
-                      {model.currencyOverlayEvidence.blockedCapabilities.length > 0 ? (
-                        model.currencyOverlayEvidence.blockedCapabilities.map((capability) => (
+                      {authorityBlockedCapabilities.length > 0 ? (
+                        authorityBlockedCapabilities.map((capability) => (
                           <SemanticBadge key={capability} tone="danger">
                             {formatBusinessReason(capability)}
                           </SemanticBadge>
@@ -494,10 +548,10 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
                         <span>None reported</span>
                       )}
                     </div>
-                    {model.currencyOverlayEvidence.reasonCodes.length > 0 ? (
+                    {authorityReasonCodes.length > 0 ? (
                       <div className="construction-currency-overlay-list">
                         <strong>Reason codes</strong>
-                        {model.currencyOverlayEvidence.reasonCodes.map((reason) => (
+                        {authorityReasonCodes.map((reason) => (
                           <SemanticBadge key={reason} tone="warn">
                             {formatBusinessReason(reason)}
                           </SemanticBadge>
