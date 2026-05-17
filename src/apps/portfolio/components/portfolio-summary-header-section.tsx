@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionLink, Panel, SemanticBadge, Text } from "@/design-system";
+import { Panel, SemanticBadge, Text } from "@/design-system";
 
 import { formatBookingCenter, formatCurrency, formatDate, formatPct, formatStatus } from "../formatters";
 import {
@@ -18,14 +18,10 @@ import type { PortfolioMetricDrawerKey } from "./portfolio-detail-drawer-builder
 export default function PortfolioSummaryHeaderSection({
   workspace,
   context,
-  orderedWorkflowCues,
-  primaryWorkflowCueKey,
   onOpenMetricDrawer,
 }: {
   workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
-  orderedWorkflowCues: Array<{ key: string; label: string; href: string }>;
-  primaryWorkflowCueKey: string | null;
   onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
 }) {
   const performanceReturns = resolvePortfolioPerformancePeriodReturns(workspace);
@@ -59,21 +55,6 @@ export default function PortfolioSummaryHeaderSection({
                 </SemanticBadge>
               ) : null}
             </div>
-          </div>
-          <div className="portfolio-hero-actions portfolio-hero-toolbar">
-            {orderedWorkflowCues.map((cue) => (
-              <ActionLink
-                key={cue.key}
-                href={cue.href}
-                className={
-                  cue.key === primaryWorkflowCueKey
-                    ? "portfolio-action-link portfolio-action-link-primary"
-                    : "portfolio-action-link portfolio-action-link-secondary"
-                }
-              >
-                {cue.label}
-              </ActionLink>
-            ))}
           </div>
         </div>
 

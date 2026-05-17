@@ -42,7 +42,7 @@ describe("portfolio record screen view model", () => {
       "Discretionary mandate · USD · As of 12 May 2026 · CIF_SG_000184"
     );
     expect(buildPortfolioRecordHeaderKpis(workspace)).toEqual([
-      { label: "Total Market Value", value: "1,000,000 USD" },
+      { label: "AUM", value: "1,000,000 USD" },
       { label: "Positions", value: "11" },
       { label: "Window", value: "30D" },
     ]);

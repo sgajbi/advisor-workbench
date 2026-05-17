@@ -3228,38 +3228,6 @@ a:hover {
   align-self: start;
 }
 
-.portfolio-record-context-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.7rem;
-  min-height: 40px;
-  padding: 10px 14px;
-  border: 1px solid #d8dde5;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #59616f;
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.portfolio-record-context-bar span:first-child {
-  color: #171a1f;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.portfolio-record-context-bar span + span::before {
-  content: "";
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  margin-right: 0.7rem;
-  vertical-align: middle;
-  border-radius: 999px;
-  background: #c6c6cd;
-}
-
 .portfolio-record-standalone-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3584,14 +3552,6 @@ a:hover {
   min-width: 0;
 }
 
-.portfolio-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  align-content: flex-start;
-}
-
 .portfolio-hero-content {
   display: grid;
   gap: var(--space-3);
@@ -3648,40 +3608,6 @@ a:hover {
 .portfolio-hero-status::before,
 .portfolio-hero-status::after {
   content: none;
-}
-
-.portfolio-hero-toolbar {
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  max-width: min(32rem, 42%);
-}
-
-.portfolio-action-link {
-  min-height: 2.25rem;
-}
-
-.portfolio-action-link-primary {
-  border-color: rgba(15, 23, 42, 0.14);
-  background: var(--brand-strong);
-  color: #ffffff;
-}
-
-.portfolio-action-link-primary:hover {
-  border-color: rgba(15, 23, 42, 0.14);
-  background: #111827;
-  color: #ffffff;
-}
-
-.portfolio-action-link-secondary {
-  background: transparent;
-  border-color: rgba(15, 23, 42, 0.12);
-  color: var(--brand-strong);
-}
-
-.portfolio-action-link-secondary:hover {
-  background: #f5f7fa;
 }
 
 .portfolio-executive-summary-grid {
@@ -14454,11 +14380,6 @@ a:hover {
     width: 100%;
   }
 
-  .portfolio-hero-actions {
-    justify-content: flex-start;
-    max-width: none;
-  }
-
   .portfolio-summary-band {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -15302,10 +15223,6 @@ a:hover {
   gap: 0.35rem 0.55rem;
 }
 
-.portfolio-page .portfolio-hero-toolbar {
-  max-width: 28rem;
-}
-
 .portfolio-page .portfolio-summary-band {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -15783,8 +15700,7 @@ a:hover {
   text-transform: none;
 }
 
-.app-page-shell .MuiButton-contained,
-.app-page-shell .portfolio-action-link-primary {
+.app-page-shell .MuiButton-contained {
   background: #131b2e;
   color: #ffffff;
 }

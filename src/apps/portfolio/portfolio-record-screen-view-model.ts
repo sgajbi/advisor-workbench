@@ -167,7 +167,7 @@ export function buildPortfolioRecordHeaderKpis(
 
   return [
     {
-      label: "Total Market Value",
+      label: "AUM",
       value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
     },
     {
