@@ -459,7 +459,7 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | append-only Manage launch history and idempotency posture for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` audit posture for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and replay posture for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
 
@@ -478,8 +478,9 @@ read-only selected campaign lifecycle evidence through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
 and append-only launch history through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`,
-including Manage-recorded wave id, actor, requested as-of date, correlation id, and idempotency
-key without inferring campaign lifecycle state, recomputing launch state, recalculating membership,
+including Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
+without inferring campaign lifecycle state, recomputing launch state, recalculating membership,
 or operating retire/supersede commands locally. It checks launch-package readiness through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
 and exposes campaign launch through Gateway

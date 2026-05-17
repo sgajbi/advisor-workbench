@@ -2300,15 +2300,22 @@ describe("workbench api", () => {
               data: {
                 campaign_id: "campaign-holdings-202605",
                 campaign_version: "2026.05",
-                launch_history: [
+                product_name: "BulkReviewCampaignDefinitionLaunchHistory",
+                items: [
                   {
                     wave_id: "dwv_campaign_launch_001",
-                    actor_id: "pm_sg_1",
+                    launched_at: "2026-05-16T00:00:00Z",
+                    launched_by: "pm_sg_1",
                     requested_as_of_date: "2026-05-16",
                     correlation_id: "corr-launch-audit",
                     idempotency_key: "idem-launch-audit",
                   },
                 ],
+                count: 1,
+                total_count: 1,
+                limit: 10,
+                offset: 0,
+                operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
               },
             }
           : {
@@ -2347,6 +2354,8 @@ describe("workbench api", () => {
     await getDpmCampaignDefinitionLaunchHistory({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
+      limit: 10,
+      offset: 0,
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
@@ -2357,6 +2366,8 @@ describe("workbench api", () => {
     expect(launchHistoryUrl).toContain(
       "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/launch-history"
     );
+    expect(launchHistoryUrl).toContain("limit=10");
+    expect(launchHistoryUrl).toContain("offset=0");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-campaign-lifecycle");
     expect(metricEventsJson).toContain("wave-campaign-launch-history");

@@ -65,8 +65,10 @@ promote dormant labels into product ownership just because historical route file
   as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
   supersede commands locally. It also opens append-only launch history from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`
-  and displays Manage-recorded wave id, actor, requested as-of date, correlation id, and
-  idempotency key without recomputing launch state, membership, readiness, or idempotency. It checks
+  and displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+  correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
+  without recomputing launch state, membership, readiness, idempotency, maker-checker, trade
+  approval, order generation, routing, fills, settlement, or OMS execution. It checks
   Manage-owned campaign launch readiness through
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
   and exposes

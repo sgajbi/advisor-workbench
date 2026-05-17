@@ -81,11 +81,23 @@ export type DpmCampaignLaunchHistoryRow = {
   key: string;
   waveId: string;
   actor: string;
+  launchedAt: string;
   requestedAsOfDate: string;
-  replayPosture: string;
-  reason: string;
   correlationId: string;
   idempotencyKey: string;
+};
+
+export type DpmCampaignLaunchHistoryPage = {
+  productName: string;
+  campaignId: string;
+  campaignVersion: string;
+  count: number;
+  totalCount: number;
+  limit: number;
+  offset: number;
+  operatingBoundaries: string[];
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 };
 
 export type DpmCampaignLaunchPosture = {
@@ -122,6 +134,7 @@ export type DpmWaveCommandCenterPanelModel = {
   campaignRows: DpmCampaignDefinitionRow[];
   campaignLifecycleRows: DpmCampaignLifecycleEventRow[];
   campaignLaunchHistoryRows: DpmCampaignLaunchHistoryRow[];
+  campaignLaunchHistoryPage: DpmCampaignLaunchHistoryPage;
   campaignLaunchPosture: DpmCampaignLaunchPosture;
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
@@ -216,6 +229,7 @@ export function buildDpmWaveCommandCenterModel(params: {
     ),
     campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
     campaignLaunchHistoryRows: buildCampaignLaunchHistoryRows(params.campaignLaunchHistory?.data),
+    campaignLaunchHistoryPage: buildCampaignLaunchHistoryPage(params.campaignLaunchHistory?.data),
     campaignLaunchPosture: buildCampaignLaunchPosture(
       params.campaignLaunchPackage?.data,
       params.campaignLaunchResponse?.data
@@ -518,29 +532,43 @@ function buildCampaignLaunchHistoryRows(
   return extractRecordArray(data?.items ?? data?.launch_history ?? data?.history).map(
     (record, index) => {
       const waveId = readString(record, "wave_id") || `launch-${index + 1}`;
-      const reasonCodes = extractStringArray(record.reason_codes);
-      const idempotentReplay = readValue(record, "idempotent_replay");
       return {
         key: [
           waveId,
+          readString(record, "launched_at") || "launched",
           readString(record, "requested_as_of_date") || String(index + 1),
           readString(record, "idempotency_key") || "idempotency",
         ].join(":"),
         waveId,
-        actor: readString(record, "actor_id") || "N/A",
+        actor: readString(record, "launched_by") || readString(record, "actor_id") || "N/A",
+        launchedAt: readString(record, "launched_at") || "N/A",
         requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
-        replayPosture:
-          idempotentReplay === true
-            ? "Replay preserved"
-            : idempotentReplay === false
-              ? "New launch"
-              : "N/A",
-        reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : "N/A",
         correlationId: readString(record, "correlation_id") || "N/A",
         idempotencyKey: readString(record, "idempotency_key") || "N/A",
       };
     }
   );
+}
+
+function buildCampaignLaunchHistoryPage(
+  data: Record<string, unknown> | undefined
+): DpmCampaignLaunchHistoryPage {
+  const count = readNumber(data ?? {}, "count") ?? 0;
+  const totalCount = readNumber(data ?? {}, "total_count") ?? count;
+  const limit = readNumber(data ?? {}, "limit") ?? 0;
+  const offset = readNumber(data ?? {}, "offset") ?? 0;
+  return {
+    productName: readString(data ?? {}, "product_name") || "BulkReviewCampaignDefinitionLaunchHistory",
+    campaignId: readString(data ?? {}, "campaign_id") || "N/A",
+    campaignVersion: readString(data ?? {}, "campaign_version") || "N/A",
+    count,
+    totalCount,
+    limit,
+    offset,
+    operatingBoundaries: extractStringArray(data?.operating_boundaries),
+    hasPreviousPage: offset > 0,
+    hasNextPage: limit > 0 && offset + count < totalCount,
+  };
 }
 
 function findSelectedWaveListRecord(
@@ -789,6 +817,18 @@ function readString(record: Record<string, unknown>, key: string): string {
     return String(value);
   }
   return "";
+}
+
+function readNumber(record: Record<string, unknown>, key: string): number | null {
+  const value = record[key];
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function firstNonEmpty(values: string[] | undefined): string {

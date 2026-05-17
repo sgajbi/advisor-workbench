@@ -374,17 +374,24 @@ describe("DPM wave command-center view model", () => {
         source_service: "lotus-manage",
         upstream_status: 200,
         data: {
+          product_name: "BulkReviewCampaignDefinitionLaunchHistory",
+          campaign_id: "campaign-holdings-202605",
+          campaign_version: "2026.05",
           items: [
             {
               wave_id: "dwv_campaign_launch_001",
-              actor_id: "pm_sg_1",
+              launched_at: "2026-05-10T00:00:00Z",
+              launched_by: "pm_sg_1",
               requested_as_of_date: "2026-05-10",
               correlation_id: "corr-campaign-launch",
               idempotency_key: "campaign-launch:campaign-holdings-202605:2026.05:abc",
-              idempotent_replay: true,
-              reason_codes: ["campaign_definition_launch_replayed"],
             },
           ],
+          limit: 10,
+          offset: 0,
+          count: 1,
+          total_count: 2,
+          operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
         },
       },
     });
@@ -397,14 +404,25 @@ describe("DPM wave command-center view model", () => {
       idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
     });
     expect(model.campaignLaunchHistoryRows[0]).toEqual({
-      key: "dwv_campaign_launch_001:2026-05-10:campaign-launch:campaign-holdings-202605:2026.05:abc",
+      key: "dwv_campaign_launch_001:2026-05-10T00:00:00Z:2026-05-10:campaign-launch:campaign-holdings-202605:2026.05:abc",
       waveId: "dwv_campaign_launch_001",
       actor: "pm_sg_1",
+      launchedAt: "2026-05-10T00:00:00Z",
       requestedAsOfDate: "2026-05-10",
-      replayPosture: "Replay preserved",
-      reason: "campaign_definition_launch_replayed",
       correlationId: "corr-campaign-launch",
       idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
+    });
+    expect(model.campaignLaunchHistoryPage).toMatchObject({
+      productName: "BulkReviewCampaignDefinitionLaunchHistory",
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      count: 1,
+      totalCount: 2,
+      limit: 10,
+      offset: 0,
+      operatingBoundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+      hasNextPage: true,
+      hasPreviousPage: false,
     });
   });
 

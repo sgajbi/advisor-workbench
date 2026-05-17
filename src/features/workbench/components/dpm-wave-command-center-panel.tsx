@@ -31,6 +31,7 @@ import {
   buildDpmWaveCommandCenterModel,
   type DpmCampaignLaunchPosture,
   type DpmCampaignLaunchHistoryRow,
+  type DpmCampaignLaunchHistoryPage,
   type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelState,
@@ -51,6 +52,8 @@ type Props = {
   campaignDiscoveryError?: string | null;
   errorMessage?: string | null;
 };
+
+const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
 
 type MetricTile = {
   label: string;
@@ -318,7 +321,7 @@ export default function DpmWaveCommandCenterPanel({
     }
   }
 
-  async function loadCampaignLaunchHistory(row: DpmCampaignDefinitionRow) {
+  async function loadCampaignLaunchHistory(row: DpmCampaignDefinitionRow, offset = 0) {
     if (pendingCampaignLaunchHistoryKey) {
       return;
     }
@@ -330,6 +333,8 @@ export default function DpmWaveCommandCenterPanel({
       const response = await getDpmCampaignDefinitionLaunchHistory({
         campaignId: row.campaignId,
         campaignVersion: row.campaignVersion,
+        limit: CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
+        offset,
       });
       setCampaignLaunchHistoryResponse(response);
     } catch (error) {
@@ -434,6 +439,7 @@ export default function DpmWaveCommandCenterPanel({
         rows={model.campaignRows}
         lifecycleRows={model.campaignLifecycleRows}
         launchHistoryRows={model.campaignLaunchHistoryRows}
+        launchHistoryPage={model.campaignLaunchHistoryPage}
         launchPosture={model.campaignLaunchPosture}
         lifecycleError={campaignLifecycleError}
         launchHistoryError={campaignLaunchHistoryError}
@@ -631,6 +637,7 @@ function CampaignDefinitionsSection({
   rows,
   lifecycleRows,
   launchHistoryRows,
+  launchHistoryPage,
   launchPosture,
   lifecycleError,
   launchHistoryError,
@@ -650,6 +657,7 @@ function CampaignDefinitionsSection({
   rows: DpmCampaignDefinitionRow[];
   lifecycleRows: DpmCampaignLifecycleEventRow[];
   launchHistoryRows: DpmCampaignLaunchHistoryRow[];
+  launchHistoryPage: DpmCampaignLaunchHistoryPage;
   launchPosture: DpmCampaignLaunchPosture;
   lifecycleError?: string | null;
   launchHistoryError?: string | null;
@@ -662,7 +670,7 @@ function CampaignDefinitionsSection({
   selectedCampaignKey?: string | null;
   errorMessage?: string | null;
   onLoadLifecycle: (row: DpmCampaignDefinitionRow) => void;
-  onLoadLaunchHistory: (row: DpmCampaignDefinitionRow) => void;
+  onLoadLaunchHistory: (row: DpmCampaignDefinitionRow, offset?: number) => void;
   onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
   onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
 }) {
@@ -826,7 +834,7 @@ function CampaignDefinitionsSection({
             <h4 id="campaign-launch-history-title">Campaign Launch History</h4>
             <p>
               {selectedCampaign
-                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
+                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion} | ${launchHistoryPage.count} of ${launchHistoryPage.totalCount} launch records`
                 : "Select a campaign definition to inspect append-only launch history."}
             </p>
           </div>
@@ -849,9 +857,8 @@ function CampaignDefinitionsSection({
           columns={[
             { key: "wave", label: "Wave" },
             { key: "actor", label: "Launched By" },
+            { key: "launched", label: "Recorded" },
             { key: "reviewDate", label: "Review Date" },
-            { key: "replay", label: "Replay Posture" },
-            { key: "reason", label: "Reason" },
             { key: "correlation", label: "Correlation" },
             { key: "idempotency", label: "Idempotency" },
           ]}
@@ -860,18 +867,66 @@ function CampaignDefinitionsSection({
             cells: [
               row.waveId,
               row.actor,
+              row.launchedAt,
               row.requestedAsOfDate,
-              row.replayPosture,
-              row.reason,
               row.correlationId,
               row.idempotencyKey,
             ],
           }))}
           emptyState={{
-            title: "No launch history loaded",
-            body: "Open launch history to review Manage-recorded launch attempts and replay posture.",
+            title: selectedCampaign ? "No launch records" : "No launch history loaded",
+            body: selectedCampaign
+              ? "Manage has no append-only launch records for this campaign definition page."
+              : "Open launch history to review Manage-recorded launch attempts and boundary posture.",
           }}
         />
+        <div className="rebalance-summary-strip" aria-label="Campaign launch history boundaries">
+          <SummaryCell
+            label="Page"
+            value={`${launchHistoryPage.offset + 1}-${launchHistoryPage.offset + launchHistoryPage.count} of ${
+              launchHistoryPage.totalCount
+            }`}
+          />
+          <SummaryCell label="Page Size" value={String(launchHistoryPage.limit || CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)} />
+          <SummaryCell
+            label="Operating Boundary"
+            value={
+              launchHistoryPage.operatingBoundaries.length > 0
+                ? launchHistoryPage.operatingBoundaries.join(", ")
+                : "No order generation or OMS execution claim"
+            }
+          />
+        </div>
+        <div className="rebalance-action-row" aria-label="Campaign launch history pagination">
+          <ActionButton
+            priority="secondary"
+            onClick={() =>
+              selectedCampaign
+                ? onLoadLaunchHistory(
+                    selectedCampaign,
+                    Math.max(0, launchHistoryPage.offset - CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)
+                  )
+                : undefined
+            }
+            disabled={!selectedCampaign || pendingLaunchHistoryKey !== null || !launchHistoryPage.hasPreviousPage}
+          >
+            Previous
+          </ActionButton>
+          <ActionButton
+            priority="secondary"
+            onClick={() =>
+              selectedCampaign
+                ? onLoadLaunchHistory(
+                    selectedCampaign,
+                    launchHistoryPage.offset + CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE
+                  )
+                : undefined
+            }
+            disabled={!selectedCampaign || pendingLaunchHistoryKey !== null || !launchHistoryPage.hasNextPage}
+          >
+            Next
+          </ActionButton>
+        </div>
       </div>
       <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-title">
         <div className="rebalance-table-heading">
