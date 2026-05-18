@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AnalyticsTable,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -11,6 +10,8 @@ import DpmWaveActiveRebalanceSection from "@/features/workbench/components/dpm-w
 import DpmCampaignDefinitionsSection, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-definitions-section";
+import DpmWaveProposedChangesSection from "@/features/workbench/components/dpm-wave-proposed-changes-section";
+import DpmWaveRecommendedActionsSection from "@/features/workbench/components/dpm-wave-recommended-actions-section";
 import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
 import {
   approveDpmWave,
@@ -422,88 +423,15 @@ export default function DpmWaveCommandCenterPanel({
           onOpenEvidencePack={openEvidencePack}
         />
 
-        <section className="rebalance-actions-card" aria-labelledby="rebalance-actions-title">
-          <div className="rebalance-section-heading">
-            <h3 id="rebalance-actions-title">Recommended Actions</h3>
-          </div>
-          <div className="rebalance-action-list">
-            <RecommendedAction
-              title="Review rebalance simulation"
-              detail="Check proposed allocation changes against mandate drift."
-            />
-            <RecommendedAction
-              title="Resolve mandate attention items"
-              detail={
-                approvalBlocked
-                  ? "Clear the open mandate items before approval."
-                  : "No blocking attention items remain."
-              }
-            />
-            <RecommendedAction
-              title="Open evidence pack"
-              detail="Review the decision evidence before staging."
-            />
-          </div>
-        </section>
+        <DpmWaveRecommendedActionsSection approvalBlocked={approvalBlocked} />
       </div>
 
-      <section className="rebalance-proposed-card" aria-labelledby="rebalance-proposed-title">
-        <div className="rebalance-table-heading">
-          <h3 id="rebalance-proposed-title">Proposed Changes</h3>
-          <div>
-            <button type="button" onClick={loadProposedChanges} disabled={!selectedWaveId || Boolean(pendingAction)}>
-              Load Changes
-            </button>
-            <button type="button">Filter</button>
-          </div>
-        </div>
-        <AnalyticsTable
-          ariaLabel="Proposed rebalance changes"
-          variant="portfolio"
-          density="compact"
-          columns={[
-            { key: "security", label: "Security" },
-            { key: "action", label: "Action" },
-            { key: "value", label: "Est. Value", align: "right" },
-            { key: "reason", label: "Reason" },
-            { key: "impact", label: "Mandate Impact" },
-            { key: "status", label: "Status" },
-          ]}
-          rows={proposedRows.map((row) => ({
-            key: row.key,
-            cells: [
-              row.security,
-              <span className={`rebalance-action rebalance-action-${row.actionTone}`} key={`${row.key}-action`}>
-                {row.action}
-              </span>,
-              row.estimatedValue,
-              row.reason,
-              row.mandateImpact,
-              <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-                {businessStateLabel(row.status)}
-              </SemanticBadge>,
-            ],
-          }))}
-          emptyState={{
-            title: "No proposed changes loaded",
-            body: "Load proposed changes after selecting a rebalance proposal.",
-          }}
-        />
-      </section>
+      <DpmWaveProposedChangesSection
+        rows={proposedRows}
+        selectedWaveId={selectedWaveId}
+        pendingAction={pendingAction}
+        onLoadProposedChanges={loadProposedChanges}
+      />
     </SectionBlock>
-  );
-}
-
-function RecommendedAction({ title, detail }: { title: string; detail: string }) {
-  return (
-    <button className="rebalance-recommended-action" type="button">
-      <span>
-        <strong>{title}</strong>
-        <small>{detail}</small>
-      </span>
-      <span className="material-symbols-outlined" aria-hidden="true">
-        chevron_right
-      </span>
-    </button>
   );
 }
