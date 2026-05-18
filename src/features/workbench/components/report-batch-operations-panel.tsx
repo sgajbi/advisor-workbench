@@ -20,6 +20,14 @@ import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import {
+  isTerminalReportBatchStatus,
+  reportBatchAvailabilityLabel,
+  reportBatchJobAvailabilityLabel,
+  reportBatchStatusTone,
+  resolveReportBatchJobLabel,
+  summarizeReportBatchCounts,
+} from "@/features/workbench/report-batch-operations-panel-helpers";
 
 type Props = {
   portfolioId: string;
@@ -28,33 +36,6 @@ type Props = {
   bookingCenterCode?: string | null;
   benchmarkCode?: string;
 };
-
-function statusTone(status: string): "default" | "success" | "warn" | "danger" {
-  const normalized = status.toLowerCase();
-  if (normalized === "completed" || normalized === "succeeded") {
-    return "success";
-  }
-  if (normalized === "failed" || normalized === "cancelled") {
-    return "danger";
-  }
-  if (normalized === "running" || normalized === "materialized" || normalized === "waiting_on_report_job") {
-    return "warn";
-  }
-  return "default";
-}
-
-function summarizeCounts(status: ReportBatchStatusResponse | null): string {
-  if (!status) {
-    return "No batch materialized";
-  }
-  return Object.entries(status.status_counts)
-    .map(([key, value]) => `${businessStateLabel(key)}: ${value}`)
-    .join(" | ");
-}
-
-function isTerminalBatchStatus(status: string | undefined): boolean {
-  return status === "completed" || status === "completed_with_failures" || status === "failed" || status === "cancelled";
-}
 
 export default function ReportBatchOperationsPanel({
   portfolioId,
@@ -72,11 +53,8 @@ export default function ReportBatchOperationsPanel({
   const [error, setError] = useState<string | null>(null);
 
   const batchId = status?.batch_id ?? handle?.batch_id ?? null;
-  const runDisabled = !batchId || pendingAction !== null || isTerminalBatchStatus(status?.status);
-  const reconciledReportJobId =
-    runResult?.report_job_ids[0] ??
-    status?.items.find((item) => item.report_job_id !== null)?.report_job_id ??
-    "No report job";
+  const runDisabled = !batchId || pendingAction !== null || isTerminalReportBatchStatus(status?.status);
+  const reconciledReportJobId = resolveReportBatchJobLabel(runResult, status);
 
   async function createBatch() {
     setPendingAction("create");
@@ -179,11 +157,11 @@ export default function ReportBatchOperationsPanel({
       ) : null}
 
       <div className="report-batch-status-strip">
-        <SemanticBadge tone={statusTone(status?.status ?? handle?.status ?? "not_created")}>
+        <SemanticBadge tone={reportBatchStatusTone(status?.status ?? handle?.status ?? "not_created")}>
           {businessStateLabel(status?.status ?? handle?.status ?? "Not created")}
         </SemanticBadge>
-        <span>{batchId ? "Report batch available" : "No report batch"}</span>
-        <span>{summarizeCounts(status)}</span>
+        <span>{reportBatchAvailabilityLabel(batchId)}</span>
+        <span>{summarizeReportBatchCounts(status)}</span>
       </div>
 
       {runResult ? (
@@ -191,7 +169,7 @@ export default function ReportBatchOperationsPanel({
           <span>Leased {runResult.leased_count}</span>
           <span>Dispatched {runResult.dispatched_count}</span>
           <span>Executed {runResult.executed_count}</span>
-          <span>{reconciledReportJobId !== "No report job" ? "Report job available" : reconciledReportJobId}</span>
+          <span>{reportBatchJobAvailabilityLabel(reconciledReportJobId)}</span>
           {runResult.back_pressure_reasons.length > 0 ? (
             <span>Back pressure {runResult.back_pressure_reasons.map(formatBusinessReason).join(", ")}</span>
           ) : null}
@@ -245,7 +223,7 @@ export default function ReportBatchOperationsPanel({
         </div>
         {archiveMetadata ? (
           <div className="report-batch-archive-summary">
-            <SemanticBadge tone={statusTone(archiveMetadata.purgeStatus)}>
+            <SemanticBadge tone={reportBatchStatusTone(archiveMetadata.purgeStatus)}>
               {archiveMetadata.outputFormat.toUpperCase()}
             </SemanticBadge>
             <span>{businessStateLabel(archiveMetadata.reportType)}</span>
