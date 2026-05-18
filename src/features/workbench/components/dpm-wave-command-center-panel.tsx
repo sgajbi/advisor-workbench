@@ -8,6 +8,7 @@ import {
   SectionBlock,
   SemanticBadge,
 } from "@/design-system";
+import DpmWaveActiveRebalanceSection from "@/features/workbench/components/dpm-wave-active-rebalance-section";
 import {
   approveDpmWave,
   createDpmWave,
@@ -38,14 +39,12 @@ import {
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
-  DPM_WAVE_LIFECYCLE_STEPS,
   dpmWaveBadgeTone,
   dpmWaveStatePanelCopy,
   findDpmWaveMetricValue,
   formatDpmWaveDisplayDate,
   isDpmWaveActionBlocked,
   resolveDpmWaveLifecycleIndex,
-  type DpmWaveMetricTile,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import {
   businessStateLabel,
@@ -407,108 +406,25 @@ export default function DpmWaveCommandCenterPanel({
       />
 
       <div className="rebalance-main-grid">
-        <section className="rebalance-active-card" aria-labelledby="rebalance-active-title">
-          <div className="rebalance-section-heading">
-            <h3 id="rebalance-active-title">Active Rebalance</h3>
-            <SemanticBadge tone={dpmWaveBadgeTone(model.selectedWaveState)}>
-              {businessStateLabel(model.selectedWaveState)}
-            </SemanticBadge>
-          </div>
-
-          <div className="rebalance-stepper" aria-label="Rebalance lifecycle">
-            {DPM_WAVE_LIFECYCLE_STEPS.map((step, index) => (
-              <div
-                className={[
-                  "rebalance-step",
-                  index < lifecycleIndex ? "is-complete" : "",
-                  index === lifecycleIndex ? "is-active" : "",
-                  index > lifecycleIndex ? "is-pending" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                key={step}
-              >
-                <span aria-hidden="true" />
-                <strong>{step}</strong>
-              </div>
-            ))}
-          </div>
-
-          {approvalBlocked ? (
-            <div className="rebalance-alert" role="status">
-              <span className="material-symbols-outlined" aria-hidden="true">
-                warning
-              </span>
-              <span>Resolve mandate attention items before approval.</span>
-            </div>
-          ) : (
-            <div className="rebalance-ready-note" role="status">
-              <span className="material-symbols-outlined" aria-hidden="true">
-                check_circle
-              </span>
-              <span>Approval can proceed after advisor review.</span>
-            </div>
-          )}
-
-          <div className="rebalance-metric-grid" aria-label="Rebalance metrics">
-            {metricTiles.map((metric) => (
-              <MetricTileView key={metric.label} metric={metric} />
-            ))}
-          </div>
-
-          <div className="rebalance-command-row" aria-label="Rebalance workflow actions">
-            <ActionButton priority="secondary" onClick={previewRebalance} disabled={Boolean(pendingAction)}>
-              Preview
-            </ActionButton>
-            <ActionButton priority="secondary" onClick={createRebalance} disabled={Boolean(pendingAction)}>
-              Create Rebalance
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={reviewDataReadiness}
-              disabled={!selectedWaveId || Boolean(pendingAction)}
-            >
-              Review Data
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={runSimulation}
-              disabled={!selectedWaveId || Boolean(pendingAction)}
-            >
-              Simulate
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={requestApproval}
-              disabled={!selectedWaveId || Boolean(pendingAction) || approvalBlocked}
-            >
-              Request Approval
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={stageRebalance}
-              disabled={!selectedWaveId || Boolean(pendingAction) || stagingBlocked}
-            >
-              Stage
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={prepareHandoff}
-              disabled={!selectedWaveId || Boolean(pendingAction) || handoffBlocked}
-            >
-              Prepare Handoff
-            </ActionButton>
-            <ActionButton
-              priority="secondary"
-              onClick={openEvidencePack}
-              disabled={!selectedWaveId || Boolean(pendingAction)}
-            >
-              Open Evidence Pack
-            </ActionButton>
-          </div>
-
-          {actionMessage ? <p className="rebalance-action-message">{actionMessage}</p> : null}
-        </section>
+        <DpmWaveActiveRebalanceSection
+          selectedWaveId={selectedWaveId}
+          selectedWaveState={model.selectedWaveState}
+          lifecycleIndex={lifecycleIndex}
+          approvalBlocked={approvalBlocked}
+          stagingBlocked={stagingBlocked}
+          handoffBlocked={handoffBlocked}
+          metricTiles={metricTiles}
+          pendingAction={pendingAction}
+          actionMessage={actionMessage}
+          onPreview={previewRebalance}
+          onCreate={createRebalance}
+          onReviewData={reviewDataReadiness}
+          onSimulate={runSimulation}
+          onRequestApproval={requestApproval}
+          onStage={stageRebalance}
+          onPrepareHandoff={prepareHandoff}
+          onOpenEvidencePack={openEvidencePack}
+        />
 
         <section className="rebalance-actions-card" aria-labelledby="rebalance-actions-title">
           <div className="rebalance-section-heading">
@@ -941,15 +857,6 @@ function SummaryCell({
     <div className={`rebalance-summary-cell rebalance-summary-${tone}`}>
       <span>{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-function MetricTileView({ metric }: { metric: DpmWaveMetricTile }) {
-  return (
-    <div className={`rebalance-metric-tile rebalance-metric-${metric.tone ?? "default"}`}>
-      <span>{metric.label}</span>
-      <strong>{metric.value}</strong>
     </div>
   );
 }
