@@ -8,8 +8,18 @@ import { formatBusinessReason } from "./manage-workspace-view-model";
 export type DpmWaveMetricTile = {
   label: string;
   value: string;
-  tone?: "default" | "success" | "warn" | "danger";
+  tone?: DpmWaveBadgeTone;
 };
+
+export type DpmWaveBadgeTone = "default" | "success" | "warn" | "danger";
+
+export const DPM_WAVE_LIFECYCLE_STEPS = [
+  "Preview",
+  "Data Check",
+  "Simulation",
+  "Approval",
+  "Staging",
+] as const;
 
 export type DpmWaveProposedChangeRow = {
   key: string;
@@ -123,6 +133,31 @@ export function dpmWaveActionTone(action: string): "buy" | "sell" | "trim" | "de
   }
   if (normalized.includes("trim") || normalized.includes("reduce")) {
     return "trim";
+  }
+  return "default";
+}
+
+export function dpmWaveBadgeTone(state: string): DpmWaveBadgeTone {
+  const normalized = state.toUpperCase();
+  if (
+    [
+      "READY",
+      "SUPPORTED",
+      "COMPLETE",
+      "HANDOFF_READY",
+      "STAGED",
+      "SIMULATION_READY",
+      "SIMULATED",
+      "SOURCE_CHECKED",
+    ].includes(normalized)
+  ) {
+    return "success";
+  }
+  if (["DEGRADED", "PARTIAL", "DRAFT", "REVIEW_REQUIRED", "PENDING"].includes(normalized)) {
+    return "warn";
+  }
+  if (["BLOCKED", "UNSUPPORTED", "FAILED", "CANCELLED"].includes(normalized)) {
+    return "danger";
   }
   return "default";
 }

@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
+  DPM_WAVE_LIFECYCLE_STEPS,
   dpmWaveActionTone,
+  dpmWaveBadgeTone,
   dpmWaveStatePanelCopy,
   findDpmWaveMetricValue,
   firstDpmWaveBusinessValue,
@@ -62,6 +64,16 @@ const itemRows: DpmWaveItemRow[] = [
 ];
 
 describe("DPM wave command-center panel helpers", () => {
+  it("exports the governed rebalance lifecycle display steps", () => {
+    expect(DPM_WAVE_LIFECYCLE_STEPS).toEqual([
+      "Preview",
+      "Data Check",
+      "Simulation",
+      "Approval",
+      "Staging",
+    ]);
+  });
+
   it("builds state-panel copy for source-owned wave readiness states", () => {
     expect(dpmWaveStatePanelCopy("empty", "PB_SG_GLOBAL_BAL_001")).toEqual({
       kind: "empty",
@@ -128,6 +140,16 @@ describe("DPM wave command-center panel helpers", () => {
     expect(dpmWaveActionTone("Review")).toBe("default");
     expect(isDpmWaveActionBlocked(["REQUEST_APPROVAL", "stage_rebalance"], "approval")).toBe(true);
     expect(isDpmWaveActionBlocked(["REQUEST_APPROVAL"], "handoff")).toBe(false);
+  });
+
+  it("classifies source-owned wave states into badge tones", () => {
+    expect(dpmWaveBadgeTone("READY")).toBe("success");
+    expect(dpmWaveBadgeTone("simulation_ready")).toBe("success");
+    expect(dpmWaveBadgeTone("REVIEW_REQUIRED")).toBe("warn");
+    expect(dpmWaveBadgeTone("pending")).toBe("warn");
+    expect(dpmWaveBadgeTone("BLOCKED")).toBe("danger");
+    expect(dpmWaveBadgeTone("cancelled")).toBe("danger");
+    expect(dpmWaveBadgeTone("AVAILABLE")).toBe("default");
   });
 
   it("resolves lifecycle index and display date deterministically", () => {
