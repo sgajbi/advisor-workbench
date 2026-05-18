@@ -1,15 +1,25 @@
 import { ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
+  clampMandateHealthPercent,
+  findMandateHealthRow,
+  formatMandateAction,
+  formatMandateAttentionObservation,
+  formatMandateHealthDimensionLabel,
+  formatMandateHealthDisplayDate,
+  formatMandateHealthObservation,
+  formatMandateRecommendedDetail,
+  mandateHealthScoreToPercent,
+  mandateHealthSummaryStateLabel,
+} from "@/features/workbench/manage-mandate-health-helpers";
+import {
   businessLastReviewed,
   businessStateLabel,
   buildManageExceptionRows,
   buildMandateHealthDimensionRows,
   buildMandateRecommendedActions,
-  formatBusinessExceptionTitle,
   formatBusinessMandateType,
   formatBusinessOwner,
-  formatBusinessReason,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
@@ -59,9 +69,9 @@ export default function ManageMandateHealth({ data }: Props) {
       : commandModel.dataCompletenessState;
   const readinessLabel = exceptionRows.length > 0 ? "Needs Attention" : businessStateLabel(healthState);
   const dataReadiness = businessStateLabel(commandModel.dataCompletenessState);
-  const marketDataRow = findHealthRow(healthRows, ["market", "source", "data"]);
-  const benchmarkRow = findHealthRow(healthRows, ["benchmark"]);
-  const constraintRow = findHealthRow(healthRows, ["constraint", "mandate"]);
+  const marketDataRow = findMandateHealthRow(healthRows, ["market", "source", "data"]);
+  const benchmarkRow = findMandateHealthRow(healthRows, ["benchmark"]);
+  const constraintRow = findMandateHealthRow(healthRows, ["constraint", "mandate"]);
   const latestReview = businessLastReviewed(commandModel.latestMonitoringRunStatus);
 
   return (
@@ -84,7 +94,7 @@ export default function ManageMandateHealth({ data }: Props) {
         <span>{mandateType}</span>
         <span>{riskProfile}</span>
         <span>{currency}</span>
-        <span>As of {formatDisplayDate(asOfDate)}</span>
+        <span>As of {formatMandateHealthDisplayDate(asOfDate)}</span>
       </div>
 
       <div className="mandate-health-summary-grid" aria-label="Mandate health summary">
@@ -98,19 +108,19 @@ export default function ManageMandateHealth({ data }: Props) {
           label="Data Readiness"
           value={dataReadiness}
           tone={toneForState(commandModel.dataCompletenessState)}
-          meter={scoreToPercent(marketDataRow?.score, dataReadiness.includes("attention") ? 62 : 82)}
+          meter={mandateHealthScoreToPercent(marketDataRow?.score, dataReadiness.includes("attention") ? 62 : 82)}
         />
         <HealthSummaryCard
           label="Benchmark Alignment"
-          value={summaryStateLabel(benchmarkRow, "On Track")}
+          value={mandateHealthSummaryStateLabel(benchmarkRow, "On Track")}
           tone={toneForState(benchmarkRow?.state ?? "READY")}
-          meter={scoreToPercent(benchmarkRow?.score, 98)}
+          meter={mandateHealthScoreToPercent(benchmarkRow?.score, 98)}
         />
         <HealthSummaryCard
           label="Constraint Fit"
-          value={summaryStateLabel(constraintRow, "Compliant")}
+          value={mandateHealthSummaryStateLabel(constraintRow, "Compliant")}
           tone={toneForState(constraintRow?.state ?? "READY")}
-          meter={scoreToPercent(constraintRow?.score, 100)}
+          meter={mandateHealthScoreToPercent(constraintRow?.score, 100)}
         />
       </div>
 
@@ -151,7 +161,7 @@ function HealthSummaryCard({
       <span>{label}</span>
       <strong>{value}</strong>
       <i aria-hidden="true">
-        <span style={{ width: `${clampPercent(meter)}%` }} />
+        <span style={{ width: `${clampMandateHealthPercent(meter)}%` }} />
       </i>
     </div>
   );
@@ -185,10 +195,10 @@ function AttentionRequiredCard({ rows }: { rows: ManageExceptionRow[] }) {
                     {businessStateLabel(row.severity)}
                   </SemanticBadge>
                 </td>
-                <td>{formatAttentionObservation(row)}</td>
+                <td>{formatMandateAttentionObservation(row)}</td>
                 <td>{formatBusinessOwner(row.owner, row.source)}</td>
                 <td>{row.age === "N/A" ? "Current" : row.age}</td>
-                <td>{formatAction(row.nextAction)}</td>
+                <td>{formatMandateAction(row.nextAction)}</td>
               </tr>
             ))
           ) : (
@@ -223,8 +233,8 @@ function RecommendedActionsCard({
           rows.slice(0, 3).map((row, index) => (
             <div className="mandate-action-card" role="listitem" key={row.key}>
               <span>{index + 1}</span>
-              <strong>{formatAction(row.action)}</strong>
-              <p>{formatRecommendedDetail(row.detail)}</p>
+              <strong>{formatMandateAction(row.action)}</strong>
+              <p>{formatMandateRecommendedDetail(row.detail)}</p>
             </div>
           ))
         ) : (
@@ -294,18 +304,18 @@ function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
           {rows.length ? (
             rows.map((row) => (
               <tr key={row.key}>
-                <td>{formatDimensionLabel(row.dimension)}</td>
+                <td>{formatMandateHealthDimensionLabel(row.dimension)}</td>
                 <td>{row.score}</td>
                 <td>
                   <SemanticBadge tone={toneForState(row.state)}>
                     {businessStateLabel(row.state)}
                   </SemanticBadge>
                 </td>
-                <td>{formatHealthObservation(row.reasons)}</td>
+                <td>{formatMandateHealthObservation(row.reasons)}</td>
                 <td>
                   {row.state.toUpperCase() === "READY"
                     ? "No action required"
-                    : formatAction(row.recommendedAction)}
+                    : formatMandateAction(row.recommendedAction)}
                 </td>
               </tr>
             ))
@@ -318,159 +328,4 @@ function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
       </table>
     </div>
   );
-}
-
-function findHealthRow(rows: MandateHealthRow[], needles: string[]): MandateHealthRow | undefined {
-  return rows.find((row) => {
-    const haystack = `${row.key} ${row.dimension}`.toLowerCase();
-    return needles.some((needle) => haystack.includes(needle));
-  });
-}
-
-function summaryStateLabel(row: MandateHealthRow | undefined, fallback: string): string {
-  if (!row || row.state === "N/A") {
-    return fallback;
-  }
-  if (row.state.toUpperCase() === "READY") {
-    return fallback;
-  }
-  return businessStateLabel(row.state);
-}
-
-function scoreToPercent(score: string | undefined, fallback: number): number {
-  if (!score) {
-    return fallback;
-  }
-  const numeric = Number.parseFloat(score.replace(/[^\d.]/g, ""));
-  if (!Number.isFinite(numeric)) {
-    return fallback;
-  }
-  return numeric > 1 ? numeric : numeric * 100;
-}
-
-function clampPercent(value: number): number {
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-
-function formatDisplayDate(value: string): string {
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    const [year, month, day] = value.slice(0, 10).split("-");
-    const date = new Date(Number(year), Number(month) - 1, Number(day));
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }
-  return value;
-}
-
-function formatDimensionLabel(value: string): string {
-  const normalized = value.toLowerCase();
-  if (normalized.includes("source") || normalized.includes("market")) {
-    return "Market Data Readiness";
-  }
-  if (normalized.includes("allocation")) {
-    return "Allocation Drift";
-  }
-  if (normalized.includes("risk")) {
-    return "Risk Drift";
-  }
-  if (normalized.includes("cash")) {
-    return "Cash Liquidity";
-  }
-  if (normalized.includes("tax")) {
-    return "Tax And Turnover";
-  }
-  if (normalized.includes("eligibility")) {
-    return "Eligibility Restrictions";
-  }
-  if (normalized.includes("performance")) {
-    return "Performance Review";
-  }
-  if (normalized.includes("workflow")) {
-    return "Review Readiness";
-  }
-  if (normalized.includes("cadence")) {
-    return "Review Cadence";
-  }
-  if (normalized.includes("model")) {
-    return "Model Freshness";
-  }
-  if (normalized.includes("constraint")) {
-    return "Mandate Constraints";
-  }
-  return businessStateLabel(value);
-}
-
-function formatAttentionObservation(row: ManageExceptionRow): string {
-  const text = `${row.title} ${row.nextAction}`.toUpperCase();
-  if (text.includes("SUSTAINABILITY")) {
-    return "Sustainability preferences require review";
-  }
-  if (text.includes("ALLOCATION")) {
-    return "Allocation drift requires review";
-  }
-  if (text.includes("CASH")) {
-    return "Cash weight above soft range";
-  }
-  return formatBusinessExceptionTitle(row.title);
-}
-
-function formatRecommendedDetail(value: string): string {
-  const normalized = value.toUpperCase();
-  if (normalized.includes("SUSTAINABILITY")) {
-    return "Confirm mandate-specific sustainability preferences before approval.";
-  }
-  if (normalized.includes("ALLOCATION")) {
-    return "Review allocation drift before moving the rebalance forward.";
-  }
-  if (normalized.includes("CASH")) {
-    return "Confirm tactical cash position remains within mandate tolerance.";
-  }
-  if (normalized.includes("ADVISOR")) {
-    return value;
-  }
-  return businessStateLabel(value);
-}
-
-function formatHealthObservation(value: string): string {
-  const normalized = value.toUpperCase();
-  if (normalized.includes("ALLOCATION")) {
-    return "Allocation drift review";
-  }
-  if (normalized.includes("CASH")) {
-    return "Cash range review";
-  }
-  if (normalized.includes("SUSTAINABILITY")) {
-    return "Sustainability review";
-  }
-  if (normalized.includes("READY")) {
-    return "No action required";
-  }
-  const reason = formatBusinessReason(value);
-  return reason === "-" ? "No action required" : reason;
-}
-
-function formatAction(value: string): string {
-  if (!value || value === "-" || value === "N/A") {
-    return "No action required";
-  }
-  const normalized = value.toUpperCase();
-  if (normalized.includes("SIMULATE_REBALANCE")) {
-    return "Review rebalance simulation";
-  }
-  if (normalized.includes("REVIEW_WORKFLOW")) {
-    return "Review mandate workflow";
-  }
-  if (normalized.includes("SUSTAINABILITY")) {
-    return "Review sustainability preferences";
-  }
-  if (normalized.includes("ACKNOWLEDGE")) {
-    return "Acknowledge";
-  }
-  if (value.toLowerCase().includes("evidence")) {
-    return "Review supporting evidence";
-  }
-  return businessStateLabel(value);
 }
