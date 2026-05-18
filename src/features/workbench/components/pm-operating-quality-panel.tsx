@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import {
-  ActionButton,
   AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
@@ -11,6 +10,7 @@ import {
   SemanticBadge,
   Text,
 } from "@/design-system";
+import PmOperatingQualityScoreRunCard from "@/features/workbench/components/pm-operating-quality-score-run-card";
 import {
   createDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityFairnessAnalysis,
@@ -287,135 +287,20 @@ export default function PmOperatingQualityPanel({
       </div>
 
       <div className="pm-quality-workspace">
-        <div className="pm-quality-primary-card">
-          <div className="pm-quality-card-header">
-            <Text as="h3" variant="subsectionTitle">
-              Score-Run Evidence
-            </Text>
-            <div className="pm-quality-action-row">
-              <ActionButton
-                priority="secondary"
-                onClick={previewScoreRun}
-                disabled={pendingAction || model.scoreRunPreviewReadinessState !== "READY"}
-              >
-                {pendingAction ? "Previewing" : "Preview Score Run"}
-              </ActionButton>
-              <ActionButton
-                priority="secondary"
-                onClick={requestSupportSummary}
-                disabled={
-                  pendingSummaryAction ||
-                  model.summaryRequestReadinessState !== "READY"
-                }
-              >
-                {pendingSummaryAction ? "Requesting" : "Request Support Summary"}
-              </ActionButton>
-              <ActionButton
-                priority="primary"
-                onClick={previewFairnessAnalysis}
-                disabled={
-                  pendingFairnessAction ||
-                  model.fairnessPreviewReadinessState !== "READY"
-                }
-              >
-                {pendingFairnessAction ? "Checking" : "Preview Fairness"}
-              </ActionButton>
-              <ActionButton
-                priority="primary"
-                onClick={createFairnessAnalysis}
-                disabled={
-                  pendingFairnessCreateAction ||
-                  model.fairnessPreviewReadinessState !== "READY"
-                }
-              >
-                {pendingFairnessCreateAction ? "Persisting" : "Persist Fairness"}
-              </ActionButton>
-            </div>
-          </div>
-          {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
-          <div
-            className="pm-quality-command-readiness"
-            aria-label="PM operating quality command readiness"
-          >
-            <MetricRow label="Score Preview Command" value={model.scoreRunPreviewReadiness} />
-            <MetricRow label="Summary Request" value={model.summaryRequestReadiness} />
-            <MetricRow label="Fairness Preview Command" value={model.fairnessPreviewReadiness} />
-            <MetricRow label="Fairness Persist Command" value={model.fairnessPreviewReadiness} />
-            <MetricRow
-              label="Execution Boundary"
-              value="Gateway-backed evidence only; no browser prompt, scoring, ranking, trade approval, order routing, OMS, or client contact in Workbench"
-            />
-          </div>
-          {actionError ? (
-            <div className="pm-quality-action-error" aria-label="PM operating quality action error posture">
-              <MetricRow label="Status Class" value={actionError.statusClass} />
-              <MetricRow label="Gateway Status" value={actionError.status} />
-              <MetricRow label="Error Source" value={actionError.source} />
-            </div>
-          ) : null}
-          <div className="pm-quality-operation-evidence" aria-label="PM operating quality Gateway operation evidence">
-            <MetricRow label="Operation" value={model.operationEvidence.operation} />
-            <MetricRow label="Correlation" value={model.operationEvidence.correlationId} />
-            <MetricRow label="Contract" value={model.operationEvidence.contractVersion} />
-            <MetricRow label="Source Service" value={model.operationEvidence.sourceService} />
-            <MetricRow label="Upstream Status" value={model.operationEvidence.upstreamStatus} />
-          </div>
-          {fairnessCreateEvidence ? (
-            <div className="pm-quality-operation-evidence" aria-label="PM operating quality persisted fairness create evidence">
-              <MetricRow label="Persisted Analysis" value={fairnessCreateEvidence.fairnessAnalysisId} />
-              <MetricRow label="Create Correlation" value={fairnessCreateEvidence.correlationId} />
-              <MetricRow label="Create Source" value={fairnessCreateEvidence.sourceService} />
-              <MetricRow label="Create Upstream Status" value={fairnessCreateEvidence.upstreamStatus} />
-            </div>
-          ) : null}
-          <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary posture">
-            <MetricRow label="Summary Status" value={model.summaryPosture.status} />
-            <MetricRow label="Review Posture" value={model.summaryPosture.reviewState} />
-            <MetricRow label="Workflow Authority" value={model.summaryPosture.workflowAuthority} />
-            <MetricRow label="Workflow Run" value={model.summaryPosture.runId} />
-            <MetricRow label="Requested Outputs" value={model.summaryPosture.requestedOutputs} />
-            <MetricRow label="Audience" value={model.summaryPosture.audience} />
-            <MetricRow label="Evidence Source" value={model.summaryPosture.evidenceSource} />
-            <MetricRow label="Summary Supportability" value={model.summaryPosture.supportability} />
-            <MetricRow label="Support Boundary" value={model.summaryPosture.boundary} />
-          </div>
-          <AnalyticsTable
-            ariaLabel="PM operating quality score runs"
-            variant="analysis"
-            density="compact"
-            columns={[
-              { key: "scoreRun", label: "Score Run" },
-              { key: "pm", label: "PM / Book" },
-              { key: "policy", label: "Policy" },
-              { key: "asOf", label: "As Of" },
-              { key: "state", label: "State" },
-              { key: "score", label: "Score" },
-              { key: "forbiddenUses", label: "Forbidden Uses" },
-              { key: "source", label: "Source Refs" },
-              { key: "reason", label: "Reason" },
-            ]}
-            rows={model.scoreRunRows.map((row) => ({
-              key: row.key,
-              cells: [
-                <strong key={`${row.key}-id`}>{row.scoreRunId}</strong>,
-                `${row.pmId} / ${row.bookId}`,
-                row.policy,
-                row.asOfDate,
-                <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-                  {businessStateLabel(row.state)}
-                </SemanticBadge>,
-                row.score,
-                row.forbiddenUses,
-                row.sourceRefs,
-                formatPmQualityReasonCodeList(row.reasonCodes),
-              ],
-            }))}
-            emptyState={{
-              title: "No score runs returned",
-              body: "Load or preview Manage score-run evidence before using score-run posture.",
-            }}
-          />
-        </div>
+        <PmOperatingQualityScoreRunCard
+          model={model}
+          pendingScorePreview={pendingAction}
+          pendingSummaryRequest={pendingSummaryAction}
+          pendingFairnessPreview={pendingFairnessAction}
+          pendingFairnessPersist={pendingFairnessCreateAction}
+          actionMessage={actionMessage}
+          actionError={actionError}
+          fairnessCreateEvidence={fairnessCreateEvidence}
+          onPreviewScoreRun={previewScoreRun}
+          onRequestSupportSummary={requestSupportSummary}
+          onPreviewFairness={previewFairnessAnalysis}
+          onPersistFairness={createFairnessAnalysis}
+        />
 
         <aside className="pm-quality-governance-card">
           <Text as="h3" variant="subsectionTitle">
