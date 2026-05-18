@@ -36,6 +36,7 @@ import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 
 type Props = {
   portfolioId: string;
@@ -318,49 +319,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                   <p>{primaryReview.clientRationale}</p>
                 </div>
                 {clientCommunicationBoundary ? (
-                  <div
-                    className="outcome-review-client-boundary"
-                    aria-label="Client communication boundary"
-                  >
-                    <div className="outcome-review-client-boundary-header">
-                      <h4>Client Communication Boundary</h4>
-                      <SemanticBadge tone={outcomeReviewBadgeTone(clientCommunicationBoundary.state)}>
-                        {businessStateLabel(clientCommunicationBoundary.state)}
-                      </SemanticBadge>
-                    </div>
-                    <p>{clientCommunicationBoundary.summary}</p>
-                    <div className="outcome-review-client-boundary-grid">
-                      <span>
-                        <strong>Communication</strong>
-                        {clientCommunicationBoundary.clientCommunicationProjected
-                          ? "Projected"
-                          : "Not projected"}
-                      </span>
-                      <span>
-                        <strong>Approval</strong>
-                        {clientCommunicationBoundary.clientApprovalProjected
-                          ? "Projected"
-                          : "Not projected"}
-                      </span>
-                      <span>
-                        <strong>Required source</strong>
-                        {clientCommunicationBoundary.requiredSourceProduct}
-                      </span>
-                      <span>
-                        <strong>Reason</strong>
-                        {formatBusinessReason(clientCommunicationBoundary.reasonCode)}
-                      </span>
-                    </div>
-                    {clientCommunicationBoundary.blockedCapabilities.length > 0 ? (
-                      <div className="outcome-review-client-boundary-capabilities">
-                        {clientCommunicationBoundary.blockedCapabilities.map((capability) => (
-                          <SemanticBadge key={capability} tone="danger">
-                            {formatBusinessReason(capability)}
-                          </SemanticBadge>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
+                  <OutcomeReviewClientBoundaryCard boundary={clientCommunicationBoundary} />
                 ) : null}
                 <h4>Evidence Availability</h4>
                 <div className="outcome-review-evidence-grid">
