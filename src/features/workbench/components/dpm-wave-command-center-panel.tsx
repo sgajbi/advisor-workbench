@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActionButton,
   AnalyticsTable,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
 } from "@/design-system";
 import DpmWaveActiveRebalanceSection from "@/features/workbench/components/dpm-wave-active-rebalance-section";
+import DpmCampaignDefinitionsSection, {
+  CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
+} from "@/features/workbench/components/dpm-campaign-definitions-section";
+import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
 import {
   approveDpmWave,
   createDpmWave,
@@ -30,10 +33,6 @@ import type {
 } from "@/features/workbench/types";
 import {
   buildDpmWaveCommandCenterModel,
-  type DpmCampaignLaunchPosture,
-  type DpmCampaignLaunchHistoryRow,
-  type DpmCampaignLaunchHistoryPage,
-  type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
@@ -48,7 +47,6 @@ import {
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import {
   businessStateLabel,
-  formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
@@ -60,8 +58,6 @@ type Props = {
   campaignDiscoveryError?: string | null;
   errorMessage?: string | null;
 };
-
-const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
 
 export default function DpmWaveCommandCenterPanel({
   portfolioId,
@@ -361,18 +357,18 @@ export default function DpmWaveCommandCenterPanel({
       ) : null}
 
       <div className="rebalance-summary-strip" aria-label="Rebalance readiness">
-        <SummaryCell
+        <DpmWaveSummaryCell
           label="Rebalance Status"
           value={businessStateLabel(model.selectedWaveState)}
           tone={dpmWaveBadgeTone(model.selectedWaveState)}
         />
-        <SummaryCell
+        <DpmWaveSummaryCell
           label="Approval Readiness"
           value={approvalBlocked ? "Blocked" : "Ready"}
           tone={approvalBlocked ? "danger" : "success"}
         />
-        <SummaryCell label="Proposed Changes" value={model.selectedWaveItemCount} />
-        <SummaryCell
+        <DpmWaveSummaryCell label="Proposed Changes" value={model.selectedWaveItemCount} />
+        <DpmWaveSummaryCell
           label="Drift Improvement"
           value={findDpmWaveMetricValue(
             model.metricRows,
@@ -383,7 +379,7 @@ export default function DpmWaveCommandCenterPanel({
         />
       </div>
 
-      <CampaignDefinitionsSection
+      <DpmCampaignDefinitionsSection
         rows={model.campaignRows}
         lifecycleRows={model.campaignLifecycleRows}
         launchHistoryRows={model.campaignLaunchHistoryRows}
@@ -495,369 +491,6 @@ export default function DpmWaveCommandCenterPanel({
         />
       </section>
     </SectionBlock>
-  );
-}
-function CampaignDefinitionsSection({
-  rows,
-  lifecycleRows,
-  launchHistoryRows,
-  launchHistoryPage,
-  launchPosture,
-  lifecycleError,
-  launchHistoryError,
-  launchError,
-  pendingLifecycleKey,
-  pendingLaunchHistoryKey,
-  pendingLaunchPackageKey,
-  pendingLaunchKey,
-  selectedCampaign,
-  selectedCampaignKey,
-  errorMessage,
-  onLoadLifecycle,
-  onLoadLaunchHistory,
-  onCheckLaunchReadiness,
-  onLaunchCampaign,
-}: {
-  rows: DpmCampaignDefinitionRow[];
-  lifecycleRows: DpmCampaignLifecycleEventRow[];
-  launchHistoryRows: DpmCampaignLaunchHistoryRow[];
-  launchHistoryPage: DpmCampaignLaunchHistoryPage;
-  launchPosture: DpmCampaignLaunchPosture;
-  lifecycleError?: string | null;
-  launchHistoryError?: string | null;
-  launchError?: string | null;
-  pendingLifecycleKey?: string | null;
-  pendingLaunchHistoryKey?: string | null;
-  pendingLaunchPackageKey?: string | null;
-  pendingLaunchKey?: string | null;
-  selectedCampaign: DpmCampaignDefinitionRow | null;
-  selectedCampaignKey?: string | null;
-  errorMessage?: string | null;
-  onLoadLifecycle: (row: DpmCampaignDefinitionRow) => void;
-  onLoadLaunchHistory: (row: DpmCampaignDefinitionRow, offset?: number) => void;
-  onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
-  onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
-}) {
-  const selectedLaunchPending = selectedCampaign?.key === pendingLaunchKey;
-  return (
-    <section className="rebalance-proposed-card" aria-labelledby="campaign-definitions-title">
-      <div className="rebalance-table-heading">
-        <div>
-          <h3 id="campaign-definitions-title">Campaign Definitions</h3>
-          <p>Manage-owned bulk-review campaigns backed by source-supplied candidate sets.</p>
-        </div>
-        <SemanticBadge tone={errorMessage ? "warn" : rows.length ? "success" : "default"}>
-          {errorMessage ? "Needs attention" : rows.length ? "Available" : "No active campaign"}
-        </SemanticBadge>
-      </div>
-      {errorMessage ? (
-        <ScreenStatePanel
-          kind="partial"
-          surface="portfolio"
-          title="Campaign definitions need attention"
-          body={errorMessage}
-        />
-      ) : null}
-      <AnalyticsTable
-        ariaLabel="DPM campaign definitions"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "campaign", label: "Campaign" },
-          { key: "version", label: "Version" },
-          { key: "status", label: "Status" },
-          { key: "asOf", label: "As Of" },
-          { key: "candidates", label: "Candidates", align: "right" },
-          { key: "eligibleCandidates", label: "Eligible", align: "right" },
-          { key: "portfolioTypes", label: "Eligible Types" },
-          { key: "governance", label: "Governance" },
-          { key: "expiry", label: "Expiry" },
-          { key: "purpose", label: "Purpose" },
-          { key: "source", label: "Source Posture" },
-          { key: "evidence", label: "Evidence" },
-          { key: "history", label: "Launch History" },
-          { key: "launch", label: "Launch" },
-        ]}
-        rows={rows.map((row) => ({
-          key: row.key,
-          cells: [
-            <button
-              className="rebalance-link-button"
-              key={`${row.key}-select`}
-              type="button"
-              onClick={() => onLoadLifecycle(row)}
-              aria-pressed={row.key === selectedCampaignKey}
-            >
-              {row.displayName}
-            </button>,
-            row.campaignVersion,
-            <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-              {businessStateLabel(row.status)}
-            </SemanticBadge>,
-            row.asOfDate,
-            row.candidateCount,
-            row.eligibleCandidateCount,
-            row.eligiblePortfolioTypes,
-            businessStateLabel(row.governanceState),
-            businessStateLabel(row.expiryState),
-            row.accessPurpose,
-            row.sourcePosture,
-            <ActionButton
-              key={`${row.key}-evidence`}
-              priority="secondary"
-              onClick={() => onLoadLifecycle(row)}
-              disabled={Boolean(pendingLifecycleKey)}
-            >
-              {pendingLifecycleKey === row.key ? "Loading" : "Open Evidence"}
-            </ActionButton>,
-            <ActionButton
-              key={`${row.key}-launch-history`}
-              priority="secondary"
-              onClick={() => onLoadLaunchHistory(row)}
-              disabled={Boolean(pendingLaunchHistoryKey)}
-            >
-              {pendingLaunchHistoryKey === row.key ? "Loading" : "Open History"}
-            </ActionButton>,
-            <ActionButton
-              key={`${row.key}-launch-readiness`}
-              priority="secondary"
-              onClick={() => onCheckLaunchReadiness(row)}
-              disabled={Boolean(pendingLaunchPackageKey || pendingLaunchKey)}
-            >
-              {pendingLaunchPackageKey === row.key ? "Checking" : "Check Readiness"}
-            </ActionButton>,
-          ],
-        }))}
-        emptyState={{
-          title: "No active campaign definitions",
-          body: "Persist a Manage campaign definition before using bulk-review campaign waves.",
-        }}
-      />
-      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-lifecycle-title">
-        <div className="rebalance-table-heading">
-          <div>
-            <h4 id="campaign-lifecycle-title">Campaign Lifecycle Evidence</h4>
-            <p>
-              {selectedCampaign
-                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
-                : "Select a campaign definition to inspect lifecycle evidence."}
-            </p>
-          </div>
-          <SemanticBadge tone={lifecycleError ? "warn" : lifecycleRows.length ? "success" : "default"}>
-            {lifecycleError ? "Needs attention" : lifecycleRows.length ? "Loaded" : "Not loaded"}
-          </SemanticBadge>
-        </div>
-        {lifecycleError ? (
-          <ScreenStatePanel
-            kind="partial"
-            surface="portfolio"
-            title="Campaign lifecycle evidence needs attention"
-            body={lifecycleError}
-          />
-        ) : null}
-        <AnalyticsTable
-          ariaLabel="DPM campaign lifecycle evidence"
-          variant="portfolio"
-          density="compact"
-          columns={[
-            { key: "event", label: "Lifecycle Event" },
-            { key: "occurred", label: "Recorded" },
-            { key: "actor", label: "Recorded By" },
-            { key: "wave", label: "Wave" },
-            { key: "reviewDate", label: "Review Date" },
-            { key: "status", label: "Status" },
-            { key: "reason", label: "Reason" },
-            { key: "correlation", label: "Correlation" },
-            { key: "idempotency", label: "Idempotency" },
-          ]}
-          rows={lifecycleRows.map((row) => ({
-            key: row.key,
-            cells: [
-              row.eventType,
-              row.occurredAt,
-              row.actor,
-              row.waveId,
-              row.requestedAsOfDate,
-              <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-                {businessStateLabel(row.status)}
-              </SemanticBadge>,
-              row.reason,
-              row.correlationId,
-              row.idempotencyKey,
-            ],
-          }))}
-          emptyState={{
-            title: "No lifecycle evidence loaded",
-            body: "Open campaign evidence to review Manage-recorded lifecycle events.",
-          }}
-        />
-      </div>
-      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-history-title">
-        <div className="rebalance-table-heading">
-          <div>
-            <h4 id="campaign-launch-history-title">Campaign Launch History</h4>
-            <p>
-              {selectedCampaign
-                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion} | ${launchHistoryPage.count} of ${launchHistoryPage.totalCount} launch records`
-                : "Select a campaign definition to inspect append-only launch history."}
-            </p>
-          </div>
-          <SemanticBadge tone={launchHistoryError ? "warn" : launchHistoryRows.length ? "success" : "default"}>
-            {launchHistoryError ? "Needs attention" : launchHistoryRows.length ? "Loaded" : "Not loaded"}
-          </SemanticBadge>
-        </div>
-        {launchHistoryError ? (
-          <ScreenStatePanel
-            kind="partial"
-            surface="portfolio"
-            title="Campaign launch history needs attention"
-            body={launchHistoryError}
-          />
-        ) : null}
-        <AnalyticsTable
-          ariaLabel="DPM campaign launch history"
-          variant="portfolio"
-          density="compact"
-          columns={[
-            { key: "wave", label: "Wave" },
-            { key: "actor", label: "Launched By" },
-            { key: "launched", label: "Recorded" },
-            { key: "reviewDate", label: "Review Date" },
-            { key: "correlation", label: "Correlation" },
-            { key: "idempotency", label: "Idempotency" },
-          ]}
-          rows={launchHistoryRows.map((row) => ({
-            key: row.key,
-            cells: [
-              row.waveId,
-              row.actor,
-              row.launchedAt,
-              row.requestedAsOfDate,
-              row.correlationId,
-              row.idempotencyKey,
-            ],
-          }))}
-          emptyState={{
-            title: selectedCampaign ? "No launch records" : "No launch history loaded",
-            body: selectedCampaign
-              ? "Manage has no append-only launch records for this campaign definition page."
-              : "Open launch history to review Manage-recorded launch attempts and boundary posture.",
-          }}
-        />
-        <div className="rebalance-summary-strip" aria-label="Campaign launch history boundaries">
-          <SummaryCell
-            label="Page"
-            value={
-              launchHistoryPage.count > 0
-                ? `${launchHistoryPage.offset + 1}-${launchHistoryPage.offset + launchHistoryPage.count} of ${
-                    launchHistoryPage.totalCount
-                  }`
-                : `0 of ${launchHistoryPage.totalCount}`
-            }
-          />
-          <SummaryCell label="Page Size" value={String(launchHistoryPage.limit || CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)} />
-          <SummaryCell
-            label="Operating Boundary"
-            value={
-              launchHistoryPage.operatingBoundaries.length > 0
-                ? launchHistoryPage.operatingBoundaries.join(", ")
-                : "No order generation or OMS execution claim"
-            }
-          />
-        </div>
-        <div className="rebalance-action-row" aria-label="Campaign launch history pagination">
-          <ActionButton
-            priority="secondary"
-            onClick={() =>
-              selectedCampaign
-                ? onLoadLaunchHistory(
-                    selectedCampaign,
-                    Math.max(0, launchHistoryPage.offset - CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)
-                  )
-                : undefined
-            }
-            disabled={!selectedCampaign || pendingLaunchHistoryKey !== null || !launchHistoryPage.hasPreviousPage}
-          >
-            Previous
-          </ActionButton>
-          <ActionButton
-            priority="secondary"
-            onClick={() =>
-              selectedCampaign
-                ? onLoadLaunchHistory(
-                    selectedCampaign,
-                    launchHistoryPage.offset + CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE
-                  )
-                : undefined
-            }
-            disabled={!selectedCampaign || pendingLaunchHistoryKey !== null || !launchHistoryPage.hasNextPage}
-          >
-            Next
-          </ActionButton>
-        </div>
-      </div>
-      <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-title">
-        <div className="rebalance-table-heading">
-          <div>
-            <h4 id="campaign-launch-title">Campaign Launch Posture</h4>
-            <p>
-              {selectedCampaign
-                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
-                : "Select a campaign definition to check launch readiness."}
-            </p>
-          </div>
-          <SemanticBadge tone={dpmWaveBadgeTone(launchPosture.state)}>
-            {businessStateLabel(launchPosture.state)}
-          </SemanticBadge>
-        </div>
-        {launchError ? (
-          <ScreenStatePanel
-            kind="partial"
-            surface="portfolio"
-            title="Campaign launch needs attention"
-            body={launchError}
-          />
-        ) : null}
-        <div className="rebalance-summary-strip" aria-label="Campaign launch posture">
-          <SummaryCell
-            label="Launch Readiness"
-            value={businessStateLabel(launchPosture.state)}
-            tone={dpmWaveBadgeTone(launchPosture.state)}
-          />
-          <SummaryCell label="Review Date" value={launchPosture.requestedAsOfDate} />
-          <SummaryCell label="Reviewed By" value={launchPosture.actor} />
-          <SummaryCell label="Durable Wave" value={launchPosture.launchedWaveId} />
-          <SummaryCell label="Idempotency Evidence" value={launchPosture.idempotencyEvidence} />
-        </div>
-        <div className="rebalance-action-row">
-          <span>{formatBusinessReason(launchPosture.reason)}</span>
-          <ActionButton
-            priority="primary"
-            onClick={() => selectedCampaign && onLaunchCampaign(selectedCampaign)}
-            disabled={!selectedCampaign || !launchPosture.canLaunch || Boolean(pendingLaunchKey)}
-          >
-            {selectedLaunchPending ? "Launching" : "Launch Campaign"}
-          </ActionButton>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SummaryCell({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  tone?: "default" | "success" | "warn" | "danger";
-}) {
-  return (
-    <div className={`rebalance-summary-cell rebalance-summary-${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }
 
