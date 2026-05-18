@@ -1,7 +1,7 @@
 import type { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { preserveBusinessAcronyms } from "@/features/workbench/business-label-formatters";
 
-import type { ManageWorkspaceData } from "./manage-workspace";
+import type { ManageWorkspaceData } from "./manage-workspace-data";
 
 export type BadgeTone = "default" | "success" | "warn" | "danger";
 

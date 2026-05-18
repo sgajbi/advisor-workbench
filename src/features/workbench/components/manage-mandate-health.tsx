@@ -30,7 +30,7 @@ import type {
   ManageExceptionRow,
 } from "@/features/workbench/manage-workspace-view-model";
 
-import type { ManageWorkspaceData } from "../manage-workspace";
+import type { ManageWorkspaceData } from "../manage-workspace-data";
 
 type Props = {
   data: ManageWorkspaceData;
