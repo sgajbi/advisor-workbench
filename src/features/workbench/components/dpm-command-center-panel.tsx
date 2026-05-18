@@ -18,15 +18,18 @@ import type {
   DpmCommandCenterGatewayResponse,
   DpmExceptionSummaryResponse,
 } from "@/features/workbench/types";
-import {
-  buildDpmCommandCenterPanelModel,
-  type DpmCommandCenterPanelState,
-} from "@/features/workbench/dpm-command-center-view-model";
+import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
   businessStateLabel,
   formatBusinessReason,
   formatBusinessSource,
 } from "@/features/workbench/manage-workspace-view-model";
+import {
+  dpmCommandCenterBadgeTone,
+  dpmCommandCenterStatePanelCopy,
+  readDpmWorkflowPackStatus,
+  shouldShowDpmCommandCenterStatePanel,
+} from "@/features/workbench/dpm-command-center-panel-helpers";
 
 type Props = {
   commandCenter: DpmCommandCenterGatewayResponse | null;
@@ -35,61 +38,6 @@ type Props = {
   mandateHealth?: DpmCommandCenterGatewayResponse | null;
   errorMessage?: string | null;
 };
-
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (
-    normalized === "COMPLETE" ||
-    normalized === "READY" ||
-    normalized === "SUCCEEDED"
-  ) {
-    return "success";
-  }
-  if (
-    normalized === "PARTIAL" ||
-    normalized === "EMPTY" ||
-    normalized.includes("REVIEW")
-  ) {
-    return "warn";
-  }
-  if (
-    normalized === "BLOCKED" ||
-    normalized === "UNSUPPORTED" ||
-    normalized === "FAILED"
-  ) {
-    return "danger";
-  }
-  return "default";
-}
-
-function statePanelCopy(state: DpmCommandCenterPanelState) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No monitoring run for this PM book",
-      body: "Run monitoring to request a fresh mandate assessment.",
-    };
-  }
-  if (state === "partial") {
-    return {
-      kind: "partial" as const,
-      title: "Mandate readiness is partial",
-      body: "Some data readiness or mandate-review inputs need attention.",
-    };
-  }
-  if (state === "unsupported") {
-    return {
-      kind: "unavailable" as const,
-      title: "Command center is not supported",
-      body: "Mandate health is not available for this context.",
-    };
-  }
-  return {
-    kind: "partial" as const,
-    title: "Mandate health is unavailable",
-    body: "Mandate health is temporarily unavailable.",
-  };
-}
 
 export default function DpmCommandCenterPanel({
   commandCenter,
@@ -124,15 +72,13 @@ export default function DpmCommandCenterPanel({
     runModel.latestMonitoringRunStatus !== "N/A"
       ? runModel.latestMonitoringRunStatus
       : model.latestMonitoringRunStatus;
-  const shouldShowStatePanel =
-    Boolean(errorMessage) ||
-    Boolean(runError) ||
-    model.state === "empty" ||
-    model.state === "partial" ||
-    model.state === "unsupported" ||
-    model.state === "unavailable";
-  const stateCopy = statePanelCopy(model.state);
-  const exceptionSummaryStatus = readWorkflowPackStatus(exceptionSummary?.data);
+  const shouldShowStatePanel = shouldShowDpmCommandCenterStatePanel(
+    model.state,
+    errorMessage,
+    runError,
+  );
+  const stateCopy = dpmCommandCenterStatePanelCopy(model.state);
+  const exceptionSummaryStatus = readDpmWorkflowPackStatus(exceptionSummary?.data);
   const runPending = pendingAction !== null;
 
   async function runMonitoring() {
@@ -173,7 +119,7 @@ export default function DpmCommandCenterPanel({
         state: "ACTIVE",
       });
       setExceptionSummary(response);
-      setRunMessage(`Exception summary ${businessStateLabel(readWorkflowPackStatus(response.data))}.`);
+      setRunMessage(`Exception summary ${businessStateLabel(readDpmWorkflowPackStatus(response.data))}.`);
     } catch (error) {
       setRunError(
         error instanceof Error
@@ -192,7 +138,7 @@ export default function DpmCommandCenterPanel({
       className="dpm-command-center-panel"
       actions={
         <div className="dpm-command-center-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
+          <SemanticBadge tone={dpmCommandCenterBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
           <SemanticBadge>Decision support available</SemanticBadge>
@@ -277,7 +223,7 @@ export default function DpmCommandCenterPanel({
               cells: [
                 <SemanticBadge
                   key={`${row.key}-state`}
-                  tone={badgeTone(row.key)}
+                  tone={dpmCommandCenterBadgeTone(row.key)}
                 >
                   {row.label}
                 </SemanticBadge>,
@@ -317,7 +263,7 @@ export default function DpmCommandCenterPanel({
         <MetricRow
           label="Run Status"
           value={
-            <SemanticBadge tone={badgeTone(latestRunStatus)}>
+            <SemanticBadge tone={dpmCommandCenterBadgeTone(latestRunStatus)}>
               {businessStateLabel(latestRunStatus)}
             </SemanticBadge>
           }
@@ -344,7 +290,7 @@ export default function DpmCommandCenterPanel({
             row.dimension,
             <SemanticBadge
               key={`${row.key}-severity`}
-              tone={badgeTone(row.severity)}
+              tone={dpmCommandCenterBadgeTone(row.severity)}
             >
               {row.severity}
             </SemanticBadge>,
@@ -374,7 +320,7 @@ export default function DpmCommandCenterPanel({
             row.action,
             <SemanticBadge
               key={`${row.key}-severity`}
-              tone={badgeTone(row.severity)}
+              tone={dpmCommandCenterBadgeTone(row.severity)}
             >
               {businessStateLabel(row.severity)}
             </SemanticBadge>,
@@ -406,7 +352,7 @@ export default function DpmCommandCenterPanel({
             row.mandateId,
             <SemanticBadge
               key={`${row.key}-severity`}
-              tone={badgeTone(row.severity)}
+              tone={dpmCommandCenterBadgeTone(row.severity)}
             >
               {row.severity}
             </SemanticBadge>,
@@ -436,7 +382,7 @@ export default function DpmCommandCenterPanel({
           cells: [
             row.dimension,
             row.score,
-            <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
+            <SemanticBadge key={`${row.key}-state`} tone={dpmCommandCenterBadgeTone(row.state)}>
               {businessStateLabel(row.state)}
             </SemanticBadge>,
             formatBusinessReason(row.reasons),
@@ -455,29 +401,4 @@ export default function DpmCommandCenterPanel({
       </Text>
     </SectionBlock>
   );
-}
-
-function readWorkflowPackStatus(data: Record<string, unknown> | undefined): string {
-  if (!data) {
-    return "NOT_REQUESTED";
-  }
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const output = readRecord(data.output);
-  return (
-    readString(data.status) ??
-    readString(data.review_state) ??
-    readString(workflowPackRun.review_state) ??
-    readString(output.review_state) ??
-    "REVIEW_REQUIRED"
-  );
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function readString(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
