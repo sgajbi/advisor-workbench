@@ -4,6 +4,7 @@ import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
   dpmWaveActionTone,
+  dpmWaveStatePanelCopy,
   findDpmWaveMetricValue,
   firstDpmWaveBusinessValue,
   formatDpmWaveDisplayDate,
@@ -61,6 +62,29 @@ const itemRows: DpmWaveItemRow[] = [
 ];
 
 describe("DPM wave command-center panel helpers", () => {
+  it("builds state-panel copy for source-owned wave readiness states", () => {
+    expect(dpmWaveStatePanelCopy("empty", "PB_SG_GLOBAL_BAL_001")).toEqual({
+      kind: "empty",
+      title: "No rebalance proposal is available",
+      body: "No active rebalance proposal is available for PB_SG_GLOBAL_BAL_001.",
+    });
+    expect(dpmWaveStatePanelCopy("partial", "PB_SG_GLOBAL_BAL_001")).toEqual({
+      kind: "partial",
+      title: "Rebalance readiness is partial",
+      body: "Some required inputs need review before approval can proceed.",
+    });
+    expect(dpmWaveStatePanelCopy("blocked", "PB_SG_GLOBAL_BAL_001")).toEqual({
+      kind: "permission_blocked",
+      title: "Approval is blocked",
+      body: "Resolve the open attention items before requesting approval.",
+    });
+    expect(dpmWaveStatePanelCopy("ready", "PB_SG_GLOBAL_BAL_001")).toEqual({
+      kind: "unavailable",
+      title: "Rebalance data is temporarily unavailable",
+      body: "Rebalance details could not be loaded.",
+    });
+  });
+
   it("builds metric tiles from Manage-owned metric rows without calculating analytics", () => {
     expect(buildDpmWaveMetricTiles(metricRows, "2", "0")).toEqual([
       { label: "Turnover", value: "4.8%" },
