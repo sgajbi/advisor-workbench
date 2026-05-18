@@ -34,11 +34,11 @@ import {
   type DpmCampaignLaunchHistoryPage,
   type DpmCampaignLifecycleEventRow,
   type DpmCampaignDefinitionRow,
-  type DpmWaveCommandCenterPanelState,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
+  dpmWaveStatePanelCopy,
   findDpmWaveMetricValue,
   formatDpmWaveDisplayDate,
   isDpmWaveActionBlocked,
@@ -93,35 +93,6 @@ function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
     return "danger";
   }
   return "default";
-}
-
-function statePanelCopy(state: DpmWaveCommandCenterPanelState, portfolioId: string) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No rebalance proposal is available",
-      body: `No active rebalance proposal is available for ${portfolioId}.`,
-    };
-  }
-  if (state === "partial") {
-    return {
-      kind: "partial" as const,
-      title: "Rebalance readiness is partial",
-      body: "Some required inputs need review before approval can proceed.",
-    };
-  }
-  if (state === "blocked") {
-    return {
-      kind: "permission_blocked" as const,
-      title: "Approval is blocked",
-      body: "Resolve the open attention items before requesting approval.",
-    };
-  }
-  return {
-    kind: "unavailable" as const,
-    title: "Rebalance data is temporarily unavailable",
-    body: "Rebalance details could not be loaded.",
-  };
 }
 
 export default function DpmWaveCommandCenterPanel({
@@ -184,7 +155,7 @@ export default function DpmWaveCommandCenterPanel({
       : model.reportInputStatus !== "NOT_REQUESTED"
         ? model.reportInputStatus
         : "AVAILABLE";
-  const stateCopy = statePanelCopy(model.state, portfolioId);
+  const stateCopy = dpmWaveStatePanelCopy(model.state, portfolioId);
   const shouldShowStatePanel =
     Boolean(errorMessage) ||
     Boolean(actionError) ||

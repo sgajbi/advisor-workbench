@@ -1,5 +1,6 @@
 import type {
   DpmWaveItemRow,
+  DpmWaveCommandCenterPanelState,
   DpmWaveMetricRow,
 } from "./dpm-wave-command-center-view-model";
 import { formatBusinessReason } from "./manage-workspace-view-model";
@@ -20,6 +21,44 @@ export type DpmWaveProposedChangeRow = {
   mandateImpact: string;
   status: string;
 };
+
+export type DpmWaveStatePanelCopy = {
+  kind: "empty" | "partial" | "permission_blocked" | "unavailable";
+  title: string;
+  body: string;
+};
+
+export function dpmWaveStatePanelCopy(
+  state: DpmWaveCommandCenterPanelState,
+  portfolioId: string
+): DpmWaveStatePanelCopy {
+  if (state === "empty") {
+    return {
+      kind: "empty",
+      title: "No rebalance proposal is available",
+      body: `No active rebalance proposal is available for ${portfolioId}.`,
+    };
+  }
+  if (state === "partial") {
+    return {
+      kind: "partial",
+      title: "Rebalance readiness is partial",
+      body: "Some required inputs need review before approval can proceed.",
+    };
+  }
+  if (state === "blocked") {
+    return {
+      kind: "permission_blocked",
+      title: "Approval is blocked",
+      body: "Resolve the open attention items before requesting approval.",
+    };
+  }
+  return {
+    kind: "unavailable",
+    title: "Rebalance data is temporarily unavailable",
+    body: "Rebalance details could not be loaded.",
+  };
+}
 
 export function buildDpmWaveMetricTiles(
   metricRows: DpmWaveMetricRow[],
