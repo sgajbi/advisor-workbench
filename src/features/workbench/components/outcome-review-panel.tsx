@@ -17,7 +17,9 @@ import {
 } from "@/features/workbench/api";
 import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types";
 import {
+  buildOutcomeClientCommunicationBoundaryView,
   buildOutcomeReviewPanelModel,
+  type OutcomeReviewClientCommunicationBoundaryView,
 } from "@/features/workbench/outcome-review-view-model";
 import {
   buildOutcomeReviewHandoffMessages,
@@ -48,8 +50,12 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
   const [aiNarrativeStatus, setAiNarrativeStatus] = useState<string | null>(null);
   const [aiNarrativeError, setAiNarrativeError] = useState<string | null>(null);
   const [aiNarrativePending, setAiNarrativePending] = useState(false);
+  const [handoffBoundary, setHandoffBoundary] =
+    useState<OutcomeReviewClientCommunicationBoundaryView | null>(null);
   const model = buildOutcomeReviewPanelModel(response);
   const primaryReview = model.items[0] ?? null;
+  const clientCommunicationBoundary =
+    handoffBoundary ?? primaryReview?.clientCommunicationBoundary ?? null;
   const hasItems = model.items.length > 0;
   const shouldShowStatePanel = shouldShowOutcomeReviewStatePanel(
     model.state,
@@ -78,6 +84,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     setReportJobError(null);
     try {
       const reportInput = await getDpmOutcomeReviewReportInput(primaryReview.outcomeReviewId);
+      setHandoffBoundary(buildOutcomeClientCommunicationBoundaryView(reportInput.data));
       const handle = await submitDpmOutcomeReviewReportJob({
         outcomeReviewId: primaryReview.outcomeReviewId,
         outcomeReportInput: reportInput.data,
@@ -100,6 +107,9 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       const narrative = await requestDpmOutcomeReviewAiNarrative({
         outcomeReviewId: primaryReview.outcomeReviewId,
       });
+      setHandoffBoundary(
+        buildOutcomeClientCommunicationBoundaryView(narrative.ai_evidence_input)
+      );
       setAiNarrativeStatus(describeOutcomeNarrativeRun(narrative.data));
     } catch (error) {
       setAiNarrativeError(
@@ -217,7 +227,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
               </div>
               <div className="outcome-review-action-stack">
                 <a href="#outcome-review-detail">
-                  <strong>Review client impact</strong>
+                  <strong>Review mandate impact</strong>
                   <span>Assess outcome dimensions against the mandate objective.</span>
                 </a>
                 {primaryReview.proofPackId !== "N/A" ? (
@@ -303,10 +313,55 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
               </section>
 
               <section>
-                <h4>Client-Facing Rationale</h4>
+                <h4>Internal Outcome Rationale</h4>
                 <div className="outcome-review-rationale">
                   <p>{primaryReview.clientRationale}</p>
                 </div>
+                {clientCommunicationBoundary ? (
+                  <div
+                    className="outcome-review-client-boundary"
+                    aria-label="Client communication boundary"
+                  >
+                    <div className="outcome-review-client-boundary-header">
+                      <h4>Client Communication Boundary</h4>
+                      <SemanticBadge tone={outcomeReviewBadgeTone(clientCommunicationBoundary.state)}>
+                        {businessStateLabel(clientCommunicationBoundary.state)}
+                      </SemanticBadge>
+                    </div>
+                    <p>{clientCommunicationBoundary.summary}</p>
+                    <div className="outcome-review-client-boundary-grid">
+                      <span>
+                        <strong>Communication</strong>
+                        {clientCommunicationBoundary.clientCommunicationProjected
+                          ? "Projected"
+                          : "Not projected"}
+                      </span>
+                      <span>
+                        <strong>Approval</strong>
+                        {clientCommunicationBoundary.clientApprovalProjected
+                          ? "Projected"
+                          : "Not projected"}
+                      </span>
+                      <span>
+                        <strong>Required source</strong>
+                        {clientCommunicationBoundary.requiredSourceProduct}
+                      </span>
+                      <span>
+                        <strong>Reason</strong>
+                        {formatBusinessReason(clientCommunicationBoundary.reasonCode)}
+                      </span>
+                    </div>
+                    {clientCommunicationBoundary.blockedCapabilities.length > 0 ? (
+                      <div className="outcome-review-client-boundary-capabilities">
+                        {clientCommunicationBoundary.blockedCapabilities.map((capability) => (
+                          <SemanticBadge key={capability} tone="danger">
+                            {formatBusinessReason(capability)}
+                          </SemanticBadge>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
                 <h4>Evidence Availability</h4>
                 <div className="outcome-review-evidence-grid">
                   <span className={outcomeReviewAvailabilityClass(primaryReview.expectedSnapshotHash)}>

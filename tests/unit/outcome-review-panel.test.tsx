@@ -45,6 +45,7 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
         supportability: {
           explanation: "Outcome remains within mandate tolerance for advisor handoff.",
         },
+        client_communication_boundary: clientCommunicationBoundary(),
         dimension_results: [
           {
             dimension: "DRIFT_REDUCTION",
@@ -98,7 +99,7 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByRole("link", { name: /Review client impact/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Review mandate impact/ })).toHaveAttribute(
       "href",
       "#outcome-review-detail"
     );
@@ -107,6 +108,14 @@ describe("OutcomeReviewPanel", () => {
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
     );
     expect(screen.queryByText("Record advisor note")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
+      "Not projected"
+    );
+    expect(screen.getByText("ClientCommunicationRecord:v1")).toBeInTheDocument();
+    expect(screen.getByText("Client Message Generation")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeEnabled();
   });
@@ -114,7 +123,14 @@ describe("OutcomeReviewPanel", () => {
   it("requests an outcome-review report job from available report input", async () => {
     vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue({
       ...readyResponse,
-      data: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+      data: {
+        outcome_review_id: "or_1",
+        content_hash: "sha256:report-input",
+        client_communication_boundary: {
+          ...clientCommunicationBoundary(),
+          content_hash: "sha256:report-boundary",
+        },
+      },
     });
     vi.mocked(submitDpmOutcomeReviewReportJob).mockResolvedValue({
       report_request_id: "rrq_outcome_1",
@@ -131,10 +147,20 @@ describe("OutcomeReviewPanel", () => {
       expect(getDpmOutcomeReviewReportInput).toHaveBeenCalledWith("or_1");
       expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledWith({
         outcomeReviewId: "or_1",
-        outcomeReportInput: { outcome_review_id: "or_1", content_hash: "sha256:report-input" },
+        outcomeReportInput: {
+          outcome_review_id: "or_1",
+          content_hash: "sha256:report-input",
+          client_communication_boundary: {
+            ...clientCommunicationBoundary(),
+            content_hash: "sha256:report-boundary",
+          },
+        },
       });
     });
     expect(screen.getByText("Report request Accepted.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
+      "ClientCommunicationRecord:v1"
+    );
   });
 
   it("requests an outcome-review narrative", async () => {
@@ -149,6 +175,10 @@ describe("OutcomeReviewPanel", () => {
       ai_evidence_input: {
         outcome_review_id: "or_1",
         content_hash: "sha256:ai-evidence",
+        client_communication_boundary: {
+          ...clientCommunicationBoundary(),
+          content_hash: "sha256:ai-boundary",
+        },
       },
       narrative_request: {
         requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
@@ -169,6 +199,9 @@ describe("OutcomeReviewPanel", () => {
       });
     });
     expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
+      "Delivery Confirmation"
+    );
   });
 
   it("keeps report and AI handoff run posture visible after both actions", async () => {
@@ -245,3 +278,27 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Failed to fetch DPM outcome reviews (503)")).toBeInTheDocument();
   });
 });
+
+function clientCommunicationBoundary(): Record<string, unknown> {
+  return {
+    boundary_id: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
+    supportability_state: "BLOCKED",
+    source_system: "lotus-manage",
+    source_product_name: "DpmPostTradeOutcomeReview",
+    source_product_version: "v1",
+    client_communication_projected: false,
+    client_approval_projected: false,
+    reason_code: "OUTCOME_CLIENT_COMMUNICATION_NOT_SUPPORTED",
+    blocked_capabilities: [
+      "client_approval",
+      "client_contact",
+      "client_message_generation",
+      "communication_audit",
+      "delivery_confirmation",
+    ],
+    required_owner: "future client-communication owner",
+    required_source_product: "ClientCommunicationRecord:v1",
+    summary: "Manage does not publish client communication events for this outcome review.",
+    content_hash: "sha256:client-communication-boundary",
+  };
+}

@@ -114,6 +114,8 @@ must travel through Gateway-shaped contracts.
     outcome-review search, detail, supportability, report-input, AI-evidence, preview, create, and
     source-refresh posture also remain manage-owned, while AI narrative execution remains
     `lotus-ai` owned; both must reach Workbench through Gateway outcome-review composition only.
+    Manage-owned `client_communication_boundary` is rendered as a fail-closed internal boundary
+    and must not become a Workbench client messaging, approval, delivery, or audit workflow.
     RFC40-WTBD-010 portfolio-memory timeline events, source refs, artifact refs, event counts,
     source systems, reason codes, supportability, and content hashes remain manage-owned and must
     reach Workbench through Gateway portfolio-memory composition only.

@@ -159,6 +159,34 @@ describe("outcome review view model", () => {
     expect(model.items[0].aiEvidenceBlocked).toBe(true);
   });
 
+  it("preserves source-owned client communication boundary without projecting capability", () => {
+    const model = buildOutcomeReviewPanelModel(
+      response({
+        items: [
+          {
+            outcome_review_id: "or_boundary",
+            state: "READY",
+            client_communication_boundary: clientCommunicationBoundary(),
+          },
+        ],
+      })
+    );
+
+    expect(model.items[0].clientCommunicationBoundary).toEqual(
+      expect.objectContaining({
+        boundaryId: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
+        state: "BLOCKED",
+        clientCommunicationProjected: false,
+        clientApprovalProjected: false,
+        requiredSourceProduct: "ClientCommunicationRecord:v1",
+        reasonCode: "OUTCOME_CLIENT_COMMUNICATION_NOT_SUPPORTED",
+      })
+    );
+    expect(model.items[0].clientCommunicationBoundary?.blockedCapabilities).toContain(
+      "client_message_generation"
+    );
+  });
+
   it("keeps empty and unavailable states explicit", () => {
     expect(buildOutcomeReviewPanelModel(response({ items: [] })).state).toBe("empty");
     expect(buildOutcomeReviewPanelModel(null)).toEqual(
@@ -170,3 +198,27 @@ describe("outcome review view model", () => {
     );
   });
 });
+
+function clientCommunicationBoundary(): Record<string, unknown> {
+  return {
+    boundary_id: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
+    supportability_state: "BLOCKED",
+    source_system: "lotus-manage",
+    source_product_name: "DpmPostTradeOutcomeReview",
+    source_product_version: "v1",
+    client_communication_projected: false,
+    client_approval_projected: false,
+    reason_code: "OUTCOME_CLIENT_COMMUNICATION_NOT_SUPPORTED",
+    blocked_capabilities: [
+      "client_approval",
+      "client_contact",
+      "client_message_generation",
+      "communication_audit",
+      "delivery_confirmation",
+    ],
+    required_owner: "future client-communication owner",
+    required_source_product: "ClientCommunicationRecord:v1",
+    summary: "Manage does not publish client communication events for this outcome review.",
+    content_hash: "sha256:client-communication-boundary",
+  };
+}

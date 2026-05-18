@@ -2365,6 +2365,53 @@
   background: #f2f4f6;
 }
 
+.manageScope :global(.outcome-review-client-boundary) {
+  display: grid;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #d0d7de;
+  border-left: 3px solid #9a6700;
+  border-radius: 4px;
+  background: #fff8e5;
+}
+
+.manageScope :global(.outcome-review-client-boundary-header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.manageScope :global(.outcome-review-client-boundary-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.manageScope :global(.outcome-review-client-boundary-grid span) {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid #e6dbb9;
+  border-radius: 4px;
+  background: #fff;
+  color: #45464d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.manageScope :global(.outcome-review-client-boundary-grid strong) {
+  color: #5f6368;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.manageScope :global(.outcome-review-client-boundary-capabilities) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .manageScope :global(.outcome-review-evidence-grid) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

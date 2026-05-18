@@ -82,6 +82,9 @@ Current repository posture:
     `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
     dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
     Gateway-backed governed AI narrative requests without client-side outcome calculation.
+    Manage-owned `client_communication_boundary` posture is rendered as a no-client-communication
+    boundary when present; Workbench must not create client messaging, approval, delivery, or
+    communication-audit workflows from outcome-review evidence.
 13. Manage `mode=proof` renders the RFC-0040 proof-pack evidence panel from Gateway
     `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
     section posture, content hash, source hashes, Markdown availability, report-input readiness,

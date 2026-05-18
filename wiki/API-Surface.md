@@ -134,8 +134,9 @@ promote dormant labels into product ownership just because historical route file
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}?mode=reviews` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
   Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,
-  source lineage, supportability, report-input posture, and AI-evidence posture without
-  calculating those values client-side. The panel can request a governed outcome-review PDF job by
+  source lineage, supportability, report-input posture, AI-evidence posture, and
+  `client_communication_boundary` posture without calculating those values client-side or creating
+  client communication capability. The panel can request a governed outcome-review PDF job by
   loading manage report input through Gateway and then submitting Gateway
   `POST /api/v1/reports/outcome-reviews`; report rendering and archive lifecycle remain owned by
   `lotus-report`, `lotus-render`, and `lotus-archive`. The panel can also request a governed

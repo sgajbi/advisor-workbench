@@ -34,6 +34,7 @@ const review: OutcomeReviewListItem = {
   updatedAt: "2026-05-13T09:35:00Z",
   reportInputBlocked: false,
   aiEvidenceBlocked: false,
+  clientCommunicationBoundary: null,
   dimensions: [],
   lineage: [
     {
