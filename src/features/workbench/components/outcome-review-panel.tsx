@@ -18,8 +18,18 @@ import {
 import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types";
 import {
   buildOutcomeReviewPanelModel,
-  type OutcomeReviewPanelState,
 } from "@/features/workbench/outcome-review-view-model";
+import {
+  buildOutcomeReviewHandoffMessages,
+  buildOutcomeReviewStatePanelCopy,
+  countReadyOutcomeReviewEvidence,
+  describeOutcomeNarrativeRun,
+  outcomeReviewAvailabilityClass,
+  outcomeReviewAvailabilityLabel,
+  outcomeReviewBadgeTone,
+  outcomeReviewSourceEvidenceStatus,
+  shouldShowOutcomeReviewStatePanel,
+} from "@/features/workbench/outcome-review-panel-helpers";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -31,49 +41,6 @@ type Props = {
   errorMessage?: string | null;
 };
 
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (normalized === "SUPPORTED" || normalized === "READY" || normalized === "WITHIN_TOLERANCE") {
-    return "success";
-  }
-  if (normalized === "DEGRADED" || normalized === "PARTIAL" || normalized.includes("REVIEW")) {
-    return "warn";
-  }
-  if (normalized === "BLOCKED" || normalized === "UNSUPPORTED" || normalized.includes("BREACH")) {
-    return "danger";
-  }
-  return "default";
-}
-
-function statePanelCopy(state: OutcomeReviewPanelState, portfolioId: string) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No outcome reviews for this portfolio",
-      body: `No outcome review is currently available for ${portfolioId}.`,
-    };
-  }
-  if (state === "blocked") {
-    return {
-      kind: "permission_blocked" as const,
-      title: "Outcome review handoff is blocked",
-      body: "Resolve the open review items before preparing advisor handoffs.",
-    };
-  }
-  if (state === "unsupported") {
-    return {
-      kind: "unavailable" as const,
-      title: "Outcome review is not supported",
-      body: "Outcome review is not available for this portfolio.",
-    };
-  }
-  return {
-    kind: "partial" as const,
-    title: "Outcome review data is unavailable",
-    body: "Outcome review details are temporarily unavailable for this portfolio.",
-  };
-}
-
 export default function OutcomeReviewPanel({ portfolioId, response, errorMessage }: Props) {
   const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
   const [reportJobError, setReportJobError] = useState<string | null>(null);
@@ -84,26 +51,23 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
   const model = buildOutcomeReviewPanelModel(response);
   const primaryReview = model.items[0] ?? null;
   const hasItems = model.items.length > 0;
-  const shouldShowStatePanel =
-    Boolean(errorMessage) || model.state === "empty" || model.state === "blocked" || model.state === "unsupported" || model.state === "unavailable";
-  const stateCopy = statePanelCopy(model.state, portfolioId);
+  const shouldShowStatePanel = shouldShowOutcomeReviewStatePanel(
+    model.state,
+    errorMessage ?? null,
+  );
+  const stateCopy = buildOutcomeReviewStatePanelCopy(model.state, portfolioId);
   const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
   const aiNarrativeAvailable = Boolean(primaryReview && !primaryReview.aiEvidenceBlocked);
-  const handoffStatusMessages = [
+  const handoffStatusMessages = buildOutcomeReviewHandoffMessages(
     reportJobError ?? reportJobStatus,
     aiNarrativeError ?? aiNarrativeStatus,
-  ].filter((message): message is string => Boolean(message));
-  const readyEvidenceCount = primaryReview
-    ? [
-        primaryReview.expectedSnapshotHash,
-        primaryReview.realizedSnapshotHash,
-        primaryReview.proofPackId,
-        primaryReview.lineage.length > 0 ? "available" : "",
-      ].filter((value) => value && value !== "N/A").length
-    : 0;
-  const evidencePackStatus = primaryReview?.proofPackId !== "N/A" ? "Available" : "Not available";
+  );
+  const readyEvidenceCount = countReadyOutcomeReviewEvidence(primaryReview);
+  const evidencePackStatus = outcomeReviewAvailabilityLabel(
+    primaryReview?.proofPackId ?? "N/A",
+  );
   const sourceEvidenceStatus =
-    readyEvidenceCount >= 3 ? "Available" : readyEvidenceCount > 0 ? "Partial" : "Not available";
+    outcomeReviewSourceEvidenceStatus(readyEvidenceCount);
   const evidencePackHref = `/workbench/${encodeURIComponent(portfolioId)}?mode=proof`;
 
   async function requestOutcomeReportJob() {
@@ -136,7 +100,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       const narrative = await requestDpmOutcomeReviewAiNarrative({
         outcomeReviewId: primaryReview.outcomeReviewId,
       });
-      setAiNarrativeStatus(describeNarrativeRun(narrative.data));
+      setAiNarrativeStatus(describeOutcomeNarrativeRun(narrative.data));
     } catch (error) {
       setAiNarrativeError(
         error instanceof Error ? error.message : "Outcome review request failed"
@@ -153,7 +117,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       className="outcome-review-panel"
       actions={
         <div className="outcome-review-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
+          <SemanticBadge tone={outcomeReviewBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
           <SemanticBadge>Evidence available</SemanticBadge>
@@ -234,7 +198,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                     item.reviewLabel,
                     item.reviewWindow,
                     item.outcomeStatusLabel,
-                    <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={badgeTone(item.state)}>
+                    <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={outcomeReviewBadgeTone(item.state)}>
                       {businessStateLabel(item.state)}
                     </SemanticBadge>,
                     item.proofPackId !== "N/A" ? "Available" : "Not available",
@@ -326,7 +290,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                       row.expected,
                       row.realized,
                       row.variance,
-                      <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.state)}>
+                      <SemanticBadge key={`${row.key}-state`} tone={outcomeReviewBadgeTone(row.state)}>
                         {businessStateLabel(row.state)}
                       </SemanticBadge>,
                     ],
@@ -345,14 +309,14 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                 </div>
                 <h4>Evidence Availability</h4>
                 <div className="outcome-review-evidence-grid">
-                  <span className={availabilityClass(primaryReview.expectedSnapshotHash)}>
-                    Expected outcome {availabilityLabel(primaryReview.expectedSnapshotHash)}
+                  <span className={outcomeReviewAvailabilityClass(primaryReview.expectedSnapshotHash)}>
+                    Expected outcome {outcomeReviewAvailabilityLabel(primaryReview.expectedSnapshotHash)}
                   </span>
-                  <span className={availabilityClass(primaryReview.realizedSnapshotHash)}>
-                    Realized outcome {availabilityLabel(primaryReview.realizedSnapshotHash)}
+                  <span className={outcomeReviewAvailabilityClass(primaryReview.realizedSnapshotHash)}>
+                    Realized outcome {outcomeReviewAvailabilityLabel(primaryReview.realizedSnapshotHash)}
                   </span>
-                  <span className={availabilityClass(primaryReview.proofPackId)}>
-                    Evidence pack {availabilityLabel(primaryReview.proofPackId)}
+                  <span className={outcomeReviewAvailabilityClass(primaryReview.proofPackId)}>
+                    Evidence pack {outcomeReviewAvailabilityLabel(primaryReview.proofPackId)}
                   </span>
                   <span className={readyEvidenceCount >= 3 ? "is-available" : "is-muted"}>
                     Source evidence {readyEvidenceCount >= 3 ? "Available" : "Partial"}
@@ -375,30 +339,4 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       ) : null}
     </SectionBlock>
   );
-}
-
-function describeNarrativeRun(data: Record<string, unknown>): string {
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const execution = readRecord(data.execution);
-  const status = readString(execution.status) ?? "submitted";
-  const reviewState = readString(workflowPackRun.review_state);
-  return `Review request ${businessStateLabel(reviewState ?? status)}.`;
-}
-
-function availabilityLabel(value: string): string {
-  return value && value !== "N/A" ? "Available" : "Not available";
-}
-
-function availabilityClass(value: string): string {
-  return value && value !== "N/A" ? "is-available" : "is-muted";
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function readString(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
