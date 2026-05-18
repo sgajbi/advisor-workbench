@@ -26,6 +26,20 @@ export type OutcomeReviewLineageRow = {
   hash: string;
 };
 
+export type OutcomeReviewClientCommunicationBoundaryView = {
+  boundaryId: string;
+  state: string;
+  reasonCode: string;
+  summary: string;
+  clientCommunicationProjected: boolean;
+  clientApprovalProjected: boolean;
+  blockedCapabilities: string[];
+  requiredOwner: string;
+  requiredSourceProduct: string;
+  sourceProduct: string;
+  contentHash: string;
+};
+
 export type OutcomeReviewListItem = {
   outcomeReviewId: string;
   reviewLabel: string;
@@ -47,6 +61,7 @@ export type OutcomeReviewListItem = {
   updatedAt: string;
   reportInputBlocked: boolean;
   aiEvidenceBlocked: boolean;
+  clientCommunicationBoundary: OutcomeReviewClientCommunicationBoundaryView | null;
   dimensions: OutcomeReviewDimensionRow[];
   lineage: OutcomeReviewLineageRow[];
 };
@@ -98,6 +113,31 @@ export function buildOutcomeReviewPanelModel(
     authority: response.supportability.authority,
     correlationId: response.correlation_id,
     items,
+  };
+}
+
+export function buildOutcomeClientCommunicationBoundaryView(
+  payload: unknown
+): OutcomeReviewClientCommunicationBoundaryView | null {
+  const boundary = isRecord(payload) ? readRecord(payload, "client_communication_boundary") : {};
+  const boundaryId = readString(boundary, "boundary_id");
+  if (!boundaryId) {
+    return null;
+  }
+  const sourceProductName = readString(boundary, "source_product_name") || "N/A";
+  const sourceProductVersion = readString(boundary, "source_product_version") || "N/A";
+  return {
+    boundaryId,
+    state: readString(boundary, "supportability_state") || "UNKNOWN",
+    reasonCode: readString(boundary, "reason_code") || "N/A",
+    summary: readString(boundary, "summary") || "No boundary summary returned.",
+    clientCommunicationProjected: readBoolean(boundary, "client_communication_projected"),
+    clientApprovalProjected: readBoolean(boundary, "client_approval_projected"),
+    blockedCapabilities: readStringArray(boundary, "blocked_capabilities"),
+    requiredOwner: readString(boundary, "required_owner") || "N/A",
+    requiredSourceProduct: readString(boundary, "required_source_product") || "N/A",
+    sourceProduct: `${sourceProductName}:${sourceProductVersion}`,
+    contentHash: readString(boundary, "content_hash") || "N/A",
   };
 }
 
@@ -171,6 +211,7 @@ function buildOutcomeReviewListItem(
     updatedAt: readString(record, "updated_at") || readString(record, "created_at") || "N/A",
     reportInputBlocked: blockedActions.includes("CREATE_REPORT_INPUT"),
     aiEvidenceBlocked: blockedActions.includes("REQUEST_AI_NARRATIVE"),
+    clientCommunicationBoundary: buildOutcomeClientCommunicationBoundaryView(record),
     dimensions,
     lineage: [
       ...extractRecordArray(record.source_lineage),
@@ -258,6 +299,17 @@ function readString(record: Record<string, unknown>, key: string): string {
     return String(value);
   }
   return "";
+}
+
+function readBoolean(record: Record<string, unknown>, key: string): boolean {
+  return record[key] === true;
+}
+
+function readStringArray(record: Record<string, unknown>, key: string): string[] {
+  const value = record[key];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function formatOutcomeValue(value: unknown): string {

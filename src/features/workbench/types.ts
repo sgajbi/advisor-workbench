@@ -1281,6 +1281,22 @@ export type DpmOutcomeReviewSupportability = {
   remediation_owner?: string | null;
 };
 
+export type DpmOutcomeClientCommunicationBoundary = {
+  boundary_id?: string | null;
+  supportability_state?: string | null;
+  source_system?: string | null;
+  source_product_name?: string | null;
+  source_product_version?: string | null;
+  client_communication_projected?: boolean | null;
+  client_approval_projected?: boolean | null;
+  reason_code?: string | null;
+  blocked_capabilities?: string[];
+  required_owner?: string | null;
+  required_source_product?: string | null;
+  summary?: string | null;
+  content_hash?: string | null;
+};
+
 export type DpmOutcomeReviewGatewayResponse = {
   correlation_id: string;
   contract_version: string;
