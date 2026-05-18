@@ -25,12 +25,20 @@ import type {
 import {
   buildProofPackPanelModel,
   deriveProofPackContext,
-  type ProofPackPanelState,
 } from "@/features/workbench/proof-pack-view-model";
 import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import {
+  proofPackAvailabilityLabel,
+  proofPackAvailabilityTone,
+  proofPackBadgeTone,
+  proofPackStatePanelCopy,
+  readProofPackAiWorkflowPackStatus,
+  readProofPackMarkdown,
+  shouldShowProofPackStatePanel,
+} from "@/features/workbench/proof-pack-panel-helpers";
 
 type Props = {
   portfolioId: string;
@@ -40,67 +48,6 @@ type Props = {
   initialProofPack: DpmProofPackGatewayResponse | null;
   errorMessage?: string | null;
 };
-
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (normalized === "SUPPORTED" || normalized === "READY" || normalized === "COMPLETE") {
-    return "success";
-  }
-  if (normalized === "DEGRADED" || normalized === "PARTIAL" || normalized.includes("PENDING")) {
-    return "warn";
-  }
-  if (normalized === "BLOCKED" || normalized === "UNSUPPORTED" || normalized === "FAILED") {
-    return "danger";
-  }
-  return "default";
-}
-
-function statePanelCopy(state: ProofPackPanelState, portfolioId: string) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No evidence pack linked to this portfolio",
-      body: `No evidence pack is currently linked to ${portfolioId}.`,
-    };
-  }
-  if (state === "blocked") {
-    return {
-      kind: "permission_blocked" as const,
-      title: "Evidence handoff is blocked",
-      body: "Resolve the open rebalance items before preparing decision evidence.",
-    };
-  }
-  if (state === "unsupported") {
-    return {
-      kind: "unavailable" as const,
-      title: "Evidence pack is not supported",
-      body: "Evidence preparation is not available for the current rebalance state.",
-    };
-  }
-  return {
-    kind: "partial" as const,
-    title: "Evidence pack is unavailable",
-    body: "Evidence details are temporarily unavailable for this portfolio.",
-  };
-}
-
-function availabilityLabel(available: boolean): string {
-  return available ? "Available" : "Unavailable";
-}
-
-function availabilityTone(value: string): "default" | "success" | "warn" | "danger" {
-  const normalized = value.toUpperCase();
-  if (normalized.includes("AVAILABLE") || normalized.includes("COMPLETE") || normalized.includes("READY")) {
-    return "success";
-  }
-  if (normalized.includes("PENDING") || normalized.includes("REVIEW")) {
-    return "warn";
-  }
-  if (normalized.includes("BLOCKED") || normalized.includes("UNAVAILABLE")) {
-    return "danger";
-  }
-  return "default";
-}
 
 export default function ProofPackPanel({
   portfolioId,
@@ -122,13 +69,8 @@ export default function ProofPackPanel({
     context.rebalanceRunId ?? (model.rebalanceRunId !== "N/A" ? model.rebalanceRunId : null);
   const resolvedMandateId =
     mandateId ?? context.mandateId ?? (model.mandateId !== "N/A" ? model.mandateId : null);
-  const shouldShowStatePanel =
-    Boolean(errorMessage) ||
-    model.state === "empty" ||
-    model.state === "blocked" ||
-    model.state === "unsupported" ||
-    model.state === "unavailable";
-  const stateCopy = statePanelCopy(model.state, portfolioId);
+  const shouldShowStatePanel = shouldShowProofPackStatePanel(model.state, errorMessage);
+  const stateCopy = proofPackStatePanelCopy(model.state, portfolioId);
 
   async function runAction(label: string, action: () => Promise<void>) {
     if (pendingAction) {
@@ -175,7 +117,7 @@ export default function ProofPackPanel({
     }
     void runAction("Load summary", async () => {
       const response = await getDpmProofPackMarkdown(proofPackId);
-      setMarkdown(readMarkdown(response));
+      setMarkdown(readProofPackMarkdown(response));
       setHandoffStatus("Summary loaded.");
     });
   }
@@ -198,7 +140,7 @@ export default function ProofPackPanel({
     }
     void runAction("Open advisor memo", async () => {
       const response = await requestDpmProofPackAiPmMemo({ proofPackId });
-      setHandoffStatus(`Advisor memo ${readAiWorkflowPackStatus(response.data)}`);
+      setHandoffStatus(`Advisor memo ${readProofPackAiWorkflowPackStatus(response.data)}`);
     });
   }
 
@@ -209,10 +151,10 @@ export default function ProofPackPanel({
       className="proof-pack-panel"
       actions={
         <div className="proof-pack-badge-row">
-          <SemanticBadge tone={badgeTone(model.supportabilityState)}>
+          <SemanticBadge tone={proofPackBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
-          <SemanticBadge tone={availabilityTone(model.evidenceStatusLabel)}>
+          <SemanticBadge tone={proofPackAvailabilityTone(model.evidenceStatusLabel)}>
             Evidence {model.evidenceStatusLabel}
           </SemanticBadge>
         </div>
@@ -280,7 +222,7 @@ export default function ProofPackPanel({
       {model.supportabilityReasons.length > 0 ? (
         <div className="proof-pack-reason-row">
           {model.supportabilityReasons.map((reason) => (
-            <SemanticBadge key={reason} tone={badgeTone(reason)}>
+            <SemanticBadge key={reason} tone={proofPackBadgeTone(reason)}>
               {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
@@ -307,7 +249,7 @@ export default function ProofPackPanel({
               key: row.key,
               cells: [
                 row.area,
-                <SemanticBadge key={`${row.key}-state`} tone={badgeTone(row.status)}>
+                <SemanticBadge key={`${row.key}-state`} tone={proofPackBadgeTone(row.status)}>
                   {businessStateLabel(row.status)}
                 </SemanticBadge>,
                 row.finding,
@@ -380,13 +322,13 @@ export default function ProofPackPanel({
           <p>{model.advisorRationale}</p>
           <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff posture">
             <SemanticBadge tone={model.markdownAvailable ? "success" : "default"}>
-              Summary {availabilityLabel(model.markdownAvailable)}
+              Summary {proofPackAvailabilityLabel(model.markdownAvailable)}
             </SemanticBadge>
             <SemanticBadge tone={model.reportInputAvailable ? "success" : "default"}>
-              Report {availabilityLabel(model.reportInputAvailable)}
+              Report {proofPackAvailabilityLabel(model.reportInputAvailable)}
             </SemanticBadge>
             <SemanticBadge tone={model.aiEvidenceInputAvailable ? "success" : "default"}>
-              Memo {availabilityLabel(model.aiEvidenceInputAvailable)}
+              Memo {proofPackAvailabilityLabel(model.aiEvidenceInputAvailable)}
             </SemanticBadge>
           </div>
         </section>
@@ -399,37 +341,4 @@ export default function ProofPackPanel({
       ) : null}
     </SectionBlock>
   );
-}
-
-function readMarkdown(response: DpmProofPackGatewayResponse & { markdown?: unknown }): string {
-  if (typeof response.markdown === "string") {
-    return response.markdown;
-  }
-  if (typeof response.data.markdown === "string") {
-    return response.data.markdown;
-  }
-  if (typeof response.data.content === "string") {
-    return response.data.content;
-  }
-  return "No summary content is available for this evidence pack.";
-}
-
-function readAiWorkflowPackStatus(data: Record<string, unknown>): string {
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const reviewState = readString(workflowPackRun.review_state);
-  if (reviewState) {
-    return `${businessStateLabel(reviewState)}.`;
-  }
-
-  return "request submitted.";
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function readString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
 }
