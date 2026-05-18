@@ -20,8 +20,11 @@ import {
 } from "@/features/workbench/api";
 import {
   buildPmOperatingQualityPanelModel,
-  type PmOperatingQualityPanelState,
 } from "@/features/workbench/pm-operating-quality-view-model";
+import {
+  formatPmQualityReasonCodeList,
+  pmOperatingQualityStatePanelCopy,
+} from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
@@ -50,47 +53,6 @@ type Props = {
   fairnessAnalysesError?: string | null;
   fairnessAnalysisDetailError?: string | null;
 };
-
-function statePanelCopy(state: PmOperatingQualityPanelState) {
-  if (state === "empty") {
-    return {
-      kind: "empty" as const,
-      title: "No PM operating quality evidence returned",
-      body: "No policy or score-run evidence is currently available for this PM book.",
-    };
-  }
-  if (state === "partial") {
-    return {
-      kind: "partial" as const,
-      title: "PM operating quality evidence is partial",
-      body: "Some policy or score-run inputs require review before a persisted score run is used.",
-    };
-  }
-  if (state === "blocked") {
-    return {
-      kind: "permission_blocked" as const,
-      title: "PM operating quality action is blocked",
-      body: "Manage has published blocked actions for this PM operating quality posture.",
-    };
-  }
-  return {
-    kind: "unavailable" as const,
-    title: "PM operating quality is unavailable",
-    body: "PM operating quality evidence could not be loaded from Gateway.",
-  };
-}
-
-function formatReasonCodeList(value: string): string {
-  if (!value || value === "N/A" || value === "-") {
-    return value || "N/A";
-  }
-  return value
-    .split(",")
-    .map((reason) => reason.trim())
-    .filter(Boolean)
-    .map((reason) => `${formatBusinessReason(reason)} (${reason})`)
-    .join(", ");
-}
 
 export default function PmOperatingQualityPanel({
   policies,
@@ -127,7 +89,7 @@ export default function PmOperatingQualityPanel({
     fairnessPreview: fairnessPreviewResponse,
     summary: summaryResponse,
   });
-  const stateCopy = statePanelCopy(model.state);
+  const stateCopy = pmOperatingQualityStatePanelCopy(model.state);
   const loadError =
     policiesError || scoreRunsError || fairnessAnalysesError || fairnessAnalysisDetailError;
   const hasFairnessPreview = model.fairnessAnalysisId !== "N/A";
@@ -445,7 +407,7 @@ export default function PmOperatingQualityPanel({
                 row.score,
                 row.forbiddenUses,
                 row.sourceRefs,
-                formatReasonCodeList(row.reasonCodes),
+                formatPmQualityReasonCodeList(row.reasonCodes),
               ],
             }))}
             emptyState={{
@@ -531,7 +493,7 @@ export default function PmOperatingQualityPanel({
             <MetricRow label="Analysis Source Refs" value={model.fairnessDetail.sourceRefs} />
             <MetricRow
               label="Analysis Reason Codes"
-              value={formatReasonCodeList(model.fairnessDetail.reasonCodes)}
+              value={formatPmQualityReasonCodeList(model.fairnessDetail.reasonCodes)}
             />
             <MetricRow label="Forbidden Use Boundary" value={model.fairnessDetail.forbiddenUses} />
           </div>
@@ -565,7 +527,7 @@ export default function PmOperatingQualityPanel({
               row.segmentCount,
               row.generatedBy,
               row.sourceRefs,
-              formatReasonCodeList(row.reasonCodes),
+              formatPmQualityReasonCodeList(row.reasonCodes),
             ],
           }))}
           emptyState={{
@@ -627,7 +589,7 @@ export default function PmOperatingQualityPanel({
               `${row.minimumScore} / ${row.maximumScore}`,
               row.scoreRunRefs,
               row.sourceRefs,
-              formatReasonCodeList(row.reasonCodes),
+              formatPmQualityReasonCodeList(row.reasonCodes),
             ],
           }))}
           emptyState={{
@@ -660,7 +622,7 @@ export default function PmOperatingQualityPanel({
               {businessStateLabel(row.state)}
             </SemanticBadge>,
             row.asOfDate,
-            formatReasonCodeList(row.reasonCodes),
+            formatPmQualityReasonCodeList(row.reasonCodes),
           ],
         }))}
         emptyState={{
