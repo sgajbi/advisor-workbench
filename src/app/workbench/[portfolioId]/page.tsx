@@ -1,9 +1,9 @@
 import {
   ManageWorkspace,
   ManageWorkspaceUnavailable,
-  loadManageWorkspaceData,
-  normalizeManageMode,
 } from "@/features/workbench/manage-workspace";
+import { loadManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
+import { normalizeManageMode } from "@/features/workbench/manage-workspace-navigation";
 import { getPortfolio360 } from "@/features/workbench/api";
 
 export default async function WorkbenchPage({
