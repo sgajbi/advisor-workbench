@@ -38,6 +38,8 @@ import {
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
+  DPM_WAVE_LIFECYCLE_STEPS,
+  dpmWaveBadgeTone,
   dpmWaveStatePanelCopy,
   findDpmWaveMetricValue,
   formatDpmWaveDisplayDate,
@@ -61,39 +63,6 @@ type Props = {
 };
 
 const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
-
-const REBALANCE_LIFECYCLE_STEPS = [
-  "Preview",
-  "Data Check",
-  "Simulation",
-  "Approval",
-  "Staging",
-];
-
-function badgeTone(state: string): "default" | "success" | "warn" | "danger" {
-  const normalized = state.toUpperCase();
-  if (
-    [
-      "READY",
-      "SUPPORTED",
-      "COMPLETE",
-      "HANDOFF_READY",
-      "STAGED",
-      "SIMULATION_READY",
-      "SIMULATED",
-      "SOURCE_CHECKED",
-    ].includes(normalized)
-  ) {
-    return "success";
-  }
-  if (["DEGRADED", "PARTIAL", "DRAFT", "REVIEW_REQUIRED", "PENDING"].includes(normalized)) {
-    return "warn";
-  }
-  if (["BLOCKED", "UNSUPPORTED", "FAILED", "CANCELLED"].includes(normalized)) {
-    return "danger";
-  }
-  return "default";
-}
 
 export default function DpmWaveCommandCenterPanel({
   portfolioId,
@@ -379,7 +348,7 @@ export default function DpmWaveCommandCenterPanel({
           <span>Discretionary Balanced</span>
           <span>USD</span>
           <span>{asOfDate}</span>
-          <SemanticBadge tone={badgeTone(proofState)}>Evidence available</SemanticBadge>
+          <SemanticBadge tone={dpmWaveBadgeTone(proofState)}>Evidence available</SemanticBadge>
         </div>
       }
     >
@@ -396,7 +365,7 @@ export default function DpmWaveCommandCenterPanel({
         <SummaryCell
           label="Rebalance Status"
           value={businessStateLabel(model.selectedWaveState)}
-          tone={badgeTone(model.selectedWaveState)}
+          tone={dpmWaveBadgeTone(model.selectedWaveState)}
         />
         <SummaryCell
           label="Approval Readiness"
@@ -441,13 +410,13 @@ export default function DpmWaveCommandCenterPanel({
         <section className="rebalance-active-card" aria-labelledby="rebalance-active-title">
           <div className="rebalance-section-heading">
             <h3 id="rebalance-active-title">Active Rebalance</h3>
-            <SemanticBadge tone={badgeTone(model.selectedWaveState)}>
+            <SemanticBadge tone={dpmWaveBadgeTone(model.selectedWaveState)}>
               {businessStateLabel(model.selectedWaveState)}
             </SemanticBadge>
           </div>
 
           <div className="rebalance-stepper" aria-label="Rebalance lifecycle">
-            {REBALANCE_LIFECYCLE_STEPS.map((step, index) => (
+            {DPM_WAVE_LIFECYCLE_STEPS.map((step, index) => (
               <div
                 className={[
                   "rebalance-step",
@@ -598,7 +567,7 @@ export default function DpmWaveCommandCenterPanel({
               row.estimatedValue,
               row.reason,
               row.mandateImpact,
-              <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+              <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
                 {businessStateLabel(row.status)}
               </SemanticBadge>,
             ],
@@ -706,7 +675,7 @@ function CampaignDefinitionsSection({
               {row.displayName}
             </button>,
             row.campaignVersion,
-            <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+            <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
               {businessStateLabel(row.status)}
             </SemanticBadge>,
             row.asOfDate,
@@ -793,7 +762,7 @@ function CampaignDefinitionsSection({
               row.actor,
               row.waveId,
               row.requestedAsOfDate,
-              <SemanticBadge key={`${row.key}-status`} tone={badgeTone(row.status)}>
+              <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
                 {businessStateLabel(row.status)}
               </SemanticBadge>,
               row.reason,
@@ -921,7 +890,7 @@ function CampaignDefinitionsSection({
                 : "Select a campaign definition to check launch readiness."}
             </p>
           </div>
-          <SemanticBadge tone={badgeTone(launchPosture.state)}>
+          <SemanticBadge tone={dpmWaveBadgeTone(launchPosture.state)}>
             {businessStateLabel(launchPosture.state)}
           </SemanticBadge>
         </div>
@@ -937,7 +906,7 @@ function CampaignDefinitionsSection({
           <SummaryCell
             label="Launch Readiness"
             value={businessStateLabel(launchPosture.state)}
-            tone={badgeTone(launchPosture.state)}
+            tone={dpmWaveBadgeTone(launchPosture.state)}
           />
           <SummaryCell label="Review Date" value={launchPosture.requestedAsOfDate} />
           <SummaryCell label="Reviewed By" value={launchPosture.actor} />
