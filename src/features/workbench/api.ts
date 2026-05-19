@@ -1222,6 +1222,33 @@ export async function getDpmCampaignDefinitionLifecycleEvents(params: {
   );
 }
 
+export async function getDpmCampaignDefinitionPreviewReadiness(params: {
+  campaignId: string;
+  campaignVersion: string;
+  requestedAsOfDate?: string;
+  actorId?: string;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const callerContext = resolveDefaultCallerContext();
+  const requestedAsOfDate = params.requestedAsOfDate ?? dpmContext.commandCenterAsOfDate;
+  const actorId = params.actorId ?? callerContext.actorId;
+  const query = new URLSearchParams();
+  query.set("requested_as_of_date", requestedAsOfDate);
+  query.set("actor_id", actorId);
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.preview-readiness",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        "client",
+        `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+          params.campaignId
+        )}/versions/${encodeURIComponent(params.campaignVersion)}/preview-readiness`,
+        "DPM campaign-definition preview readiness",
+        query
+      )
+  );
+}
+
 export async function getDpmCampaignDefinitionLaunchHistory(params: {
   campaignId: string;
   campaignVersion: string;

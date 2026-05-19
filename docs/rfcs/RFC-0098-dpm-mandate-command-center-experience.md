@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST AND LIFECYCLE-EVIDENCE RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
+| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST, LIFECYCLE-EVIDENCE, PREVIEW-READINESS, LAUNCH-HISTORY, AND READY-GATED LAUNCH RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
 | **Created** | 2026-05-03 |
 | **Last Tightened** | 2026-05-06 |
 | **Owner** | `lotus-workbench` |
@@ -460,6 +460,7 @@ Workbench must consume these Gateway wave routes when implemented:
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` audit posture for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness` | Manage-owned `BulkReviewCampaignDefinitionPreviewReadiness:v1` posture for selected campaign preview and wave-create readiness |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and idempotency evidence for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
 
@@ -481,7 +482,10 @@ and append-only launch history through Gateway
 including Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
 correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
 without inferring campaign lifecycle state, recomputing launch state, recalculating membership,
-or operating retire/supersede commands locally. It checks launch-package readiness through Gateway
+or operating retire/supersede commands locally. It checks campaign preview readiness through Gateway
+`GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness`
+and renders Manage-owned supportability, reason codes, blocked actions, source references, and
+operating boundaries without recalculating readiness. It then checks launch-package readiness through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
 and exposes campaign launch through Gateway
 `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`

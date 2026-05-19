@@ -68,8 +68,11 @@ promote dormant labels into product ownership just because historical route file
   and displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
   correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
   without recomputing launch state, membership, readiness, idempotency, maker-checker, trade
-  approval, order generation, routing, fills, settlement, or OMS execution. It checks
-  Manage-owned campaign launch readiness through
+  approval, order generation, routing, fills, settlement, or OMS execution. It first checks
+  Manage-owned campaign preview readiness through
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness`
+  and renders source-owned supportability, reason codes, blocked actions, source posture, and
+  operating boundaries without recalculating readiness. It then checks campaign launch readiness through
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
   and exposes
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`

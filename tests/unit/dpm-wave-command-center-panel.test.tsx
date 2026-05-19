@@ -8,6 +8,7 @@ import {
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
+  getDpmCampaignDefinitionPreviewReadiness,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -28,6 +29,7 @@ vi.mock("../../src/features/workbench/api", () => ({
   getDpmCampaignDefinitionLaunchHistory: vi.fn(),
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
+  getDpmCampaignDefinitionPreviewReadiness: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
@@ -247,6 +249,26 @@ const campaignLaunchPackageResponse: DpmCampaignDefinitionGatewayResponse = {
   },
 };
 
+const campaignPreviewReadinessResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-preview-readiness",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    product_name: "BulkReviewCampaignDefinitionPreviewReadiness",
+    product_version: "v1",
+    campaign_id: "campaign-holdings-202605",
+    campaign_version: "2026.05",
+    requested_as_of_date: "2026-05-10",
+    actor_id: "pm_sg_1",
+    supportability_state: "READY",
+    reason_codes: [],
+    blocked_actions: [],
+    source_refs: [{ source_type: "BulkReviewCampaignDefinition", source_id: "campaign-plan" }],
+    operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+  },
+};
+
 const campaignLaunchResponse: DpmWaveGatewayResponse = {
   ...waveResponse,
   correlation_id: "corr-campaign-launch",
@@ -272,6 +294,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(campaignLifecycleResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(campaignLaunchHistoryResponse);
+    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(campaignPreviewReadinessResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(campaignLaunchPackageResponse);
     vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
   });
@@ -438,6 +461,13 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
 
     await waitFor(() =>
+      expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalledWith({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+        requestedAsOfDate: "2026-05-10",
+      }),
+    );
+    await waitFor(() =>
       expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledWith({
         campaignId: "campaign-holdings-202605",
         campaignVersion: "2026.05",
@@ -446,6 +476,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     );
 
     expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
+    expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
 
     await waitFor(() =>
@@ -459,6 +490,36 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
     expect(screen.queryByText("corr-campaign-launch")).not.toBeInTheDocument();
+  });
+
+  it("renders blocked campaign preview readiness and keeps launch unavailable", async () => {
+    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue({
+      ...campaignPreviewReadinessResponse,
+      data: {
+        ...campaignPreviewReadinessResponse.data,
+        supportability_state: "BLOCKED",
+        reason_codes: ["campaign_definition_actor_not_entitled"],
+        blocked_actions: ["preview_wave", "create_wave"],
+      },
+    });
+
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+        campaignDefinitions={campaignDefinitionsResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
+
+    await waitFor(() => expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalled());
+    expect((await screen.findAllByText("Campaign Definition Actor Not Entitled")).length).toBeGreaterThan(0);
+    expect(screen.getByText("Blocked")).toBeInTheDocument();
+    expect(await screen.findByText("preview_wave, create_wave")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
+    expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
+    expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
 
   it("routes bounded workflow actions through Gateway helpers", async () => {

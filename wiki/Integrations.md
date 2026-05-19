@@ -98,12 +98,17 @@ must travel through Gateway-shaped contracts.
     preserving Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
     correlation id, idempotency key, page counts, and operating boundaries without local
     launch-state or idempotency reconstruction.
-    Campaign launch-package readiness and durable launch also reach Workbench only through Gateway
+    Campaign preview readiness reaches Workbench only through Gateway
+    `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness`,
+    preserving Manage-owned supportability, reason codes, blocked actions, source references, and
+    operating boundaries without local campaign readiness calculation. Campaign launch-package
+    readiness and durable launch also reach Workbench only through Gateway
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
     and
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`.
     Workbench renders the bounded campaign-definition list and read-only lifecycle evidence,
-    append-only launch history, campaign-discovery posture, and ready-only launch action but does
+    append-only launch history, campaign-discovery posture, preview-readiness posture, and
+    ready-only launch action but does
     not discover global campaign cohorts, recalculate membership or launch readiness, infer
     lifecycle state, reconstruct idempotency, render content hashes, operate retire/supersede
     commands, operate maker-checker workflow, approve trades, generate or stage orders, route
