@@ -14,15 +14,12 @@ import {
 import type { DpmPortfolioMemoryGatewayResponse } from "@/features/workbench/types";
 import {
   buildPortfolioMemoryPanelModel,
-  type PortfolioMemoryEventRow,
 } from "@/features/workbench/portfolio-memory-view-model";
 import {
-  buildPortfolioMemoryFallbackSnapshotRows,
   buildPortfolioMemoryStatePanelCopy,
   filterPortfolioMemoryEvents,
   portfolioMemoryBadgeTone,
   portfolioMemoryEvidenceAvailability,
-  portfolioMemoryReviewPosture,
   resolveSelectedPortfolioMemoryEvent,
   shouldShowPortfolioMemoryStatePanel,
 } from "@/features/workbench/portfolio-memory-panel-helpers";
@@ -30,6 +27,7 @@ import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import PortfolioMemorySelectedEventDetail from "@/features/workbench/components/portfolio-memory-selected-event-detail";
 
 type Props = {
   response: DpmPortfolioMemoryGatewayResponse | null;
@@ -190,86 +188,7 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
         </aside>
       </div>
 
-      <SelectedEventDetail event={selectedEvent} />
+      <PortfolioMemorySelectedEventDetail event={selectedEvent} />
     </SectionBlock>
-  );
-}
-
-function SelectedEventDetail({
-  event,
-}: {
-  event: PortfolioMemoryEventRow | null;
-}) {
-  return (
-    <div className="portfolio-memory-detail-panel">
-      <div className="portfolio-memory-detail-header">
-        <Text as="h3" variant="subsectionTitle">
-          Details: {event?.eventLabel ?? "No event selected"}
-        </Text>
-        <SemanticBadge tone={portfolioMemoryBadgeTone(event?.status ?? "N/A")}>
-          {businessStateLabel(event?.status ?? "N/A")}
-        </SemanticBadge>
-      </div>
-      <div className="portfolio-memory-detail-grid">
-        <div className="portfolio-memory-detail-narrative">
-          <Text as="h4" variant="dataLabel">
-            Business Context
-          </Text>
-          <p>{event?.summary ?? "No memory event selected."}</p>
-          <div className="portfolio-memory-artifact-grid">
-            <ArtifactPill label="Mandate health check" enabled={Boolean(event)} />
-            <ArtifactPill label="Rebalance simulation" enabled={event?.category === "Rebalance"} />
-            <ArtifactPill label="Evidence pack" enabled={(event?.artifactRefCount ?? 0) > 0} />
-            <ArtifactPill label="Outcome review" enabled={event?.category === "Outcome Review"} />
-          </div>
-          <label className="portfolio-memory-note-box">
-            <span>Decision Notes</span>
-            <textarea placeholder="Add advisor rationale here..." />
-          </label>
-        </div>
-        <div className="portfolio-memory-detail-snapshot">
-          <Text as="h4" variant="dataLabel">
-            Support Snapshot
-          </Text>
-          <div>
-            {(event?.metadataRows.length ? event.metadataRows : buildPortfolioMemoryFallbackSnapshotRows(event)).map((row) => (
-              <DetailCell key={row.key} label={row.label} value={row.value} />
-            ))}
-          </div>
-          <div className="portfolio-memory-readiness-callout">
-            <strong>Review Posture</strong>
-            <span>{portfolioMemoryReviewPosture(event?.status ?? "N/A")}</span>
-            <small>
-              {event?.reasonCodes !== "N/A"
-                ? formatBusinessReason(event?.reasonCodes ?? "N/A")
-                : "No additional reason code returned."}
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DetailCell({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="portfolio-memory-detail-cell">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function ArtifactPill({ label, enabled }: { label: string; enabled: boolean }) {
-  return (
-    <span className={enabled ? "is-enabled" : undefined}>
-      {label}
-    </span>
   );
 }
