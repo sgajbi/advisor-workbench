@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   ActionButton,
-  AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
@@ -21,6 +20,7 @@ import type {
   WorkbenchPortfolio360,
 } from "@/features/workbench/types";
 import ConstructionAuthorityEvidenceCard from "@/features/workbench/components/construction-authority-evidence-card";
+import ConstructionAlternativesComparisonCard from "@/features/workbench/components/construction-alternatives-comparison-card";
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
   buildConstructionPanelModel,
@@ -236,67 +236,11 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
 
       <div className="construction-alternatives-grid">
         <div className="construction-alternatives-primary">
-          <div className="construction-alternatives-card">
-            <div className="construction-alternatives-card-header">
-              <Text as="h3" variant="subsectionTitle">Alternatives Comparison</Text>
-              <span>{model.alternatives.length} paths</span>
-            </div>
-            <AnalyticsTable
-              ariaLabel="Alternatives comparison"
-              variant="analysis"
-              density="compact"
-              columns={[
-                { key: "alternative", label: "Alternative" },
-                { key: "objective", label: "Objective" },
-                { key: "turnover", label: "Turnover", align: "right" },
-                { key: "cash", label: "Cash After", align: "right" },
-                { key: "drift", label: "Drift Improvement", align: "right" },
-                { key: "fit", label: "Mandate Fit" },
-                { key: "action", label: "Action" },
-              ]}
-              rows={model.alternatives.map((alternative) => {
-                const selected =
-                  model.selectedAlternativeId === alternative.alternativeId;
-                const selectable =
-                  !selected &&
-                  model.state !== "blocked" &&
-                  model.state !== "unsupported";
-                return {
-                  key: alternative.alternativeId,
-                  cells: [
-                    <span className="construction-alternative-label" key={`${alternative.alternativeId}-label`}>
-                      {alternative.label}
-                      {alternative.isRecommended ? <SemanticBadge tone="success">Recommended</SemanticBadge> : null}
-                      {selected ? <SemanticBadge tone="success">Selected</SemanticBadge> : null}
-                    </span>,
-                    alternative.objective,
-                    alternative.turnoverPct,
-                    alternative.cashAfterPct,
-                    alternative.driftImprovementPct,
-                    <SemanticBadge key={`${alternative.alternativeId}-fit`} tone={constructionBadgeTone(alternative.mandateFit)}>
-                      {alternative.mandateFit}
-                    </SemanticBadge>,
-                    <ActionButton
-                      key={`${alternative.alternativeId}-action`}
-                      priority={alternative.isRecommended ? "primary" : "secondary"}
-                      onClick={() => selectAlternative(alternative.alternativeId)}
-                      disabled={!selectable || Boolean(selectionPendingId)}
-                    >
-                      {selected
-                        ? "Selected"
-                        : selectionPendingId === alternative.alternativeId
-                          ? "Selecting"
-                          : alternative.actionLabel}
-                    </ActionButton>,
-                  ],
-                };
-              })}
-              emptyState={{
-                title: "No construction alternatives returned",
-                body: "Generate an alternative set to compare construction choices.",
-              }}
-            />
-          </div>
+          <ConstructionAlternativesComparisonCard
+            model={model}
+            selectionPendingId={selectionPendingId}
+            onSelectAlternative={selectAlternative}
+          />
 
           <div className="construction-alternatives-detail-card">
             <div className="construction-alternatives-detail-header">
