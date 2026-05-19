@@ -20,6 +20,7 @@ import type {
   WorkbenchPortfolio360,
 } from "@/features/workbench/types";
 import ConstructionAlternativesComparisonCard from "@/features/workbench/components/construction-alternatives-comparison-card";
+import ConstructionRecommendedActionsCard from "@/features/workbench/components/construction-recommended-actions-card";
 import ConstructionSelectedDetailCard from "@/features/workbench/components/construction-selected-detail-card";
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
@@ -250,24 +251,12 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
           />
         </div>
 
-        <div className="construction-source-readiness-card">
-          <Text as="h3" variant="subsectionTitle">
-            Recommended Actions
-          </Text>
-          <div className="construction-source-readiness-list">
-            <button
-              type="button"
-              onClick={() => model.selectedAlternative ? void selectAlternative(model.selectedAlternative.alternativeId) : undefined}
-              disabled={!model.selectedAlternative || model.state === "blocked" || Boolean(selectionPendingId)}
-            >
-              <strong>Select recommended path</strong>
-              <span>{model.recommendedPathLabel}</span>
-            </button>
-            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=waves`}>Review trade impact</a>
-            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=mandate`}>Resolve mandate attention item</a>
-            <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=proof`}>Open evidence pack</a>
-          </div>
-        </div>
+        <ConstructionRecommendedActionsCard
+          model={model}
+          portfolioId={portfolioId}
+          selectionPendingId={selectionPendingId}
+          onSelectRecommended={selectAlternative}
+        />
       </div>
     </SectionBlock>
   );
