@@ -3,13 +3,10 @@
 import { useMemo, useState } from "react";
 
 import {
-  ActionButton,
-  AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
-  Text,
 } from "@/design-system";
 import type { DpmPortfolioMemoryGatewayResponse } from "@/features/workbench/types";
 import {
@@ -19,7 +16,6 @@ import {
   buildPortfolioMemoryStatePanelCopy,
   filterPortfolioMemoryEvents,
   portfolioMemoryBadgeTone,
-  portfolioMemoryEvidenceAvailability,
   resolveSelectedPortfolioMemoryEvent,
   shouldShowPortfolioMemoryStatePanel,
 } from "@/features/workbench/portfolio-memory-panel-helpers";
@@ -29,6 +25,7 @@ import {
 } from "@/features/workbench/manage-workspace-view-model";
 import PortfolioMemoryRecommendedActionsRail from "@/features/workbench/components/portfolio-memory-recommended-actions-rail";
 import PortfolioMemorySelectedEventDetail from "@/features/workbench/components/portfolio-memory-selected-event-detail";
+import PortfolioMemoryTimelineCard from "@/features/workbench/components/portfolio-memory-timeline-card";
 
 type Props = {
   response: DpmPortfolioMemoryGatewayResponse | null;
@@ -120,58 +117,13 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
       </div>
 
       <div className="portfolio-memory-workspace">
-        <div className="portfolio-memory-timeline-card">
-          <div className="portfolio-memory-card-header">
-            <Text as="h3" variant="subsectionTitle">
-              Historical Event Log
-            </Text>
-            <span>{model.eventCount} events</span>
-          </div>
-          <AnalyticsTable
-            ariaLabel="Portfolio memory event timeline"
-            variant="analysis"
-            density="compact"
-            columns={[
-              { key: "time", label: "Date/Time" },
-              { key: "event", label: "Event" },
-              { key: "category", label: "Category" },
-              { key: "impact", label: "Business Impact" },
-              { key: "evidence", label: "Evidence" },
-              { key: "action", label: "Action", align: "right" },
-            ]}
-            rows={filteredEvents.map((row) => ({
-              key: row.key,
-              className: selectedEvent?.eventId === row.eventId ? "portfolio-memory-selected-row" : undefined,
-              ariaLabel: row.displayId,
-              onClick: () => setSelectedEventId(row.eventId),
-              cells: [
-                row.eventTime,
-                <strong key={`${row.key}-event`} className="portfolio-memory-event-title">
-                  {row.eventLabel}
-                </strong>,
-                row.category,
-                row.businessImpact,
-                <SemanticBadge key={`${row.key}-evidence`} tone={row.artifactRefCount > 0 ? "success" : "default"}>
-                  {portfolioMemoryEvidenceAvailability(row.artifactRefs)}
-                </SemanticBadge>,
-                <ActionButton
-                  key={`${row.key}-action`}
-                  priority="quiet"
-                  onClick={() => setSelectedEventId(row.eventId)}
-                >
-                  {row.actionLabel}
-                </ActionButton>,
-              ],
-            }))}
-            emptyState={{
-              title: "No memory events returned",
-              body:
-                activeEventType === "ALL"
-                  ? "No timeline rows are currently available."
-                  : "No events are available for this event type.",
-            }}
-          />
-        </div>
+        <PortfolioMemoryTimelineCard
+          activeEventType={activeEventType}
+          eventCount={model.eventCount}
+          events={filteredEvents}
+          selectedEventId={selectedEvent?.eventId ?? null}
+          onSelectEvent={setSelectedEventId}
+        />
 
         <PortfolioMemoryRecommendedActionsRail actions={model.recommendedActions} />
       </div>
