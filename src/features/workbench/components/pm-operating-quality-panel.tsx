@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import {
-  AnalyticsTable,
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
@@ -11,6 +10,7 @@ import {
 } from "@/design-system";
 import PmOperatingQualityFairnessEvidenceCard from "@/features/workbench/components/pm-operating-quality-fairness-evidence-card";
 import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm-operating-quality-governance-card";
+import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
 import PmOperatingQualityScoreRunCard from "@/features/workbench/components/pm-operating-quality-score-run-card";
 import {
   createDpmPmOperatingQualityFairnessAnalysis,
@@ -23,7 +23,6 @@ import {
   buildPmOperatingQualityPanelModel,
 } from "@/features/workbench/pm-operating-quality-view-model";
 import {
-  formatPmQualityReasonCodeList,
   pmOperatingQualityStatePanelCopy,
 } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type {
@@ -307,34 +306,7 @@ export default function PmOperatingQualityPanel({
 
       <PmOperatingQualityFairnessEvidenceCard model={model} />
 
-      <AnalyticsTable
-        ariaLabel="PM operating quality policies"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "policy", label: "Policy" },
-          { key: "enabled", label: "Enabled" },
-          { key: "state", label: "State" },
-          { key: "asOf", label: "As Of" },
-          { key: "reason", label: "Reason" },
-        ]}
-        rows={model.policyRows.map((row) => ({
-          key: row.key,
-          cells: [
-            <strong key={`${row.key}-policy`}>{`${row.policyId} / ${row.policyVersion}`}</strong>,
-            row.enabled,
-            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-              {businessStateLabel(row.state)}
-            </SemanticBadge>,
-            row.asOfDate,
-            formatPmQualityReasonCodeList(row.reasonCodes),
-          ],
-        }))}
-        emptyState={{
-          title: "No PM operating quality policy returned",
-          body: "A Manage-owned policy is required before score-run evidence can be used.",
-        }}
-      />
+      <PmOperatingQualityPolicyCard model={model} />
     </SectionBlock>
   );
 }
