@@ -100,6 +100,16 @@ export type DpmCampaignLaunchHistoryPage = {
   hasNextPage: boolean;
 };
 
+export type DpmCampaignPreviewReadinessPosture = {
+  state: string;
+  reason: string;
+  requestedAsOfDate: string;
+  actor: string;
+  blockedActions: string[];
+  operatingBoundaries: string[];
+  sourcePosture: string;
+};
+
 export type DpmCampaignLaunchPosture = {
   state: string;
   canLaunch: boolean;
@@ -135,6 +145,7 @@ export type DpmWaveCommandCenterPanelModel = {
   campaignLifecycleRows: DpmCampaignLifecycleEventRow[];
   campaignLaunchHistoryRows: DpmCampaignLaunchHistoryRow[];
   campaignLaunchHistoryPage: DpmCampaignLaunchHistoryPage;
+  campaignPreviewReadinessPosture: DpmCampaignPreviewReadinessPosture;
   campaignLaunchPosture: DpmCampaignLaunchPosture;
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
@@ -154,6 +165,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignPreviewReadiness?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchHistory?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchPackage?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchResponse?: DpmWaveGatewayResponse | null;
@@ -230,6 +242,9 @@ export function buildDpmWaveCommandCenterModel(params: {
     campaignLifecycleRows: buildCampaignLifecycleEventRows(params.campaignLifecycleEvents?.data),
     campaignLaunchHistoryRows: buildCampaignLaunchHistoryRows(params.campaignLaunchHistory?.data),
     campaignLaunchHistoryPage: buildCampaignLaunchHistoryPage(params.campaignLaunchHistory?.data),
+    campaignPreviewReadinessPosture: buildCampaignPreviewReadinessPosture(
+      params.campaignPreviewReadiness?.data
+    ),
     campaignLaunchPosture: buildCampaignLaunchPosture(
       params.campaignLaunchPackage?.data,
       params.campaignLaunchResponse?.data
@@ -241,6 +256,32 @@ export function buildDpmWaveCommandCenterModel(params: {
     externalExecutionClaimed: formatValue(
       readValue(proofPackPosture, "external_execution_claimed")
     ),
+  };
+}
+
+function buildCampaignPreviewReadinessPosture(
+  previewReadiness: Record<string, unknown> | undefined
+): DpmCampaignPreviewReadinessPosture {
+  const state = normalizeState(
+    readString(previewReadiness ?? {}, "supportability_state") ||
+      readString(previewReadiness ?? {}, "state") ||
+      "NOT_CHECKED"
+  );
+  const reasonCodes = extractStringArray(
+    previewReadiness?.reason_codes ?? previewReadiness?.blocked_reason_codes
+  );
+  const sourceRefs = extractRecordArray(previewReadiness?.source_refs);
+  return {
+    state,
+    reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : state === "READY" ? "Ready" : "Not checked",
+    requestedAsOfDate: readString(previewReadiness ?? {}, "requested_as_of_date") || "N/A",
+    actor: readString(previewReadiness ?? {}, "actor_id") || "N/A",
+    blockedActions: extractStringArray(previewReadiness?.blocked_actions),
+    operatingBoundaries: extractStringArray(previewReadiness?.operating_boundaries),
+    sourcePosture:
+      sourceRefs.length > 0
+        ? `${sourceRefs.length} source ${sourceRefs.length === 1 ? "reference" : "references"}`
+        : "N/A",
   };
 }
 

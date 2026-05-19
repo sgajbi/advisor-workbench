@@ -13,6 +13,7 @@ import {
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
+  getDpmCampaignDefinitionPreviewReadiness,
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
   getDpmMandateByPortfolio,
@@ -2376,6 +2377,46 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("corr-campaign-lifecycle");
     expect(metricEventsJson).not.toContain("corr-campaign-launch-history");
     expect(metricEventsJson).not.toContain("corr-launch-audit");
+  });
+
+  it("checks campaign-definition preview readiness through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-preview-readiness",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              product_name: "BulkReviewCampaignDefinitionPreviewReadiness",
+              supportability_state: "BLOCKED",
+              reason_codes: ["campaign_definition_actor_not_entitled"],
+              blocked_actions: ["preview_wave", "create_wave"],
+              operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await getDpmCampaignDefinitionPreviewReadiness({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      requestedAsOfDate: "2026-05-10",
+      actorId: "pm_sg_1",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/preview-readiness?requested_as_of_date=2026-05-10&actor_id=pm_sg_1"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-preview-readiness");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-preview-readiness");
   });
 
   it("checks and launches DPM campaign definitions through the Gateway BFF", async () => {

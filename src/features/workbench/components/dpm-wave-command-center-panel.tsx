@@ -19,6 +19,7 @@ import {
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
+  getDpmCampaignDefinitionPreviewReadiness,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -76,17 +77,21 @@ export default function DpmWaveCommandCenterPanel({
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
+  const [campaignPreviewReadinessResponse, setCampaignPreviewReadinessResponse] =
+    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchPackageResponse, setCampaignLaunchPackageResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchResponse, setCampaignLaunchResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] = useState<string | null>(null);
   const [pendingCampaignLaunchHistoryKey, setPendingCampaignLaunchHistoryKey] = useState<string | null>(null);
+  const [pendingCampaignPreviewReadinessKey, setPendingCampaignPreviewReadinessKey] = useState<string | null>(null);
   const [pendingCampaignLaunchPackageKey, setPendingCampaignLaunchPackageKey] = useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
   const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] = useState<string | null>(null);
+  const [campaignPreviewReadinessError, setCampaignPreviewReadinessError] = useState<string | null>(null);
   const [campaignLaunchError, setCampaignLaunchError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
@@ -101,6 +106,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
     campaignLaunchHistory: campaignLaunchHistoryResponse,
+    campaignPreviewReadiness: campaignPreviewReadinessResponse,
     campaignLaunchPackage: campaignLaunchPackageResponse,
     campaignLaunchResponse,
   });
@@ -288,26 +294,50 @@ export default function DpmWaveCommandCenterPanel({
   }
 
   async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
-    if (pendingCampaignLaunchPackageKey || pendingCampaignLaunchKey) {
+    if (pendingCampaignPreviewReadinessKey || pendingCampaignLaunchPackageKey || pendingCampaignLaunchKey) {
       return;
     }
     setSelectedCampaignKey(row.key);
+    setPendingCampaignPreviewReadinessKey(row.key);
     setPendingCampaignLaunchPackageKey(row.key);
+    setCampaignPreviewReadinessError(null);
     setCampaignLaunchError(null);
+    setCampaignPreviewReadinessResponse(null);
     setCampaignLaunchPackageResponse(null);
     setCampaignLaunchResponse(null);
     try {
-      const response = await getDpmCampaignDefinitionLaunchPackage({
+      const requestedAsOfDate = row.asOfDate === "N/A" ? undefined : row.asOfDate;
+      const previewReadiness = await getDpmCampaignDefinitionPreviewReadiness({
         campaignId: row.campaignId,
         campaignVersion: row.campaignVersion,
-        requestedAsOfDate: row.asOfDate === "N/A" ? undefined : row.asOfDate,
+        requestedAsOfDate,
       });
-      setCampaignLaunchPackageResponse(response);
+      setCampaignPreviewReadinessResponse(previewReadiness);
+      const readinessState =
+        typeof previewReadiness.data.supportability_state === "string"
+          ? previewReadiness.data.supportability_state.toUpperCase()
+          : "";
+      if (readinessState !== "READY") {
+        return;
+      }
+      try {
+        const launchPackage = await getDpmCampaignDefinitionLaunchPackage({
+          campaignId: row.campaignId,
+          campaignVersion: row.campaignVersion,
+          requestedAsOfDate,
+        });
+        setCampaignLaunchPackageResponse(launchPackage);
+      } catch (error) {
+        setCampaignLaunchError(
+          error instanceof Error ? error.message : "Campaign launch readiness could not be loaded."
+        );
+      }
     } catch (error) {
-      setCampaignLaunchError(
-        error instanceof Error ? error.message : "Campaign launch readiness could not be loaded."
+      setCampaignPreviewReadinessError(
+        error instanceof Error ? error.message : "Campaign preview readiness could not be loaded."
       );
     } finally {
+      setPendingCampaignPreviewReadinessKey(null);
       setPendingCampaignLaunchPackageKey(null);
     }
   }
@@ -385,12 +415,15 @@ export default function DpmWaveCommandCenterPanel({
         lifecycleRows={model.campaignLifecycleRows}
         launchHistoryRows={model.campaignLaunchHistoryRows}
         launchHistoryPage={model.campaignLaunchHistoryPage}
+        previewReadinessPosture={model.campaignPreviewReadinessPosture}
         launchPosture={model.campaignLaunchPosture}
         lifecycleError={campaignLifecycleError}
         launchHistoryError={campaignLaunchHistoryError}
+        previewReadinessError={campaignPreviewReadinessError}
         launchError={campaignLaunchError}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
         pendingLaunchHistoryKey={pendingCampaignLaunchHistoryKey}
+        pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}
         pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
         pendingLaunchKey={pendingCampaignLaunchKey}
         selectedCampaign={selectedCampaign}

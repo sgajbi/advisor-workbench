@@ -303,6 +303,39 @@ describe("DPM wave command-center view model", () => {
     });
   });
 
+  it("preserves Manage-owned campaign preview readiness without deriving readiness", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignPreviewReadiness: {
+        correlation_id: "corr-campaign-preview-readiness",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          product_name: "BulkReviewCampaignDefinitionPreviewReadiness",
+          supportability_state: "BLOCKED",
+          requested_as_of_date: "2026-05-10",
+          actor_id: "pm_sg_1",
+          reason_codes: ["campaign_definition_actor_not_entitled"],
+          blocked_actions: ["preview_wave", "create_wave"],
+          source_refs: [{ source_type: "BulkReviewCampaignDefinition", source_id: "campaign-plan" }],
+          operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+        },
+      },
+    });
+
+    expect(model.campaignPreviewReadinessPosture).toEqual({
+      state: "BLOCKED",
+      reason: "campaign_definition_actor_not_entitled",
+      requestedAsOfDate: "2026-05-10",
+      actor: "pm_sg_1",
+      blockedActions: ["preview_wave", "create_wave"],
+      operatingBoundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+      sourcePosture: "1 source reference",
+    });
+    expect(model.campaignLaunchPosture.canLaunch).toBe(false);
+  });
+
   it("uses manage-owned launch package readiness without deriving launch state", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,

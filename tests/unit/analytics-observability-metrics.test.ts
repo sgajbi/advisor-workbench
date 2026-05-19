@@ -427,6 +427,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "wave-campaign-preview-readiness",
+        "dpm.waves.campaign-definitions.preview-readiness",
+      ],
+      [
+        "workbench.manage",
         "wave-campaign-launch-history",
         "dpm.waves.campaign-definitions.launch-history",
       ],
