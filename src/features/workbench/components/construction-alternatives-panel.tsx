@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  ActionButton,
-  MetricRow,
-  ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
-  Text,
 } from "@/design-system";
 import {
   getExternalOrderExecutionAcknowledgement,
@@ -20,6 +16,7 @@ import type {
   WorkbenchPortfolio360,
 } from "@/features/workbench/types";
 import ConstructionAlternativesComparisonCard from "@/features/workbench/components/construction-alternatives-comparison-card";
+import ConstructionCommandSummaryCard from "@/features/workbench/components/construction-command-summary-card";
 import ConstructionRecommendedActionsCard from "@/features/workbench/components/construction-recommended-actions-card";
 import ConstructionSelectedDetailCard from "@/features/workbench/components/construction-selected-detail-card";
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
@@ -27,16 +24,11 @@ import {
   buildConstructionPanelModel,
 } from "@/features/workbench/construction-alternatives-view-model";
 import {
-  buildConstructionStatePanelCopy,
   canSelectConstructionAlternative,
   constructionBadgeTone,
   resolveConstructionAlternativeLabel,
-  shouldShowConstructionStatePanel,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
+import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolio: WorkbenchPortfolio360;
@@ -61,7 +53,6 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     useState<string | null>(null);
   const model = buildConstructionPanelModel(response);
   const portfolioId = portfolio.portfolio.portfolio_id;
-  const stateCopy = buildConstructionStatePanelCopy(model.state, portfolioId);
   const selectedAlternative = model.selectedAlternative;
   const canSelectSelectedAlternative = canSelectConstructionAlternative({
     selectedAlternative,
@@ -70,10 +61,6 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     selectedAlternativeId: model.selectedAlternativeId,
     selectionPendingId,
   });
-  const shouldShowStatePanel = shouldShowConstructionStatePanel(
-    model.state,
-    actionError,
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -177,57 +164,14 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
         </div>
       }
     >
-      {shouldShowStatePanel ? (
-        <ScreenStatePanel
-          kind={actionError ? "partial" : stateCopy.kind}
-          surface="portfolio"
-          title={
-            actionError
-              ? "Construction endpoint is unavailable"
-              : stateCopy.title
-          }
-          body={actionError ?? stateCopy.body}
-        />
-      ) : null}
-
-      <div className="construction-alternatives-summary">
-        <MetricRow label="Recommended Path" value={model.recommendedPathLabel} />
-        <MetricRow label="Mandate Fit" value={model.mandateFitLabel} />
-        <MetricRow label="Drift Improvement" value={model.driftImprovementLabel} />
-        <MetricRow label="Approval Readiness" value={model.approvalReadinessLabel} />
-      </div>
-
-      <div className="construction-alternatives-action-row" aria-label="Construction actions">
-        <ActionButton
-          priority="secondary"
-          onClick={generateAlternatives}
-          disabled={generatePending}
-        >
-          {generatePending
-            ? "Generating alternatives"
-            : "Generate alternatives"}
-        </ActionButton>
-        <div>
-          {actionMessage ? (
-            <Text variant="secondary" className="muted">
-              {actionMessage}
-            </Text>
-          ) : null}
-          <Text variant="secondary" className="muted">
-            Alternatives are generated from the supported mandate and portfolio data available for this account.
-          </Text>
-        </div>
-      </div>
-
-      {model.supportabilityReasons.length > 0 ? (
-        <div className="construction-alternatives-reason-row">
-          {model.supportabilityReasons.map((reason) => (
-            <SemanticBadge key={reason} tone="warn">
-              {formatBusinessReason(reason)}
-            </SemanticBadge>
-          ))}
-        </div>
-      ) : null}
+      <ConstructionCommandSummaryCard
+        model={model}
+        portfolioId={portfolioId}
+        generatePending={generatePending}
+        actionMessage={actionMessage}
+        actionError={actionError}
+        onGenerateAlternatives={generateAlternatives}
+      />
 
       <ExecutionAcknowledgementSupportabilityPanel
         response={executionAcknowledgementResponse}
