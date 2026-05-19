@@ -1590,7 +1590,7 @@
   gap: 10px;
 }
 
-.manageScope :global(.portfolio-memory-action-stack button) {
+.manageScope :global(.portfolio-memory-action-item) {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   column-gap: 10px;
@@ -1601,16 +1601,10 @@
   border-radius: 4px;
   background: #ffffff;
   color: #191c1e;
-  cursor: pointer;
   text-align: left;
 }
 
-.manageScope :global(.portfolio-memory-action-stack button:hover) {
-  border-color: #725b26;
-  background: #f7f9fb;
-}
-
-.manageScope :global(.portfolio-memory-action-stack button > span) {
+.manageScope :global(.portfolio-memory-action-item > span) {
   grid-row: 1 / span 2;
   color: #725b26;
   font-size: 21px;

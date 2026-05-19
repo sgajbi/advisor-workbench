@@ -1,0 +1,45 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import PortfolioMemoryRecommendedActionsRail from "../../src/features/workbench/components/portfolio-memory-recommended-actions-rail";
+import type { PortfolioMemoryRecommendedAction } from "../../src/features/workbench/portfolio-memory-view-model";
+
+const actions: PortfolioMemoryRecommendedAction[] = [
+  {
+    key: "review-latest",
+    title: "Review latest memory event",
+    body: "Check the most recent mandate, rebalance, review, or evidence update.",
+    icon: "autorenew",
+  },
+  {
+    key: "open-evidence",
+    title: "Open linked evidence pack",
+    body: "Access audit-ready documentation linked to this memory view.",
+    icon: "folder_zip",
+  },
+];
+
+describe("PortfolioMemoryRecommendedActionsRail", () => {
+  it("renders advisor review guidance without enabling local workflow actions", () => {
+    render(<PortfolioMemoryRecommendedActionsRail actions={actions} />);
+
+    expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
+    expect(screen.getByText("Review latest memory event")).toBeInTheDocument();
+    expect(screen.getByText("Open linked evidence pack")).toBeInTheDocument();
+    expect(screen.getByRole("list")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("renders fail-closed empty posture without inventing client or execution controls", () => {
+    render(<PortfolioMemoryRecommendedActionsRail actions={[]} />);
+
+    expect(screen.getByText("No recommended review steps returned")).toBeInTheDocument();
+    expect(screen.queryByText("Message client")).not.toBeInTheDocument();
+    expect(screen.queryByText("Approve client communication")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
+    expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mark Filled")).not.toBeInTheDocument();
+    expect(screen.queryByText("Settle")).not.toBeInTheDocument();
+  });
+});
