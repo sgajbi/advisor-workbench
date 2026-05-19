@@ -19,8 +19,8 @@ import type {
   ExternalOrderExecutionAcknowledgementResponse,
   WorkbenchPortfolio360,
 } from "@/features/workbench/types";
-import ConstructionAuthorityEvidenceCard from "@/features/workbench/components/construction-authority-evidence-card";
 import ConstructionAlternativesComparisonCard from "@/features/workbench/components/construction-alternatives-comparison-card";
+import ConstructionSelectedDetailCard from "@/features/workbench/components/construction-selected-detail-card";
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
   buildConstructionPanelModel,
@@ -242,107 +242,12 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
             onSelectAlternative={selectAlternative}
           />
 
-          <div className="construction-alternatives-detail-card">
-            <div className="construction-alternatives-detail-header">
-              <Text as="h3" variant="subsectionTitle">
-                Selected: {selectedAlternative?.label ?? "N/A"}
-              </Text>
-              <ActionButton
-                priority="primary"
-                onClick={() =>
-                  selectedAlternative
-                    ? void selectAlternative(selectedAlternative.alternativeId)
-                    : undefined
-                }
-                disabled={!canSelectSelectedAlternative}
-              >
-                {selectionPendingId === selectedAlternative?.alternativeId
-                  ? "Applying selection"
-                  : model.selectedAlternativeId === selectedAlternative?.alternativeId
-                    ? "Selection Applied"
-                    : "Apply Selection"}
-              </ActionButton>
-            </div>
-
-            <div className="construction-alternatives-detail-grid">
-              <div className="construction-alternatives-detail-main">
-                <section>
-                  <h4>Business Rationale</h4>
-                  <p className="construction-alternatives-rationale">
-                    {model.selectedBusinessRationale}
-                  </p>
-                </section>
-
-                <section>
-                  <h4>Trade Impact Summary</h4>
-                  <div className="construction-trade-impact-strip">
-                    <div>
-                      <strong>{model.tradeImpact.tradeCount}</strong>
-                      <span>Total Trades</span>
-                    </div>
-                    <div>
-                      <strong>{model.tradeImpact.buyCount}</strong>
-                      <span>Buys</span>
-                    </div>
-                    <div>
-                      <strong>{model.tradeImpact.trimCount}</strong>
-                      <span>Trims</span>
-                    </div>
-                    <div>
-                      <strong>{model.tradeImpact.cashReductionCount}</strong>
-                      <span>Cash Red.</span>
-                    </div>
-                  </div>
-                </section>
-
-                {model.allocationRows.length > 0 ? (
-                  <section>
-                    <h4>Allocation Comparison</h4>
-                    <div className="construction-allocation-list" aria-label="Allocation comparison">
-                      {model.allocationRows.map((row) => (
-                        <div key={row.key}>
-                          <div>
-                            <strong>{row.label}</strong>
-                            <span>{row.before} to {row.after}</span>
-                          </div>
-                          <div aria-hidden="true">
-                            <i style={{ width: row.beforeWidth }} />
-                            <b style={{ width: row.afterWidth }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                ) : null}
-              </div>
-
-              <div className="construction-alternatives-detail-side">
-                <Text as="h3" variant="subsectionTitle">
-                  Mandate Integrity Checks
-                </Text>
-                {model.constraints.length > 0 ? (
-                  <div className="construction-constraint-list">
-                    {model.constraints.map((constraint) => (
-                      <div key={constraint.key}>
-                        <strong>{businessStateLabel(constraint.name)}</strong>
-                        <SemanticBadge tone={constructionBadgeTone(constraint.state)}>
-                          {businessStateLabel(constraint.state)}
-                        </SemanticBadge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <ScreenStatePanel
-                    kind="empty"
-                    surface="portfolio"
-                    title="No constraint matrix returned"
-                    body="Constraint rows are not available for the selected alternative."
-                  />
-                )}
-                <ConstructionAuthorityEvidenceCard model={model} />
-              </div>
-            </div>
-          </div>
+          <ConstructionSelectedDetailCard
+            model={model}
+            selectionPendingId={selectionPendingId}
+            canSelectSelectedAlternative={canSelectSelectedAlternative}
+            onSelectAlternative={selectAlternative}
+          />
         </div>
 
         <div className="construction-source-readiness-card">
