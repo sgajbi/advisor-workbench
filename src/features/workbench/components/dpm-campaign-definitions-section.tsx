@@ -1,14 +1,12 @@
 "use client";
 
-import { ActionButton, AnalyticsTable, ScreenStatePanel, SemanticBadge } from "@/design-system";
+import { ScreenStatePanel, SemanticBadge } from "@/design-system";
+import DpmCampaignDefinitionsTable from "@/features/workbench/components/dpm-campaign-definitions-table";
 import DpmCampaignLifecycleEvidenceCard from "@/features/workbench/components/dpm-campaign-lifecycle-evidence-card";
 import DpmCampaignLaunchHistoryCard, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-launch-history-card";
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
-import {
-  dpmWaveBadgeTone,
-} from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import type {
   DpmCampaignDefinitionRow,
   DpmCampaignLaunchHistoryPage,
@@ -17,9 +15,6 @@ import type {
   DpmCampaignPreviewReadinessPosture,
   DpmCampaignLifecycleEventRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import {
-  businessStateLabel,
-} from "@/features/workbench/manage-workspace-view-model";
 
 export { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE };
 
@@ -103,82 +98,17 @@ export default function DpmCampaignDefinitionsSection({
           body={errorMessage}
         />
       ) : null}
-      <AnalyticsTable
-        ariaLabel="DPM campaign definitions"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "campaign", label: "Campaign" },
-          { key: "version", label: "Version" },
-          { key: "status", label: "Status" },
-          { key: "asOf", label: "As Of" },
-          { key: "candidates", label: "Candidates", align: "right" },
-          { key: "eligibleCandidates", label: "Eligible", align: "right" },
-          { key: "portfolioTypes", label: "Eligible Types" },
-          { key: "governance", label: "Governance" },
-          { key: "expiry", label: "Expiry" },
-          { key: "purpose", label: "Purpose" },
-          { key: "source", label: "Source Posture" },
-          { key: "evidence", label: "Evidence" },
-          { key: "history", label: "Launch History" },
-          { key: "launch", label: "Launch" },
-        ]}
-        rows={rows.map((row) => ({
-          key: row.key,
-          cells: [
-            <button
-              className="rebalance-link-button"
-              key={`${row.key}-select`}
-              type="button"
-              onClick={() => onLoadLifecycle(row)}
-              aria-pressed={row.key === selectedCampaignKey}
-            >
-              {row.displayName}
-            </button>,
-            row.campaignVersion,
-            <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-              {businessStateLabel(row.status)}
-            </SemanticBadge>,
-            row.asOfDate,
-            row.candidateCount,
-            row.eligibleCandidateCount,
-            row.eligiblePortfolioTypes,
-            businessStateLabel(row.governanceState),
-            businessStateLabel(row.expiryState),
-            row.accessPurpose,
-            row.sourcePosture,
-            <ActionButton
-              key={`${row.key}-evidence`}
-              priority="secondary"
-              onClick={() => onLoadLifecycle(row)}
-              disabled={Boolean(pendingLifecycleKey)}
-            >
-              {pendingLifecycleKey === row.key ? "Loading" : "Open Evidence"}
-            </ActionButton>,
-            <ActionButton
-              key={`${row.key}-launch-history`}
-              priority="secondary"
-              onClick={() => onLoadLaunchHistory(row)}
-              disabled={Boolean(pendingLaunchHistoryKey)}
-            >
-              {pendingLaunchHistoryKey === row.key ? "Loading" : "Open History"}
-            </ActionButton>,
-            <ActionButton
-              key={`${row.key}-launch-readiness`}
-              priority="secondary"
-              onClick={() => onCheckLaunchReadiness(row)}
-              disabled={Boolean(pendingPreviewReadinessKey || pendingLaunchPackageKey || pendingLaunchKey)}
-            >
-              {pendingPreviewReadinessKey === row.key || pendingLaunchPackageKey === row.key
-                ? "Checking"
-                : "Check Readiness"}
-            </ActionButton>,
-          ],
-        }))}
-        emptyState={{
-          title: "No active campaign definitions",
-          body: "Persist a Manage campaign definition before using bulk-review campaign waves.",
-        }}
+      <DpmCampaignDefinitionsTable
+        rows={rows}
+        selectedCampaignKey={selectedCampaignKey}
+        pendingLifecycleKey={pendingLifecycleKey}
+        pendingLaunchHistoryKey={pendingLaunchHistoryKey}
+        pendingPreviewReadinessKey={pendingPreviewReadinessKey}
+        pendingLaunchPackageKey={pendingLaunchPackageKey}
+        pendingLaunchKey={pendingLaunchKey}
+        onLoadLifecycle={onLoadLifecycle}
+        onLoadLaunchHistory={onLoadLaunchHistory}
+        onCheckLaunchReadiness={onCheckLaunchReadiness}
       />
       <DpmCampaignLifecycleEvidenceCard
         rows={lifecycleRows}
