@@ -27,6 +27,7 @@ import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import PortfolioMemoryRecommendedActionsRail from "@/features/workbench/components/portfolio-memory-recommended-actions-rail";
 import PortfolioMemorySelectedEventDetail from "@/features/workbench/components/portfolio-memory-selected-event-detail";
 
 type Props = {
@@ -172,20 +173,7 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
           />
         </div>
 
-        <aside className="portfolio-memory-actions-card">
-          <Text as="h3" variant="subsectionTitle">
-            Recommended Actions
-          </Text>
-          <div className="portfolio-memory-action-stack">
-            {model.recommendedActions.map((action) => (
-              <button type="button" key={action.key}>
-                <span className="material-symbols-outlined" aria-hidden="true">{action.icon}</span>
-                <strong>{action.title}</strong>
-                <small>{action.body}</small>
-              </button>
-            ))}
-          </div>
-        </aside>
+        <PortfolioMemoryRecommendedActionsRail actions={model.recommendedActions} />
       </div>
 
       <PortfolioMemorySelectedEventDetail event={selectedEvent} />
