@@ -37,6 +37,7 @@ import {
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
 
 type Props = {
   portfolioId: string;
@@ -187,40 +188,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           </div>
 
           <div className="outcome-review-workspace-grid">
-            <div className="outcome-review-card outcome-review-timeline-card">
-              <div className="outcome-review-card-header">
-                <h3>Review Timeline</h3>
-                <span>{model.items.length} returned</span>
-              </div>
-              <AnalyticsTable
-                ariaLabel="Outcome reviews"
-                variant="portfolio"
-                density="compact"
-                columns={[
-                  { key: "review", label: "Review" },
-                  { key: "window", label: "Window" },
-                  { key: "outcome", label: "Outcome" },
-                  { key: "state", label: "Status" },
-                  { key: "evidence", label: "Evidence" },
-                ]}
-                rows={model.items.map((item) => ({
-                  key: item.outcomeReviewId,
-                  cells: [
-                    item.reviewLabel,
-                    item.reviewWindow,
-                    item.outcomeStatusLabel,
-                    <SemanticBadge key={`${item.outcomeReviewId}-state`} tone={outcomeReviewBadgeTone(item.state)}>
-                      {businessStateLabel(item.state)}
-                    </SemanticBadge>,
-                    item.proofPackId !== "N/A" ? "Available" : "Not available",
-                  ],
-                }))}
-                emptyState={{
-                  title: "No outcome reviews returned",
-                  body: "No outcome review rows are currently available for this portfolio.",
-                }}
-              />
-            </div>
+            <OutcomeReviewTimelineCard items={model.items} />
 
             <div className="outcome-review-card outcome-review-actions-card">
               <div className="outcome-review-card-header">
