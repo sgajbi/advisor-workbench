@@ -1,0 +1,1 @@
+export const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
