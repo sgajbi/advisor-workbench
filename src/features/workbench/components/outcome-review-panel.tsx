@@ -38,6 +38,7 @@ import {
 } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
 
 type Props = {
@@ -169,24 +170,12 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 
       {primaryReview && hasItems ? (
         <>
-          <div className="outcome-review-readiness-band" aria-label="Selected outcome review readiness">
-            <div>
-              <span>Review Window</span>
-              <strong>{primaryReview.reviewWindow}</strong>
-            </div>
-            <div>
-              <span>Report Input</span>
-              <strong>{primaryReview.reportInputBlocked ? "Blocked" : "Ready"}</strong>
-            </div>
-            <div>
-              <span>AI Narrative</span>
-              <strong>{primaryReview.aiEvidenceBlocked ? "Blocked" : "Ready"}</strong>
-            </div>
-            <div>
-              <span>Source Evidence</span>
-              <strong>{sourceEvidenceStatus}</strong>
-            </div>
-          </div>
+          <OutcomeReviewReadinessBand
+            reviewWindow={primaryReview.reviewWindow}
+            reportInputBlocked={primaryReview.reportInputBlocked}
+            aiEvidenceBlocked={primaryReview.aiEvidenceBlocked}
+            sourceEvidenceStatus={sourceEvidenceStatus}
+          />
 
           <div className="outcome-review-workspace-grid">
             <OutcomeReviewTimelineCard items={model.items} />
