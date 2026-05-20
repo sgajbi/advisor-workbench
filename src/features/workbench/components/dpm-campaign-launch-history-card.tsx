@@ -7,8 +7,9 @@ import type {
   DpmCampaignLaunchHistoryPage,
   DpmCampaignLaunchHistoryRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
+import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 
-export const CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE = 10;
+export { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE };
 
 type Props = {
   rows: DpmCampaignLaunchHistoryRow[];
