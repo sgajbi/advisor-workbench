@@ -6,7 +6,6 @@ import {
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
-  Text,
 } from "@/design-system";
 import {
   requestDpmOutcomeReviewAiNarrative,
@@ -34,6 +33,7 @@ import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewDimensionTable from "./outcome-review-dimension-table";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
+import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
@@ -236,15 +236,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         </>
       ) : null}
 
-      {handoffStatusMessages.length > 0 ? (
-        <div className="outcome-review-handoff-messages">
-          {handoffStatusMessages.map((message) => (
-            <Text key={message} variant="secondary" className="muted">
-              {message}
-            </Text>
-          ))}
-        </div>
-      ) : null}
+      <OutcomeReviewHandoffMessages messages={handoffStatusMessages} />
     </SectionBlock>
   );
 }
