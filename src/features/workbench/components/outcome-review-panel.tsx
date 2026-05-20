@@ -1,26 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { SectionBlock } from "@/design-system";
-import {
-  requestDpmOutcomeReviewAiNarrative,
-  getDpmOutcomeReviewReportInput,
-  submitDpmOutcomeReviewReportJob,
-} from "@/features/workbench/api";
 import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types";
+import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
 import {
-  buildOutcomeClientCommunicationBoundaryView,
-  buildOutcomeReviewPanelModel,
-  type OutcomeReviewClientCommunicationBoundaryView,
-} from "@/features/workbench/outcome-review-view-model";
-import {
-  buildOutcomeReviewHandoffMessages,
   countReadyOutcomeReviewEvidence,
-  describeOutcomeNarrativeRun,
   outcomeReviewAvailabilityLabel,
   outcomeReviewSourceEvidenceStatus,
 } from "@/features/workbench/outcome-review-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import { useOutcomeReviewHandoffs } from "@/features/workbench/use-outcome-review-handoffs";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewStatePanel from "./outcome-review-state-panel";
@@ -35,25 +23,19 @@ type Props = {
 };
 
 export default function OutcomeReviewPanel({ portfolioId, response, errorMessage }: Props) {
-  const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
-  const [reportJobError, setReportJobError] = useState<string | null>(null);
-  const [reportJobPending, setReportJobPending] = useState(false);
-  const [aiNarrativeStatus, setAiNarrativeStatus] = useState<string | null>(null);
-  const [aiNarrativeError, setAiNarrativeError] = useState<string | null>(null);
-  const [aiNarrativePending, setAiNarrativePending] = useState(false);
-  const [handoffBoundary, setHandoffBoundary] =
-    useState<OutcomeReviewClientCommunicationBoundaryView | null>(null);
   const model = buildOutcomeReviewPanelModel(response);
   const primaryReview = model.items[0] ?? null;
-  const clientCommunicationBoundary =
-    handoffBoundary ?? primaryReview?.clientCommunicationBoundary ?? null;
   const hasItems = model.items.length > 0;
-  const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
-  const aiNarrativeAvailable = Boolean(primaryReview && !primaryReview.aiEvidenceBlocked);
-  const handoffStatusMessages = buildOutcomeReviewHandoffMessages(
-    reportJobError ?? reportJobStatus,
-    aiNarrativeError ?? aiNarrativeStatus,
-  );
+  const {
+    clientCommunicationBoundary,
+    handoffStatusMessages,
+    reportJobAvailable,
+    reportJobPending,
+    aiNarrativeAvailable,
+    aiNarrativePending,
+    requestOutcomeReportJob,
+    requestOutcomeAiNarrative,
+  } = useOutcomeReviewHandoffs({ primaryReview });
   const readyEvidenceCount = countReadyOutcomeReviewEvidence(primaryReview);
   const evidencePackStatus = outcomeReviewAvailabilityLabel(
     primaryReview?.proofPackId ?? "N/A",
@@ -61,50 +43,6 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
   const sourceEvidenceStatus =
     outcomeReviewSourceEvidenceStatus(readyEvidenceCount);
   const evidencePackHref = `/workbench/${encodeURIComponent(portfolioId)}?mode=proof`;
-
-  async function requestOutcomeReportJob() {
-    if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
-      return;
-    }
-    setReportJobPending(true);
-    setReportJobError(null);
-    try {
-      const reportInput = await getDpmOutcomeReviewReportInput(primaryReview.outcomeReviewId);
-      setHandoffBoundary(buildOutcomeClientCommunicationBoundaryView(reportInput.data));
-      const handle = await submitDpmOutcomeReviewReportJob({
-        outcomeReviewId: primaryReview.outcomeReviewId,
-        outcomeReportInput: reportInput.data,
-      });
-      setReportJobStatus(`Report request ${businessStateLabel(handle.status)}.`);
-    } catch (error) {
-      setReportJobError(error instanceof Error ? error.message : "Outcome report job failed");
-    } finally {
-      setReportJobPending(false);
-    }
-  }
-
-  async function requestOutcomeAiNarrative() {
-    if (!primaryReview || primaryReview.aiEvidenceBlocked || aiNarrativePending) {
-      return;
-    }
-    setAiNarrativePending(true);
-    setAiNarrativeError(null);
-    try {
-      const narrative = await requestDpmOutcomeReviewAiNarrative({
-        outcomeReviewId: primaryReview.outcomeReviewId,
-      });
-      setHandoffBoundary(
-        buildOutcomeClientCommunicationBoundaryView(narrative.ai_evidence_input)
-      );
-      setAiNarrativeStatus(describeOutcomeNarrativeRun(narrative.data));
-    } catch (error) {
-      setAiNarrativeError(
-        error instanceof Error ? error.message : "Outcome review request failed"
-      );
-    } finally {
-      setAiNarrativePending(false);
-    }
-  }
 
   return (
     <SectionBlock
