@@ -1,9 +1,7 @@
 "use client";
 
-import { ActionButton, AnalyticsTable, SemanticBadge } from "@/design-system";
-import {
-  dpmWaveBadgeTone,
-} from "@/features/workbench/dpm-wave-command-center-panel-helpers";
+import { ActionButton, AnalyticsTable } from "@/design-system";
+import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type {
   DpmCampaignDefinitionRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -70,9 +68,7 @@ export default function DpmCampaignDefinitionsTable({
             {row.displayName}
           </button>,
           row.campaignVersion,
-          <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-            {businessStateLabel(row.status)}
-          </SemanticBadge>,
+          <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,
           row.asOfDate,
           row.candidateCount,
           row.eligibleCandidateCount,

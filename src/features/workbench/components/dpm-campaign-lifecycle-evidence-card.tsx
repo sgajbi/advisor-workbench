@@ -1,16 +1,11 @@
 "use client";
 
 import { AnalyticsTable, ScreenStatePanel, SemanticBadge } from "@/design-system";
-import {
-  dpmWaveBadgeTone,
-} from "@/features/workbench/dpm-wave-command-center-panel-helpers";
+import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type {
   DpmCampaignDefinitionRow,
   DpmCampaignLifecycleEventRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import {
-  businessStateLabel,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   rows: DpmCampaignLifecycleEventRow[];
@@ -69,9 +64,7 @@ export default function DpmCampaignLifecycleEvidenceCard({
             row.actor,
             row.waveId,
             row.requestedAsOfDate,
-            <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-              {businessStateLabel(row.status)}
-            </SemanticBadge>,
+            <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,
             row.reason,
             row.correlationId,
             row.idempotencyKey,
