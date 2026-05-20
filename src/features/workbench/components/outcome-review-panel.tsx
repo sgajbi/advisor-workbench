@@ -25,7 +25,6 @@ import {
   buildOutcomeReviewStatePanelCopy,
   countReadyOutcomeReviewEvidence,
   describeOutcomeNarrativeRun,
-  outcomeReviewAvailabilityClass,
   outcomeReviewAvailabilityLabel,
   outcomeReviewBadgeTone,
   outcomeReviewSourceEvidenceStatus,
@@ -37,6 +36,7 @@ import {
 } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
@@ -261,20 +261,12 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                   <OutcomeReviewClientBoundaryCard boundary={clientCommunicationBoundary} />
                 ) : null}
                 <h4>Evidence Availability</h4>
-                <div className="outcome-review-evidence-grid">
-                  <span className={outcomeReviewAvailabilityClass(primaryReview.expectedSnapshotHash)}>
-                    Expected outcome {outcomeReviewAvailabilityLabel(primaryReview.expectedSnapshotHash)}
-                  </span>
-                  <span className={outcomeReviewAvailabilityClass(primaryReview.realizedSnapshotHash)}>
-                    Realized outcome {outcomeReviewAvailabilityLabel(primaryReview.realizedSnapshotHash)}
-                  </span>
-                  <span className={outcomeReviewAvailabilityClass(primaryReview.proofPackId)}>
-                    Evidence pack {outcomeReviewAvailabilityLabel(primaryReview.proofPackId)}
-                  </span>
-                  <span className={readyEvidenceCount >= 3 ? "is-available" : "is-muted"}>
-                    Source evidence {readyEvidenceCount >= 3 ? "Available" : "Partial"}
-                  </span>
-                </div>
+                <OutcomeReviewEvidenceGrid
+                  expectedSnapshotHash={primaryReview.expectedSnapshotHash}
+                  realizedSnapshotHash={primaryReview.realizedSnapshotHash}
+                  proofPackId={primaryReview.proofPackId}
+                  readyEvidenceCount={readyEvidenceCount}
+                />
               </section>
             </div>
           </div>
