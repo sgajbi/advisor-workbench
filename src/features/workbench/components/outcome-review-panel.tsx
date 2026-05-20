@@ -30,6 +30,7 @@ import {
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewDetailContext from "./outcome-review-detail-context";
 import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
 import OutcomeReviewDimensionTable from "./outcome-review-dimension-table";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
@@ -189,11 +190,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
               onRequestReportJob={requestOutcomeReportJob}
               onRequestAiNarrative={requestOutcomeAiNarrative}
             />
-            <div className="outcome-review-detail-context" aria-label="Selected review source posture">
-              <span>Updated {primaryReview.updatedAt}</span>
-              <span>Retention {primaryReview.retentionUntil}</span>
-              <span>{primaryReview.lineage.length} source refs</span>
-            </div>
+            <OutcomeReviewDetailContext
+              updatedAt={primaryReview.updatedAt}
+              retentionUntil={primaryReview.retentionUntil}
+              sourceReferenceCount={primaryReview.lineage.length}
+            />
 
             <div className="outcome-review-detail-grid">
               <section>
