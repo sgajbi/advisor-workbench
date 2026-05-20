@@ -21,15 +21,12 @@ import {
   outcomeReviewSourceEvidenceStatus,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
-import OutcomeReviewActionsCard from "./outcome-review-actions-card";
-import OutcomeReviewDetailPanel from "./outcome-review-detail-panel";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
-import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatePanel from "./outcome-review-state-panel";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
-import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
+import OutcomeReviewWorkspace from "./outcome-review-workspace";
 
 type Props = {
   portfolioId: string;
@@ -138,38 +135,20 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       />
 
       {primaryReview && hasItems ? (
-        <>
-          <OutcomeReviewReadinessBand
-            reviewWindow={primaryReview.reviewWindow}
-            reportInputBlocked={primaryReview.reportInputBlocked}
-            aiEvidenceBlocked={primaryReview.aiEvidenceBlocked}
-            sourceEvidenceStatus={sourceEvidenceStatus}
-          />
-
-          <div className="outcome-review-workspace-grid">
-            <OutcomeReviewTimelineCard items={model.items} />
-
-            <OutcomeReviewActionsCard
-              primaryReview={primaryReview}
-              evidencePackHref={evidencePackHref}
-              aiNarrativeAvailable={aiNarrativeAvailable}
-              aiNarrativePending={aiNarrativePending}
-              onRequestAiNarrative={requestOutcomeAiNarrative}
-            />
-          </div>
-
-          <OutcomeReviewDetailPanel
-            primaryReview={primaryReview}
-            clientCommunicationBoundary={clientCommunicationBoundary}
-            readyEvidenceCount={readyEvidenceCount}
-            reportJobAvailable={reportJobAvailable}
-            reportJobPending={reportJobPending}
-            aiNarrativeAvailable={aiNarrativeAvailable}
-            aiNarrativePending={aiNarrativePending}
-            onRequestReportJob={requestOutcomeReportJob}
-            onRequestAiNarrative={requestOutcomeAiNarrative}
-          />
-        </>
+        <OutcomeReviewWorkspace
+          items={model.items}
+          primaryReview={primaryReview}
+          clientCommunicationBoundary={clientCommunicationBoundary}
+          evidencePackHref={evidencePackHref}
+          readyEvidenceCount={readyEvidenceCount}
+          sourceEvidenceStatus={sourceEvidenceStatus}
+          reportJobAvailable={reportJobAvailable}
+          reportJobPending={reportJobPending}
+          aiNarrativeAvailable={aiNarrativeAvailable}
+          aiNarrativePending={aiNarrativePending}
+          onRequestReportJob={requestOutcomeReportJob}
+          onRequestAiNarrative={requestOutcomeAiNarrative}
+        />
       ) : null}
 
       <OutcomeReviewHandoffMessages messages={handoffStatusMessages} />
