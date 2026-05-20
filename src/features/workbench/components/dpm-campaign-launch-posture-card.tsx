@@ -1,7 +1,8 @@
 "use client";
 
-import { ActionButton, ScreenStatePanel, SemanticBadge } from "@/design-system";
+import { ActionButton, ScreenStatePanel } from "@/design-system";
 import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
+import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import { dpmWaveBadgeTone } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import type {
   DpmCampaignDefinitionRow,
@@ -48,9 +49,7 @@ export default function DpmCampaignLaunchPostureCard({
               : "Select a campaign definition to check launch readiness."}
           </p>
         </div>
-        <SemanticBadge tone={dpmWaveBadgeTone(launchPosture.state)}>
-          {businessStateLabel(launchPosture.state)}
-        </SemanticBadge>
+        <DpmWaveStateBadge state={launchPosture.state} />
       </div>
       {launchError ? (
         <ScreenStatePanel

@@ -1,12 +1,11 @@
 "use client";
 
-import { ActionButton, SemanticBadge } from "@/design-system";
+import { ActionButton } from "@/design-system";
+import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type { DpmWaveMetricTile } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import {
   DPM_WAVE_LIFECYCLE_STEPS,
-  dpmWaveBadgeTone,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   selectedWaveId: string | null;
@@ -53,9 +52,7 @@ export default function DpmWaveActiveRebalanceSection({
     <section className="rebalance-active-card" aria-labelledby="rebalance-active-title">
       <div className="rebalance-section-heading">
         <h3 id="rebalance-active-title">Active Rebalance</h3>
-        <SemanticBadge tone={dpmWaveBadgeTone(selectedWaveState)}>
-          {businessStateLabel(selectedWaveState)}
-        </SemanticBadge>
+        <DpmWaveStateBadge state={selectedWaveState} />
       </div>
 
       <div className="rebalance-stepper" aria-label="Rebalance lifecycle">

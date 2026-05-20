@@ -1,11 +1,10 @@
 "use client";
 
-import { AnalyticsTable, SemanticBadge } from "@/design-system";
+import { AnalyticsTable } from "@/design-system";
+import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import {
-  dpmWaveBadgeTone,
   type DpmWaveProposedChangeRow,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   rows: DpmWaveProposedChangeRow[];
@@ -57,9 +56,7 @@ export default function DpmWaveProposedChangesSection({
             row.estimatedValue,
             row.reason,
             row.mandateImpact,
-            <SemanticBadge key={`${row.key}-status`} tone={dpmWaveBadgeTone(row.status)}>
-              {businessStateLabel(row.status)}
-            </SemanticBadge>,
+            <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,
           ],
         }))}
         emptyState={{
