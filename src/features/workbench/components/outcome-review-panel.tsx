@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   ActionButton,
   AnalyticsTable,
-  MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -39,6 +38,7 @@ import {
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
+import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
 
 type Props = {
@@ -147,12 +147,12 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         />
       ) : null}
 
-      <div className="outcome-review-status-strip">
-        <MetricRow label="Latest Review" value={primaryReview?.reviewPostureLabel ?? "N/A"} />
-        <MetricRow label="Outcome Status" value={primaryReview?.outcomeStatusLabel ?? "N/A"} />
-        <MetricRow label="Drift Improvement" value={primaryReview?.driftImprovementLabel ?? "N/A"} />
-        <MetricRow label="Evidence Pack" value={evidencePackStatus} />
-      </div>
+      <OutcomeReviewStatusStrip
+        latestReview={primaryReview?.reviewPostureLabel}
+        outcomeStatus={primaryReview?.outcomeStatusLabel}
+        driftImprovement={primaryReview?.driftImprovementLabel}
+        evidencePackStatus={evidencePackStatus}
+      />
 
       {model.supportabilityReasons.length > 0 || model.blockedActions.length > 0 || model.remediationOwner !== "N/A" ? (
         <div className="outcome-review-reason-row">
