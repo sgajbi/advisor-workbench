@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -31,6 +30,7 @@ import {
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
 import OutcomeReviewDimensionTable from "./outcome-review-dimension-table";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
@@ -180,28 +180,15 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           </div>
 
           <div className="outcome-review-detail-panel" id="outcome-review-detail">
-            <div className="outcome-review-detail-header">
-              <div>
-                <h3>Selected Review Detail</h3>
-                <span>{primaryReview.reviewLabel}</span>
-              </div>
-              <div className="outcome-review-detail-actions">
-                <ActionButton
-                  priority="secondary"
-                  onClick={requestOutcomeReportJob}
-                  disabled={!reportJobAvailable || reportJobPending}
-                >
-                  {reportJobPending ? "Requesting report" : "Request report"}
-                </ActionButton>
-                <ActionButton
-                  priority="secondary"
-                  onClick={requestOutcomeAiNarrative}
-                  disabled={!aiNarrativeAvailable || aiNarrativePending}
-                >
-                  {aiNarrativePending ? "Requesting memo" : "Request advisor memo"}
-                </ActionButton>
-              </div>
-            </div>
+            <OutcomeReviewDetailHeader
+              reviewLabel={primaryReview.reviewLabel}
+              reportJobAvailable={reportJobAvailable}
+              reportJobPending={reportJobPending}
+              aiNarrativeAvailable={aiNarrativeAvailable}
+              aiNarrativePending={aiNarrativePending}
+              onRequestReportJob={requestOutcomeReportJob}
+              onRequestAiNarrative={requestOutcomeAiNarrative}
+            />
             <div className="outcome-review-detail-context" aria-label="Selected review source posture">
               <span>Updated {primaryReview.updatedAt}</span>
               <span>Retention {primaryReview.retentionUntil}</span>
