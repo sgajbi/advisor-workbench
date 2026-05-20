@@ -4,19 +4,15 @@ import {
   ActionButton,
   AnalyticsTable,
   MetricRow,
-  SemanticBadge,
   Text,
 } from "@/design-system";
+import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
 import type {
   PmQualityActionError,
   PmQualityFairnessCreateEvidence,
 } from "@/features/workbench/pm-operating-quality-actions";
-import {
-  businessStateLabel,
-  toneForState,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: PmOperatingQualityPanelModel;
@@ -153,9 +149,7 @@ export default function PmOperatingQualityScoreRunCard({
             `${row.pmId} / ${row.bookId}`,
             row.policy,
             row.asOfDate,
-            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-              {businessStateLabel(row.state)}
-            </SemanticBadge>,
+            <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.state} />,
             row.score,
             row.forbiddenUses,
             row.sourceRefs,

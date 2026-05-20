@@ -1,12 +1,9 @@
 "use client";
 
-import { AnalyticsTable, SemanticBadge } from "@/design-system";
+import { AnalyticsTable } from "@/design-system";
+import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
-import {
-  businessStateLabel,
-  toneForState,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: PmOperatingQualityPanelModel;
@@ -30,9 +27,7 @@ export default function PmOperatingQualityPolicyCard({ model }: Props) {
         cells: [
           <strong key={`${row.key}-policy`}>{`${row.policyId} / ${row.policyVersion}`}</strong>,
           row.enabled,
-          <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-            {businessStateLabel(row.state)}
-          </SemanticBadge>,
+          <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.state} />,
           row.asOfDate,
           formatPmQualityReasonCodeList(row.reasonCodes),
         ],
