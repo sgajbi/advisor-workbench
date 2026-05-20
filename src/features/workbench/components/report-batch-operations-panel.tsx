@@ -1,33 +1,21 @@
 "use client";
 
-import { useState } from "react";
-
 import { ActionButton, AnalyticsTable, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import {
   buildArchivedDocumentDownloadUrl,
-  createPortfolioReportBatch,
-  getArchivedDocumentMetadata,
-  getReportBatchStatus,
-  runReportBatchOnce,
 } from "@/features/workbench/api";
-import type {
-  ArchivedDocumentMetadataResponse,
-  ReportBatchHandleResponse,
-  ReportBatchStatusResponse,
-  ReportBatchWorkerRunResponse,
-} from "@/features/workbench/types";
 import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import {
-  isTerminalReportBatchStatus,
   reportBatchAvailabilityLabel,
   reportBatchJobAvailabilityLabel,
   reportBatchStatusTone,
   resolveReportBatchJobLabel,
   summarizeReportBatchCounts,
 } from "@/features/workbench/report-batch-operations-panel-helpers";
+import { useReportBatchOperationsActions } from "@/features/workbench/use-report-batch-operations-actions";
 
 type Props = {
   portfolioId: string;
@@ -44,89 +32,29 @@ export default function ReportBatchOperationsPanel({
   bookingCenterCode,
   benchmarkCode,
 }: Props) {
-  const [handle, setHandle] = useState<ReportBatchHandleResponse | null>(null);
-  const [status, setStatus] = useState<ReportBatchStatusResponse | null>(null);
-  const [runResult, setRunResult] = useState<ReportBatchWorkerRunResponse | null>(null);
-  const [archiveDocumentId, setArchiveDocumentId] = useState("");
-  const [archiveMetadata, setArchiveMetadata] = useState<ArchivedDocumentMetadataResponse | null>(null);
-  const [pendingAction, setPendingAction] = useState<"create" | "refresh" | "run" | "archive" | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const batchId = status?.batch_id ?? handle?.batch_id ?? null;
-  const runDisabled = !batchId || pendingAction !== null || isTerminalReportBatchStatus(status?.status);
+  const {
+    handle,
+    status,
+    runResult,
+    archiveDocumentId,
+    archiveMetadata,
+    pendingAction,
+    error,
+    batchId,
+    runDisabled,
+    setArchiveDocumentId,
+    createBatch,
+    refreshStatus,
+    runOnce,
+    loadArchiveDocument,
+  } = useReportBatchOperationsActions({
+    portfolioId,
+    asOfDate,
+    reportingCurrency,
+    bookingCenterCode,
+    benchmarkCode,
+  });
   const reconciledReportJobId = resolveReportBatchJobLabel(runResult, status);
-
-  async function createBatch() {
-    setPendingAction("create");
-    setError(null);
-    try {
-      const nextHandle = await createPortfolioReportBatch({
-        portfolioId,
-        asOfDate,
-        reportingCurrency,
-        bookingCenterCode,
-        benchmarkCode,
-      });
-      setHandle(nextHandle);
-      setStatus(await getReportBatchStatus(nextHandle.batch_id, { bookingCenterCode }));
-      setRunResult(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Report batch materialization failed.");
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
-  async function refreshStatus() {
-    if (!batchId) return;
-    setPendingAction("refresh");
-    setError(null);
-    try {
-      setStatus(await getReportBatchStatus(batchId, { bookingCenterCode }));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Report batch status refresh failed.");
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
-  async function runOnce() {
-    if (!batchId) return;
-    setPendingAction("run");
-    setError(null);
-    try {
-      const result = await runReportBatchOnce({
-        batchId,
-        bookingCenterCode,
-      });
-      setRunResult(result);
-      setStatus(await getReportBatchStatus(batchId, { bookingCenterCode }));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Report batch run failed.");
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
-  async function loadArchiveDocument() {
-    const documentId = archiveDocumentId.trim();
-    if (!documentId) return;
-    setPendingAction("archive");
-    setError(null);
-    try {
-      setArchiveMetadata(
-        await getArchivedDocumentMetadata(documentId, {
-          current: true,
-          bookingCenterCode,
-        })
-      );
-    } catch (caught) {
-      setArchiveMetadata(null);
-      setError(caught instanceof Error ? caught.message : "Archived document retrieval failed.");
-    } finally {
-      setPendingAction(null);
-    }
-  }
 
   return (
     <SectionBlock
