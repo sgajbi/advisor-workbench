@@ -113,4 +113,51 @@ describe("portfolio-memory view model", () => {
     expect(model.supportabilityState).toBe("BLOCKED");
     expect(model.reasonCodes).toEqual(["DPM_OPERATIONS_REVIEW_REQUIRED"]);
   });
+
+  it("labels PM quality review actions as bounded supervisory records without raw rationale leakage", () => {
+    const model = buildPortfolioMemoryPanelModel({
+      ...memoryResponse,
+      supportability: {
+        ...memoryResponse.supportability,
+        event_count: 1,
+        event_type_counts: { PM_QUALITY_REVIEW_ACTION: 1 },
+      },
+      data: {
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        events: [
+          {
+            event_id: "memory:pm-quality-review-action:pmq_review_001",
+            event_type: "PM_QUALITY_REVIEW_ACTION",
+            event_time: "2026-05-13T10:05:00Z",
+            title: "raw rationale should not render",
+            summary: "raw score 90 and PM ranking should not render",
+            metadata: {
+              review_rationale: "raw rationale from manage",
+              score: "90.00",
+              pm_ranking: "1",
+              content_hash: "sha256:pmq-review",
+              client_contact: "message client",
+              oms_action: "route order",
+            },
+            reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+          },
+        ],
+      },
+    });
+
+    expect(model.events[0]).toEqual(
+      expect.objectContaining({
+        eventLabel: "PM Quality Supervisory Review Action",
+        category: "Operating Quality",
+        summary: "A bounded PM operating quality supervisory review action is available.",
+        businessImpact: "Pm Quality Review Action Ready",
+      })
+    );
+    expect(JSON.stringify(model.events[0])).not.toContain("raw rationale");
+    expect(JSON.stringify(model.events[0])).not.toContain("90.00");
+    expect(JSON.stringify(model.events[0])).not.toContain("pm_ranking");
+    expect(JSON.stringify(model.events[0])).not.toContain("sha256:pmq-review");
+    expect(JSON.stringify(model.events[0])).not.toContain("message client");
+    expect(JSON.stringify(model.events[0])).not.toContain("route order");
+  });
 });

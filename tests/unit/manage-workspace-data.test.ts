@@ -4,6 +4,7 @@ import {
   readDpmFairnessAnalysisId,
   readDpmMandateId,
   readDpmProofPackId,
+  readDpmReviewActionId,
 } from "../../src/features/workbench/manage-workspace-data";
 
 describe("manage workspace data selectors", () => {
@@ -43,5 +44,25 @@ describe("manage workspace data selectors", () => {
       })
     ).toBe("fair_items");
     expect(readDpmFairnessAnalysisId({ fairness_analyses: [{}] })).toBeNull();
+  });
+
+  it("reads PM quality review-action identifiers from every supported Gateway shape", () => {
+    expect(readDpmReviewActionId({ review_action_id: "review_direct" })).toBe(
+      "review_direct"
+    );
+    expect(
+      readDpmReviewActionId({ review_action: { review_action_id: "review_nested" } })
+    ).toBe("review_nested");
+    expect(
+      readDpmReviewActionId({
+        review_actions: [{ review_action_id: "review_list" }],
+      })
+    ).toBe("review_list");
+    expect(
+      readDpmReviewActionId({
+        items: [{ review_action_id: "review_items" }],
+      })
+    ).toBe("review_items");
+    expect(readDpmReviewActionId({ review_actions: [{}] })).toBeNull();
   });
 });

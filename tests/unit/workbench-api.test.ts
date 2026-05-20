@@ -22,9 +22,11 @@ import {
   getDpmOutcomeReviewReportInput,
   getDpmOutcomeReviews,
   getDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityReviewAction,
   getDpmPortfolioMemory,
   listDpmPmOperatingQualityFairnessAnalyses,
   listDpmPmOperatingQualityPolicies,
+  listDpmPmOperatingQualityReviewActions,
   listDpmPmOperatingQualityScoreRuns,
   getDpmConstructionAlternativeSet,
   getExternalOrderExecutionAcknowledgement,
@@ -2952,7 +2954,7 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
   });
 
-  it("uses Gateway PM operating quality routes including fairness-analysis lifecycle reads", async () => {
+  it("uses Gateway PM operating quality routes including fairness-analysis and review-action reads", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -2988,6 +2990,13 @@ describe("workbench api", () => {
       limit: 5,
     });
     await getDpmPmOperatingQualityFairnessAnalysis("pmq_fair_001");
+    await listDpmPmOperatingQualityReviewActions({
+      targetType: "SCORE_RUN",
+      targetId: "pmq_run_001",
+      policyId: "pmq_sg_dpm",
+      limit: 6,
+    });
+    await getDpmPmOperatingQualityReviewAction("pmq_review_001");
     await previewDpmPmOperatingQualityScoreRun({
       pmId: "PM_SG_DPM_001",
       policyId: "pmq_sg_dpm",
@@ -3047,20 +3056,30 @@ describe("workbench api", () => {
     expect(fetchMock.mock.calls[3][0].toString()).toContain(
       "/dpm/command-center/pm-operating-quality/fairness-analyses/pmq_fair_001"
     );
-    expect(fetchMock.mock.calls[4][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/preview`
+    expect(fetchMock.mock.calls[4][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/review-actions?as_of_date="
     );
-    expect(fetchMock.mock.calls[5][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
+    expect(fetchMock.mock.calls[4][0].toString()).toContain("target_type=SCORE_RUN");
+    expect(fetchMock.mock.calls[4][0].toString()).toContain("target_id=pmq_run_001");
+    expect(fetchMock.mock.calls[4][0].toString()).toContain("policy_id=pmq_sg_dpm");
+    expect(fetchMock.mock.calls[4][0].toString()).toContain("limit=6");
+    expect(fetchMock.mock.calls[5][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/review-actions/pmq_review_001"
     );
     expect(fetchMock.mock.calls[6][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses`
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/preview`
     );
     expect(fetchMock.mock.calls[7][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
+    );
+    expect(fetchMock.mock.calls[8][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses`
+    );
+    expect(fetchMock.mock.calls[9][0]).toBe(
       `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/pmq_run_001/ai-summary`
     );
-    expect(fetchMock.mock.calls[7][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const summaryBody = JSON.parse(fetchMock.mock.calls[7][1].body);
+    expect(fetchMock.mock.calls[9][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const summaryBody = JSON.parse(fetchMock.mock.calls[9][1].body);
     expect(summaryBody.requested_outputs).toEqual([
       "score_run_summary",
       "governance_summary",
@@ -3073,14 +3092,14 @@ describe("workbench api", () => {
       "investment_control",
       "cio_office",
     ]);
-    expect(fetchMock.mock.calls[5][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const fairnessBody = JSON.parse(fetchMock.mock.calls[5][1].body);
+    expect(fetchMock.mock.calls[7][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const fairnessBody = JSON.parse(fetchMock.mock.calls[7][1].body);
     expect(fairnessBody.body.policy_id).toBe("pmq_sg_dpm");
     expect(fairnessBody.body.segments).toHaveLength(2);
     expect(fairnessBody.body.minimum_segment_score_run_count).toBeUndefined();
     expect(fairnessBody.body.maximum_average_score_spread).toBeUndefined();
-    expect(fetchMock.mock.calls[6][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const persistedFairnessBody = JSON.parse(fetchMock.mock.calls[6][1].body);
+    expect(fetchMock.mock.calls[8][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const persistedFairnessBody = JSON.parse(fetchMock.mock.calls[8][1].body);
     expect(persistedFairnessBody.body.policy_id).toBe("pmq_sg_dpm");
     expect(persistedFairnessBody.body.segments).toHaveLength(2);
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
@@ -3089,8 +3108,11 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("pm-operating-quality-score-run-ai-summary");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-list");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-detail");
+    expect(metricEventsJson).toContain("pm-operating-quality-review-action-list");
+    expect(metricEventsJson).toContain("pm-operating-quality-review-action-detail");
     expect(metricEventsJson).not.toContain("pmq_run_001");
     expect(metricEventsJson).not.toContain("pmq_fair_001");
+    expect(metricEventsJson).not.toContain("pmq_review_001");
   });
 
   it("generates and loads DPM proof packs through Gateway endpoints", async () => {

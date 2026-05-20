@@ -11,6 +11,7 @@ import {
 import PmOperatingQualityFairnessEvidenceCard from "@/features/workbench/components/pm-operating-quality-fairness-evidence-card";
 import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm-operating-quality-governance-card";
 import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
+import PmOperatingQualityReviewActionsCard from "@/features/workbench/components/pm-operating-quality-review-actions-card";
 import PmOperatingQualityScoreRunCard from "@/features/workbench/components/pm-operating-quality-score-run-card";
 import {
   createDpmPmOperatingQualityFairnessAnalysis,
@@ -48,10 +49,14 @@ type Props = {
   scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
   fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
+  reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
   policiesError?: string | null;
   scoreRunsError?: string | null;
   fairnessAnalysesError?: string | null;
   fairnessAnalysisDetailError?: string | null;
+  reviewActionsError?: string | null;
+  reviewActionDetailError?: string | null;
 };
 
 export default function PmOperatingQualityPanel({
@@ -59,10 +64,14 @@ export default function PmOperatingQualityPanel({
   scoreRuns,
   fairnessAnalyses = null,
   fairnessAnalysisDetail = null,
+  reviewActions = null,
+  reviewActionDetail = null,
   policiesError = null,
   scoreRunsError = null,
   fairnessAnalysesError = null,
   fairnessAnalysisDetailError = null,
+  reviewActionsError = null,
+  reviewActionDetailError = null,
 }: Props) {
   const [previewResponse, setPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
@@ -85,13 +94,20 @@ export default function PmOperatingQualityPanel({
     scoreRuns,
     fairnessAnalyses,
     fairnessAnalysisDetail: createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
+    reviewActions,
+    reviewActionDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
     summary: summaryResponse,
   });
   const stateCopy = pmOperatingQualityStatePanelCopy(model.state);
   const loadError =
-    policiesError || scoreRunsError || fairnessAnalysesError || fairnessAnalysisDetailError;
+    policiesError ||
+    scoreRunsError ||
+    fairnessAnalysesError ||
+    fairnessAnalysisDetailError ||
+    reviewActionsError ||
+    reviewActionDetailError;
   const shouldShowStatePanel =
     Boolean(loadError) ||
     Boolean(actionError) ||
@@ -305,6 +321,8 @@ export default function PmOperatingQualityPanel({
       </div>
 
       <PmOperatingQualityFairnessEvidenceCard model={model} />
+
+      <PmOperatingQualityReviewActionsCard model={model} />
 
       <PmOperatingQualityPolicyCard model={model} />
     </SectionBlock>

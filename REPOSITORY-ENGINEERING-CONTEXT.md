@@ -96,10 +96,12 @@ Current repository posture:
 14. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
     `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
     `/score-runs*`, `/fairness-analyses`, `/fairness-analyses/{fairness_analysis_id}`, and
-    `/fairness-analyses/preview`, with optional review-gated summary requests through Gateway
-    `/score-runs/{score_run_id}/ai-summary`. Workbench renders Manage-owned policy, score-run,
-    source-defined segment, fairness-analysis preview/create/list/detail, source refs,
-    reason-code, supportability, forbidden-use posture, and Gateway/AI workflow-pack run posture
+    `/fairness-analyses/preview`, `/review-actions`, and
+    `/review-actions/{review_action_id}`, with optional review-gated summary requests through
+    Gateway `/score-runs/{score_run_id}/ai-summary`. Workbench renders Manage-owned policy,
+    score-run, source-defined segment, fairness-analysis preview/create/list/detail,
+    supervisory review-action list/detail, source refs, reason-code, supportability,
+    forbidden-use posture, and Gateway/AI workflow-pack run posture
     without constructing prompts, calculating PM scores, discovering segments, calculating segment
     averages or governed spreads, inferring protected classes, ranking PMs, creating
     HR/compensation/conduct decisions, approving trades, contacting clients, routing orders, or
@@ -230,12 +232,13 @@ Important validation expectations:
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
-16. DPM PM operating quality policy, score-run, score-run summary, score-run preview, create, and
-    fairness-analysis preview/create/list/detail operations are Workbench gateway-only operations.
+16. DPM PM operating quality policy, score-run, score-run summary, score-run preview, create,
+    fairness-analysis preview/create/list/detail, and review-action list/detail operations are
+    Workbench gateway-only operations.
     Observability labels must remain bounded to route, panel, operation, freshness,
     supportability, status class, and error category; policy ids, policy versions, score-run ids,
-    fairness-analysis ids, segment ids, PM ids, book ids, source refs, content hashes, workflow
-    run ids, request bodies, response bodies, score values, and screen content must never be
+    fairness-analysis ids, review-action ids, segment ids, PM ids, book ids, source refs, content
+    hashes, workflow run ids, request bodies, response bodies, score values, and screen content must never be
     emitted as metric labels.
 
 ### Visual Review Gate
