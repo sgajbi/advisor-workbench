@@ -22,11 +22,8 @@ import {
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
-import OutcomeReviewDetailContext from "./outcome-review-detail-context";
-import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
+import OutcomeReviewDetailPanel from "./outcome-review-detail-panel";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
-import OutcomeReviewMandateImpactSection from "./outcome-review-mandate-impact-section";
-import OutcomeReviewRationaleEvidenceSection from "./outcome-review-rationale-evidence-section";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatePanel from "./outcome-review-state-panel";
@@ -161,38 +158,17 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
             />
           </div>
 
-          <div className="outcome-review-detail-panel" id="outcome-review-detail">
-            <OutcomeReviewDetailHeader
-              reviewLabel={primaryReview.reviewLabel}
-              reportJobAvailable={reportJobAvailable}
-              reportJobPending={reportJobPending}
-              aiNarrativeAvailable={aiNarrativeAvailable}
-              aiNarrativePending={aiNarrativePending}
-              onRequestReportJob={requestOutcomeReportJob}
-              onRequestAiNarrative={requestOutcomeAiNarrative}
-            />
-            <OutcomeReviewDetailContext
-              updatedAt={primaryReview.updatedAt}
-              retentionUntil={primaryReview.retentionUntil}
-              sourceReferenceCount={primaryReview.lineage.length}
-            />
-
-            <div className="outcome-review-detail-grid">
-              <OutcomeReviewMandateImpactSection
-                mandateImpact={primaryReview.mandateImpact}
-                dimensions={primaryReview.dimensions}
-              />
-
-              <OutcomeReviewRationaleEvidenceSection
-                clientRationale={primaryReview.clientRationale}
-                clientCommunicationBoundary={clientCommunicationBoundary}
-                expectedSnapshotHash={primaryReview.expectedSnapshotHash}
-                realizedSnapshotHash={primaryReview.realizedSnapshotHash}
-                proofPackId={primaryReview.proofPackId}
-                readyEvidenceCount={readyEvidenceCount}
-              />
-            </div>
-          </div>
+          <OutcomeReviewDetailPanel
+            primaryReview={primaryReview}
+            clientCommunicationBoundary={clientCommunicationBoundary}
+            readyEvidenceCount={readyEvidenceCount}
+            reportJobAvailable={reportJobAvailable}
+            reportJobPending={reportJobPending}
+            aiNarrativeAvailable={aiNarrativeAvailable}
+            aiNarrativePending={aiNarrativePending}
+            onRequestReportJob={requestOutcomeReportJob}
+            onRequestAiNarrative={requestOutcomeAiNarrative}
+          />
         </>
       ) : null}
 
