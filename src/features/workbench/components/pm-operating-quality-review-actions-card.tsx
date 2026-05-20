@@ -1,12 +1,9 @@
 "use client";
 
-import { AnalyticsTable, MetricRow, SemanticBadge, Text } from "@/design-system";
+import { AnalyticsTable, MetricRow, Text } from "@/design-system";
+import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
-import {
-  businessStateLabel,
-  toneForState,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: PmOperatingQualityPanelModel;
@@ -22,9 +19,10 @@ export default function PmOperatingQualityReviewActionsCard({ model }: Props) {
           <Text as="h3" variant="subsectionTitle">
             Supervisory Review Action Detail
           </Text>
-          <SemanticBadge tone={toneForState(hasDetail ? model.reviewActionDetail.actionState : "PENDING")}>
-            {hasDetail ? businessStateLabel(model.reviewActionDetail.actionState) : "No detail"}
-          </SemanticBadge>
+          <PmOperatingQualityStateBadge
+            state={hasDetail ? model.reviewActionDetail.actionState : "PENDING"}
+            label={hasDetail ? undefined : "No detail"}
+          />
         </div>
         <div aria-label="PM operating quality supervisory review-action posture">
           <MetricRow
@@ -78,9 +76,7 @@ export default function PmOperatingQualityReviewActionsCard({ model }: Props) {
             <strong key={`${row.key}-action`}>{row.reviewActionRef}</strong>,
             row.target,
             row.actionType,
-            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.actionState)}>
-              {businessStateLabel(row.actionState)}
-            </SemanticBadge>,
+            <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.actionState} />,
             row.actorId,
             row.asOfDate,
             row.policy,

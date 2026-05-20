@@ -1,12 +1,9 @@
 "use client";
 
-import { AnalyticsTable, MetricRow, SemanticBadge, Text } from "@/design-system";
+import { AnalyticsTable, MetricRow, Text } from "@/design-system";
+import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
-import {
-  businessStateLabel,
-  toneForState,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: PmOperatingQualityPanelModel;
@@ -22,9 +19,10 @@ export default function PmOperatingQualityFairnessEvidenceCard({ model }: Props)
           <Text as="h3" variant="subsectionTitle">
             Fairness Analysis Detail
           </Text>
-          <SemanticBadge tone={toneForState(hasFairnessDetail ? model.fairnessState : "PENDING")}>
-            {hasFairnessDetail ? businessStateLabel(model.fairnessState) : "No detail"}
-          </SemanticBadge>
+          <PmOperatingQualityStateBadge
+            state={hasFairnessDetail ? model.fairnessState : "PENDING"}
+            label={hasFairnessDetail ? undefined : "No detail"}
+          />
         </div>
         <div
           className="pm-quality-fairness-preview-posture"
@@ -92,9 +90,7 @@ export default function PmOperatingQualityFairnessEvidenceCard({ model }: Props)
           cells: [
             <strong key={`${row.key}-analysis`}>{row.fairnessAnalysisId}</strong>,
             row.policy,
-            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-              {businessStateLabel(row.state)}
-            </SemanticBadge>,
+            <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.state} />,
             row.asOfDate,
             row.observedSpread,
             row.segmentCount,
@@ -154,9 +150,7 @@ export default function PmOperatingQualityFairnessEvidenceCard({ model }: Props)
           cells: [
             <strong key={`${row.key}-segment`}>{row.segment}</strong>,
             row.segmentType,
-            <SemanticBadge key={`${row.key}-state`} tone={toneForState(row.state)}>
-              {businessStateLabel(row.state)}
-            </SemanticBadge>,
+            <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.state} />,
             row.scoreRunCount,
             row.averageScore,
             `${row.minimumScore} / ${row.maximumScore}`,
