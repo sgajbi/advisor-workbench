@@ -1953,6 +1953,61 @@ export async function getDpmPmOperatingQualityFairnessAnalysis(
   );
 }
 
+export async function listDpmPmOperatingQualityReviewActions(params?: {
+  targetType?: string;
+  targetId?: string;
+  policyId?: string;
+  actionState?: string;
+  asOfDate?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.targetType) {
+    query.set("target_type", params.targetType);
+  }
+  if (params?.targetId) {
+    query.set("target_id", params.targetId);
+  }
+  if (params?.policyId) {
+    query.set("policy_id", params.policyId);
+  }
+  if (params?.actionState) {
+    query.set("action_state", params.actionState);
+  }
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.review-actions.list",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        "/dpm/command-center/pm-operating-quality/review-actions",
+        "DPM PM operating quality review actions",
+        query
+      )
+  );
+}
+
+export async function getDpmPmOperatingQualityReviewAction(
+  reviewActionId: string,
+  target: WorkbenchRequestTarget = "server"
+): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.review-actions.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        target,
+        `/dpm/command-center/pm-operating-quality/review-actions/${encodeURIComponent(
+          reviewActionId
+        )}`,
+        "DPM PM operating quality review action"
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];

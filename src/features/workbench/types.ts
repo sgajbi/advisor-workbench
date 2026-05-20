@@ -1427,6 +1427,7 @@ export type DpmPmOperatingQualitySupportability = {
   policy_version?: string | null;
   score_run_id?: string | null;
   fairness_analysis_id?: string | null;
+  review_action_id?: string | null;
   count?: number | null;
 };
 

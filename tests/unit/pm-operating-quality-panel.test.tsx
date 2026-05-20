@@ -215,13 +215,85 @@ const fairnessAnalysisResponse: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const reviewActions: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-pmq-review-actions",
+  supportability: {
+    ...scoreRuns.supportability,
+    state: "PENDING_REVIEW",
+    review_action_id: "pmq_review_001",
+    reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+  },
+  data: {
+    review_actions: [
+      {
+        review_action_id: "pmq_review_001",
+        review_action_ref: "PMQ-RA-001",
+        target_type: "SCORE_RUN",
+        target_id: "pmq_run_001",
+        action_type: "SUPERVISORY_REVIEW",
+        action_state: "PENDING_REVIEW",
+        actor_id: "supervisor_sg_1",
+        as_of_date: "2026-05-13",
+        policy_id: "pmq_sg_dpm",
+        policy_version: "2026.05",
+        reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+        operating_boundaries: ["NO_CLIENT_COMMUNICATION", "NO_TRADE_OR_EXECUTION"],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualityReviewAction",
+            source_id: "pmq_review_001",
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
+  ...reviewActions,
+  correlation_id: "corr-pmq-review-action-detail",
+  data: {
+    review_action: {
+      review_action_id: "pmq_review_001",
+      review_action_ref: "PMQ-RA-001",
+      target_type: "SCORE_RUN",
+      target_id: "pmq_run_001",
+      action_type: "SUPERVISORY_REVIEW",
+      action_state: "PENDING_REVIEW",
+      actor_id: "supervisor_sg_1",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      review_rationale: "Review source-owned PM quality posture with investment control.",
+      reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+      forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_001",
+        },
+      ],
+    },
+  },
+};
+
 describe("PmOperatingQualityPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders PM quality evidence without exposing hashes or claiming ranking decisions", () => {
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    render(
+      <PmOperatingQualityPanel
+        policies={policies}
+        scoreRuns={scoreRuns}
+        reviewActions={reviewActions}
+        reviewActionDetail={reviewActionDetail}
+      />
+    );
 
     expect(screen.getByRole("heading", { name: "PM Operating Quality" })).toBeInTheDocument();
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
@@ -241,10 +313,16 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByLabelText("PM operating quality fairness analysis posture")
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality supervisory review-action posture")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality supervisory review actions")
+    ).toBeInTheDocument();
     expect(screen.getByText("Awaiting persisted analysis detail or preview")).toBeInTheDocument();
     expect(screen.getByText(/no browser prompt, scoring, ranking, trade approval/i)).toBeInTheDocument();
-    expect(screen.getByText("Score-run evidence load")).toBeInTheDocument();
-    expect(screen.getByText("corr-score")).toBeInTheDocument();
+    expect(screen.getByText("Review-action detail load")).toBeInTheDocument();
+    expect(screen.getByText("corr-pmq-review-action-detail")).toBeInTheDocument();
     expect(
       screen.getAllByText("Ready for policy pmq_sg_dpm / 2026.05").length
     ).toBeGreaterThan(0);
@@ -274,7 +352,17 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
+    expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("Review source-owned PM quality posture with investment control.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Client Contact (client_contact), OMS Routing (oms_routing), Trade Execution (trade_execution)")
+    ).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /generate order/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
     expect(screen.getByText(/does not rank PMs/i)).toBeInTheDocument();
   });
 

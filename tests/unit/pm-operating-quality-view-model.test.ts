@@ -211,6 +211,78 @@ const fairnessAnalyses: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const reviewActions: DpmPmOperatingQualityGatewayResponse = {
+  correlation_id: "corr-review-actions",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    review_action_id: "pmq_review_001",
+    count: 1,
+  },
+  data: {
+    review_actions: [
+      {
+        review_action_id: "pmq_review_001",
+        review_action_ref: "PMQ-RA-001",
+        target_type: "SCORE_RUN",
+        target_id: "pmq_run_001",
+        action_type: "SUPERVISORY_REVIEW",
+        action_state: "PENDING_REVIEW",
+        actor_id: "supervisor_sg_1",
+        as_of_date: "2026-05-13",
+        policy_id: "pmq_sg_dpm",
+        policy_version: "2026.05",
+        reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+        operating_boundaries: ["NO_CLIENT_COMMUNICATION", "NO_PM_RANKING"],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualityReviewAction",
+            source_id: "pmq_review_001",
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
+  ...reviewActions,
+  correlation_id: "corr-review-action-detail",
+  data: {
+    review_action: {
+      review_action_id: "pmq_review_001",
+      review_action_ref: "PMQ-RA-001",
+      target_type: "FAIRNESS_ANALYSIS",
+      target_ref: "pmq_fair_001",
+      action_type: "SUPERVISORY_REVIEW",
+      action_state: "PENDING_REVIEW",
+      actor_id: "supervisor_sg_1",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      review_rationale: "Review source-owned fairness posture with investment control.",
+      reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+      forbidden_uses: ["client_contact", "trade_approval", "oms_routing"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_001",
+        },
+      ],
+    },
+  },
+};
+
 const summary: DpmPmOperatingQualitySummaryResponse = {
   correlation_id: "corr-summary",
   contract_version: "v1",
@@ -357,6 +429,45 @@ describe("PM operating quality view model", () => {
       upstreamStatus: "200",
     });
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
+  });
+
+  it("renders Manage-owned review-action ledger and detail without workflow claims", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      reviewActions,
+      reviewActionDetail,
+    });
+
+    expect(model.reviewActionRows).toHaveLength(1);
+    expect(model.selectedReviewAction).toEqual(
+      expect.objectContaining({
+        reviewActionId: "pmq_review_001",
+        reviewActionRef: "PMQ-RA-001",
+        target: "Fairness Analysis / pmq_fair_001",
+        actionType: "Supervisory Review",
+        actionState: "PENDING_REVIEW",
+      })
+    );
+    expect(model.reviewActionDetail).toEqual(
+      expect.objectContaining({
+        reviewActionId: "pmq_review_001",
+        reviewActionRef: "PMQ-RA-001",
+        target: "Fairness Analysis / pmq_fair_001",
+        rationale: "Review source-owned fairness posture with investment control.",
+        operatingBoundaries:
+          "Client Contact (client_contact), Trade Approval (trade_approval), OMS Routing (oms_routing)",
+      })
+    );
+    expect(model.operationEvidence).toEqual({
+      operation: "Review-action detail load",
+      correlationId: "corr-review-action-detail",
+      contractVersion: "v1",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    expect(JSON.stringify(model)).not.toContain("sha256:");
+    expect(JSON.stringify(model)).not.toContain("client approval");
   });
 
   it("renders fairness preview as review-required evidence without client-side analysis", () => {

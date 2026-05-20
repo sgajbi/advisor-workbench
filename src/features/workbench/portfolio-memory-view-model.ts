@@ -203,10 +203,12 @@ function buildEventRow(
       ) ||
       "N/A",
     summary:
-      readString(record, "title") ||
-      readString(record, "summary") ||
-      readString(record, "description") ||
-      eventSummary(eventType),
+      eventType === "PM_QUALITY_REVIEW_ACTION"
+        ? eventSummary(eventType)
+        : readString(record, "title") ||
+          readString(record, "summary") ||
+          readString(record, "description") ||
+          eventSummary(eventType),
     businessImpact: eventBusinessImpact(eventType, record),
     actionLabel: eventActionLabel(eventType),
     status:
@@ -246,6 +248,7 @@ function eventTypeLabel(eventType: string, record: Record<string, unknown> = {})
     OUTCOME_REVIEW_CREATED: "Outcome Review Created",
     OUTCOME_REVIEW_EVENT: "Outcome Review Updated",
     PM_QUALITY_SCORE_RUN: "PM Quality Review Recorded",
+    PM_QUALITY_REVIEW_ACTION: "PM Quality Supervisory Review Action",
   };
   return labels[eventType] ?? businessCase(eventType);
 }
@@ -281,6 +284,7 @@ function eventSummary(eventType: string): string {
     OUTCOME_REVIEW_CREATED: "A post-trade outcome review is available.",
     OUTCOME_REVIEW_EVENT: "Outcome review activity was added to the record.",
     PM_QUALITY_SCORE_RUN: "PM operating quality lineage is available.",
+    PM_QUALITY_REVIEW_ACTION: "A bounded PM operating quality supervisory review action is available.",
   };
   return summaries[eventType] ?? "Portfolio memory event is available.";
 }
@@ -306,6 +310,7 @@ function eventBusinessImpact(eventType: string, record: Record<string, unknown>)
     OUTCOME_REVIEW_CREATED: "Outcome ready for review",
     OUTCOME_REVIEW_EVENT: "Review record updated",
     PM_QUALITY_SCORE_RUN: "Operating-quality lineage recorded",
+    PM_QUALITY_REVIEW_ACTION: "Supervisory review action recorded",
   };
   return impacts[eventType] ?? "Portfolio record updated";
 }

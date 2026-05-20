@@ -64,4 +64,42 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.queryByText("Mark Filled")).not.toBeInTheDocument();
     expect(screen.queryByText("Settle")).not.toBeInTheDocument();
   });
+
+  it("renders PM quality review-action memory detail without raw rationale or action controls", () => {
+    render(
+      <PortfolioMemorySelectedEventDetail
+        event={{
+          ...outcomeReviewEvent,
+          eventId: "memory:pm-quality-review-action:pmq_review_001",
+          eventType: "PM_QUALITY_REVIEW_ACTION",
+          eventLabel: "PM Quality Supervisory Review Action",
+          category: "Operating Quality",
+          summary: "A bounded PM operating quality supervisory review action is available.",
+          businessImpact: "Supervisory review action recorded",
+          reasonCodes: "PM_QUALITY_REVIEW_ACTION_READY",
+          metadataRows: [
+            { key: "status-0", label: "Status", value: "PENDING_REVIEW" },
+            { key: "category-1", label: "Category", value: "Operating Quality" },
+            { key: "evidence-2", label: "Evidence Items", value: "0" },
+          ],
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Details: PM Quality Supervisory Review Action" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("A bounded PM operating quality supervisory review action is available.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("PM Quality Review Action Ready")).toBeInTheDocument();
+    expect(screen.queryByText(/raw rationale/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/raw score/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/pm ranking/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sha256:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Message client")).not.toBeInTheDocument();
+    expect(screen.queryByText("Approve client communication")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
+    expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
+  });
 });

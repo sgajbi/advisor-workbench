@@ -5,6 +5,7 @@ import {
   getDpmMandateHealth,
   getDpmOutcomeReviews,
   getDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityReviewAction,
   getDpmPortfolioMemory,
   getDpmProofPack,
   listDpmCampaignDefinitions,
@@ -12,6 +13,7 @@ import {
   listDpmPmOperatingQualityFairnessAnalyses,
   getPortfolio360,
   listDpmPmOperatingQualityPolicies,
+  listDpmPmOperatingQualityReviewActions,
   listDpmPmOperatingQualityScoreRuns,
   listDpmWaves,
 } from "@/features/workbench/api";
@@ -37,6 +39,14 @@ export type ManageWorkspaceData = {
     ReturnType<typeof getDpmPmOperatingQualityFairnessAnalysis>
   > | null;
   pmOperatingQualityFairnessAnalysisDetailError: string | null;
+  pmOperatingQualityReviewActions: Awaited<
+    ReturnType<typeof listDpmPmOperatingQualityReviewActions>
+  > | null;
+  pmOperatingQualityReviewActionDetail: Awaited<
+    ReturnType<typeof getDpmPmOperatingQualityReviewAction>
+  > | null;
+  pmOperatingQualityReviewActionsError: string | null;
+  pmOperatingQualityReviewActionDetailError: string | null;
   waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
   wavesError: string | null;
   campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
@@ -64,6 +74,7 @@ export async function loadManageWorkspaceData(
     pmQualityPoliciesResult,
     pmQualityScoreRunsResult,
     pmQualityFairnessAnalysesResult,
+    pmQualityReviewActionsResult,
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
@@ -76,6 +87,7 @@ export async function loadManageWorkspaceData(
     listDpmPmOperatingQualityPolicies({ limit: 10 }),
     listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
     listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }),
+    listDpmPmOperatingQualityReviewActions({ limit: 10 }),
     getDpmOutcomeReviews({ portfolioId, limit: 10 }),
   ]);
 
@@ -119,6 +131,22 @@ export async function loadManageWorkspaceData(
     }
   }
 
+  const reviewActions = readSettledValue(pmQualityReviewActionsResult);
+  let reviewActionDetail: Awaited<ReturnType<typeof getDpmPmOperatingQualityReviewAction>> | null =
+    null;
+  let reviewActionDetailError: string | null = null;
+  const reviewActionId = readDpmReviewActionId(reviewActions?.data ?? null);
+  if (reviewActionId) {
+    try {
+      reviewActionDetail = await getDpmPmOperatingQualityReviewAction(reviewActionId);
+    } catch (error) {
+      reviewActionDetailError =
+        error instanceof Error
+          ? error.message
+          : "PM operating quality review-action detail endpoint unavailable.";
+    }
+  }
+
   return {
     portfolio,
     commandCenter: readSettledValue(commandCenterResult),
@@ -151,6 +179,13 @@ export async function loadManageWorkspaceData(
     ),
     pmOperatingQualityFairnessAnalysisDetail: fairnessAnalysisDetail,
     pmOperatingQualityFairnessAnalysisDetailError: fairnessAnalysisDetailError,
+    pmOperatingQualityReviewActions: reviewActions,
+    pmOperatingQualityReviewActionDetail: reviewActionDetail,
+    pmOperatingQualityReviewActionsError: readSettledError(
+      pmQualityReviewActionsResult,
+      "PM operating quality review-action list endpoint unavailable."
+    ),
+    pmOperatingQualityReviewActionDetailError: reviewActionDetailError,
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
     campaignDefinitions: readSettledValue(campaignDefinitionsResult),
@@ -171,6 +206,37 @@ export async function loadManageWorkspaceData(
     proofPack,
     proofPackError,
   };
+}
+
+export function readDpmReviewActionId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.review_action_id === "string" && data.review_action_id.trim().length > 0) {
+    return data.review_action_id;
+  }
+  const reviewAction = data.review_action;
+  if (reviewAction && typeof reviewAction === "object" && !Array.isArray(reviewAction)) {
+    const reviewActionId = (reviewAction as Record<string, unknown>).review_action_id;
+    if (typeof reviewActionId === "string" && reviewActionId.trim().length > 0) {
+      return reviewActionId;
+    }
+  }
+  const items = Array.isArray(data.review_actions)
+    ? data.review_actions
+    : Array.isArray(data.items)
+      ? data.items
+      : [];
+  for (const item of items) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const reviewActionId = (item as Record<string, unknown>).review_action_id;
+    if (typeof reviewActionId === "string" && reviewActionId.trim().length > 0) {
+      return reviewActionId;
+    }
+  }
+  return null;
 }
 
 function readSettledValue<T>(result: PromiseSettledResult<T>): T | null {

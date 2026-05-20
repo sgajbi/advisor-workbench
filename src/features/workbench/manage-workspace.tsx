@@ -164,10 +164,14 @@ function renderManageMode(
           scoreRuns={data.pmOperatingQualityScoreRuns}
           fairnessAnalyses={data.pmOperatingQualityFairnessAnalyses}
           fairnessAnalysisDetail={data.pmOperatingQualityFairnessAnalysisDetail}
+          reviewActions={data.pmOperatingQualityReviewActions}
+          reviewActionDetail={data.pmOperatingQualityReviewActionDetail}
           policiesError={data.pmOperatingQualityPoliciesError}
           scoreRunsError={data.pmOperatingQualityScoreRunsError}
           fairnessAnalysesError={data.pmOperatingQualityFairnessAnalysesError}
           fairnessAnalysisDetailError={data.pmOperatingQualityFairnessAnalysisDetailError}
+          reviewActionsError={data.pmOperatingQualityReviewActionsError}
+          reviewActionDetailError={data.pmOperatingQualityReviewActionDetailError}
         />
       );
     case "reviews":
