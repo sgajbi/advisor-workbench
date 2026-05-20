@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ScreenStatePanel,
-  SectionBlock,
-} from "@/design-system";
+import { SectionBlock } from "@/design-system";
 import {
   requestDpmOutcomeReviewAiNarrative,
   getDpmOutcomeReviewReportInput,
@@ -18,12 +15,10 @@ import {
 } from "@/features/workbench/outcome-review-view-model";
 import {
   buildOutcomeReviewHandoffMessages,
-  buildOutcomeReviewStatePanelCopy,
   countReadyOutcomeReviewEvidence,
   describeOutcomeNarrativeRun,
   outcomeReviewAvailabilityLabel,
   outcomeReviewSourceEvidenceStatus,
-  shouldShowOutcomeReviewStatePanel,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
@@ -34,6 +29,7 @@ import OutcomeReviewMandateImpactSection from "./outcome-review-mandate-impact-s
 import OutcomeReviewRationaleEvidenceSection from "./outcome-review-rationale-evidence-section";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
+import OutcomeReviewStatePanel from "./outcome-review-state-panel";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
@@ -58,11 +54,6 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
   const clientCommunicationBoundary =
     handoffBoundary ?? primaryReview?.clientCommunicationBoundary ?? null;
   const hasItems = model.items.length > 0;
-  const shouldShowStatePanel = shouldShowOutcomeReviewStatePanel(
-    model.state,
-    errorMessage ?? null,
-  );
-  const stateCopy = buildOutcomeReviewStatePanelCopy(model.state, portfolioId);
   const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
   const aiNarrativeAvailable = Boolean(primaryReview && !primaryReview.aiEvidenceBlocked);
   const handoffStatusMessages = buildOutcomeReviewHandoffMessages(
@@ -130,14 +121,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         <OutcomeReviewSupportBadges supportabilityState={model.supportabilityState} />
       }
     >
-      {shouldShowStatePanel ? (
-        <ScreenStatePanel
-          kind={errorMessage ? "partial" : stateCopy.kind}
-          surface="portfolio"
-          title={errorMessage ? "Outcome review is unavailable" : stateCopy.title}
-          body={errorMessage ?? stateCopy.body}
-        />
-      ) : null}
+      <OutcomeReviewStatePanel
+        portfolioId={portfolioId}
+        state={model.state}
+        errorMessage={errorMessage}
+      />
 
       <OutcomeReviewStatusStrip
         latestReview={primaryReview?.reviewPostureLabel}
