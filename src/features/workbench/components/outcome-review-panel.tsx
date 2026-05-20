@@ -29,12 +29,11 @@ import {
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
-import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewDetailContext from "./outcome-review-detail-context";
 import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
-import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewMandateImpactSection from "./outcome-review-mandate-impact-section";
+import OutcomeReviewRationaleEvidenceSection from "./outcome-review-rationale-evidence-section";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
@@ -202,22 +201,14 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
                 dimensions={primaryReview.dimensions}
               />
 
-              <section>
-                <h4>Internal Outcome Rationale</h4>
-                <div className="outcome-review-rationale">
-                  <p>{primaryReview.clientRationale}</p>
-                </div>
-                {clientCommunicationBoundary ? (
-                  <OutcomeReviewClientBoundaryCard boundary={clientCommunicationBoundary} />
-                ) : null}
-                <h4>Evidence Availability</h4>
-                <OutcomeReviewEvidenceGrid
-                  expectedSnapshotHash={primaryReview.expectedSnapshotHash}
-                  realizedSnapshotHash={primaryReview.realizedSnapshotHash}
-                  proofPackId={primaryReview.proofPackId}
-                  readyEvidenceCount={readyEvidenceCount}
-                />
-              </section>
+              <OutcomeReviewRationaleEvidenceSection
+                clientRationale={primaryReview.clientRationale}
+                clientCommunicationBoundary={clientCommunicationBoundary}
+                expectedSnapshotHash={primaryReview.expectedSnapshotHash}
+                realizedSnapshotHash={primaryReview.realizedSnapshotHash}
+                proofPackId={primaryReview.proofPackId}
+                readyEvidenceCount={readyEvidenceCount}
+              />
             </div>
           </div>
         </>
