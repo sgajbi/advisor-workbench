@@ -5,14 +5,11 @@ import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types
 import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
 import {
   countReadyOutcomeReviewEvidence,
-  outcomeReviewAvailabilityLabel,
   outcomeReviewSourceEvidenceStatus,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { useOutcomeReviewHandoffs } from "@/features/workbench/use-outcome-review-handoffs";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
-import OutcomeReviewReasonRow from "./outcome-review-reason-row";
-import OutcomeReviewStatePanel from "./outcome-review-state-panel";
-import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
+import OutcomeReviewSummary from "./outcome-review-summary";
 import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
 import OutcomeReviewWorkspace from "./outcome-review-workspace";
 
@@ -37,9 +34,6 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     requestOutcomeAiNarrative,
   } = useOutcomeReviewHandoffs({ primaryReview });
   const readyEvidenceCount = countReadyOutcomeReviewEvidence(primaryReview);
-  const evidencePackStatus = outcomeReviewAvailabilityLabel(
-    primaryReview?.proofPackId ?? "N/A",
-  );
   const sourceEvidenceStatus =
     outcomeReviewSourceEvidenceStatus(readyEvidenceCount);
   const evidencePackHref = `/workbench/${encodeURIComponent(portfolioId)}?mode=proof`;
@@ -53,23 +47,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         <OutcomeReviewSupportBadges supportabilityState={model.supportabilityState} />
       }
     >
-      <OutcomeReviewStatePanel
+      <OutcomeReviewSummary
         portfolioId={portfolioId}
-        state={model.state}
+        model={model}
+        primaryReview={primaryReview}
         errorMessage={errorMessage}
-      />
-
-      <OutcomeReviewStatusStrip
-        latestReview={primaryReview?.reviewPostureLabel}
-        outcomeStatus={primaryReview?.outcomeStatusLabel}
-        driftImprovement={primaryReview?.driftImprovementLabel}
-        evidencePackStatus={evidencePackStatus}
-      />
-
-      <OutcomeReviewReasonRow
-        supportabilityReasons={model.supportabilityReasons}
-        blockedActions={model.blockedActions}
-        remediationOwner={model.remediationOwner}
       />
 
       {primaryReview && hasItems ? (
