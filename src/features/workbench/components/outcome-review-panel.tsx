@@ -32,11 +32,11 @@ import {
 } from "@/features/workbench/outcome-review-panel-helpers";
 import {
   businessStateLabel,
-  formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
+import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
@@ -154,19 +154,11 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
         evidencePackStatus={evidencePackStatus}
       />
 
-      {model.supportabilityReasons.length > 0 || model.blockedActions.length > 0 || model.remediationOwner !== "N/A" ? (
-        <div className="outcome-review-reason-row">
-          {[
-            ...model.supportabilityReasons,
-            ...model.blockedActions,
-            ...(model.remediationOwner !== "N/A" ? [`Owner: ${model.remediationOwner}`] : []),
-          ].map((reason) => (
-            <SemanticBadge key={reason} tone={reason.startsWith("CREATE") || reason.startsWith("REQUEST") ? "danger" : "warn"}>
-              {reason.startsWith("Owner: ") ? reason : formatBusinessReason(reason)}
-            </SemanticBadge>
-          ))}
-        </div>
-      ) : null}
+      <OutcomeReviewReasonRow
+        supportabilityReasons={model.supportabilityReasons}
+        blockedActions={model.blockedActions}
+        remediationOwner={model.remediationOwner}
+      />
 
       {primaryReview && hasItems ? (
         <>

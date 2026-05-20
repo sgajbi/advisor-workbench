@@ -1,0 +1,50 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import OutcomeReviewReasonRow from "../../src/features/workbench/components/outcome-review-reason-row";
+
+describe("OutcomeReviewReasonRow", () => {
+  it("renders source-provided supportability reasons, blocked actions, and remediation owner", () => {
+    render(
+      <OutcomeReviewReasonRow
+        supportabilityReasons={["READY_FOR_REPORT_INPUT"]}
+        blockedActions={["CREATE_REPORT_INPUT", "REQUEST_AI_NARRATIVE"]}
+        remediationOwner="Portfolio Operations"
+      />,
+    );
+
+    const reasonRow = screen.getByLabelText("Outcome review supportability reasons");
+    expect(reasonRow).toHaveTextContent(/Ready.*Report.*Input/i);
+    expect(reasonRow).toHaveTextContent(/Create.*Report.*Input/i);
+    expect(reasonRow).toHaveTextContent(/Request.*Ai.*Narrative/i);
+    expect(reasonRow).toHaveTextContent("Owner: Portfolio Operations");
+  });
+
+  it("does not render empty supportability chrome", () => {
+    render(
+      <OutcomeReviewReasonRow
+        supportabilityReasons={[]}
+        blockedActions={[]}
+        remediationOwner="N/A"
+      />,
+    );
+
+    expect(screen.queryByLabelText("Outcome review supportability reasons")).not.toBeInTheDocument();
+  });
+
+  it("does not introduce client communication or execution controls", () => {
+    render(
+      <OutcomeReviewReasonRow
+        supportabilityReasons={["READY_FOR_REPORT_INPUT"]}
+        blockedActions={["REQUEST_AI_NARRATIVE"]}
+        remediationOwner="Portfolio Operations"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /client|communication|approval|delivery/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/order|oms|execution|fill|settlement/i)).not.toBeInTheDocument();
+  });
+});
