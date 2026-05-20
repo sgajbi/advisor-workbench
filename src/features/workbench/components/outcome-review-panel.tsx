@@ -32,9 +32,9 @@ import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewDetailContext from "./outcome-review-detail-context";
 import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
-import OutcomeReviewDimensionTable from "./outcome-review-dimension-table";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
+import OutcomeReviewMandateImpactSection from "./outcome-review-mandate-impact-section";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
@@ -197,11 +197,10 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
             />
 
             <div className="outcome-review-detail-grid">
-              <section>
-                <h4>Mandate Impact</h4>
-                <p>{primaryReview.mandateImpact}</p>
-                <OutcomeReviewDimensionTable dimensions={primaryReview.dimensions} />
-              </section>
+              <OutcomeReviewMandateImpactSection
+                mandateImpact={primaryReview.mandateImpact}
+                dimensions={primaryReview.dimensions}
+              />
 
               <section>
                 <h4>Internal Outcome Rationale</h4>
