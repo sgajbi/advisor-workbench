@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   ScreenStatePanel,
   SectionBlock,
-  SemanticBadge,
 } from "@/design-system";
 import {
   requestDpmOutcomeReviewAiNarrative,
@@ -23,7 +22,6 @@ import {
   countReadyOutcomeReviewEvidence,
   describeOutcomeNarrativeRun,
   outcomeReviewAvailabilityLabel,
-  outcomeReviewBadgeTone,
   outcomeReviewSourceEvidenceStatus,
   shouldShowOutcomeReviewStatePanel,
 } from "@/features/workbench/outcome-review-panel-helpers";
@@ -37,6 +35,7 @@ import OutcomeReviewRationaleEvidenceSection from "./outcome-review-rationale-ev
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
+import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
 
 type Props = {
@@ -128,12 +127,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
       subtitle="Review mandate outcomes, advisor observations, and evidence readiness."
       className="outcome-review-panel"
       actions={
-        <div className="outcome-review-badge-row">
-          <SemanticBadge tone={outcomeReviewBadgeTone(model.supportabilityState)}>
-            {businessStateLabel(model.supportabilityState)}
-          </SemanticBadge>
-          <SemanticBadge>Evidence available</SemanticBadge>
-        </div>
+        <OutcomeReviewSupportBadges supportabilityState={model.supportabilityState} />
       }
     >
       {shouldShowStatePanel ? (
