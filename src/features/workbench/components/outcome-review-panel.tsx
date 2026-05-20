@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   ActionButton,
-  AnalyticsTable,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -30,11 +29,10 @@ import {
   outcomeReviewSourceEvidenceStatus,
   shouldShowOutcomeReviewStatePanel,
 } from "@/features/workbench/outcome-review-panel-helpers";
-import {
-  businessStateLabel,
-} from "@/features/workbench/manage-workspace-view-model";
+import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
+import OutcomeReviewDimensionTable from "./outcome-review-dimension-table";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
@@ -214,34 +212,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
               <section>
                 <h4>Mandate Impact</h4>
                 <p>{primaryReview.mandateImpact}</p>
-                <AnalyticsTable
-                  ariaLabel="Outcome review dimensions"
-                  variant="analysis"
-                  density="compact"
-                  columns={[
-                    { key: "dimension", label: "Dimension" },
-                    { key: "expected", label: "Expected", align: "right" },
-                    { key: "realized", label: "Realized", align: "right" },
-                    { key: "variance", label: "Variance", align: "right" },
-                    { key: "state", label: "State" },
-                  ]}
-                  rows={primaryReview.dimensions.map((row) => ({
-                    key: row.key,
-                    cells: [
-                      businessStateLabel(row.dimension),
-                      row.expected,
-                      row.realized,
-                      row.variance,
-                      <SemanticBadge key={`${row.key}-state`} tone={outcomeReviewBadgeTone(row.state)}>
-                        {businessStateLabel(row.state)}
-                      </SemanticBadge>,
-                    ],
-                  }))}
-                  emptyState={{
-                    title: "No dimension results returned",
-                    body: "The review exists, but no expected-versus-realized dimension rows are available.",
-                  }}
-                />
+                <OutcomeReviewDimensionTable dimensions={primaryReview.dimensions} />
               </section>
 
               <section>
