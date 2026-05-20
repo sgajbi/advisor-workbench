@@ -14,6 +14,23 @@ export type PmQualityFairnessCreateEvidence = {
   upstreamStatus: string;
 };
 
+export type PmQualityReviewActionEvidence = {
+  reviewActionId: string;
+  correlationId: string;
+  sourceService: string;
+  upstreamStatus: string;
+};
+
+export type PmQualityReviewActionForm = {
+  actorId: string;
+  targetType: string;
+  targetId: string;
+  actionType: string;
+  actionState: string;
+  reviewActionRef: string;
+  boundedRationale: string;
+};
+
 export function buildPmQualityActionError(
   error: unknown,
   fallback: string
@@ -55,11 +72,40 @@ export function readPmQualityFairnessAnalysisId(
   return typeof candidate === "string" && candidate ? candidate : null;
 }
 
+export function readPmQualityReviewActionId(
+  response: DpmPmOperatingQualityGatewayResponse
+): string | null {
+  if (response.supportability.review_action_id) {
+    return response.supportability.review_action_id;
+  }
+  const data = response.data;
+  if (!isRecord(data)) {
+    return null;
+  }
+  const reviewAction = data.review_action;
+  if (!isRecord(reviewAction)) {
+    return null;
+  }
+  const candidate = reviewAction.review_action_id;
+  return typeof candidate === "string" && candidate ? candidate : null;
+}
+
 export function buildPmQualityFairnessCreateEvidence(
   response: DpmPmOperatingQualityGatewayResponse
 ): PmQualityFairnessCreateEvidence {
   return {
     fairnessAnalysisId: readPmQualityFairnessAnalysisId(response) ?? "N/A",
+    correlationId: response.correlation_id || "N/A",
+    sourceService: response.supportability.source_service || response.source_service || "N/A",
+    upstreamStatus: String(response.upstream_status ?? "N/A"),
+  };
+}
+
+export function buildPmQualityReviewActionEvidence(
+  response: DpmPmOperatingQualityGatewayResponse
+): PmQualityReviewActionEvidence {
+  return {
+    reviewActionId: readPmQualityReviewActionId(response) ?? "N/A",
     correlationId: response.correlation_id || "N/A",
     sourceService: response.supportability.source_service || response.source_service || "N/A",
     upstreamStatus: String(response.upstream_status ?? "N/A"),

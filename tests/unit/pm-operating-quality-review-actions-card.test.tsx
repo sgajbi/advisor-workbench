@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityReviewActionsCard from "../../src/features/workbench/components/pm-operating-quality-review-actions-card";
 import { buildPmOperatingQualityPanelModel } from "../../src/features/workbench/pm-operating-quality-view-model";
@@ -88,7 +88,10 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
       as_of_date: "2026-05-13",
       policy_id: "pmq_sg_dpm",
       policy_version: "2026.05",
-      review_rationale: "Review source-owned PM quality posture with investment control.",
+      bounded_review_rationale:
+        "Bounded supervisory review of source-owned PM quality posture.",
+      review_reason: "Gateway bounded supervisory review reason.",
+      review_rationale: "raw rationale from Manage must not render",
       reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
       forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
       source_refs: [
@@ -120,7 +123,7 @@ describe("PmOperatingQualityReviewActionsCard", () => {
     expect(screen.getAllByText("Supervisory Review").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Pending Review").length).toBeGreaterThan(0);
     expect(
-      screen.getByText("Review source-owned PM quality posture with investment control.")
+      screen.getByText("Bounded supervisory review of source-owned PM quality posture.")
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -131,10 +134,112 @@ describe("PmOperatingQualityReviewActionsCard", () => {
       screen.getByLabelText("PM operating quality supervisory review actions")
     ).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /generate order/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
+  });
+
+  it("renders bounded preview-before-create controls without client or order actions", async () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies: null,
+      scoreRuns,
+      reviewActions,
+      reviewActionDetail,
+    });
+    const onFormChange = vi.fn();
+    const onPreview = vi.fn();
+    const onCreate = vi.fn();
+
+    render(
+      <PmOperatingQualityReviewActionsCard
+        model={model}
+        form={{
+          actorId: "supervisor_sg_1",
+          targetType: "SCORE_RUN",
+          targetId: "pmq_run_001",
+          actionType: "REQUEST_EVIDENCE_REMEDIATION",
+          actionState: "REVIEW_REQUIRED",
+          reviewActionRef: "PMQ-RA-001",
+          boundedRationale: "Bounded supervisory action rationale.",
+        }}
+        readiness={{ state: "READY", detail: "Ready to preview score run pmq_run_001" }}
+        previewReady={false}
+        pendingPreview={false}
+        pendingCreate={false}
+        createEvidence={null}
+        onFormChange={onFormChange}
+        onPreview={onPreview}
+        onCreate={onCreate}
+      />
+    );
+
+    expect(
+      screen.getByLabelText("PM operating quality supervisory review-action control")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Supervisor actor")).toHaveValue("supervisor_sg_1");
+    expect(screen.getByText("Preview required before create")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
+
+    fireEvent.change(
+      screen.getByLabelText("Bounded supervisory rationale"),
+      { target: { value: "Updated bounded rationale." } }
+    );
+
+    expect(onFormChange).toHaveBeenCalledWith(
+      "boundedRationale",
+      "Updated bounded rationale."
+    );
+    expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /approve trade/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /execute/i })).not.toBeInTheDocument();
+  });
+
+  it("enables create only after preview and renders Manage create evidence", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies: null,
+      scoreRuns,
+      reviewActions,
+      reviewActionDetail,
+    });
+
+    render(
+      <PmOperatingQualityReviewActionsCard
+        model={model}
+        form={{
+          actorId: "supervisor_sg_1",
+          targetType: "SCORE_RUN",
+          targetId: "pmq_run_001",
+          actionType: "REQUEST_EVIDENCE_REMEDIATION",
+          actionState: "REVIEW_REQUIRED",
+          reviewActionRef: "PMQ-RA-001",
+          boundedRationale: "Bounded supervisory action rationale.",
+        }}
+        readiness={{ state: "READY", detail: "Ready to preview score run pmq_run_001" }}
+        previewReady
+        pendingPreview={false}
+        pendingCreate={false}
+        createEvidence={{
+          reviewActionId: "pmq_review_001",
+          correlationId: "corr-create",
+          sourceService: "lotus-manage",
+          upstreamStatus: "200",
+        }}
+        onFormChange={vi.fn()}
+        onPreview={vi.fn()}
+        onCreate={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("Preview available; create records an immutable Manage review action")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeEnabled();
+    expect(screen.getByLabelText("PM operating quality persisted review-action evidence")).toBeInTheDocument();
+    expect(screen.getByText("corr-create")).toBeInTheDocument();
   });
 
   it("renders fail-closed empty posture when no review action is returned", () => {

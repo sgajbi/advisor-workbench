@@ -59,13 +59,22 @@ export default function PmOperatingQualityPanel({
     pendingFairnessAction,
     pendingFairnessCreateAction,
     pendingSummaryAction,
+    pendingReviewActionPreview,
+    pendingReviewActionCreate,
     actionError,
     actionMessage,
     fairnessCreateEvidence,
+    reviewActionCreateEvidence,
+    reviewActionForm,
+    reviewActionReadiness,
+    reviewActionPreviewReady,
+    setReviewActionFormValue,
     previewScoreRun,
     previewFairnessAnalysis,
     createFairnessAnalysis,
     requestSupportSummary,
+    previewReviewAction,
+    createReviewAction,
   } = usePmOperatingQualityActions({
     policies,
     scoreRuns,
@@ -159,7 +168,18 @@ export default function PmOperatingQualityPanel({
 
       <PmOperatingQualityFairnessEvidenceCard model={model} />
 
-      <PmOperatingQualityReviewActionsCard model={model} />
+      <PmOperatingQualityReviewActionsCard
+        model={model}
+        form={reviewActionForm}
+        readiness={reviewActionReadiness}
+        previewReady={reviewActionPreviewReady}
+        pendingPreview={pendingReviewActionPreview}
+        pendingCreate={pendingReviewActionCreate}
+        createEvidence={reviewActionCreateEvidence}
+        onFormChange={setReviewActionFormValue}
+        onPreview={previewReviewAction}
+        onCreate={createReviewAction}
+      />
 
       <PmOperatingQualityPolicyCard model={model} />
     </SectionBlock>

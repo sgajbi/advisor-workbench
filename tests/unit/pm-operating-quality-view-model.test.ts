@@ -269,7 +269,10 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
       as_of_date: "2026-05-13",
       policy_id: "pmq_sg_dpm",
       policy_version: "2026.05",
-      review_rationale: "Review source-owned fairness posture with investment control.",
+      bounded_review_rationale:
+        "Bounded supervisory review of source-owned fairness posture.",
+      review_reason: "Gateway bounded supervisory review reason.",
+      review_rationale: "raw rationale from Manage must not render",
       reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
       forbidden_uses: ["client_contact", "trade_approval", "oms_routing"],
       source_refs: [
@@ -454,7 +457,7 @@ describe("PM operating quality view model", () => {
         reviewActionId: "pmq_review_001",
         reviewActionRef: "PMQ-RA-001",
         target: "Fairness Analysis / pmq_fair_001",
-        rationale: "Review source-owned fairness posture with investment control.",
+        rationale: "Bounded supervisory review of source-owned fairness posture.",
         operatingBoundaries:
           "Client Contact (client_contact), Trade Approval (trade_approval), OMS Routing (oms_routing)",
       })
@@ -467,6 +470,7 @@ describe("PM operating quality view model", () => {
       upstreamStatus: "200",
     });
     expect(JSON.stringify(model)).not.toContain("sha256:");
+    expect(JSON.stringify(model)).not.toContain("raw rationale from Manage");
     expect(JSON.stringify(model)).not.toContain("client approval");
   });
 

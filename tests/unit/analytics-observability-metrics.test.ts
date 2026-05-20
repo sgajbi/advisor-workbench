@@ -549,6 +549,16 @@ describe("analytics UI observability metrics", () => {
         "pm-operating-quality-review-action-detail",
         "dpm.pm-operating-quality.review-actions.get",
       ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-review-action-preview",
+        "dpm.pm-operating-quality.review-actions.preview",
+      ],
+      [
+        "workbench.manage",
+        "pm-operating-quality-review-action-create",
+        "dpm.pm-operating-quality.review-actions.create",
+      ],
       ["workbench.legacy-advisor", "advisor-overview", "workbench.overview"],
       ["workbench.legacy-advisor", "portfolio-360", "workbench.portfolio-360"],
       ["workbench.legacy-advisor", "portfolio-analytics", "workbench.analytics"],

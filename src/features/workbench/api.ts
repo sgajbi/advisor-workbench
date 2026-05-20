@@ -2008,6 +2008,65 @@ export async function getDpmPmOperatingQualityReviewAction(
   );
 }
 
+export type DpmPmOperatingQualityReviewActionRequest = {
+  target_type: string;
+  target_id: string;
+  action_type: string;
+  action_state?: string;
+  review_action_ref: string;
+  review_reason: string;
+  actor_id: string;
+  policy_id?: string;
+  policy_version?: string;
+  as_of_date?: string;
+  source_refs?: Array<Record<string, unknown>>;
+};
+
+export async function previewDpmPmOperatingQualityReviewAction(params: {
+  request: DpmPmOperatingQualityReviewActionRequest;
+  actorId?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.review-actions.preview",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          "/dpm/command-center/pm-operating-quality/review-actions/preview"
+        ),
+        "preview DPM PM operating quality review action",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(
+            params.actorId ?? params.request.actor_id
+          ),
+          body: JSON.stringify({ body: params.request }),
+        }
+      )
+  );
+}
+
+export async function createDpmPmOperatingQualityReviewAction(params: {
+  request: DpmPmOperatingQualityReviewActionRequest;
+  actorId?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.review-actions.create",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/review-actions"),
+        "create DPM PM operating quality review action",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(
+            params.actorId ?? params.request.actor_id
+          ),
+          body: JSON.stringify({ body: params.request }),
+        }
+      )
+  );
+}
+
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];

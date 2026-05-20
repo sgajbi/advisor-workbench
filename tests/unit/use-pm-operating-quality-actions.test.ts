@@ -4,8 +4,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { usePmOperatingQualityActions } from "../../src/features/workbench/use-pm-operating-quality-actions";
 import {
   createDpmPmOperatingQualityFairnessAnalysis,
+  createDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityFairnessAnalysis,
+  previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
 } from "../../src/features/workbench/api";
@@ -16,8 +19,11 @@ import type {
 
 vi.mock("../../src/features/workbench/api", () => ({
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  createDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  getDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  previewDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
   requestDpmPmOperatingQualitySummary: vi.fn(),
 }));
@@ -114,6 +120,42 @@ const fairnessAnalysisResponse: DpmPmOperatingQualityGatewayResponse = {
       as_of_date: "2026-05-13",
       observed_average_score_spread: "18.00",
       segment_results: [],
+    },
+  },
+};
+
+const reviewActionResponse: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-pmq-review-action-create",
+  supportability: {
+    ...scoreRuns.supportability,
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+    review_action_id: "pmq_review_002",
+  },
+  data: {
+    review_action: {
+      review_action_id: "pmq_review_002",
+      review_action_ref: "PMQ-REVIEW-pmq_run_001",
+      target_type: "SCORE_RUN",
+      target_id: "pmq_run_001",
+      action_type: "REQUEST_EVIDENCE_REMEDIATION",
+      action_state: "REVIEW_REQUIRED",
+      actor_id: "workbench-pm-operating-quality-supervisor",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      bounded_review_rationale:
+        "Bounded supervisory review for Manage-owned PM operating quality evidence.",
+      review_rationale: "raw rationale from Manage must not render",
+      reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_002",
+        },
+      ],
     },
   },
 };
@@ -256,6 +298,92 @@ describe("usePmOperatingQualityActions", () => {
     expect(JSON.stringify(result.current.model.summaryPosture)).not.toContain("sha256:pm-quality");
   });
 
+  it("previews before creating bounded supervisory review actions through Gateway", async () => {
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction).mockResolvedValue(reviewActionResponse);
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(reviewActionResponse);
+    const { result } = renderActions();
+
+    await act(async () => {
+      await result.current.createReviewAction();
+    });
+
+    expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
+    expect(result.current.actionError).toEqual(
+      expect.objectContaining({
+        statusClass: "blocked",
+        body: "Preview the supervisory review action before recording it.",
+      })
+    );
+
+    await act(async () => {
+      result.current.setReviewActionFormValue(
+        "boundedRationale",
+        "Bounded supervisory review for source-owned PM quality evidence."
+      );
+    });
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+
+    expect(previewDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        target_type: "SCORE_RUN",
+        target_id: "pmq_run_001",
+        action_type: "REQUEST_EVIDENCE_REMEDIATION",
+        action_state: "REVIEW_REQUIRED",
+        review_action_ref: "PMQ-REVIEW-pmq_run_001",
+        review_reason: "Bounded supervisory review for source-owned PM quality evidence.",
+        actor_id: "workbench-pm-operating-quality-supervisor",
+        policy_id: "pmq_sg_dpm",
+        policy_version: "2026.05",
+        as_of_date: "2026-05-13",
+        source_refs: [],
+      }),
+      actorId: "workbench-pm-operating-quality-supervisor",
+    });
+    await waitFor(() =>
+      expect(result.current.actionMessage).toBe(
+        "Review-action preview returned Manage supervisory evidence."
+      )
+    );
+    expect(result.current.reviewActionPreviewReady).toBe(true);
+
+    await act(async () => {
+      await result.current.createReviewAction();
+    });
+
+    expect(createDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        target_type: "SCORE_RUN",
+        target_id: "pmq_run_001",
+        review_reason: "Bounded supervisory review for source-owned PM quality evidence.",
+      }),
+      actorId: "workbench-pm-operating-quality-supervisor",
+    });
+    expect(getDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith(
+      "pmq_review_002",
+      "client"
+    );
+    await waitFor(() =>
+      expect(result.current.actionMessage).toBe(
+        "Recorded Manage-owned supervisory review action."
+      )
+    );
+    expect(result.current.reviewActionCreateEvidence).toEqual({
+      reviewActionId: "pmq_review_002",
+      correlationId: "corr-pmq-review-action-create",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    expect(JSON.stringify(result.current.model.reviewActionDetail)).not.toContain(
+      "raw rationale from Manage"
+    );
+  });
+
   it("blocks Gateway calls when source-owned readiness is not available", async () => {
     const { result } = renderActions({
       policies: null,
@@ -267,12 +395,16 @@ describe("usePmOperatingQualityActions", () => {
       await result.current.previewFairnessAnalysis();
       await result.current.createFairnessAnalysis();
       await result.current.requestSupportSummary();
+      await result.current.previewReviewAction();
+      await result.current.createReviewAction();
     });
 
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
     expect(createDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
     expect(requestDpmPmOperatingQualitySummary).not.toHaveBeenCalled();
+    expect(previewDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
+    expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
     expect(result.current.actionError).toEqual(
       expect.objectContaining({
         statusClass: "blocked",
