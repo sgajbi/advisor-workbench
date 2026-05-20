@@ -4,8 +4,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-operating-quality-panel";
 import {
   createDpmPmOperatingQualityFairnessAnalysis,
+  createDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualityFairnessAnalysis,
+  getDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityFairnessAnalysis,
+  previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
 } from "../../src/features/workbench/api";
@@ -16,8 +19,11 @@ import type {
 
 vi.mock("../../src/features/workbench/api", () => ({
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  createDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  getDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  previewDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
   requestDpmPmOperatingQualitySummary: vi.fn(),
 }));
@@ -266,7 +272,10 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
       as_of_date: "2026-05-13",
       policy_id: "pmq_sg_dpm",
       policy_version: "2026.05",
-      review_rationale: "Review source-owned PM quality posture with investment control.",
+      bounded_review_rationale:
+        "Bounded supervisory review of source-owned PM quality posture.",
+      review_reason: "Gateway bounded supervisory review reason.",
+      review_rationale: "raw rationale from Manage must not render",
       reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
       forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
       source_refs: [
@@ -351,15 +360,18 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
     expect(
-      screen.getByText("Review source-owned PM quality posture with investment control.")
+      screen.getByText("Bounded supervisory review of source-owned PM quality posture.")
     ).toBeInTheDocument();
     expect(
       screen.getByText("Client Contact (client_contact), OMS Routing (oms_routing), Trade Execution (trade_execution)")
     ).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /generate order/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
@@ -419,6 +431,9 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Gateway PM operating quality route")).toBeInTheDocument();
     expect(screen.getByText(/Failed to fetch preview DPM PM operating quality score run/)).toBeInTheDocument();
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+    expect(previewDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
+    expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
+    expect(getDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
   });
 
   it("explains when fairness preview is blocked by missing source-defined segments", () => {

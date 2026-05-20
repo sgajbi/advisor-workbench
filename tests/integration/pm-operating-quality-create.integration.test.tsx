@@ -125,6 +125,49 @@ const fairnessDetail: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
+  correlation_id: "corr-review-action-create",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    review_action_id: "pmq_review_created",
+  },
+  data: {
+    review_action: {
+      review_action_id: "pmq_review_created",
+      review_action_ref: "PMQ-REVIEW-pmq_run_001",
+      target_type: "SCORE_RUN",
+      target_id: "pmq_run_001",
+      action_type: "REQUEST_EVIDENCE_REMEDIATION",
+      action_state: "REVIEW_REQUIRED",
+      actor_id: "workbench-pm-operating-quality-supervisor",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      bounded_review_rationale:
+        "Bounded supervisory review for Manage-owned PM operating quality evidence.",
+      review_rationale: "raw rationale from Manage must not render",
+      reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+      forbidden_uses: ["client_contact", "trade_execution", "oms_routing"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_created",
+        },
+      ],
+    },
+  },
+};
+
 describe("PM operating quality fairness-analysis create integration", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -182,6 +225,95 @@ describe("PM operating quality fairness-analysis create integration", () => {
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-create");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-detail");
     expect(metricEventsJson).not.toContain("pmq_fair_created");
+    expect(metricEventsJson).not.toContain("pmq_run_001");
+  });
+
+  it("previews and creates a bounded supervisory review action through Gateway", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = input.toString();
+        if (url.endsWith("/pm-operating-quality/review-actions/preview")) {
+          return new Response(JSON.stringify(reviewActionDetail), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        if (url.endsWith("/pm-operating-quality/review-actions")) {
+          return new Response(JSON.stringify(reviewActionDetail), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        if (url.endsWith("/pm-operating-quality/review-actions/pmq_review_created")) {
+          return new Response(JSON.stringify(reviewActionDetail), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return new Response("unexpected route", { status: 500 });
+      })
+    );
+
+    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+
+    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Preview Review Action" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Review-action preview returned Manage supervisory evidence.")
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Record Review Action" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Recorded Manage-owned supervisory review action.")).toBeInTheDocument();
+    });
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/bff/api/v1/dpm/command-center/pm-operating-quality/review-actions/preview"
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "/api/bff/api/v1/dpm/command-center/pm-operating-quality/review-actions"
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      "/api/bff/api/v1/dpm/command-center/pm-operating-quality/review-actions/pmq_review_created"
+    );
+    const previewOptions = fetchMock.mock.calls[0][1];
+    const createOptions = fetchMock.mock.calls[1][1];
+    expect(previewOptions.method).toBe("POST");
+    expect(createOptions.method).toBe("POST");
+    expect(createOptions.headers["X-Caller-Application"]).toBe("lotus-workbench");
+    expect(createOptions.headers["X-Actor-Id"]).toBe(
+      "workbench-pm-operating-quality-supervisor"
+    );
+    const previewBody = JSON.parse(previewOptions.body);
+    const createBody = JSON.parse(createOptions.body);
+    expect(createBody).toEqual(previewBody);
+    expect(createBody.body).toEqual(
+      expect.objectContaining({
+        target_type: "SCORE_RUN",
+        target_id: "pmq_run_001",
+        review_reason:
+          "Record bounded supervisory review for Manage-owned PM operating quality evidence.",
+      })
+    );
+    expect(screen.getAllByText("pmq_review_created").length).toBeGreaterThan(0);
+    expect(screen.getByText("Create Correlation")).toBeInTheDocument();
+    expect(screen.getAllByText("corr-review-action-create").length).toBeGreaterThan(0);
+    expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("pm-operating-quality-review-action-preview");
+    expect(metricEventsJson).toContain("pm-operating-quality-review-action-create");
+    expect(metricEventsJson).toContain("pm-operating-quality-review-action-detail");
+    expect(metricEventsJson).not.toContain("pmq_review_created");
     expect(metricEventsJson).not.toContain("pmq_run_001");
   });
 });

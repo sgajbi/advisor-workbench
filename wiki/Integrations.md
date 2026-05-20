@@ -127,7 +127,7 @@ must travel through Gateway-shaped contracts.
     RFC-0043 monitoring-exception summary execution remains `lotus-ai` owned and must reach
     Workbench through Gateway exception-summary composition only.
     PM operating quality policies, score runs, score-run preview/create, fairness-analysis
-    preview/create/list/detail, review-action list/detail, and PM quality support-summary requests
+    preview/create/list/detail, review-action preview/create/list/detail, and PM quality support-summary requests
     must reach Workbench through Gateway
     `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders
     source-defined segment, fairness, supervisory review-action, and review-gated workflow-pack posture but does not
@@ -150,7 +150,7 @@ must travel through Gateway-shaped contracts.
     The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
     preserves manage event order without reconstructing timeline nodes, and the implemented PM
     operating quality panel consumes Gateway policy, score-run, persisted fairness-analysis
-    create/list/detail, fairness-analysis preview, review-action list/detail, and score-run
+    create/list/detail, fairness-analysis preview, review-action preview/create/list/detail, and score-run
     support-summary contracts when Manage/Gateway expose source-defined segment assignments,
     review actions, and a selected score run.
     Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack

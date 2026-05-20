@@ -440,6 +440,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.pm-operating-quality.review-actions.get",
   },
   {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-review-action-preview",
+    operation: "dpm.pm-operating-quality.review-actions.preview",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-review-action-create",
+    operation: "dpm.pm-operating-quality.review-actions.create",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

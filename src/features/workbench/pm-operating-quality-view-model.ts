@@ -646,8 +646,8 @@ function buildReviewActionDetail(
     asOfDate: firstNonEmpty(readString(reviewAction, "as_of_date"), readString(reviewAction, "created_at")),
     policy: `${policyId} / ${policyVersion}`,
     rationale: firstNonEmpty(
-      readString(reviewAction, "review_rationale"),
       readString(reviewAction, "bounded_review_rationale"),
+      readString(reviewAction, "review_reason"),
       readString(reviewAction, "rationale")
     ),
     supportability: firstNonEmpty(readString(reviewAction, "supportability_state"), "READY"),

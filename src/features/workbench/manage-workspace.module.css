@@ -1318,6 +1318,33 @@
   margin-top: 14px;
 }
 
+.manageScope :global(.pm-quality-review-action-form) {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.manageScope :global(.pm-quality-review-action-form-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manageScope :global(.pm-quality-review-action-form .workbench-field-label) {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.manageScope :global(.pm-quality-review-action-form textarea.workbench-input) {
+  min-height: 84px;
+  resize: vertical;
+}
+
 .manageScope :global(.pm-quality-fairness-detail) {
   grid-column: 1 / -1;
   overflow: hidden;
@@ -3774,6 +3801,7 @@
   .manageScope :global(.pm-quality-workspace),
   .manageScope :global(.pm-quality-evidence-grid),
   .manageScope :global(.pm-quality-review-action-grid),
+  .manageScope :global(.pm-quality-review-action-form-grid),
   .manageScope :global(.pm-quality-detail-grid),
   .manageScope :global(.pm-quality-detail-stack),
   .manageScope :global(.construction-alternatives-summary),
