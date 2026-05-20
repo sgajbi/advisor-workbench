@@ -7,9 +7,12 @@ import {
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
-  SemanticBadge,
   Text,
 } from "@/design-system";
+import {
+  ProofPackAvailabilityBadge,
+  ProofPackStateBadge,
+} from "@/features/workbench/components/proof-pack-badges";
 import {
   generateDpmProofPackFromRun,
   getDpmProofPack,
@@ -27,13 +30,6 @@ import {
   deriveProofPackContext,
 } from "@/features/workbench/proof-pack-view-model";
 import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
-import {
-  proofPackAvailabilityLabel,
-  proofPackAvailabilityTone,
-  proofPackBadgeTone,
   proofPackStatePanelCopy,
   readProofPackAiWorkflowPackStatus,
   readProofPackMarkdown,
@@ -151,12 +147,8 @@ export default function ProofPackPanel({
       className="proof-pack-panel"
       actions={
         <div className="proof-pack-badge-row">
-          <SemanticBadge tone={proofPackBadgeTone(model.supportabilityState)}>
-            {businessStateLabel(model.supportabilityState)}
-          </SemanticBadge>
-          <SemanticBadge tone={proofPackAvailabilityTone(model.evidenceStatusLabel)}>
-            Evidence {model.evidenceStatusLabel}
-          </SemanticBadge>
+          <ProofPackStateBadge state={model.supportabilityState} />
+          <ProofPackAvailabilityBadge label="Evidence" statusLabel={model.evidenceStatusLabel} />
         </div>
       }
     >
@@ -222,9 +214,7 @@ export default function ProofPackPanel({
       {model.supportabilityReasons.length > 0 ? (
         <div className="proof-pack-reason-row">
           {model.supportabilityReasons.map((reason) => (
-            <SemanticBadge key={reason} tone={proofPackBadgeTone(reason)}>
-              {formatBusinessReason(reason)}
-            </SemanticBadge>
+            <ProofPackStateBadge key={reason} state={reason} reason />
           ))}
         </div>
       ) : null}
@@ -249,9 +239,7 @@ export default function ProofPackPanel({
               key: row.key,
               cells: [
                 row.area,
-                <SemanticBadge key={`${row.key}-state`} tone={proofPackBadgeTone(row.status)}>
-                  {businessStateLabel(row.status)}
-                </SemanticBadge>,
+                <ProofPackStateBadge key={`${row.key}-state`} state={row.status} />,
                 row.finding,
                 row.action,
               ],
@@ -321,15 +309,9 @@ export default function ProofPackPanel({
           <h3>Advisor Rationale</h3>
           <p>{model.advisorRationale}</p>
           <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff posture">
-            <SemanticBadge tone={model.markdownAvailable ? "success" : "default"}>
-              Summary {proofPackAvailabilityLabel(model.markdownAvailable)}
-            </SemanticBadge>
-            <SemanticBadge tone={model.reportInputAvailable ? "success" : "default"}>
-              Report {proofPackAvailabilityLabel(model.reportInputAvailable)}
-            </SemanticBadge>
-            <SemanticBadge tone={model.aiEvidenceInputAvailable ? "success" : "default"}>
-              Memo {proofPackAvailabilityLabel(model.aiEvidenceInputAvailable)}
-            </SemanticBadge>
+            <ProofPackAvailabilityBadge label="Summary" available={model.markdownAvailable} />
+            <ProofPackAvailabilityBadge label="Report" available={model.reportInputAvailable} />
+            <ProofPackAvailabilityBadge label="Memo" available={model.aiEvidenceInputAvailable} />
           </div>
         </section>
       </div>
