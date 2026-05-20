@@ -11,8 +11,8 @@ import DpmCampaignDefinitionsSection, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-definitions-section";
 import DpmWaveProposedChangesSection from "@/features/workbench/components/dpm-wave-proposed-changes-section";
+import DpmWaveReadinessSummaryStrip from "@/features/workbench/components/dpm-wave-readiness-summary-strip";
 import DpmWaveRecommendedActionsSection from "@/features/workbench/components/dpm-wave-recommended-actions-section";
-import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
 import {
   approveDpmWave,
   createDpmWave,
@@ -42,14 +42,10 @@ import {
   buildDpmWaveProposedChangeRows,
   dpmWaveBadgeTone,
   dpmWaveStatePanelCopy,
-  findDpmWaveMetricValue,
   formatDpmWaveDisplayDate,
   isDpmWaveActionBlocked,
   resolveDpmWaveLifecycleIndex,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
-import {
-  businessStateLabel,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   portfolioId: string;
@@ -387,28 +383,12 @@ export default function DpmWaveCommandCenterPanel({
         />
       ) : null}
 
-      <div className="rebalance-summary-strip" aria-label="Rebalance readiness">
-        <DpmWaveSummaryCell
-          label="Rebalance Status"
-          value={businessStateLabel(model.selectedWaveState)}
-          tone={dpmWaveBadgeTone(model.selectedWaveState)}
-        />
-        <DpmWaveSummaryCell
-          label="Approval Readiness"
-          value={approvalBlocked ? "Blocked" : "Ready"}
-          tone={approvalBlocked ? "danger" : "success"}
-        />
-        <DpmWaveSummaryCell label="Proposed Changes" value={model.selectedWaveItemCount} />
-        <DpmWaveSummaryCell
-          label="Drift Improvement"
-          value={findDpmWaveMetricValue(
-            model.metricRows,
-            ["drift improvement", "drift reduction", "drift"],
-            "Pending"
-          )}
-          tone="success"
-        />
-      </div>
+      <DpmWaveReadinessSummaryStrip
+        selectedWaveState={model.selectedWaveState}
+        approvalBlocked={approvalBlocked}
+        selectedWaveItemCount={model.selectedWaveItemCount}
+        metricRows={model.metricRows}
+      />
 
       <DpmCampaignDefinitionsSection
         rows={model.campaignRows}
