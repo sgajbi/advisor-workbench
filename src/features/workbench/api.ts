@@ -26,8 +26,6 @@ import {
   DpmOutcomeReviewNarrativeResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmPortfolioMemoryGatewayResponse,
-  DpmPmOperatingQualityGatewayResponse,
-  DpmPmOperatingQualitySummaryResponse,
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
   DpmProofPackMarkdownResponse,
@@ -42,53 +40,29 @@ import {
   WorkbenchSandboxState,
 } from "./types";
 import {
-  resolveBffProxyBaseUrl,
-  resolveWorkbenchApiBase,
-  type ServiceRequestTarget,
-} from "@/features/platform-runtime/service-addressing";
-import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
-import {
-  applyDefaultCallerContextHeaders,
   resolveDefaultCallerContext,
   resolveDefaultDpmContext,
 } from "./caller-context";
+import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
 import {
-  WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
-  observeWorkbenchAnalyticsRequest,
-  type WorkbenchAnalyticsUiObservationContext,
-  type WorkbenchAnalyticsUiObservationOptions,
-} from "@/features/analytics-observability/metrics";
+  BFF_PROXY_BASE,
+  buildServerGatewayHeaders,
+  buildWorkbenchUrl,
+  fetchWorkbenchJson,
+  fetchWorkbenchMutation,
+  fetchWorkbenchResource,
+  observeWorkbenchMutation,
+  observeWorkbenchResource,
+  type WorkbenchObservedOperation,
+  type WorkbenchRequestTarget,
+} from "@/features/workbench/api-client";
 
-const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
-type WorkbenchRequestTarget = ServiceRequestTarget;
-type WorkbenchObservedOperation =
-  (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"];
-
-export class WorkbenchApiError extends Error {
-  readonly status: number;
-
-  constructor(errorLabel: string, status: number) {
-    super(`Failed to fetch ${errorLabel} (${status})`);
-    this.name = "WorkbenchApiError";
-    this.status = status;
-  }
-}
-
-export function getWorkbenchApiErrorStatus(error: unknown): number | null {
-  if (error instanceof WorkbenchApiError) {
-    return error.status;
-  }
-  if (error instanceof Error) {
-    const match = error.message.match(/\((\d{3})\)$/);
-    return match ? Number(match[1]) : null;
-  }
-  return null;
-}
-
-export function isWorkbenchPermissionBlockedError(error: unknown): boolean {
-  const status = getWorkbenchApiErrorStatus(error);
-  return status === 401 || status === 403;
-}
+export {
+  WorkbenchApiError,
+  getWorkbenchApiErrorStatus,
+  isWorkbenchPermissionBlockedError,
+} from "@/features/workbench/api-client";
+export * from "@/features/workbench/pm-operating-quality-api";
 
 function buildPerformanceWorkspaceQuery(params: {
   period: string;
@@ -136,121 +110,6 @@ function buildConstructionGenerationIdempotencyKey(params: {
     params.constructionAsOf,
     params.mutationToken,
   ].join("-");
-}
-
-async function fetchWorkbenchJson<T>(
-  url: string,
-  errorLabel: string,
-  init?: RequestInit
-): Promise<T> {
-  const response = await fetch(url, { cache: "no-store", ...init });
-  if (!response.ok) {
-    throw new WorkbenchApiError(errorLabel, response.status);
-  }
-  return (await response.json()) as T;
-}
-
-async function fetchWorkbenchMutation<T>(
-  url: string,
-  errorLabel: string,
-  init: RequestInit
-): Promise<T> {
-  const response = await fetch(url, { cache: "no-store", ...withJsonMutationHeaders(init) });
-  if (!response.ok) {
-    throw new WorkbenchApiError(errorLabel, response.status);
-  }
-  return (await response.json()) as T;
-}
-
-function withJsonMutationHeaders(init: RequestInit): RequestInit {
-  if (typeof init.body !== "string") {
-    return init;
-  }
-
-  const headers = init.headers;
-  if (headers instanceof Headers) {
-    const nextHeaders = new Headers(headers);
-    if (!nextHeaders.has("Content-Type")) {
-      nextHeaders.set("Content-Type", "application/json");
-    }
-    return { ...init, headers: nextHeaders };
-  }
-
-  if (Array.isArray(headers)) {
-    const hasContentType = headers.some(([key]) => key.toLowerCase() === "content-type");
-    return {
-      ...init,
-      headers: hasContentType ? headers : [["Content-Type", "application/json"], ...headers],
-    };
-  }
-
-  const nextHeaders: Record<string, string> = { ...(headers as Record<string, string> | undefined) };
-  const hasContentType = Object.keys(nextHeaders).some((key) => key.toLowerCase() === "content-type");
-  if (!hasContentType) {
-    nextHeaders["Content-Type"] = "application/json";
-  }
-  return { ...init, headers: nextHeaders };
-}
-
-function observedSurface(
-  operation: WorkbenchObservedOperation
-): WorkbenchAnalyticsUiObservationContext {
-  return WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
-    (surface) => surface.operation === operation
-  )!;
-}
-
-async function observeWorkbenchResource<T>(
-  operation: WorkbenchObservedOperation,
-  request: () => Promise<T>,
-  options?: WorkbenchAnalyticsUiObservationOptions
-): Promise<T> {
-  return await observeWorkbenchAnalyticsRequest(
-    observedSurface(operation),
-    request,
-    options
-  );
-}
-
-async function observeWorkbenchMutation<T>(
-  operation: WorkbenchObservedOperation,
-  request: () => Promise<T>
-): Promise<T> {
-  return await observeWorkbenchResource(operation, request, {
-    recordPanelHydration: false,
-  });
-}
-
-function buildWorkbenchUrl(
-  target: WorkbenchRequestTarget,
-  path: string,
-  query?: URLSearchParams | string
-): string {
-  const baseUrl = resolveWorkbenchApiBase(target);
-  const suffix =
-    query instanceof URLSearchParams ? query.toString() : query;
-  return suffix ? `${baseUrl}${path}?${suffix}` : `${baseUrl}${path}`;
-}
-
-function buildServerGatewayHeaders(initialHeaders?: HeadersInit): Headers {
-  const headers = buildAnalyticsUiCorrelationHeaders(initialHeaders);
-  applyDefaultCallerContextHeaders(headers);
-  return headers;
-}
-
-async function fetchWorkbenchResource<T>(
-  target: WorkbenchRequestTarget,
-  path: string,
-  errorLabel: string,
-  query?: URLSearchParams | string
-): Promise<T> {
-  return await fetchWorkbenchJson<T>(
-    buildWorkbenchUrl(target, path, query),
-    errorLabel,
-    target === "client"
-      ? { headers: buildAnalyticsUiCorrelationHeaders() }
-      : { headers: buildServerGatewayHeaders() }
-  );
 }
 
 function buildPerformanceWorkspaceUrl(
@@ -442,8 +301,8 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
-  return await observeWorkbenchAnalyticsRequest(
-    observedSurface("performance.workspace.summary"),
+  return await observeWorkbenchResource(
+    "performance.workspace.summary",
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceSummary>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/summary", "client"),
@@ -466,8 +325,8 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
     reportEndDate?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
-  return await observeWorkbenchAnalyticsRequest(
-    observedSurface("performance.workspace.details"),
+  return await observeWorkbenchResource(
+    "performance.workspace.details",
     async () =>
       await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
         buildPerformanceWorkspaceUrl(portfolioId, params, "/details", "client"),
@@ -716,8 +575,8 @@ export async function getWorkbenchRiskSummaryClient(
     reportingCurrency?: string;
   }
 ): Promise<WorkbenchRiskSummaryResponse> {
-  return await observeWorkbenchAnalyticsRequest(
-    observedSurface("risk.summary"),
+  return await observeWorkbenchResource(
+    "risk.summary",
     async () =>
       await fetchWorkbenchJson<WorkbenchRiskSummaryResponse>(
         buildRiskWorkspaceUrl(portfolioId, "/risk/summary", params, "client"),
@@ -1603,470 +1462,6 @@ export async function requestDpmOperationsHandoffSummary(
   );
 }
 
-export async function listDpmPmOperatingQualityPolicies(params?: {
-  policyId?: string;
-  enabled?: boolean;
-  asOfDate?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const query = new URLSearchParams();
-  query.set("limit", String(params?.limit ?? 10));
-  query.set("offset", String(params?.offset ?? 0));
-  if (params?.policyId) {
-    query.set("policy_id", params.policyId);
-  }
-  if (params?.enabled !== undefined) {
-    query.set("enabled", String(params.enabled));
-  }
-  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.policies.list",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
-        "/dpm/command-center/pm-operating-quality/policies",
-        "DPM PM operating quality policies",
-        query
-      )
-  );
-}
-
-export async function getDpmPmOperatingQualityPolicy(params: {
-  policyId: string;
-  policyVersion: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.policies.get",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "client",
-        `/dpm/command-center/pm-operating-quality/policies/${encodeURIComponent(
-          params.policyId
-        )}/versions/${encodeURIComponent(params.policyVersion)}`,
-        "DPM PM operating quality policy"
-      )
-  );
-}
-
-export async function putDpmPmOperatingQualityPolicy(params: {
-  policyId: string;
-  policyVersion: string;
-  body: Record<string, unknown>;
-  actorId?: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.policies.put",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl(
-          "client",
-          `/dpm/command-center/pm-operating-quality/policies/${encodeURIComponent(
-            params.policyId
-          )}/versions/${encodeURIComponent(params.policyVersion)}`
-        ),
-        "persist DPM PM operating quality policy",
-        {
-          method: "PUT",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({ body: params.body }),
-        }
-      )
-  );
-}
-
-export async function listDpmPmOperatingQualityScoreRuns(params?: {
-  pmId?: string;
-  bookId?: string;
-  policyId?: string;
-  asOfDate?: string;
-  state?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const query = new URLSearchParams();
-  query.set("book_id", params?.bookId ?? dpmContext.commandCenterBookId);
-  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
-  query.set("limit", String(params?.limit ?? 10));
-  query.set("offset", String(params?.offset ?? 0));
-  if (params?.pmId) {
-    query.set("pm_id", params.pmId);
-  }
-  if (params?.policyId) {
-    query.set("policy_id", params.policyId);
-  }
-  if (params?.state) {
-    query.set("state", params.state);
-  }
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.score-runs.list",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
-        "/dpm/command-center/pm-operating-quality/score-runs",
-        "DPM PM operating quality score runs",
-        query
-      )
-  );
-}
-
-export async function getDpmPmOperatingQualityScoreRun(
-  scoreRunId: string
-): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.score-runs.get",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "client",
-        `/dpm/command-center/pm-operating-quality/score-runs/${encodeURIComponent(scoreRunId)}`,
-        "DPM PM operating quality score run"
-      )
-  );
-}
-
-export async function previewDpmPmOperatingQualityScoreRun(params: {
-  pmId?: string;
-  bookId?: string;
-  policyId?: string;
-  policyVersion?: string;
-  asOfDate?: string;
-  actorId?: string;
-  outcomeReviewIds?: string[];
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const body = buildPmOperatingQualityScoreRunBody(params);
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.score-runs.preview",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/score-runs/preview"),
-        "preview DPM PM operating quality score run",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({ body }),
-        }
-      )
-  );
-}
-
-export async function createDpmPmOperatingQualityScoreRun(params: {
-  pmId?: string;
-  bookId?: string;
-  policyId?: string;
-  policyVersion?: string;
-  asOfDate?: string;
-  actorId?: string;
-  outcomeReviewIds?: string[];
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const body = buildPmOperatingQualityScoreRunBody(params);
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.score-runs.create",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/score-runs"),
-        "create DPM PM operating quality score run",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({ body }),
-        }
-      )
-  );
-}
-
-export async function requestDpmPmOperatingQualitySummary(params: {
-  scoreRunId: string;
-  requestedOutputs?: string[];
-  audience?: string[];
-  actorId?: string;
-}): Promise<DpmPmOperatingQualitySummaryResponse> {
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.score-runs.ai-summary",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualitySummaryResponse>(
-        buildWorkbenchUrl(
-          "client",
-          `/dpm/command-center/pm-operating-quality/score-runs/${encodeURIComponent(
-            params.scoreRunId
-          )}/ai-summary`
-        ),
-        "request DPM PM operating quality support summary",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({
-            requested_outputs: params.requestedOutputs ?? [
-              "score_run_summary",
-              "governance_summary",
-              "fairness_review_posture",
-              "support_references",
-              "evidence_gaps",
-            ],
-            audience: params.audience ?? [
-              "portfolio_manager",
-              "investment_control",
-              "cio_office",
-            ],
-          }),
-        }
-      )
-  );
-}
-
-export type DpmPmOperatingQualityFairnessSegmentRequest = {
-  segment_id: string;
-  segment_type: string;
-  display_name: string;
-  score_run_ids: string[];
-  source_refs?: Array<Record<string, unknown>>;
-};
-
-export async function previewDpmPmOperatingQualityFairnessAnalysis(params: {
-  policyId: string;
-  policyVersion: string;
-  asOfDate?: string;
-  actorId?: string;
-  segments: DpmPmOperatingQualityFairnessSegmentRequest[];
-  minimumSegmentScoreRunCount?: number;
-  maximumAverageScoreSpread?: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const body: Record<string, unknown> = {
-    policy_id: params.policyId,
-    policy_version: params.policyVersion,
-    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
-    actor_id: params.actorId ?? "workbench-pm-operating-quality-operator",
-    segments: params.segments,
-  };
-  if (typeof params.minimumSegmentScoreRunCount === "number") {
-    body.minimum_segment_score_run_count = params.minimumSegmentScoreRunCount;
-  }
-  if (params.maximumAverageScoreSpread) {
-    body.maximum_average_score_spread = params.maximumAverageScoreSpread;
-  }
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.fairness-analyses.preview",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl(
-          "client",
-          "/dpm/command-center/pm-operating-quality/fairness-analyses/preview"
-        ),
-        "preview DPM PM operating quality fairness analysis",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({ body }),
-        }
-      )
-  );
-}
-
-export async function createDpmPmOperatingQualityFairnessAnalysis(params: {
-  policyId: string;
-  policyVersion: string;
-  asOfDate?: string;
-  actorId?: string;
-  segments: DpmPmOperatingQualityFairnessSegmentRequest[];
-  minimumSegmentScoreRunCount?: number;
-  maximumAverageScoreSpread?: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const body: Record<string, unknown> = {
-    policy_id: params.policyId,
-    policy_version: params.policyVersion,
-    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
-    actor_id: params.actorId ?? "workbench-pm-operating-quality-operator",
-    segments: params.segments,
-  };
-  if (typeof params.minimumSegmentScoreRunCount === "number") {
-    body.minimum_segment_score_run_count = params.minimumSegmentScoreRunCount;
-  }
-  if (params.maximumAverageScoreSpread) {
-    body.maximum_average_score_spread = params.maximumAverageScoreSpread;
-  }
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.fairness-analyses.create",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/fairness-analyses"),
-        "create DPM PM operating quality fairness analysis",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
-          body: JSON.stringify({ body }),
-        }
-      )
-  );
-}
-
-export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
-  policyId?: string;
-  policyVersion?: string;
-  asOfDate?: string;
-  state?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const query = new URLSearchParams();
-  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
-  query.set("limit", String(params?.limit ?? 10));
-  query.set("offset", String(params?.offset ?? 0));
-  if (params?.policyId) {
-    query.set("policy_id", params.policyId);
-  }
-  if (params?.policyVersion) {
-    query.set("policy_version", params.policyVersion);
-  }
-  if (params?.state) {
-    query.set("state", params.state);
-  }
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.fairness-analyses.list",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
-        "/dpm/command-center/pm-operating-quality/fairness-analyses",
-        "DPM PM operating quality fairness analyses",
-        query
-      )
-  );
-}
-
-export async function getDpmPmOperatingQualityFairnessAnalysis(
-  fairnessAnalysisId: string,
-  target: WorkbenchRequestTarget = "server"
-): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.fairness-analyses.get",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        target,
-        `/dpm/command-center/pm-operating-quality/fairness-analyses/${encodeURIComponent(
-          fairnessAnalysisId
-        )}`,
-        "DPM PM operating quality fairness analysis"
-      )
-  );
-}
-
-export async function listDpmPmOperatingQualityReviewActions(params?: {
-  targetType?: string;
-  targetId?: string;
-  policyId?: string;
-  actionState?: string;
-  asOfDate?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const query = new URLSearchParams();
-  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
-  query.set("limit", String(params?.limit ?? 10));
-  query.set("offset", String(params?.offset ?? 0));
-  if (params?.targetType) {
-    query.set("target_type", params.targetType);
-  }
-  if (params?.targetId) {
-    query.set("target_id", params.targetId);
-  }
-  if (params?.policyId) {
-    query.set("policy_id", params.policyId);
-  }
-  if (params?.actionState) {
-    query.set("action_state", params.actionState);
-  }
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.review-actions.list",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
-        "/dpm/command-center/pm-operating-quality/review-actions",
-        "DPM PM operating quality review actions",
-        query
-      )
-  );
-}
-
-export async function getDpmPmOperatingQualityReviewAction(
-  reviewActionId: string,
-  target: WorkbenchRequestTarget = "server"
-): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchResource(
-    "dpm.pm-operating-quality.review-actions.get",
-    async () =>
-      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        target,
-        `/dpm/command-center/pm-operating-quality/review-actions/${encodeURIComponent(
-          reviewActionId
-        )}`,
-        "DPM PM operating quality review action"
-      )
-  );
-}
-
-export type DpmPmOperatingQualityReviewActionRequest = {
-  target_type: string;
-  target_id: string;
-  action_type: string;
-  action_state?: string;
-  review_action_ref: string;
-  review_reason: string;
-  actor_id: string;
-  policy_id?: string;
-  policy_version?: string;
-  as_of_date?: string;
-  source_refs?: Array<Record<string, unknown>>;
-};
-
-export async function previewDpmPmOperatingQualityReviewAction(params: {
-  request: DpmPmOperatingQualityReviewActionRequest;
-  actorId?: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.review-actions.preview",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl(
-          "client",
-          "/dpm/command-center/pm-operating-quality/review-actions/preview"
-        ),
-        "preview DPM PM operating quality review action",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(
-            params.actorId ?? params.request.actor_id
-          ),
-          body: JSON.stringify({ body: params.request }),
-        }
-      )
-  );
-}
-
-export async function createDpmPmOperatingQualityReviewAction(params: {
-  request: DpmPmOperatingQualityReviewActionRequest;
-  actorId?: string;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
-  return await observeWorkbenchMutation(
-    "dpm.pm-operating-quality.review-actions.create",
-    async () =>
-      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
-        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/review-actions"),
-        "create DPM PM operating quality review action",
-        {
-          method: "POST",
-          headers: buildDpmPmOperatingQualityCallerHeaders(
-            params.actorId ?? params.request.actor_id
-          ),
-          body: JSON.stringify({ body: params.request }),
-        }
-      )
-  );
-}
-
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
   methods?: string[];
@@ -2527,38 +1922,6 @@ function buildDpmWaveCallerHeaders(actorId?: string): Record<string, string> {
     "X-Actor-Id": actorId ?? callerContext.actorId,
     "X-Caller-Application": "lotus-workbench",
     "X-Correlation-Id": "corr-workbench-dpm-wave",
-  };
-}
-
-function buildDpmPmOperatingQualityCallerHeaders(actorId?: string): Record<string, string> {
-  const callerContext = resolveDefaultCallerContext();
-  return {
-    "Content-Type": "application/json",
-    "X-Actor-Id": actorId ?? callerContext.actorId,
-    "X-Caller-Application": "lotus-workbench",
-    "X-Correlation-Id": "corr-workbench-pm-operating-quality",
-  };
-}
-
-function buildPmOperatingQualityScoreRunBody(params: {
-  pmId?: string;
-  bookId?: string;
-  policyId?: string;
-  policyVersion?: string;
-  asOfDate?: string;
-  actorId?: string;
-  outcomeReviewIds?: string[];
-}): Record<string, unknown> {
-  const dpmContext = resolveDefaultDpmContext();
-  const callerContext = resolveDefaultCallerContext();
-  return {
-    pm_id: params.pmId ?? dpmContext.commandCenterPortfolioManagerId,
-    book_id: params.bookId ?? dpmContext.commandCenterBookId,
-    policy_id: params.policyId ?? "pmq_sg_dpm",
-    policy_version: params.policyVersion ?? "2026.05",
-    as_of_date: params.asOfDate ?? dpmContext.commandCenterAsOfDate,
-    actor_id: params.actorId ?? callerContext.actorId,
-    outcome_review_ids: params.outcomeReviewIds ?? [],
   };
 }
 
