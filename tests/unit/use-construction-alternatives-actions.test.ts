@@ -6,14 +6,14 @@ import {
   generateDpmConstructionAlternatives,
   getExternalOrderExecutionAcknowledgement,
   selectDpmConstructionAlternative,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/construction-api";
 import type {
   DpmConstructionGatewayResponse,
   ExternalOrderExecutionAcknowledgementResponse,
   WorkbenchPortfolio360,
 } from "../../src/features/workbench/types";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/construction-api", () => ({
   generateDpmConstructionAlternatives: vi.fn(),
   getExternalOrderExecutionAcknowledgement: vi.fn(),
   selectDpmConstructionAlternative: vi.fn(),

@@ -10,9 +10,9 @@ import {
   getExternalOrderExecutionAcknowledgement,
   generateDpmConstructionAlternatives,
   selectDpmConstructionAlternative,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/construction-api";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/construction-api", () => ({
   getExternalOrderExecutionAcknowledgement: vi.fn(),
   generateDpmConstructionAlternatives: vi.fn(),
   selectDpmConstructionAlternative: vi.fn(),

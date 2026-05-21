@@ -5,7 +5,7 @@ import {
   generateDpmConstructionAlternatives,
   getExternalOrderExecutionAcknowledgement,
   selectDpmConstructionAlternative,
-} from "@/features/workbench/api";
+} from "@/features/workbench/construction-api";
 import {
   buildConstructionPanelModel,
   type ConstructionPanelModel,
