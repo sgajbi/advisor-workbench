@@ -3,7 +3,7 @@
 import { ActionButton, AnalyticsTable, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import {
   buildArchivedDocumentDownloadUrl,
-} from "@/features/workbench/api";
+} from "@/features/workbench/reporting-api";
 import {
   businessStateLabel,
   formatBusinessReason,
