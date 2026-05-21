@@ -46,7 +46,10 @@ describe("PortfolioMemoryPanel", () => {
     expect(screen.getAllByText("Outcome Review Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Historical Event Log")).toBeInTheDocument();
     expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
+    expect(screen.getByText("Review supportability posture")).toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Add advisor note")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage:or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:portfolio-memory")).not.toBeInTheDocument();
     expect(screen.queryByText("memory:outcome-review:or_1")).not.toBeInTheDocument();

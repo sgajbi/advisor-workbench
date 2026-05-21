@@ -47,10 +47,6 @@ export default function PortfolioMemorySelectedEventDetail({ event }: Props) {
             <ArtifactPill label="Evidence pack" enabled={(event?.artifactRefCount ?? 0) > 0} />
             <ArtifactPill label="Outcome review" enabled={event?.category === "Outcome Review"} />
           </div>
-          <label className="portfolio-memory-note-box">
-            <span>Decision Notes</span>
-            <textarea placeholder="Add advisor rationale here..." />
-          </label>
         </div>
         <div className="portfolio-memory-detail-snapshot">
           <Text as="h4" variant="dataLabel">

@@ -82,6 +82,13 @@ describe("portfolio-memory view model", () => {
     expect(model.memoryCoverage).toBe("Complete");
     expect(model.openFollowUps).toBe("0 Items");
     expect(model.evidenceLinks).toBe("2 Available");
+    expect(model.recommendedActions.map((action) => action.title)).toEqual([
+      "Review latest memory event",
+      "Open linked evidence pack",
+      "Review supportability posture",
+    ]);
+    expect(JSON.stringify(model.recommendedActions)).not.toContain("Add advisor note");
+    expect(JSON.stringify(model.recommendedActions)).not.toContain("client preference");
   });
 
   it("does not infer readiness from populated events when manage supportability is partial", () => {

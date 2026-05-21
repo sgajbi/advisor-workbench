@@ -423,10 +423,10 @@ function defaultRecommendedActions(state: string): PortfolioMemoryRecommendedAct
       icon: "folder_zip",
     },
     {
-      key: "advisor-note",
-      title: "Add advisor note",
-      body: "Record rationale for exception handling or client preference context.",
-      icon: "add_comment",
+      key: "review-supportability",
+      title: "Review supportability posture",
+      body: "Use the source-owned supportability and reason-code posture before follow-up.",
+      icon: "fact_check",
     },
   ];
   if (state === "BLOCKED" || state === "PENDING_REVIEW" || state === "DEGRADED") {

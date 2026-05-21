@@ -12,10 +12,10 @@ const actions: PortfolioMemoryRecommendedAction[] = [
     icon: "autorenew",
   },
   {
-    key: "open-evidence",
-    title: "Open linked evidence pack",
-    body: "Access audit-ready documentation linked to this memory view.",
-    icon: "folder_zip",
+    key: "review-supportability",
+    title: "Review supportability posture",
+    body: "Use the source-owned supportability and reason-code posture before follow-up.",
+    icon: "fact_check",
   },
 ];
 
@@ -25,10 +25,12 @@ describe("PortfolioMemoryRecommendedActionsRail", () => {
 
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
     expect(screen.getByText("Review latest memory event")).toBeInTheDocument();
-    expect(screen.getByText("Open linked evidence pack")).toBeInTheDocument();
+    expect(screen.getByText("Review supportability posture")).toBeInTheDocument();
     expect(screen.getByRole("list")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByText("Add advisor note")).not.toBeInTheDocument();
+    expect(screen.queryByText(/client preference/i)).not.toBeInTheDocument();
   });
 
   it("renders fail-closed empty posture without inventing client or execution controls", () => {
