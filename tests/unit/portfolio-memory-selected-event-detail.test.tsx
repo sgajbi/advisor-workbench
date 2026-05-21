@@ -102,4 +102,59 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
     expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
   });
+
+  it("renders campaign assignment task transition detail with only bounded safe fields", () => {
+    render(
+      <PortfolioMemorySelectedEventDetail
+        event={{
+          ...outcomeReviewEvent,
+          eventId: "memory:campaign-assignment-task-transition:transition_001",
+          eventType: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION",
+          eventLabel: "Campaign Assignment Task Transition",
+          category: "Campaign Workflow",
+          summary:
+            "A campaign assignment task transition was recorded from Manage workflow evidence.",
+          businessImpact: "Campaign task posture recorded",
+          reasonCodes: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_RECORDED",
+          metadataRows: [
+            { key: "task-ref-0", label: "Task Ref", value: "task-ref-001" },
+            { key: "transition-1", label: "Transition", value: "ACKNOWLEDGE" },
+            { key: "from-status-2", label: "From Status", value: "OPEN" },
+            { key: "to-status-3", label: "To Status", value: "IN_PROGRESS" },
+            { key: "sla-posture-4", label: "SLA Posture", value: "ON_TRACK" },
+            {
+              key: "content-hash-5",
+              label: "Content Hash",
+              value: "sha256:assignment-task-transition",
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Details: Campaign Assignment Task Transition" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "A campaign assignment task transition was recorded from Manage workflow evidence.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("task-ref-001")).toBeInTheDocument();
+    expect(screen.getByText("ACKNOWLEDGE")).toBeInTheDocument();
+    expect(screen.getByText("OPEN")).toBeInTheDocument();
+    expect(screen.getByText("IN_PROGRESS")).toBeInTheDocument();
+    expect(screen.getByText("ON_TRACK")).toBeInTheDocument();
+    expect(screen.getByText("sha256:assignment-task-transition")).toBeInTheDocument();
+    expect(screen.queryByText(/transition rationale/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/raw rationale/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/reviewer note/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/generated ai/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Message client")).not.toBeInTheDocument();
+    expect(screen.queryByText("Approve client communication")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
+    expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mark Filled")).not.toBeInTheDocument();
+    expect(screen.queryByText("Settle")).not.toBeInTheDocument();
+  });
 });
