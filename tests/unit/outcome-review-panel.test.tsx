@@ -7,9 +7,9 @@ import {
   getDpmOutcomeReviewReportInput,
   requestDpmOutcomeReviewAiNarrative,
   submitDpmOutcomeReviewReportJob,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/outcome-review-api";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/outcome-review-api", () => ({
   getDpmOutcomeReviewReportInput: vi.fn(),
   requestDpmOutcomeReviewAiNarrative: vi.fn(),
   submitDpmOutcomeReviewReportJob: vi.fn(),
