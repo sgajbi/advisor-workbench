@@ -5,7 +5,7 @@ import {
   getDpmOutcomeReviewReportInput,
   requestDpmOutcomeReviewAiNarrative,
   submitDpmOutcomeReviewReportJob,
-} from "@/features/workbench/api";
+} from "@/features/workbench/outcome-review-api";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import {
   buildOutcomeClientCommunicationBoundaryView,
