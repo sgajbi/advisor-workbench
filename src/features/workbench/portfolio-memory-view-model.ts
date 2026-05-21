@@ -1,5 +1,8 @@
 import type { DpmPortfolioMemoryGatewayResponse } from "./types";
 
+const CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT =
+  "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION";
+
 export type PortfolioMemoryPanelState =
   | "complete"
   | "partial"
@@ -203,7 +206,8 @@ function buildEventRow(
       ) ||
       "N/A",
     summary:
-      eventType === "PM_QUALITY_REVIEW_ACTION"
+      eventType === "PM_QUALITY_REVIEW_ACTION" ||
+      eventType === CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT
         ? eventSummary(eventType)
         : readString(record, "title") ||
           readString(record, "summary") ||
@@ -249,6 +253,7 @@ function eventTypeLabel(eventType: string, record: Record<string, unknown> = {})
     OUTCOME_REVIEW_EVENT: "Outcome Review Updated",
     PM_QUALITY_SCORE_RUN: "PM Quality Review Recorded",
     PM_QUALITY_REVIEW_ACTION: "PM Quality Supervisory Review Action",
+    [CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT]: "Campaign Assignment Task Transition",
   };
   return labels[eventType] ?? businessCase(eventType);
 }
@@ -262,6 +267,9 @@ function eventCategory(eventType: string): string {
   }
   if (eventType.startsWith("WAVE")) {
     return "Rebalance";
+  }
+  if (eventType.startsWith("BULK_REVIEW_CAMPAIGN")) {
+    return "Campaign Workflow";
   }
   if (eventType.startsWith("OUTCOME")) {
     return "Outcome Review";
@@ -285,6 +293,8 @@ function eventSummary(eventType: string): string {
     OUTCOME_REVIEW_EVENT: "Outcome review activity was added to the record.",
     PM_QUALITY_SCORE_RUN: "PM operating quality lineage is available.",
     PM_QUALITY_REVIEW_ACTION: "A bounded PM operating quality supervisory review action is available.",
+    [CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT]:
+      "A campaign assignment task transition was recorded from Manage workflow evidence.",
   };
   return summaries[eventType] ?? "Portfolio memory event is available.";
 }
@@ -311,6 +321,7 @@ function eventBusinessImpact(eventType: string, record: Record<string, unknown>)
     OUTCOME_REVIEW_EVENT: "Review record updated",
     PM_QUALITY_SCORE_RUN: "Operating-quality lineage recorded",
     PM_QUALITY_REVIEW_ACTION: "Supervisory review action recorded",
+    [CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT]: "Campaign task posture recorded",
   };
   return impacts[eventType] ?? "Portfolio record updated";
 }
@@ -326,6 +337,10 @@ function eventActionLabel(eventType: string): string {
 }
 
 function metadataRows(record: Record<string, unknown>): PortfolioMemoryDetailMetric[] {
+  if (readString(record, "event_type") === CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT) {
+    return campaignAssignmentTaskTransitionRows(record);
+  }
+
   const metadata = readRecord(record.metadata);
   const rows: PortfolioMemoryDetailMetric[] = [];
   addMetadataRow(rows, "Status", readString(record, "status"));
@@ -337,6 +352,29 @@ function metadataRows(record: Record<string, unknown>): PortfolioMemoryDetailMet
   addMetadataRow(rows, "Recommended Action", readString(metadata, "recommended_action"));
   addMetadataRow(rows, "Dimension", readString(metadata, "dimension"));
   return rows.slice(0, 6);
+}
+
+function campaignAssignmentTaskTransitionRows(
+  record: Record<string, unknown>,
+): PortfolioMemoryDetailMetric[] {
+  const metadata = readRecord(record.metadata);
+  const rows: PortfolioMemoryDetailMetric[] = [];
+  addMetadataRow(rows, "Task Ref", readString(metadata, "task_ref") || readString(metadata, "assignment_task_id"));
+  addMetadataRow(rows, "Transition", readString(metadata, "transition_type"));
+  addMetadataRow(rows, "From Status", readString(metadata, "from_status"));
+  addMetadataRow(rows, "To Status", readString(metadata, "to_status") || readString(record, "status"));
+  addMetadataRow(rows, "SLA Posture", readString(metadata, "sla_posture"));
+  addMetadataRow(
+    rows,
+    "Supportability",
+    readString(metadata, "supportability_state") ||
+      readString(record, "supportability_state") ||
+      readString(record, "status"),
+  );
+  addMetadataRow(rows, "Evidence Items", String(extractRecordArray(record.artifact_refs).length));
+  addMetadataRow(rows, "Reason Codes", String(extractStringArray(record.reason_codes).length));
+  addMetadataRow(rows, "Content Hash", readString(record, "content_hash"));
+  return rows.slice(0, 9);
 }
 
 function addMetadataRow(rows: PortfolioMemoryDetailMetric[], label: string, value: string): void {

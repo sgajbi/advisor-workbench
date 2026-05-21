@@ -160,4 +160,99 @@ describe("portfolio-memory view model", () => {
     expect(JSON.stringify(model.events[0])).not.toContain("message client");
     expect(JSON.stringify(model.events[0])).not.toContain("route order");
   });
+
+  it("labels campaign assignment task transitions with bounded safe workflow detail", () => {
+    const model = buildPortfolioMemoryPanelModel({
+      ...memoryResponse,
+      supportability: {
+        ...memoryResponse.supportability,
+        event_count: 1,
+        event_type_counts: {
+          BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION: 1,
+        },
+      },
+      data: {
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        events: [
+          {
+            event_id: "memory:campaign-assignment-task-transition:transition_001",
+            event_type: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION",
+            event_time: "2026-05-21T08:15:00Z",
+            title: "raw transition rationale should not render",
+            summary: "raw reviewer note should not render",
+            status: "IN_PROGRESS",
+            supportability_state: "PENDING_REVIEW",
+            source_refs: [
+              {
+                source_system: "lotus-manage",
+                source_type: "BulkReviewCampaignDefinition",
+                source_id: "campaign_001:v1",
+              },
+            ],
+            artifact_refs: [
+              {
+                source_system: "lotus-manage",
+                source_type: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK",
+                source_id: "task_001",
+              },
+            ],
+            content_hash: "sha256:assignment-task-transition",
+            reason_codes: [
+              "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_RECORDED",
+            ],
+            metadata: {
+              task_ref: "task-ref-001",
+              assignment_task_id: "task_001",
+              transition_type: "ACKNOWLEDGE",
+              from_status: "OPEN",
+              to_status: "IN_PROGRESS",
+              sla_posture: "ON_TRACK",
+              supportability_state: "PENDING_REVIEW",
+              transition_reason: "unsafe transition rationale",
+              raw_rationale: "unsafe raw rationale",
+              reviewer_notes: "unsafe reviewer note",
+              generated_ai_text: "unsafe AI text",
+              client_contact: "message client",
+              oms_action: "route order",
+              order_instruction: "buy security",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(model.eventTypeRows[0]).toMatchObject({
+      eventType: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION",
+      eventLabel: "Campaign Assignment Task Transition",
+    });
+    expect(model.events[0]).toEqual(
+      expect.objectContaining({
+        eventLabel: "Campaign Assignment Task Transition",
+        category: "Campaign Workflow",
+        summary:
+          "A campaign assignment task transition was recorded from Manage workflow evidence.",
+        businessImpact: "Bulk Review Campaign Assignment Task Transition Recorded",
+        actionLabel: "View",
+        status: "PENDING_REVIEW",
+        contentHash: "sha256:assignment-task-transition",
+      }),
+    );
+    expect(model.events[0].metadataRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Task Ref", value: "task-ref-001" }),
+        expect.objectContaining({ label: "Transition", value: "ACKNOWLEDGE" }),
+        expect.objectContaining({ label: "From Status", value: "OPEN" }),
+        expect.objectContaining({ label: "To Status", value: "IN_PROGRESS" }),
+        expect.objectContaining({ label: "SLA Posture", value: "ON_TRACK" }),
+        expect.objectContaining({ label: "Content Hash", value: "sha256:assignment-task-transition" }),
+      ]),
+    );
+    expect(JSON.stringify(model.events[0])).not.toContain("unsafe transition rationale");
+    expect(JSON.stringify(model.events[0])).not.toContain("unsafe raw rationale");
+    expect(JSON.stringify(model.events[0])).not.toContain("unsafe reviewer note");
+    expect(JSON.stringify(model.events[0])).not.toContain("unsafe AI text");
+    expect(JSON.stringify(model.events[0])).not.toContain("message client");
+    expect(JSON.stringify(model.events[0])).not.toContain("route order");
+    expect(JSON.stringify(model.events[0])).not.toContain("buy security");
+  });
 });
