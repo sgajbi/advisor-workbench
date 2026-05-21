@@ -11,13 +11,13 @@ import {
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/pm-operating-quality-api";
 import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
 } from "../../src/features/workbench/types";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   createDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),

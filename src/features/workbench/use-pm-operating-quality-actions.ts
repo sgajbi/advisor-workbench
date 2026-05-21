@@ -11,7 +11,7 @@ import {
   previewDpmPmOperatingQualityScoreRun,
   requestDpmPmOperatingQualitySummary,
   type DpmPmOperatingQualityReviewActionRequest,
-} from "@/features/workbench/api";
+} from "@/features/workbench/pm-operating-quality-api";
 import {
   buildPmQualityActionError,
   buildPmQualityBlockedActionError,
