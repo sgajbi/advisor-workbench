@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  buildDpmPmOperatingQualityReviewActionCorrelationId,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualityFairnessAnalysis,
@@ -287,9 +288,11 @@ export function usePmOperatingQualityActions({
     setCreatedReviewActionResponse(null);
     setReviewActionCreateEvidence(null);
     try {
+      const correlationId = buildDpmPmOperatingQualityReviewActionCorrelationId();
       const response = await previewDpmPmOperatingQualityReviewAction({
         request: buildReviewActionRequest(reviewActionForm, model),
         actorId: reviewActionForm.actorId,
+        correlationId,
       });
       setReviewActionPreviewResponse(response);
       setActionMessage("Review-action preview returned Manage supervisory evidence.");
@@ -322,9 +325,11 @@ export function usePmOperatingQualityActions({
     setActionError(null);
     setActionMessage(null);
     try {
+      const correlationId = buildDpmPmOperatingQualityReviewActionCorrelationId();
       const response = await createDpmPmOperatingQualityReviewAction({
         request: buildReviewActionRequest(reviewActionForm, model),
         actorId: reviewActionForm.actorId,
+        correlationId,
       });
       setCreatedReviewActionResponse(response);
       setReviewActionCreateEvidence(buildPmQualityReviewActionEvidence(response));

@@ -4,6 +4,7 @@ import {
   approveDpmWave,
   applySandboxChanges,
   buildArchivedDocumentDownloadUrl,
+  buildDpmPmOperatingQualityReviewActionCorrelationId,
   calculateCompositePerformanceTwrClient,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
@@ -3144,6 +3145,20 @@ describe("workbench api", () => {
     expect(persistedFairnessBody.body.segments).toHaveLength(2);
     expect(fetchMock.mock.calls[9][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
     expect(fetchMock.mock.calls[10][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
+    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-review-action-/
+    );
+    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-review-action-/
+    );
+    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).not.toBe(
+      "corr-workbench-pm-operating-quality"
+    );
+    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).not.toBe(
+      "corr-workbench-pm-operating-quality"
+    );
+    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
+    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
     const reviewPreviewBody = JSON.parse(fetchMock.mock.calls[9][1].body);
     expect(reviewPreviewBody.body).toEqual(
       expect.objectContaining({
@@ -3168,6 +3183,17 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("pmq_run_001");
     expect(metricEventsJson).not.toContain("pmq_fair_001");
     expect(metricEventsJson).not.toContain("pmq_review_001");
+  });
+
+  it("builds bounded PM-quality review-action correlation ids without source identifiers", () => {
+    const correlationId = buildDpmPmOperatingQualityReviewActionCorrelationId();
+
+    expect(correlationId).toMatch(/^corr-workbench-pm-quality-review-action-/);
+    expect(correlationId).not.toBe("corr-workbench-pm-operating-quality");
+    expect(correlationId).not.toContain("pmq_run_001");
+    expect(correlationId).not.toContain("pmq_fair_001");
+    expect(correlationId).not.toContain("pmq_review_001");
+    expect(correlationId).not.toContain("PM_SG");
   });
 
   it("generates and loads DPM proof packs through Gateway endpoints", async () => {
