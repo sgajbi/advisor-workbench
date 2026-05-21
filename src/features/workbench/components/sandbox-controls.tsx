@@ -6,7 +6,7 @@ import { Alert, Box, MenuItem, Stack, TextField } from "@mui/material";
 
 import { ActionButton, MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
-import { applySandboxChanges, createSandboxSession } from "../api";
+import { applySandboxChanges, createSandboxSession } from "../workbench-core-api";
 import { WorkbenchPolicyFeedback } from "../types";
 
 export default function SandboxControls({

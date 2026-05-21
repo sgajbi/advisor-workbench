@@ -4,7 +4,7 @@ import {
 } from "@/features/workbench/manage-workspace";
 import { loadManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import { normalizeManageMode } from "@/features/workbench/manage-workspace-navigation";
-import { getPortfolio360 } from "@/features/workbench/api";
+import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
 
 export default async function WorkbenchPage({
   params,

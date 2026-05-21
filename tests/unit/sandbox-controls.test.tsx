@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/workbench-core-api", () => ({
   createSandboxSession: (...args: unknown[]) => createSandboxSessionMock(...args),
   applySandboxChanges: (...args: unknown[]) => applySandboxChangesMock(...args),
 }));
