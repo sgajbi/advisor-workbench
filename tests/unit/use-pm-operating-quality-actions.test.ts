@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { usePmOperatingQualityActions } from "../../src/features/workbench/use-pm-operating-quality-actions";
 import {
+  buildDpmPmOperatingQualityReviewActionCorrelationId,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualityFairnessAnalysis,
@@ -18,6 +19,9 @@ import type {
 } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
+  buildDpmPmOperatingQualityReviewActionCorrelationId: vi.fn(
+    () => "corr-workbench-pm-quality-review-action-test"
+  ),
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   createDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
@@ -299,6 +303,9 @@ describe("usePmOperatingQualityActions", () => {
   });
 
   it("previews before creating bounded supervisory review actions through Gateway", async () => {
+    vi.mocked(buildDpmPmOperatingQualityReviewActionCorrelationId)
+      .mockReturnValueOnce("corr-workbench-pm-quality-review-action-preview")
+      .mockReturnValueOnce("corr-workbench-pm-quality-review-action-create");
     vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
       reviewActionResponse
     );
@@ -344,6 +351,7 @@ describe("usePmOperatingQualityActions", () => {
         source_refs: [],
       }),
       actorId: "workbench-pm-operating-quality-supervisor",
+      correlationId: "corr-workbench-pm-quality-review-action-preview",
     });
     await waitFor(() =>
       expect(result.current.actionMessage).toBe(
@@ -363,6 +371,7 @@ describe("usePmOperatingQualityActions", () => {
         review_reason: "Bounded supervisory review for source-owned PM quality evidence.",
       }),
       actorId: "workbench-pm-operating-quality-supervisor",
+      correlationId: "corr-workbench-pm-quality-review-action-create",
     });
     expect(getDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith(
       "pmq_review_002",

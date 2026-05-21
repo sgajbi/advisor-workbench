@@ -18,6 +18,9 @@ import type {
 } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
+  buildDpmPmOperatingQualityReviewActionCorrelationId: vi.fn(
+    () => "corr-workbench-pm-quality-review-action-panel-test"
+  ),
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   createDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),

@@ -286,6 +286,20 @@ describe("PM operating quality fairness-analysis create integration", () => {
     const createOptions = fetchMock.mock.calls[1][1];
     expect(previewOptions.method).toBe("POST");
     expect(createOptions.method).toBe("POST");
+    expect(previewOptions.headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-review-action-/
+    );
+    expect(createOptions.headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-review-action-/
+    );
+    expect(previewOptions.headers["X-Correlation-Id"]).not.toBe(
+      "corr-workbench-pm-operating-quality"
+    );
+    expect(createOptions.headers["X-Correlation-Id"]).not.toBe(
+      "corr-workbench-pm-operating-quality"
+    );
+    expect(previewOptions.headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
+    expect(createOptions.headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
     expect(createOptions.headers["X-Caller-Application"]).toBe("lotus-workbench");
     expect(createOptions.headers["X-Actor-Id"]).toBe(
       "workbench-pm-operating-quality-supervisor"

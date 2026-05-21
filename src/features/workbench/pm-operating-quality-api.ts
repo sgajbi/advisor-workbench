@@ -15,13 +15,24 @@ import type {
   DpmPmOperatingQualitySummaryResponse,
 } from "@/features/workbench/types";
 
-function buildDpmPmOperatingQualityCallerHeaders(actorId?: string): Record<string, string> {
+export function buildDpmPmOperatingQualityReviewActionCorrelationId(): string {
+  const randomId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `corr-workbench-pm-quality-review-action-${randomId}`;
+}
+
+function buildDpmPmOperatingQualityCallerHeaders(
+  actorId?: string,
+  correlationId = "corr-workbench-pm-operating-quality"
+): Record<string, string> {
   const callerContext = resolveDefaultCallerContext();
   return {
     "Content-Type": "application/json",
     "X-Actor-Id": actorId ?? callerContext.actorId,
     "X-Caller-Application": "lotus-workbench",
-    "X-Correlation-Id": "corr-workbench-pm-operating-quality",
+    "X-Correlation-Id": correlationId,
   };
 }
 
@@ -469,7 +480,10 @@ export type DpmPmOperatingQualityReviewActionRequest = {
 export async function previewDpmPmOperatingQualityReviewAction(params: {
   request: DpmPmOperatingQualityReviewActionRequest;
   actorId?: string;
+  correlationId?: string;
 }): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const correlationId =
+    params.correlationId ?? buildDpmPmOperatingQualityReviewActionCorrelationId();
   return await observeWorkbenchMutation(
     "dpm.pm-operating-quality.review-actions.preview",
     async () =>
@@ -482,7 +496,8 @@ export async function previewDpmPmOperatingQualityReviewAction(params: {
         {
           method: "POST",
           headers: buildDpmPmOperatingQualityCallerHeaders(
-            params.actorId ?? params.request.actor_id
+            params.actorId ?? params.request.actor_id,
+            correlationId
           ),
           body: JSON.stringify({ body: params.request }),
         }
@@ -493,7 +508,10 @@ export async function previewDpmPmOperatingQualityReviewAction(params: {
 export async function createDpmPmOperatingQualityReviewAction(params: {
   request: DpmPmOperatingQualityReviewActionRequest;
   actorId?: string;
+  correlationId?: string;
 }): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const correlationId =
+    params.correlationId ?? buildDpmPmOperatingQualityReviewActionCorrelationId();
   return await observeWorkbenchMutation(
     "dpm.pm-operating-quality.review-actions.create",
     async () =>
@@ -503,7 +521,8 @@ export async function createDpmPmOperatingQualityReviewAction(params: {
         {
           method: "POST",
           headers: buildDpmPmOperatingQualityCallerHeaders(
-            params.actorId ?? params.request.actor_id
+            params.actorId ?? params.request.actor_id,
+            correlationId
           ),
           body: JSON.stringify({ body: params.request }),
         }
