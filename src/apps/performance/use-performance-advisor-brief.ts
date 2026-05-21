@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
-  isWorkbenchPermissionBlockedError,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
-} from "@/features/workbench/api";
+} from "@/features/workbench/performance-api";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 import type {
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
   WorkbenchPerformanceAdvisorBrief,
