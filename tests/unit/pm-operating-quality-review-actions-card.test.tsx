@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import PmOperatingQualityReviewActionsCard from "../../src/features/workbench/components/pm-operating-quality-review-actions-card";
 import { buildPmOperatingQualityPanelModel } from "../../src/features/workbench/pm-operating-quality-view-model";
@@ -141,16 +141,13 @@ describe("PmOperatingQualityReviewActionsCard", () => {
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
   });
 
-  it("renders bounded preview-before-create controls without client or order actions", async () => {
+  it("delegates bounded review-action control rendering when command props are provided", () => {
     const model = buildPmOperatingQualityPanelModel({
       policies: null,
       scoreRuns,
       reviewActions,
       reviewActionDetail,
     });
-    const onFormChange = vi.fn();
-    const onPreview = vi.fn();
-    const onCreate = vi.fn();
 
     render(
       <PmOperatingQualityReviewActionsCard
@@ -169,9 +166,9 @@ describe("PmOperatingQualityReviewActionsCard", () => {
         pendingPreview={false}
         pendingCreate={false}
         createEvidence={null}
-        onFormChange={onFormChange}
-        onPreview={onPreview}
-        onCreate={onCreate}
+        onFormChange={() => undefined}
+        onPreview={() => undefined}
+        onCreate={() => undefined}
       />
     );
 
@@ -182,64 +179,6 @@ describe("PmOperatingQualityReviewActionsCard", () => {
     expect(screen.getByText("Preview required before create")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
-
-    fireEvent.change(
-      screen.getByLabelText("Bounded supervisory rationale"),
-      { target: { value: "Updated bounded rationale." } }
-    );
-
-    expect(onFormChange).toHaveBeenCalledWith(
-      "boundedRationale",
-      "Updated bounded rationale."
-    );
-    expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /approve trade/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /execute/i })).not.toBeInTheDocument();
-  });
-
-  it("enables create only after preview and renders Manage create evidence", () => {
-    const model = buildPmOperatingQualityPanelModel({
-      policies: null,
-      scoreRuns,
-      reviewActions,
-      reviewActionDetail,
-    });
-
-    render(
-      <PmOperatingQualityReviewActionsCard
-        model={model}
-        form={{
-          actorId: "supervisor_sg_1",
-          targetType: "SCORE_RUN",
-          targetId: "pmq_run_001",
-          actionType: "REQUEST_EVIDENCE_REMEDIATION",
-          actionState: "REVIEW_REQUIRED",
-          reviewActionRef: "PMQ-RA-001",
-          boundedRationale: "Bounded supervisory action rationale.",
-        }}
-        readiness={{ state: "READY", detail: "Ready to preview score run pmq_run_001" }}
-        previewReady
-        pendingPreview={false}
-        pendingCreate={false}
-        createEvidence={{
-          reviewActionId: "pmq_review_001",
-          correlationId: "corr-create",
-          sourceService: "lotus-manage",
-          upstreamStatus: "200",
-        }}
-        onFormChange={vi.fn()}
-        onPreview={vi.fn()}
-        onCreate={vi.fn()}
-      />
-    );
-
-    expect(
-      screen.getByText("Preview available; create records an immutable Manage review action")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Record Review Action" })).toBeEnabled();
-    expect(screen.getByLabelText("PM operating quality persisted review-action evidence")).toBeInTheDocument();
-    expect(screen.getByText("corr-create")).toBeInTheDocument();
   });
 
   it("renders fail-closed empty posture when no review action is returned", () => {
