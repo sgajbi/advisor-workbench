@@ -11,12 +11,12 @@ import {
   listDpmCampaignDefinitions,
   listDpmCampaignDiscovery,
   listDpmPmOperatingQualityFairnessAnalyses,
-  getPortfolio360,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityReviewActions,
   listDpmPmOperatingQualityScoreRuns,
   listDpmWaves,
 } from "@/features/workbench/api";
+import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
 
 export type ManageWorkspaceData = {
   portfolio: Awaited<ReturnType<typeof getPortfolio360>>;
