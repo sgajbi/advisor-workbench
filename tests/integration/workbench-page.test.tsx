@@ -130,6 +130,30 @@ describe("WorkbenchPage", () => {
     expect(screen.queryByRole("heading", { name: "Post-Trade Outcome Review" })).not.toBeInTheDocument();
   });
 
+  it("renders portfolio memory as read-only Gateway-backed evidence", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_2101" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_2101" }),
+        searchParams: Promise.resolve({ mode: "memory" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "Portfolio Memory" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Campaign Assignment Task Transition").length).toBeGreaterThan(0);
+    expect(screen.getByText("Review supportability posture")).toBeInTheDocument();
+    expect(screen.queryByText("Add advisor note")).not.toBeInTheDocument();
+    expect(screen.queryByText("Decision Notes")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/portfolios/PF_2101/memory")
+      )
+    ).toBe(true);
+  });
+
   it("renders PM operating quality as a Gateway-backed manage surface", async () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_2501" }));
     vi.stubGlobal("fetch", fetchMock);
@@ -492,7 +516,29 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           content_hash: "sha256:memory",
           blocked_actions: [],
         },
-        data: { events: [] },
+        data: {
+          portfolio_id: portfolioId,
+          events: [
+            {
+              event_id: "memory:campaign-assignment-task-transition:transition_001",
+              event_type: "BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION",
+              event_time: "2026-05-21T08:15:00Z",
+              status: "IN_PROGRESS",
+              supportability_state: "PENDING_REVIEW",
+              reason_codes: ["BULK_REVIEW_CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_RECORDED"],
+              artifact_refs: [{ artifact_type: "assignment_task", artifact_id: "task_001" }],
+              metadata: {
+                task_ref: "task-ref-001",
+                transition_type: "ACKNOWLEDGE",
+                from_status: "OPEN",
+                to_status: "IN_PROGRESS",
+                sla_posture: "ON_TRACK",
+                supportability_state: "PENDING_REVIEW",
+                raw_rationale: "unsafe raw rationale",
+              },
+            },
+          ],
+        },
       });
     }
 

@@ -1757,13 +1757,6 @@
   color: #594410;
 }
 
-.manageScope :global(.portfolio-memory-note-box) {
-  display: grid;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.manageScope :global(.portfolio-memory-note-box span),
 .manageScope :global(.portfolio-memory-detail-snapshot > .ui-text-data-label) {
   color: #45464d;
   font-size: 11px;
@@ -1771,17 +1764,6 @@
   letter-spacing: 0.05em;
   line-height: 16px;
   text-transform: uppercase;
-}
-
-.manageScope :global(.portfolio-memory-note-box textarea) {
-  min-height: 82px;
-  resize: vertical;
-  border: 1px solid #c6c6cd;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #191c1e;
-  font-size: 13px;
-  line-height: 18px;
 }
 
 .manageScope :global(.portfolio-memory-detail-snapshot) {

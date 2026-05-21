@@ -44,6 +44,9 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.getByText("Outcome Review Ready")).toBeInTheDocument();
     expect(screen.getByText("Evidence pack")).toBeInTheDocument();
     expect(screen.getByText("Outcome review")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByText("Decision Notes")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Add advisor rationale here...")).not.toBeInTheDocument();
     expect(screen.queryByText("memory:outcome-review:or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage:or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:portfolio-memory-event")).not.toBeInTheDocument();
@@ -63,6 +66,7 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
     expect(screen.queryByText("Mark Filled")).not.toBeInTheDocument();
     expect(screen.queryByText("Settle")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
   it("renders PM quality review-action memory detail without raw rationale or action controls", () => {
@@ -101,6 +105,7 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.queryByText("Approve client communication")).not.toBeInTheDocument();
     expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
     expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
   it("renders campaign assignment task transition detail with only bounded safe fields", () => {
@@ -156,5 +161,7 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.queryByText("Route Order")).not.toBeInTheDocument();
     expect(screen.queryByText("Mark Filled")).not.toBeInTheDocument();
     expect(screen.queryByText("Settle")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByText("Decision Notes")).not.toBeInTheDocument();
   });
 });
