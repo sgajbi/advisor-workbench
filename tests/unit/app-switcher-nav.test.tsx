@@ -81,8 +81,8 @@ describe("AppSwitcherNav", () => {
               href: "/proposals",
               enabled: false,
               supportability: {
-                state: "unavailable",
-                reasons: ["proposal_disabled_by_contract"],
+                state: "degraded",
+                reasons: ["dependency_degraded"],
               },
             },
           ],
@@ -101,7 +101,7 @@ describe("AppSwitcherNav", () => {
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Proposal")).toHaveAttribute(
       "title",
-      "Proposal workspace is not available in this release."
+      "Proposal workspace is unavailable: dependency degraded."
     );
   });
 

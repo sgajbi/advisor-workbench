@@ -5,12 +5,21 @@ import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capab
 export function getWorkspaceDisabledTitle(
   workspace: PlatformShellWorkspaceDescriptor
 ): string {
+  const sourceReason = workspace.supportability.reasons[0];
+  if (sourceReason) {
+    return `${workspace.label} workspace is unavailable: ${formatSupportabilityReason(sourceReason)}.`;
+  }
+
   switch (workspace.id) {
     case "proposal":
-      return "Proposal workspace is not available in this release.";
+      return "Proposal workspace is unavailable.";
     case "advisory":
-      return "Advisory workspace is not available in this release.";
+      return "Advisory workspace is unavailable.";
     default:
       return `${workspace.label} workspace is currently unavailable.`;
   }
+}
+
+function formatSupportabilityReason(reason: string): string {
+  return reason.replaceAll("_", " ").toLowerCase();
 }
