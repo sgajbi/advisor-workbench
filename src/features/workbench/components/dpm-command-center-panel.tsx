@@ -13,7 +13,7 @@ import {
 import {
   requestDpmExceptionSummary,
   runDpmCommandCenterMonitoring,
-} from "@/features/workbench/api";
+} from "@/features/workbench/dpm-command-center-api";
 import type {
   DpmCommandCenterGatewayResponse,
   DpmExceptionSummaryResponse,

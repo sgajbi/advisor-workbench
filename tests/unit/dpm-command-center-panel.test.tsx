@@ -5,10 +5,10 @@ import DpmCommandCenterPanel from "../../src/features/workbench/components/dpm-c
 import {
   requestDpmExceptionSummary,
   runDpmCommandCenterMonitoring,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/dpm-command-center-api";
 import type { DpmCommandCenterGatewayResponse } from "../../src/features/workbench/types";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/dpm-command-center-api", () => ({
   requestDpmExceptionSummary: vi.fn(),
   runDpmCommandCenterMonitoring: vi.fn(),
 }));
