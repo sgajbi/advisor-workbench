@@ -16,7 +16,7 @@ import {
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
-} from "@/features/workbench/api";
+} from "@/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,

@@ -17,13 +17,13 @@ import {
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   approveDpmWave: vi.fn(),
   createDpmWave: vi.fn(),
   getDpmCampaignDefinitionLaunchHistory: vi.fn(),
