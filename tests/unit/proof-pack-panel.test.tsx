@@ -12,9 +12,9 @@ import {
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
   requestDpmProofPackAiPmMemo,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/proof-pack-api";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/proof-pack-api", () => ({
   generateDpmProofPackFromRun: vi.fn(),
   getDpmProofPack: vi.fn(),
   getDpmProofPackAiEvidenceInput: vi.fn(),

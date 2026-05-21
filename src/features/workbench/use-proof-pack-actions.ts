@@ -7,7 +7,7 @@ import {
   getDpmProofPackMarkdown,
   getDpmProofPackReportInput,
   requestDpmProofPackAiPmMemo,
-} from "@/features/workbench/api";
+} from "@/features/workbench/proof-pack-api";
 import {
   buildProofPackPanelModel,
   type ProofPackPanelModel,
