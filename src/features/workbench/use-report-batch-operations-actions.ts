@@ -7,7 +7,7 @@ import {
   getArchivedDocumentMetadata,
   getReportBatchStatus,
   runReportBatchOnce,
-} from "@/features/workbench/api";
+} from "@/features/workbench/reporting-api";
 import { isTerminalReportBatchStatus } from "@/features/workbench/report-batch-operations-panel-helpers";
 import type {
   ArchivedDocumentMetadataResponse,

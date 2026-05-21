@@ -7,9 +7,9 @@ import {
   getArchivedDocumentMetadata,
   getReportBatchStatus,
   runReportBatchOnce,
-} from "../../src/features/workbench/api";
+} from "../../src/features/workbench/reporting-api";
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/reporting-api", () => ({
   createPortfolioReportBatch: vi.fn(),
   getArchivedDocumentMetadata: vi.fn(),
   getReportBatchStatus: vi.fn(),
