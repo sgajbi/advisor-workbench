@@ -7,7 +7,7 @@ const getReportBatchStatusMock = vi.fn();
 const runReportBatchOnceMock = vi.fn();
 const getArchivedDocumentMetadataMock = vi.fn();
 
-vi.mock("../../src/features/workbench/api", () => ({
+vi.mock("../../src/features/workbench/reporting-api", () => ({
   buildArchivedDocumentDownloadUrl: (documentId: string) =>
     `/api/bff/api/v1/documents/${encodeURIComponent(documentId)}/download`,
   createPortfolioReportBatch: (...args: unknown[]) => createPortfolioReportBatchMock(...args),
