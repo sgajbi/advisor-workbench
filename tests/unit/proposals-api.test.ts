@@ -4,11 +4,15 @@ import {
   approveCompliance,
   approveRisk,
   createProposalVersion,
-  getProposalVersion,
+  createProposalReportRequest,
+  getProposalDeliveryEvents,
+  getProposalDeliverySummary,
   getProposalApprovals,
-  listProposals,
+  getProposalVersion,
   getProposalWorkflowEvents,
+  listProposals,
   recordClientConsent,
+  reviewProposalNarrative,
   submitProposal,
 } from "../../src/features/proposals/api";
 
@@ -184,5 +188,75 @@ describe("proposal api", () => {
     const calledUrls = fetchMock.mock.calls.map((call) => call[0] as string);
     expect(calledUrls).toContain(`${expectedBaseUrl}/proposals/pp_1/versions/2?include_evidence=true`);
     expect(calledUrls).toContain(`${expectedBaseUrl}/proposals/pp_1/versions`);
+  });
+
+  it("calls reviewed narrative and delivery posture endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data: {
+              narrative_review: {
+                review_state: "APPROVED_FOR_ADVISOR_USE",
+                source_narrative_hash: "sha256:narrative-001",
+              },
+              explanation: {
+                proposal_narrative_package: {
+                  package_status: "INCLUDED_REVIEWED_NARRATIVE",
+                },
+              },
+              event_count: 1,
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
+
+    await reviewProposalNarrative(
+      "pp_1",
+      2,
+      {
+        action: "APPROVE",
+        reviewed_by: "advisor_1",
+        reason: "Evidence-grounded advisor narrative.",
+      },
+      "idem-review-1"
+    );
+    await createProposalReportRequest("pp_1", {
+      report_type: "PORTFOLIO_REVIEW",
+      requested_by: "advisor_1",
+      related_version_no: 2,
+      include_reviewed_narrative: true,
+    });
+    await getProposalDeliverySummary("pp_1");
+    await getProposalDeliveryEvents("pp_1");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/narrative/review`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Idempotency-Key": "idem-review-1",
+        }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/report-requests`,
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/delivery-summary`
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/delivery-events`
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import ProposalDetailView from "@/features/proposals/components/proposal-detail-view";
 
 type Props = {
   params: Promise<{
@@ -7,6 +7,6 @@ type Props = {
 };
 
 export default async function ProposalDetailPage({ params }: Props) {
-  await params;
-  redirect("/portfolio");
+  const resolvedParams = await params;
+  return <ProposalDetailView proposalId={resolvedParams.proposalId} />;
 }

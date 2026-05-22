@@ -171,8 +171,14 @@ must travel through Gateway-shaped contracts.
     supportability, active exceptions, monitoring-run lineage, and mandate health dimensions
     without reconstructing mandate-health scores, source readiness, PM-book membership, exception
     queues, or resolution state.
-17. `lotus-advise` owns advisor-led proposal workflows. Workbench proposal compatibility routes are
-    not the active RFC-0108 product surface and should not be used as current client-demo evidence.
+17. `lotus-advise` owns advisor-led proposal workflow truth. Workbench proposal queue/detail
+    routes consume that truth through Gateway proposal endpoints only. The RFC-0023 proposal detail
+    panel can record advisor-use narrative review and request reviewed narrative report packaging
+    through Gateway, then display delivery-summary and delivery-event posture. It does not generate
+    narrative, infer client-ready release, render documents, archive artifacts, contact clients, or
+    call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly. The top-level
+    shell `Proposal` entry remains capability-disabled until broader product promotion is
+    separately proven.
 
 ## Ownership Diagram
 
@@ -203,6 +209,7 @@ flowchart TB
   Workbench -->|/api/bff/api/v1/dpm/command-center/portfolios/*/memory| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/waves*| Gateway
   Workbench -->|/api/bff/api/v1/dpm/command-center/outcome-reviews*| Gateway
+  Workbench -->|/api/bff/api/v1/proposals*| Gateway
   Workbench -->|AI narrative action via Gateway only| Gateway
   DpmCenter --> Waves
   DpmCenter --> Construction
@@ -217,6 +224,6 @@ flowchart TB
   Gateway --> Archive
   Gateway --> Render
   Gateway --> Manage
-  Gateway -. future/current external proposal boundary .-> Advise
+  Gateway --> Advise
   Workbench -. validation evidence only .-> Manage
 ```

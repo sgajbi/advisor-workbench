@@ -33,6 +33,8 @@ This repo does not own:
   identity, bounded recent runs, workflow posture, run issue count, and explicit unknown/N/A or
   empty-run handling when supportability or recent runs are absent
 - risk is served through Performance route modes
-- recommendations and proposals remain compatibility entrypoints rather than active shell apps
+- recommendations remain compatibility entrypoints; proposals have bounded direct Gateway-backed
+  queue/detail routes for RFC-0023 advisor narrative delivery posture, but are not yet promoted as
+  an active top-level shell app
 - shell navigation currently exposes disabled `Proposal` and `Advisory` items through normalized
   capability posture rather than treating them as active supported apps

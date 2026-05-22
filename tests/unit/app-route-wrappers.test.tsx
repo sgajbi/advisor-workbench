@@ -37,9 +37,9 @@ describe("app route wrappers", () => {
     await expect(ProposalsPage({ searchParams: Promise.resolve({}) })).resolves.toBeTruthy();
   });
 
-  it("redirects the proposal detail route back to portfolio", async () => {
+  it("mounts the proposal detail route for gateway-backed advisory posture", async () => {
     await expect(
       ProposalDetailPage({ params: Promise.resolve({ proposalId: "PR_1001" }) })
-    ).rejects.toThrowError("REDIRECT:/portfolio");
+    ).resolves.toBeTruthy();
   });
 });

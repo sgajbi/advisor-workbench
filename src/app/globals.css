@@ -16693,6 +16693,17 @@ a:hover {
   font-size: 11px;
 }
 
+.proposal-review-field {
+  display: grid;
+  min-width: 180px;
+  gap: 6px;
+}
+
+.proposal-review-field-wide {
+  flex: 1;
+  min-width: min(100%, 360px);
+}
+
 @media (max-width: 1180px) {
   .portfolio-page .portfolio-summary-kpi-strip,
   .portfolio-page .portfolio-allocation-legend {

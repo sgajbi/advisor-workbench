@@ -2,10 +2,16 @@ import {
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
   ProposalCreateRequest,
+  ProposalDeliveryEventsData,
+  ProposalDeliverySummaryData,
   ProposalDetailData,
   ProposalEnvelopeResponse,
   ProposalListData,
   ProposalLineageData,
+  ProposalNarrativeReviewData,
+  ProposalNarrativeReviewRequest,
+  ProposalReportRequest,
+  ProposalReportRequestData,
   ProposalSimulateRequest,
   ProposalSimulateResponse,
   ProposalSubmitRequest,
@@ -135,6 +141,52 @@ export async function getProposalLineage(
   return envelope.data as unknown as ProposalLineageData;
 }
 
+export async function reviewProposalNarrative(
+  proposalId: string,
+  versionNo: number,
+  payload: ProposalNarrativeReviewRequest,
+  idempotencyKey?: string
+): Promise<ProposalNarrativeReviewData> {
+  const envelope = await postJson(
+    `/proposals/${proposalId}/versions/${versionNo}/narrative/review`,
+    payload,
+    idempotencyKey
+  );
+  return envelope.data as unknown as ProposalNarrativeReviewData;
+}
+
+export async function createProposalReportRequest(
+  proposalId: string,
+  payload: ProposalReportRequest
+): Promise<ProposalReportRequestData> {
+  const envelope = await postJson(`/proposals/${proposalId}/report-requests`, payload);
+  return envelope.data as unknown as ProposalReportRequestData;
+}
+
+export async function getProposalDeliverySummary(
+  proposalId: string
+): Promise<ProposalDeliverySummaryData> {
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-summary`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Proposal delivery summary failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as ProposalEnvelopeResponse;
+  return envelope.data as unknown as ProposalDeliverySummaryData;
+}
+
+export async function getProposalDeliveryEvents(
+  proposalId: string
+): Promise<ProposalDeliveryEventsData> {
+  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-events`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Proposal delivery events failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as ProposalEnvelopeResponse;
+  return envelope.data as unknown as ProposalDeliveryEventsData;
+}
+
 export async function submitProposal(
   proposalId: string,
   payload: ProposalSubmitRequest,
@@ -193,7 +245,7 @@ export async function getProposalApprovals(
 
 async function postJson(
   path: string,
-  payload: Record<string, unknown>,
+  payload: unknown,
   idempotencyKey?: string
 ): Promise<ProposalEnvelopeResponse> {
   const headers: Record<string, string> = {

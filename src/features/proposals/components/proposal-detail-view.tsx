@@ -35,59 +35,23 @@ import {
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "../types";
+import ProposalNarrativePosturePanel from "./proposal-narrative-posture-panel";
+import {
+  buildProposalActionIdempotencyKey,
+  isValidProposalId,
+  proposalStageDescription,
+  proposalStageOrder,
+} from "../proposal-workflow-copy";
 
 type Props = {
   proposalId: string;
 };
-
-function buildProposalActionIdempotencyKey(proposalId: string, action: string): string {
-  return `ui-${action}-${proposalId}-${Date.now()}`;
-}
-
-function stageOrder(state: string): number {
-  if (state === "DRAFT") {
-    return 1;
-  }
-  if (state === "RISK_REVIEW" || state === "COMPLIANCE_REVIEW") {
-    return 2;
-  }
-  if (state === "AWAITING_CLIENT_CONSENT") {
-    return 3;
-  }
-  if (state === "EXECUTION_READY") {
-    return 4;
-  }
-  return 0;
-}
-
-function stageDescription(state: string): string {
-  if (state === "DRAFT") {
-    return "Advisor draft is ready for review submission.";
-  }
-  if (state === "RISK_REVIEW") {
-    return "Risk team review is currently pending.";
-  }
-  if (state === "COMPLIANCE_REVIEW") {
-    return "Compliance team review is currently pending.";
-  }
-  if (state === "AWAITING_CLIENT_CONSENT") {
-    return "Client consent is required before execution.";
-  }
-  if (state === "EXECUTION_READY") {
-    return "Proposal has cleared all gates and is ready for execution.";
-  }
-  return "Workflow state is not mapped yet.";
-}
 
 function isNotFound(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
   }
   return /\(404\)/.test(error.message) || /not found/i.test(error.message);
-}
-
-function isValidProposalId(proposalId: string): boolean {
-  return /^[A-Za-z0-9-]+$/.test(proposalId);
 }
 
 export default function ProposalDetailView({ proposalId }: Props) {
@@ -286,7 +250,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     return (
       <SectionBlock title="Invalid Proposal Identifier">
         <Text variant="secondary" className="muted">
-          Proposal ID `{proposalId}` is not a valid route key. Use alphanumeric IDs with hyphen separators only.
+          Proposal ID `{proposalId}` is not a valid route key. Use alphanumeric IDs with hyphen or underscore separators only.
         </Text>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
           <Link href="/proposals" className="nav-link">
@@ -357,7 +321,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       title={`Proposal ${data.proposal.proposal_id}`}
       actions={
         <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
-          {stageDescription(data.proposal.current_state)}
+          {proposalStageDescription(data.proposal.current_state)}
         </SemanticBadge>
       }
     >
@@ -378,7 +342,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
         <div className="analytics-stat">
           <Text variant="label">Current State</Text>
           <Text variant="metricValueCompact">{data.proposal.current_state}</Text>
-          <Text variant="secondary">{stageDescription(data.proposal.current_state)}</Text>
+          <Text variant="secondary">{proposalStageDescription(data.proposal.current_state)}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Portfolio</Text>
@@ -389,10 +353,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
 
       <Text variant="label">Workflow Progress</Text>
       <Stack direction="row" spacing={0.7} flexWrap="wrap" sx={{ mb: 1 }}>
-        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 1 ? "success" : "default"}>Draft</SemanticBadge>
-        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 2 ? "success" : "default"}>Review</SemanticBadge>
-        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 3 ? "success" : "default"}>Client Consent</SemanticBadge>
-        <SemanticBadge tone={stageOrder(data.proposal.current_state) >= 4 ? "success" : "default"}>Execution Ready</SemanticBadge>
+        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 1 ? "success" : "default"}>Draft</SemanticBadge>
+        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 2 ? "success" : "default"}>Review</SemanticBadge>
+        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 3 ? "success" : "default"}>Client Consent</SemanticBadge>
+        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 4 ? "success" : "default"}>Execution Ready</SemanticBadge>
       </Stack>
 
       <Text variant="label">Available Actions</Text>
@@ -433,6 +397,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
           </Alert>
         ) : null}
       </Stack>
+
+      <Divider sx={{ my: 1 }} />
+      <ProposalNarrativePosturePanel
+        proposalId={data.proposal.proposal_id}
+        currentVersionNo={data.proposal.current_version_no}
+      />
 
       <Divider sx={{ my: 1 }} />
       <Text variant="sectionTitle">Version Management</Text>

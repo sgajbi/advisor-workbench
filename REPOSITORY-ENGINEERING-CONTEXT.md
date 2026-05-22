@@ -113,6 +113,13 @@ Current repository posture:
     prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
     OMS claims.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+16. `/proposals` and `/proposals/{proposalId}` are direct Gateway-backed advisory routes for the
+    proposal queue, proposal detail, and RFC-0023 advisor narrative delivery posture. The detail
+    route records advisor-use narrative review and reviewed report-package requests through
+    Gateway proposal endpoints only, renders delivery-summary and delivery-event posture, and does
+    not generate narrative, infer client-ready release, render reports, archive artifacts, contact
+    clients, or call advisory/report/archive/render services directly. The top-level shell
+    `Proposal` capability remains disabled until broader shell promotion is separately proven.
 
 ## Architecture And Module Map
 
@@ -247,6 +254,10 @@ Important validation expectations:
     source refs, content hashes, artifact refs, workflow run ids, request bodies, response bodies,
     generated summary text, prompts, model responses, score values, and screen content must never
     be emitted as metric labels.
+17. Proposal advisor narrative actions are Workbench gateway-only operations. UI state must stay
+    explicit about advisor-use review, reviewed narrative package inclusion, report delivery
+    posture, and latest delivery event, without presenting report rendering, archive publication,
+    client messaging, or client-ready release as Workbench-owned capabilities.
 
 ### Visual Review Gate
 
