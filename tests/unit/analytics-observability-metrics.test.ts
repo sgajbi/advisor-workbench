@@ -452,8 +452,18 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "wave-campaign-approval-decisions-create",
+        "dpm.waves.campaign-approval-decisions.create",
+      ],
+      [
+        "workbench.manage",
         "wave-campaign-assignment-actions",
         "dpm.waves.campaign-assignment-actions.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-assignment-actions-create",
+        "dpm.waves.campaign-assignment-actions.create",
       ],
       [
         "workbench.manage",
@@ -462,8 +472,23 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "wave-campaign-assignment-tasks-create",
+        "dpm.waves.campaign-assignment-tasks.create",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-assignment-task-transitions-create",
+        "dpm.waves.campaign-assignment-task-transitions.create",
+      ],
+      [
+        "workbench.manage",
         "wave-campaign-maker-checker-controls",
         "dpm.waves.campaign-maker-checker-controls.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-maker-checker-controls-create",
+        "dpm.waves.campaign-maker-checker-controls.create",
       ],
       [
         "workbench.manage",

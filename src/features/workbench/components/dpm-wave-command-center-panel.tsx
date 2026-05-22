@@ -76,12 +76,15 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignWorkflowCommand,
     actionError,
     proofPackLoaded,
     campaignLifecycleError,
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
     campaignLaunchError,
+    campaignWorkflowCommandError,
+    campaignWorkflowCommandEvidence,
     actionMessage,
     previewRebalance,
     createRebalance,
@@ -96,6 +99,7 @@ export default function DpmWaveCommandCenterPanel({
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
     launchCampaign,
+    recordCampaignWorkflowCommand,
   } = useDpmWaveCommandCenterActions({
     portfolioId,
     waveList,
@@ -192,6 +196,9 @@ export default function DpmWaveCommandCenterPanel({
         pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}
         pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
         pendingLaunchKey={pendingCampaignLaunchKey}
+        pendingWorkflowCommand={pendingCampaignWorkflowCommand}
+        workflowCommandError={campaignWorkflowCommandError}
+        workflowCommandEvidence={campaignWorkflowCommandEvidence}
         selectedCampaign={selectedCampaign}
         selectedCampaignKey={selectedCampaignKey}
         errorMessage={campaignDefinitionsError ?? campaignDiscoveryError}
@@ -199,6 +206,7 @@ export default function DpmWaveCommandCenterPanel({
         onLoadLaunchHistory={loadCampaignLaunchHistory}
         onCheckLaunchReadiness={checkCampaignLaunchReadiness}
         onLaunchCampaign={launchCampaign}
+        onRecordWorkflowCommand={recordCampaignWorkflowCommand}
       />
 
       <div className="rebalance-main-grid">

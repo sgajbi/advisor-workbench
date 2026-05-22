@@ -229,7 +229,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getByRole("heading", { name: "Campaign Workflow Audit" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
     expect(screen.getByText("Operating Queue")).toBeInTheDocument();
-    expect(screen.getByText("Assignment Task")).toBeInTheDocument();
+    expect(screen.getAllByText("Assignment Task").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Proposed Changes" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
     expect(

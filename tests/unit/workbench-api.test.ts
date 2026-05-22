@@ -7,6 +7,11 @@ import {
   buildDpmPmOperatingQualityReviewActionCorrelationId,
   buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   calculateCompositePerformanceTwrClient,
+  createDpmCampaignApprovalDecision,
+  createDpmCampaignAssignmentAction,
+  createDpmCampaignAssignmentTask,
+  createDpmCampaignAssignmentTaskTransition,
+  createDpmCampaignMakerCheckerControl,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
   createDpmPmOperatingQualitySummaryInvocation,
@@ -2391,6 +2396,103 @@ describe("workbench api", () => {
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign-workflow-audit");
     expect(metricEventsJson).not.toContain("task-sensitive-001");
+  });
+
+  it("records DPM campaign workflow evidence through Gateway mutation helpers without leaking ids into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-workflow-command",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 201,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:campaign-workflow",
+              state: "READY",
+              reason_codes: ["campaign_workflow_command_recorded"],
+            },
+            data: {
+              task_ref: "task-sensitive-001",
+              content_hash: "sha256:workflow-command",
+              reason_codes: ["campaign_workflow_command_recorded"],
+              operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+              request_body: init?.body,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await createDpmCampaignApprovalDecision({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      actorId: "pm_sg_1",
+      body: { decision_ref: "decision-sensitive-001", actor_id: "pm_sg_1" },
+    });
+    await createDpmCampaignAssignmentAction({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      body: { action_ref: "action-sensitive-001", actor_id: "pm_sg_1" },
+    });
+    await createDpmCampaignAssignmentTask({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      body: { task_ref: "task-sensitive-001", actor_id: "pm_sg_1" },
+    });
+    await createDpmCampaignAssignmentTaskTransition({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      taskRef: "task-sensitive-001",
+      body: { transition_type: "MARK_SUPPORTABLE", actor_id: "pm_sg_1" },
+    });
+    await createDpmCampaignMakerCheckerControl({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      body: { control_ref: "control-sensitive-001", actor_id: "pm_sg_1" },
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const calls = fetchMock.mock.calls.map((call) => ({
+      url: call[0].toString(),
+      body: JSON.parse(String(call[1]?.body)),
+    }));
+    expect(calls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          url: expect.stringContaining("/approval-decisions"),
+          body: { body: { decision_ref: "decision-sensitive-001", actor_id: "pm_sg_1" } },
+        }),
+        expect.objectContaining({
+          url: expect.stringContaining("/assignment-actions"),
+          body: { body: { action_ref: "action-sensitive-001", actor_id: "pm_sg_1" } },
+        }),
+        expect.objectContaining({
+          url: expect.stringContaining("/assignment-tasks"),
+          body: { body: { task_ref: "task-sensitive-001", actor_id: "pm_sg_1" } },
+        }),
+        expect.objectContaining({
+          url: expect.stringContaining("/assignment-tasks/task-sensitive-001/transitions"),
+          body: {
+            body: { transition_type: "MARK_SUPPORTABLE", actor_id: "pm_sg_1" },
+          },
+        }),
+        expect.objectContaining({
+          url: expect.stringContaining("/maker-checker-controls"),
+          body: { body: { control_ref: "control-sensitive-001", actor_id: "pm_sg_1" } },
+        }),
+      ])
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-approval-decisions-create");
+    expect(metricEventsJson).toContain("wave-campaign-assignment-task-transitions-create");
+    expect(metricEventsJson).toContain("wave-campaign-maker-checker-controls-create");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("task-sensitive-001");
+    expect(metricEventsJson).not.toContain("corr-campaign-workflow-command");
   });
 
   it("loads DPM campaign-definition lifecycle and launch-history evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {

@@ -4,11 +4,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
 import {
   approveDpmWave,
+  createDpmCampaignApprovalDecision,
+  createDpmCampaignAssignmentAction,
+  createDpmCampaignAssignmentTask,
+  createDpmCampaignAssignmentTaskTransition,
+  createDpmCampaignMakerCheckerControl,
   createDpmWave,
+  getDpmCampaignApprovalDecisions,
+  getDpmCampaignAssignmentActions,
+  getDpmCampaignAssignmentTasks,
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
+  getDpmCampaignMakerCheckerControls,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -20,16 +29,26 @@ import {
 } from "../../src/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   approveDpmWave: vi.fn(),
+  createDpmCampaignApprovalDecision: vi.fn(),
+  createDpmCampaignAssignmentAction: vi.fn(),
+  createDpmCampaignAssignmentTask: vi.fn(),
+  createDpmCampaignAssignmentTaskTransition: vi.fn(),
+  createDpmCampaignMakerCheckerControl: vi.fn(),
   createDpmWave: vi.fn(),
+  getDpmCampaignApprovalDecisions: vi.fn(),
+  getDpmCampaignAssignmentActions: vi.fn(),
+  getDpmCampaignAssignmentTasks: vi.fn(),
   getDpmCampaignDefinitionLaunchHistory: vi.fn(),
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmCampaignDefinitionPreviewReadiness: vi.fn(),
+  getDpmCampaignMakerCheckerControls: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
@@ -223,6 +242,45 @@ const campaignLaunchResponse: DpmWaveGatewayResponse = {
   },
 };
 
+const campaignWorkflowCommandResponse: DpmCampaignWorkflowGatewayResponse = {
+  correlation_id: "corr-campaign-command",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 201,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:campaign-workflow",
+    state: "READY",
+    reason_codes: ["campaign_assignment_task_transition_recorded"],
+  },
+  data: {
+    task_ref: "task-review-001",
+    transition_type: "MARK_SUPPORTABLE",
+    content_hash: "sha256:task-transition",
+    reason_codes: ["campaign_assignment_task_transition_recorded"],
+    operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+  },
+};
+
+const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
+  ...campaignWorkflowCommandResponse,
+  upstream_status: 200,
+  data: {
+    items: [
+      {
+        task_ref: "task-review-001",
+        status: "SUPPORTABLE",
+        content_hash: "sha256:task-transition",
+        reason_codes: ["campaign_assignment_task_transition_recorded"],
+      },
+    ],
+    count: 1,
+    total_count: 1,
+    limit: 10,
+    offset: 0,
+  },
+};
+
 function renderActions() {
   return renderHook(() =>
     useDpmWaveCommandCenterActions({
@@ -241,6 +299,21 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(previewReadinessResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(launchPackageResponse);
     vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
+    vi.mocked(createDpmCampaignApprovalDecision).mockResolvedValue(campaignWorkflowCommandResponse);
+    vi.mocked(createDpmCampaignAssignmentAction).mockResolvedValue(campaignWorkflowCommandResponse);
+    vi.mocked(createDpmCampaignAssignmentTask).mockResolvedValue(campaignWorkflowCommandResponse);
+    vi.mocked(createDpmCampaignAssignmentTaskTransition).mockResolvedValue(
+      campaignWorkflowCommandResponse
+    );
+    vi.mocked(createDpmCampaignMakerCheckerControl).mockResolvedValue(
+      campaignWorkflowCommandResponse
+    );
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(campaignWorkflowEvidenceResponse);
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(campaignWorkflowEvidenceResponse);
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(campaignWorkflowEvidenceResponse);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(
+      campaignWorkflowEvidenceResponse
+    );
   });
 
   afterEach(() => {
@@ -377,5 +450,80 @@ describe("useDpmWaveCommandCenterActions", () => {
       await result.current.launchCampaign(result.current.selectedCampaign!);
     });
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
+  });
+
+  it("records campaign workflow commands and refreshes Manage-owned evidence lists", async () => {
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignWorkflowCommand({
+        commandType: "task_transition",
+        taskRef: "task-review-001",
+        body: {
+          transition_type: "MARK_SUPPORTABLE",
+          actor_id: "pm_sg_1",
+        },
+      });
+    });
+
+    expect(createDpmCampaignAssignmentTaskTransition).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      taskRef: "task-review-001",
+      actorId: "pm_sg_1",
+      body: {
+        transition_type: "MARK_SUPPORTABLE",
+        actor_id: "pm_sg_1",
+      },
+    });
+    expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    expect(getDpmCampaignAssignmentActions).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    expect(getDpmCampaignAssignmentTasks).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    expect(getDpmCampaignMakerCheckerControls).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
+      evidenceRef: "task-review-001",
+      correlationId: "corr-campaign-command",
+      sourceService: "lotus-manage",
+      contentHash: "sha256:task-transition",
+    });
+    expect(result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef).toBe(
+      "task-review-001"
+    );
+  });
+
+  it("keeps campaign workflow command failures bounded and does not refresh local evidence", async () => {
+    vi.mocked(createDpmCampaignAssignmentTask).mockRejectedValueOnce(
+      new Error("Failed to fetch create DPM campaign assignment task (502)")
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignWorkflowCommand({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-review-001",
+          actor_id: "pm_sg_1",
+        },
+      });
+    });
+
+    expect(result.current.campaignWorkflowCommandError).toBe(
+      "Failed to fetch create DPM campaign assignment task (502)"
+    );
+    expect(getDpmCampaignAssignmentTasks).not.toHaveBeenCalled();
   });
 });

@@ -3,11 +3,20 @@
 import { useEffect, useState } from "react";
 import {
   approveDpmWave,
+  createDpmCampaignApprovalDecision,
+  createDpmCampaignAssignmentAction,
+  createDpmCampaignAssignmentTask,
+  createDpmCampaignAssignmentTaskTransition,
+  createDpmCampaignMakerCheckerControl,
   createDpmWave,
+  getDpmCampaignApprovalDecisions,
+  getDpmCampaignAssignmentActions,
+  getDpmCampaignAssignmentTasks,
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
+  getDpmCampaignMakerCheckerControls,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
@@ -45,6 +54,30 @@ type UseDpmWaveCommandCenterActionsInput = {
   campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 };
 
+export type DpmCampaignWorkflowCommandType =
+  | "approval_decision"
+  | "assignment_action"
+  | "assignment_task"
+  | "task_transition"
+  | "maker_checker_control";
+
+export type DpmCampaignWorkflowCommandInput = {
+  commandType: DpmCampaignWorkflowCommandType;
+  body: Record<string, unknown>;
+  taskRef?: string;
+};
+
+export type DpmCampaignWorkflowCommandEvidence = {
+  commandLabel: string;
+  evidenceRef: string;
+  correlationId: string;
+  sourceService: string;
+  upstreamStatus: string;
+  contentHash: string;
+  reasonCodes: string;
+  operatingBoundaries: string;
+};
+
 type UseDpmWaveCommandCenterActionsResult = {
   model: DpmWaveCommandCenterPanelModel;
   selectedCampaign: DpmCampaignDefinitionRow | null;
@@ -55,12 +88,15 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignPreviewReadinessKey: string | null;
   pendingCampaignLaunchPackageKey: string | null;
   pendingCampaignLaunchKey: string | null;
+  pendingCampaignWorkflowCommand: boolean;
   actionError: string | null;
   proofPackLoaded: boolean;
   campaignLifecycleError: string | null;
   campaignLaunchHistoryError: string | null;
   campaignPreviewReadinessError: string | null;
   campaignLaunchError: string | null;
+  campaignWorkflowCommandError: string | null;
+  campaignWorkflowCommandEvidence: DpmCampaignWorkflowCommandEvidence | null;
   actionMessage: string | null;
   previewRebalance: () => void;
   createRebalance: () => void;
@@ -78,6 +114,9 @@ type UseDpmWaveCommandCenterActionsResult = {
   ) => Promise<void>;
   checkCampaignLaunchReadiness: (row: DpmCampaignDefinitionRow) => Promise<void>;
   launchCampaign: (row: DpmCampaignDefinitionRow) => Promise<void>;
+  recordCampaignWorkflowCommand: (
+    command: DpmCampaignWorkflowCommandInput
+  ) => Promise<void>;
 };
 
 export function useDpmWaveCommandCenterActions({
@@ -108,6 +147,14 @@ export function useDpmWaveCommandCenterActions({
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchResponse, setCampaignLaunchResponse] =
     useState<DpmWaveGatewayResponse | null>(null);
+  const [campaignApprovalDecisionsResponse, setCampaignApprovalDecisionsResponse] =
+    useState<DpmCampaignWorkflowGatewayResponse | null>(null);
+  const [campaignAssignmentActionsResponse, setCampaignAssignmentActionsResponse] =
+    useState<DpmCampaignWorkflowGatewayResponse | null>(null);
+  const [campaignAssignmentTasksResponse, setCampaignAssignmentTasksResponse] =
+    useState<DpmCampaignWorkflowGatewayResponse | null>(null);
+  const [campaignMakerCheckerControlsResponse, setCampaignMakerCheckerControlsResponse] =
+    useState<DpmCampaignWorkflowGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] =
     useState<string | null>(null);
@@ -119,6 +166,8 @@ export function useDpmWaveCommandCenterActions({
     useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] =
     useState<string | null>(null);
+  const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
+    useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
   const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] =
@@ -126,6 +175,10 @@ export function useDpmWaveCommandCenterActions({
   const [campaignPreviewReadinessError, setCampaignPreviewReadinessError] =
     useState<string | null>(null);
   const [campaignLaunchError, setCampaignLaunchError] = useState<string | null>(null);
+  const [campaignWorkflowCommandError, setCampaignWorkflowCommandError] =
+    useState<string | null>(null);
+  const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
+    useState<DpmCampaignWorkflowCommandEvidence | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
   const [selectedCampaignKey, setSelectedCampaignKey] = useState<string | null>(null);
@@ -147,10 +200,11 @@ export function useDpmWaveCommandCenterActions({
     campaignWorkflowBoard,
     campaignAssignmentPlan,
     campaignWorkflowAutomation,
-    campaignApprovalDecisions,
-    campaignAssignmentActions,
-    campaignAssignmentTasks,
-    campaignMakerCheckerControls,
+    campaignApprovalDecisions: campaignApprovalDecisionsResponse ?? campaignApprovalDecisions,
+    campaignAssignmentActions: campaignAssignmentActionsResponse ?? campaignAssignmentActions,
+    campaignAssignmentTasks: campaignAssignmentTasksResponse ?? campaignAssignmentTasks,
+    campaignMakerCheckerControls:
+      campaignMakerCheckerControlsResponse ?? campaignMakerCheckerControls,
   });
   const selectedWaveId = model.selectedWaveId;
   const selectedCampaign =
@@ -382,6 +436,76 @@ export function useDpmWaveCommandCenterActions({
     }
   }
 
+  async function refreshCampaignWorkflowEvidence(row: DpmCampaignDefinitionRow) {
+    const params = {
+      campaignId: row.campaignId,
+      campaignVersion: row.campaignVersion,
+    };
+    const [
+      approvalDecisions,
+      assignmentActions,
+      assignmentTasks,
+      makerCheckerControls,
+    ] = await Promise.all([
+      getDpmCampaignApprovalDecisions(params),
+      getDpmCampaignAssignmentActions(params),
+      getDpmCampaignAssignmentTasks(params),
+      getDpmCampaignMakerCheckerControls(params),
+    ]);
+    setCampaignApprovalDecisionsResponse(approvalDecisions);
+    setCampaignAssignmentActionsResponse(assignmentActions);
+    setCampaignAssignmentTasksResponse(assignmentTasks);
+    setCampaignMakerCheckerControlsResponse(makerCheckerControls);
+  }
+
+  async function recordCampaignWorkflowCommand(command: DpmCampaignWorkflowCommandInput) {
+    if (pendingCampaignWorkflowCommand) {
+      return;
+    }
+    if (!selectedCampaign) {
+      setCampaignWorkflowCommandError("Select a Manage campaign definition before recording workflow evidence.");
+      return;
+    }
+    if (command.commandType === "task_transition" && !command.taskRef) {
+      setCampaignWorkflowCommandError("Task transition requires a Manage task reference.");
+      return;
+    }
+    setPendingCampaignWorkflowCommand(true);
+    setCampaignWorkflowCommandError(null);
+    setCampaignWorkflowCommandEvidence(null);
+    try {
+      const params = {
+        campaignId: selectedCampaign.campaignId,
+        campaignVersion: selectedCampaign.campaignVersion,
+        body: command.body,
+        actorId: readString(command.body.actor_id),
+      };
+      const response =
+        command.commandType === "approval_decision"
+          ? await createDpmCampaignApprovalDecision(params)
+          : command.commandType === "assignment_action"
+            ? await createDpmCampaignAssignmentAction(params)
+            : command.commandType === "assignment_task"
+              ? await createDpmCampaignAssignmentTask(params)
+              : command.commandType === "task_transition"
+                ? await createDpmCampaignAssignmentTaskTransition({
+                    ...params,
+                    taskRef: command.taskRef ?? "",
+                  })
+                : await createDpmCampaignMakerCheckerControl(params);
+      setCampaignWorkflowCommandEvidence(
+        buildCampaignWorkflowCommandEvidence(command.commandType, response)
+      );
+      await refreshCampaignWorkflowEvidence(selectedCampaign);
+    } catch (error) {
+      setCampaignWorkflowCommandError(
+        error instanceof Error ? error.message : "Campaign workflow command failed."
+      );
+    } finally {
+      setPendingCampaignWorkflowCommand(false);
+    }
+  }
+
   return {
     model,
     selectedCampaign,
@@ -392,12 +516,15 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignWorkflowCommand,
     actionError,
     proofPackLoaded: Boolean(proofPackResponse),
     campaignLifecycleError,
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
     campaignLaunchError,
+    campaignWorkflowCommandError,
+    campaignWorkflowCommandEvidence,
     actionMessage,
     previewRebalance,
     createRebalance,
@@ -412,5 +539,65 @@ export function useDpmWaveCommandCenterActions({
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
     launchCampaign,
+    recordCampaignWorkflowCommand,
   };
+}
+
+function buildCampaignWorkflowCommandEvidence(
+  commandType: DpmCampaignWorkflowCommandType,
+  response: DpmCampaignWorkflowGatewayResponse
+): DpmCampaignWorkflowCommandEvidence {
+  const data = response.data;
+  return {
+    commandLabel: campaignWorkflowCommandLabel(commandType),
+    evidenceRef:
+      readString(data.evidence_ref) ||
+      readString(data.decision_ref) ||
+      readString(data.action_ref) ||
+      readString(data.task_ref) ||
+      readString(data.control_ref) ||
+      "N/A",
+    correlationId: response.correlation_id,
+    sourceService: response.source_service,
+    upstreamStatus: String(response.upstream_status),
+    contentHash: readString(data.content_hash) || response.supportability?.content_hash || "N/A",
+    reasonCodes: formatList(data.reason_codes),
+    operatingBoundaries: formatList(data.operating_boundaries),
+  };
+}
+
+function campaignWorkflowCommandLabel(commandType: DpmCampaignWorkflowCommandType): string {
+  switch (commandType) {
+    case "approval_decision":
+      return "Approval decision";
+    case "assignment_action":
+      return "Assignment action";
+    case "assignment_task":
+      return "Assignment task";
+    case "task_transition":
+      return "Task transition";
+    case "maker_checker_control":
+      return "Maker-checker control";
+  }
+}
+
+function readString(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
+function formatList(value: unknown): string {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+  if (!Array.isArray(value)) {
+    return "N/A";
+  }
+  const values = value.filter((item): item is string => typeof item === "string" && item.length > 0);
+  return values.length > 0 ? values.join(", ") : "N/A";
 }
