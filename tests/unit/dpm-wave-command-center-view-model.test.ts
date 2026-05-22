@@ -379,6 +379,94 @@ describe("DPM wave command-center view model", () => {
     });
   });
 
+  it("preserves Manage-owned campaign workflow audit evidence without deriving task state", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignOperatingQueue: {
+        correlation_id: "corr-operating-queue",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:campaign-workflow",
+          state: "READY",
+          reason_codes: ["MANAGE_SOURCE_BACKED"],
+          blocked_actions: [],
+          count: 1,
+          total_count: 1,
+          content_hash: "sha256:queue",
+        },
+        data: {
+          items: [
+            {
+              task_ref: "task_001",
+              source_refs: [{ source_type: "BulkReviewCampaignAssignmentTask" }],
+            },
+          ],
+          count: 1,
+          total_count: 1,
+          limit: 10,
+          offset: 0,
+          operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+        },
+      },
+      campaignAssignmentTasks: {
+        correlation_id: "corr-assignment-tasks",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              task_ref: "task_001",
+              status: "WAITING_FOR_REVIEW",
+              actor_id: "pm_sg_1",
+              recorded_at: "2026-05-21T08:00:00Z",
+              reason_codes: ["TASK_RECORDED"],
+              source_refs: [{ source_type: "BulkReviewCampaignAssignmentTask" }],
+              content_hash: "sha256:task",
+              operating_boundaries: ["NO_CLIENT_CONTACT_WORKFLOW", "NO_EXTERNAL_WORKFLOW_ORCHESTRATION"],
+              transitions: [
+                {
+                  transition_type: "ASSIGNED_FOR_REVIEW",
+                  from_status: "OPEN",
+                  to_status: "WAITING_FOR_REVIEW",
+                },
+              ],
+              raw_rationale: "Do not render raw rationale",
+              reviewer_notes: "Do not render reviewer notes",
+              oms_order_id: "Do not render OMS claims",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignWorkflowSummaryRows[0]).toMatchObject({
+      surface: "Operating Queue",
+      state: "READY",
+      itemCount: "1",
+      sourceRefs: "1",
+      contentHash: "sha256:queue",
+      operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
+    });
+    expect(model.campaignWorkflowEvidenceRows[0]).toMatchObject({
+      evidenceType: "Assignment Task",
+      evidenceRef: "task_001",
+      status: "WAITING_FOR_REVIEW",
+      actor: "pm_sg_1",
+      reasonCodes: "TASK_RECORDED",
+      sourceRefs: "1",
+      contentHash: "sha256:task",
+      transitionPosture: "ASSIGNED_FOR_REVIEW: OPEN to WAITING_FOR_REVIEW",
+    });
+    const renderedRows = JSON.stringify(model.campaignWorkflowEvidenceRows);
+    expect(renderedRows).not.toContain("raw rationale");
+    expect(renderedRows).not.toContain("reviewer notes");
+    expect(renderedRows).not.toContain("OMS");
+  });
+
   it("preserves launched lifecycle events and append-only launch history", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,

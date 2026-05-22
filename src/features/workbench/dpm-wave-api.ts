@@ -12,6 +12,7 @@ import {
 } from "@/features/workbench/caller-context";
 import type {
   DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
@@ -258,6 +259,214 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
         }`,
         "DPM campaign-definition launch history"
       )
+  );
+}
+
+function appendOptionalCampaignWorkflowQuery(
+  query: URLSearchParams,
+  params?: {
+    campaignId?: string;
+    campaignVersion?: string;
+    state?: string;
+    limit?: number;
+    offset?: number;
+  }
+): URLSearchParams {
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.campaignId) {
+    query.set("campaign_id", params.campaignId);
+  }
+  if (params?.campaignVersion) {
+    query.set("campaign_version", params.campaignVersion);
+  }
+  if (params?.state) {
+    query.set("state", params.state);
+  }
+  return query;
+}
+
+async function listDpmCampaignWorkflowResource(
+  operation: WorkbenchObservedOperation,
+  path: string,
+  label: string,
+  params?: {
+    campaignId?: string;
+    campaignVersion?: string;
+    state?: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<DpmCampaignWorkflowGatewayResponse> {
+  const query = appendOptionalCampaignWorkflowQuery(new URLSearchParams(), params);
+  return await observeWorkbenchResource(
+    operation,
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignWorkflowGatewayResponse>(
+        "server",
+        path,
+        label,
+        query
+      )
+  );
+}
+
+export async function listDpmCampaignOperatingQueue(params?: {
+  campaignId?: string;
+  campaignVersion?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await listDpmCampaignWorkflowResource(
+    "dpm.waves.campaign-operating-queue.list",
+    "/dpm/command-center/waves/campaign-operating-queue",
+    "DPM campaign operating queue",
+    params
+  );
+}
+
+export async function listDpmCampaignApprovalInbox(params?: {
+  campaignId?: string;
+  campaignVersion?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await listDpmCampaignWorkflowResource(
+    "dpm.waves.campaign-approval-inbox.list",
+    "/dpm/command-center/waves/campaign-approval-inbox",
+    "DPM campaign approval inbox",
+    params
+  );
+}
+
+export async function listDpmCampaignWorkflowBoard(params?: {
+  campaignId?: string;
+  campaignVersion?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await listDpmCampaignWorkflowResource(
+    "dpm.waves.campaign-workflow-board.list",
+    "/dpm/command-center/waves/campaign-workflow-board",
+    "DPM campaign workflow board",
+    params
+  );
+}
+
+export async function listDpmCampaignAssignmentPlan(params?: {
+  campaignId?: string;
+  campaignVersion?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await listDpmCampaignWorkflowResource(
+    "dpm.waves.campaign-assignment-plan.list",
+    "/dpm/command-center/waves/campaign-assignment-plan",
+    "DPM campaign assignment plan",
+    params
+  );
+}
+
+export async function listDpmCampaignWorkflowAutomation(params?: {
+  campaignId?: string;
+  campaignVersion?: string;
+  state?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await listDpmCampaignWorkflowResource(
+    "dpm.waves.campaign-workflow-automation.list",
+    "/dpm/command-center/waves/campaign-workflow-automation",
+    "DPM campaign workflow automation",
+    params
+  );
+}
+
+async function getDpmCampaignWorkflowEvidence(
+  operation: WorkbenchObservedOperation,
+  pathSuffix: string,
+  label: string,
+  params: {
+    campaignId: string;
+    campaignVersion: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<DpmCampaignWorkflowGatewayResponse> {
+  const query = new URLSearchParams();
+  query.set("limit", String(params.limit ?? 10));
+  query.set("offset", String(params.offset ?? 0));
+  return await observeWorkbenchResource(
+    operation,
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignWorkflowGatewayResponse>(
+        "server",
+        `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+          params.campaignId
+        )}/versions/${encodeURIComponent(params.campaignVersion)}/${pathSuffix}`,
+        label,
+        query
+      )
+  );
+}
+
+export async function getDpmCampaignApprovalDecisions(params: {
+  campaignId: string;
+  campaignVersion: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await getDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-approval-decisions.list",
+    "approval-decisions",
+    "DPM campaign approval decisions",
+    params
+  );
+}
+
+export async function getDpmCampaignAssignmentActions(params: {
+  campaignId: string;
+  campaignVersion: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await getDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-assignment-actions.list",
+    "assignment-actions",
+    "DPM campaign assignment actions",
+    params
+  );
+}
+
+export async function getDpmCampaignAssignmentTasks(params: {
+  campaignId: string;
+  campaignVersion: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await getDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-assignment-tasks.list",
+    "assignment-tasks",
+    "DPM campaign assignment tasks",
+    params
+  );
+}
+
+export async function getDpmCampaignMakerCheckerControls(params: {
+  campaignId: string;
+  campaignVersion: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await getDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-maker-checker-controls.list",
+    "maker-checker-controls",
+    "DPM campaign maker-checker controls",
+    params
   );
 }
 

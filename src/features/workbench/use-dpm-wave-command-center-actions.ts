@@ -19,6 +19,7 @@ import {
 } from "@/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
   DpmWaveGatewayResponse,
 } from "@/features/workbench/types";
 import {
@@ -33,6 +34,15 @@ type UseDpmWaveCommandCenterActionsInput = {
   waveList: DpmWaveGatewayResponse | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignOperatingQueue?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalInbox?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 };
 
 type UseDpmWaveCommandCenterActionsResult = {
@@ -75,6 +85,15 @@ export function useDpmWaveCommandCenterActions({
   waveList,
   campaignDefinitions = null,
   campaignDiscovery = null,
+  campaignOperatingQueue = null,
+  campaignApprovalInbox = null,
+  campaignWorkflowBoard = null,
+  campaignAssignmentPlan = null,
+  campaignWorkflowAutomation = null,
+  campaignApprovalDecisions = null,
+  campaignAssignmentActions = null,
+  campaignAssignmentTasks = null,
+  campaignMakerCheckerControls = null,
 }: UseDpmWaveCommandCenterActionsInput): UseDpmWaveCommandCenterActionsResult {
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
@@ -123,6 +142,15 @@ export function useDpmWaveCommandCenterActions({
     campaignPreviewReadiness: campaignPreviewReadinessResponse,
     campaignLaunchPackage: campaignLaunchPackageResponse,
     campaignLaunchResponse,
+    campaignOperatingQueue,
+    campaignApprovalInbox,
+    campaignWorkflowBoard,
+    campaignAssignmentPlan,
+    campaignWorkflowAutomation,
+    campaignApprovalDecisions,
+    campaignAssignmentActions,
+    campaignAssignmentTasks,
+    campaignMakerCheckerControls,
   });
   const selectedWaveId = model.selectedWaveId;
   const selectedCampaign =

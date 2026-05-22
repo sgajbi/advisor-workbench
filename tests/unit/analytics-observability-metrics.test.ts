@@ -422,6 +422,51 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "wave-campaign-operating-queue",
+        "dpm.waves.campaign-operating-queue.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-approval-inbox",
+        "dpm.waves.campaign-approval-inbox.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-workflow-board",
+        "dpm.waves.campaign-workflow-board.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-assignment-plan",
+        "dpm.waves.campaign-assignment-plan.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-workflow-automation",
+        "dpm.waves.campaign-workflow-automation.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-approval-decisions",
+        "dpm.waves.campaign-approval-decisions.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-assignment-actions",
+        "dpm.waves.campaign-assignment-actions.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-assignment-tasks",
+        "dpm.waves.campaign-assignment-tasks.list",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-maker-checker-controls",
+        "dpm.waves.campaign-maker-checker-controls.list",
+      ],
+      [
+        "workbench.manage",
         "wave-campaign-lifecycle",
         "dpm.waves.campaign-definitions.lifecycle-events",
       ],

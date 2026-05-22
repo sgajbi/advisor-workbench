@@ -276,6 +276,51 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "wave-campaign-operating-queue",
+    operation: "dpm.waves.campaign-operating-queue.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-approval-inbox",
+    operation: "dpm.waves.campaign-approval-inbox.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-workflow-board",
+    operation: "dpm.waves.campaign-workflow-board.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-assignment-plan",
+    operation: "dpm.waves.campaign-assignment-plan.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-workflow-automation",
+    operation: "dpm.waves.campaign-workflow-automation.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-approval-decisions",
+    operation: "dpm.waves.campaign-approval-decisions.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-assignment-actions",
+    operation: "dpm.waves.campaign-assignment-actions.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-assignment-tasks",
+    operation: "dpm.waves.campaign-assignment-tasks.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-maker-checker-controls",
+    operation: "dpm.waves.campaign-maker-checker-controls.list",
+  },
+  {
+    route: "workbench.manage",
     panel: "wave-campaign-lifecycle",
     operation: "dpm.waves.campaign-definitions.lifecycle-events",
   },

@@ -210,7 +210,10 @@ describe("WorkbenchPage", () => {
     expect(screen.getAllByRole("heading", { name: "Rebalance" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Workflow Audit" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
+    expect(screen.getByText("Operating Queue")).toBeInTheDocument();
+    expect(screen.getByText("Assignment Task")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Proposed Changes" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
     expect(
@@ -226,6 +229,21 @@ describe("WorkbenchPage", () => {
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/waves/campaign-discovery")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/waves/campaign-operating-queue")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/waves/campaign-workflow-automation")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/assignment-tasks")
       )
     ).toBe(true);
     expect(
@@ -752,6 +770,88 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
               as_of_date: "2026-05-13",
               item_count: 1,
               issue_count: 0,
+            },
+          ],
+        },
+      });
+    }
+
+    if (
+      [
+        "campaign-operating-queue",
+        "campaign-approval-inbox",
+        "campaign-workflow-board",
+        "campaign-assignment-plan",
+        "campaign-workflow-automation",
+      ].some((path) => url.includes(`/api/v1/dpm/command-center/waves/${path}`))
+    ) {
+      return jsonResponse({
+        correlation_id: "corr_campaign_workflow",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:campaign-workflow",
+          state: "READY",
+          reason_codes: ["MANAGE_SOURCE_BACKED"],
+          blocked_actions: [],
+          count: 1,
+          total_count: 1,
+          content_hash: "sha256:workflow-summary",
+        },
+        data: {
+          items: [
+            {
+              task_ref: "task_001",
+              state: "READY",
+              source_refs: [{ source_type: "BulkReviewCampaignAssignmentTask" }],
+            },
+          ],
+          count: 1,
+          total_count: 1,
+          limit: 10,
+          offset: 0,
+          operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+        },
+      });
+    }
+
+    if (
+      [
+        "approval-decisions",
+        "assignment-actions",
+        "assignment-tasks",
+        "maker-checker-controls",
+      ].some((path) =>
+        url.includes(
+          `/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/${path}`
+        )
+      )
+    ) {
+      return jsonResponse({
+        correlation_id: "corr_campaign_workflow_evidence",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              task_ref: "task_001",
+              status: "WAITING_FOR_REVIEW",
+              actor_id: "pm_sg_1",
+              recorded_at: "2026-05-21T08:00:00Z",
+              reason_codes: ["TASK_RECORDED"],
+              source_refs: [{ source_type: "BulkReviewCampaignAssignmentTask" }],
+              content_hash: "sha256:task",
+              operating_boundaries: ["NO_CLIENT_CONTACT_WORKFLOW"],
+              transitions: [
+                {
+                  transition_type: "ASSIGNED_FOR_REVIEW",
+                  from_status: "OPEN",
+                  to_status: "WAITING_FOR_REVIEW",
+                },
+              ],
             },
           ],
         },

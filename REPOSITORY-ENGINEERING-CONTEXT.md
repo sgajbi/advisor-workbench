@@ -66,9 +66,10 @@ Current repository posture:
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
    blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
    list, bounded campaign-discovery posture, lifecycle-event evidence posture, preview-readiness
-   posture, launch-history audit posture, and `external_execution_claimed` posture. Workbench must
-   not discover global campaign cohorts, calculate campaign membership or readiness, infer campaign
-   lifecycle state, render campaign content hashes, or operate campaign-definition upsert locally.
+   posture, launch-history audit posture, read-only campaign workflow audit posture, and
+   `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
+   calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
+   maker-checker state, or operate campaign-definition upsert locally.
 10. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,
