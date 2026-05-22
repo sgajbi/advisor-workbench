@@ -5,9 +5,11 @@ import {
   applySandboxChanges,
   buildArchivedDocumentDownloadUrl,
   buildDpmPmOperatingQualityReviewActionCorrelationId,
+  buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   calculateCompositePerformanceTwrClient,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
+  createDpmPmOperatingQualitySummaryInvocation,
   createPortfolioReportBatch,
   createSandboxSession,
   generateDpmConstructionAlternatives,
@@ -29,10 +31,12 @@ import {
   getDpmOutcomeReviews,
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
+  getDpmPmOperatingQualitySummaryInvocation,
   getDpmPortfolioMemory,
   listDpmPmOperatingQualityFairnessAnalyses,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityReviewActions,
+  listDpmPmOperatingQualitySummaryInvocations,
   listDpmPmOperatingQualityScoreRuns,
   getDpmConstructionAlternativeSet,
   getExternalOrderExecutionAcknowledgement,
@@ -59,6 +63,7 @@ import {
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
+  previewDpmPmOperatingQualitySummaryInvocation,
   requestDpmExceptionSummary,
   requestDpmPmOperatingQualitySummary,
   requestDpmOperationsHandoffSummary,
@@ -3072,6 +3077,8 @@ describe("workbench api", () => {
               policy_version: "2026.05",
               score_run_id: "pmq_run_001",
               fairness_analysis_id: "pmq_fair_001",
+              review_action_id: "pmq_review_001",
+              summary_invocation_id: "pmq_summary_001",
             },
             data: { ok: true },
           }),
@@ -3095,6 +3102,14 @@ describe("workbench api", () => {
       limit: 6,
     });
     await getDpmPmOperatingQualityReviewAction("pmq_review_001");
+    await listDpmPmOperatingQualitySummaryInvocations({
+      scoreRunId: "pmq_run_001",
+      reviewActionId: "pmq_review_001",
+      policyId: "pmq_sg_dpm",
+      invocationState: "PENDING_REVIEW",
+      limit: 7,
+    });
+    await getDpmPmOperatingQualitySummaryInvocation("pmq_summary_001");
     await previewDpmPmOperatingQualityScoreRun({
       pmId: "PM_SG_DPM_001",
       policyId: "pmq_sg_dpm",
@@ -3168,6 +3183,38 @@ describe("workbench api", () => {
       },
       actorId: "supervisor_sg_1",
     });
+    await previewDpmPmOperatingQualitySummaryInvocation({
+      request: {
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_001",
+        invocation_state: "PENDING_REVIEW",
+        summary_ref: "PMQ-SUMMARY-pmq_run_001",
+        workflow_pack_name: "pm-operating-quality-summary",
+        workflow_pack_version: "2026.05",
+        workflow_run_id: "wf_pmq_summary_001",
+        summary_artifact_ref: "artifact://pmq-summary/001",
+        summary_content_hash: "sha256:summary-invocation",
+        requested_by: "supervisor_sg_1",
+        source_refs: [],
+      },
+      actorId: "supervisor_sg_1",
+    });
+    await createDpmPmOperatingQualitySummaryInvocation({
+      request: {
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_001",
+        invocation_state: "PENDING_REVIEW",
+        summary_ref: "PMQ-SUMMARY-pmq_run_001",
+        workflow_pack_name: "pm-operating-quality-summary",
+        workflow_pack_version: "2026.05",
+        workflow_run_id: "wf_pmq_summary_001",
+        summary_artifact_ref: "artifact://pmq-summary/001",
+        summary_content_hash: "sha256:summary-invocation",
+        requested_by: "supervisor_sg_1",
+        source_refs: [],
+      },
+      actorId: "supervisor_sg_1",
+    });
     await requestDpmPmOperatingQualitySummary({ scoreRunId: "pmq_run_001" });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -3196,26 +3243,43 @@ describe("workbench api", () => {
     expect(fetchMock.mock.calls[5][0].toString()).toContain(
       "/dpm/command-center/pm-operating-quality/review-actions/pmq_review_001"
     );
-    expect(fetchMock.mock.calls[6][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/preview`
+    expect(fetchMock.mock.calls[6][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/summary-invocations?as_of_date="
     );
-    expect(fetchMock.mock.calls[7][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
+    expect(fetchMock.mock.calls[6][0].toString()).toContain("score_run_id=pmq_run_001");
+    expect(fetchMock.mock.calls[6][0].toString()).toContain("review_action_id=pmq_review_001");
+    expect(fetchMock.mock.calls[6][0].toString()).toContain("policy_id=pmq_sg_dpm");
+    expect(fetchMock.mock.calls[6][0].toString()).toContain("invocation_state=PENDING_REVIEW");
+    expect(fetchMock.mock.calls[6][0].toString()).toContain("limit=7");
+    expect(fetchMock.mock.calls[7][0].toString()).toContain(
+      "/dpm/command-center/pm-operating-quality/summary-invocations/pmq_summary_001"
     );
     expect(fetchMock.mock.calls[8][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses`
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/preview`
     );
     expect(fetchMock.mock.calls[9][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/review-actions/preview`
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses/preview`
     );
     expect(fetchMock.mock.calls[10][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/review-actions`
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/fairness-analyses`
     );
     expect(fetchMock.mock.calls[11][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/review-actions/preview`
+    );
+    expect(fetchMock.mock.calls[12][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/review-actions`
+    );
+    expect(fetchMock.mock.calls[13][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/summary-invocations/preview`
+    );
+    expect(fetchMock.mock.calls[14][0]).toBe(
+      `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/summary-invocations`
+    );
+    expect(fetchMock.mock.calls[15][0]).toBe(
       `${expectedBaseUrl}/dpm/command-center/pm-operating-quality/score-runs/pmq_run_001/ai-summary`
     );
-    expect(fetchMock.mock.calls[11][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const summaryBody = JSON.parse(fetchMock.mock.calls[11][1].body);
+    expect(fetchMock.mock.calls[15][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const summaryBody = JSON.parse(fetchMock.mock.calls[15][1].body);
     expect(summaryBody.requested_outputs).toEqual([
       "score_run_summary",
       "governance_summary",
@@ -3228,33 +3292,41 @@ describe("workbench api", () => {
       "investment_control",
       "cio_office",
     ]);
-    expect(fetchMock.mock.calls[7][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const fairnessBody = JSON.parse(fetchMock.mock.calls[7][1].body);
+    expect(fetchMock.mock.calls[9][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const fairnessBody = JSON.parse(fetchMock.mock.calls[9][1].body);
     expect(fairnessBody.body.policy_id).toBe("pmq_sg_dpm");
     expect(fairnessBody.body.segments).toHaveLength(2);
     expect(fairnessBody.body.minimum_segment_score_run_count).toBeUndefined();
     expect(fairnessBody.body.maximum_average_score_spread).toBeUndefined();
-    expect(fetchMock.mock.calls[8][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
-    const persistedFairnessBody = JSON.parse(fetchMock.mock.calls[8][1].body);
+    expect(fetchMock.mock.calls[10][1].headers["X-Caller-Application"]).toBe("lotus-workbench");
+    const persistedFairnessBody = JSON.parse(fetchMock.mock.calls[10][1].body);
     expect(persistedFairnessBody.body.policy_id).toBe("pmq_sg_dpm");
     expect(persistedFairnessBody.body.segments).toHaveLength(2);
-    expect(fetchMock.mock.calls[9][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
-    expect(fetchMock.mock.calls[10][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
-    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).toMatch(
+    expect(fetchMock.mock.calls[11][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
+    expect(fetchMock.mock.calls[12][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
+    expect(fetchMock.mock.calls[13][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
+    expect(fetchMock.mock.calls[14][1].headers["X-Actor-Id"]).toBe("supervisor_sg_1");
+    expect(fetchMock.mock.calls[11][1].headers["X-Correlation-Id"]).toMatch(
       /^corr-workbench-pm-quality-review-action-/
     );
-    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).toMatch(
+    expect(fetchMock.mock.calls[12][1].headers["X-Correlation-Id"]).toMatch(
       /^corr-workbench-pm-quality-review-action-/
     );
-    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).not.toBe(
+    expect(fetchMock.mock.calls[13][1].headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-summary-invocation-/
+    );
+    expect(fetchMock.mock.calls[14][1].headers["X-Correlation-Id"]).toMatch(
+      /^corr-workbench-pm-quality-summary-invocation-/
+    );
+    expect(fetchMock.mock.calls[11][1].headers["X-Correlation-Id"]).not.toBe(
       "corr-workbench-pm-operating-quality"
     );
-    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).not.toBe(
+    expect(fetchMock.mock.calls[12][1].headers["X-Correlation-Id"]).not.toBe(
       "corr-workbench-pm-operating-quality"
     );
-    expect(fetchMock.mock.calls[9][1].headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
-    expect(fetchMock.mock.calls[10][1].headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
-    const reviewPreviewBody = JSON.parse(fetchMock.mock.calls[9][1].body);
+    expect(fetchMock.mock.calls[13][1].headers["X-Correlation-Id"]).not.toContain("pmq_run_001");
+    expect(fetchMock.mock.calls[14][1].headers["X-Correlation-Id"]).not.toContain("pmq_summary_001");
+    const reviewPreviewBody = JSON.parse(fetchMock.mock.calls[11][1].body);
     expect(reviewPreviewBody.body).toEqual(
       expect.objectContaining({
         target_type: "SCORE_RUN",
@@ -3263,8 +3335,19 @@ describe("workbench api", () => {
         actor_id: "supervisor_sg_1",
       })
     );
-    const reviewCreateBody = JSON.parse(fetchMock.mock.calls[10][1].body);
+    const reviewCreateBody = JSON.parse(fetchMock.mock.calls[12][1].body);
     expect(reviewCreateBody.body).toEqual(reviewPreviewBody.body);
+    const summaryInvocationPreviewBody = JSON.parse(fetchMock.mock.calls[13][1].body);
+    expect(summaryInvocationPreviewBody.body).toEqual(
+      expect.objectContaining({
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_001",
+        summary_ref: "PMQ-SUMMARY-pmq_run_001",
+        requested_by: "supervisor_sg_1",
+      })
+    );
+    const summaryInvocationCreateBody = JSON.parse(fetchMock.mock.calls[14][1].body);
+    expect(summaryInvocationCreateBody.body).toEqual(summaryInvocationPreviewBody.body);
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-preview");
     expect(metricEventsJson).toContain("pm-operating-quality-fairness-analysis-create");
@@ -3275,9 +3358,14 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("pm-operating-quality-review-action-detail");
     expect(metricEventsJson).toContain("pm-operating-quality-review-action-preview");
     expect(metricEventsJson).toContain("pm-operating-quality-review-action-create");
+    expect(metricEventsJson).toContain("pm-operating-quality-summary-invocation-list");
+    expect(metricEventsJson).toContain("pm-operating-quality-summary-invocation-detail");
+    expect(metricEventsJson).toContain("pm-operating-quality-summary-invocation-preview");
+    expect(metricEventsJson).toContain("pm-operating-quality-summary-invocation-create");
     expect(metricEventsJson).not.toContain("pmq_run_001");
     expect(metricEventsJson).not.toContain("pmq_fair_001");
     expect(metricEventsJson).not.toContain("pmq_review_001");
+    expect(metricEventsJson).not.toContain("pmq_summary_001");
   });
 
   it("builds bounded PM-quality review-action correlation ids without source identifiers", () => {
@@ -3288,6 +3376,17 @@ describe("workbench api", () => {
     expect(correlationId).not.toContain("pmq_run_001");
     expect(correlationId).not.toContain("pmq_fair_001");
     expect(correlationId).not.toContain("pmq_review_001");
+    expect(correlationId).not.toContain("PM_SG");
+  });
+
+  it("builds bounded PM-quality summary-invocation correlation ids without source identifiers", () => {
+    const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
+
+    expect(correlationId).toMatch(/^corr-workbench-pm-quality-summary-invocation-/);
+    expect(correlationId).not.toBe("corr-workbench-pm-operating-quality");
+    expect(correlationId).not.toContain("pmq_run_001");
+    expect(correlationId).not.toContain("pmq_review_001");
+    expect(correlationId).not.toContain("pmq_summary_001");
     expect(correlationId).not.toContain("PM_SG");
   });
 

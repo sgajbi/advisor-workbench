@@ -111,6 +111,42 @@ export type PmOperatingQualityReviewActionDetail = {
   operatingBoundaries: string;
 };
 
+export type PmOperatingQualitySummaryInvocationRow = {
+  key: string;
+  summaryInvocationId: string;
+  summaryRef: string;
+  scoreRunId: string;
+  reviewActionId: string;
+  invocationState: string;
+  workflowRunId: string;
+  artifactRef: string;
+  requestedBy: string;
+  asOfDate: string;
+  policy: string;
+  contentHash: string;
+  reasonCodes: string;
+  sourceRefs: string;
+  textBoundary: string;
+};
+
+export type PmOperatingQualitySummaryInvocationDetail = {
+  summaryInvocationId: string;
+  summaryRef: string;
+  scoreRunId: string;
+  reviewActionId: string;
+  invocationState: string;
+  workflowPack: string;
+  workflowRunId: string;
+  artifactRef: string;
+  requestedBy: string;
+  policy: string;
+  sourceRefs: string;
+  reasonCodes: string;
+  contentHash: string;
+  textBoundary: string;
+  operatingBoundaries: string;
+};
+
 export type PmOperatingQualityFairnessDetail = {
   product: string;
   asOfDate: string;
@@ -152,6 +188,7 @@ export type PmOperatingQualityPanelModel = {
   policyVersion: string;
   scoreRunId: string;
   fairnessAnalysisId: string;
+  summaryInvocationId: string;
   count: string;
   reasonCodes: string[];
   blockedActions: string[];
@@ -162,6 +199,7 @@ export type PmOperatingQualityPanelModel = {
   sourceSegmentRows: PmOperatingQualitySourceSegmentRow[];
   fairnessAnalysisRows: PmOperatingQualityFairnessAnalysisRow[];
   reviewActionRows: PmOperatingQualityReviewActionRow[];
+  summaryInvocationRows: PmOperatingQualitySummaryInvocationRow[];
   fairnessSegmentRows: PmOperatingQualityFairnessSegmentRow[];
   selectedFairnessAnalysis: PmOperatingQualityFairnessAnalysisRow | null;
   selectedReviewAction: PmOperatingQualityReviewActionRow | null;
@@ -172,6 +210,7 @@ export type PmOperatingQualityPanelModel = {
   fairnessSpread: string;
   fairnessDetail: PmOperatingQualityFairnessDetail;
   reviewActionDetail: PmOperatingQualityReviewActionDetail;
+  summaryInvocationDetail: PmOperatingQualitySummaryInvocationDetail;
   operationEvidence: PmOperatingQualityOperationEvidence;
   summaryPosture: PmOperatingQualitySummaryPosture;
   summaryRequestReadinessState: string;
@@ -189,12 +228,16 @@ export function buildPmOperatingQualityPanelModel(params: {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
   summary?: DpmPmOperatingQualitySummaryResponse | null;
 }): PmOperatingQualityPanelModel {
   const primary =
     params.summary ??
+    params.summaryInvocationDetail ??
+    params.summaryInvocations ??
     params.fairnessPreview ??
     params.reviewActionDetail ??
     params.reviewActions ??
@@ -219,6 +262,10 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...buildReviewActionRows(params.reviewActionDetail),
     ...buildReviewActionRows(params.reviewActions),
   ].filter(uniqueByReviewActionId);
+  const summaryInvocationRows = [
+    ...buildSummaryInvocationRows(params.summaryInvocationDetail),
+    ...buildSummaryInvocationRows(params.summaryInvocations),
+  ].filter(uniqueBySummaryInvocationId);
   const fairnessAnalysis = readFairnessAnalysis(
     params.fairnessPreview ?? params.fairnessAnalysisDetail ?? params.fairnessAnalyses
   );
@@ -232,6 +279,7 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...scoreRunRows.flatMap((row) => splitList(row.reasonCodes)),
     ...fairnessAnalysisRows.flatMap((row) => splitList(row.reasonCodes)),
     ...reviewActionRows.flatMap((row) => splitList(row.reasonCodes)),
+    ...summaryInvocationRows.flatMap((row) => splitList(row.reasonCodes)),
     ...fairnessSegmentRows.flatMap((row) => splitList(row.reasonCodes)),
   ].filter(uniqueString);
   const blockedActions = supportability?.blocked_actions ?? [];
@@ -273,9 +321,18 @@ export function buildPmOperatingQualityPanelModel(params: {
       readString(fairnessAnalysis, "fairness_analysis_id"),
       selectedFairnessAnalysis?.fairnessAnalysisId,
     ),
+    summaryInvocationId: firstNonEmpty(
+      supportability?.summary_invocation_id,
+      summaryInvocationRows[0]?.summaryInvocationId
+    ),
     count: formatCount(
       supportability?.count,
-      Math.max(scoreRunRows.length, fairnessAnalysisRows.length, reviewActionRows.length)
+      Math.max(
+        scoreRunRows.length,
+        fairnessAnalysisRows.length,
+        reviewActionRows.length,
+        summaryInvocationRows.length
+      )
     ),
     reasonCodes,
     blockedActions,
@@ -286,6 +343,7 @@ export function buildPmOperatingQualityPanelModel(params: {
     sourceSegmentRows: buildSourceSegmentRows(fairnessSegmentRequests),
     fairnessAnalysisRows,
     reviewActionRows,
+    summaryInvocationRows,
     fairnessSegmentRows,
     selectedFairnessAnalysis,
     selectedReviewAction,
@@ -296,6 +354,9 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
     fairnessDetail: buildFairnessDetail(fairnessAnalysis),
     reviewActionDetail: buildReviewActionDetail(readReviewAction(params.reviewActionDetail)),
+    summaryInvocationDetail: buildSummaryInvocationDetail(
+      readSummaryInvocation(params.summaryInvocationDetail)
+    ),
     operationEvidence: buildOperationEvidence({
       policies: params.policies,
       scoreRuns: params.scoreRuns,
@@ -303,6 +364,8 @@ export function buildPmOperatingQualityPanelModel(params: {
       fairnessAnalysisDetail: params.fairnessAnalysisDetail,
       reviewActions: params.reviewActions,
       reviewActionDetail: params.reviewActionDetail,
+      summaryInvocations: params.summaryInvocations,
+      summaryInvocationDetail: params.summaryInvocationDetail,
       preview: params.preview,
       fairnessPreview: params.fairnessPreview,
       summary: params.summary,
@@ -324,6 +387,8 @@ function buildOperationEvidence(params: {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
   summary?: DpmPmOperatingQualitySummaryResponse | null;
@@ -333,6 +398,10 @@ function buildOperationEvidence(params: {
       ? "PM quality support summary"
       : params.fairnessPreview
       ? "Fairness analysis preview"
+      : params.summaryInvocationDetail
+        ? "Summary invocation detail load"
+        : params.summaryInvocations
+          ? "Summary invocation ledger load"
       : params.reviewActionDetail
         ? "Review-action detail load"
         : params.reviewActions
@@ -351,6 +420,8 @@ function buildOperationEvidence(params: {
   const response =
     params.summary ??
     params.fairnessPreview ??
+    params.summaryInvocationDetail ??
+    params.summaryInvocations ??
     params.reviewActionDetail ??
     params.reviewActions ??
     params.fairnessAnalysisDetail ??
@@ -657,6 +728,131 @@ function buildReviewActionDetail(
   };
 }
 
+function buildSummaryInvocationRows(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+): PmOperatingQualitySummaryInvocationRow[] {
+  if (!response) {
+    return [];
+  }
+  const data = asRecord(response.data);
+  const records = extractRecords(data.summary_invocations).length
+    ? extractRecords(data.summary_invocations)
+    : extractRecords(data.items).length
+      ? extractRecords(data.items)
+      : [asRecord(data.summary_invocation)].filter(hasAnySummaryInvocationIdentity);
+  return records.map((record, index) => {
+    const summaryInvocationId =
+      readString(record, "summary_invocation_id") ||
+      response.supportability.summary_invocation_id ||
+      `summary-invocation-${index + 1}`;
+    const policyId = readString(record, "policy_id") || response.supportability.policy_id || "N/A";
+    const policyVersion =
+      readString(record, "policy_version") || response.supportability.policy_version || "N/A";
+    return {
+      key: `${summaryInvocationId}-${index}`,
+      summaryInvocationId,
+      summaryRef: firstNonEmpty(readString(record, "summary_ref"), summaryInvocationId),
+      scoreRunId: firstNonEmpty(
+        readString(record, "score_run_id"),
+        response.supportability.score_run_id
+      ),
+      reviewActionId: firstNonEmpty(
+        readString(record, "review_action_id"),
+        response.supportability.review_action_id
+      ),
+      invocationState: normalizeState(
+        readString(record, "invocation_state") ||
+          readString(record, "state") ||
+          response.supportability.state
+      ),
+      workflowRunId: firstNonEmpty(readString(record, "workflow_run_id")),
+      artifactRef: firstNonEmpty(readString(record, "summary_artifact_ref")),
+      requestedBy: firstNonEmpty(readString(record, "requested_by"), readString(record, "created_by")),
+      asOfDate: firstNonEmpty(
+        readString(record, "as_of_date"),
+        readString(record, "generated_at"),
+        readString(record, "created_at")
+      ),
+      policy: `${policyId} / ${policyVersion}`,
+      contentHash: firstNonEmpty(
+        readString(record, "content_hash"),
+        readString(record, "summary_content_hash")
+      ),
+      reasonCodes: formatList(record.reason_codes),
+      sourceRefs: summarizeSourceRefs(extractRecords(record.source_refs)),
+      textBoundary: formatSummaryTextBoundary(record),
+    };
+  });
+}
+
+function readSummaryInvocation(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+): Record<string, unknown> {
+  return asRecord(asRecord(response?.data).summary_invocation);
+}
+
+function buildSummaryInvocationDetail(
+  summaryInvocation: Record<string, unknown>
+): PmOperatingQualitySummaryInvocationDetail {
+  if (Object.keys(summaryInvocation).length === 0) {
+    return {
+      summaryInvocationId: "N/A",
+      summaryRef: "N/A",
+      scoreRunId: "N/A",
+      reviewActionId: "N/A",
+      invocationState: "N/A",
+      workflowPack: "N/A",
+      workflowRunId: "N/A",
+      artifactRef: "N/A",
+      requestedBy: "N/A",
+      policy: "N/A",
+      sourceRefs: "N/A",
+      reasonCodes: "N/A",
+      contentHash: "N/A",
+      textBoundary:
+        "Generated summary text, prompts, model responses, client communication, orders, and OMS execution are not exposed by Workbench.",
+      operatingBoundaries:
+        "Persisted invocation history only; no summary text, prompt, model response, client communication, order, trade, execution, fill, settlement, or OMS capability is enabled.",
+    };
+  }
+  const policyId = readString(summaryInvocation, "policy_id") || "N/A";
+  const policyVersion = readString(summaryInvocation, "policy_version") || "N/A";
+  return {
+    summaryInvocationId: readString(summaryInvocation, "summary_invocation_id") || "N/A",
+    summaryRef: firstNonEmpty(
+      readString(summaryInvocation, "summary_ref"),
+      readString(summaryInvocation, "summary_invocation_id")
+    ),
+    scoreRunId: firstNonEmpty(readString(summaryInvocation, "score_run_id")),
+    reviewActionId: firstNonEmpty(readString(summaryInvocation, "review_action_id")),
+    invocationState: normalizeState(
+      readString(summaryInvocation, "invocation_state") || readString(summaryInvocation, "state")
+    ),
+    workflowPack:
+      [
+        readString(summaryInvocation, "workflow_pack_name"),
+        readString(summaryInvocation, "workflow_pack_version"),
+      ]
+        .filter(Boolean)
+        .join(" / ") || "N/A",
+    workflowRunId: firstNonEmpty(readString(summaryInvocation, "workflow_run_id")),
+    artifactRef: firstNonEmpty(readString(summaryInvocation, "summary_artifact_ref")),
+    requestedBy: firstNonEmpty(
+      readString(summaryInvocation, "requested_by"),
+      readString(summaryInvocation, "created_by")
+    ),
+    policy: `${policyId} / ${policyVersion}`,
+    sourceRefs: summarizeSourceRefs(extractRecords(summaryInvocation.source_refs)),
+    reasonCodes: formatList(summaryInvocation.reason_codes),
+    contentHash: firstNonEmpty(
+      readString(summaryInvocation, "content_hash"),
+      readString(summaryInvocation, "summary_content_hash")
+    ),
+    textBoundary: formatSummaryTextBoundary(summaryInvocation),
+    operatingBoundaries: formatSummaryInvocationBoundaries(summaryInvocation),
+  };
+}
+
 function extractFairnessSegmentRequests(
   response: DpmPmOperatingQualityGatewayResponse | null
 ): PmOperatingQualityFairnessSegmentRequest[] {
@@ -895,6 +1091,10 @@ function hasAnyReviewActionIdentity(record: Record<string, unknown>) {
   return Boolean(readString(record, "review_action_id"));
 }
 
+function hasAnySummaryInvocationIdentity(record: Record<string, unknown>) {
+  return Boolean(readString(record, "summary_invocation_id"));
+}
+
 function uniqueByFairnessAnalysisId(
   row: PmOperatingQualityFairnessAnalysisRow,
   index: number,
@@ -909,6 +1109,14 @@ function uniqueByReviewActionId(
   rows: PmOperatingQualityReviewActionRow[]
 ) {
   return rows.findIndex((candidate) => candidate.reviewActionId === row.reviewActionId) === index;
+}
+
+function uniqueBySummaryInvocationId(
+  row: PmOperatingQualitySummaryInvocationRow,
+  index: number,
+  rows: PmOperatingQualitySummaryInvocationRow[]
+) {
+  return rows.findIndex((candidate) => candidate.summaryInvocationId === row.summaryInvocationId) === index;
 }
 
 function formatCount(count: number | null | undefined, fallback: number) {
@@ -1001,6 +1209,65 @@ function formatOperatingBoundaries(record: Record<string, unknown>): string {
     return "Supervisory record only; no client communication, HR, conduct, PM ranking, OMS, trade, execution, fills, or settlement capability is enabled.";
   }
   return boundaryIds.map(formatForbiddenUse).join(", ");
+}
+
+function formatSummaryInvocationBoundaries(record: Record<string, unknown>): string {
+  const inherited = formatOperatingBoundaries(record);
+  const textBoundary = formatSummaryTextBoundary(record);
+  if (inherited === "Supervisory record only; no client communication, HR, conduct, PM ranking, OMS, trade, execution, fills, or settlement capability is enabled.") {
+    return `${textBoundary}; persisted invocation evidence only; no generated summary text, prompt, model response, client communication, order, trade, execution, fill, settlement, or OMS capability is enabled.`;
+  }
+  return `${textBoundary}; ${inherited}`;
+}
+
+function formatSummaryTextBoundary(record: Record<string, unknown>): string {
+  const boundary = {
+    ...asRecord(record.text_boundary),
+    ...asRecord(record.summary_text_boundary),
+  };
+  const explicitFlags = [
+    formatBoundaryFlag(boundary, "generated_summary_text_stored", "Generated text stored"),
+    formatBoundaryFlag(boundary, "prompt_body_stored", "Prompt stored"),
+    formatBoundaryFlag(boundary, "model_response_stored", "Model response stored"),
+    formatBoundaryFlag(boundary, "client_communication_projected", "Client communication projected"),
+    formatBoundaryFlag(boundary, "order_or_oms_projected", "Order or OMS projected"),
+  ].filter(Boolean);
+  const boundaryRef = firstNonEmpty(
+    readString(boundary, "boundary_ref"),
+    readString(boundary, "boundary_id"),
+    readString(record, "text_boundary_ref")
+  );
+  if (explicitFlags.length === 0 && boundaryRef === "N/A") {
+    return "Generated summary text, prompts, model responses, client communication, orders, and OMS execution are not exposed by Workbench.";
+  }
+  return [
+    ...explicitFlags,
+    boundaryRef !== "N/A" ? `Boundary ref: ${boundaryRef}` : "",
+  ].filter(Boolean).join("; ");
+}
+
+function formatBoundaryFlag(
+  record: Record<string, unknown>,
+  key: string,
+  label: string
+): string {
+  if (!(key in record)) {
+    return "";
+  }
+  return `${label}: ${formatYesNo(record[key])}`;
+}
+
+function formatYesNo(value: unknown): string {
+  if (value === true) {
+    return "Yes";
+  }
+  if (value === false) {
+    return "No";
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value;
+  }
+  return "N/A";
 }
 
 function summarizeSourceRefs(refs: Array<Record<string, unknown>>): string {

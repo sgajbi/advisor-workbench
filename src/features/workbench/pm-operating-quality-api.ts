@@ -23,6 +23,14 @@ export function buildDpmPmOperatingQualityReviewActionCorrelationId(): string {
   return `corr-workbench-pm-quality-review-action-${randomId}`;
 }
 
+export function buildDpmPmOperatingQualitySummaryInvocationCorrelationId(): string {
+  const randomId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `corr-workbench-pm-quality-summary-invocation-${randomId}`;
+}
+
 function buildDpmPmOperatingQualityCallerHeaders(
   actorId?: string,
   correlationId = "corr-workbench-pm-operating-quality"
@@ -526,6 +534,128 @@ export async function createDpmPmOperatingQualityReviewAction(params: {
           ),
           body: JSON.stringify({ body: params.request }),
         }
+      )
+  );
+}
+
+export type DpmPmOperatingQualitySummaryInvocationRequest = {
+  score_run_id: string;
+  review_action_id: string;
+  invocation_state?: string;
+  summary_ref: string;
+  workflow_pack_name?: string;
+  workflow_pack_version?: string;
+  workflow_run_id?: string;
+  summary_artifact_ref?: string;
+  summary_content_hash?: string;
+  requested_by: string;
+  source_refs?: Array<Record<string, unknown>>;
+};
+
+export async function previewDpmPmOperatingQualitySummaryInvocation(params: {
+  request: DpmPmOperatingQualitySummaryInvocationRequest;
+  actorId?: string;
+  correlationId?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const correlationId =
+    params.correlationId ?? buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.summary-invocations.preview",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          "/dpm/command-center/pm-operating-quality/summary-invocations/preview"
+        ),
+        "preview DPM PM operating quality summary invocation",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(
+            params.actorId ?? params.request.requested_by,
+            correlationId
+          ),
+          body: JSON.stringify({ body: params.request }),
+        }
+      )
+  );
+}
+
+export async function createDpmPmOperatingQualitySummaryInvocation(params: {
+  request: DpmPmOperatingQualitySummaryInvocationRequest;
+  actorId?: string;
+  correlationId?: string;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const correlationId =
+    params.correlationId ?? buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
+  return await observeWorkbenchMutation(
+    "dpm.pm-operating-quality.summary-invocations.create",
+    async () =>
+      await fetchWorkbenchMutation<DpmPmOperatingQualityGatewayResponse>(
+        buildWorkbenchUrl("client", "/dpm/command-center/pm-operating-quality/summary-invocations"),
+        "create DPM PM operating quality summary invocation",
+        {
+          method: "POST",
+          headers: buildDpmPmOperatingQualityCallerHeaders(
+            params.actorId ?? params.request.requested_by,
+            correlationId
+          ),
+          body: JSON.stringify({ body: params.request }),
+        }
+      )
+  );
+}
+
+export async function listDpmPmOperatingQualitySummaryInvocations(params?: {
+  scoreRunId?: string;
+  reviewActionId?: string;
+  policyId?: string;
+  invocationState?: string;
+  asOfDate?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DpmPmOperatingQualityGatewayResponse> {
+  const dpmContext = resolveDefaultDpmContext();
+  const query = new URLSearchParams();
+  query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
+  query.set("limit", String(params?.limit ?? 10));
+  query.set("offset", String(params?.offset ?? 0));
+  if (params?.scoreRunId) {
+    query.set("score_run_id", params.scoreRunId);
+  }
+  if (params?.reviewActionId) {
+    query.set("review_action_id", params.reviewActionId);
+  }
+  if (params?.policyId) {
+    query.set("policy_id", params.policyId);
+  }
+  if (params?.invocationState) {
+    query.set("invocation_state", params.invocationState);
+  }
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.summary-invocations.list",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        "server",
+        "/dpm/command-center/pm-operating-quality/summary-invocations",
+        "DPM PM operating quality summary invocations",
+        query
+      )
+  );
+}
+
+export async function getDpmPmOperatingQualitySummaryInvocation(
+  summaryInvocationId: string,
+  target: WorkbenchRequestTarget = "server"
+): Promise<DpmPmOperatingQualityGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.pm-operating-quality.summary-invocations.get",
+    async () =>
+      await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
+        target,
+        `/dpm/command-center/pm-operating-quality/summary-invocations/${encodeURIComponent(
+          summaryInvocationId
+        )}`,
+        "DPM PM operating quality summary invocation"
       )
   );
 }

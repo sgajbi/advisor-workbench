@@ -495,6 +495,26 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "dpm.pm-operating-quality.review-actions.create",
   },
   {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-summary-invocation-preview",
+    operation: "dpm.pm-operating-quality.summary-invocations.preview",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-summary-invocation-create",
+    operation: "dpm.pm-operating-quality.summary-invocations.create",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-summary-invocation-list",
+    operation: "dpm.pm-operating-quality.summary-invocations.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "pm-operating-quality-summary-invocation-detail",
+    operation: "dpm.pm-operating-quality.summary-invocations.get",
+  },
+  {
     route: "workbench.legacy-advisor",
     panel: "advisor-overview",
     operation: "workbench.overview",

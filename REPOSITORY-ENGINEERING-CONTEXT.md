@@ -98,15 +98,19 @@ Current repository posture:
     `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
     `/score-runs*`, `/fairness-analyses`, `/fairness-analyses/{fairness_analysis_id}`, and
     `/fairness-analyses/preview`, `/review-actions/preview`, `/review-actions`, and
-    `/review-actions/{review_action_id}`, with optional review-gated summary requests through
+    `/review-actions/{review_action_id}`, `/summary-invocations`, and
+    `/summary-invocations/{summary_invocation_id}`, with optional review-gated summary requests through
     Gateway `/score-runs/{score_run_id}/ai-summary`. Workbench renders Manage-owned policy,
     score-run, source-defined segment, fairness-analysis preview/create/list/detail,
-    supervisory review-action preview/create/list/detail, source refs, reason-code,
-    supportability, forbidden-use posture, and Gateway/AI workflow-pack run posture
+    supervisory review-action preview/create/list/detail, persisted summary-invocation history/detail,
+    source refs, reason-code, supportability, forbidden-use posture, artifact/hash posture, and
+    Gateway/AI workflow-pack run posture
     without constructing prompts, calculating PM scores, discovering segments, calculating segment
     averages or governed spreads, inferring protected classes, ranking PMs, creating
     HR/compensation/conduct decisions, approving trades, contacting clients, routing orders, or
-    claiming OMS/execution truth.
+    claiming OMS/execution truth. Summary-invocation rendering does not display generated summary
+    text, prompt bodies, model responses, PM rankings, client-contact instructions, order claims,
+    or OMS claims.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
@@ -234,13 +238,14 @@ Important validation expectations:
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
 16. DPM PM operating quality policy, score-run, score-run summary, score-run preview, create,
-    fairness-analysis preview/create/list/detail, and review-action preview/create/list/detail operations are
-    Workbench gateway-only operations.
+    fairness-analysis preview/create/list/detail, review-action preview/create/list/detail, and
+    summary-invocation preview/create/list/detail operations are Workbench gateway-only operations.
     Observability labels must remain bounded to route, panel, operation, freshness,
     supportability, status class, and error category; policy ids, policy versions, score-run ids,
-    fairness-analysis ids, review-action ids, segment ids, PM ids, book ids, source refs, content
-    hashes, workflow run ids, request bodies, response bodies, score values, and screen content must never be
-    emitted as metric labels.
+    fairness-analysis ids, review-action ids, summary-invocation ids, segment ids, PM ids, book ids,
+    source refs, content hashes, artifact refs, workflow run ids, request bodies, response bodies,
+    generated summary text, prompts, model responses, score values, and screen content must never
+    be emitted as metric labels.
 
 ### Visual Review Gate
 

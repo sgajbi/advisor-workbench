@@ -10,6 +10,7 @@ import {
   getDpmOutcomeReviews,
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
+  getDpmPmOperatingQualitySummaryInvocation,
   getDpmPortfolioMemory,
   getDpmProofPack,
   listDpmCampaignDefinitions,
@@ -23,6 +24,7 @@ import {
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityReviewActions,
   listDpmPmOperatingQualityScoreRuns,
+  listDpmPmOperatingQualitySummaryInvocations,
   listDpmWaves,
 } from "@/features/workbench/api";
 import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
@@ -56,6 +58,14 @@ export type ManageWorkspaceData = {
   > | null;
   pmOperatingQualityReviewActionsError: string | null;
   pmOperatingQualityReviewActionDetailError: string | null;
+  pmOperatingQualitySummaryInvocations: Awaited<
+    ReturnType<typeof listDpmPmOperatingQualitySummaryInvocations>
+  > | null;
+  pmOperatingQualitySummaryInvocationDetail: Awaited<
+    ReturnType<typeof getDpmPmOperatingQualitySummaryInvocation>
+  > | null;
+  pmOperatingQualitySummaryInvocationsError: string | null;
+  pmOperatingQualitySummaryInvocationDetailError: string | null;
   waves: Awaited<ReturnType<typeof listDpmWaves>> | null;
   wavesError: string | null;
   campaignDefinitions: Awaited<ReturnType<typeof listDpmCampaignDefinitions>> | null;
@@ -107,6 +117,7 @@ export async function loadManageWorkspaceData(
     pmQualityScoreRunsResult,
     pmQualityFairnessAnalysesResult,
     pmQualityReviewActionsResult,
+    pmQualitySummaryInvocationsResult,
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
@@ -125,6 +136,7 @@ export async function loadManageWorkspaceData(
     listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
     listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }),
     listDpmPmOperatingQualityReviewActions({ limit: 10 }),
+    listDpmPmOperatingQualitySummaryInvocations({ limit: 10 }),
     getDpmOutcomeReviews({ portfolioId, limit: 10 }),
   ]);
 
@@ -181,6 +193,24 @@ export async function loadManageWorkspaceData(
         error instanceof Error
           ? error.message
           : "PM operating quality review-action detail endpoint unavailable.";
+    }
+  }
+
+  const summaryInvocations = readSettledValue(pmQualitySummaryInvocationsResult);
+  let summaryInvocationDetail: Awaited<
+    ReturnType<typeof getDpmPmOperatingQualitySummaryInvocation>
+  > | null = null;
+  let summaryInvocationDetailError: string | null = null;
+  const summaryInvocationId = readDpmSummaryInvocationId(summaryInvocations?.data ?? null);
+  if (summaryInvocationId) {
+    try {
+      summaryInvocationDetail =
+        await getDpmPmOperatingQualitySummaryInvocation(summaryInvocationId);
+    } catch (error) {
+      summaryInvocationDetailError =
+        error instanceof Error
+          ? error.message
+          : "PM operating quality summary-invocation detail endpoint unavailable.";
     }
   }
 
@@ -244,6 +274,13 @@ export async function loadManageWorkspaceData(
       "PM operating quality review-action list endpoint unavailable."
     ),
     pmOperatingQualityReviewActionDetailError: reviewActionDetailError,
+    pmOperatingQualitySummaryInvocations: summaryInvocations,
+    pmOperatingQualitySummaryInvocationDetail: summaryInvocationDetail,
+    pmOperatingQualitySummaryInvocationsError: readSettledError(
+      pmQualitySummaryInvocationsResult,
+      "PM operating quality summary-invocation list endpoint unavailable."
+    ),
+    pmOperatingQualitySummaryInvocationDetailError: summaryInvocationDetailError,
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
     campaignDefinitions,
@@ -317,6 +354,45 @@ export async function loadManageWorkspaceData(
     proofPack,
     proofPackError,
   };
+}
+
+export function readDpmSummaryInvocationId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (
+    typeof data.summary_invocation_id === "string" &&
+    data.summary_invocation_id.trim().length > 0
+  ) {
+    return data.summary_invocation_id;
+  }
+  const summaryInvocation = data.summary_invocation;
+  if (
+    summaryInvocation &&
+    typeof summaryInvocation === "object" &&
+    !Array.isArray(summaryInvocation)
+  ) {
+    const summaryInvocationId = (summaryInvocation as Record<string, unknown>)
+      .summary_invocation_id;
+    if (typeof summaryInvocationId === "string" && summaryInvocationId.trim().length > 0) {
+      return summaryInvocationId;
+    }
+  }
+  const items = Array.isArray(data.summary_invocations)
+    ? data.summary_invocations
+    : Array.isArray(data.items)
+      ? data.items
+      : [];
+  for (const item of items) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+    const summaryInvocationId = (item as Record<string, unknown>).summary_invocation_id;
+    if (typeof summaryInvocationId === "string" && summaryInvocationId.trim().length > 0) {
+      return summaryInvocationId;
+    }
+  }
+  return null;
 }
 
 export function readDpmReviewActionId(data: Record<string, unknown> | null): string | null {

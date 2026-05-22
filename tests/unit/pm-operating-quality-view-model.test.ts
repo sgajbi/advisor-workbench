@@ -286,6 +286,103 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const summaryInvocations: DpmPmOperatingQualityGatewayResponse = {
+  correlation_id: "corr-summary-invocations",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+    blocked_actions: [],
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    score_run_id: "pmq_run_001",
+    review_action_id: "pmq_review_001",
+    summary_invocation_id: "pmq_summary_001",
+    count: 1,
+  },
+  data: {
+    summary_invocations: [
+      {
+        summary_invocation_id: "pmq_summary_001",
+        summary_ref: "PMQ-SUMMARY-001",
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_001",
+        invocation_state: "PENDING_REVIEW",
+        workflow_run_id: "wf_pmq_summary_001",
+        summary_artifact_ref: "artifact://pmq-summary/001",
+        summary_content_hash: "sha256:summary-invocation",
+        requested_by: "supervisor_sg_1",
+        as_of_date: "2026-05-13",
+        policy_id: "pmq_sg_dpm",
+        policy_version: "2026.05",
+        reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+        text_boundary: {
+          generated_summary_text_stored: false,
+          prompt_body_stored: false,
+          model_response_stored: false,
+          client_communication_projected: false,
+          order_or_oms_projected: false,
+        },
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_product: "PmOperatingQualitySummaryInvocation",
+            source_id: "pmq_summary_001",
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const summaryInvocationDetail: DpmPmOperatingQualityGatewayResponse = {
+  ...summaryInvocations,
+  correlation_id: "corr-summary-invocation-detail",
+  data: {
+    summary_invocation: {
+      summary_invocation_id: "pmq_summary_001",
+      summary_ref: "PMQ-SUMMARY-001",
+      score_run_id: "pmq_run_001",
+      review_action_id: "pmq_review_001",
+      invocation_state: "PENDING_REVIEW",
+      workflow_pack_name: "pm-operating-quality-summary",
+      workflow_pack_version: "2026.05",
+      workflow_run_id: "wf_pmq_summary_001",
+      summary_artifact_ref: "artifact://pmq-summary/001",
+      summary_content_hash: "sha256:summary-invocation",
+      requested_by: "supervisor_sg_1",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+      generated_summary_text: "Raw generated PM summary narrative must stay hidden.",
+      prompt_body: "Prompt body must stay hidden.",
+      model_response: "Model response must stay hidden.",
+      pm_ranking_claim: "PM ranking must stay hidden.",
+      client_contact_instruction: "Contact the client about this summary.",
+      order_instruction: "Generate an OMS order.",
+      text_boundary: {
+        generated_summary_text_stored: false,
+        prompt_body_stored: false,
+        model_response_stored: false,
+        client_communication_projected: false,
+        order_or_oms_projected: false,
+      },
+      forbidden_uses: ["client_contact", "order_generation", "oms_routing"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualitySummaryInvocation",
+          source_id: "pmq_summary_001",
+        },
+      ],
+    },
+  },
+};
+
 const summary: DpmPmOperatingQualitySummaryResponse = {
   correlation_id: "corr-summary",
   contract_version: "v1",
@@ -472,6 +569,54 @@ describe("PM operating quality view model", () => {
     expect(JSON.stringify(model)).not.toContain("sha256:");
     expect(JSON.stringify(model)).not.toContain("raw rationale from Manage");
     expect(JSON.stringify(model)).not.toContain("client approval");
+  });
+
+  it("renders persisted summary-invocation history without exposing generated text or prompts", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      summaryInvocations,
+      summaryInvocationDetail,
+    });
+
+    expect(model.summaryInvocationId).toBe("pmq_summary_001");
+    expect(model.summaryInvocationRows).toHaveLength(1);
+    expect(model.summaryInvocationRows[0]).toEqual(
+      expect.objectContaining({
+        summaryInvocationId: "pmq_summary_001",
+        summaryRef: "PMQ-SUMMARY-001",
+        scoreRunId: "pmq_run_001",
+        reviewActionId: "pmq_review_001",
+        workflowRunId: "wf_pmq_summary_001",
+        artifactRef: "artifact://pmq-summary/001",
+        contentHash: "sha256:summary-invocation",
+      })
+    );
+    expect(model.summaryInvocationDetail).toEqual(
+      expect.objectContaining({
+        summaryInvocationId: "pmq_summary_001",
+        summaryRef: "PMQ-SUMMARY-001",
+        workflowPack: "pm-operating-quality-summary / 2026.05",
+        workflowRunId: "wf_pmq_summary_001",
+        contentHash: "sha256:summary-invocation",
+      })
+    );
+    expect(model.summaryInvocationDetail.textBoundary).toContain("Generated text stored: No");
+    expect(model.summaryInvocationDetail.operatingBoundaries).toContain("Client Contact");
+    expect(model.operationEvidence).toEqual({
+      operation: "Summary invocation detail load",
+      correlationId: "corr-summary-invocation-detail",
+      contractVersion: "v1",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    const rendered = JSON.stringify(model);
+    expect(rendered).not.toContain("Raw generated PM summary narrative");
+    expect(rendered).not.toContain("Prompt body must stay hidden");
+    expect(rendered).not.toContain("Model response must stay hidden");
+    expect(rendered).not.toContain("PM ranking must stay hidden");
+    expect(rendered).not.toContain("Contact the client");
+    expect(rendered).not.toContain("Generate an OMS order");
   });
 
   it("renders fairness preview as review-required evidence without client-side analysis", () => {
