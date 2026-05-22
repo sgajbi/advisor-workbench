@@ -444,6 +444,8 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
+    expect(screen.getByLabelText("Target id")).toHaveValue("pmq_run_001");
+    expect(screen.getAllByText("pmq_run_001 / PM_SG_001").length).toBeGreaterThan(0);
     expect(
       screen.getByLabelText("PM operating quality summary-invocation control")
     ).toBeInTheDocument();
@@ -452,6 +454,11 @@ describe("PmOperatingQualityPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Summary Invocation" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Summary Invocation" })).toBeDisabled();
+    expect(screen.getByLabelText("Score run id")).toHaveValue("pmq_run_001");
+    expect(screen.getByLabelText("Review action id")).toHaveValue("pmq_review_001");
+    expect(
+      screen.getByText("pmq_review_001 | Score Run / pmq_run_001 | PENDING_REVIEW")
+    ).toBeInTheDocument();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);

@@ -3,6 +3,7 @@
 import { ActionButton, MetricRow, Text } from "@/design-system";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import type {
+  PmQualityCommandOption,
   PmQualitySummaryInvocationEvidence,
   PmQualitySummaryInvocationForm,
 } from "@/features/workbench/pm-operating-quality-actions";
@@ -14,6 +15,8 @@ type Props = {
   pendingPreview: boolean;
   pendingCreate: boolean;
   createEvidence: PmQualitySummaryInvocationEvidence | null;
+  scoreRunOptions: PmQualityCommandOption[];
+  reviewActionOptions: PmQualityCommandOption[];
   onFormChange: (field: keyof PmQualitySummaryInvocationForm, value: string) => void;
   onPreview: () => void;
   onCreate: () => void;
@@ -26,6 +29,8 @@ export default function PmOperatingQualitySummaryInvocationControl({
   pendingPreview,
   pendingCreate,
   createEvidence,
+  scoreRunOptions,
+  reviewActionOptions,
   onFormChange,
   onPreview,
   onCreate,
@@ -53,21 +58,41 @@ export default function PmOperatingQualitySummaryInvocationControl({
         </label>
         <label className="workbench-field-label" htmlFor="pm-quality-summary-score-run">
           Score run id
-          <input
+          <select
             id="pm-quality-summary-score-run"
             className="workbench-input"
             value={form.scoreRunId}
             onChange={(event) => onFormChange("scoreRunId", event.target.value)}
-          />
+          >
+            {scoreRunOptions.some((option) => option.value === form.scoreRunId) ? null : (
+              <option value={form.scoreRunId}>{form.scoreRunId || "Select score run"}</option>
+            )}
+            {scoreRunOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="workbench-field-label" htmlFor="pm-quality-summary-review-action">
           Review action id
-          <input
+          <select
             id="pm-quality-summary-review-action"
             className="workbench-input"
             value={form.reviewActionId}
             onChange={(event) => onFormChange("reviewActionId", event.target.value)}
-          />
+          >
+            {reviewActionOptions.some((option) => option.value === form.reviewActionId) ? null : (
+              <option value={form.reviewActionId}>
+                {form.reviewActionId || "Select review action"}
+              </option>
+            )}
+            {reviewActionOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="workbench-field-label" htmlFor="pm-quality-summary-state">
           Invocation state
@@ -142,6 +167,20 @@ export default function PmOperatingQualitySummaryInvocationControl({
         aria-label="PM operating quality summary-invocation readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
+        <MetricRow
+          label="Score-Run Source"
+          value={
+            scoreRunOptions.find((option) => option.value === form.scoreRunId)?.detail ??
+            "No Gateway-returned score run selected"
+          }
+        />
+        <MetricRow
+          label="Review-Action Source"
+          value={
+            reviewActionOptions.find((option) => option.value === form.reviewActionId)?.detail ??
+            "No Gateway-returned review action selected"
+          }
+        />
         <MetricRow
           label="Create Control"
           value={

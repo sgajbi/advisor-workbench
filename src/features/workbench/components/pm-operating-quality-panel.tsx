@@ -79,6 +79,9 @@ export default function PmOperatingQualityPanel({
     summaryInvocationCreateEvidence,
     reviewActionForm,
     summaryInvocationForm,
+    reviewActionTargetOptions,
+    summaryInvocationScoreRunOptions,
+    summaryInvocationReviewActionOptions,
     reviewActionReadiness,
     summaryInvocationReadiness,
     reviewActionPreviewReady,
@@ -199,6 +202,7 @@ export default function PmOperatingQualityPanel({
         pendingPreview={pendingReviewActionPreview}
         pendingCreate={pendingReviewActionCreate}
         createEvidence={reviewActionCreateEvidence}
+        targetOptions={reviewActionTargetOptions}
         onFormChange={setReviewActionFormValue}
         onPreview={previewReviewAction}
         onCreate={createReviewAction}
@@ -212,6 +216,8 @@ export default function PmOperatingQualityPanel({
         pendingPreview={pendingSummaryInvocationPreview}
         pendingCreate={pendingSummaryInvocationCreate}
         createEvidence={summaryInvocationCreateEvidence}
+        scoreRunOptions={summaryInvocationScoreRunOptions}
+        reviewActionOptions={summaryInvocationReviewActionOptions}
         onFormChange={setSummaryInvocationFormValue}
         onPreview={previewSummaryInvocation}
         onCreate={createSummaryInvocation}

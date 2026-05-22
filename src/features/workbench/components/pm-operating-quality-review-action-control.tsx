@@ -3,6 +3,7 @@
 import { ActionButton, MetricRow, Text } from "@/design-system";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import type {
+  PmQualityReviewTargetOption,
   PmQualityReviewActionEvidence,
   PmQualityReviewActionForm,
 } from "@/features/workbench/pm-operating-quality-actions";
@@ -14,6 +15,7 @@ type Props = {
   pendingPreview: boolean;
   pendingCreate: boolean;
   createEvidence: PmQualityReviewActionEvidence | null;
+  targetOptions: PmQualityReviewTargetOption[];
   onFormChange: (field: keyof PmQualityReviewActionForm, value: string) => void;
   onPreview: () => void;
   onCreate: () => void;
@@ -26,10 +28,15 @@ export default function PmOperatingQualityReviewActionControl({
   pendingPreview,
   pendingCreate,
   createEvidence,
+  targetOptions,
   onFormChange,
   onPreview,
   onCreate,
 }: Props) {
+  const visibleTargetOptions = targetOptions.filter(
+    (option) => option.targetType === form.targetType
+  );
+
   return (
     <div
       className="pm-quality-review-action-form"
@@ -65,12 +72,21 @@ export default function PmOperatingQualityReviewActionControl({
         </label>
         <label className="workbench-field-label" htmlFor="pm-quality-review-target-id">
           Target id
-          <input
+          <select
             id="pm-quality-review-target-id"
             className="workbench-input"
             value={form.targetId}
             onChange={(event) => onFormChange("targetId", event.target.value)}
-          />
+          >
+            {visibleTargetOptions.some((option) => option.value === form.targetId) ? null : (
+              <option value={form.targetId}>{form.targetId || "Select target"}</option>
+            )}
+            {visibleTargetOptions.map((option) => (
+              <option key={`${option.targetType}-${option.value}`} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="workbench-field-label" htmlFor="pm-quality-review-action-type">
           Action type
@@ -123,6 +139,13 @@ export default function PmOperatingQualityReviewActionControl({
         aria-label="PM operating quality review-action readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
+        <MetricRow
+          label="Source Target"
+          value={
+            visibleTargetOptions.find((option) => option.value === form.targetId)?.detail ??
+            "No Gateway-returned target selected"
+          }
+        />
         <MetricRow
           label="Create Control"
           value={

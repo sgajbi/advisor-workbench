@@ -5,6 +5,7 @@ import PmOperatingQualityReviewActionControl from "@/features/workbench/componen
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type {
+  PmQualityReviewTargetOption,
   PmQualityReviewActionEvidence,
   PmQualityReviewActionForm,
 } from "@/features/workbench/pm-operating-quality-actions";
@@ -18,6 +19,7 @@ type Props = {
   pendingPreview?: boolean;
   pendingCreate?: boolean;
   createEvidence?: PmQualityReviewActionEvidence | null;
+  targetOptions?: PmQualityReviewTargetOption[];
   onFormChange?: (field: keyof PmQualityReviewActionForm, value: string) => void;
   onPreview?: () => void;
   onCreate?: () => void;
@@ -31,6 +33,7 @@ export default function PmOperatingQualityReviewActionsCard({
   pendingPreview = false,
   pendingCreate = false,
   createEvidence = null,
+  targetOptions = [],
   onFormChange,
   onPreview,
   onCreate,
@@ -47,6 +50,7 @@ export default function PmOperatingQualityReviewActionsCard({
           pendingPreview={pendingPreview}
           pendingCreate={pendingCreate}
           createEvidence={createEvidence}
+          targetOptions={targetOptions}
           onFormChange={onFormChange}
           onPreview={onPreview}
           onCreate={onCreate}

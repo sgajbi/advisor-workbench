@@ -28,9 +28,11 @@ import {
   readPmQualityReviewActionId,
   readPmQualitySummaryInvocationId,
   type PmQualityActionError,
+  type PmQualityCommandOption,
   type PmQualityFairnessCreateEvidence,
   type PmQualityReviewActionEvidence,
   type PmQualityReviewActionForm,
+  type PmQualityReviewTargetOption,
   type PmQualitySummaryInvocationEvidence,
   type PmQualitySummaryInvocationForm,
 } from "@/features/workbench/pm-operating-quality-actions";
@@ -71,6 +73,9 @@ type UsePmOperatingQualityActionsResult = {
   summaryInvocationCreateEvidence: PmQualitySummaryInvocationEvidence | null;
   reviewActionForm: PmQualityReviewActionForm;
   summaryInvocationForm: PmQualitySummaryInvocationForm;
+  reviewActionTargetOptions: PmQualityReviewTargetOption[];
+  summaryInvocationScoreRunOptions: PmQualityCommandOption[];
+  summaryInvocationReviewActionOptions: PmQualityCommandOption[];
   reviewActionReadiness: { state: string; detail: string };
   summaryInvocationReadiness: { state: string; detail: string };
   reviewActionPreviewReady: boolean;
@@ -166,6 +171,9 @@ export function usePmOperatingQualityActions({
     blockedActions: model.blockedActions,
   });
   const reviewActionPreviewReady = Boolean(reviewActionPreviewResponse);
+  const reviewActionTargetOptions = buildReviewActionTargetOptions(model);
+  const summaryInvocationScoreRunOptions = buildSummaryInvocationScoreRunOptions(model);
+  const summaryInvocationReviewActionOptions = buildSummaryInvocationReviewActionOptions(model);
   const defaultSummaryInvocationTarget = resolveSummaryInvocationTarget(model);
   const [summaryInvocationForm, setSummaryInvocationForm] =
     useState<PmQualitySummaryInvocationForm>(() => ({
@@ -189,7 +197,25 @@ export function usePmOperatingQualityActions({
   const summaryInvocationPreviewReady = Boolean(summaryInvocationPreviewResponse);
 
   function setReviewActionFormValue(field: keyof PmQualityReviewActionForm, value: string) {
-    setReviewActionForm((current) => ({ ...current, [field]: value }));
+    setReviewActionForm((current) => {
+      if (field === "targetType") {
+        const targetId = resolveDefaultReviewTargetId(model, value) || current.targetId;
+        return {
+          ...current,
+          targetType: value,
+          targetId,
+          reviewActionRef: buildReviewActionRef(targetId, current.reviewActionRef),
+        };
+      }
+      if (field === "targetId") {
+        return {
+          ...current,
+          targetId: value,
+          reviewActionRef: buildReviewActionRef(value, current.reviewActionRef),
+        };
+      }
+      return { ...current, [field]: value };
+    });
     setReviewActionPreviewResponse(null);
     setCreatedReviewActionResponse(null);
     setReviewActionCreateEvidence(null);
@@ -199,7 +225,16 @@ export function usePmOperatingQualityActions({
     field: keyof PmQualitySummaryInvocationForm,
     value: string
   ) {
-    setSummaryInvocationForm((current) => ({ ...current, [field]: value }));
+    setSummaryInvocationForm((current) => {
+      if (field === "scoreRunId") {
+        return {
+          ...current,
+          scoreRunId: value,
+          summaryRef: buildSummaryInvocationRef(value, current.summaryRef),
+        };
+      }
+      return { ...current, [field]: value };
+    });
     setSummaryInvocationPreviewResponse(null);
     setCreatedSummaryInvocationResponse(null);
     setSummaryInvocationCreateEvidence(null);
@@ -516,6 +551,9 @@ export function usePmOperatingQualityActions({
     summaryInvocationCreateEvidence,
     reviewActionForm,
     summaryInvocationForm,
+    reviewActionTargetOptions,
+    summaryInvocationScoreRunOptions,
+    summaryInvocationReviewActionOptions,
     reviewActionReadiness,
     summaryInvocationReadiness,
     reviewActionPreviewReady,
@@ -575,6 +613,83 @@ function resolveSummaryInvocationTarget(model: PmOperatingQualityPanelModel): {
     reviewActionId,
     summaryRef: scoreRunId ? `PMQ-SUMMARY-${scoreRunId}` : "PMQ-SUMMARY",
   };
+}
+
+function buildReviewActionTargetOptions(
+  model: PmOperatingQualityPanelModel
+): PmQualityReviewTargetOption[] {
+  return [
+    ...model.scoreRunRows
+      .filter((row) => row.scoreRunId !== "N/A")
+      .map((row) => ({
+        targetType: "SCORE_RUN",
+        value: row.scoreRunId,
+        label: `${row.scoreRunId} / ${row.pmId}`,
+        detail: `${row.bookId} | ${row.state} | ${row.asOfDate}`,
+      })),
+    ...model.fairnessAnalysisRows
+      .filter((row) => row.fairnessAnalysisId !== "N/A")
+      .map((row) => ({
+        targetType: "FAIRNESS_ANALYSIS",
+        value: row.fairnessAnalysisId,
+        label: row.fairnessAnalysisId,
+        detail: `${row.state} | ${row.policy} | ${row.asOfDate}`,
+      })),
+  ];
+}
+
+function buildSummaryInvocationScoreRunOptions(
+  model: PmOperatingQualityPanelModel
+): PmQualityCommandOption[] {
+  return model.scoreRunRows
+    .filter((row) => row.scoreRunId !== "N/A")
+    .map((row) => ({
+      value: row.scoreRunId,
+      label: `${row.scoreRunId} / ${row.pmId}`,
+      detail: `${row.bookId} | ${row.state} | ${row.asOfDate}`,
+    }));
+}
+
+function buildSummaryInvocationReviewActionOptions(
+  model: PmOperatingQualityPanelModel
+): PmQualityCommandOption[] {
+  return model.reviewActionRows
+    .filter((row) => row.reviewActionId !== "N/A")
+    .map((row) => ({
+      value: row.reviewActionId,
+      label: row.reviewActionRef,
+      detail: `${row.reviewActionId} | ${row.target} | ${row.actionState}`,
+    }));
+}
+
+function resolveDefaultReviewTargetId(
+  model: PmOperatingQualityPanelModel,
+  targetType: string
+): string {
+  return (
+    buildReviewActionTargetOptions(model).find((option) => option.targetType === targetType)
+      ?.value ?? ""
+  );
+}
+
+function buildReviewActionRef(targetId: string, currentRef: string): string {
+  if (!targetId.trim()) {
+    return currentRef;
+  }
+  if (!currentRef.trim() || currentRef.startsWith("PMQ-REVIEW-")) {
+    return `PMQ-REVIEW-${targetId.trim()}`;
+  }
+  return currentRef;
+}
+
+function buildSummaryInvocationRef(scoreRunId: string, currentRef: string): string {
+  if (!scoreRunId.trim()) {
+    return currentRef;
+  }
+  if (!currentRef.trim() || currentRef.startsWith("PMQ-SUMMARY-")) {
+    return `PMQ-SUMMARY-${scoreRunId.trim()}`;
+  }
+  return currentRef;
 }
 
 function resolveReviewActionReadiness(params: {

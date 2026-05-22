@@ -21,6 +21,16 @@ export type PmQualityReviewActionEvidence = {
   upstreamStatus: string;
 };
 
+export type PmQualityCommandOption = {
+  value: string;
+  label: string;
+  detail: string;
+};
+
+export type PmQualityReviewTargetOption = PmQualityCommandOption & {
+  targetType: string;
+};
+
 export type PmQualitySummaryInvocationEvidence = {
   summaryInvocationId: string;
   correlationId: string;
