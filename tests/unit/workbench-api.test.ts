@@ -38,6 +38,7 @@ import {
   getDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualitySummaryInvocation,
   getDpmPortfolioMemory,
+  searchDpmPortfolioMemory,
   listDpmPmOperatingQualityFairnessAnalyses,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityReviewActions,
@@ -2940,18 +2941,80 @@ describe("workbench api", () => {
     await getDpmOutcomeReviews({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       state: "READY",
+      sourceSystem: "lotus-performance",
+      sourceType: "PortfolioRealizedTaxSummary:v1",
+      sourceScanLimit: 250,
       limit: 5,
+      offset: 10,
       cursor: "cursor_1",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=5&state=READY&cursor=cursor_1"
+      "/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=5&state=READY&source_system=lotus-performance&source_type=PortfolioRealizedTaxSummary%3Av1&source_scan_limit=250&offset=10&cursor=cursor_1"
     );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("outcome-review-list");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("or_1");
+  });
+
+  it("loads bounded DPM portfolio-memory source search without leaking source ids into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-memory-search",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0040/RFC-0041/RFC-0042",
+              state: "READY",
+              event_count: 1,
+              event_type_counts: { OUTCOME_REVIEW_SOURCE_LINEAGE_RECORDED: 1 },
+              source_systems: ["lotus-performance"],
+              source_system_counts: { "lotus-performance": 1 },
+              source_type_counts: { "PortfolioRealizedTaxSummary:v1": 1 },
+              reason_codes: ["PERSISTED_LINEAGE_SEARCH_ONLY"],
+              content_hash: "sha256:memory-search",
+            },
+            data: {
+              items: [
+                {
+                  event_id: "memory:tax:PMTAX_001",
+                  source_system: "lotus-performance",
+                  source_type: "PortfolioRealizedTaxSummary:v1",
+                  source_id: "PMTAX_001",
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await searchDpmPortfolioMemory({
+      portfolioIds: ["PB_SG_GLOBAL_BAL_001"],
+      sourceSystem: "lotus-performance",
+      sourceType: "PortfolioRealizedTaxSummary:v1",
+      sourceScanLimit: 250,
+      limit: 5,
+      offset: 0,
+    });
+
+    const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/v1/dpm/command-center/portfolio-memory/search?portfolio_ids=PB_SG_GLOBAL_BAL_001&source_system=lotus-performance&source_type=PortfolioRealizedTaxSummary%3Av1&limit=5&offset=0&source_scan_limit=250"
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("dpm.portfolio-memory.search");
+    expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(metricEventsJson).not.toContain("PMTAX_001");
+    expect(metricEventsJson).not.toContain("sha256:memory-search");
   });
 
   it("loads DPM report and AI handoff inputs through gateway-only client endpoints", async () => {

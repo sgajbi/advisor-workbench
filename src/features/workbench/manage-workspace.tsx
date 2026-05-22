@@ -174,7 +174,9 @@ function renderManageMode(
       return (
         <PortfolioMemoryPanel
           response={data.portfolioMemory}
+          searchResponse={data.portfolioMemorySearch}
           errorMessage={data.portfolioMemoryError}
+          sourceSearchErrorMessage={data.portfolioMemorySearchError}
         />
       );
     case "quality":

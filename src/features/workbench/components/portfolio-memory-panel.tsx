@@ -29,11 +29,18 @@ import PortfolioMemoryTimelineCard from "@/features/workbench/components/portfol
 
 type Props = {
   response: DpmPortfolioMemoryGatewayResponse | null;
+  searchResponse?: DpmPortfolioMemoryGatewayResponse | null;
   errorMessage?: string | null;
+  sourceSearchErrorMessage?: string | null;
 };
 
-export default function PortfolioMemoryPanel({ response, errorMessage = null }: Props) {
-  const model = buildPortfolioMemoryPanelModel(response);
+export default function PortfolioMemoryPanel({
+  response,
+  searchResponse = null,
+  errorMessage = null,
+  sourceSearchErrorMessage = null,
+}: Props) {
+  const model = buildPortfolioMemoryPanelModel(response, searchResponse);
   const [activeEventType, setActiveEventType] = useState<string>("ALL");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const filteredEvents = useMemo(
@@ -88,6 +95,25 @@ export default function PortfolioMemoryPanel({ response, errorMessage = null }: 
               {formatBusinessReason(reason)}
             </SemanticBadge>
           ))}
+        </div>
+      ) : null}
+
+      {model.sourceFacetRows.length > 0 || model.sourceBoundaryRows.length > 0 ? (
+        <div className="portfolio-memory-status-strip" aria-label="Portfolio memory source facets">
+          {model.sourceFacetRows.slice(0, 4).map((row) => (
+            <MetricRow
+              key={row.key}
+              label={row.family === "system" ? "Source Owner" : "Source Type"}
+              value={`${row.label} (${row.count})`}
+            />
+          ))}
+          {model.sourceBoundaryRows.slice(0, 2).map((boundary) => (
+            <MetricRow key={boundary} label="Search Boundary" value={boundary} />
+          ))}
+        </div>
+      ) : sourceSearchErrorMessage ? (
+        <div className="portfolio-memory-reason-row">
+          <SemanticBadge tone="warn">Source-family posture unavailable</SemanticBadge>
         </div>
       ) : null}
 

@@ -26,6 +26,7 @@ import {
   listDpmPmOperatingQualityScoreRuns,
   listDpmPmOperatingQualitySummaryInvocations,
   listDpmWaves,
+  searchDpmPortfolioMemory,
 } from "@/features/workbench/api";
 import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
 
@@ -37,7 +38,9 @@ export type ManageWorkspaceData = {
   mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null;
   commandCenterError: string | null;
   portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null;
+  portfolioMemorySearch: Awaited<ReturnType<typeof searchDpmPortfolioMemory>> | null;
   portfolioMemoryError: string | null;
+  portfolioMemorySearchError: string | null;
   pmOperatingQualityPolicies: Awaited<ReturnType<typeof listDpmPmOperatingQualityPolicies>> | null;
   pmOperatingQualityPoliciesError: string | null;
   pmOperatingQualityScoreRuns: Awaited<ReturnType<typeof listDpmPmOperatingQualityScoreRuns>> | null;
@@ -105,6 +108,7 @@ export async function loadManageWorkspaceData(
     exceptionsResult,
     mandateResult,
     memoryResult,
+    memorySearchResult,
     wavesResult,
     campaignDefinitionsResult,
     campaignDiscoveryResult,
@@ -124,6 +128,7 @@ export async function loadManageWorkspaceData(
     getDpmCommandCenterExceptions({ state: "ACTIVE", limit: 25 }),
     getDpmMandateByPortfolio(portfolioId),
     getDpmPortfolioMemory({ portfolioId, limit: 100 }),
+    searchDpmPortfolioMemory({ portfolioIds: [portfolioId], limit: 10, sourceScanLimit: 250 }),
     listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
     listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
     listDpmCampaignDiscovery({ campaignStatus: "ACTIVE", limit: 10 }),
@@ -246,9 +251,14 @@ export async function loadManageWorkspaceData(
       "Mandate readiness is temporarily unavailable."
     ),
     portfolioMemory: readSettledValue(memoryResult),
+    portfolioMemorySearch: readSettledValue(memorySearchResult),
     portfolioMemoryError: readSettledError(
       memoryResult,
       "Portfolio-memory endpoint unavailable."
+    ),
+    portfolioMemorySearchError: readSettledError(
+      memorySearchResult,
+      "Portfolio-memory source-family search endpoint unavailable."
     ),
     pmOperatingQualityPolicies: readSettledValue(pmQualityPoliciesResult),
     pmOperatingQualityPoliciesError: readSettledError(

@@ -237,16 +237,22 @@ The implemented panel:
 
 1. consumes only Gateway
    `GET /api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`,
-2. renders manage-owned supportability state, event count, event type counts, source systems,
-   reason codes, and content hash,
-3. preserves upstream event order, event type, event time, source refs, artifact refs, and reason
+2. consumes only Gateway `GET /api/v1/dpm/command-center/portfolio-memory/search` for bounded
+   Manage-local source-family posture over persisted memory lineage,
+3. renders manage-owned supportability state, event count, event type counts, source systems,
+   source-system/source-type facets, support boundary, reason codes, and content hash,
+4. preserves upstream event order, event type, event time, source refs, artifact refs, and reason
    codes,
-4. shows empty, partial, degraded, unsupported, unavailable, and error states explicitly,
-5. emits bounded `dpm.portfolio-memory.get` observability without portfolio ids, event ids, content
-   hashes, source refs, request payloads, response payloads, or screen content as metric labels,
-6. must not call `lotus-manage` directly,
-7. must not reconstruct timeline nodes from proof-pack, wave, outcome-review, report, archive, or
-   AI responses.
+5. shows empty, partial, degraded, unsupported, unavailable, and error states explicitly,
+6. emits bounded `dpm.portfolio-memory.get` and `dpm.portfolio-memory.search` observability without
+   portfolio ids, event ids, source ids, content hashes, source refs, request payloads, response
+   payloads, or screen content as metric labels,
+7. must not call `lotus-manage` directly,
+8. must not reconstruct timeline nodes from proof-pack, wave, outcome-review, report, archive, or
+   AI responses,
+9. must not query source-owner stores, discover the global portfolio universe, run cross-app
+   source-event search, or claim OMS execution, fills, settlement, or client communication
+   workflow.
 
 This panel is intentionally read-only in the current slice. Dedicated timeline filters, event
 detail drawers, retention/audit policy controls, cross-app lifecycle export, and client-demo
@@ -554,7 +560,9 @@ Implementation note as of 2026-05-05: the first RFC-0042 outcome-review realizat
 bounded analytics UI observability surfaces, deterministic view-model normalization, and a
 portfolio-linked panel that renders manage-owned review state, dimension rows, lineage rows,
 snapshot hashes, supportability reasons, blocked actions, report handoff posture, and
-Gateway-backed governed AI narrative request posture. Workbench does not call `lotus-ai` or
+Gateway-backed governed AI narrative request posture. Workbench now also renders Manage-published
+applied source-lineage filters, source-owner counts, source-type counts, and support boundary in a
+read-only posture. Workbench does not call `lotus-ai` or
 construct prompts; the narrative action uses Gateway
 `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`, which composes
 manage-owned AI evidence with `lotus-ai` workflow-pack execution. Dedicated `/dpm/outcomes`

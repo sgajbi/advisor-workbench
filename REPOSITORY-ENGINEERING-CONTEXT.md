@@ -76,13 +76,19 @@ Current repository posture:
     supportability, objective/constraint traces, and selected-alternative state, and must not build
     stateless source bundles, optimizer logic, prices, or selection truth in the browser.
 11. Manage `mode=memory` renders the RFC40-WTBD-010 portfolio-memory panel through Gateway
-    `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`, preserving manage-owned
-    timeline order, event type counts, source systems, source refs, artifact refs, reason codes,
-    supportability state, and content hash without reconstructing timeline nodes locally.
+    `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` and bounded source-family
+    posture through Gateway `/api/v1/dpm/command-center/portfolio-memory/search`, preserving
+    manage-owned timeline order, event type counts, source systems, source-system/source-type
+    facets, source refs, artifact refs, applied filters, reason codes, supportability state,
+    support boundary, and content hash without reconstructing timeline nodes locally, querying
+    source-owner stores, discovering the global portfolio universe, or running cross-app
+    source-event search.
 12. Manage `mode=reviews` renders the RFC-0042 DPM outcome-review panel from Gateway
     `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
-    dimensions, source lineage, supportability, report-input posture, AI-evidence posture, and
-    Gateway-backed governed AI narrative requests without client-side outcome calculation.
+    dimensions, source lineage, source-owner/source-type facets, applied source-lineage filters,
+    support boundary, supportability, report-input posture, AI-evidence posture, and
+    Gateway-backed governed AI narrative requests without client-side outcome calculation or
+    source-owner store querying.
     Manage-owned `client_communication_boundary` posture is rendered as a no-client-communication
     boundary when present; Workbench must not create client messaging, approval, delivery, or
     communication-audit workflows from outcome-review evidence.

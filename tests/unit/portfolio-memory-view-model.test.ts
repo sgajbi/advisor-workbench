@@ -91,6 +91,65 @@ describe("portfolio-memory view model", () => {
     expect(JSON.stringify(model.recommendedActions)).not.toContain("client preference");
   });
 
+  it("preserves bounded source-family search facets without changing timeline authority", () => {
+    const model = buildPortfolioMemoryPanelModel(memoryResponse, {
+      ...memoryResponse,
+      supportability: {
+        ...memoryResponse.supportability,
+        event_count: 2,
+        event_type_counts: { OUTCOME_REVIEW_SOURCE_LINEAGE_RECORDED: 2 },
+        source_systems: ["lotus-performance"],
+        source_system_counts: { "lotus-performance": 2 },
+        source_type_counts: {
+          "PortfolioRealizedTaxSummary:v1": 1,
+          "PortfolioCashMovementSummary:v1": 1,
+        },
+        reason_codes: ["PERSISTED_LINEAGE_SEARCH_ONLY"],
+        content_hash: "sha256:memory-search",
+      },
+      data: {
+        support_boundary: {
+          manage_persisted_lineage_only: true,
+          source_owner_store_query: false,
+          global_portfolio_discovery: false,
+        },
+        items: [
+          {
+            event_id: "memory:tax:PMTAX_001",
+            source_id: "PMTAX_001",
+          },
+        ],
+      },
+    });
+
+    expect(model.events.map((row) => row.eventId)).toEqual([
+      "memory:proof-pack:ppack_1",
+      "memory:outcome-review:or_1",
+    ]);
+    expect(model.sourceFacetRows).toEqual([
+      {
+        key: "system-lotus-performance",
+        label: "lotus-performance",
+        count: "2",
+        family: "system",
+      },
+      {
+        key: "type-PortfolioRealizedTaxSummary:v1",
+        label: "PortfolioRealizedTaxSummary:v1",
+        count: "1",
+        family: "type",
+      },
+      {
+        key: "type-PortfolioCashMovementSummary:v1",
+        label: "PortfolioCashMovementSummary:v1",
+        count: "1",
+        family: "type",
+      },
+    ]);
+    expect(model.sourceBoundaryRows).toContain("Source Owner Store Query: No");
+    expect(JSON.stringify(model)).not.toContain("PMTAX_001");
+  });
+
   it("does not infer readiness from populated events when manage supportability is partial", () => {
     const model = buildPortfolioMemoryPanelModel({
       ...memoryResponse,

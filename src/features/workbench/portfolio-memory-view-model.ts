@@ -44,6 +44,13 @@ export type PortfolioMemoryDetailMetric = {
   value: string;
 };
 
+export type PortfolioMemorySourceFacetRow = {
+  key: string;
+  label: string;
+  count: string;
+  family: "system" | "type";
+};
+
 export type PortfolioMemoryPanelModel = {
   state: PortfolioMemoryPanelState;
   supportabilityState: string;
@@ -64,6 +71,8 @@ export type PortfolioMemoryPanelModel = {
   memoryCoverage: string;
   openFollowUps: string;
   evidenceLinks: string;
+  sourceFacetRows: PortfolioMemorySourceFacetRow[];
+  sourceBoundaryRows: string[];
   recommendedActions: PortfolioMemoryRecommendedAction[];
 };
 
@@ -76,6 +85,7 @@ export type PortfolioMemoryRecommendedAction = {
 
 export function buildPortfolioMemoryPanelModel(
   response: DpmPortfolioMemoryGatewayResponse | null,
+  searchResponse: DpmPortfolioMemoryGatewayResponse | null = null,
 ): PortfolioMemoryPanelModel {
   if (!response) {
     return {
@@ -98,11 +108,14 @@ export function buildPortfolioMemoryPanelModel(
       memoryCoverage: "Unavailable",
       openFollowUps: "N/A",
       evidenceLinks: "N/A",
+      sourceFacetRows: [],
+      sourceBoundaryRows: [],
       recommendedActions: defaultRecommendedActions("UNAVAILABLE"),
     };
   }
 
   const supportability = response.supportability;
+  const searchSupportability = searchResponse?.supportability;
   const supportabilityState = normalizeState(supportability.state);
   const data = response.data;
   const eventRecords = extractRecordArray(data.events);
@@ -154,8 +167,34 @@ export function buildPortfolioMemoryPanelModel(
     memoryCoverage: resolveMemoryCoverage(supportabilityState, events.length),
     openFollowUps: formatFollowUpCount(events),
     evidenceLinks: `${artifactRefCount} Available`,
+    sourceFacetRows: [
+      ...buildSourceFacetRows(
+        searchSupportability?.source_system_counts ?? supportability.source_system_counts,
+        "system",
+      ),
+      ...buildSourceFacetRows(
+        searchSupportability?.source_type_counts ?? supportability.source_type_counts,
+        "type",
+      ),
+    ],
+    sourceBoundaryRows: formatObjectEntries(searchResponse?.data.support_boundary),
     recommendedActions: defaultRecommendedActions(supportabilityState),
   };
+}
+
+function buildSourceFacetRows(
+  counts: Record<string, number> | undefined,
+  family: "system" | "type",
+): PortfolioMemorySourceFacetRow[] {
+  return Object.entries(counts ?? {})
+    .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+    .slice(0, 6)
+    .map(([label, count]) => ({
+      key: `${family}-${label}`,
+      label,
+      count: count.toLocaleString(),
+      family,
+    }));
 }
 
 function resolvePanelState(
@@ -560,6 +599,13 @@ function formatValue(value: unknown): string {
     return value ? "Yes" : "No";
   }
   return JSON.stringify(value);
+}
+
+function formatObjectEntries(value: unknown): string[] {
+  const record = readRecord(value);
+  return Object.entries(record)
+    .filter(([, entryValue]) => entryValue !== null && entryValue !== undefined && entryValue !== "")
+    .map(([key, entryValue]) => `${businessCase(key)}: ${formatValue(entryValue)}`);
 }
 
 function normalizeState(state: string): string {

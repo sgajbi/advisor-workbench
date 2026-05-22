@@ -57,17 +57,18 @@ Implemented:
 
 1. loads portfolio memory through Gateway only,
 2. renders manage-owned supportability, event count, event type counts, source systems, reason
-   codes, and content hash,
+   codes, source-system/source-type facets, bounded search boundary, and content hash,
 3. preserves event order, event type, event time, source refs, artifact refs, and reason codes,
 4. handles empty, partial, degraded, unsupported, unavailable, and endpoint error states without implying
    local reconstruction,
-5. emits bounded observability for `dpm.portfolio-memory.get` without portfolio ids, event ids,
-   source refs, content hashes, request bodies, response bodies, or screen content as labels.
+5. emits bounded observability for `dpm.portfolio-memory.get` and
+   `dpm.portfolio-memory.search` without portfolio ids, event ids, source refs, source ids,
+   content hashes, request bodies, response bodies, or screen content as labels.
 
 Not yet supported:
 
 1. event detail drawers,
-2. timeline filtering and search,
+2. global portfolio-universe discovery,
 3. retention or audit-policy controls,
 4. cross-app lifecycle export,
 5. client-demo script steps beyond the canonical Workbench screenshot after live validation.
