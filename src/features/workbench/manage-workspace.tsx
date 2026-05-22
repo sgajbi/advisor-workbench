@@ -186,12 +186,16 @@ function renderManageMode(
           fairnessAnalysisDetail={data.pmOperatingQualityFairnessAnalysisDetail}
           reviewActions={data.pmOperatingQualityReviewActions}
           reviewActionDetail={data.pmOperatingQualityReviewActionDetail}
+          summaryInvocations={data.pmOperatingQualitySummaryInvocations}
+          summaryInvocationDetail={data.pmOperatingQualitySummaryInvocationDetail}
           policiesError={data.pmOperatingQualityPoliciesError}
           scoreRunsError={data.pmOperatingQualityScoreRunsError}
           fairnessAnalysesError={data.pmOperatingQualityFairnessAnalysesError}
           fairnessAnalysisDetailError={data.pmOperatingQualityFairnessAnalysisDetailError}
           reviewActionsError={data.pmOperatingQualityReviewActionsError}
           reviewActionDetailError={data.pmOperatingQualityReviewActionDetailError}
+          summaryInvocationsError={data.pmOperatingQualitySummaryInvocationsError}
+          summaryInvocationDetailError={data.pmOperatingQualitySummaryInvocationDetailError}
         />
       );
     case "reviews":

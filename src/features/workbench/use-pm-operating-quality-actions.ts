@@ -41,6 +41,8 @@ type UsePmOperatingQualityActionsInput = {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
 };
 
 type UsePmOperatingQualityActionsResult = {
@@ -74,6 +76,8 @@ export function usePmOperatingQualityActions({
   fairnessAnalysisDetail = null,
   reviewActions = null,
   reviewActionDetail = null,
+  summaryInvocations = null,
+  summaryInvocationDetail = null,
 }: UsePmOperatingQualityActionsInput): UsePmOperatingQualityActionsResult {
   const [previewResponse, setPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
@@ -106,6 +110,8 @@ export function usePmOperatingQualityActions({
     fairnessAnalysisDetail: createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
     reviewActions,
     reviewActionDetail: createdReviewActionResponse ?? reviewActionPreviewResponse ?? reviewActionDetail,
+    summaryInvocations,
+    summaryInvocationDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
     summary: summaryResponse,

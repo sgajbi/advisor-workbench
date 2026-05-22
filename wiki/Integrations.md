@@ -127,13 +127,14 @@ must travel through Gateway-shaped contracts.
     RFC-0043 monitoring-exception summary execution remains `lotus-ai` owned and must reach
     Workbench through Gateway exception-summary composition only.
     PM operating quality policies, score runs, score-run preview/create, fairness-analysis
-    preview/create/list/detail, review-action preview/create/list/detail, and PM quality support-summary requests
-    must reach Workbench through Gateway
-    `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders
-    source-defined segment, fairness, supervisory review-action, and review-gated workflow-pack posture but does not
-    construct prompts, discover segments, calculate PM scores, segment averages, or governed
-    spreads, infer protected classes, rank PMs, create HR/compensation/conduct decisions, approve
-    trades, contact clients, route orders, or claim OMS/execution truth.
+    preview/create/list/detail, review-action preview/create/list/detail, summary-invocation
+    preview/create/list/detail, and PM quality support-summary requests must reach Workbench
+    through Gateway `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders
+    source-defined segment, fairness, supervisory review-action, persisted summary-invocation,
+    and review-gated workflow-pack posture but does not construct prompts, render generated
+    summary text or model responses, discover segments, calculate PM scores, segment averages,
+    or governed spreads, infer protected classes, rank PMs, create HR/compensation/conduct
+    decisions, approve trades, contact clients, route orders, or claim OMS/execution truth.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
     create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture,

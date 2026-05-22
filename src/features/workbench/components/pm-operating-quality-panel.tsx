@@ -11,6 +11,7 @@ import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm
 import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
 import PmOperatingQualityReviewActionsCard from "@/features/workbench/components/pm-operating-quality-review-actions-card";
 import PmOperatingQualityScoreRunCard from "@/features/workbench/components/pm-operating-quality-score-run-card";
+import PmOperatingQualitySummaryInvocationsCard from "@/features/workbench/components/pm-operating-quality-summary-invocations-card";
 import {
   pmOperatingQualityStatePanelCopy,
 } from "@/features/workbench/pm-operating-quality-panel-helpers";
@@ -31,12 +32,16 @@ type Props = {
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
   policiesError?: string | null;
   scoreRunsError?: string | null;
   fairnessAnalysesError?: string | null;
   fairnessAnalysisDetailError?: string | null;
   reviewActionsError?: string | null;
   reviewActionDetailError?: string | null;
+  summaryInvocationsError?: string | null;
+  summaryInvocationDetailError?: string | null;
 };
 
 export default function PmOperatingQualityPanel({
@@ -46,12 +51,16 @@ export default function PmOperatingQualityPanel({
   fairnessAnalysisDetail = null,
   reviewActions = null,
   reviewActionDetail = null,
+  summaryInvocations = null,
+  summaryInvocationDetail = null,
   policiesError = null,
   scoreRunsError = null,
   fairnessAnalysesError = null,
   fairnessAnalysisDetailError = null,
   reviewActionsError = null,
   reviewActionDetailError = null,
+  summaryInvocationsError = null,
+  summaryInvocationDetailError = null,
 }: Props) {
   const {
     model,
@@ -82,6 +91,8 @@ export default function PmOperatingQualityPanel({
     fairnessAnalysisDetail,
     reviewActions,
     reviewActionDetail,
+    summaryInvocations,
+    summaryInvocationDetail,
   });
   const stateCopy = pmOperatingQualityStatePanelCopy(model.state);
   const loadError =
@@ -90,7 +101,9 @@ export default function PmOperatingQualityPanel({
     fairnessAnalysesError ||
     fairnessAnalysisDetailError ||
     reviewActionsError ||
-    reviewActionDetailError;
+    reviewActionDetailError ||
+    summaryInvocationsError ||
+    summaryInvocationDetailError;
   const shouldShowStatePanel =
     Boolean(loadError) ||
     Boolean(actionError) ||
@@ -131,6 +144,7 @@ export default function PmOperatingQualityPanel({
         <MetricRow label="Policy" value={`${model.policyId} / ${model.policyVersion}`} />
         <MetricRow label="Latest Score Run" value={model.scoreRunId} />
         <MetricRow label="Fairness Analysis" value={model.fairnessAnalysisId} />
+        <MetricRow label="Summary Invocation" value={model.summaryInvocationId} />
         <MetricRow label="Returned Rows" value={model.count} />
         <MetricRow label="Authority" value={model.authority} />
       </div>
@@ -180,6 +194,8 @@ export default function PmOperatingQualityPanel({
         onPreview={previewReviewAction}
         onCreate={createReviewAction}
       />
+
+      <PmOperatingQualitySummaryInvocationsCard model={model} />
 
       <PmOperatingQualityPolicyCard model={model} />
     </SectionBlock>

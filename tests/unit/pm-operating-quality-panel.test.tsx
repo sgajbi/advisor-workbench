@@ -292,6 +292,68 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const summaryInvocationItem = {
+  summary_invocation_id: "pmq_summary_001",
+  summary_ref: "PMQ-SUMMARY-001",
+  score_run_id: "pmq_run_001",
+  review_action_id: "pmq_review_001",
+  invocation_state: "PENDING_REVIEW",
+  workflow_run_id: "wf_pmq_summary_001",
+  summary_artifact_ref: "artifact://pmq-summary/001",
+  summary_content_hash: "sha256:summary-invocation",
+  requested_by: "supervisor_sg_1",
+  as_of_date: "2026-05-13",
+  policy_id: "pmq_sg_dpm",
+  policy_version: "2026.05",
+  reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+  text_boundary: {
+    generated_summary_text_stored: false,
+    prompt_body_stored: false,
+    model_response_stored: false,
+    client_communication_projected: false,
+    order_or_oms_projected: false,
+  },
+  generated_summary_text: "Raw generated PM summary narrative must stay hidden.",
+  prompt_body: "Prompt body must stay hidden.",
+  model_response: "Model response must stay hidden.",
+  source_refs: [
+    {
+      source_system: "lotus-manage",
+      source_product: "PmOperatingQualitySummaryInvocation",
+      source_id: "pmq_summary_001",
+    },
+  ],
+};
+
+const summaryInvocations: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-pmq-summary-invocations",
+  supportability: {
+    ...scoreRuns.supportability,
+    state: "PENDING_REVIEW",
+    summary_invocation_id: "pmq_summary_001",
+    review_action_id: "pmq_review_001",
+    reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+    count: 1,
+  },
+  data: {
+    summary_invocations: [summaryInvocationItem],
+  },
+};
+
+const summaryInvocationDetail: DpmPmOperatingQualityGatewayResponse = {
+  ...summaryInvocations,
+  correlation_id: "corr-pmq-summary-invocation-detail",
+  data: {
+    summary_invocation: {
+      ...summaryInvocationItem,
+      workflow_pack_name: "pm-operating-quality-summary",
+      workflow_pack_version: "2026.05",
+      forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
+    },
+  },
+};
+
 describe("PmOperatingQualityPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -304,6 +366,8 @@ describe("PmOperatingQualityPanel", () => {
         scoreRuns={scoreRuns}
         reviewActions={reviewActions}
         reviewActionDetail={reviewActionDetail}
+        summaryInvocations={summaryInvocations}
+        summaryInvocationDetail={summaryInvocationDetail}
       />
     );
 
@@ -331,10 +395,16 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByLabelText("PM operating quality supervisory review actions")
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality summary-invocation posture")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality summary invocations")
+    ).toBeInTheDocument();
     expect(screen.getByText("Awaiting persisted analysis detail or preview")).toBeInTheDocument();
     expect(screen.getByText(/no browser prompt, scoring, ranking, trade approval/i)).toBeInTheDocument();
-    expect(screen.getByText("Review-action detail load")).toBeInTheDocument();
-    expect(screen.getByText("corr-pmq-review-action-detail")).toBeInTheDocument();
+    expect(screen.getByText("Summary invocation detail load")).toBeInTheDocument();
+    expect(screen.getByText("corr-pmq-summary-invocation-detail")).toBeInTheDocument();
     expect(
       screen.getAllByText("Ready for policy pmq_sg_dpm / 2026.05").length
     ).toBeGreaterThan(0);
@@ -367,6 +437,14 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("wf_pmq_summary_001").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("artifact://pmq-summary/001").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(
+        "Generated text stored: No; Prompt stored: No; Model response stored: No; Client communication projected: No; Order or OMS projected: No"
+      ).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getByText("Bounded supervisory review of source-owned PM quality posture.")
     ).toBeInTheDocument();
@@ -374,6 +452,9 @@ describe("PmOperatingQualityPanel", () => {
       screen.getByText("Client Contact (client_contact), OMS Routing (oms_routing), Trade Execution (trade_execution)")
     ).toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(screen.queryByText("Raw generated PM summary narrative must stay hidden.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prompt body must stay hidden.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Model response must stay hidden.")).not.toBeInTheDocument();
     expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /generate order/i })).not.toBeInTheDocument();

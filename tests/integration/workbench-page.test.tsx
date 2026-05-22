@@ -170,8 +170,12 @@ describe("WorkbenchPage", () => {
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality persisted fairness analyses")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality fairness segments")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality summary-invocation posture")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality summary invocations")).toBeInTheDocument();
+    expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
+    expect(screen.queryByText("Raw generated PM summary narrative must stay hidden.")).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/policies?")
@@ -191,6 +195,18 @@ describe("WorkbenchPage", () => {
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes(
           "/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses/pmq_fair_001"
+        )
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center/pm-operating-quality/summary-invocations?")
+      )
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes(
+          "/api/v1/dpm/command-center/pm-operating-quality/summary-invocations/pmq_summary_001"
         )
       )
     ).toBe(true);
@@ -741,6 +757,121 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
                 average_score: "90.00",
                 minimum_score: "90.00",
                 maximum_score: "90.00",
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    if (url.includes("/api/v1/dpm/command-center/pm-operating-quality/summary-invocations?")) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_summary_invocations",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "PENDING_REVIEW",
+          reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          score_run_id: "pmq_run_001",
+          review_action_id: "pmq_review_001",
+          summary_invocation_id: "pmq_summary_001",
+          count: 1,
+        },
+        data: {
+          summary_invocations: [
+            {
+              summary_invocation_id: "pmq_summary_001",
+              summary_ref: "PMQ-SUMMARY-001",
+              score_run_id: "pmq_run_001",
+              review_action_id: "pmq_review_001",
+              invocation_state: "PENDING_REVIEW",
+              workflow_run_id: "wf_pmq_summary_001",
+              summary_artifact_ref: "artifact://pmq-summary/001",
+              summary_content_hash: "sha256:summary-invocation",
+              requested_by: "supervisor_sg_1",
+              as_of_date: "2026-05-13",
+              policy_id: "pmq_sg_dpm",
+              policy_version: "2026.05",
+              reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+              text_boundary: {
+                generated_summary_text_stored: false,
+                prompt_body_stored: false,
+                model_response_stored: false,
+                client_communication_projected: false,
+                order_or_oms_projected: false,
+              },
+              source_refs: [
+                {
+                  source_system: "lotus-manage",
+                  source_product: "PmOperatingQualitySummaryInvocation",
+                  source_id: "pmq_summary_001",
+                },
+              ],
+            },
+          ],
+          count: 1,
+        },
+      });
+    }
+
+    if (
+      url.includes("/api/v1/dpm/command-center/pm-operating-quality/summary-invocations/pmq_summary_001")
+    ) {
+      return jsonResponse({
+        correlation_id: "corr_pmq_summary_invocation_detail",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+          state: "PENDING_REVIEW",
+          reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+          blocked_actions: [],
+          policy_id: "pmq_sg_dpm",
+          policy_version: "2026.05",
+          score_run_id: "pmq_run_001",
+          review_action_id: "pmq_review_001",
+          summary_invocation_id: "pmq_summary_001",
+        },
+        data: {
+          summary_invocation: {
+            summary_invocation_id: "pmq_summary_001",
+            summary_ref: "PMQ-SUMMARY-001",
+            score_run_id: "pmq_run_001",
+            review_action_id: "pmq_review_001",
+            invocation_state: "PENDING_REVIEW",
+            workflow_pack_name: "pm-operating-quality-summary",
+            workflow_pack_version: "2026.05",
+            workflow_run_id: "wf_pmq_summary_001",
+            summary_artifact_ref: "artifact://pmq-summary/001",
+            summary_content_hash: "sha256:summary-invocation",
+            requested_by: "supervisor_sg_1",
+            policy_id: "pmq_sg_dpm",
+            policy_version: "2026.05",
+            reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+            generated_summary_text: "Raw generated PM summary narrative must stay hidden.",
+            prompt_body: "Prompt body must stay hidden.",
+            model_response: "Model response must stay hidden.",
+            forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
+            text_boundary: {
+              generated_summary_text_stored: false,
+              prompt_body_stored: false,
+              model_response_stored: false,
+              client_communication_projected: false,
+              order_or_oms_projected: false,
+            },
+            source_refs: [
+              {
+                source_system: "lotus-manage",
+                source_product: "PmOperatingQualitySummaryInvocation",
+                source_id: "pmq_summary_001",
               },
             ],
           },
