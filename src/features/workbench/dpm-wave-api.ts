@@ -414,6 +414,37 @@ async function getDpmCampaignWorkflowEvidence(
   );
 }
 
+async function createDpmCampaignWorkflowEvidence(
+  operation: WorkbenchObservedOperation,
+  pathSuffix: string,
+  label: string,
+  params: {
+    campaignId: string;
+    campaignVersion: string;
+    body: Record<string, unknown>;
+    actorId?: string;
+  }
+): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await observeWorkbenchMutation(
+    operation,
+    async () =>
+      await fetchWorkbenchMutation<DpmCampaignWorkflowGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+            params.campaignId
+          )}/versions/${encodeURIComponent(params.campaignVersion)}/${pathSuffix}`
+        ),
+        label,
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(params.actorId),
+          body: JSON.stringify({ body: params.body }),
+        }
+      )
+  );
+}
+
 export async function getDpmCampaignApprovalDecisions(params: {
   campaignId: string;
   campaignVersion: string;
@@ -424,6 +455,20 @@ export async function getDpmCampaignApprovalDecisions(params: {
     "dpm.waves.campaign-approval-decisions.list",
     "approval-decisions",
     "DPM campaign approval decisions",
+    params
+  );
+}
+
+export async function createDpmCampaignApprovalDecision(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await createDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-approval-decisions.create",
+    "approval-decisions",
+    "create DPM campaign approval decision",
     params
   );
 }
@@ -442,6 +487,20 @@ export async function getDpmCampaignAssignmentActions(params: {
   );
 }
 
+export async function createDpmCampaignAssignmentAction(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await createDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-assignment-actions.create",
+    "assignment-actions",
+    "create DPM campaign assignment action",
+    params
+  );
+}
+
 export async function getDpmCampaignAssignmentTasks(params: {
   campaignId: string;
   campaignVersion: string;
@@ -456,6 +515,35 @@ export async function getDpmCampaignAssignmentTasks(params: {
   );
 }
 
+export async function createDpmCampaignAssignmentTask(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await createDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-assignment-tasks.create",
+    "assignment-tasks",
+    "create DPM campaign assignment task",
+    params
+  );
+}
+
+export async function createDpmCampaignAssignmentTaskTransition(params: {
+  campaignId: string;
+  campaignVersion: string;
+  taskRef: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await createDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-assignment-task-transitions.create",
+    `assignment-tasks/${encodeURIComponent(params.taskRef)}/transitions`,
+    "create DPM campaign assignment-task transition",
+    params
+  );
+}
+
 export async function getDpmCampaignMakerCheckerControls(params: {
   campaignId: string;
   campaignVersion: string;
@@ -466,6 +554,20 @@ export async function getDpmCampaignMakerCheckerControls(params: {
     "dpm.waves.campaign-maker-checker-controls.list",
     "maker-checker-controls",
     "DPM campaign maker-checker controls",
+    params
+  );
+}
+
+export async function createDpmCampaignMakerCheckerControl(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignWorkflowGatewayResponse> {
+  return await createDpmCampaignWorkflowEvidence(
+    "dpm.waves.campaign-maker-checker-controls.create",
+    "maker-checker-controls",
+    "create DPM campaign maker-checker control",
     params
   );
 }

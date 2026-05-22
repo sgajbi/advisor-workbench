@@ -468,10 +468,11 @@ Workbench must consume these Gateway wave routes when implemented:
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness` | Manage-owned `BulkReviewCampaignDefinitionPreviewReadiness:v1` posture for selected campaign preview and wave-create readiness |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and idempotency evidence for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/approval-decisions` | read-only approval-decision evidence |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-actions` | read-only assignment-action evidence |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks` | read-only assignment-task and task-transition evidence |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/maker-checker-controls` | read-only maker-checker evidence |
+| `GET/POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/approval-decisions` | approval-decision evidence list and bounded Gateway-backed record control |
+| `GET/POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-actions` | assignment-action evidence list and bounded Gateway-backed record control |
+| `GET/POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks` | assignment-task evidence list and bounded Gateway-backed record control |
+| `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks/{task_ref}/transitions` | bounded Gateway-backed assignment-task transition evidence record control |
+| `GET/POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/maker-checker-controls` | maker-checker evidence list and bounded Gateway-backed record control |
 
 Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
@@ -500,11 +501,15 @@ and exposes campaign launch through Gateway
 `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
 only when Manage returns `READY`, preserving durable wave response and idempotency evidence without
 recomputing membership, launch readiness, idempotency, maker-checker workflow, trade approval,
-staging, or OMS execution locally. It also renders read-only campaign workflow audit posture from
-Gateway operating queue, approval inbox, workflow board, assignment plan, workflow automation,
+staging, or OMS execution locally. It also renders campaign workflow audit posture from Gateway
+operating queue, approval inbox, workflow board, assignment plan, workflow automation,
 approval-decision, assignment-action, assignment-task, and maker-checker reads, preserving
 source refs, count/page metadata, reason codes, content hashes, task-transition posture, and
-operating boundaries without mutating assignment or maker-checker state. The panel renders
+operating boundaries. Selected-campaign workflow controls can record bounded Gateway-backed
+approval-decision, assignment-action, assignment-task, assignment-task transition, and
+maker-checker-control evidence, then refresh the source-owned evidence lists and show
+Gateway-returned correlation, source, upstream-status, content-hash, reason-code, and boundary
+evidence without fabricating browser-owned workflow state. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and

@@ -306,8 +306,18 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "wave-campaign-approval-decisions-create",
+    operation: "dpm.waves.campaign-approval-decisions.create",
+  },
+  {
+    route: "workbench.manage",
     panel: "wave-campaign-assignment-actions",
     operation: "dpm.waves.campaign-assignment-actions.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-assignment-actions-create",
+    operation: "dpm.waves.campaign-assignment-actions.create",
   },
   {
     route: "workbench.manage",
@@ -316,8 +326,23 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "wave-campaign-assignment-tasks-create",
+    operation: "dpm.waves.campaign-assignment-tasks.create",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-assignment-task-transitions-create",
+    operation: "dpm.waves.campaign-assignment-task-transitions.create",
+  },
+  {
+    route: "workbench.manage",
     panel: "wave-campaign-maker-checker-controls",
     operation: "dpm.waves.campaign-maker-checker-controls.list",
+  },
+  {
+    route: "workbench.manage",
+    panel: "wave-campaign-maker-checker-controls-create",
+    operation: "dpm.waves.campaign-maker-checker-controls.create",
   },
   {
     route: "workbench.manage",

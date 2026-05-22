@@ -9,6 +9,10 @@ import DpmCampaignLaunchHistoryCard, {
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
 import DpmCampaignWorkflowAuditCard from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
 import type {
+  DpmCampaignWorkflowCommandEvidence,
+  DpmCampaignWorkflowCommandInput,
+} from "@/features/workbench/use-dpm-wave-command-center-actions";
+import type {
   DpmCampaignDefinitionRow,
   DpmCampaignLaunchHistoryPage,
   DpmCampaignLaunchHistoryRow,
@@ -50,6 +54,9 @@ type Props = {
   pendingPreviewReadinessKey?: string | null;
   pendingLaunchPackageKey?: string | null;
   pendingLaunchKey?: string | null;
+  pendingWorkflowCommand?: boolean;
+  workflowCommandError?: string | null;
+  workflowCommandEvidence?: DpmCampaignWorkflowCommandEvidence | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
   selectedCampaignKey?: string | null;
   errorMessage?: string | null;
@@ -57,6 +64,7 @@ type Props = {
   onLoadLaunchHistory: (row: DpmCampaignDefinitionRow, offset?: number) => void;
   onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
   onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
+  onRecordWorkflowCommand?: (command: DpmCampaignWorkflowCommandInput) => Promise<void>;
 };
 
 export default function DpmCampaignDefinitionsSection({
@@ -78,6 +86,9 @@ export default function DpmCampaignDefinitionsSection({
   pendingPreviewReadinessKey,
   pendingLaunchPackageKey,
   pendingLaunchKey,
+  pendingWorkflowCommand,
+  workflowCommandError,
+  workflowCommandEvidence,
   selectedCampaign,
   selectedCampaignKey,
   errorMessage,
@@ -85,6 +96,7 @@ export default function DpmCampaignDefinitionsSection({
   onLoadLaunchHistory,
   onCheckLaunchReadiness,
   onLaunchCampaign,
+  onRecordWorkflowCommand = async () => {},
 }: Props) {
   const selectedLaunchPending = Boolean(selectedCampaign && selectedCampaign.key === pendingLaunchKey);
 
@@ -128,6 +140,11 @@ export default function DpmCampaignDefinitionsSection({
         summaryRows={workflowSummaryRows}
         evidenceRows={workflowEvidenceRows}
         error={workflowError}
+        selectedCampaign={selectedCampaign}
+        pendingCommand={pendingWorkflowCommand}
+        commandError={workflowCommandError}
+        commandEvidence={workflowCommandEvidence}
+        onRecordWorkflowCommand={onRecordWorkflowCommand}
       />
       <DpmCampaignLaunchHistoryCard
         rows={launchHistoryRows}

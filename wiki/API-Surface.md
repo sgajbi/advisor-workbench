@@ -77,7 +77,7 @@ promote dormant labels into product ownership just because historical route file
   and exposes
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
   only when the launch package is `READY`, preserving durable wave response and idempotency evidence
-  without recalculating membership or readiness. It also renders read-only campaign workflow audit
+  without recalculating membership or readiness. It also renders campaign workflow audit
   posture from
   `/api/v1/dpm/command-center/waves/campaign-operating-queue`,
   `/api/v1/dpm/command-center/waves/campaign-approval-inbox`,
@@ -87,10 +87,15 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/approval-decisions`,
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-actions`,
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks`,
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks/{task_ref}/transitions`,
   and
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/maker-checker-controls`,
   preserving source refs, count/page metadata, reason codes, content hashes, task-transition
-  posture, and operating boundaries without mutating assignment or maker-checker state. It
+  posture, and operating boundaries. Selected-campaign workflow controls can record bounded
+  Gateway-backed approval-decision, assignment-action, assignment-task, assignment-task
+  transition, and maker-checker-control evidence, then refresh the source-owned evidence lists
+  and show Gateway-returned correlation/source/upstream/content-hash evidence without browser-owned
+  workflow state. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
