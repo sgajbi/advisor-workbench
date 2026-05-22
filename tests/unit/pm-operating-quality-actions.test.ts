@@ -4,7 +4,9 @@ import {
   buildPmQualityActionError,
   buildPmQualityBlockedActionError,
   buildPmQualityFairnessCreateEvidence,
+  buildPmQualitySummaryInvocationEvidence,
   readPmQualityFairnessAnalysisId,
+  readPmQualitySummaryInvocationId,
 } from "../../src/features/workbench/pm-operating-quality-actions";
 import type { DpmPmOperatingQualityGatewayResponse } from "../../src/features/workbench/types";
 
@@ -25,6 +27,24 @@ const response: DpmPmOperatingQualityGatewayResponse = {
     fairness_analysis: {
       fairness_analysis_id: "pmq_fair_payload",
       content_hash: "sha256:pm-quality",
+    },
+  },
+};
+
+const summaryInvocationResponse: DpmPmOperatingQualityGatewayResponse = {
+  ...response,
+  correlation_id: "corr-pmq-summary-create",
+  supportability: {
+    ...response.supportability,
+    summary_invocation_id: "pmq_summary_supportability",
+  },
+  data: {
+    summary_invocation: {
+      summary_invocation_id: "pmq_summary_payload",
+      summary_content_hash: "sha256:summary-invocation",
+      generated_summary_text: "Raw summary text must not enter evidence.",
+      prompt_body: "Raw prompt must not enter evidence.",
+      model_response: "Raw model response must not enter evidence.",
     },
   },
 };
@@ -89,5 +109,33 @@ describe("PM operating quality action helpers", () => {
       upstreamStatus: "200",
     });
     expect(JSON.stringify(evidence)).not.toContain("sha256:pm-quality");
+  });
+
+  it("builds persisted summary-invocation evidence without generated text", () => {
+    expect(readPmQualitySummaryInvocationId(summaryInvocationResponse)).toBe(
+      "pmq_summary_supportability"
+    );
+    expect(
+      readPmQualitySummaryInvocationId({
+        ...summaryInvocationResponse,
+        supportability: {
+          ...summaryInvocationResponse.supportability,
+          summary_invocation_id: null,
+        },
+      })
+    ).toBe("pmq_summary_payload");
+
+    const evidence = buildPmQualitySummaryInvocationEvidence(summaryInvocationResponse);
+
+    expect(evidence).toEqual({
+      summaryInvocationId: "pmq_summary_supportability",
+      correlationId: "corr-pmq-summary-create",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    expect(JSON.stringify(evidence)).not.toContain("Raw summary text");
+    expect(JSON.stringify(evidence)).not.toContain("Raw prompt");
+    expect(JSON.stringify(evidence)).not.toContain("Raw model response");
+    expect(JSON.stringify(evidence)).not.toContain("sha256:summary-invocation");
   });
 });

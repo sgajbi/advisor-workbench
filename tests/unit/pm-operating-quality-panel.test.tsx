@@ -3,10 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-operating-quality-panel";
 import {
+  createDpmPmOperatingQualitySummaryInvocation,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
+  getDpmPmOperatingQualitySummaryInvocation,
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
+  previewDpmPmOperatingQualitySummaryInvocation,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
@@ -21,13 +24,19 @@ vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
   buildDpmPmOperatingQualityReviewActionCorrelationId: vi.fn(
     () => "corr-workbench-pm-quality-review-action-panel-test"
   ),
+  buildDpmPmOperatingQualitySummaryInvocationCorrelationId: vi.fn(
+    () => "corr-workbench-pm-quality-summary-invocation-panel-test"
+  ),
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   createDpmPmOperatingQualityReviewAction: vi.fn(),
+  createDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   getDpmPmOperatingQualityReviewAction: vi.fn(),
+  getDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
+  previewDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   requestDpmPmOperatingQualitySummary: vi.fn(),
 }));
 
@@ -435,6 +444,14 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
+    expect(
+      screen.getByLabelText("PM operating quality summary-invocation control")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality summary-invocation readiness")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview Summary Invocation" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record Summary Invocation" })).toBeDisabled();
     expect(screen.getByText("Not requested")).toBeInTheDocument();
     expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);
@@ -455,6 +472,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.queryByText("Raw generated PM summary narrative must stay hidden.")).not.toBeInTheDocument();
     expect(screen.queryByText("Prompt body must stay hidden.")).not.toBeInTheDocument();
     expect(screen.queryByText("Model response must stay hidden.")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/prompt/i)).not.toBeInTheDocument();
     expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /generate order/i })).not.toBeInTheDocument();
@@ -764,5 +782,77 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("previews and records summary invocations through Gateway after review evidence", async () => {
+    vi.mocked(previewDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationDetail
+    );
+    vi.mocked(createDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationDetail
+    );
+    vi.mocked(getDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationDetail
+    );
+
+    render(
+      <PmOperatingQualityPanel
+        policies={policies}
+        scoreRuns={scoreRuns}
+        reviewActions={reviewActions}
+        reviewActionDetail={reviewActionDetail}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Record Summary Invocation" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Preview Summary Invocation" }));
+
+    await waitFor(() => {
+      expect(previewDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith({
+        request: expect.objectContaining({
+          score_run_id: "pmq_run_001",
+          review_action_id: "pmq_review_001",
+          invocation_state: "PENDING_REVIEW",
+          summary_ref: "PMQ-SUMMARY-pmq_run_001",
+          workflow_pack_name: "pm-operating-quality-summary",
+          workflow_pack_version: "2026.05",
+          requested_by: "workbench-pm-operating-quality-supervisor",
+          source_refs: [],
+        }),
+        actorId: "workbench-pm-operating-quality-supervisor",
+        correlationId: "corr-workbench-pm-quality-summary-invocation-panel-test",
+      });
+    });
+    expect(screen.getByText("Summary-invocation preview returned Manage evidence.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Record Summary Invocation" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Record Summary Invocation" }));
+
+    await waitFor(() => {
+      expect(createDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith({
+        request: expect.objectContaining({
+          score_run_id: "pmq_run_001",
+          review_action_id: "pmq_review_001",
+          summary_ref: "PMQ-SUMMARY-pmq_run_001",
+        }),
+        actorId: "workbench-pm-operating-quality-supervisor",
+        correlationId: "corr-workbench-pm-quality-summary-invocation-panel-test",
+      });
+    });
+    expect(getDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith(
+      "pmq_summary_001",
+      "client"
+    );
+    expect(
+      screen.getByText("Recorded Manage-owned PM quality summary invocation.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality persisted summary-invocation evidence")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("pmq_summary_001").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Raw generated PM summary narrative must stay hidden.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prompt body must stay hidden.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Model response must stay hidden.")).not.toBeInTheDocument();
+    expect(requestDpmPmOperatingQualitySummary).not.toHaveBeenCalled();
   });
 });

@@ -4,13 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { usePmOperatingQualityActions } from "../../src/features/workbench/use-pm-operating-quality-actions";
 import {
   buildDpmPmOperatingQualityReviewActionCorrelationId,
+  buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
+  createDpmPmOperatingQualitySummaryInvocation,
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
+  getDpmPmOperatingQualitySummaryInvocation,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
+  previewDpmPmOperatingQualitySummaryInvocation,
   requestDpmPmOperatingQualitySummary,
 } from "../../src/features/workbench/pm-operating-quality-api";
 import type {
@@ -22,13 +26,19 @@ vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
   buildDpmPmOperatingQualityReviewActionCorrelationId: vi.fn(
     () => "corr-workbench-pm-quality-review-action-test"
   ),
+  buildDpmPmOperatingQualitySummaryInvocationCorrelationId: vi.fn(
+    () => "corr-workbench-pm-quality-summary-invocation-test"
+  ),
   createDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   createDpmPmOperatingQualityReviewAction: vi.fn(),
+  createDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   getDpmPmOperatingQualityReviewAction: vi.fn(),
+  getDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
+  previewDpmPmOperatingQualitySummaryInvocation: vi.fn(),
   requestDpmPmOperatingQualitySummary: vi.fn(),
 }));
 
@@ -158,6 +168,58 @@ const reviewActionResponse: DpmPmOperatingQualityGatewayResponse = {
           source_system: "lotus-manage",
           source_product: "PmOperatingQualityReviewAction",
           source_id: "pmq_review_002",
+        },
+      ],
+    },
+  },
+};
+
+const summaryInvocationResponse: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-pmq-summary-invocation-create",
+  supportability: {
+    ...scoreRuns.supportability,
+    state: "PENDING_REVIEW",
+    reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+    summary_invocation_id: "pmq_summary_002",
+    review_action_id: "pmq_review_002",
+    score_run_id: "pmq_run_001",
+  },
+  data: {
+    summary_invocation: {
+      summary_invocation_id: "pmq_summary_002",
+      summary_ref: "PMQ-SUMMARY-pmq_run_001",
+      score_run_id: "pmq_run_001",
+      review_action_id: "pmq_review_002",
+      invocation_state: "PENDING_REVIEW",
+      workflow_pack_name: "pm-operating-quality-summary",
+      workflow_pack_version: "2026.05",
+      workflow_run_id: "wf_pmq_summary_002",
+      summary_artifact_ref: "artifact://pmq-summary/002",
+      summary_content_hash: "sha256:summary-invocation",
+      requested_by: "workbench-pm-operating-quality-supervisor",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      generated_summary_text: "Raw generated summary text must stay hidden.",
+      prompt_body: "Raw prompt must stay hidden.",
+      model_response: "Raw model response must stay hidden.",
+      client_contact_claim: "Client communication must stay hidden.",
+      order_claim: "Order claim must stay hidden.",
+      oms_claim: "OMS claim must stay hidden.",
+      reason_codes: ["PM_QUALITY_SUMMARY_INVOCATION_READY"],
+      text_boundary: {
+        generated_summary_text_stored: false,
+        prompt_body_stored: false,
+        model_response_stored: false,
+        client_communication_projected: false,
+        order_or_oms_projected: false,
+      },
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualitySummaryInvocation",
+          source_id: "pmq_summary_002",
         },
       ],
     },
@@ -393,6 +455,98 @@ describe("usePmOperatingQualityActions", () => {
     );
   });
 
+  it("previews before creating PM quality summary invocations through Gateway", async () => {
+    vi.mocked(buildDpmPmOperatingQualitySummaryInvocationCorrelationId)
+      .mockReturnValueOnce("corr-workbench-pm-quality-summary-invocation-preview")
+      .mockReturnValueOnce("corr-workbench-pm-quality-summary-invocation-create");
+    vi.mocked(previewDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationResponse
+    );
+    vi.mocked(createDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationResponse
+    );
+    vi.mocked(getDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationResponse
+    );
+    const { result } = renderActions({
+      reviewActions: reviewActionResponse,
+      reviewActionDetail: reviewActionResponse,
+    });
+
+    await act(async () => {
+      await result.current.createSummaryInvocation();
+    });
+
+    expect(createDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
+    expect(result.current.actionError).toEqual(
+      expect.objectContaining({
+        statusClass: "blocked",
+        body: "Preview the PM quality summary invocation before recording it.",
+      })
+    );
+
+    await act(async () => {
+      await result.current.previewSummaryInvocation();
+    });
+
+    expect(previewDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_002",
+        invocation_state: "PENDING_REVIEW",
+        summary_ref: "PMQ-SUMMARY-pmq_run_001",
+        workflow_pack_name: "pm-operating-quality-summary",
+        workflow_pack_version: "2026.05",
+        requested_by: "workbench-pm-operating-quality-supervisor",
+        source_refs: [],
+      }),
+      actorId: "workbench-pm-operating-quality-supervisor",
+      correlationId: "corr-workbench-pm-quality-summary-invocation-preview",
+    });
+    await waitFor(() =>
+      expect(result.current.actionMessage).toBe(
+        "Summary-invocation preview returned Manage evidence."
+      )
+    );
+    expect(result.current.summaryInvocationPreviewReady).toBe(true);
+
+    await act(async () => {
+      await result.current.createSummaryInvocation();
+    });
+
+    expect(createDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        score_run_id: "pmq_run_001",
+        review_action_id: "pmq_review_002",
+        summary_ref: "PMQ-SUMMARY-pmq_run_001",
+      }),
+      actorId: "workbench-pm-operating-quality-supervisor",
+      correlationId: "corr-workbench-pm-quality-summary-invocation-create",
+    });
+    expect(getDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith(
+      "pmq_summary_002",
+      "client"
+    );
+    await waitFor(() =>
+      expect(result.current.actionMessage).toBe(
+        "Recorded Manage-owned PM quality summary invocation."
+      )
+    );
+    expect(result.current.summaryInvocationCreateEvidence).toEqual({
+      summaryInvocationId: "pmq_summary_002",
+      correlationId: "corr-pmq-summary-invocation-create",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    const renderedDetail = JSON.stringify(result.current.model.summaryInvocationDetail);
+    expect(renderedDetail).not.toContain("Raw generated summary text must stay hidden");
+    expect(renderedDetail).not.toContain("Raw prompt must stay hidden");
+    expect(renderedDetail).not.toContain("Raw model response must stay hidden");
+    expect(renderedDetail).not.toContain("Client communication must stay hidden");
+    expect(renderedDetail).not.toContain("Order claim must stay hidden");
+    expect(renderedDetail).not.toContain("OMS claim must stay hidden");
+  });
+
   it("blocks Gateway calls when source-owned readiness is not available", async () => {
     const { result } = renderActions({
       policies: null,
@@ -406,6 +560,8 @@ describe("usePmOperatingQualityActions", () => {
       await result.current.requestSupportSummary();
       await result.current.previewReviewAction();
       await result.current.createReviewAction();
+      await result.current.previewSummaryInvocation();
+      await result.current.createSummaryInvocation();
     });
 
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
@@ -414,6 +570,8 @@ describe("usePmOperatingQualityActions", () => {
     expect(requestDpmPmOperatingQualitySummary).not.toHaveBeenCalled();
     expect(previewDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
     expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
+    expect(previewDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
+    expect(createDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
     expect(result.current.actionError).toEqual(
       expect.objectContaining({
         statusClass: "blocked",

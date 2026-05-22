@@ -21,6 +21,13 @@ export type PmQualityReviewActionEvidence = {
   upstreamStatus: string;
 };
 
+export type PmQualitySummaryInvocationEvidence = {
+  summaryInvocationId: string;
+  correlationId: string;
+  sourceService: string;
+  upstreamStatus: string;
+};
+
 export type PmQualityReviewActionForm = {
   actorId: string;
   targetType: string;
@@ -29,6 +36,19 @@ export type PmQualityReviewActionForm = {
   actionState: string;
   reviewActionRef: string;
   boundedRationale: string;
+};
+
+export type PmQualitySummaryInvocationForm = {
+  requestedBy: string;
+  summaryRef: string;
+  scoreRunId: string;
+  reviewActionId: string;
+  invocationState: string;
+  workflowPackName: string;
+  workflowPackVersion: string;
+  workflowRunId: string;
+  artifactRef: string;
+  contentHash: string;
 };
 
 export function buildPmQualityActionError(
@@ -90,6 +110,24 @@ export function readPmQualityReviewActionId(
   return typeof candidate === "string" && candidate ? candidate : null;
 }
 
+export function readPmQualitySummaryInvocationId(
+  response: DpmPmOperatingQualityGatewayResponse
+): string | null {
+  if (response.supportability.summary_invocation_id) {
+    return response.supportability.summary_invocation_id;
+  }
+  const data = response.data;
+  if (!isRecord(data)) {
+    return null;
+  }
+  const summaryInvocation = data.summary_invocation;
+  if (!isRecord(summaryInvocation)) {
+    return null;
+  }
+  const candidate = summaryInvocation.summary_invocation_id;
+  return typeof candidate === "string" && candidate ? candidate : null;
+}
+
 export function buildPmQualityFairnessCreateEvidence(
   response: DpmPmOperatingQualityGatewayResponse
 ): PmQualityFairnessCreateEvidence {
@@ -106,6 +144,17 @@ export function buildPmQualityReviewActionEvidence(
 ): PmQualityReviewActionEvidence {
   return {
     reviewActionId: readPmQualityReviewActionId(response) ?? "N/A",
+    correlationId: response.correlation_id || "N/A",
+    sourceService: response.supportability.source_service || response.source_service || "N/A",
+    upstreamStatus: String(response.upstream_status ?? "N/A"),
+  };
+}
+
+export function buildPmQualitySummaryInvocationEvidence(
+  response: DpmPmOperatingQualityGatewayResponse
+): PmQualitySummaryInvocationEvidence {
+  return {
+    summaryInvocationId: readPmQualitySummaryInvocationId(response) ?? "N/A",
     correlationId: response.correlation_id || "N/A",
     sourceService: response.supportability.source_service || response.source_service || "N/A",
     upstreamStatus: String(response.upstream_status ?? "N/A"),

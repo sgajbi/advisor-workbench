@@ -70,20 +70,29 @@ export default function PmOperatingQualityPanel({
     pendingSummaryAction,
     pendingReviewActionPreview,
     pendingReviewActionCreate,
+    pendingSummaryInvocationPreview,
+    pendingSummaryInvocationCreate,
     actionError,
     actionMessage,
     fairnessCreateEvidence,
     reviewActionCreateEvidence,
+    summaryInvocationCreateEvidence,
     reviewActionForm,
+    summaryInvocationForm,
     reviewActionReadiness,
+    summaryInvocationReadiness,
     reviewActionPreviewReady,
+    summaryInvocationPreviewReady,
     setReviewActionFormValue,
+    setSummaryInvocationFormValue,
     previewScoreRun,
     previewFairnessAnalysis,
     createFairnessAnalysis,
     requestSupportSummary,
     previewReviewAction,
     createReviewAction,
+    previewSummaryInvocation,
+    createSummaryInvocation,
   } = usePmOperatingQualityActions({
     policies,
     scoreRuns,
@@ -195,7 +204,18 @@ export default function PmOperatingQualityPanel({
         onCreate={createReviewAction}
       />
 
-      <PmOperatingQualitySummaryInvocationsCard model={model} />
+      <PmOperatingQualitySummaryInvocationsCard
+        model={model}
+        form={summaryInvocationForm}
+        readiness={summaryInvocationReadiness}
+        previewReady={summaryInvocationPreviewReady}
+        pendingPreview={pendingSummaryInvocationPreview}
+        pendingCreate={pendingSummaryInvocationCreate}
+        createEvidence={summaryInvocationCreateEvidence}
+        onFormChange={setSummaryInvocationFormValue}
+        onPreview={previewSummaryInvocation}
+        onCreate={createSummaryInvocation}
+      />
 
       <PmOperatingQualityPolicyCard model={model} />
     </SectionBlock>
