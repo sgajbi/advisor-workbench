@@ -111,6 +111,7 @@ export default function ProposalNarrativePosturePanel({
 
   return (
     <SectionBlock
+      className="proposal-narrative-posture-panel"
       title="Advisor Narrative And Delivery"
       subtitle="Review advisor-use narrative posture, request reviewed narrative report packaging, and inspect delivery events from the Gateway advisory contract."
       actions={

@@ -247,12 +247,15 @@ Validation layers:
    - risk attribution
    - advisor brief
    - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
+   - proposal creation with advisor-review narrative request
+   - proposal narrative review and reviewed report-package request
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
    - Performance summary
    - Performance analysis
    - Performance advisor brief
+   - Proposal narrative posture
    - Performance risk
    - Performance evidence
 
@@ -268,10 +271,13 @@ stable file name, absolute path, route, panel identifier, portfolio ID, benchmar
 and demo readiness state. The validator also writes `SHOT-INDEX.md` in the screenshot directory so
 demo reviewers can quickly identify the captured product surfaces.
 
-The machine-readable summary also records `workflowPackChecks` for the advisor-brief live path.
-Those checks prove initial workflow-pack run visibility plus bounded `ACCEPT`, `REVISE`, and
-`SUPERSEDE` review transitions with replacement lineage through the live
-`lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain.
+The machine-readable summary also records `workflowPackChecks` for the advisor-brief live path and
+RFC-0023 proposal narrative proof. Advisor-brief checks prove initial workflow-pack run visibility
+plus bounded `ACCEPT`, `REVISE`, and `SUPERSEDE` review transitions with replacement lineage
+through the live `lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain. Proposal
+narrative checks prove Gateway-backed proposal creation with an advisor-review narrative request,
+Workbench advisor-use narrative review, reviewed report-package request, source narrative hash
+visibility, and screenshot evidence for `proposal.narrative_posture`.
 
 Machine-readable validation evidence is written to:
 

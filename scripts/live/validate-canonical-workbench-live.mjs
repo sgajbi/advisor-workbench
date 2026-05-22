@@ -12,7 +12,14 @@ import {
   writeShotIndex,
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
-import { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } from "./validation/probes.mjs";
+import {
+  checkDns,
+  fetchJson,
+  fetchJsonUntil,
+  fetchText,
+  postJson,
+  sendJson,
+} from "./validation/probes.mjs";
 import {
   assertPerformanceCalculationSanity,
   assertRiskCalculationSanity,
@@ -20,6 +27,7 @@ import {
 import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
+  validateProposalNarrativePosturePanel,
   validateDpmCommandCenterPanel,
   validatePortfolioMemoryPanel,
   validateDpmWaveCommandCenterPanel,
@@ -189,6 +197,10 @@ function extractWorkflowPackRunId(payload) {
   );
 }
 
+function extractGatewayEnvelopeData(payload) {
+  return payload?.data ?? payload;
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -336,6 +348,57 @@ async function run() {
     timeoutMs,
     fetchJson,
     postJson,
+  });
+
+  const proposalCreate = await sendJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/proposals`,
+    "Create proposal narrative canonical proof",
+    timeoutMs,
+    {
+      method: "POST",
+      body: {
+        body: {
+          created_by: "workbench-canonical-validator",
+          input_mode: "stateful",
+          stateful_input: {
+            portfolio_id: portfolioId,
+            as_of: canonicalAsOfDate,
+            narrative_request: {
+              audience: "ADVISOR_REVIEW",
+              jurisdiction: "SG",
+              client_audience: "ADVISOR_REVIEW",
+              sections: ["EXECUTIVE_SUMMARY", "RISK_AND_CONCENTRATION"],
+              requested_by: "workbench-canonical-validator",
+            },
+          },
+          metadata: {
+            title: "Canonical advisor narrative proof",
+            advisor_notes: "Workbench canonical validation proposal for RFC-0023 Slice 12.",
+            jurisdiction: "SG",
+          },
+        },
+      },
+      headers: {
+        "Idempotency-Key": `workbench-canonical-narrative-${portfolioId}-${canonicalAsOfDate}`,
+      },
+    }
+  );
+  const proposalCreateData = extractGatewayEnvelopeData(proposalCreate);
+  const proposalId = readString(proposalCreateData?.proposal?.proposal_id);
+  const proposalVersionNo = proposalCreateData?.version?.version_no ?? null;
+  const proposalNarrative = proposalCreateData?.version?.artifact?.proposal_narrative;
+  if (!proposalId || !proposalNarrative?.narrative_id) {
+    throw new Error("Canonical proposal narrative proof did not create a narrative proposal.");
+  }
+  summary.workflowPackChecks.push({
+    actionType: "PROPOSAL_NARRATIVE_CREATED",
+    route: `/api/v1/proposals`,
+    sourceRunId: proposalNarrative.narrative_id,
+    resultReviewState: proposalNarrative.review_state,
+    resultSupportabilityStatus: proposalNarrative.generation_mode,
+    proposalId,
+    versionNo: proposalVersionNo,
   });
 
   const manageSupportabilitySummary = await fetchJson(
@@ -722,6 +785,13 @@ async function run() {
   panelGovernance.recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
     sourceMetricMinimum: 3,
   });
+  panelGovernance.recordPanelClassification("proposal.narrative_posture", "ready", "lotus-advise", {
+    route: `/proposals/${proposalId}`,
+    proposalId,
+    versionNo: proposalVersionNo,
+    narrativeId: proposalNarrative.narrative_id,
+    generationMode: proposalNarrative.generation_mode,
+  });
   panelGovernance.recordPanelClassification("dpm.outcome_review", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     outcomeReviewMinimum: 1,
@@ -822,6 +892,13 @@ async function run() {
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
       performAcceptReviewActionProof: true,
+    });
+    await validateProposalNarrativePosturePanel(page, {
+      summary,
+      workbenchBaseUrl,
+      proposalId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateRiskPanel(page, {
       workbenchBaseUrl,

@@ -196,6 +196,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain('from "./validation/workflow-pack-proof.mjs"');
     expect(script).toContain("validateAdvisorBriefWorkflowPackReviewChain");
     expect(script).toContain("workflowPackChecks.push");
+    expect(script).toContain("validateProposalNarrativePosturePanel");
+    expect(script).toContain("Create proposal narrative canonical proof");
+    expect(script).toContain("proposal.narrative_posture");
     expect(calculationModule).toContain("calculationChecks");
     expect(calculationModule).toContain("Contribution total does not reconcile with net portfolio return");
     expect(calculationModule).toContain("Historical risk attribution residual is too high");
@@ -407,7 +410,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Post-Trade Outcome Review"');
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Proof-Pack Evidence"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
+    expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
+    expect(contractModule).toContain('screenshotName: "proposal-narrative-posture-live.png"');
+    expect(browserWorkflowModule).toContain("Proposal narrative posture review and report package");
+    expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
+    expect(browserWorkflowModule).toContain("Request Reviewed Report");
     expect(browserWorkflowModule).toContain("panel: panelId");
     expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
     expect(browserWorkflowModule).toContain("state: screenshotState");

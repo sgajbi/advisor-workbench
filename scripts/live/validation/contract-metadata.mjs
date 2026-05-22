@@ -86,6 +86,17 @@ export const DEFAULT_PANEL_REGISTRY = {
       ownerFollowUpRfc: null,
     },
     {
+      panelId: "proposal.narrative_posture",
+      owningService: "lotus-advise",
+      gatewayEndpoint: "/api/v1/proposals/{proposal_id}/delivery-summary",
+      requiredSupportState: "ready",
+      route: "/proposals/{proposalId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "proposal-narrative-posture-live.png",
+      knownLimitations: [],
+      ownerFollowUpRfc: null,
+    },
+    {
       panelId: "performance.risk.snapshot",
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/summary",
