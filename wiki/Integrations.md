@@ -127,8 +127,9 @@ must travel through Gateway-shaped contracts.
     Manage-owned `client_communication_boundary` is rendered as a fail-closed internal boundary
     and must not become a Workbench client messaging, approval, delivery, or audit workflow.
     RFC40-WTBD-010 portfolio-memory timeline events, source refs, artifact refs, event counts,
-    source systems, reason codes, supportability, and content hashes remain manage-owned and must
-    reach Workbench through Gateway portfolio-memory composition only.
+    source systems, source-system/source-type facets, applied filters, reason codes,
+    supportability, support boundaries, and content hashes remain manage-owned and must reach
+    Workbench through Gateway portfolio-memory composition and bounded memory search only.
     RFC-0043 monitoring-exception summary execution remains `lotus-ai` owned and must reach
     Workbench through Gateway exception-summary composition only.
     PM operating quality policies, score runs, score-run preview/create, fairness-analysis
@@ -155,7 +156,9 @@ must travel through Gateway-shaped contracts.
     recompute top-position weights or infer largest holdings locally.
     The implemented command-center exception queue consumes the Gateway exception-summary contract.
     The implemented portfolio-memory panel consumes the Gateway portfolio-memory contract and
-    preserves manage event order without reconstructing timeline nodes, and the implemented PM
+    bounded source search contract and preserves manage event order and source facets without
+    reconstructing timeline nodes, querying source-owner stores, discovering the global portfolio
+    universe, or running cross-app source-event search, and the implemented PM
     operating quality panel consumes Gateway policy, score-run, persisted fairness-analysis
     create/list/detail, fairness-analysis preview, review-action preview/create/list/detail, and score-run
     support-summary contracts when Manage/Gateway expose source-defined segment assignments,

@@ -143,7 +143,32 @@ export function buildManageWorkspaceData(
       },
       data: { events: [] },
     },
+    portfolioMemorySearch: {
+      correlation_id: "corr_memory_search",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:portfolio-memory",
+        state: "SUPPORTED",
+        event_count: 1,
+        event_type_counts: { OUTCOME_REVIEW_SOURCE_LINEAGE_RECORDED: 1 },
+        source_systems: ["lotus-performance"],
+        source_system_counts: { "lotus-performance": 1 },
+        source_type_counts: { "PortfolioRealizedTaxSummary:v1": 1 },
+        reason_codes: ["PERSISTED_LINEAGE_SEARCH_ONLY"],
+      },
+      data: {
+        support_boundary: {
+          source_owner_store_query: false,
+          global_portfolio_discovery: false,
+        },
+        items: [],
+      },
+    },
     portfolioMemoryError: null,
+    portfolioMemorySearchError: null,
     pmOperatingQualityPolicies: {
       correlation_id: "corr_policy",
       contract_version: "v1",

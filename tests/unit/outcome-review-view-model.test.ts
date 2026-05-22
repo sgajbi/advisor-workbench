@@ -86,6 +86,7 @@ describe("outcome review view model", () => {
     expect(model.items[0].lineage[0]).toEqual(
       expect.objectContaining({
         source: "lotus-performance",
+        sourceType: "N/A",
         reference: "perf_1",
         freshness: "fresh",
         hash: "sha256:perf",
@@ -127,15 +128,63 @@ describe("outcome review view model", () => {
     expect(model.items[0].lineage).toEqual([
       expect.objectContaining({
         source: "lotus-manage",
+        sourceType: "DPM_SELECTED_ALTERNATIVE_EXPECTED_OUTCOME",
         reference: "selected-alternative-1",
         hash: "sha256:selected",
       }),
       expect.objectContaining({
         source: "lotus-core",
+        sourceType: "POST_TRADE_HOLDINGS_WINDOW",
         reference: "post-trade-holdings-1",
         hash: "sha256:realized",
       }),
     ]);
+  });
+
+  it("preserves Manage source-lineage filters, facets, and support boundary", () => {
+    const model = buildOutcomeReviewPanelModel(
+      response(
+        {
+          items: [{ outcome_review_id: "or_1", state: "READY" }],
+        },
+        {
+          applied_filters: {
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            source_system: "lotus-performance",
+            source_type: "PortfolioCashMovementSummary:v1",
+            source_scan_limit: 250,
+          },
+          source_owner_counts: { "lotus-performance": 2 },
+          source_type_counts: {
+            "PortfolioCashMovementSummary:v1": 1,
+            "PortfolioRealizedTaxSummary:v1": 1,
+          },
+          support_boundary: {
+            manage_persisted_lineage_only: true,
+            source_owner_store_query: false,
+            global_portfolio_discovery: false,
+          },
+        },
+      ),
+    );
+
+    const sourceBoundary = model.sourceBoundary!;
+    expect(sourceBoundary.sourceOwnerFacets).toEqual([
+      {
+        key: "owner-lotus-performance",
+        label: "lotus-performance",
+        count: "2",
+        family: "owner",
+      },
+    ]);
+    expect(sourceBoundary.sourceTypeFacets.map((row) => row.label)).toEqual([
+      "PortfolioCashMovementSummary:v1",
+      "PortfolioRealizedTaxSummary:v1",
+    ]);
+    expect(sourceBoundary.appliedFilters).toContain(
+      "Source Type: PortfolioCashMovementSummary:v1",
+    );
+    expect(sourceBoundary.supportBoundary).toContain("Source Owner Store Query: No");
   });
 
   it("marks blocked handoffs from manage supportability without inventing UI support", () => {

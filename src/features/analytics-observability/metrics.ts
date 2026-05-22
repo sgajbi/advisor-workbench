@@ -186,6 +186,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.manage",
+    panel: "portfolio-memory",
+    operation: "dpm.portfolio-memory.search",
+  },
+  {
+    route: "workbench.manage",
     panel: "outcome-review-list",
     operation: "dpm.outcome-reviews.list",
   },

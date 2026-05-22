@@ -1259,6 +1259,8 @@ export type DpmPortfolioMemorySupportability = {
   event_count: number;
   event_type_counts: Record<string, number>;
   source_systems: string[];
+  source_system_counts?: Record<string, number>;
+  source_type_counts?: Record<string, number>;
   reason_codes: string[];
   content_hash?: string | null;
 };
@@ -1279,6 +1281,10 @@ export type DpmOutcomeReviewSupportability = {
   reason_codes: string[];
   blocked_actions: string[];
   remediation_owner?: string | null;
+  applied_filters?: Record<string, unknown>;
+  source_owner_counts?: Record<string, number>;
+  source_type_counts?: Record<string, number>;
+  support_boundary?: Record<string, unknown>;
 };
 
 export type DpmOutcomeClientCommunicationBoundary = {

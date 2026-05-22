@@ -16,7 +16,11 @@ import type {
 export async function getDpmOutcomeReviews(params: {
   portfolioId: string;
   state?: string;
+  sourceSystem?: string;
+  sourceType?: string;
+  sourceScanLimit?: number;
   limit?: number;
+  offset?: number;
   cursor?: string;
 }): Promise<DpmOutcomeReviewGatewayResponse> {
   const query = new URLSearchParams();
@@ -24,6 +28,18 @@ export async function getDpmOutcomeReviews(params: {
   query.set("limit", String(params.limit ?? 10));
   if (params.state) {
     query.set("state", params.state);
+  }
+  if (params.sourceSystem) {
+    query.set("source_system", params.sourceSystem);
+  }
+  if (params.sourceType) {
+    query.set("source_type", params.sourceType);
+  }
+  if (typeof params.sourceScanLimit === "number") {
+    query.set("source_scan_limit", String(params.sourceScanLimit));
+  }
+  if (typeof params.offset === "number") {
+    query.set("offset", String(params.offset));
   }
   if (params.cursor) {
     query.set("cursor", params.cursor);

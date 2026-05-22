@@ -21,9 +21,24 @@ export type OutcomeReviewDimensionRow = {
 export type OutcomeReviewLineageRow = {
   key: string;
   source: string;
+  sourceType?: string;
   reference: string;
   freshness: string;
   hash: string;
+};
+
+export type OutcomeReviewSourceFacetRow = {
+  key: string;
+  label: string;
+  count: string;
+  family: "owner" | "type";
+};
+
+export type OutcomeReviewSourceBoundary = {
+  appliedFilters: string[];
+  supportBoundary: string[];
+  sourceOwnerFacets: OutcomeReviewSourceFacetRow[];
+  sourceTypeFacets: OutcomeReviewSourceFacetRow[];
 };
 
 export type OutcomeReviewClientCommunicationBoundaryView = {
@@ -75,6 +90,7 @@ export type OutcomeReviewPanelModel = {
   sourceService: string;
   authority: string;
   correlationId: string;
+  sourceBoundary?: OutcomeReviewSourceBoundary;
   items: OutcomeReviewListItem[];
 };
 
@@ -91,6 +107,7 @@ export function buildOutcomeReviewPanelModel(
       sourceService: "lotus-gateway",
       authority: "lotus-manage:RFC-0042",
       correlationId: "N/A",
+      sourceBoundary: emptySourceBoundary(),
       items: [],
     };
   }
@@ -112,6 +129,7 @@ export function buildOutcomeReviewPanelModel(
     sourceService: response.supportability.source_service || response.source_service,
     authority: response.supportability.authority,
     correlationId: response.correlation_id,
+    sourceBoundary: buildSourceBoundary(response),
     items,
   };
 }
@@ -252,6 +270,7 @@ function buildLineageRow(record: Record<string, unknown>, index: number): Outcom
   return {
     key: `${source}-${reference}-${index}`,
     source,
+    sourceType: readString(record, "source_type") || readString(record, "product_name") || "N/A",
     reference,
     freshness:
       readString(record, "freshness") ||
@@ -264,6 +283,65 @@ function buildLineageRow(record: Record<string, unknown>, index: number): Outcom
       readString(record, "content_hash") ||
       "N/A",
   };
+}
+
+function buildSourceBoundary(
+  response: DpmOutcomeReviewGatewayResponse,
+): OutcomeReviewSourceBoundary {
+  return {
+    appliedFilters: formatObjectEntries(response.supportability.applied_filters),
+    supportBoundary: formatObjectEntries(response.supportability.support_boundary),
+    sourceOwnerFacets: buildFacetRows(response.supportability.source_owner_counts, "owner"),
+    sourceTypeFacets: buildFacetRows(response.supportability.source_type_counts, "type"),
+  };
+}
+
+function emptySourceBoundary(): OutcomeReviewSourceBoundary {
+  return {
+    appliedFilters: [],
+    supportBoundary: [],
+    sourceOwnerFacets: [],
+    sourceTypeFacets: [],
+  };
+}
+
+function buildFacetRows(
+  counts: Record<string, number> | undefined,
+  family: "owner" | "type",
+): OutcomeReviewSourceFacetRow[] {
+  return Object.entries(counts ?? {})
+    .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+    .slice(0, 6)
+    .map(([label, count]) => ({
+      key: `${family}-${label}`,
+      label,
+      count: count.toLocaleString(),
+      family,
+    }));
+}
+
+function formatObjectEntries(value: Record<string, unknown> | undefined): string[] {
+  return Object.entries(value ?? {})
+    .filter(([, entryValue]) => entryValue !== null && entryValue !== undefined && entryValue !== "")
+    .map(([key, entryValue]) => `${labelFromKey(key)}: ${formatFilterValue(entryValue)}`);
+}
+
+function formatFilterValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).join(", ");
+  }
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return String(value);
+}
+
+function labelFromKey(value: string): string {
+  return value
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function extractOutcomeReviewRecords(data: Record<string, unknown>): Record<string, unknown>[] {

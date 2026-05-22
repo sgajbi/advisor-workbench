@@ -336,6 +336,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.manage",
+        "portfolio-memory",
+        "dpm.portfolio-memory.search",
+      ],
+      [
+        "workbench.manage",
         "outcome-review-list",
         "dpm.outcome-reviews.list",
       ],

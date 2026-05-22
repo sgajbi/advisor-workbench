@@ -27,6 +27,17 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
     reason_codes: ["READY_FOR_REPORT_INPUT"],
     blocked_actions: [],
     remediation_owner: null,
+    applied_filters: {
+      source_system: "lotus-performance",
+      source_type: "PortfolioRealizedTaxSummary:v1",
+    },
+    source_owner_counts: { "lotus-performance": 2 },
+    source_type_counts: { "PortfolioRealizedTaxSummary:v1": 2 },
+    support_boundary: {
+      manage_persisted_lineage_only: true,
+      source_owner_store_query: false,
+      global_portfolio_discovery: false,
+    },
   },
   data: {
     items: [
@@ -59,6 +70,7 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
         source_lineage: [
           {
             source_service: "lotus-risk",
+            source_type: "PortfolioRiskSummary:v1",
             source_ref: "risk_1",
             freshness_bucket: "fresh",
             hash: "sha256:risk",
@@ -81,6 +93,9 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Supported")).toBeInTheDocument();
     expect(screen.getByText("Review Timeline")).toBeInTheDocument();
     expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
+    expect(screen.getByText("Persisted Evidence Facets")).toBeInTheDocument();
+    expect(screen.getByText("PortfolioRealizedTaxSummary:v1")).toBeInTheDocument();
+    expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
     expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
     expect(screen.getByText("Ready for Advisor Review")).toBeInTheDocument();
     expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);

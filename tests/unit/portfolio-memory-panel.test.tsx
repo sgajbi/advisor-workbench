@@ -34,14 +34,46 @@ const readyResponse: DpmPortfolioMemoryGatewayResponse = {
   },
 };
 
+const searchResponse: DpmPortfolioMemoryGatewayResponse = {
+  correlation_id: "corr-memory-search",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  supportability: {
+    source_service: "lotus-manage",
+    authority: "lotus-manage:RFC-0040/RFC-0041/RFC-0042",
+    state: "READY",
+    event_count: 2,
+    event_type_counts: { OUTCOME_REVIEW_SOURCE_LINEAGE_RECORDED: 2 },
+    source_systems: ["lotus-performance"],
+    source_system_counts: { "lotus-performance": 2 },
+    source_type_counts: {
+      "PortfolioRealizedTaxSummary:v1": 1,
+      "PortfolioCashMovementSummary:v1": 1,
+    },
+    reason_codes: ["PERSISTED_LINEAGE_SEARCH_ONLY"],
+    content_hash: "sha256:memory-search",
+  },
+  data: {
+    support_boundary: {
+      manage_persisted_lineage_only: true,
+      source_owner_store_query: false,
+    },
+    items: [],
+  },
+};
+
 describe("PortfolioMemoryPanel", () => {
   it("renders business-facing portfolio memory supportability and timeline", () => {
-    render(<PortfolioMemoryPanel response={readyResponse} />);
+    render(<PortfolioMemoryPanel response={readyResponse} searchResponse={searchResponse} />);
 
     expect(screen.getByRole("heading", { name: "Portfolio Memory" })).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Latest Memory Event")).toBeInTheDocument();
     expect(screen.getByText("Memory Coverage")).toBeInTheDocument();
+    expect(screen.getByText("lotus-performance (2)")).toBeInTheDocument();
+    expect(screen.getByText("PortfolioRealizedTaxSummary:v1 (1)")).toBeInTheDocument();
+    expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
     expect(screen.getAllByText("Outcome Review Created").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Outcome Review Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Historical Event Log")).toBeInTheDocument();

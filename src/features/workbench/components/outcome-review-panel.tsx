@@ -59,6 +59,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           items={model.items}
           primaryReview={primaryReview}
           clientCommunicationBoundary={clientCommunicationBoundary}
+          sourceBoundary={model.sourceBoundary}
           evidencePackHref={evidencePackHref}
           readyEvidenceCount={readyEvidenceCount}
           sourceEvidenceStatus={sourceEvidenceStatus}

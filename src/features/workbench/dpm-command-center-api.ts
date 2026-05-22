@@ -237,3 +237,46 @@ export async function getDpmPortfolioMemory(params: {
       )
   );
 }
+
+export async function searchDpmPortfolioMemory(params: {
+  portfolioIds?: string[];
+  eventType?: string;
+  supportabilityState?: string;
+  sourceSystem?: string;
+  sourceType?: string;
+  limit?: number;
+  offset?: number;
+  sourceScanLimit?: number;
+}): Promise<DpmPortfolioMemoryGatewayResponse> {
+  const query = new URLSearchParams();
+  for (const portfolioId of params.portfolioIds ?? []) {
+    query.append("portfolio_ids", portfolioId);
+  }
+  if (params.eventType) {
+    query.set("event_type", params.eventType);
+  }
+  if (params.supportabilityState) {
+    query.set("supportability_state", params.supportabilityState);
+  }
+  if (params.sourceSystem) {
+    query.set("source_system", params.sourceSystem);
+  }
+  if (params.sourceType) {
+    query.set("source_type", params.sourceType);
+  }
+  query.set("limit", String(params.limit ?? 10));
+  query.set("offset", String(params.offset ?? 0));
+  if (typeof params.sourceScanLimit === "number") {
+    query.set("source_scan_limit", String(params.sourceScanLimit));
+  }
+  return await observeWorkbenchResource(
+    "dpm.portfolio-memory.search",
+    async () =>
+      await fetchWorkbenchResource<DpmPortfolioMemoryGatewayResponse>(
+        "server",
+        "/dpm/command-center/portfolio-memory/search",
+        "DPM portfolio memory search",
+        query
+      )
+  );
+}

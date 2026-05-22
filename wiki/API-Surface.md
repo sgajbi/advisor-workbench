@@ -148,12 +148,16 @@ promote dormant labels into product ownership just because historical route file
   reports, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 - RFC40-WTBD-010 portfolio-memory timeline rendering is implemented on
   `/workbench/{portfolioId}?mode=memory` through Gateway
-  `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`. Workbench renders manage-owned
-  event order, event type counts, event time, source systems, source refs, artifact refs, reason
-  codes, supportability state, and content hash. It does not reconstruct timeline nodes from
-  proof-pack, wave, outcome-review, report, archive, or AI payloads; direct `lotus-manage` calls
-  remain forbidden. Dedicated timeline filters, event drawers, lifecycle export, and retention or
-  audit-policy controls remain future scope until separately implemented and proven.
+  `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` and bounded source-family posture
+  through Gateway `/api/v1/dpm/command-center/portfolio-memory/search`. Workbench renders
+  manage-owned event order, event type counts, event time, source systems, source refs, artifact
+  refs, reason codes, supportability state, source-system/source-type facets, support boundary,
+  and content hash. It does not reconstruct timeline nodes from proof-pack, wave, outcome-review,
+  report, archive, or AI payloads; direct `lotus-manage` calls, global portfolio-universe
+  discovery, source-owner store querying, cross-app source-event search, OMS/fill/settlement
+  claims, and client communication workflow remain forbidden. Event drawers, lifecycle export,
+  and retention or audit-policy controls remain future scope until separately implemented and
+  proven.
 - RFC-0098/RFC-0041 action-register supportability is rendered on the Manage workspace from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow
@@ -164,9 +168,11 @@ promote dormant labels into product ownership just because historical route file
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}?mode=reviews` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
   Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,
-  source lineage, supportability, report-input posture, AI-evidence posture, and
-  `client_communication_boundary` posture without calculating those values client-side or creating
-  client communication capability. The panel can request a governed outcome-review PDF job by
+  source lineage, source-owner/source-type facets, applied source-lineage filters, support
+  boundary, supportability, report-input posture, AI-evidence posture, and
+  `client_communication_boundary` posture without calculating those values client-side, querying
+  source-owner stores, or creating client communication capability. The panel can request a
+  governed outcome-review PDF job by
   loading manage report input through Gateway and then submitting Gateway
   `POST /api/v1/reports/outcome-reviews`; report rendering and archive lifecycle remain owned by
   `lotus-report`, `lotus-render`, and `lotus-archive`. The panel can also request a governed
