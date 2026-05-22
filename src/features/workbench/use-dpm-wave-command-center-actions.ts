@@ -21,10 +21,13 @@ import {
   getDpmWaveProofPackPosture,
   handoffDpmWave,
   launchDpmCampaignDefinition,
+  listDpmCampaignDefinitions,
   previewDpmWave,
+  retireDpmCampaignDefinition,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
+  supersedeDpmCampaignDefinition,
 } from "@/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
@@ -78,6 +81,31 @@ export type DpmCampaignWorkflowCommandEvidence = {
   operatingBoundaries: string;
 };
 
+export type DpmCampaignLifecycleCommandType = "retire" | "supersede";
+
+export type DpmCampaignLifecycleCommandInput = {
+  commandType: DpmCampaignLifecycleCommandType;
+  actorId: string;
+  reasonCode: string;
+  replacementCampaignVersion?: string;
+  replacementContentHash?: string;
+};
+
+export type DpmCampaignLifecycleCommandEvidence = {
+  commandLabel: string;
+  status: string;
+  actor: string;
+  reason: string;
+  replacementCampaignVersion: string;
+  replacementContentHash: string;
+  correlationId: string;
+  sourceService: string;
+  upstreamStatus: string;
+  contentHash: string;
+  reasonCodes: string;
+  operatingBoundaries: string;
+};
+
 type UseDpmWaveCommandCenterActionsResult = {
   model: DpmWaveCommandCenterPanelModel;
   selectedCampaign: DpmCampaignDefinitionRow | null;
@@ -88,6 +116,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignPreviewReadinessKey: string | null;
   pendingCampaignLaunchPackageKey: string | null;
   pendingCampaignLaunchKey: string | null;
+  pendingCampaignLifecycleCommand: boolean;
   pendingCampaignWorkflowCommand: boolean;
   actionError: string | null;
   proofPackLoaded: boolean;
@@ -95,7 +124,9 @@ type UseDpmWaveCommandCenterActionsResult = {
   campaignLaunchHistoryError: string | null;
   campaignPreviewReadinessError: string | null;
   campaignLaunchError: string | null;
+  campaignLifecycleCommandError: string | null;
   campaignWorkflowCommandError: string | null;
+  campaignLifecycleCommandEvidence: DpmCampaignLifecycleCommandEvidence | null;
   campaignWorkflowCommandEvidence: DpmCampaignWorkflowCommandEvidence | null;
   actionMessage: string | null;
   previewRebalance: () => void;
@@ -114,6 +145,9 @@ type UseDpmWaveCommandCenterActionsResult = {
   ) => Promise<void>;
   checkCampaignLaunchReadiness: (row: DpmCampaignDefinitionRow) => Promise<void>;
   launchCampaign: (row: DpmCampaignDefinitionRow) => Promise<void>;
+  recordCampaignLifecycleCommand: (
+    command: DpmCampaignLifecycleCommandInput
+  ) => Promise<void>;
   recordCampaignWorkflowCommand: (
     command: DpmCampaignWorkflowCommandInput
   ) => Promise<void>;
@@ -147,6 +181,8 @@ export function useDpmWaveCommandCenterActions({
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchResponse, setCampaignLaunchResponse] =
     useState<DpmWaveGatewayResponse | null>(null);
+  const [campaignDefinitionsResponse, setCampaignDefinitionsResponse] =
+    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignApprovalDecisionsResponse, setCampaignApprovalDecisionsResponse] =
     useState<DpmCampaignWorkflowGatewayResponse | null>(null);
   const [campaignAssignmentActionsResponse, setCampaignAssignmentActionsResponse] =
@@ -166,6 +202,8 @@ export function useDpmWaveCommandCenterActions({
     useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] =
     useState<string | null>(null);
+  const [pendingCampaignLifecycleCommand, setPendingCampaignLifecycleCommand] =
+    useState(false);
   const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
     useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -175,8 +213,12 @@ export function useDpmWaveCommandCenterActions({
   const [campaignPreviewReadinessError, setCampaignPreviewReadinessError] =
     useState<string | null>(null);
   const [campaignLaunchError, setCampaignLaunchError] = useState<string | null>(null);
+  const [campaignLifecycleCommandError, setCampaignLifecycleCommandError] =
+    useState<string | null>(null);
   const [campaignWorkflowCommandError, setCampaignWorkflowCommandError] =
     useState<string | null>(null);
+  const [campaignLifecycleCommandEvidence, setCampaignLifecycleCommandEvidence] =
+    useState<DpmCampaignLifecycleCommandEvidence | null>(null);
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
     useState<DpmCampaignWorkflowCommandEvidence | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -188,7 +230,7 @@ export function useDpmWaveCommandCenterActions({
     waveDetail: proofPackResponse,
     waveItems: itemsResponse,
     actionResponse,
-    campaignDefinitions,
+    campaignDefinitions: campaignDefinitionsResponse ?? campaignDefinitions,
     campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
     campaignLaunchHistory: campaignLaunchHistoryResponse,
@@ -458,6 +500,77 @@ export function useDpmWaveCommandCenterActions({
     setCampaignMakerCheckerControlsResponse(makerCheckerControls);
   }
 
+  async function recordCampaignLifecycleCommand(command: DpmCampaignLifecycleCommandInput) {
+    if (pendingCampaignLifecycleCommand) {
+      return;
+    }
+    if (!selectedCampaign) {
+      setCampaignLifecycleCommandError(
+        "Select a Manage campaign definition before recording a lifecycle command."
+      );
+      return;
+    }
+    const actorId = command.actorId.trim();
+    const reasonCode = command.reasonCode.trim();
+    const replacementCampaignVersion = command.replacementCampaignVersion?.trim() ?? "";
+    const replacementContentHash = command.replacementContentHash?.trim() ?? "";
+    if (!actorId || !reasonCode) {
+      setCampaignLifecycleCommandError("Campaign lifecycle command requires actor and reason.");
+      return;
+    }
+    if (command.commandType === "supersede" && (!replacementCampaignVersion || !replacementContentHash)) {
+      setCampaignLifecycleCommandError(
+        "Supersede requires replacement campaign version and content hash."
+      );
+      return;
+    }
+    setPendingCampaignLifecycleCommand(true);
+    setCampaignLifecycleCommandError(null);
+    setCampaignLifecycleCommandEvidence(null);
+    try {
+      const body: Record<string, unknown> = {
+        actor_id: actorId,
+        reason_code: reasonCode,
+      };
+      if (command.commandType === "supersede") {
+        body.replacement_campaign_version = replacementCampaignVersion;
+        body.replacement_content_hash = replacementContentHash;
+      }
+      const params = {
+        campaignId: selectedCampaign.campaignId,
+        campaignVersion: selectedCampaign.campaignVersion,
+        body,
+        actorId,
+      };
+      const response =
+        command.commandType === "retire"
+          ? await retireDpmCampaignDefinition(params)
+          : await supersedeDpmCampaignDefinition(params);
+      setCampaignLifecycleCommandEvidence(
+        buildCampaignLifecycleCommandEvidence(command.commandType, response)
+      );
+      if (isLifecycleCommandBlocked(response)) {
+        setCampaignLifecycleCommandError("Manage did not accept the campaign lifecycle command.");
+        return;
+      }
+      const [definitions, lifecycle] = await Promise.all([
+        listDpmCampaignDefinitions({ limit: 10, offset: 0 }),
+        getDpmCampaignDefinitionLifecycleEvents({
+          campaignId: selectedCampaign.campaignId,
+          campaignVersion: selectedCampaign.campaignVersion,
+        }),
+      ]);
+      setCampaignDefinitionsResponse(definitions);
+      setCampaignLifecycleResponse(lifecycle);
+    } catch (error) {
+      setCampaignLifecycleCommandError(
+        error instanceof Error ? error.message : "Campaign lifecycle command failed."
+      );
+    } finally {
+      setPendingCampaignLifecycleCommand(false);
+    }
+  }
+
   async function recordCampaignWorkflowCommand(command: DpmCampaignWorkflowCommandInput) {
     if (pendingCampaignWorkflowCommand) {
       return;
@@ -516,6 +629,7 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError,
     proofPackLoaded: Boolean(proofPackResponse),
@@ -523,7 +637,9 @@ export function useDpmWaveCommandCenterActions({
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
     campaignLaunchError,
+    campaignLifecycleCommandError,
     campaignWorkflowCommandError,
+    campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
     previewRebalance,
@@ -539,8 +655,35 @@ export function useDpmWaveCommandCenterActions({
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
     launchCampaign,
+    recordCampaignLifecycleCommand,
     recordCampaignWorkflowCommand,
   };
+}
+
+function buildCampaignLifecycleCommandEvidence(
+  commandType: DpmCampaignLifecycleCommandType,
+  response: DpmCampaignDefinitionGatewayResponse
+): DpmCampaignLifecycleCommandEvidence {
+  const data = response.data;
+  return {
+    commandLabel: commandType === "retire" ? "Retire campaign" : "Supersede campaign",
+    status: readString(data.status) || readString(data.supportability_state) || "N/A",
+    actor: readString(data.actor_id) || readString(data.actor) || "N/A",
+    reason: readString(data.reason_code) || formatList(data.reason_codes),
+    replacementCampaignVersion: readString(data.replacement_campaign_version) || "N/A",
+    replacementContentHash: readString(data.replacement_content_hash) || "N/A",
+    correlationId: readString(data.correlation_id) || response.correlation_id,
+    sourceService: response.source_service,
+    upstreamStatus: String(response.upstream_status),
+    contentHash: readString(data.content_hash) || "N/A",
+    reasonCodes: formatList(data.reason_codes),
+    operatingBoundaries: formatList(data.operating_boundaries),
+  };
+}
+
+function isLifecycleCommandBlocked(response: DpmCampaignDefinitionGatewayResponse): boolean {
+  const state = readString(response.data.supportability_state).toUpperCase();
+  return state === "BLOCKED" || state === "UNSUPPORTED" || state === "NOT_SUPPORTED";
 }
 
 function buildCampaignWorkflowCommandEvidence(

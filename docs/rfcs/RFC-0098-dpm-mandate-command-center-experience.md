@@ -463,7 +463,9 @@ Workbench must consume these Gateway wave routes when implemented:
 | `GET /api/v1/dpm/command-center/waves/campaign-workflow-board` | read-only Manage campaign workflow board summary |
 | `GET /api/v1/dpm/command-center/waves/campaign-assignment-plan` | read-only Manage campaign assignment plan summary |
 | `GET /api/v1/dpm/command-center/waves/campaign-workflow-automation` | read-only Manage workflow automation posture |
-| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | Manage lifecycle evidence for a selected campaign definition |
+| `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/retire` | bounded Gateway-backed campaign-definition retire control |
+| `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede` | bounded Gateway-backed campaign-definition supersede control |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` audit posture for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness` | Manage-owned `BulkReviewCampaignDefinitionPreviewReadiness:v1` posture for selected campaign preview and wave-create readiness |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and idempotency evidence for a selected campaign definition |
@@ -485,14 +487,22 @@ campaign definitions through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
 status, as-of date, candidate count, eligible portfolio type, governance posture, and source-backed
 posture without rendering campaign content hashes or recalculating membership. The panel can open
-read-only selected campaign lifecycle evidence through Gateway
+selected campaign lifecycle evidence through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
-and append-only launch history through Gateway
+and record bounded retire/supersede lifecycle commands through Gateway
+`POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/retire`
+and
+`POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede`.
+Those controls require actor and reason evidence, require replacement version/hash evidence for
+supersede, refresh campaign definitions and lifecycle evidence after accepted commands, and render
+returned status, actor, reason, replacement lineage, correlation id, content hash, reason codes,
+and operating boundaries without fabricating browser-owned lifecycle truth. The panel can also open
+append-only launch history through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`,
 including Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
 correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
 without inferring campaign lifecycle state, recomputing launch state, recalculating membership,
-or operating retire/supersede commands locally. It checks campaign preview readiness through Gateway
+or operating unsupported lifecycle commands locally. It checks campaign preview readiness through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness`
 and renders Manage-owned supportability, reason codes, blocked actions, source references, and
 operating boundaries without recalculating readiness. It then checks launch-package readiness through Gateway

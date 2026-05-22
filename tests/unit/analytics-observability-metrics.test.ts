@@ -515,6 +515,16 @@ describe("analytics UI observability metrics", () => {
         "wave-campaign-launch",
         "dpm.waves.campaign-definitions.launch",
       ],
+      [
+        "workbench.manage",
+        "wave-campaign-retire",
+        "dpm.waves.campaign-definitions.retire",
+      ],
+      [
+        "workbench.manage",
+        "wave-campaign-supersede",
+        "dpm.waves.campaign-definitions.supersede",
+      ],
       ["workbench.manage", "wave-preview", "dpm.waves.preview"],
       ["workbench.manage", "wave-create", "dpm.waves.create"],
       ["workbench.manage", "wave-detail", "dpm.waves.get"],

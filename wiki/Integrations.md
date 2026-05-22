@@ -106,12 +106,17 @@ must travel through Gateway-shaped contracts.
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package`
     and
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`.
-    Workbench renders the bounded campaign-definition list and read-only lifecycle evidence,
+    Campaign retire and supersede commands reach Workbench only through Gateway
+    `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/retire`
+    and
+    `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede`.
+    Workbench renders the bounded campaign-definition list and lifecycle evidence,
     append-only launch history, campaign-discovery posture, preview-readiness posture,
-    campaign workflow audit evidence, and ready-only launch action but does
+    campaign workflow audit evidence, ready-only launch action, and bounded retire/supersede
+    lifecycle controls but does
     not discover global campaign cohorts, recalculate membership or launch readiness, infer
     lifecycle state, reconstruct idempotency, mutate assignment or maker-checker state, operate
-    retire/supersede commands, approve trades, generate or stage orders, route orders, claim fills,
+    unsupported lifecycle commands, approve trades, generate or stage orders, route orders, claim fills,
     settlement, or OMS execution, or operate a campaign-definition upsert
     workflow locally. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned

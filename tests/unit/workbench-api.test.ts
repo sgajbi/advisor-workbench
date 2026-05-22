@@ -65,6 +65,7 @@ import {
   listDpmWaves,
   launchDpmCampaignDefinition,
   previewDpmWave,
+  retireDpmCampaignDefinition,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
@@ -75,6 +76,7 @@ import {
   requestDpmOutcomeReviewAiNarrative,
   requestDpmProofPackAiPmMemo,
   requestDpmWaveAiPmMemo,
+  supersedeDpmCampaignDefinition,
   getArchivedDocumentMetadata,
   getPortfolio360,
   getReportBatchStatus,
@@ -2687,6 +2689,75 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-launch");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign-launch");
+  });
+
+  it("records campaign-definition retire and supersede commands through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-lifecycle-command",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              product_name: "BulkReviewCampaignDefinitionLifecycleCommand",
+              status: "SUPERSEDED",
+              actor_id: "pm_sg_1",
+              reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+              replacement_campaign_version: "2026.06",
+              replacement_content_hash: "sha256:campaign-replacement",
+              content_hash: "sha256:campaign-superseded",
+              reason_codes: ["campaign_definition_superseded"],
+              operating_boundaries: [
+                "NO_ORDER_GENERATION",
+                "NO_OMS_EXECUTION_CLAIM",
+                "NO_EXTERNAL_WORKFLOW_ORCHESTRATION",
+              ],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await retireDpmCampaignDefinition({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      actorId: "pm_sg_1",
+      body: {
+        actor_id: "pm_sg_1",
+        reason_code: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+      },
+    });
+    await supersedeDpmCampaignDefinition({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      actorId: "pm_sg_1",
+      body: {
+        actor_id: "pm_sg_1",
+        reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+        replacement_campaign_version: "2026.06",
+        replacement_content_hash: "sha256:campaign-replacement",
+      },
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/retire"
+    );
+    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+      "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/supersede"
+    );
+    expect(fetchMock.mock.calls[1][1]?.body).toContain(
+      '"replacement_content_hash":"sha256:campaign-replacement"'
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-retire");
+    expect(metricEventsJson).toContain("wave-campaign-supersede");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-lifecycle-command");
   });
 
   it("previews, creates, reviews, actions, and inspects DPM waves through Gateway BFF", async () => {

@@ -87,6 +87,7 @@ describe("DpmCampaignDefinitionsSection", () => {
     const onLoadLaunchHistory = vi.fn();
     const onCheckLaunchReadiness = vi.fn();
     const onLaunchCampaign = vi.fn();
+    const onRecordLifecycleCommand = vi.fn();
 
     render(
       <DpmCampaignDefinitionsSection
@@ -101,11 +102,13 @@ describe("DpmCampaignDefinitionsSection", () => {
         onLoadLaunchHistory={onLoadLaunchHistory}
         onCheckLaunchReadiness={onCheckLaunchReadiness}
         onLaunchCampaign={onLaunchCampaign}
+        onRecordLifecycleCommand={onRecordLifecycleCommand}
       />
     );
 
     expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign Lifecycle Control" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
@@ -122,12 +125,35 @@ describe("DpmCampaignDefinitionsSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
     fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retire Campaign" }));
+    fireEvent.change(screen.getByLabelText("Replacement Version"), {
+      target: { value: "2026.06" },
+    });
+    fireEvent.change(screen.getByLabelText("Replacement Hash"), {
+      target: { value: "sha256:campaign-replacement" },
+    });
+    fireEvent.change(screen.getByLabelText("Reason"), {
+      target: { value: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Supersede Campaign" }));
 
     expect(onLoadLifecycle).toHaveBeenCalledWith(campaign);
     expect(onLoadLaunchHistory).toHaveBeenNthCalledWith(1, campaign);
     expect(onLoadLaunchHistory).toHaveBeenNthCalledWith(2, campaign, 10);
     expect(onCheckLaunchReadiness).toHaveBeenCalledWith(campaign);
     expect(onLaunchCampaign).toHaveBeenCalledWith(campaign);
+    expect(onRecordLifecycleCommand).toHaveBeenNthCalledWith(1, {
+      commandType: "retire",
+      actorId: "workbench-system",
+      reasonCode: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+    });
+    expect(onRecordLifecycleCommand).toHaveBeenNthCalledWith(2, {
+      commandType: "supersede",
+      actorId: "workbench-system",
+      reasonCode: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+      replacementCampaignVersion: "2026.06",
+      replacementContentHash: "sha256:campaign-replacement",
+    });
     expect(screen.queryByRole("button", { name: /trade/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /oms/i })).not.toBeInTheDocument();
   });
@@ -153,6 +179,8 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(screen.getByText("Campaign definitions unavailable")).toBeInTheDocument();
     expect(screen.getByText("Campaign launch needs source readiness")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Retire Campaign" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Supersede Campaign" })).toBeDisabled();
     expect(screen.getByText("No active campaign definitions")).toBeInTheDocument();
     expect(screen.getByText("No launch history loaded")).toBeInTheDocument();
 

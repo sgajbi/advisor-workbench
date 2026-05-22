@@ -262,6 +262,65 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
   );
 }
 
+async function runDpmCampaignDefinitionLifecycleCommand(
+  operation: WorkbenchObservedOperation,
+  actionPath: "retire" | "supersede",
+  label: string,
+  params: {
+    campaignId: string;
+    campaignVersion: string;
+    body: Record<string, unknown>;
+    actorId?: string;
+  }
+): Promise<DpmCampaignDefinitionGatewayResponse> {
+  return await observeWorkbenchMutation(
+    operation,
+    async () =>
+      await fetchWorkbenchMutation<DpmCampaignDefinitionGatewayResponse>(
+        buildWorkbenchUrl(
+          "client",
+          `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
+            params.campaignId
+          )}/versions/${encodeURIComponent(params.campaignVersion)}/${actionPath}`
+        ),
+        label,
+        {
+          method: "POST",
+          headers: buildDpmWaveCallerHeaders(params.actorId),
+          body: JSON.stringify({ body: params.body }),
+        }
+      )
+  );
+}
+
+export async function retireDpmCampaignDefinition(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  return await runDpmCampaignDefinitionLifecycleCommand(
+    "dpm.waves.campaign-definitions.retire",
+    "retire",
+    "retire DPM campaign definition",
+    params
+  );
+}
+
+export async function supersedeDpmCampaignDefinition(params: {
+  campaignId: string;
+  campaignVersion: string;
+  body: Record<string, unknown>;
+  actorId?: string;
+}): Promise<DpmCampaignDefinitionGatewayResponse> {
+  return await runDpmCampaignDefinitionLifecycleCommand(
+    "dpm.waves.campaign-definitions.supersede",
+    "supersede",
+    "supersede DPM campaign definition",
+    params
+  );
+}
+
 function appendOptionalCampaignWorkflowQuery(
   query: URLSearchParams,
   params?: {
