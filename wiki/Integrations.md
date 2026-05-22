@@ -130,11 +130,12 @@ must travel through Gateway-shaped contracts.
     preview/create/list/detail, review-action preview/create/list/detail, summary-invocation
     preview/create/list/detail, and PM quality support-summary requests must reach Workbench
     through Gateway `/api/v1/dpm/command-center/pm-operating-quality*` only. Workbench renders
-    source-defined segment, fairness, supervisory review-action, persisted summary-invocation,
-    and review-gated workflow-pack posture but does not construct prompts, render generated
-    summary text or model responses, discover segments, calculate PM scores, segment averages,
-    or governed spreads, infer protected classes, rank PMs, create HR/compensation/conduct
-    decisions, approve trades, contact clients, route orders, or claim OMS/execution truth.
+    source-defined segment, fairness, supervisory review-action, preview-gated persisted
+    summary-invocation, and review-gated workflow-pack posture but does not construct prompts,
+    submit or render generated summary text or model responses, discover segments, calculate PM
+    scores, segment averages, or governed spreads, infer protected classes, rank PMs, create
+    HR/compensation/conduct decisions, approve trades, contact clients, route orders, or claim
+    OMS/execution truth.
     The implemented Workbench construction panel consumes the Gateway construction alternative-set
     contracts, the implemented wave command-center panel consumes Gateway wave list, preview,
     create, detail, item, source-check, simulation, approval, staging, handoff, proof-posture,

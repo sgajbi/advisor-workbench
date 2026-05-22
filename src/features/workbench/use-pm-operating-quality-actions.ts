@@ -2,28 +2,37 @@
 
 import { useState } from "react";
 import {
+  buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   buildDpmPmOperatingQualityReviewActionCorrelationId,
   createDpmPmOperatingQualityFairnessAnalysis,
   createDpmPmOperatingQualityReviewAction,
+  createDpmPmOperatingQualitySummaryInvocation,
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
+  getDpmPmOperatingQualitySummaryInvocation,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
+  previewDpmPmOperatingQualitySummaryInvocation,
   requestDpmPmOperatingQualitySummary,
   type DpmPmOperatingQualityReviewActionRequest,
+  type DpmPmOperatingQualitySummaryInvocationRequest,
 } from "@/features/workbench/pm-operating-quality-api";
 import {
   buildPmQualityActionError,
   buildPmQualityBlockedActionError,
   buildPmQualityFairnessCreateEvidence,
   buildPmQualityReviewActionEvidence,
+  buildPmQualitySummaryInvocationEvidence,
   readPmQualityFairnessAnalysisId,
   readPmQualityReviewActionId,
+  readPmQualitySummaryInvocationId,
   type PmQualityActionError,
   type PmQualityFairnessCreateEvidence,
   type PmQualityReviewActionEvidence,
   type PmQualityReviewActionForm,
+  type PmQualitySummaryInvocationEvidence,
+  type PmQualitySummaryInvocationForm,
 } from "@/features/workbench/pm-operating-quality-actions";
 import {
   buildPmOperatingQualityPanelModel,
@@ -53,20 +62,32 @@ type UsePmOperatingQualityActionsResult = {
   pendingSummaryAction: boolean;
   pendingReviewActionPreview: boolean;
   pendingReviewActionCreate: boolean;
+  pendingSummaryInvocationPreview: boolean;
+  pendingSummaryInvocationCreate: boolean;
   actionError: PmQualityActionError | null;
   actionMessage: string | null;
   fairnessCreateEvidence: PmQualityFairnessCreateEvidence | null;
   reviewActionCreateEvidence: PmQualityReviewActionEvidence | null;
+  summaryInvocationCreateEvidence: PmQualitySummaryInvocationEvidence | null;
   reviewActionForm: PmQualityReviewActionForm;
+  summaryInvocationForm: PmQualitySummaryInvocationForm;
   reviewActionReadiness: { state: string; detail: string };
+  summaryInvocationReadiness: { state: string; detail: string };
   reviewActionPreviewReady: boolean;
+  summaryInvocationPreviewReady: boolean;
   setReviewActionFormValue: (field: keyof PmQualityReviewActionForm, value: string) => void;
+  setSummaryInvocationFormValue: (
+    field: keyof PmQualitySummaryInvocationForm,
+    value: string
+  ) => void;
   previewScoreRun: () => Promise<void>;
   previewFairnessAnalysis: () => Promise<void>;
   createFairnessAnalysis: () => Promise<void>;
   requestSupportSummary: () => Promise<void>;
   previewReviewAction: () => Promise<void>;
   createReviewAction: () => Promise<void>;
+  previewSummaryInvocation: () => Promise<void>;
+  createSummaryInvocation: () => Promise<void>;
 };
 
 export function usePmOperatingQualityActions({
@@ -89,10 +110,16 @@ export function usePmOperatingQualityActions({
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [createdReviewActionResponse, setCreatedReviewActionResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [summaryInvocationPreviewResponse, setSummaryInvocationPreviewResponse] =
+    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [createdSummaryInvocationResponse, setCreatedSummaryInvocationResponse] =
+    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [fairnessCreateEvidence, setFairnessCreateEvidence] =
     useState<PmQualityFairnessCreateEvidence | null>(null);
   const [reviewActionCreateEvidence, setReviewActionCreateEvidence] =
     useState<PmQualityReviewActionEvidence | null>(null);
+  const [summaryInvocationCreateEvidence, setSummaryInvocationCreateEvidence] =
+    useState<PmQualitySummaryInvocationEvidence | null>(null);
   const [summaryResponse, setSummaryResponse] =
     useState<DpmPmOperatingQualitySummaryResponse | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
@@ -101,6 +128,8 @@ export function usePmOperatingQualityActions({
   const [pendingSummaryAction, setPendingSummaryAction] = useState(false);
   const [pendingReviewActionPreview, setPendingReviewActionPreview] = useState(false);
   const [pendingReviewActionCreate, setPendingReviewActionCreate] = useState(false);
+  const [pendingSummaryInvocationPreview, setPendingSummaryInvocationPreview] = useState(false);
+  const [pendingSummaryInvocationCreate, setPendingSummaryInvocationCreate] = useState(false);
   const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const model = buildPmOperatingQualityPanelModel({
@@ -111,7 +140,10 @@ export function usePmOperatingQualityActions({
     reviewActions,
     reviewActionDetail: createdReviewActionResponse ?? reviewActionPreviewResponse ?? reviewActionDetail,
     summaryInvocations,
-    summaryInvocationDetail,
+    summaryInvocationDetail:
+      createdSummaryInvocationResponse ??
+      summaryInvocationPreviewResponse ??
+      summaryInvocationDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
     summary: summaryResponse,
@@ -134,12 +166,43 @@ export function usePmOperatingQualityActions({
     blockedActions: model.blockedActions,
   });
   const reviewActionPreviewReady = Boolean(reviewActionPreviewResponse);
+  const defaultSummaryInvocationTarget = resolveSummaryInvocationTarget(model);
+  const [summaryInvocationForm, setSummaryInvocationForm] =
+    useState<PmQualitySummaryInvocationForm>(() => ({
+      requestedBy: "workbench-pm-operating-quality-supervisor",
+      summaryRef: defaultSummaryInvocationTarget.summaryRef,
+      scoreRunId: defaultSummaryInvocationTarget.scoreRunId,
+      reviewActionId: defaultSummaryInvocationTarget.reviewActionId,
+      invocationState: "PENDING_REVIEW",
+      workflowPackName: "pm-operating-quality-summary",
+      workflowPackVersion: model.policyVersion !== "N/A" ? model.policyVersion : "",
+      workflowRunId: "",
+      artifactRef: "",
+      contentHash: "",
+    }));
+  const summaryInvocationReadiness = resolveSummaryInvocationReadiness({
+    form: summaryInvocationForm,
+    policyId: model.policyId,
+    policyVersion: model.policyVersion,
+    blockedActions: model.blockedActions,
+  });
+  const summaryInvocationPreviewReady = Boolean(summaryInvocationPreviewResponse);
 
   function setReviewActionFormValue(field: keyof PmQualityReviewActionForm, value: string) {
     setReviewActionForm((current) => ({ ...current, [field]: value }));
     setReviewActionPreviewResponse(null);
     setCreatedReviewActionResponse(null);
     setReviewActionCreateEvidence(null);
+  }
+
+  function setSummaryInvocationFormValue(
+    field: keyof PmQualitySummaryInvocationForm,
+    value: string
+  ) {
+    setSummaryInvocationForm((current) => ({ ...current, [field]: value }));
+    setSummaryInvocationPreviewResponse(null);
+    setCreatedSummaryInvocationResponse(null);
+    setSummaryInvocationCreateEvidence(null);
   }
 
   async function previewScoreRun() {
@@ -343,6 +406,10 @@ export function usePmOperatingQualityActions({
       if (reviewActionId) {
         const detail = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
         setCreatedReviewActionResponse(detail);
+        setSummaryInvocationForm((current) => ({
+          ...current,
+          reviewActionId: current.reviewActionId || reviewActionId,
+        }));
       }
       setActionMessage("Recorded Manage-owned supervisory review action.");
     } catch (error) {
@@ -354,6 +421,84 @@ export function usePmOperatingQualityActions({
     }
   }
 
+  async function previewSummaryInvocation() {
+    if (pendingSummaryInvocationPreview) {
+      return;
+    }
+    if (summaryInvocationReadiness.state !== "READY") {
+      setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
+      return;
+    }
+    setPendingSummaryInvocationPreview(true);
+    setActionError(null);
+    setActionMessage(null);
+    setSummaryInvocationPreviewResponse(null);
+    setCreatedSummaryInvocationResponse(null);
+    setSummaryInvocationCreateEvidence(null);
+    try {
+      const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
+      const response = await previewDpmPmOperatingQualitySummaryInvocation({
+        request: buildSummaryInvocationRequest(summaryInvocationForm),
+        actorId: summaryInvocationForm.requestedBy,
+        correlationId,
+      });
+      setSummaryInvocationPreviewResponse(response);
+      setActionMessage("Summary-invocation preview returned Manage evidence.");
+    } catch (error) {
+      setActionError(
+        buildPmQualityActionError(error, "PM operating quality summary-invocation preview failed")
+      );
+    } finally {
+      setPendingSummaryInvocationPreview(false);
+    }
+  }
+
+  async function createSummaryInvocation() {
+    if (pendingSummaryInvocationCreate) {
+      return;
+    }
+    if (!summaryInvocationPreviewResponse) {
+      setActionError(
+        buildPmQualityBlockedActionError(
+          "Preview the PM quality summary invocation before recording it."
+        )
+      );
+      return;
+    }
+    if (summaryInvocationReadiness.state !== "READY") {
+      setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
+      return;
+    }
+    setPendingSummaryInvocationCreate(true);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
+      const response = await createDpmPmOperatingQualitySummaryInvocation({
+        request: buildSummaryInvocationRequest(summaryInvocationForm),
+        actorId: summaryInvocationForm.requestedBy,
+        correlationId,
+      });
+      setCreatedSummaryInvocationResponse(response);
+      setSummaryInvocationCreateEvidence(buildPmQualitySummaryInvocationEvidence(response));
+      const summaryInvocationId = readPmQualitySummaryInvocationId(response);
+      if (summaryInvocationId) {
+        const detail = await getDpmPmOperatingQualitySummaryInvocation(
+          summaryInvocationId,
+          "client"
+        );
+        setCreatedSummaryInvocationResponse(detail);
+      }
+      setActionMessage("Recorded Manage-owned PM quality summary invocation.");
+    } catch (error) {
+      setActionError(
+        buildPmQualityActionError(error, "PM operating quality summary-invocation create failed")
+      );
+    } finally {
+      setPendingSummaryInvocationCreate(false);
+    }
+  }
+
   return {
     model,
     pendingAction,
@@ -362,20 +507,29 @@ export function usePmOperatingQualityActions({
     pendingSummaryAction,
     pendingReviewActionPreview,
     pendingReviewActionCreate,
+    pendingSummaryInvocationPreview,
+    pendingSummaryInvocationCreate,
     actionError,
     actionMessage,
     fairnessCreateEvidence,
     reviewActionCreateEvidence,
+    summaryInvocationCreateEvidence,
     reviewActionForm,
+    summaryInvocationForm,
     reviewActionReadiness,
+    summaryInvocationReadiness,
     reviewActionPreviewReady,
+    summaryInvocationPreviewReady,
     setReviewActionFormValue,
+    setSummaryInvocationFormValue,
     previewScoreRun,
     previewFairnessAnalysis,
     createFairnessAnalysis,
     requestSupportSummary,
     previewReviewAction,
     createReviewAction,
+    previewSummaryInvocation,
+    createSummaryInvocation,
   };
 }
 
@@ -402,6 +556,24 @@ function resolveReviewActionTarget(model: PmOperatingQualityPanelModel): {
     targetType: "SCORE_RUN",
     targetId: "",
     reviewActionRef: "PMQ-REVIEW",
+  };
+}
+
+function resolveSummaryInvocationTarget(model: PmOperatingQualityPanelModel): {
+  scoreRunId: string;
+  reviewActionId: string;
+  summaryRef: string;
+} {
+  const scoreRunId = model.selectedScoreRun?.scoreRunId ?? "";
+  const reviewActionId =
+    model.selectedReviewAction?.reviewActionId ??
+    (model.reviewActionDetail.reviewActionId !== "N/A"
+      ? model.reviewActionDetail.reviewActionId
+      : "");
+  return {
+    scoreRunId,
+    reviewActionId,
+    summaryRef: scoreRunId ? `PMQ-SUMMARY-${scoreRunId}` : "PMQ-SUMMARY",
   };
 }
 
@@ -446,6 +618,44 @@ function resolveReviewActionReadiness(params: {
   };
 }
 
+function resolveSummaryInvocationReadiness(params: {
+  form: PmQualitySummaryInvocationForm;
+  policyId: string;
+  policyVersion: string;
+  blockedActions: string[];
+}): { state: string; detail: string } {
+  const blocked = params.blockedActions.find((action) =>
+    [
+      "PREVIEW_SUMMARY_INVOCATION",
+      "CREATE_SUMMARY_INVOCATION",
+      "PREVIEW_PM_QUALITY_SUMMARY_INVOCATION",
+      "CREATE_PM_QUALITY_SUMMARY_INVOCATION",
+    ].includes(action)
+  );
+  if (blocked) {
+    return { state: "BLOCKED", detail: "Blocked by Manage action register" };
+  }
+  if (!params.form.scoreRunId.trim()) {
+    return { state: "BLOCKED", detail: "Select a Manage-owned score run." };
+  }
+  if (!params.form.reviewActionId.trim()) {
+    return { state: "BLOCKED", detail: "Record or select a Manage review action first." };
+  }
+  if (!params.form.requestedBy.trim()) {
+    return { state: "BLOCKED", detail: "Supervisor requester is required." };
+  }
+  if (!params.form.summaryRef.trim()) {
+    return { state: "BLOCKED", detail: "Bank summary reference is required." };
+  }
+  if (params.policyId === "N/A" || params.policyVersion === "N/A") {
+    return { state: "BLOCKED", detail: "Blocked until Manage returns policy id and version." };
+  }
+  return {
+    state: "READY",
+    detail: `Ready to preview summary invocation for score run ${params.form.scoreRunId}`,
+  };
+}
+
 function buildReviewActionRequest(
   form: PmQualityReviewActionForm,
   model: PmOperatingQualityPanelModel
@@ -476,6 +686,29 @@ function resolveReviewActionAsOfDate(
     return model.selectedScoreRun.asOfDate;
   }
   return undefined;
+}
+
+function buildSummaryInvocationRequest(
+  form: PmQualitySummaryInvocationForm
+): DpmPmOperatingQualitySummaryInvocationRequest {
+  return {
+    score_run_id: form.scoreRunId.trim(),
+    review_action_id: form.reviewActionId.trim(),
+    invocation_state: form.invocationState || "PENDING_REVIEW",
+    summary_ref: form.summaryRef.trim(),
+    workflow_pack_name: optionalTrimmed(form.workflowPackName),
+    workflow_pack_version: optionalTrimmed(form.workflowPackVersion),
+    workflow_run_id: optionalTrimmed(form.workflowRunId),
+    summary_artifact_ref: optionalTrimmed(form.artifactRef),
+    summary_content_hash: optionalTrimmed(form.contentHash),
+    requested_by: form.requestedBy.trim(),
+    source_refs: [],
+  };
+}
+
+function optionalTrimmed(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function formatReviewActionTarget(value: string): string {

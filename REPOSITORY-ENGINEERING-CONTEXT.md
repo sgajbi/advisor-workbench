@@ -102,15 +102,16 @@ Current repository posture:
     `/summary-invocations/{summary_invocation_id}`, with optional review-gated summary requests through
     Gateway `/score-runs/{score_run_id}/ai-summary`. Workbench renders Manage-owned policy,
     score-run, source-defined segment, fairness-analysis preview/create/list/detail,
-    supervisory review-action preview/create/list/detail, persisted summary-invocation history/detail,
+    supervisory review-action preview/create/list/detail, summary-invocation preview/create/list/detail,
     source refs, reason-code, supportability, forbidden-use posture, artifact/hash posture, and
     Gateway/AI workflow-pack run posture
     without constructing prompts, calculating PM scores, discovering segments, calculating segment
     averages or governed spreads, inferring protected classes, ranking PMs, creating
     HR/compensation/conduct decisions, approving trades, contacting clients, routing orders, or
-    claiming OMS/execution truth. Summary-invocation rendering does not display generated summary
-    text, prompt bodies, model responses, PM rankings, client-contact instructions, order claims,
-    or OMS claims.
+    claiming OMS/execution truth. Summary-invocation create is preview-gated, records only
+    Manage-owned invocation evidence, and does not display or submit generated summary text,
+    prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
+    OMS claims.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 
 ## Architecture And Module Map
