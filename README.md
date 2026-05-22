@@ -64,8 +64,10 @@ Boundary rules that matter:
    and rebalance action-register supportability. Workbench renders Gateway/manage/lotus-ai truth
    and does not calculate mandate health, wave readiness, optimizer output, outcome variance,
    proof-pack hashes, report inputs, AI prompts, PM memos, narratives, or execution claims locally.
-7. Recommendations and proposals routes still exist as compatibility paths, but they are no longer
-   the primary supported front-office app surfaces.
+7. Recommendations remain compatibility paths. Proposals are now a bounded direct advisory
+   workspace surface for the Gateway-backed proposal queue and RFC-0023 advisor narrative delivery
+   posture, while the top-level `Proposal` shell entry remains disabled pending broader product
+   promotion.
 8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
@@ -98,12 +100,17 @@ Current shell navigation truth:
 - currently disabled by capability posture:
   `Proposal`, `Advisory`
 
-Current compatibility redirects:
+Current route posture:
 
 - `/recommendations`
   redirects to supported active surfaces
-- `/proposals`, `/proposals/simulate`, `/proposals/[proposalId]`
-  compatibility routes, not primary active shell apps
+- `/proposals`
+  direct Gateway-backed proposal queue for advisor follow-up
+- `/proposals/[proposalId]`
+  direct Gateway-backed proposal detail with RFC-0023 advisor narrative review and delivery
+  posture
+- `/proposals/simulate`
+  compatibility draft entry retained for proposal creation workflows
 
 Key code areas:
 
@@ -249,8 +256,9 @@ Important current product and route truths:
 1. the active front-office surfaces are `Portfolio` and `Performance`
 2. `Risk` is currently served through the `Performance` route via mode-based behavior, not as a
    separate top-level route
-3. `/recommendations` and `/proposals*` remain compatibility routes and should not be documented as
-   the main supported shell paths
+3. `/recommendations` remains a compatibility route. `/proposals` and `/proposals/{proposalId}`
+   are direct Gateway-backed advisory routes, but the `Proposal` shell navigation item remains
+   capability-disabled and should not be documented as a promoted top-level shell app.
 4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
    integration posture
 5. `/data-products` consumes only gateway domain-product discovery and trust-certification
@@ -281,6 +289,15 @@ Important current product and route truths:
    but must not build report input, construct AI prompts, generate memo text locally, calculate
    campaign membership or readiness, mutate maker-checker or assignment state, score PMs, approve
    trades independently, contact clients, place orders, or call upstream services directly.
+12. RFC-0023 advisor proposal narrative posture is rendered on `/proposals/{proposalId}` through
+    Gateway proposal endpoints only:
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/narrative/review`,
+    `/api/v1/proposals/{proposal_id}/report-requests`,
+    `/api/v1/proposals/{proposal_id}/delivery-summary`, and
+    `/api/v1/proposals/{proposal_id}/delivery-events`. Workbench may record advisor-use review
+    and request reviewed narrative report packaging through Gateway, but it must not generate
+    narrative, infer client-ready publication, render documents, archive artifacts, contact
+    clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

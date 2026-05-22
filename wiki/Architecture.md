@@ -17,8 +17,10 @@
   benchmark-aware performance, analysis, advisor brief, evidence, and risk modes
 - `Workbench`
   compatibility workspace entry and portfolio-linked operational route
+- `Proposals`
+  direct Gateway-backed proposal queue/detail route for bounded advisor narrative delivery posture
 - legacy compatibility surfaces
-  recommendations and proposals redirects
+  recommendations redirects and proposal draft compatibility entry
 
 ## Boundary notes
 

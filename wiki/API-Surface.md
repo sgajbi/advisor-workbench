@@ -26,9 +26,11 @@ promote dormant labels into product ownership just because historical route file
 - `/recommendations`
   redirects to supported active surfaces
 - `/proposals`
+  direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`
+  compatibility draft entry
 - `/proposals/{proposalId}`
-  compatibility redirects, not primary shell apps
+  direct Gateway-backed proposal detail with RFC-0023 advisor narrative delivery posture
 
 ## Current contract notes
 
@@ -38,7 +40,8 @@ promote dormant labels into product ownership just because historical route file
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
 - canonical product proof should use `workbench.dev.lotus`, not ad hoc localhost URLs
 - shell navigation support is narrower than the historical route set: `Proposal` and `Advisory`
-  are currently disabled even though compatibility routes still exist
+  are currently disabled even though direct proposal routes now exist for bounded advisory
+  workflow entry
 - canonical evidence should be taken from `output/playwright/live-canonical/` after
   `npm run live:validate`
 - RFC-0108 observability coverage is implemented for supported Portfolio, Intake, Performance, Risk,
@@ -172,6 +175,15 @@ promote dormant labels into product ownership just because historical route file
   remains manage-owned, narrative execution remains `lotus-ai` owned, and Workbench shows only
   bounded workflow-pack run posture. Demo promotion still requires the canonical
   `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review in the implementation ledger.
+- RFC-0023 advisor proposal narrative posture is implemented on `/proposals/{proposalId}` through
+  Gateway proposal endpoints. Workbench records advisor-use narrative review with
+  `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/narrative/review`, requests reviewed
+  narrative report packaging with `POST /api/v1/proposals/{proposal_id}/report-requests`, and
+  renders delivery posture from `GET /api/v1/proposals/{proposal_id}/delivery-summary` and
+  `GET /api/v1/proposals/{proposal_id}/delivery-events`. The panel displays explicit not-reviewed,
+  not-requested, no-report, and no-event states when Gateway has not materialized evidence. It does
+  not generate narrative, infer client-ready release, render documents, archive artifacts, contact
+  clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
 
 ## Route examples
 
@@ -234,11 +246,11 @@ Compatibility recommendation redirect:
 http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001
 ```
 
-Compatibility proposal redirect posture:
+Proposal route posture:
 
 ```txt
-/proposals -> /portfolio
-/proposals/{proposalId} -> /portfolio
+/proposals -> Gateway-backed proposal queue
+/proposals/{proposalId} -> Gateway-backed proposal detail and advisor narrative delivery posture
 /proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001 -> /performance?portfolioId=PB_SG_GLOBAL_BAL_001
 ```
 

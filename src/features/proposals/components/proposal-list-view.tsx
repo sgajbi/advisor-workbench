@@ -15,47 +15,18 @@ import {
 
 import { listProposals } from "../api";
 import { ProposalSummary } from "../types";
+import {
+  PROPOSAL_STAGES,
+  proposalNextAction,
+  proposalStageLabel,
+  proposalStageTone,
+  type ProposalStage,
+} from "../proposal-workflow-copy";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
 
-const STAGES = ["DRAFT", "RISK_REVIEW", "COMPLIANCE_REVIEW", "AWAITING_CLIENT_CONSENT", "EXECUTION_READY"] as const;
-type Stage = (typeof STAGES)[number];
-
-function stageLabel(state: string): string {
-  return state.replaceAll("_", " ");
-}
-
-function nextAction(state: string): string {
-  if (state === "DRAFT") {
-    return "Submit for risk or compliance review";
-  }
-  if (state === "RISK_REVIEW") {
-    return "Risk officer approval needed";
-  }
-  if (state === "COMPLIANCE_REVIEW") {
-    return "Compliance approval needed";
-  }
-  if (state === "AWAITING_CLIENT_CONSENT") {
-    return "Record client consent";
-  }
-  if (state === "EXECUTION_READY") {
-    return "Ready for execution handoff";
-  }
-  return "Pending workflow action";
-}
-
-function stageTone(state: string): "default" | "warn" | "success" {
-  if (state === "EXECUTION_READY") {
-    return "success";
-  }
-  if (state === "DRAFT") {
-    return "default";
-  }
-  return "warn";
-}
-
-function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary[]> {
-  return STAGES.reduce(
+function groupedByStage(items: ProposalSummary[]): Record<ProposalStage, ProposalSummary[]> {
+  return PROPOSAL_STAGES.reduce(
     (acc, stage) => {
       acc[stage] = items.filter((item) => item.current_state === stage);
       return acc;
@@ -66,7 +37,7 @@ function groupedByStage(items: ProposalSummary[]): Record<Stage, ProposalSummary
       COMPLIANCE_REVIEW: [],
       AWAITING_CLIENT_CONSENT: [],
       EXECUTION_READY: [],
-    } as Record<Stage, ProposalSummary[]>
+    } as Record<ProposalStage, ProposalSummary[]>
   );
 }
 
@@ -153,7 +124,7 @@ export default function ProposalListView({
             sx={{ minWidth: { md: 180 } }}
           >
             <MenuItem value="">All</MenuItem>
-            {STAGES.map((stage) => (
+            {PROPOSAL_STAGES.map((stage) => (
               <MenuItem key={stage} value={stage}>
                 {stage}
               </MenuItem>
@@ -190,9 +161,9 @@ export default function ProposalListView({
             sx={{ minWidth: { md: 360 } }}
           />
           <Stack direction="row" spacing={0.7} flexWrap="wrap">
-            {STAGES.map((stage) => (
-              <SemanticBadge key={stage} tone={stageTone(stage)}>
-                {stageLabel(stage)}: {grouped[stage].length}
+            {PROPOSAL_STAGES.map((stage) => (
+              <SemanticBadge key={stage} tone={proposalStageTone(stage)}>
+                {proposalStageLabel(stage)}: {grouped[stage].length}
               </SemanticBadge>
             ))}
           </Stack>
@@ -214,11 +185,11 @@ export default function ProposalListView({
             gridTemplateColumns: { xs: "1fr", lg: "repeat(3, minmax(0, 1fr))" },
           }}
         >
-          {STAGES.map((stage) => (
+          {PROPOSAL_STAGES.map((stage) => (
             <SectionBlock key={stage} className="proposal-stage-block">
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.4 }}>
-                <Text variant="subsectionTitle">{stageLabel(stage)}</Text>
-                <SemanticBadge tone={stageTone(stage)}>{grouped[stage].length}</SemanticBadge>
+                <Text variant="subsectionTitle">{proposalStageLabel(stage)}</Text>
+                <SemanticBadge tone={proposalStageTone(stage)}>{grouped[stage].length}</SemanticBadge>
               </Stack>
               <Divider sx={{ mb: 0.8 }} />
               {grouped[stage].length === 0 ? (
@@ -234,7 +205,7 @@ export default function ProposalListView({
                       </Text>
                       <Text variant="metadata">ID: {item.proposal_id}</Text>
                       <Text variant="metadata">Portfolio: {item.portfolio_id ?? "N/A"}</Text>
-                      <Text variant="body">Next: {nextAction(item.current_state)}</Text>
+                      <Text variant="body">Next: {proposalNextAction(item.current_state)}</Text>
                     </SectionBlock>
                   ))}
                 </Stack>

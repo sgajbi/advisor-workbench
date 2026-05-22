@@ -11,6 +11,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Portfolio income and activity | `/income` | Gateway portfolio workspace `income_summary` and `activity_summary` | Supported as the dedicated source-backed screen for income composition, source-defined activity buckets, net movement, cash weight, and evidence posture. Workbench does not forecast income or calculate activity classifications locally. |
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
+| Advisor proposal narrative posture | `/proposals`, `/proposals/{proposalId}` | Gateway `/api/v1/proposals*` | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, and delivery-event posture through Gateway only. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
 | DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
@@ -20,6 +21,34 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | DPM PM operating quality | `/workbench/{portfolioId}?mode=quality` | Gateway `/api/v1/dpm/command-center/pm-operating-quality*` | Implemented for Manage-owned policy, score-run, source-defined segment, fairness-analysis preview/create/list/detail, score-run support-summary request, bounded supervisory review-action preview/create/list/detail, and summary-invocation preview/create/list/detail through Gateway only. Review-action and summary-invocation creates are preview-gated and record Manage-owned evidence; summary-invocation controls do not submit or render generated summary text, prompts, or model responses. Workbench does not calculate PM scores, fairness spreads, segment membership, PM rankings, HR/conduct posture, client communication, trade/order, OMS, execution, fills, or settlement truth. |
 
 ## DPM Portfolio Memory
+
+## Advisor Proposal Narrative Posture
+
+The RFC-0023 proposal detail panel gives advisors and supervisors a bounded way to review
+advisor-use narrative posture before downstream report packaging.
+
+Implemented:
+
+1. lists proposal queue items from Gateway and opens direct proposal detail routes,
+2. loads proposal detail, workflow, approvals, lineage, delivery summary, and delivery events
+   through the Workbench BFF/Gateway boundary,
+3. records advisor-use narrative review against an explicit proposal version with an idempotency
+   key,
+4. requests reviewed narrative report packaging through Gateway with
+   `include_reviewed_narrative=true`,
+5. displays review posture, report-package posture, delivery status, latest delivery event, policy
+   version, and source narrative hash,
+6. renders missing evidence as explicit not-reviewed, not-requested, no-report, or no-event states
+   rather than inferring client-ready status.
+
+Not supported in Workbench:
+
+1. narrative generation,
+2. client-ready publication inference,
+3. PDF rendering,
+4. archive publication,
+5. client contact or client messaging,
+6. direct calls to `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive`.
 
 The RFC40-WTBD-010 portfolio-memory panel gives portfolio managers, operations, audit, and
 sales/pre-sales a single readable event trail for DPM evidence.
