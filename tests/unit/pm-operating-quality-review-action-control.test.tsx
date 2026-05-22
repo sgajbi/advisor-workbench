@@ -13,6 +13,21 @@ const form = {
   boundedRationale: "Bounded supervisory action rationale.",
 };
 
+const targetOptions = [
+  {
+    targetType: "SCORE_RUN",
+    value: "pmq_run_001",
+    label: "pmq_run_001 / PM_SG_001",
+    detail: "PM_BOOK_SG_BALANCED | READY | 2026-05-13",
+  },
+  {
+    targetType: "FAIRNESS_ANALYSIS",
+    value: "pmq_fair_001",
+    label: "pmq_fair_001",
+    detail: "PENDING_REVIEW | pmq_sg_dpm / 2026.05 | 2026-05-13",
+  },
+];
+
 describe("PmOperatingQualityReviewActionControl", () => {
   it("renders bounded preview-before-create controls without unsupported actions", () => {
     const onFormChange = vi.fn();
@@ -25,6 +40,7 @@ describe("PmOperatingQualityReviewActionControl", () => {
         pendingPreview={false}
         pendingCreate={false}
         createEvidence={null}
+        targetOptions={targetOptions}
         onFormChange={onFormChange}
         onPreview={vi.fn()}
         onCreate={vi.fn()}
@@ -35,6 +51,8 @@ describe("PmOperatingQualityReviewActionControl", () => {
       screen.getByLabelText("PM operating quality supervisory review-action control")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Supervisor actor")).toHaveValue("supervisor_sg_1");
+    expect(screen.getByLabelText("Target id")).toHaveValue("pmq_run_001");
+    expect(screen.getByText("PM_BOOK_SG_BALANCED | READY | 2026-05-13")).toBeInTheDocument();
     expect(screen.getByText("Preview required before create")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
@@ -47,6 +65,10 @@ describe("PmOperatingQualityReviewActionControl", () => {
       "boundedRationale",
       "Updated bounded rationale."
     );
+    fireEvent.change(screen.getByLabelText("Target id"), {
+      target: { value: "pmq_run_001" },
+    });
+    expect(onFormChange).toHaveBeenCalledWith("targetId", "pmq_run_001");
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /approve trade/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
@@ -67,6 +89,7 @@ describe("PmOperatingQualityReviewActionControl", () => {
           sourceService: "lotus-manage",
           upstreamStatus: "200",
         }}
+        targetOptions={targetOptions}
         onFormChange={vi.fn()}
         onPreview={vi.fn()}
         onCreate={vi.fn()}
@@ -92,6 +115,7 @@ describe("PmOperatingQualityReviewActionControl", () => {
         pendingPreview={false}
         pendingCreate={false}
         createEvidence={null}
+        targetOptions={targetOptions}
         onFormChange={vi.fn()}
         onPreview={vi.fn()}
         onCreate={vi.fn()}

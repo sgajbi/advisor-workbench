@@ -455,6 +455,53 @@ describe("usePmOperatingQualityActions", () => {
     );
   });
 
+  it("derives PM quality command selectors from Gateway-returned source rows", async () => {
+    const { result } = renderActions({
+      fairnessAnalyses: fairnessAnalysisResponse,
+      fairnessAnalysisDetail: fairnessAnalysisResponse,
+      reviewActions: reviewActionResponse,
+      reviewActionDetail: reviewActionResponse,
+    });
+
+    expect(result.current.reviewActionTargetOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetType: "SCORE_RUN",
+          value: "pmq_run_001",
+          label: "pmq_run_001 / PM_SG_001",
+        }),
+        expect.objectContaining({
+          targetType: "FAIRNESS_ANALYSIS",
+          value: "pmq_fair_002",
+        }),
+      ])
+    );
+    expect(result.current.summaryInvocationScoreRunOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: "pmq_run_001",
+          detail: "PM_BOOK_SG_BALANCED | READY | 2026-05-13",
+        }),
+      ])
+    );
+    expect(result.current.summaryInvocationReviewActionOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: "pmq_review_002",
+          detail: "pmq_review_002 | Score Run / pmq_run_001 | REVIEW_REQUIRED",
+        }),
+      ])
+    );
+
+    await act(async () => {
+      result.current.setReviewActionFormValue("targetType", "FAIRNESS_ANALYSIS");
+    });
+
+    expect(result.current.reviewActionForm.targetType).toBe("FAIRNESS_ANALYSIS");
+    expect(result.current.reviewActionForm.targetId).toBe("pmq_fair_002");
+    expect(result.current.reviewActionForm.reviewActionRef).toBe("PMQ-REVIEW-pmq_fair_002");
+  });
+
   it("previews before creating PM quality summary invocations through Gateway", async () => {
     vi.mocked(buildDpmPmOperatingQualitySummaryInvocationCorrelationId)
       .mockReturnValueOnce("corr-workbench-pm-quality-summary-invocation-preview")

@@ -5,6 +5,7 @@ import PmOperatingQualitySummaryInvocationControl from "@/features/workbench/com
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type {
+  PmQualityCommandOption,
   PmQualitySummaryInvocationEvidence,
   PmQualitySummaryInvocationForm,
 } from "@/features/workbench/pm-operating-quality-actions";
@@ -18,6 +19,8 @@ type Props = {
   pendingPreview?: boolean;
   pendingCreate?: boolean;
   createEvidence?: PmQualitySummaryInvocationEvidence | null;
+  scoreRunOptions?: PmQualityCommandOption[];
+  reviewActionOptions?: PmQualityCommandOption[];
   onFormChange?: (field: keyof PmQualitySummaryInvocationForm, value: string) => void;
   onPreview?: () => void;
   onCreate?: () => void;
@@ -31,6 +34,8 @@ export default function PmOperatingQualitySummaryInvocationsCard({
   pendingPreview = false,
   pendingCreate = false,
   createEvidence = null,
+  scoreRunOptions = [],
+  reviewActionOptions = [],
   onFormChange,
   onPreview,
   onCreate,
@@ -47,6 +52,8 @@ export default function PmOperatingQualitySummaryInvocationsCard({
           pendingPreview={pendingPreview}
           pendingCreate={pendingCreate}
           createEvidence={createEvidence}
+          scoreRunOptions={scoreRunOptions}
+          reviewActionOptions={reviewActionOptions}
           onFormChange={onFormChange}
           onPreview={onPreview}
           onCreate={onCreate}
