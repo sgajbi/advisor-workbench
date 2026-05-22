@@ -76,6 +76,7 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError,
     proofPackLoaded,
@@ -83,7 +84,9 @@ export default function DpmWaveCommandCenterPanel({
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
     campaignLaunchError,
+    campaignLifecycleCommandError,
     campaignWorkflowCommandError,
+    campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
     previewRebalance,
@@ -99,6 +102,7 @@ export default function DpmWaveCommandCenterPanel({
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
     launchCampaign,
+    recordCampaignLifecycleCommand,
     recordCampaignWorkflowCommand,
   } = useDpmWaveCommandCenterActions({
     portfolioId,
@@ -196,7 +200,10 @@ export default function DpmWaveCommandCenterPanel({
         pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}
         pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
         pendingLaunchKey={pendingCampaignLaunchKey}
+        pendingLifecycleCommand={pendingCampaignLifecycleCommand}
         pendingWorkflowCommand={pendingCampaignWorkflowCommand}
+        lifecycleCommandError={campaignLifecycleCommandError}
+        lifecycleCommandEvidence={campaignLifecycleCommandEvidence}
         workflowCommandError={campaignWorkflowCommandError}
         workflowCommandEvidence={campaignWorkflowCommandEvidence}
         selectedCampaign={selectedCampaign}
@@ -206,6 +213,7 @@ export default function DpmWaveCommandCenterPanel({
         onLoadLaunchHistory={loadCampaignLaunchHistory}
         onCheckLaunchReadiness={checkCampaignLaunchReadiness}
         onLaunchCampaign={launchCampaign}
+        onRecordLifecycleCommand={recordCampaignLifecycleCommand}
         onRecordWorkflowCommand={recordCampaignWorkflowCommand}
       />
 

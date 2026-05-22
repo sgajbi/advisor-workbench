@@ -62,8 +62,14 @@ promote dormant labels into product ownership just because historical route file
   without discovering global campaign cohorts. It opens
   selected campaign lifecycle evidence from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
-  as a read-only Manage evidence feed without inferring lifecycle state or operating retire/
-  supersede commands locally. It also opens append-only launch history from
+  as a Manage evidence feed without inferring lifecycle state locally. It exposes bounded
+  Gateway-backed retire and supersede controls through
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/retire`
+  and
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede`,
+  refreshes campaign definitions and lifecycle evidence after accepted commands, and renders
+  returned status, actor, reason, replacement version/hash, correlation id, content hash, reason
+  codes, and operating boundaries without browser-owned lifecycle truth. It also opens append-only launch history from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`
   and displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
   correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
@@ -100,8 +106,8 @@ promote dormant labels into product ownership just because historical route file
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local
   readiness calculation, local report-input construction, prompt construction, memo narrative
-  generation, operations handoff-summary generation, campaign discovery, campaign membership
-  calculation, maker-checker workflow, trade approval, staging, or OMS execution claims.
+  generation, operations handoff-summary generation, campaign membership calculation,
+  maker-checker workflow, trade approval, staging, or OMS execution claims.
   Item-selection drawers, dedicated `/dpm/waves` routes, PM-book discovery, global
   campaign discovery, campaign-definition upsert UX, CIO
   workflow, and external OMS execution remain future scope until separately implemented and proven.

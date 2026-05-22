@@ -3,12 +3,15 @@
 import { ScreenStatePanel, SemanticBadge } from "@/design-system";
 import DpmCampaignDefinitionsTable from "@/features/workbench/components/dpm-campaign-definitions-table";
 import DpmCampaignLifecycleEvidenceCard from "@/features/workbench/components/dpm-campaign-lifecycle-evidence-card";
+import DpmCampaignLifecycleCommandCard from "@/features/workbench/components/dpm-campaign-lifecycle-command-card";
 import DpmCampaignLaunchHistoryCard, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-launch-history-card";
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
 import DpmCampaignWorkflowAuditCard from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
 import type {
+  DpmCampaignLifecycleCommandEvidence,
+  DpmCampaignLifecycleCommandInput,
   DpmCampaignWorkflowCommandEvidence,
   DpmCampaignWorkflowCommandInput,
 } from "@/features/workbench/use-dpm-wave-command-center-actions";
@@ -49,12 +52,15 @@ type Props = {
   previewReadinessError?: string | null;
   launchError?: string | null;
   workflowError?: string | null;
+  lifecycleCommandError?: string | null;
   pendingLifecycleKey?: string | null;
   pendingLaunchHistoryKey?: string | null;
   pendingPreviewReadinessKey?: string | null;
   pendingLaunchPackageKey?: string | null;
   pendingLaunchKey?: string | null;
+  pendingLifecycleCommand?: boolean;
   pendingWorkflowCommand?: boolean;
+  lifecycleCommandEvidence?: DpmCampaignLifecycleCommandEvidence | null;
   workflowCommandError?: string | null;
   workflowCommandEvidence?: DpmCampaignWorkflowCommandEvidence | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
@@ -64,6 +70,7 @@ type Props = {
   onLoadLaunchHistory: (row: DpmCampaignDefinitionRow, offset?: number) => void;
   onCheckLaunchReadiness: (row: DpmCampaignDefinitionRow) => void;
   onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
+  onRecordLifecycleCommand?: (command: DpmCampaignLifecycleCommandInput) => Promise<void>;
   onRecordWorkflowCommand?: (command: DpmCampaignWorkflowCommandInput) => Promise<void>;
 };
 
@@ -81,12 +88,15 @@ export default function DpmCampaignDefinitionsSection({
   previewReadinessError,
   launchError,
   workflowError,
+  lifecycleCommandError,
   pendingLifecycleKey,
   pendingLaunchHistoryKey,
   pendingPreviewReadinessKey,
   pendingLaunchPackageKey,
   pendingLaunchKey,
+  pendingLifecycleCommand,
   pendingWorkflowCommand,
+  lifecycleCommandEvidence,
   workflowCommandError,
   workflowCommandEvidence,
   selectedCampaign,
@@ -96,6 +106,7 @@ export default function DpmCampaignDefinitionsSection({
   onLoadLaunchHistory,
   onCheckLaunchReadiness,
   onLaunchCampaign,
+  onRecordLifecycleCommand = async () => {},
   onRecordWorkflowCommand = async () => {},
 }: Props) {
   const selectedLaunchPending = Boolean(selectedCampaign && selectedCampaign.key === pendingLaunchKey);
@@ -135,6 +146,13 @@ export default function DpmCampaignDefinitionsSection({
         rows={lifecycleRows}
         selectedCampaign={selectedCampaign}
         error={lifecycleError}
+      />
+      <DpmCampaignLifecycleCommandCard
+        selectedCampaign={selectedCampaign}
+        pendingCommand={pendingLifecycleCommand}
+        commandError={lifecycleCommandError}
+        commandEvidence={lifecycleCommandEvidence}
+        onRecordLifecycleCommand={onRecordLifecycleCommand}
       />
       <DpmCampaignWorkflowAuditCard
         summaryRows={workflowSummaryRows}

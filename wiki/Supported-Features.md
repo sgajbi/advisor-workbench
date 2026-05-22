@@ -66,9 +66,10 @@ Implemented:
 8. reads bounded `BulkReviewCampaignDiscovery:v1` posture through Gateway and renders Manage-owned
    eligible candidate count, expiry posture, access purpose, governance posture, and source-ref
    posture without discovering global campaign cohorts,
-9. opens read-only campaign lifecycle evidence through Gateway for a selected campaign definition
-   without inferring lifecycle state, recalculating membership, or operating retire/supersede
-   commands locally,
+9. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
+   bounded Gateway-backed retire/supersede controls that require actor, reason, and replacement
+   lineage for supersede, then refreshes campaign definitions and lifecycle evidence without
+   inferring lifecycle state or recalculating membership locally,
 10. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
    displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
    correlation id, idempotency key, page counts, and operating boundaries without recomputing launch
@@ -94,9 +95,8 @@ Not yet supported:
 3. item selection drawer,
 4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
 5. global campaign discovery or campaign-definition upsert UX,
-6. campaign retire/supersede controls,
-7. CIO approval workflow,
-8. external OMS/execution integration,
+6. CIO approval workflow,
+7. external OMS/execution integration,
 8. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
    operations-handoff summary, exception-summary narrative, or handoff calculation.
 

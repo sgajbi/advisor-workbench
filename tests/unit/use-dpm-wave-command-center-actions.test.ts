@@ -22,10 +22,13 @@ import {
   getDpmWaveProofPackPosture,
   handoffDpmWave,
   launchDpmCampaignDefinition,
+  listDpmCampaignDefinitions,
   previewDpmWave,
+  retireDpmCampaignDefinition,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
+  supersedeDpmCampaignDefinition,
 } from "../../src/features/workbench/dpm-wave-api";
 import type {
   DpmCampaignDefinitionGatewayResponse,
@@ -53,10 +56,13 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
   launchDpmCampaignDefinition: vi.fn(),
+  listDpmCampaignDefinitions: vi.fn(),
   previewDpmWave: vi.fn(),
+  retireDpmCampaignDefinition: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
   stageDpmWave: vi.fn(),
+  supersedeDpmCampaignDefinition: vi.fn(),
 }));
 
 const waveResponse: DpmWaveGatewayResponse = {
@@ -262,6 +268,31 @@ const campaignWorkflowCommandResponse: DpmCampaignWorkflowGatewayResponse = {
   },
 };
 
+const campaignLifecycleCommandResponse: DpmCampaignDefinitionGatewayResponse = {
+  correlation_id: "corr-campaign-lifecycle-command",
+  contract_version: "v1",
+  source_service: "lotus-manage",
+  upstream_status: 200,
+  data: {
+    product_name: "BulkReviewCampaignDefinitionLifecycleCommand",
+    campaign_id: "campaign-holdings-202605",
+    campaign_version: "2026.05",
+    status: "SUPERSEDED",
+    actor_id: "pm_sg_1",
+    reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+    replacement_campaign_version: "2026.06",
+    replacement_content_hash: "sha256:campaign-replacement",
+    correlation_id: "corr-campaign-lifecycle-command",
+    content_hash: "sha256:campaign-superseded",
+    reason_codes: ["campaign_definition_superseded"],
+    operating_boundaries: [
+      "NO_ORDER_GENERATION",
+      "NO_OMS_EXECUTION_CLAIM",
+      "NO_EXTERNAL_WORKFLOW_ORCHESTRATION",
+    ],
+  },
+};
+
 const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
   ...campaignWorkflowCommandResponse,
   upstream_status: 200,
@@ -299,6 +330,18 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(previewReadinessResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(launchPackageResponse);
     vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(campaignDefinitions);
+    vi.mocked(retireDpmCampaignDefinition).mockResolvedValue({
+      ...campaignLifecycleCommandResponse,
+      data: {
+        ...campaignLifecycleCommandResponse.data,
+        status: "RETIRED",
+        reason_code: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+        reason_codes: ["campaign_definition_retired"],
+        content_hash: "sha256:campaign-retired",
+      },
+    });
+    vi.mocked(supersedeDpmCampaignDefinition).mockResolvedValue(campaignLifecycleCommandResponse);
     vi.mocked(createDpmCampaignApprovalDecision).mockResolvedValue(campaignWorkflowCommandResponse);
     vi.mocked(createDpmCampaignAssignmentAction).mockResolvedValue(campaignWorkflowCommandResponse);
     vi.mocked(createDpmCampaignAssignmentTask).mockResolvedValue(campaignWorkflowCommandResponse);
@@ -450,6 +493,92 @@ describe("useDpmWaveCommandCenterActions", () => {
       await result.current.launchCampaign(result.current.selectedCampaign!);
     });
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
+  });
+
+  it("records campaign lifecycle commands and refreshes definitions plus lifecycle evidence", async () => {
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "supersede",
+        actorId: "pm_sg_1",
+        reasonCode: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+        replacementCampaignVersion: "2026.06",
+        replacementContentHash: "sha256:campaign-replacement",
+      });
+    });
+
+    expect(supersedeDpmCampaignDefinition).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+      actorId: "pm_sg_1",
+      body: {
+        actor_id: "pm_sg_1",
+        reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+        replacement_campaign_version: "2026.06",
+        replacement_content_hash: "sha256:campaign-replacement",
+      },
+    });
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledWith({ limit: 10, offset: 0 });
+    expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
+      commandLabel: "Supersede campaign",
+      status: "SUPERSEDED",
+      replacementCampaignVersion: "2026.06",
+      replacementContentHash: "sha256:campaign-replacement",
+      contentHash: "sha256:campaign-superseded",
+    });
+  });
+
+  it("keeps campaign lifecycle commands fail-closed for missing replacement evidence", async () => {
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "supersede",
+        actorId: "pm_sg_1",
+        reasonCode: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+      });
+    });
+
+    expect(result.current.campaignLifecycleCommandError).toBe(
+      "Supersede requires replacement campaign version and content hash."
+    );
+    expect(supersedeDpmCampaignDefinition).not.toHaveBeenCalled();
+    expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();
+  });
+
+  it("keeps campaign lifecycle commands fail-closed when Manage blocks the command", async () => {
+    vi.mocked(retireDpmCampaignDefinition).mockResolvedValueOnce({
+      ...campaignLifecycleCommandResponse,
+      data: {
+        ...campaignLifecycleCommandResponse.data,
+        status: "BLOCKED",
+        supportability_state: "BLOCKED",
+        reason_codes: ["campaign_definition_lifecycle_command_blocked"],
+      },
+    });
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        actorId: "pm_sg_1",
+        reasonCode: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+      });
+    });
+
+    expect(retireDpmCampaignDefinition).toHaveBeenCalled();
+    expect(result.current.campaignLifecycleCommandError).toBe(
+      "Manage did not accept the campaign lifecycle command."
+    );
+    expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();
   });
 
   it("records campaign workflow commands and refreshes Manage-owned evidence lists", async () => {
