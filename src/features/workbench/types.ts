@@ -1417,6 +1417,25 @@ export type DpmCampaignDefinitionGatewayResponse = {
   data: Record<string, unknown>;
 };
 
+export type DpmCampaignWorkflowGatewayResponse = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  upstream_status: number;
+  supportability?: {
+    source_service?: string | null;
+    authority?: string | null;
+    state?: string | null;
+    reason_codes?: string[];
+    blocked_actions?: string[];
+    remediation_owner?: string | null;
+    count?: number | null;
+    total_count?: number | null;
+    content_hash?: string | null;
+  } | null;
+  data: Record<string, unknown>;
+};
+
 export type DpmPmOperatingQualitySupportability = {
   source_service: string;
   authority: string;

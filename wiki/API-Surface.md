@@ -77,7 +77,20 @@ promote dormant labels into product ownership just because historical route file
   and exposes
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
   only when the launch package is `READY`, preserving durable wave response and idempotency evidence
-  without recalculating membership or readiness. It
+  without recalculating membership or readiness. It also renders read-only campaign workflow audit
+  posture from
+  `/api/v1/dpm/command-center/waves/campaign-operating-queue`,
+  `/api/v1/dpm/command-center/waves/campaign-approval-inbox`,
+  `/api/v1/dpm/command-center/waves/campaign-workflow-board`,
+  `/api/v1/dpm/command-center/waves/campaign-assignment-plan`,
+  `/api/v1/dpm/command-center/waves/campaign-workflow-automation`,
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/approval-decisions`,
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-actions`,
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks`,
+  and
+  `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/maker-checker-controls`,
+  preserving source refs, count/page metadata, reason codes, content hashes, task-transition
+  posture, and operating boundaries without mutating assignment or maker-checker state. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local

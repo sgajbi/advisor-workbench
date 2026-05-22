@@ -1,6 +1,10 @@
 import {
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
+  getDpmCampaignApprovalDecisions,
+  getDpmCampaignAssignmentActions,
+  getDpmCampaignAssignmentTasks,
+  getDpmCampaignMakerCheckerControls,
   getDpmMandateByPortfolio,
   getDpmMandateHealth,
   getDpmOutcomeReviews,
@@ -10,6 +14,11 @@ import {
   getDpmProofPack,
   listDpmCampaignDefinitions,
   listDpmCampaignDiscovery,
+  listDpmCampaignApprovalInbox,
+  listDpmCampaignAssignmentPlan,
+  listDpmCampaignOperatingQueue,
+  listDpmCampaignWorkflowAutomation,
+  listDpmCampaignWorkflowBoard,
   listDpmPmOperatingQualityFairnessAnalyses,
   listDpmPmOperatingQualityPolicies,
   listDpmPmOperatingQualityReviewActions,
@@ -53,6 +62,24 @@ export type ManageWorkspaceData = {
   campaignDefinitionsError: string | null;
   campaignDiscovery: Awaited<ReturnType<typeof listDpmCampaignDiscovery>> | null;
   campaignDiscoveryError: string | null;
+  campaignOperatingQueue: Awaited<ReturnType<typeof listDpmCampaignOperatingQueue>> | null;
+  campaignOperatingQueueError: string | null;
+  campaignApprovalInbox: Awaited<ReturnType<typeof listDpmCampaignApprovalInbox>> | null;
+  campaignApprovalInboxError: string | null;
+  campaignWorkflowBoard: Awaited<ReturnType<typeof listDpmCampaignWorkflowBoard>> | null;
+  campaignWorkflowBoardError: string | null;
+  campaignAssignmentPlan: Awaited<ReturnType<typeof listDpmCampaignAssignmentPlan>> | null;
+  campaignAssignmentPlanError: string | null;
+  campaignWorkflowAutomation: Awaited<ReturnType<typeof listDpmCampaignWorkflowAutomation>> | null;
+  campaignWorkflowAutomationError: string | null;
+  campaignApprovalDecisions: Awaited<ReturnType<typeof getDpmCampaignApprovalDecisions>> | null;
+  campaignApprovalDecisionsError: string | null;
+  campaignAssignmentActions: Awaited<ReturnType<typeof getDpmCampaignAssignmentActions>> | null;
+  campaignAssignmentActionsError: string | null;
+  campaignAssignmentTasks: Awaited<ReturnType<typeof getDpmCampaignAssignmentTasks>> | null;
+  campaignAssignmentTasksError: string | null;
+  campaignMakerCheckerControls: Awaited<ReturnType<typeof getDpmCampaignMakerCheckerControls>> | null;
+  campaignMakerCheckerControlsError: string | null;
   outcomeReviews: Awaited<ReturnType<typeof getDpmOutcomeReviews>> | null;
   outcomeReviewError: string | null;
   proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null;
@@ -71,6 +98,11 @@ export async function loadManageWorkspaceData(
     wavesResult,
     campaignDefinitionsResult,
     campaignDiscoveryResult,
+    campaignOperatingQueueResult,
+    campaignApprovalInboxResult,
+    campaignWorkflowBoardResult,
+    campaignAssignmentPlanResult,
+    campaignWorkflowAutomationResult,
     pmQualityPoliciesResult,
     pmQualityScoreRunsResult,
     pmQualityFairnessAnalysesResult,
@@ -84,6 +116,11 @@ export async function loadManageWorkspaceData(
     listDpmWaves({ triggerType: "EXPLICIT_PORTFOLIO_LIST", limit: 10 }),
     listDpmCampaignDefinitions({ campaignStatus: "ACTIVE", limit: 10 }),
     listDpmCampaignDiscovery({ campaignStatus: "ACTIVE", limit: 10 }),
+    listDpmCampaignOperatingQueue({ limit: 10 }),
+    listDpmCampaignApprovalInbox({ limit: 10 }),
+    listDpmCampaignWorkflowBoard({ limit: 10 }),
+    listDpmCampaignAssignmentPlan({ limit: 10 }),
+    listDpmCampaignWorkflowAutomation({ limit: 10 }),
     listDpmPmOperatingQualityPolicies({ limit: 10 }),
     listDpmPmOperatingQualityScoreRuns({ limit: 10 }),
     listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }),
@@ -147,6 +184,27 @@ export async function loadManageWorkspaceData(
     }
   }
 
+  const campaignDefinitions = readSettledValue(campaignDefinitionsResult);
+  const firstCampaign = readFirstDpmCampaignDefinition(campaignDefinitions?.data ?? null);
+  const [
+    campaignApprovalDecisionsResult,
+    campaignAssignmentActionsResult,
+    campaignAssignmentTasksResult,
+    campaignMakerCheckerControlsResult,
+  ] = firstCampaign
+    ? await Promise.allSettled([
+        getDpmCampaignApprovalDecisions({ ...firstCampaign, limit: 10 }),
+        getDpmCampaignAssignmentActions({ ...firstCampaign, limit: 10 }),
+        getDpmCampaignAssignmentTasks({ ...firstCampaign, limit: 10 }),
+        getDpmCampaignMakerCheckerControls({ ...firstCampaign, limit: 10 }),
+      ])
+    : [
+        rejectedNotLoaded(),
+        rejectedNotLoaded(),
+        rejectedNotLoaded(),
+        rejectedNotLoaded(),
+      ];
+
   return {
     portfolio,
     commandCenter: readSettledValue(commandCenterResult),
@@ -188,7 +246,7 @@ export async function loadManageWorkspaceData(
     pmOperatingQualityReviewActionDetailError: reviewActionDetailError,
     waves: readSettledValue(wavesResult),
     wavesError: readSettledError(wavesResult, "DPM wave endpoint unavailable."),
-    campaignDefinitions: readSettledValue(campaignDefinitionsResult),
+    campaignDefinitions,
     campaignDefinitionsError: readSettledError(
       campaignDefinitionsResult,
       "DPM campaign-definition endpoint unavailable."
@@ -198,6 +256,59 @@ export async function loadManageWorkspaceData(
       campaignDiscoveryResult,
       "DPM campaign-discovery endpoint unavailable."
     ),
+    campaignOperatingQueue: readSettledValue(campaignOperatingQueueResult),
+    campaignOperatingQueueError: readSettledError(
+      campaignOperatingQueueResult,
+      "DPM campaign operating-queue endpoint unavailable."
+    ),
+    campaignApprovalInbox: readSettledValue(campaignApprovalInboxResult),
+    campaignApprovalInboxError: readSettledError(
+      campaignApprovalInboxResult,
+      "DPM campaign approval-inbox endpoint unavailable."
+    ),
+    campaignWorkflowBoard: readSettledValue(campaignWorkflowBoardResult),
+    campaignWorkflowBoardError: readSettledError(
+      campaignWorkflowBoardResult,
+      "DPM campaign workflow-board endpoint unavailable."
+    ),
+    campaignAssignmentPlan: readSettledValue(campaignAssignmentPlanResult),
+    campaignAssignmentPlanError: readSettledError(
+      campaignAssignmentPlanResult,
+      "DPM campaign assignment-plan endpoint unavailable."
+    ),
+    campaignWorkflowAutomation: readSettledValue(campaignWorkflowAutomationResult),
+    campaignWorkflowAutomationError: readSettledError(
+      campaignWorkflowAutomationResult,
+      "DPM campaign workflow-automation endpoint unavailable."
+    ),
+    campaignApprovalDecisions: readSettledValue(campaignApprovalDecisionsResult),
+    campaignApprovalDecisionsError: firstCampaign
+      ? readSettledError(
+          campaignApprovalDecisionsResult,
+          "DPM campaign approval-decision endpoint unavailable."
+        )
+      : null,
+    campaignAssignmentActions: readSettledValue(campaignAssignmentActionsResult),
+    campaignAssignmentActionsError: firstCampaign
+      ? readSettledError(
+          campaignAssignmentActionsResult,
+          "DPM campaign assignment-action endpoint unavailable."
+        )
+      : null,
+    campaignAssignmentTasks: readSettledValue(campaignAssignmentTasksResult),
+    campaignAssignmentTasksError: firstCampaign
+      ? readSettledError(
+          campaignAssignmentTasksResult,
+          "DPM campaign assignment-task endpoint unavailable."
+        )
+      : null,
+    campaignMakerCheckerControls: readSettledValue(campaignMakerCheckerControlsResult),
+    campaignMakerCheckerControlsError: firstCampaign
+      ? readSettledError(
+          campaignMakerCheckerControlsResult,
+          "DPM campaign maker-checker endpoint unavailable."
+        )
+      : null,
     outcomeReviews,
     outcomeReviewError: readSettledError(
       reviewsResult,
@@ -248,6 +359,42 @@ function readSettledError<T>(result: PromiseSettledResult<T>, fallback: string):
     return null;
   }
   return result.reason instanceof Error ? result.reason.message : fallback;
+}
+
+function rejectedNotLoaded(): PromiseRejectedResult {
+  return {
+    status: "rejected",
+    reason: new Error("No active campaign definition selected."),
+  };
+}
+
+function readFirstDpmCampaignDefinition(
+  data: Record<string, unknown> | null
+): { campaignId: string; campaignVersion: string } | null {
+  if (!data) {
+    return null;
+  }
+  const records = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.campaign_definitions)
+      ? data.campaign_definitions
+      : [];
+  for (const record of records) {
+    if (!record || typeof record !== "object" || Array.isArray(record)) {
+      continue;
+    }
+    const campaignId = (record as Record<string, unknown>).campaign_id;
+    const campaignVersion = (record as Record<string, unknown>).campaign_version;
+    if (
+      typeof campaignId === "string" &&
+      campaignId.trim().length > 0 &&
+      typeof campaignVersion === "string" &&
+      campaignVersion.trim().length > 0
+    ) {
+      return { campaignId, campaignVersion };
+    }
+  }
+  return null;
 }
 
 export function readDpmMandateId(data: Record<string, unknown> | null): string | null {

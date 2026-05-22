@@ -13,6 +13,7 @@ import DpmWaveReadinessSummaryStrip from "@/features/workbench/components/dpm-wa
 import DpmWaveRecommendedActionsSection from "@/features/workbench/components/dpm-wave-recommended-actions-section";
 import type {
   DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
   DpmWaveGatewayResponse,
 } from "@/features/workbench/types";
 import {
@@ -31,8 +32,18 @@ type Props = {
   waveList: DpmWaveGatewayResponse | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
+  campaignOperatingQueue?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalInbox?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
   campaignDefinitionsError?: string | null;
   campaignDiscoveryError?: string | null;
+  campaignWorkflowError?: string | null;
   errorMessage?: string | null;
 };
 
@@ -41,8 +52,18 @@ export default function DpmWaveCommandCenterPanel({
   waveList,
   campaignDefinitions = null,
   campaignDiscovery = null,
+  campaignOperatingQueue = null,
+  campaignApprovalInbox = null,
+  campaignWorkflowBoard = null,
+  campaignAssignmentPlan = null,
+  campaignWorkflowAutomation = null,
+  campaignApprovalDecisions = null,
+  campaignAssignmentActions = null,
+  campaignAssignmentTasks = null,
+  campaignMakerCheckerControls = null,
   campaignDefinitionsError = null,
   campaignDiscoveryError = null,
+  campaignWorkflowError = null,
   errorMessage = null,
 }: Props) {
   const {
@@ -80,6 +101,15 @@ export default function DpmWaveCommandCenterPanel({
     waveList,
     campaignDefinitions,
     campaignDiscovery,
+    campaignOperatingQueue,
+    campaignApprovalInbox,
+    campaignWorkflowBoard,
+    campaignAssignmentPlan,
+    campaignWorkflowAutomation,
+    campaignApprovalDecisions,
+    campaignAssignmentActions,
+    campaignAssignmentTasks,
+    campaignMakerCheckerControls,
   });
   const selectedWaveId = model.selectedWaveId;
   const lifecycleIndex = resolveDpmWaveLifecycleIndex(model.selectedWaveState);
@@ -150,10 +180,13 @@ export default function DpmWaveCommandCenterPanel({
         launchHistoryPage={model.campaignLaunchHistoryPage}
         previewReadinessPosture={model.campaignPreviewReadinessPosture}
         launchPosture={model.campaignLaunchPosture}
+        workflowSummaryRows={model.campaignWorkflowSummaryRows}
+        workflowEvidenceRows={model.campaignWorkflowEvidenceRows}
         lifecycleError={campaignLifecycleError}
         launchHistoryError={campaignLaunchHistoryError}
         previewReadinessError={campaignPreviewReadinessError}
         launchError={campaignLaunchError}
+        workflowError={campaignWorkflowError}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
         pendingLaunchHistoryKey={pendingCampaignLaunchHistoryKey}
         pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}

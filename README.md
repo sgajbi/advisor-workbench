@@ -276,10 +276,11 @@ Important current product and route truths:
    construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 11. RFC-0041 rebalance-wave rendering on `/workbench/{portfolioId}?mode=waves` is backed by Gateway
    `/api/v1/dpm/command-center/waves*`; Workbench may render Gateway/manage wave state,
-   report-input readiness, lotus-ai wave PM memo workflow-pack posture, and lotus-ai
-   operations-handoff summary posture through Gateway, but
-   must not build report input, construct AI prompts, generate memo text locally, score PMs,
-   approve trades independently, contact clients, place orders, or call upstream services directly.
+   report-input readiness, lotus-ai wave PM memo workflow-pack posture, lotus-ai
+   operations-handoff summary posture, and Manage campaign workflow audit evidence through Gateway,
+   but must not build report input, construct AI prompts, generate memo text locally, calculate
+   campaign membership or readiness, mutate maker-checker or assignment state, score PMs, approve
+   trades independently, contact clients, place orders, or call upstream services directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

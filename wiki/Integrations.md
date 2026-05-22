@@ -107,12 +107,12 @@ must travel through Gateway-shaped contracts.
     and
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`.
     Workbench renders the bounded campaign-definition list and read-only lifecycle evidence,
-    append-only launch history, campaign-discovery posture, preview-readiness posture, and
-    ready-only launch action but does
+    append-only launch history, campaign-discovery posture, preview-readiness posture,
+    campaign workflow audit evidence, and ready-only launch action but does
     not discover global campaign cohorts, recalculate membership or launch readiness, infer
-    lifecycle state, reconstruct idempotency, render content hashes, operate retire/supersede
-    commands, operate maker-checker workflow, approve trades, generate or stage orders, route
-    orders, claim fills, settlement, or OMS execution, or operate a campaign-definition upsert
+    lifecycle state, reconstruct idempotency, mutate assignment or maker-checker state, operate
+    retire/supersede commands, approve trades, generate or stage orders, route orders, claim fills,
+    settlement, or OMS execution, or operate a campaign-definition upsert
     workflow locally. RFC-0039
     construction alternative generation, retrieval, supportability, and selection are manage-owned
     and must reach Workbench through Gateway construction composition only. RFC-0042

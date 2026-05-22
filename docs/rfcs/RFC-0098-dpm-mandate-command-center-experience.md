@@ -458,11 +458,20 @@ Workbench must consume these Gateway wave routes when implemented:
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/ai-pm-memo` | governed AI PM memo request |
 | `POST /api/v1/dpm/command-center/waves/{wave_id}/operations-handoff-summary` | governed operations handoff summary request |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions` | Manage-owned bulk-review campaign definitions |
+| `GET /api/v1/dpm/command-center/waves/campaign-operating-queue` | read-only Manage campaign operating queue summary |
+| `GET /api/v1/dpm/command-center/waves/campaign-approval-inbox` | read-only Manage campaign approval inbox summary |
+| `GET /api/v1/dpm/command-center/waves/campaign-workflow-board` | read-only Manage campaign workflow board summary |
+| `GET /api/v1/dpm/command-center/waves/campaign-assignment-plan` | read-only Manage campaign assignment plan summary |
+| `GET /api/v1/dpm/command-center/waves/campaign-workflow-automation` | read-only Manage workflow automation posture |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events` | read-only Manage lifecycle evidence for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history` | paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` audit posture for a selected campaign definition |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/preview-readiness` | Manage-owned `BulkReviewCampaignDefinitionPreviewReadiness:v1` posture for selected campaign preview and wave-create readiness |
 | `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-package` | Manage-owned launch readiness and idempotency evidence for a selected campaign definition |
 | `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch` | READY-gated durable campaign launch through Gateway |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/approval-decisions` | read-only approval-decision evidence |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-actions` | read-only assignment-action evidence |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/assignment-tasks` | read-only assignment-task and task-transition evidence |
+| `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/maker-checker-controls` | read-only maker-checker evidence |
 
 Implementation note as of 2026-05-14: the first RFC-0041 rebalance-wave command-center
 realization is embedded in `/workbench/{portfolioId}` through Gateway
@@ -491,7 +500,11 @@ and exposes campaign launch through Gateway
 `POST /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch`
 only when Manage returns `READY`, preserving durable wave response and idempotency evidence without
 recomputing membership, launch readiness, idempotency, maker-checker workflow, trade approval,
-staging, or OMS execution locally. The panel renders
+staging, or OMS execution locally. It also renders read-only campaign workflow audit posture from
+Gateway operating queue, approval inbox, workflow board, assignment plan, workflow automation,
+approval-decision, assignment-action, assignment-task, and maker-checker reads, preserving
+source refs, count/page metadata, reason codes, content hashes, task-transition posture, and
+operating boundaries without mutating assignment or maker-checker state. The panel renders
 manage-owned wave id, lifecycle state, item count, issue count, supportability reason codes,
 blocked actions, aggregate metrics, item states, source-readiness state, alternative refs,
 report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and

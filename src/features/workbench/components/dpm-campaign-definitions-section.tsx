@@ -7,6 +7,7 @@ import DpmCampaignLaunchHistoryCard, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-launch-history-card";
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
+import DpmCampaignWorkflowAuditCard from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
 import type {
   DpmCampaignDefinitionRow,
   DpmCampaignLaunchHistoryPage,
@@ -14,6 +15,8 @@ import type {
   DpmCampaignLaunchPosture,
   DpmCampaignPreviewReadinessPosture,
   DpmCampaignLifecycleEventRow,
+  DpmCampaignWorkflowEvidenceRow,
+  DpmCampaignWorkflowSummaryRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 
 export { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE };
@@ -35,10 +38,13 @@ type Props = {
   launchHistoryPage: DpmCampaignLaunchHistoryPage;
   previewReadinessPosture?: DpmCampaignPreviewReadinessPosture;
   launchPosture: DpmCampaignLaunchPosture;
+  workflowSummaryRows?: DpmCampaignWorkflowSummaryRow[];
+  workflowEvidenceRows?: DpmCampaignWorkflowEvidenceRow[];
   lifecycleError?: string | null;
   launchHistoryError?: string | null;
   previewReadinessError?: string | null;
   launchError?: string | null;
+  workflowError?: string | null;
   pendingLifecycleKey?: string | null;
   pendingLaunchHistoryKey?: string | null;
   pendingPreviewReadinessKey?: string | null;
@@ -60,10 +66,13 @@ export default function DpmCampaignDefinitionsSection({
   launchHistoryPage,
   previewReadinessPosture = DEFAULT_PREVIEW_READINESS_POSTURE,
   launchPosture,
+  workflowSummaryRows = [],
+  workflowEvidenceRows = [],
   lifecycleError,
   launchHistoryError,
   previewReadinessError,
   launchError,
+  workflowError,
   pendingLifecycleKey,
   pendingLaunchHistoryKey,
   pendingPreviewReadinessKey,
@@ -114,6 +123,11 @@ export default function DpmCampaignDefinitionsSection({
         rows={lifecycleRows}
         selectedCampaign={selectedCampaign}
         error={lifecycleError}
+      />
+      <DpmCampaignWorkflowAuditCard
+        summaryRows={workflowSummaryRows}
+        evidenceRows={workflowEvidenceRows}
+        error={workflowError}
       />
       <DpmCampaignLaunchHistoryCard
         rows={launchHistoryRows}

@@ -134,8 +134,28 @@ function renderManageMode(
             waveList={data.waves}
             campaignDefinitions={data.campaignDefinitions}
             campaignDiscovery={data.campaignDiscovery}
+            campaignOperatingQueue={data.campaignOperatingQueue}
+            campaignApprovalInbox={data.campaignApprovalInbox}
+            campaignWorkflowBoard={data.campaignWorkflowBoard}
+            campaignAssignmentPlan={data.campaignAssignmentPlan}
+            campaignWorkflowAutomation={data.campaignWorkflowAutomation}
+            campaignApprovalDecisions={data.campaignApprovalDecisions}
+            campaignAssignmentActions={data.campaignAssignmentActions}
+            campaignAssignmentTasks={data.campaignAssignmentTasks}
+            campaignMakerCheckerControls={data.campaignMakerCheckerControls}
             campaignDefinitionsError={data.campaignDefinitionsError}
             campaignDiscoveryError={data.campaignDiscoveryError}
+            campaignWorkflowError={
+              data.campaignOperatingQueueError ??
+              data.campaignApprovalInboxError ??
+              data.campaignWorkflowBoardError ??
+              data.campaignAssignmentPlanError ??
+              data.campaignWorkflowAutomationError ??
+              data.campaignApprovalDecisionsError ??
+              data.campaignAssignmentActionsError ??
+              data.campaignAssignmentTasksError ??
+              data.campaignMakerCheckerControlsError
+            }
             errorMessage={data.wavesError}
           />
           <ProofPackPanel

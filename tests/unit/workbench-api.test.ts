@@ -16,6 +16,10 @@ import {
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
+  getDpmCampaignApprovalDecisions,
+  getDpmCampaignAssignmentActions,
+  getDpmCampaignAssignmentTasks,
+  getDpmCampaignMakerCheckerControls,
   getDpmCommandCenter,
   getDpmCommandCenterExceptions,
   getDpmMandateByPortfolio,
@@ -44,6 +48,11 @@ import {
   handoffDpmWave,
   listDpmCampaignDiscovery,
   listDpmCampaignDefinitions,
+  listDpmCampaignApprovalInbox,
+  listDpmCampaignAssignmentPlan,
+  listDpmCampaignOperatingQueue,
+  listDpmCampaignWorkflowAutomation,
+  listDpmCampaignWorkflowBoard,
   listDpmWaves,
   launchDpmCampaignDefinition,
   previewDpmWave,
@@ -2291,6 +2300,92 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-discovery");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign-discovery");
+  });
+
+  it("loads DPM campaign workflow audit surfaces through Gateway without leaking campaign identifiers into metrics", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-workflow-audit",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:campaign-workflow",
+              state: "READY",
+              reason_codes: ["MANAGE_SOURCE_BACKED"],
+            },
+            data: {
+              items: [
+                {
+                  campaign_id: "campaign-holdings-202605",
+                  campaign_version: "2026.05",
+                  task_ref: "task-sensitive-001",
+                  status: "READY",
+                  reason_codes: ["ASSIGNMENT_TASK_RECORDED"],
+                  source_refs: [{ source_type: "BulkReviewAssignmentTask" }],
+                  content_hash: "sha256:workflow",
+                  operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+                },
+              ],
+              limit: 10,
+              offset: 0,
+              count: 1,
+              total_count: 1,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    await listDpmCampaignOperatingQueue({ campaignId: "campaign-holdings-202605", limit: 10 });
+    await listDpmCampaignApprovalInbox({ limit: 10 });
+    await listDpmCampaignWorkflowBoard({ limit: 10 });
+    await listDpmCampaignAssignmentPlan({ limit: 10 });
+    await listDpmCampaignWorkflowAutomation({ limit: 10 });
+    await getDpmCampaignApprovalDecisions({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    await getDpmCampaignAssignmentActions({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    await getDpmCampaignAssignmentTasks({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+    await getDpmCampaignMakerCheckerControls({
+      campaignId: "campaign-holdings-202605",
+      campaignVersion: "2026.05",
+    });
+
+    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
+      call[0].toString()
+    );
+    expect(calls).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("/api/v1/dpm/command-center/waves/campaign-operating-queue"),
+        expect.stringContaining("/api/v1/dpm/command-center/waves/campaign-approval-inbox"),
+        expect.stringContaining("/api/v1/dpm/command-center/waves/campaign-workflow-board"),
+        expect.stringContaining("/api/v1/dpm/command-center/waves/campaign-assignment-plan"),
+        expect.stringContaining("/api/v1/dpm/command-center/waves/campaign-workflow-automation"),
+        expect.stringContaining("/approval-decisions?limit=10&offset=0"),
+        expect.stringContaining("/assignment-actions?limit=10&offset=0"),
+        expect.stringContaining("/assignment-tasks?limit=10&offset=0"),
+        expect.stringContaining("/maker-checker-controls?limit=10&offset=0"),
+      ])
+    );
+    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
+    expect(metricEventsJson).toContain("wave-campaign-operating-queue");
+    expect(metricEventsJson).toContain("wave-campaign-maker-checker-controls");
+    expect(metricEventsJson).not.toContain("campaign-holdings-202605");
+    expect(metricEventsJson).not.toContain("corr-campaign-workflow-audit");
+    expect(metricEventsJson).not.toContain("task-sensitive-001");
   });
 
   it("loads DPM campaign-definition lifecycle and launch-history evidence through the Gateway BFF without leaking campaign identifiers into metrics", async () => {

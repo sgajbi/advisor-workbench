@@ -78,7 +78,12 @@ Implemented:
    launch only when Manage returns `READY`, preserving source-owned reason codes, blocked actions,
    source posture, durable wave, and idempotency evidence without recomputing membership,
    readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
-12. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+12. renders read-only Manage campaign workflow audit evidence from Gateway operating queue,
+   approval inbox, workflow board, assignment plan, workflow automation, approval-decision,
+   assignment-action, assignment-task, and maker-checker read endpoints, preserving source refs,
+   count/page metadata, reason codes, content hashes, task-transition posture, and operating
+   boundaries without mutating assignment or maker-checker state,
+13. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
    report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 

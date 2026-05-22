@@ -1,5 +1,6 @@
 import type {
   DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
   DpmOperationsHandoffSummaryResponse,
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
@@ -120,6 +121,32 @@ export type DpmCampaignLaunchPosture = {
   idempotencyEvidence: string;
 };
 
+export type DpmCampaignWorkflowSummaryRow = {
+  key: string;
+  surface: string;
+  state: string;
+  itemCount: string;
+  page: string;
+  sourceRefs: string;
+  reasonCodes: string;
+  contentHash: string;
+  operatingBoundaries: string;
+};
+
+export type DpmCampaignWorkflowEvidenceRow = {
+  key: string;
+  evidenceType: string;
+  evidenceRef: string;
+  status: string;
+  actor: string;
+  recordedAt: string;
+  reasonCodes: string;
+  sourceRefs: string;
+  contentHash: string;
+  operatingBoundaries: string;
+  transitionPosture: string;
+};
+
 export type DpmWaveCommandCenterPanelModel = {
   state: DpmWaveCommandCenterPanelState;
   sourceService: string;
@@ -147,6 +174,8 @@ export type DpmWaveCommandCenterPanelModel = {
   campaignLaunchHistoryPage: DpmCampaignLaunchHistoryPage;
   campaignPreviewReadinessPosture: DpmCampaignPreviewReadinessPosture;
   campaignLaunchPosture: DpmCampaignLaunchPosture;
+  campaignWorkflowSummaryRows: DpmCampaignWorkflowSummaryRow[];
+  campaignWorkflowEvidenceRows: DpmCampaignWorkflowEvidenceRow[];
   metricRows: DpmWaveMetricRow[];
   itemRows: DpmWaveItemRow[];
   proofPackRows: DpmWaveMetricRow[];
@@ -169,6 +198,15 @@ export function buildDpmWaveCommandCenterModel(params: {
   campaignLaunchHistory?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchPackage?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLaunchResponse?: DpmWaveGatewayResponse | null;
+  campaignOperatingQueue?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalInbox?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
   const primary =
     params.actionResponse ??
@@ -249,6 +287,19 @@ export function buildDpmWaveCommandCenterModel(params: {
       params.campaignLaunchPackage?.data,
       params.campaignLaunchResponse?.data
     ),
+    campaignWorkflowSummaryRows: buildCampaignWorkflowSummaryRows([
+      ["Operating Queue", params.campaignOperatingQueue],
+      ["Approval Inbox", params.campaignApprovalInbox],
+      ["Workflow Board", params.campaignWorkflowBoard],
+      ["Assignment Plan", params.campaignAssignmentPlan],
+      ["Workflow Automation", params.campaignWorkflowAutomation],
+    ]),
+    campaignWorkflowEvidenceRows: buildCampaignWorkflowEvidenceRows([
+      ["Approval Decision", params.campaignApprovalDecisions],
+      ["Assignment Action", params.campaignAssignmentActions],
+      ["Assignment Task", params.campaignAssignmentTasks],
+      ["Maker-Checker Control", params.campaignMakerCheckerControls],
+    ]),
     metricRows: buildMetricRows(metricSource),
     itemRows,
     proofPackRows: buildProofPackRows(proofPackPosture, itemRows),
@@ -256,6 +307,123 @@ export function buildDpmWaveCommandCenterModel(params: {
     externalExecutionClaimed: formatValue(
       readValue(proofPackPosture, "external_execution_claimed")
     ),
+  };
+}
+
+function buildCampaignWorkflowSummaryRows(
+  responses: Array<[string, DpmCampaignWorkflowGatewayResponse | null | undefined]>
+): DpmCampaignWorkflowSummaryRow[] {
+  return responses.flatMap(([surface, response]) => {
+    if (!response) {
+      return [];
+    }
+    const data = response.data;
+    const supportability = readRecord(response.supportability);
+    const records = extractWorkflowRecords(data);
+    const count = readNumber(data, "count") ?? readNumber(supportability, "count") ?? records.length;
+    const totalCount =
+      readNumber(data, "total_count") ?? readNumber(supportability, "total_count") ?? count;
+    const limit = readNumber(data, "limit");
+    const offset = readNumber(data, "offset");
+    return [
+      {
+        key: surface.toLowerCase().replaceAll(" ", "-"),
+        surface,
+        state: normalizeState(
+          readString(data, "supportability_state") ||
+            readString(data, "state") ||
+            readString(supportability, "state")
+        ),
+        itemCount: formatValue(count),
+        page:
+          limit === null || offset === null
+            ? `${formatValue(count)} of ${formatValue(totalCount)}`
+            : `${formatValue(offset + 1)}-${formatValue(offset + count)} of ${formatValue(totalCount)}`,
+        sourceRefs: formatValue(countNestedRecords(data, "source_refs")),
+        reasonCodes: formatStringList(
+          extractStringArray(data.reason_codes ?? supportability.reason_codes)
+        ),
+        contentHash:
+          readString(data, "content_hash") || readString(supportability, "content_hash") || "N/A",
+        operatingBoundaries: formatStringList(extractStringArray(data.operating_boundaries)),
+      },
+    ];
+  });
+}
+
+function buildCampaignWorkflowEvidenceRows(
+  responses: Array<[string, DpmCampaignWorkflowGatewayResponse | null | undefined]>
+): DpmCampaignWorkflowEvidenceRow[] {
+  return responses.flatMap(([evidenceType, response]) =>
+    extractWorkflowRecords(response?.data).map((record, index) =>
+      buildCampaignWorkflowEvidenceRow(evidenceType, record, index)
+    )
+  );
+}
+
+function buildCampaignWorkflowEvidenceRow(
+  evidenceType: string,
+  record: Record<string, unknown>,
+  index: number
+): DpmCampaignWorkflowEvidenceRow {
+  const sourceRefs = extractRecordArray(record.source_refs);
+  const transitionRecords = extractRecordArray(
+    record.transitions ?? record.transition_history ?? record.task_transitions
+  );
+  const transitionPosture = transitionRecords.length
+    ? transitionRecords
+        .map((transition, transitionIndex) => {
+          const transitionType =
+            readString(transition, "transition_type") ||
+            readString(transition, "event_type") ||
+            `transition_${transitionIndex + 1}`;
+          const fromStatus = readString(transition, "from_status");
+          const toStatus = readString(transition, "to_status");
+          return [transitionType, [fromStatus, toStatus].filter(Boolean).join(" to ")]
+            .filter(Boolean)
+            .join(": ");
+        })
+        .join(" | ")
+    : "N/A";
+  return {
+    key: [
+      evidenceType.toLowerCase().replaceAll(" ", "-"),
+      readString(record, "evidence_ref") ||
+        readString(record, "decision_ref") ||
+        readString(record, "action_ref") ||
+        readString(record, "task_ref") ||
+        readString(record, "control_ref") ||
+        String(index + 1),
+    ].join(":"),
+    evidenceType,
+    evidenceRef:
+      readString(record, "evidence_ref") ||
+      readString(record, "decision_ref") ||
+      readString(record, "action_ref") ||
+      readString(record, "task_ref") ||
+      readString(record, "control_ref") ||
+      "N/A",
+    status: normalizeState(
+      readString(record, "status") ||
+        readString(record, "state") ||
+        readString(record, "to_status") ||
+        "RECORDED"
+    ),
+    actor:
+      readString(record, "actor_id") ||
+      readString(record, "recorded_by") ||
+      readString(record, "created_by") ||
+      "N/A",
+    recordedAt:
+      readString(record, "recorded_at") ||
+      readString(record, "created_at") ||
+      readString(record, "updated_at") ||
+      "N/A",
+    reasonCodes: formatStringList(extractStringArray(record.reason_codes ?? record.reason_code)),
+    sourceRefs: formatValue(sourceRefs.length),
+    contentHash: readString(record, "content_hash") || "N/A",
+    operatingBoundaries: formatStringList(extractStringArray(record.operating_boundaries)),
+    transitionPosture,
   };
 }
 
@@ -824,6 +992,28 @@ function extractRecordArray(value: unknown): Record<string, unknown>[] {
   return value.filter(isRecord);
 }
 
+function extractWorkflowRecords(data: Record<string, unknown> | undefined): Record<string, unknown>[] {
+  return extractRecordArray(
+    data?.items ??
+      data?.approval_decisions ??
+      data?.assignment_actions ??
+      data?.assignment_tasks ??
+      data?.maker_checker_controls ??
+      data?.tasks ??
+      data?.controls
+  );
+}
+
+function countNestedRecords(data: Record<string, unknown>, key: string): number {
+  return (
+    extractRecordArray(data[key]).length +
+    extractWorkflowRecords(data).reduce(
+      (count, record) => count + extractRecordArray(record[key]).length,
+      0
+    )
+  );
+}
+
 function extractStringArray(value: unknown): string[] {
   if (typeof value === "string" && value.length > 0) {
     return [value];
@@ -871,6 +1061,10 @@ function readNumber(record: Record<string, unknown>, key: string): number | null
 
 function firstNonEmpty(values: string[] | undefined): string {
   return values?.find((value) => value.trim().length > 0) ?? "";
+}
+
+function formatStringList(values: string[]): string {
+  return values.length > 0 ? values.join(", ") : "N/A";
 }
 
 function formatValue(value: unknown): string {
