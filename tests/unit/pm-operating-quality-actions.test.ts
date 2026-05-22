@@ -4,8 +4,10 @@ import {
   buildPmQualityActionError,
   buildPmQualityBlockedActionError,
   buildPmQualityFairnessCreateEvidence,
+  buildPmQualityReviewActionEvidence,
   buildPmQualitySummaryInvocationEvidence,
   readPmQualityFairnessAnalysisId,
+  readPmQualityReviewActionId,
   readPmQualitySummaryInvocationId,
 } from "../../src/features/workbench/pm-operating-quality-actions";
 import type { DpmPmOperatingQualityGatewayResponse } from "../../src/features/workbench/types";
@@ -45,6 +47,33 @@ const summaryInvocationResponse: DpmPmOperatingQualityGatewayResponse = {
       generated_summary_text: "Raw summary text must not enter evidence.",
       prompt_body: "Raw prompt must not enter evidence.",
       model_response: "Raw model response must not enter evidence.",
+    },
+  },
+};
+
+const reviewActionResponse: DpmPmOperatingQualityGatewayResponse = {
+  ...response,
+  correlation_id: "corr-pmq-review-action-create",
+  supportability: {
+    ...response.supportability,
+    review_action_id: "pmq_review_supportability",
+  },
+  data: {
+    review_action: {
+      review_action_id: "pmq_review_payload",
+      bounded_review_rationale: "Bounded supervisory review evidence.",
+      review_rationale: "Raw rationale must not enter evidence.",
+      reviewer_notes: "Reviewer notes must not enter evidence.",
+      client_contact_instruction: "Client instruction must not enter evidence.",
+      order_instruction: "Order instruction must not enter evidence.",
+      oms_claim: "OMS claim must not enter evidence.",
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_payload",
+        },
+      ],
     },
   },
 };
@@ -109,6 +138,36 @@ describe("PM operating quality action helpers", () => {
       upstreamStatus: "200",
     });
     expect(JSON.stringify(evidence)).not.toContain("sha256:pm-quality");
+  });
+
+  it("builds persisted review-action evidence without raw rationale or workflow claims", () => {
+    expect(readPmQualityReviewActionId(reviewActionResponse)).toBe(
+      "pmq_review_supportability"
+    );
+    expect(
+      readPmQualityReviewActionId({
+        ...reviewActionResponse,
+        supportability: {
+          ...reviewActionResponse.supportability,
+          review_action_id: null,
+        },
+      })
+    ).toBe("pmq_review_payload");
+
+    const evidence = buildPmQualityReviewActionEvidence(reviewActionResponse);
+
+    expect(evidence).toEqual({
+      reviewActionId: "pmq_review_supportability",
+      correlationId: "corr-pmq-review-action-create",
+      sourceService: "lotus-manage",
+      upstreamStatus: "200",
+    });
+    expect(JSON.stringify(evidence)).not.toContain("Bounded supervisory review");
+    expect(JSON.stringify(evidence)).not.toContain("Raw rationale");
+    expect(JSON.stringify(evidence)).not.toContain("Reviewer notes");
+    expect(JSON.stringify(evidence)).not.toContain("Client instruction");
+    expect(JSON.stringify(evidence)).not.toContain("Order instruction");
+    expect(JSON.stringify(evidence)).not.toContain("OMS claim");
   });
 
   it("builds persisted summary-invocation evidence without generated text", () => {
