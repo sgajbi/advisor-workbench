@@ -39,7 +39,10 @@ type PerformanceRiskContractState = {
   isAttributionLoading: boolean;
   isDrawdownDetailLoading: boolean;
   isRollingDetailLoading: boolean;
-  requestAttribution: (attributionType: string, groupingDimension: string) => void;
+  requestAttribution: (
+    attributionType: string,
+    groupingDimension: string,
+  ) => void;
   requestDrawdownDetail: () => void;
   requestRollingDetail: () => void;
 };
@@ -56,36 +59,53 @@ export function usePerformanceRiskContract({
   isDetailsPending: boolean;
 }): PerformanceRiskContractState {
   const workspaceRef = useRef(workspace);
-  const summaryCacheRef = useRef<Map<string, WorkbenchRiskSummaryResponse>>(new Map());
-  const concentrationCacheRef = useRef<Map<string, WorkbenchRiskConcentrationResponse>>(new Map());
-  const attributionCacheRef = useRef<Map<string, WorkbenchRiskAttributionResponse>>(new Map());
-  const drawdownCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
-  const drawdownDetailCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(new Map());
-  const rollingCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(new Map());
-  const rollingDetailCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(new Map());
+  const summaryCacheRef = useRef<Map<string, WorkbenchRiskSummaryResponse>>(
+    new Map(),
+  );
+  const concentrationCacheRef = useRef<
+    Map<string, WorkbenchRiskConcentrationResponse>
+  >(new Map());
+  const attributionCacheRef = useRef<
+    Map<string, WorkbenchRiskAttributionResponse>
+  >(new Map());
+  const drawdownCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(
+    new Map(),
+  );
+  const drawdownDetailCacheRef = useRef<
+    Map<string, WorkbenchRiskDrawdownResponse>
+  >(new Map());
+  const rollingCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(
+    new Map(),
+  );
+  const rollingDetailCacheRef = useRef<
+    Map<string, WorkbenchRiskRollingResponse>
+  >(new Map());
   const requestSequenceRef = useRef(0);
   const drawdownDetailRequestSequenceRef = useRef(0);
   const rollingDetailRequestSequenceRef = useRef(0);
   const attributionRequestSequenceRef = useRef(0);
-  const [riskSummary, setRiskSummary] = useState<WorkbenchRiskSummaryResponse | null>(null);
-  const [riskConcentration, setRiskConcentration] = useState<WorkbenchRiskConcentrationResponse | null>(
-    null
-  );
-  const [riskAttribution, setRiskAttribution] = useState<WorkbenchRiskAttributionResponse | null>(null);
-  const [riskDrawdown, setRiskDrawdown] = useState<WorkbenchRiskDrawdownResponse | null>(null);
-  const [riskDrawdownDetail, setRiskDrawdownDetail] = useState<WorkbenchRiskDrawdownResponse | null>(
-    null
-  );
-  const [riskRolling, setRiskRolling] = useState<WorkbenchRiskRollingResponse | null>(null);
-  const [riskRollingDetail, setRiskRollingDetail] = useState<WorkbenchRiskRollingResponse | null>(
-    null
-  );
+  const [riskSummary, setRiskSummary] =
+    useState<WorkbenchRiskSummaryResponse | null>(null);
+  const [riskConcentration, setRiskConcentration] =
+    useState<WorkbenchRiskConcentrationResponse | null>(null);
+  const [riskAttribution, setRiskAttribution] =
+    useState<WorkbenchRiskAttributionResponse | null>(null);
+  const [riskDrawdown, setRiskDrawdown] =
+    useState<WorkbenchRiskDrawdownResponse | null>(null);
+  const [riskDrawdownDetail, setRiskDrawdownDetail] =
+    useState<WorkbenchRiskDrawdownResponse | null>(null);
+  const [riskRolling, setRiskRolling] =
+    useState<WorkbenchRiskRollingResponse | null>(null);
+  const [riskRollingDetail, setRiskRollingDetail] =
+    useState<WorkbenchRiskRollingResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAttributionLoading, setIsAttributionLoading] = useState(false);
   const [isDrawdownDetailLoading, setIsDrawdownDetailLoading] = useState(false);
   const [isRollingDetailLoading, setIsRollingDetailLoading] = useState(false);
-  const [selectedAttributionType, setSelectedAttributionType] = useState("TOTAL_RISK");
-  const [selectedGroupingDimension, setSelectedGroupingDimension] = useState("SECTOR");
+  const [selectedAttributionType, setSelectedAttributionType] =
+    useState("TOTAL_RISK");
+  const [selectedGroupingDimension, setSelectedGroupingDimension] =
+    useState("SECTOR");
   const riskWindowParams = useMemo(
     () =>
       period === "EXPLICIT"
@@ -94,8 +114,9 @@ export function usePerformanceRiskContract({
             reportEndDate: workspace.report_end_date,
           }
         : {},
-    [period, workspace.report_end_date, workspace.report_start_date]
+    [period, workspace.report_end_date, workspace.report_start_date],
   );
+  const riskAsOfDate = getRiskAsOfDate(workspace);
 
   useEffect(() => {
     workspaceRef.current = workspace;
@@ -109,18 +130,18 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
       }),
     [
       detailBasis,
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   const concentrationKey = useMemo(
@@ -130,17 +151,17 @@ export function usePerformanceRiskContract({
         period,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
       }),
     [
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   const drawdownKey = useMemo(
@@ -151,7 +172,7 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
         includeUnderwaterSeries: false,
       }),
@@ -159,11 +180,11 @@ export function usePerformanceRiskContract({
       detailBasis,
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   const drawdownDetailKey = useMemo(
@@ -174,7 +195,7 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
         includeUnderwaterSeries: true,
       }),
@@ -182,11 +203,11 @@ export function usePerformanceRiskContract({
       detailBasis,
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   const rollingKey = useMemo(
@@ -197,7 +218,7 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
         includeTimeSeries: false,
       }),
@@ -205,11 +226,11 @@ export function usePerformanceRiskContract({
       detailBasis,
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   const rollingDetailKey = useMemo(
@@ -220,7 +241,7 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
         includeTimeSeries: true,
       }),
@@ -228,11 +249,11 @@ export function usePerformanceRiskContract({
       detailBasis,
       period,
       riskWindowParams,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -252,22 +273,32 @@ export function usePerformanceRiskContract({
     }
 
     const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
-    const cachedConcentration = concentrationCacheRef.current.get(concentrationKey) ?? null;
+    const cachedConcentration =
+      concentrationCacheRef.current.get(concentrationKey) ?? null;
     const cachedDrawdown = drawdownCacheRef.current.get(drawdownKey) ?? null;
     const cachedRolling = rollingCacheRef.current.get(rollingKey) ?? null;
 
     setRiskSummary(cachedSummary);
     setRiskConcentration(cachedConcentration);
     setRiskDrawdown(cachedDrawdown);
-    setRiskDrawdownDetail(drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null);
+    setRiskDrawdownDetail(
+      drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null,
+    );
     setRiskRolling(cachedRolling);
-    setRiskRollingDetail(rollingDetailCacheRef.current.get(rollingDetailKey) ?? null);
+    setRiskRollingDetail(
+      rollingDetailCacheRef.current.get(rollingDetailKey) ?? null,
+    );
 
     const needsSummary = !cachedSummary;
     const needsConcentration = !cachedConcentration;
     const needsDrawdown = !cachedDrawdown;
     const needsRolling = !cachedRolling;
-    if (!needsSummary && !needsConcentration && !needsDrawdown && !needsRolling) {
+    if (
+      !needsSummary &&
+      !needsConcentration &&
+      !needsDrawdown &&
+      !needsRolling
+    ) {
       setIsLoading(false);
       return;
     }
@@ -282,7 +313,7 @@ export function usePerformanceRiskContract({
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
           ...riskWindowParams,
-          asOfDate: workspace.as_of_date,
+          asOfDate: riskAsOfDate,
           reportingCurrency: workspace.portfolio.base_currency,
         }).catch((error: unknown) =>
           buildUnavailableRiskSummary({
@@ -291,7 +322,7 @@ export function usePerformanceRiskContract({
             detailBasis,
             detail: buildRiskFetchFailureDetail(error, "Risk summary"),
             permissionBlocked: isWorkbenchPermissionBlockedError(error),
-          })
+          }),
         )
       : Promise.resolve(cachedSummary);
 
@@ -300,7 +331,7 @@ export function usePerformanceRiskContract({
           period,
           benchmark: workspace.benchmark_code ?? undefined,
           ...riskWindowParams,
-          asOfDate: workspace.as_of_date,
+          asOfDate: riskAsOfDate,
           reportingCurrency: workspace.portfolio.base_currency,
         }).catch((error: unknown) =>
           buildUnavailableRiskConcentration({
@@ -308,7 +339,7 @@ export function usePerformanceRiskContract({
             period,
             detail: buildRiskFetchFailureDetail(error, "Risk concentration"),
             permissionBlocked: isWorkbenchPermissionBlockedError(error),
-          })
+          }),
         )
       : Promise.resolve(cachedConcentration);
 
@@ -318,7 +349,7 @@ export function usePerformanceRiskContract({
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
           ...riskWindowParams,
-          asOfDate: workspace.as_of_date,
+          asOfDate: riskAsOfDate,
           reportingCurrency: workspace.portfolio.base_currency,
           includeUnderwaterSeries: false,
         }).catch((error: unknown) =>
@@ -329,7 +360,7 @@ export function usePerformanceRiskContract({
             detail: buildRiskFetchFailureDetail(error, "Risk drawdown"),
             includeUnderwaterSeries: false,
             permissionBlocked: isWorkbenchPermissionBlockedError(error),
-          })
+          }),
         )
       : Promise.resolve(cachedDrawdown);
 
@@ -339,7 +370,7 @@ export function usePerformanceRiskContract({
           detailBasis,
           benchmark: workspace.benchmark_code ?? undefined,
           ...riskWindowParams,
-          asOfDate: workspace.as_of_date,
+          asOfDate: riskAsOfDate,
           reportingCurrency: workspace.portfolio.base_currency,
           includeTimeSeries: false,
         }).catch((error: unknown) =>
@@ -350,34 +381,37 @@ export function usePerformanceRiskContract({
             detail: buildRiskFetchFailureDetail(error, "Risk rolling"),
             includeTimeSeries: false,
             permissionBlocked: isWorkbenchPermissionBlockedError(error),
-          })
+          }),
         )
       : Promise.resolve(cachedRolling);
 
-    void Promise.all([summaryPromise, concentrationPromise, drawdownPromise, rollingPromise]).then(
-      ([nextSummary, nextConcentration, nextDrawdown, nextRolling]) => {
-        if (requestSequenceRef.current !== requestId) {
-          return;
-        }
-        if (nextSummary) {
-          summaryCacheRef.current.set(summaryKey, nextSummary);
-          setRiskSummary(nextSummary);
-        }
-        if (nextConcentration) {
-          concentrationCacheRef.current.set(concentrationKey, nextConcentration);
-          setRiskConcentration(nextConcentration);
-        }
-        if (nextDrawdown) {
-          drawdownCacheRef.current.set(drawdownKey, nextDrawdown);
-          setRiskDrawdown(nextDrawdown);
-        }
-        if (nextRolling) {
-          rollingCacheRef.current.set(rollingKey, nextRolling);
-          setRiskRolling(nextRolling);
-        }
-        setIsLoading(false);
+    void Promise.all([
+      summaryPromise,
+      concentrationPromise,
+      drawdownPromise,
+      rollingPromise,
+    ]).then(([nextSummary, nextConcentration, nextDrawdown, nextRolling]) => {
+      if (requestSequenceRef.current !== requestId) {
+        return;
       }
-    );
+      if (nextSummary) {
+        summaryCacheRef.current.set(summaryKey, nextSummary);
+        setRiskSummary(nextSummary);
+      }
+      if (nextConcentration) {
+        concentrationCacheRef.current.set(concentrationKey, nextConcentration);
+        setRiskConcentration(nextConcentration);
+      }
+      if (nextDrawdown) {
+        drawdownCacheRef.current.set(drawdownKey, nextDrawdown);
+        setRiskDrawdown(nextDrawdown);
+      }
+      if (nextRolling) {
+        rollingCacheRef.current.set(rollingKey, nextRolling);
+        setRiskRolling(nextRolling);
+      }
+      setIsLoading(false);
+    });
   }, [
     concentrationKey,
     detailBasis,
@@ -389,7 +423,7 @@ export function usePerformanceRiskContract({
     rollingDetailKey,
     rollingKey,
     summaryKey,
-    workspace.as_of_date,
+    riskAsOfDate,
     workspace.benchmark_code,
     workspace.portfolio.base_currency,
     workspace.portfolio.portfolio_id,
@@ -403,7 +437,7 @@ export function usePerformanceRiskContract({
         detailBasis,
         benchmark: workspace.benchmark_code ?? null,
         ...riskWindowParams,
-        asOfDate: workspace.as_of_date,
+        asOfDate: riskAsOfDate,
         reportingCurrency: workspace.portfolio.base_currency,
         attributionType: selectedAttributionType,
         groupingDimension: selectedGroupingDimension,
@@ -414,11 +448,11 @@ export function usePerformanceRiskContract({
       riskWindowParams,
       selectedAttributionType,
       selectedGroupingDimension,
-      workspace.as_of_date,
+      riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.base_currency,
       workspace.portfolio.portfolio_id,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -426,9 +460,18 @@ export function usePerformanceRiskContract({
     setSelectedGroupingDimension("SECTOR");
     setRiskAttribution(null);
     setIsAttributionLoading(false);
-  }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
+  }, [
+    detailBasis,
+    period,
+    riskAsOfDate,
+    workspace.benchmark_code,
+    workspace.portfolio.portfolio_id,
+  ]);
 
-  const requestAttribution = (attributionType: string, groupingDimension: string) => {
+  const requestAttribution = (
+    attributionType: string,
+    groupingDimension: string,
+  ) => {
     if (isDetailsPending) {
       return;
     }
@@ -440,7 +483,8 @@ export function usePerformanceRiskContract({
     if (isDetailsPending) {
       return;
     }
-    const cachedResponse = attributionCacheRef.current.get(attributionKey) ?? null;
+    const cachedResponse =
+      attributionCacheRef.current.get(attributionKey) ?? null;
     if (cachedResponse) {
       setRiskAttribution(cachedResponse);
       setIsAttributionLoading(false);
@@ -454,7 +498,7 @@ export function usePerformanceRiskContract({
       detailBasis,
       benchmark: workspace.benchmark_code ?? undefined,
       ...riskWindowParams,
-      asOfDate: workspace.as_of_date,
+      asOfDate: riskAsOfDate,
       reportingCurrency: workspace.portfolio.base_currency,
       attributionType: selectedAttributionType,
       groupingDimension: selectedGroupingDimension,
@@ -488,7 +532,7 @@ export function usePerformanceRiskContract({
     riskWindowParams,
     selectedAttributionType,
     selectedGroupingDimension,
-    workspace.as_of_date,
+    riskAsOfDate,
     workspace.benchmark_code,
     workspace.portfolio.base_currency,
     workspace.portfolio.portfolio_id,
@@ -498,7 +542,8 @@ export function usePerformanceRiskContract({
     if (isDetailsPending) {
       return;
     }
-    const cachedDetail = drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null;
+    const cachedDetail =
+      drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null;
     if (cachedDetail) {
       setRiskDrawdownDetail(cachedDetail);
       return;
@@ -506,24 +551,29 @@ export function usePerformanceRiskContract({
     const requestId = drawdownDetailRequestSequenceRef.current + 1;
     drawdownDetailRequestSequenceRef.current = requestId;
     setIsDrawdownDetailLoading(true);
-    void getWorkbenchRiskDrawdownClient(workspaceRef.current.portfolio.portfolio_id, {
-      period,
-      detailBasis,
-      benchmark: workspaceRef.current.benchmark_code ?? undefined,
-      ...getRiskWindowParams(workspaceRef.current, period),
-      asOfDate: workspaceRef.current.as_of_date,
-      reportingCurrency: workspaceRef.current.portfolio.base_currency,
-      includeUnderwaterSeries: true,
-    })
+    void getWorkbenchRiskDrawdownClient(
+      workspaceRef.current.portfolio.portfolio_id,
+      {
+        period,
+        detailBasis,
+        benchmark: workspaceRef.current.benchmark_code ?? undefined,
+        ...getRiskWindowParams(workspaceRef.current, period),
+        asOfDate: getRiskAsOfDate(workspaceRef.current),
+        reportingCurrency: workspaceRef.current.portfolio.base_currency,
+        includeUnderwaterSeries: true,
+      },
+    )
       .catch((error: unknown) =>
         buildUnavailableRiskDrawdown({
           workspace: workspaceRef.current,
           period,
           detailBasis,
           detail:
-            error instanceof Error ? error.message : "Risk drawdown detail fetch failed.",
+            error instanceof Error
+              ? error.message
+              : "Risk drawdown detail fetch failed.",
           includeUnderwaterSeries: true,
-        })
+        }),
       )
       .then((response) => {
         if (drawdownDetailRequestSequenceRef.current !== requestId) {
@@ -539,7 +589,8 @@ export function usePerformanceRiskContract({
     if (isDetailsPending) {
       return;
     }
-    const cachedDetail = rollingDetailCacheRef.current.get(rollingDetailKey) ?? null;
+    const cachedDetail =
+      rollingDetailCacheRef.current.get(rollingDetailKey) ?? null;
     if (cachedDetail) {
       setRiskRollingDetail(cachedDetail);
       return;
@@ -547,24 +598,29 @@ export function usePerformanceRiskContract({
     const requestId = rollingDetailRequestSequenceRef.current + 1;
     rollingDetailRequestSequenceRef.current = requestId;
     setIsRollingDetailLoading(true);
-    void getWorkbenchRiskRollingClient(workspaceRef.current.portfolio.portfolio_id, {
-      period,
-      detailBasis,
-      benchmark: workspaceRef.current.benchmark_code ?? undefined,
-      ...getRiskWindowParams(workspaceRef.current, period),
-      asOfDate: workspaceRef.current.as_of_date,
-      reportingCurrency: workspaceRef.current.portfolio.base_currency,
-      includeTimeSeries: true,
-    })
+    void getWorkbenchRiskRollingClient(
+      workspaceRef.current.portfolio.portfolio_id,
+      {
+        period,
+        detailBasis,
+        benchmark: workspaceRef.current.benchmark_code ?? undefined,
+        ...getRiskWindowParams(workspaceRef.current, period),
+        asOfDate: getRiskAsOfDate(workspaceRef.current),
+        reportingCurrency: workspaceRef.current.portfolio.base_currency,
+        includeTimeSeries: true,
+      },
+    )
       .catch((error: unknown) =>
         buildUnavailableRiskRolling({
           workspace: workspaceRef.current,
           period,
           detailBasis,
           detail:
-            error instanceof Error ? error.message : "Risk rolling detail fetch failed.",
+            error instanceof Error
+              ? error.message
+              : "Risk rolling detail fetch failed.",
           includeTimeSeries: true,
-        })
+        }),
       )
       .then((response) => {
         if (rollingDetailRequestSequenceRef.current !== requestId) {
@@ -594,13 +650,20 @@ export function usePerformanceRiskContract({
   };
 }
 
-function getRiskWindowParams(workspace: WorkbenchPerformanceWorkspace, period: string) {
+function getRiskWindowParams(
+  workspace: WorkbenchPerformanceWorkspace,
+  period: string,
+) {
   return period === "EXPLICIT"
     ? {
         reportStartDate: workspace.report_start_date,
         reportEndDate: workspace.report_end_date,
       }
     : {};
+}
+
+function getRiskAsOfDate(workspace: WorkbenchPerformanceWorkspace): string {
+  return workspace.report_end_date?.trim() || workspace.as_of_date;
 }
 
 function buildRiskFetchFailureDetail(error: unknown, label: string): string {

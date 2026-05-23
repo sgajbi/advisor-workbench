@@ -1,5 +1,11 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceRiskMode from "../../src/apps/performance/components/performance-risk-mode";
@@ -17,7 +23,10 @@ import {
   getWorkbenchRiskRollingClient,
   getWorkbenchRiskSummaryClient,
 } from "../../src/features/workbench/api";
-import { buildBenchmarkUnassignedPerformanceScenario, buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
+import {
+  buildBenchmarkUnassignedPerformanceScenario,
+  buildSupportedPerformanceScenario,
+} from "../fixtures/performance-workspace-fixtures";
 
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskSummaryClient: vi.fn(),
@@ -26,13 +35,17 @@ vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskDrawdownClient: vi.fn(),
   getWorkbenchRiskRollingClient: vi.fn(),
   isWorkbenchPermissionBlockedError: vi.fn((error: unknown) =>
-    error instanceof Error ? /\((401|403)\)$/.test(error.message) : false
+    error instanceof Error ? /\((401|403)\)$/.test(error.message) : false,
   ),
 }));
 
 function renderRiskMode(
   scenario = buildSupportedPerformanceScenario(),
-  options: { detailBasis?: "NET" | "GROSS"; period?: string; isDetailsPending?: boolean } = {}
+  options: {
+    detailBasis?: "NET" | "GROSS";
+    period?: string;
+    isDetailsPending?: boolean;
+  } = {},
 ) {
   return render(
     <PerformanceRiskMode
@@ -45,7 +58,7 @@ function renderRiskMode(
       chartFrequency="monthly"
       isUpdating={false}
       isDetailsPending={options.isDetailsPending ?? false}
-    />
+    />,
   );
 }
 
@@ -57,70 +70,100 @@ describe("PerformanceRiskMode", () => {
   it("fetches live Gateway-backed risk summary and concentration contracts", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     const { container } = renderRiskMode(scenario);
 
     expect(screen.getByText("Loading risk")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
+      expect(
+        screen.getByLabelText("Risk snapshot headline metrics"),
+      ).toHaveTextContent("Volatility");
     });
-    expect(screen.getByLabelText("Risk coverage and review notes")).toHaveTextContent(
-      "Coverage and review notes"
+    expect(
+      screen.getByLabelText("Risk coverage and review notes"),
+    ).toHaveTextContent("Coverage and review notes");
+    expect(
+      screen.queryByLabelText("Risk snapshot business reading"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
+      "Risk posture",
     );
-    expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Risk posture");
-    expect(screen.getByLabelText("Risk executive overview")).not.toHaveTextContent("What matters now");
+    expect(
+      screen.getByLabelText("Risk executive overview"),
+    ).not.toHaveTextContent("What matters now");
     expect(screen.getByLabelText("Primary risk review")).toBeInTheDocument();
-    expect(screen.getByLabelText("Secondary risk analysis")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /methodology and coverage$/i })).toHaveLength(5);
-    expect(screen.queryByLabelText("Drawdown business reading")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Historical risk attribution business reading")).not.toBeInTheDocument();
-    const concentrationHeading = screen.getByRole("heading", { name: "Concentration" });
-    const rollingHeading = screen.getByRole("heading", { name: "Rolling Risk" });
+    expect(
+      screen.getByLabelText("Secondary risk analysis"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /methodology and coverage$/i }),
+    ).toHaveLength(5);
+    expect(
+      screen.queryByLabelText("Drawdown business reading"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Rolling risk business reading"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Historical risk attribution business reading"),
+    ).not.toBeInTheDocument();
+    const concentrationHeading = screen.getByRole("heading", {
+      name: "Concentration",
+    });
+    const rollingHeading = screen.getByRole("heading", {
+      name: "Rolling Risk",
+    });
     const attributionHeading = screen.getByRole("heading", {
       name: "Historical Risk Attribution",
     });
     expect(
       concentrationHeading.compareDocumentPosition(rollingHeading) &
-        Node.DOCUMENT_POSITION_FOLLOWING
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       rollingHeading.compareDocumentPosition(attributionHeading) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-    expect(
-      container.querySelector(".performance-risk-secondary-group .performance-risk-rolling-panel")
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       container.querySelector(
-        ".performance-risk-secondary-group .performance-risk-attribution-panel"
-      )
-    ).toBeTruthy();
-    expect(
-      container.querySelector(".performance-risk-secondary-group .performance-risk-secondary-main")
+        ".performance-risk-secondary-group .performance-risk-rolling-panel",
+      ),
     ).toBeTruthy();
     expect(
       container.querySelector(
-        ".performance-risk-secondary-group .performance-risk-secondary-sidecar"
-      )
+        ".performance-risk-secondary-group .performance-risk-attribution-panel",
+      ),
     ).toBeTruthy();
-    expect(container.querySelectorAll(".performance-risk-module-shell-compact")).toHaveLength(5);
-    expect(screen.queryByText("Coverage and methodology")).not.toBeInTheDocument();
+    expect(
+      container.querySelector(
+        ".performance-risk-secondary-group .performance-risk-secondary-main",
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        ".performance-risk-secondary-group .performance-risk-secondary-sidecar",
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelectorAll(".performance-risk-module-shell-compact"),
+    ).toHaveLength(5);
+    expect(
+      screen.queryByText("Coverage and methodology"),
+    ).not.toBeInTheDocument();
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
@@ -129,12 +172,15 @@ describe("PerformanceRiskMode", () => {
       asOfDate: "2026-02-24",
       reportingCurrency: "USD",
     });
-    expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledWith("PF_1001", {
-      period: "YTD",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      asOfDate: "2026-02-24",
-      reportingCurrency: "USD",
-    });
+    expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledWith(
+      "PF_1001",
+      {
+        period: "YTD",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        asOfDate: "2026-02-24",
+        reportingCurrency: "USD",
+      },
+    );
     expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
       detailBasis: "NET",
@@ -162,22 +208,78 @@ describe("PerformanceRiskMode", () => {
     });
   });
 
+  it("uses the report end date as the risk as-of date for canonical historical analytics", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const canonicalScenario = {
+      ...scenario,
+      workspace: {
+        ...scenario.workspace,
+        as_of_date: "2026-05-23",
+        report_end_date: "2026-04-10",
+      },
+    };
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(canonicalScenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(canonicalScenario.workspace, "YTD"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(canonicalScenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(canonicalScenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(canonicalScenario.workspace, "YTD", "NET"),
+    );
+
+    renderRiskMode(canonicalScenario);
+
+    await waitFor(() => {
+      expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith(
+        "PF_1001",
+        {
+          period: "YTD",
+          detailBasis: "NET",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          asOfDate: "2026-04-10",
+          reportingCurrency: "USD",
+          attributionType: "TOTAL_RISK",
+          groupingDimension: "SECTOR",
+        },
+      );
+    });
+    expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledWith(
+      "PF_1001",
+      expect.objectContaining({ asOfDate: "2026-04-10" }),
+    );
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledWith(
+      "PF_1001",
+      expect.objectContaining({ asOfDate: "2026-04-10" }),
+    );
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledWith(
+      "PF_1001",
+      expect.objectContaining({ asOfDate: "2026-04-10" }),
+    );
+  });
+
   it("reuses cached live responses for the same request shape and invalidates summary only when detail basis changes", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     const { rerender } = render(
@@ -191,11 +293,13 @@ describe("PerformanceRiskMode", () => {
         chartFrequency="monthly"
         isUpdating={false}
         isDetailsPending={false}
-      />
+      />,
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk snapshot headline metrics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk snapshot headline metrics"),
+      ).toBeInTheDocument();
     });
 
     rerender(
@@ -209,11 +313,13 @@ describe("PerformanceRiskMode", () => {
         chartFrequency="monthly"
         isUpdating={false}
         isDetailsPending={false}
-      />
+      />,
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk concentration headline metrics"),
+      ).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
@@ -223,7 +329,7 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
 
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS"),
     );
 
     rerender(
@@ -237,7 +343,7 @@ describe("PerformanceRiskMode", () => {
         chartFrequency="monthly"
         isUpdating={false}
         isDetailsPending={false}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -252,59 +358,71 @@ describe("PerformanceRiskMode", () => {
   it("shows partial live supportability when benchmark-relative risk is unavailable", async () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
         includeBenchmarkRelative: false,
-      })
+      }),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     const { container } = renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent(
-        "Relative Max Drawdown"
-      );
+      expect(
+        screen.getByLabelText("Risk drawdown headline metrics"),
+      ).toHaveTextContent("Relative Max Drawdown");
     });
-    expect(screen.getByLabelText("Risk drawdown headline metrics")).toHaveTextContent("N/A");
-    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent("Evidence posture");
+    expect(
+      screen.getByLabelText("Risk drawdown headline metrics"),
+    ).toHaveTextContent("N/A");
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
+      "Evidence posture",
+    );
   });
 
   it("opens panel methodology and coverage on demand without changing data-fetch flow", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", {
+          name: "Risk Snapshot methodology and coverage",
+        }),
+      ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Concentration methodology and coverage" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Concentration methodology and coverage",
+      }),
+    );
 
     const dialog = screen.getByRole("dialog", {
       name: "Concentration methodology and coverage",
@@ -320,42 +438,52 @@ describe("PerformanceRiskMode", () => {
   it("renders enriched concentration interpretation without a provenance footer", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk concentration headline metrics"),
+      ).toBeInTheDocument();
     });
-    expect(screen.queryByLabelText("Risk concentration executive summary")).not.toBeInTheDocument();
-    const concentrationMetricStrip = screen.getByLabelText("Risk concentration headline metrics");
+    expect(
+      screen.queryByLabelText("Risk concentration executive summary"),
+    ).not.toBeInTheDocument();
+    const concentrationMetricStrip = screen.getByLabelText(
+      "Risk concentration headline metrics",
+    );
     expect(
       within(concentrationMetricStrip)
         .getByText("Portfolio Concentration Index")
-        .closest(".performance-risk-concentration-indicator-tile")
+        .closest(".performance-risk-concentration-indicator-tile"),
     ).toHaveAttribute(
       "title",
-      "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings."
+      "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
     );
     expect(screen.getByLabelText("Risk concentration scale")).toHaveTextContent(
-      "Diversified"
+      "Diversified",
     );
-    expect(screen.queryByLabelText("Risk concentration driver analysis")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk concentration driver analysis"),
+    ).not.toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole("button", { name: "Concentration methodology and coverage" })
+      screen.getByRole("button", {
+        name: "Concentration methodology and coverage",
+      }),
     );
 
     const concentrationDialog = screen.getByRole("dialog", {
@@ -363,51 +491,77 @@ describe("PerformanceRiskMode", () => {
     });
 
     expect(concentrationDialog).toHaveTextContent("Grouping Level");
-    expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk concentration diagnostic table"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
   });
 
   it("uses a single semantic status badge in the risk header", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     const { container } = renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Partial");
+      expect(screen.getByLabelText("Risk mode status")).toHaveTextContent(
+        "Partial",
+      );
     });
 
-    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent("Partial");
-    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Input mode");
-    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
-    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Evidence");
-    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Review notes");
-    expect(screen.queryByLabelText("Status Stateful only")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Status Source-grounded")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Risk mode status")).toHaveTextContent(
+      "Partial",
+    );
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent(
+      "Input mode",
+    );
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent(
+      "Stateful only",
+    );
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent(
+      "Evidence",
+    );
+    expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent(
+      "Review notes",
+    );
+    expect(
+      screen.queryByLabelText("Status Stateful only"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Status Source-grounded"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders controlled unavailable states when both live BFF requests fail", async () => {
-    vi.mocked(getWorkbenchRiskSummaryClient).mockRejectedValue(new Error("summary down"));
-    vi.mocked(getWorkbenchRiskConcentrationClient).mockRejectedValue(
-      new Error("concentration down")
+    vi.mocked(getWorkbenchRiskSummaryClient).mockRejectedValue(
+      new Error("summary down"),
     );
-    vi.mocked(getWorkbenchRiskAttributionClient).mockRejectedValue(new Error("attribution down"));
-    vi.mocked(getWorkbenchRiskDrawdownClient).mockRejectedValue(new Error("drawdown down"));
-    vi.mocked(getWorkbenchRiskRollingClient).mockRejectedValue(new Error("rolling down"));
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockRejectedValue(
+      new Error("concentration down"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockRejectedValue(
+      new Error("attribution down"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockRejectedValue(
+      new Error("drawdown down"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockRejectedValue(
+      new Error("rolling down"),
+    );
 
     renderRiskMode();
 
@@ -415,51 +569,67 @@ describe("PerformanceRiskMode", () => {
       expect(screen.getByText("Risk unavailable")).toBeInTheDocument();
     });
     expect(screen.queryByLabelText("Risk provenance")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Risk snapshot headline metrics")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk snapshot headline metrics"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not request underwater detail on first paint and fetches it only on drawer drill-down", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient)
-      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      )
       .mockResolvedValueOnce(
         buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
           includeUnderwaterSeries: true,
-        })
+        }),
       );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk drawdown headline metrics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk drawdown headline metrics"),
+      ).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[0][1]).toMatchObject({
+    expect(
+      vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[0][1],
+    ).toMatchObject({
       includeUnderwaterSeries: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View underwater path" }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: "Underwater path detail" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Risk underwater series table")).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "Underwater path detail" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk underwater series table"),
+      ).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[1][1]).toMatchObject({
+    expect(
+      vi.mocked(getWorkbenchRiskDrawdownClient).mock.calls[1][1],
+    ).toMatchObject({
       includeUnderwaterSeries: true,
     });
   });
@@ -467,45 +637,59 @@ describe("PerformanceRiskMode", () => {
   it("does not request rolling detail on first paint and fetches it only on drawer drill-down", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient)
-      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      )
       .mockResolvedValueOnce(
         buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
           includeTimeSeries: true,
-        })
+        }),
       );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Rolling risk summary table"),
+      ).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[0][1]).toMatchObject({
+    expect(
+      vi.mocked(getWorkbenchRiskRollingClient).mock.calls[0][1],
+    ).toMatchObject({
       includeTimeSeries: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View rolling series" }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: "Rolling series detail" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Rolling risk series table")).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "Rolling series detail" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Rolling risk series table"),
+      ).toBeInTheDocument();
     });
 
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(getWorkbenchRiskRollingClient).mock.calls[1][1]).toMatchObject({
+    expect(
+      vi.mocked(getWorkbenchRiskRollingClient).mock.calls[1][1],
+    ).toMatchObject({
       includeTimeSeries: true,
     });
   });
@@ -513,23 +697,25 @@ describe("PerformanceRiskMode", () => {
   it("preserves the selected rolling window when opening rolling series detail", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient)
-      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      )
       .mockResolvedValueOnce(
         buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
           includeTimeSeries: true,
-        })
+        }),
       );
 
     renderRiskMode(scenario);
@@ -539,13 +725,19 @@ describe("PerformanceRiskMode", () => {
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "63D" }));
-    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View rolling series" }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: "Rolling series detail" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "Rolling series detail" }),
+      ).toBeInTheDocument();
     });
 
-    const detailDialog = screen.getByRole("dialog", { name: "Rolling series detail" });
+    const detailDialog = screen.getByRole("dialog", {
+      name: "Rolling series detail",
+    });
     expect(within(detailDialog).getByText("Review window")).toBeInTheDocument();
     expect(within(detailDialog).getByText("63D")).toBeInTheDocument();
   });
@@ -553,64 +745,75 @@ describe("PerformanceRiskMode", () => {
   it("requests supported active-risk attribution directly and does not expose issuer as interactive", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
-    vi.mocked(getWorkbenchRiskAttributionClient).mockImplementation(async (_portfolioId, params) =>
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
-        attributionType:
-          params.attributionType === "ACTIVE_RISK" ? "ACTIVE_RISK" : "TOTAL_RISK",
-        groupingDimension:
-          params.groupingDimension === "ASSET_CLASS"
-            ? "ASSET_CLASS"
-            : params.groupingDimension === "POSITION"
-              ? "POSITION"
-              : params.groupingDimension === "ISSUER"
-                ? "ISSUER"
-                : "SECTOR",
-      })
+    vi.mocked(getWorkbenchRiskAttributionClient).mockImplementation(
+      async (_portfolioId, params) =>
+        buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
+          attributionType:
+            params.attributionType === "ACTIVE_RISK"
+              ? "ACTIVE_RISK"
+              : "TOTAL_RISK",
+          groupingDimension:
+            params.groupingDimension === "ASSET_CLASS"
+              ? "ASSET_CLASS"
+              : params.groupingDimension === "POSITION"
+                ? "POSITION"
+                : params.groupingDimension === "ISSUER"
+                  ? "ISSUER"
+                  : "SECTOR",
+        }),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Historical risk attribution table")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Historical risk attribution table"),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
     await waitFor(() => {
-      expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith("PF_1001", {
-        period: "YTD",
-        detailBasis: "NET",
-        benchmark: "BMK_GLOBAL_BALANCED_60_40",
-        asOfDate: "2026-02-24",
-        reportingCurrency: "USD",
-        attributionType: "ACTIVE_RISK",
-        groupingDimension: "SECTOR",
-      });
+      expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith(
+        "PF_1001",
+        {
+          period: "YTD",
+          detailBasis: "NET",
+          benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          asOfDate: "2026-02-24",
+          reportingCurrency: "USD",
+          attributionType: "ACTIVE_RISK",
+          groupingDimension: "SECTOR",
+        },
+      );
     });
     fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
 
     await waitFor(() => {
       expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(3);
     });
-    expect(getWorkbenchRiskAttributionClient).toHaveBeenLastCalledWith("PF_1001", {
-      period: "YTD",
-      detailBasis: "NET",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      asOfDate: "2026-02-24",
-      reportingCurrency: "USD",
-      attributionType: "ACTIVE_RISK",
-      groupingDimension: "ASSET_CLASS",
-    });
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenLastCalledWith(
+      "PF_1001",
+      {
+        period: "YTD",
+        detailBasis: "NET",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        asOfDate: "2026-02-24",
+        reportingCurrency: "USD",
+        attributionType: "ACTIVE_RISK",
+        groupingDimension: "ASSET_CLASS",
+      },
+    );
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Issuer" })).toBeDisabled();
     });
@@ -619,67 +822,87 @@ describe("PerformanceRiskMode", () => {
   it("renders structured attribution blocked state instead of raw inline copy", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
       buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
         attributionType: "ACTIVE_RISK",
         groupingDimension: "ISSUER",
-      })
+      }),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
-      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
-      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByText("Attribution selection blocked")).toBeInTheDocument();
+      expect(
+        screen.getByText("Attribution selection blocked"),
+      ).toBeInTheDocument();
     });
     expect(
-      screen.getByText("Choose a supported attribution type and grouping combination to continue.")
+      screen.getByText(
+        "Choose a supported attribution type and grouping combination to continue.",
+      ),
     ).toBeInTheDocument();
   });
 
   it("renders structured unavailable states for deferred detail panels", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
-      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
-      buildFixtureRiskConcentration(scenario.workspace, "YTD")
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
     vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
     );
     vi.mocked(getWorkbenchRiskDrawdownClient)
-      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      )
       .mockRejectedValueOnce(new Error("underwater unavailable"));
     vi.mocked(getWorkbenchRiskRollingClient)
-      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"))
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      )
       .mockRejectedValueOnce(new Error("rolling unavailable"));
 
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risk drawdown headline metrics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Risk drawdown headline metrics"),
+      ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "View underwater path" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View underwater path" }),
+    );
     await waitFor(() => {
-      expect(screen.getByText("Underwater path unavailable")).toBeInTheDocument();
+      expect(
+        screen.getByText("Underwater path unavailable"),
+      ).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole("button", { name: "Close Underwater path detail" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Close Underwater path detail" }),
+    );
 
-    fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View rolling series" }),
+    );
     await waitFor(() => {
-      expect(screen.getByText("Rolling series unavailable")).toBeInTheDocument();
+      expect(
+        screen.getByText("Rolling series unavailable"),
+      ).toBeInTheDocument();
     });
   });
 });

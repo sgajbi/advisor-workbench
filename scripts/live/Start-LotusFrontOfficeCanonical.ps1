@@ -7,6 +7,7 @@ param(
   [int]$SeedWaitSeconds = 900,
   [string[]]$LocalApps = @(),
   [switch]$CleanCoreState,
+  [switch]$SkipSeedCleanup,
   [switch]$BuildImages,
   [switch]$CoreManageOnly,
   [switch]$RunValidation
@@ -286,9 +287,22 @@ function Invoke-CanonicalCoreSeed {
   if ($IngestOnly) {
     $seedCommand = "$seedCommand --ingest-only"
   }
+  if ($SkipSeedCleanup) {
+    $seedCommand = "$seedCommand --skip-cleanup"
+  }
 
   Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
   Invoke-RepoCommand $coreRepo $seedCommand
+}
+
+function Invoke-DpmCommandCenterSeed {
+  $dpmSeedCommand = (
+    "powershell -ExecutionPolicy Bypass -File automation\Invoke-DpmCommandCenterSeed.ps1 " +
+    "-PortfolioId $PortfolioId"
+  )
+
+  Write-Host "Seeding governed DPM command-center and action-register evidence for $PortfolioId ..."
+  Invoke-RepoCommand $platformRepo $dpmSeedCommand
 }
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
@@ -365,6 +379,7 @@ if (Test-LocalApp "gateway") {
 }
 
 Invoke-CanonicalCoreSeed
+Invoke-DpmCommandCenterSeed
 
 if (Test-LocalApp "workbench") {
   Invoke-RepoCommand $workbenchRepo "docker compose down --remove-orphans"

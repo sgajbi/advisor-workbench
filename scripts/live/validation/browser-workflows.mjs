@@ -326,7 +326,7 @@ export async function validateProposalNarrativePosturePanel(
     "Live canonical validator approved this advisor-use narrative from Gateway evidence."
   );
   await narrativePanel.getByRole("button", { name: "Approve Advisor Narrative" }).click();
-  await expect(narrativePanel.getByText("Approved For Advisor Use")).toBeVisible({
+  await expect(narrativePanel.getByLabel("Status Approved For Advisor Use")).toBeVisible({
     timeout: timeoutMs,
   });
   await narrativePanel.getByRole("button", { name: "Request Reviewed Report" }).click();
