@@ -672,19 +672,19 @@ describe("PmOperatingQualityPanel", () => {
         policyVersion: "2026.05",
         asOfDate: "2026-05-13",
         segments: [
-            {
-              segment_id: "mandate_balanced",
-              segment_type: "MANDATE_TYPE",
-              display_name: "Balanced DPM Mandates",
-              score_run_ids: ["pmq_run_001"],
-              source_refs: [
-                {
-                  source_system: "lotus-core",
-                  source_type: "MandateTypeSegment",
-                  source_id: "balanced",
-                },
-              ],
-            },
+          {
+            segment_id: "mandate_balanced",
+            segment_type: "MANDATE_TYPE",
+            display_name: "Balanced DPM Mandates",
+            score_run_ids: ["pmq_run_001"],
+            source_refs: [
+              {
+                source_system: "lotus-core",
+                source_type: "MandateTypeSegment",
+                source_id: "balanced",
+              },
+            ],
+          },
           {
             segment_id: "mandate_income",
             segment_type: "MANDATE_TYPE",
@@ -695,7 +695,9 @@ describe("PmOperatingQualityPanel", () => {
       });
     });
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
-    expect(screen.getByText("Fairness preview returned Manage segment evidence.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Fairness preview returned Manage segment evidence.")
+    ).toBeInTheDocument();
     expect(screen.getByText("Fairness analysis preview")).toBeInTheDocument();
     expect(screen.getByText("Fairness analysis returned by Gateway")).toBeInTheDocument();
     expect(screen.getByText("corr-pmq-fairness")).toBeInTheDocument();
