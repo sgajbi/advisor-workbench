@@ -16,6 +16,7 @@
 - gateway-first product integration
 - canonical seeded-data runtime validation
 - Playwright browser smoke and coverage-backed tests
+- audit-clean browser and build-tool dependencies before demo-ready canonical proof
 - no unsupported UI states or fabricated data
 
 ## Operational discipline
@@ -25,3 +26,5 @@
 - document compatibility redirects without presenting them as active product ownership
 - distinguish disabled shell entries from active apps when capability posture says they are not
   supported yet
+- remove high-risk client dependencies when a smaller browser-native implementation satisfies the
+  same front-office workflow

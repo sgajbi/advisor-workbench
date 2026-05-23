@@ -9,7 +9,6 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-import * as XLSX from "xlsx";
 
 import { WorkbenchInlineRefreshNote } from "@/design-system";
 
@@ -32,6 +31,7 @@ import {
   type TransactionRow,
 } from "./portfolio-transactions-grid-helpers";
 import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
+import { downloadCsv } from "./portfolio-grid-export";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
 
@@ -278,7 +278,7 @@ export default function PortfolioTransactionsGrid({
             size="small"
             variant="outlined"
             aria-label="Export transactions"
-            onClick={() => exportTransactionsXlsx(rowData, baseCurrency)}
+            onClick={() => exportTransactionsCsv(rowData, baseCurrency)}
           >
             Export
           </Button>
@@ -464,9 +464,6 @@ function transactionStatusCellRenderer(params: ICellRendererParams<TransactionRo
   );
 }
 
-function exportTransactionsXlsx(rows: TransactionRow[], baseCurrency: string) {
-  const worksheet = XLSX.utils.json_to_sheet(buildTransactionExportRows(rows, baseCurrency));
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-  XLSX.writeFileXLSX(workbook, "portfolio-transactions.xlsx");
+function exportTransactionsCsv(rows: TransactionRow[], baseCurrency: string) {
+  downloadCsv("portfolio-transactions.csv", buildTransactionExportRows(rows, baseCurrency));
 }

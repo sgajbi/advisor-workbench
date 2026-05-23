@@ -9,7 +9,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import * as XLSX from "xlsx";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
@@ -30,6 +29,7 @@ import {
   shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
 import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
+import { downloadCsv } from "./portfolio-grid-export";
 import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
 
@@ -231,7 +231,7 @@ export default function PortfolioHoldingsGrid({
             size="small"
             variant="outlined"
             aria-label="Export holdings"
-            onClick={() => exportHoldingsXlsx(rowData, columnVisibility, baseCurrency)}
+            onClick={() => exportHoldingsCsv(rowData, columnVisibility, baseCurrency)}
           >
             Export
           </Button>
@@ -376,15 +376,10 @@ function toggleHoldingsColumn(
   setColumnVisibility((current) => ({ ...current, [key]: !current[key] }));
 }
 
-function exportHoldingsXlsx(
+function exportHoldingsCsv(
   rows: HoldingsRow[],
   visibility: Record<HoldingsColumnKey, boolean>,
   baseCurrency: string
 ) {
-  const exportRows = buildHoldingsExportRows(rows, visibility, baseCurrency);
-
-  const worksheet = XLSX.utils.json_to_sheet(exportRows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Holdings");
-  XLSX.writeFileXLSX(workbook, "portfolio-holdings.xlsx");
+  downloadCsv("portfolio-holdings.csv", buildHoldingsExportRows(rows, visibility, baseCurrency));
 }
