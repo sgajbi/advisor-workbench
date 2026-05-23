@@ -23,13 +23,15 @@ export default function PerformanceAnalysisSegmentToolbar({
   isOptionSupported,
   onChange,
 }: PerformanceAnalysisSegmentToolbarProps) {
+  const selectedValue = options.includes(value) ? value : "";
+
   return (
     <WorkbenchSummaryToolbar className="performance-analysis-toolbar">
       <FormControl size="small" sx={{ minWidth: 180 }}>
         <FieldLabel>{fieldLabel}</FieldLabel>
         <Select
           aria-label={ariaLabel}
-          value={value}
+          value={selectedValue}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
         >

@@ -22,6 +22,9 @@
   focused RFC-0039 construction alternatives proof against the running canonical stack
 - `npm run live:evidence`
   post-validation observability, logging, metrics, API, and dashboard evidence capture
+- `npm audit --json`
+  dependency advisory posture for the Workbench runtime and test toolchain; canonical proof logs
+  should not carry unresolved critical or high dependency findings
 
 ## What the gates protect
 
@@ -29,6 +32,7 @@
 - browser smoke for supported front-office flows
 - Docker parity for production-like runtime assumptions
 - canonical seeded-data validation for integrated product proof
+- dependency posture for browser-delivered code and the Node-based build/test toolchain
 
 ## Evidence posture
 

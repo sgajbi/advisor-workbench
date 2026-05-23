@@ -35,22 +35,14 @@ vi.mock("ag-grid-react", () => ({
   },
 }));
 
-vi.mock("xlsx", () => ({
-  utils: {
-    json_to_sheet: vi.fn(() => ({})),
-    book_new: vi.fn(() => ({})),
-    book_append_sheet: vi.fn(),
-  },
-  writeFileXLSX: vi.fn(),
-}));
-
 import PortfolioHoldingsGrid from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioTransactionsGrid from "../../src/apps/portfolio/components/portfolio-transactions-grid";
-import * as XLSX from "xlsx";
+import { toCsv } from "../../src/apps/portfolio/components/portfolio-grid-export";
 
 describe("portfolio data grids", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("renders holdings columns, supports clearing a filter, and opens the detail drawer", async () => {
@@ -172,6 +164,23 @@ describe("portfolio data grids", () => {
     expect(screen.getByRole("heading", { name: "Ledger" })).toBeInTheDocument();
     expect(screen.getByText("Activity from 01 Mar 2026 to 28 Mar 2026")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter" })).toBeInTheDocument();
+    const createObjectUrl = vi.fn(() => "blob:portfolio-transactions");
+    const revokeObjectUrl = vi.fn();
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL: createObjectUrl,
+      revokeObjectURL: revokeObjectUrl,
+    });
+    const anchorClick = vi.fn();
+    const createElement = vi.spyOn(document, "createElement");
+    createElement.mockImplementation((tagName: string, options?: ElementCreationOptions) => {
+      const element = Document.prototype.createElement.call(document, tagName, options);
+      if (tagName.toLowerCase() === "a") {
+        Object.defineProperty(element, "click", { value: anchorClick });
+      }
+      return element;
+    });
+
     expect(screen.getByRole("button", { name: "Export transactions" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show expanded transaction columns" })).toBeInTheDocument();
     expect(screen.getByLabelText("Transaction type filter")).toBeInTheDocument();
@@ -198,14 +207,19 @@ describe("portfolio data grids", () => {
     expect(onRowSelect.mock.calls[0][0].settleDate).toBe("2026-03-24");
 
     fireEvent.click(screen.getByRole("button", { name: "Export transactions" }));
-    expect(XLSX.utils.json_to_sheet).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          "Trade Date": "20 Mar 2026",
-          "Settle Date": "24 Mar 2026",
-        }),
-      ])
-    );
+    expect(createObjectUrl).toHaveBeenCalledTimes(1);
+    expect(anchorClick).toHaveBeenCalledTimes(1);
+    expect(revokeObjectUrl).toHaveBeenCalledWith("blob:portfolio-transactions");
+  });
+
+  it("serializes portfolio grid exports as auditable CSV without spreadsheet runtime dependencies", () => {
+    expect(toCsv([
+      {
+        "Trade Date": "20 Mar 2026",
+        Instrument: "Global, Balanced Fund",
+        Note: 'Advisor said "hold"',
+      },
+    ])).toBe('Trade Date,Instrument,Note\r\n20 Mar 2026,"Global, Balanced Fund","Advisor said ""hold"""');
   });
 
   it("renders the component filter alongside the strategic ledger controls", async () => {

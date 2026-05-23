@@ -125,6 +125,7 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getAllByRole("heading", { name: "Construction Alternatives" })).toHaveLength(2);
+    expect(await screen.findByText("External OMS evidence is unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Portfolio Memory" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Post-Trade Outcome Review" })).not.toBeInTheDocument();
