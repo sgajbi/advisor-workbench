@@ -33,6 +33,8 @@
 - Docker parity for production-like runtime assumptions
 - canonical seeded-data validation for integrated product proof
 - dependency posture for browser-delivered code and the Node-based build/test toolchain
+- GitHub Actions JavaScript action runtime posture, using Node 24-capable action majors for
+  checkout, setup-node, and artifact upload so CI warnings do not hide product-surface failures
 
 ## Evidence posture
 
