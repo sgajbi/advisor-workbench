@@ -1,4 +1,5 @@
 import process from "node:process";
+import { createHash } from "node:crypto";
 import { chromium, expect } from "@playwright/test";
 import { resolveValidationConfig } from "./validation/args.mjs";
 import {
@@ -12,7 +13,14 @@ import {
   writeShotIndex,
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
-import { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } from "./validation/probes.mjs";
+import {
+  checkDns,
+  fetchJson,
+  fetchJsonUntil,
+  fetchText,
+  postJson,
+  sendJson,
+} from "./validation/probes.mjs";
 import {
   assertPerformanceCalculationSanity,
   assertRiskCalculationSanity,
@@ -20,6 +28,7 @@ import {
 import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
+  validateProposalNarrativePosturePanel,
   validateDpmCommandCenterPanel,
   validatePortfolioMemoryPanel,
   validateDpmWaveCommandCenterPanel,
@@ -64,6 +73,11 @@ const summary = createValidationSummary({
   panelRegistry,
 });
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
+
+function buildPayloadScopedIdempotencyKey(prefix, payload) {
+  const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 16);
+  return `${prefix}-${digest}`.slice(0, 64);
+}
 
 async function fetchOptionalJson(description, url) {
   try {
@@ -187,6 +201,10 @@ function extractWorkflowPackRunId(payload) {
     readString(payload?.audit?.workflow_pack_run_id) ||
     null
   );
+}
+
+function extractGatewayEnvelopeData(payload) {
+  return payload?.data ?? payload;
 }
 
 async function run() {
@@ -338,6 +356,62 @@ async function run() {
     postJson,
   });
 
+  const proposalCreateBody = {
+    body: {
+      created_by: "workbench-canonical-validator",
+      input_mode: "stateful",
+      stateful_input: {
+        portfolio_id: portfolioId,
+        as_of: canonicalAsOfDate,
+        narrative_request: {
+          audience: "ADVISOR_REVIEW",
+          jurisdiction: "SG",
+          client_audience: "ADVISOR_REVIEW",
+          sections: ["EXECUTIVE_SUMMARY", "RISK_AND_CONCENTRATION"],
+          requested_by: "workbench-canonical-validator",
+        },
+      },
+      metadata: {
+        title: "Canonical advisor narrative proof",
+        advisor_notes: "Workbench canonical validation proposal for RFC-0023 Slice 12.",
+        jurisdiction: "SG",
+      },
+    },
+  };
+  const proposalCreateIdempotencyKey = buildPayloadScopedIdempotencyKey(
+    "wb-canonical-narrative",
+    proposalCreateBody
+  );
+  const proposalCreate = await sendJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/proposals`,
+    "Create proposal narrative canonical proof",
+    timeoutMs,
+    {
+      method: "POST",
+      body: proposalCreateBody,
+      headers: {
+        "Idempotency-Key": proposalCreateIdempotencyKey,
+      },
+    }
+  );
+  const proposalCreateData = extractGatewayEnvelopeData(proposalCreate);
+  const proposalId = readString(proposalCreateData?.proposal?.proposal_id);
+  const proposalVersionNo = proposalCreateData?.version?.version_no ?? null;
+  const proposalNarrative = proposalCreateData?.version?.artifact?.proposal_narrative;
+  if (!proposalId || !proposalNarrative?.narrative_id) {
+    throw new Error("Canonical proposal narrative proof did not create a narrative proposal.");
+  }
+  summary.workflowPackChecks.push({
+    actionType: "PROPOSAL_NARRATIVE_CREATED",
+    route: `/api/v1/proposals`,
+    sourceRunId: proposalNarrative.narrative_id,
+    resultReviewState: proposalNarrative.review_state,
+    resultSupportabilityStatus: proposalNarrative.generation_mode,
+    proposalId,
+    versionNo: proposalVersionNo,
+  });
+
   const manageSupportabilitySummary = await fetchJson(
     summary,
     "http://manage.dev.lotus/api/v1/rebalance/supportability/summary",
@@ -387,7 +461,20 @@ async function run() {
   if (!rebalanceRunId) {
     throw new Error("Gateway workbench overview returned no manage rebalance-run reference for proof-pack generation.");
   }
-  const proofPackIdempotencyKey = `workbench-proof-pack-${rebalanceRunId}`;
+  const proofPackRequestBody = {
+    source_type: "REBALANCE_RUN",
+    rebalance_run_id: rebalanceRunId,
+    mandate_id: readString(proofPackSourceReview?.mandate_id) ?? undefined,
+    include_markdown: true,
+    include_report_input: true,
+    include_ai_evidence_input: true,
+    actor_id: "workbench-proof-pack-operator",
+    reason: "Workbench PM generated proof pack from Gateway-backed rebalance run.",
+  };
+  const proofPackIdempotencyKey = buildPayloadScopedIdempotencyKey(
+    "wb-proof-pack",
+    proofPackRequestBody
+  );
   const generatedProofPack = await postJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs`,
@@ -395,16 +482,7 @@ async function run() {
     timeoutMs,
     {
       idempotency_key: proofPackIdempotencyKey,
-      body: {
-        source_type: "REBALANCE_RUN",
-        rebalance_run_id: rebalanceRunId,
-        mandate_id: readString(proofPackSourceReview?.mandate_id) ?? undefined,
-        include_markdown: true,
-        include_report_input: true,
-        include_ai_evidence_input: true,
-        actor_id: "workbench-proof-pack-operator",
-        reason: "Workbench PM generated proof pack from Gateway-backed rebalance run.",
-      },
+      body: proofPackRequestBody,
     }
   );
   const proofPackId = extractGeneratedProofPackId(generatedProofPack);
@@ -722,6 +800,13 @@ async function run() {
   panelGovernance.recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
     sourceMetricMinimum: 3,
   });
+  panelGovernance.recordPanelClassification("proposal.narrative_posture", "ready", "lotus-advise", {
+    route: `/proposals/${proposalId}`,
+    proposalId,
+    versionNo: proposalVersionNo,
+    narrativeId: proposalNarrative.narrative_id,
+    generationMode: proposalNarrative.generation_mode,
+  });
   panelGovernance.recordPanelClassification("dpm.outcome_review", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     outcomeReviewMinimum: 1,
@@ -822,6 +907,13 @@ async function run() {
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
       performAcceptReviewActionProof: true,
+    });
+    await validateProposalNarrativePosturePanel(page, {
+      summary,
+      workbenchBaseUrl,
+      proposalId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateRiskPanel(page, {
       workbenchBaseUrl,

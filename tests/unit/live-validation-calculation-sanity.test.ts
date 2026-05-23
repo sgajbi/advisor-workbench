@@ -241,12 +241,13 @@ describe("live validation calculation sanity helpers", () => {
             },
           ],
         },
-        source_supportability: [
+        supportability: [
           {
+            key: "portfolio_returns",
+            label: "Portfolio returns",
             source_service: "lotus-risk",
             operation: "risk.summary",
             state: "ready",
-            freshness_bucket: "fresh",
           },
         ],
       },

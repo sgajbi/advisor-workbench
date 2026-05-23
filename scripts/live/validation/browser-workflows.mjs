@@ -298,6 +298,57 @@ export async function validateAdvisorBriefPanel(
   }
 }
 
+export async function validateProposalNarrativePosturePanel(
+  page,
+  {
+    summary,
+    workbenchBaseUrl,
+    proposalId,
+    timeoutMs,
+    screenshotRegisteredPanel,
+  }
+) {
+  await page.goto(`${workbenchBaseUrl}/proposals/${encodeURIComponent(proposalId)}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: new RegExp(`Proposal ${proposalId}`) })).toBeVisible({
+    timeout: timeoutMs,
+  });
+
+  const narrativePanel = workbenchPanelByClass(page, "proposal-narrative-posture-panel");
+  await expect(narrativePanel).toBeVisible({ timeout: timeoutMs });
+  await expect(narrativePanel.getByText("Advisor Narrative And Delivery")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(narrativePanel.getByText("Review Posture")).toBeVisible({ timeout: timeoutMs });
+  await narrativePanel.getByLabel("Review rationale").fill(
+    "Live canonical validator approved this advisor-use narrative from Gateway evidence."
+  );
+  await narrativePanel.getByRole("button", { name: "Approve Advisor Narrative" }).click();
+  await expect(narrativePanel.getByLabel("Status Approved For Advisor Use")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await narrativePanel.getByRole("button", { name: "Request Reviewed Report" }).click();
+  await expect(narrativePanel.getByText("Included Reviewed Narrative")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(narrativePanel.getByText(/Source narrative hash: sha256:/)).toBeVisible({
+    timeout: timeoutMs,
+  });
+
+  summary.uiChecks.push({
+    description: "Proposal narrative posture review and report package",
+    kind: "proposal-narrative-posture",
+    proposalId,
+    reviewState: "APPROVED_FOR_ADVISOR_USE",
+    reportPackageState: "INCLUDED_REVIEWED_NARRATIVE",
+  });
+  await screenshotRegisteredPanel(page, "proposal.narrative_posture", {
+    route: `/proposals/${proposalId}`,
+  });
+}
+
 export async function validateRiskPanel(
   page,
   {

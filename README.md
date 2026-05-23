@@ -298,6 +298,8 @@ Important current product and route truths:
     and request reviewed narrative report packaging through Gateway, but it must not generate
     narrative, infer client-ready publication, render documents, archive artifacts, contact
     clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
+    Canonical front-office validation now creates a seeded advisor-review narrative proposal,
+    exercises the panel, and captures governed `proposal.narrative_posture` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

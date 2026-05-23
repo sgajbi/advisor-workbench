@@ -97,12 +97,14 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[int]$SeedWaitSeconds = 900");
     expect(script).toContain('[string]$LotusAiEnvFile = ".env.example"');
     expect(script).toContain("[string[]]$LocalApps = @()");
+    expect(script).toContain("[switch]$SkipSeedCleanup");
     expect(script).toContain("function Test-LocalApp");
     expect(script).toContain("function Invoke-ComposeUp");
     expect(script).toContain("function Start-LocalUvicornService");
     expect(script).toContain("function Start-CanonicalManage");
     expect(script).toContain("function Start-DirectIngress");
     expect(script).toContain("function Invoke-CanonicalCoreSeed");
+    expect(script).toContain("function Invoke-DpmCommandCenterSeed");
     expect(script).toContain("Using lotus-ai env file for canonical proof");
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("[switch]$CoreManageOnly");
@@ -137,6 +139,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("--end-date 2026-04-10");
     expect(script).toContain("--benchmark-start-date 2025-01-06");
     expect(script).toContain("--wait-seconds $SeedWaitSeconds");
+    expect(script).toContain("$seedCommand = \"$seedCommand --skip-cleanup\"");
+    expect(script).toContain("automation\\Invoke-DpmCommandCenterSeed.ps1");
+    expect(script).toContain("Seeding governed DPM command-center and action-register evidence");
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain("ScreenshotDirectory = $ScreenshotDirectory");
   });
@@ -185,6 +190,10 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "calculation-sanity.mjs"),
       "utf8"
     );
+    const browserWorkflows = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "browser-workflows.mjs"),
+      "utf8"
+    );
 
     expect(script).toContain("assertPerformanceCalculationSanity");
     expect(script).toContain("assertRiskCalculationSanity");
@@ -196,6 +205,15 @@ describe("canonical live validation script", () => {
     expect(script).toContain('from "./validation/workflow-pack-proof.mjs"');
     expect(script).toContain("validateAdvisorBriefWorkflowPackReviewChain");
     expect(script).toContain("workflowPackChecks.push");
+    expect(script).toContain("validateProposalNarrativePosturePanel");
+    expect(script).toContain("Create proposal narrative canonical proof");
+    expect(script).toContain('import { createHash } from "node:crypto"');
+    expect(script).toContain("buildPayloadScopedIdempotencyKey");
+    expect(script).toContain("proposalCreateIdempotencyKey");
+    expect(script).toContain("proofPackIdempotencyKey");
+    expect(script).toContain("proposal.narrative_posture");
+    expect(browserWorkflows).toContain('getByLabel("Status Approved For Advisor Use")');
+    expect(browserWorkflows).not.toContain('getByText("Approved For Advisor Use")');
     expect(calculationModule).toContain("calculationChecks");
     expect(calculationModule).toContain("Contribution total does not reconcile with net portfolio return");
     expect(calculationModule).toContain("Historical risk attribution residual is too high");
@@ -407,7 +425,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Post-Trade Outcome Review"');
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Proof-Pack Evidence"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
+    expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
+    expect(contractModule).toContain('screenshotName: "proposal-narrative-posture-live.png"');
+    expect(browserWorkflowModule).toContain("Proposal narrative posture review and report package");
+    expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
+    expect(browserWorkflowModule).toContain("Request Reviewed Report");
     expect(browserWorkflowModule).toContain("panel: panelId");
     expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
     expect(browserWorkflowModule).toContain("state: screenshotState");

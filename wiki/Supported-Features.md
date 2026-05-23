@@ -11,7 +11,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Portfolio income and activity | `/income` | Gateway portfolio workspace `income_summary` and `activity_summary` | Supported as the dedicated source-backed screen for income composition, source-defined activity buckets, net movement, cash weight, and evidence posture. Workbench does not forecast income or calculate activity classifications locally. |
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
-| Advisor proposal narrative posture | `/proposals`, `/proposals/{proposalId}` | Gateway `/api/v1/proposals*` | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, and delivery-event posture through Gateway only. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven. |
+| Advisor proposal narrative posture | `/proposals`, `/proposals/{proposalId}` | Gateway `/api/v1/proposals*` | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, delivery-event posture, and governed canonical proof through Gateway only. Canonical validation creates a seeded advisor-review narrative proposal, exercises the panel, and captures `proposal-narrative-posture-live.png`. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
 | DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. |
@@ -38,7 +38,9 @@ Implemented:
    `include_reviewed_narrative=true`,
 5. displays review posture, report-package posture, delivery status, latest delivery event, policy
    version, and source narrative hash,
-6. renders missing evidence as explicit not-reviewed, not-requested, no-report, or no-event states
+6. participates in canonical Workbench proof as `proposal.narrative_posture` with a governed
+   screenshot after advisor-use review and reviewed report-package request pass,
+7. renders missing evidence as explicit not-reviewed, not-requested, no-report, or no-event states
    rather than inferring client-ready status.
 
 Not supported in Workbench:
