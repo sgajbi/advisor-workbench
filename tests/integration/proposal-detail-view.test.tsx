@@ -191,7 +191,7 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByText("Current State")).toBeInTheDocument();
+      expect(screen.getByText("Review History")).toBeInTheDocument();
     });
 
     expect(screen.getAllByText("DRAFT").length).toBeGreaterThan(0);

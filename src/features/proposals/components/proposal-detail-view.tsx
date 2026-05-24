@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
-  Box,
   Button,
   CircularProgress,
   Divider,
@@ -37,6 +36,7 @@ import {
 } from "../types";
 import ProposalNarrativePosturePanel from "./proposal-narrative-posture-panel";
 import ProposalMemoPosturePanel from "./proposal-memo-posture-panel";
+import detailStyles from "./proposal-detail-view.module.css";
 import {
   buildProposalActionIdempotencyKey,
   isValidProposalId,
@@ -317,16 +317,40 @@ export default function ProposalDetailView({ proposalId }: Props) {
     (artifact.generated_at as string | undefined) ??
     (currentVersion.created_at as string | undefined) ??
     (evidence?.generated_at as string | undefined);
+  const workflowStage = proposalStageOrder(data.proposal.current_state);
+  const stageLabels = [
+    { label: "Draft", reached: workflowStage >= 1 },
+    { label: "Review", reached: workflowStage >= 2 },
+    { label: "Client Consent", reached: workflowStage >= 3 },
+    { label: "Execution Ready", reached: workflowStage >= 4 },
+  ];
+  const stageCopy = proposalStageDescription(data.proposal.current_state);
+  const visibleWorkflowEvents = workflow?.events?.slice(0, 8) ?? [];
+  const hiddenWorkflowEventCount = Math.max((workflow?.events?.length ?? 0) - visibleWorkflowEvents.length, 0);
 
   return (
-    <SectionBlock
-      title={`Proposal ${data.proposal.proposal_id}`}
-      actions={
-        <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
-          {proposalStageDescription(data.proposal.current_state)}
-        </SemanticBadge>
-      }
-    >
+    <main className={detailStyles.page} aria-label="Proposal advisory workspace">
+      <header className={detailStyles.pageHeader}>
+        <div>
+          <Text variant="eyebrow">Private Banking Proposal Workspace</Text>
+          <Text variant="pageTitle" as="h1">
+            Proposal {data.proposal.proposal_id}
+          </Text>
+          <Text variant="secondary">
+            {data.proposal.portfolio_id ?? "Portfolio not linked"} · Advisor-use proposal posture · Version{" "}
+            {String(data.proposal.current_version_no ?? "N/A")}
+          </Text>
+        </div>
+        <div className={detailStyles.headerStatus}>
+          <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
+            {stageCopy}
+          </SemanticBadge>
+          <Text variant="metadata">Client-ready release remains blocked until source evidence and review gates promote it.</Text>
+        </div>
+      </header>
+
+      {error ? <Alert severity="error">{error}</Alert> : null}
+
       <ProposalAdvisoryWorkspace
         data={data}
         workflow={workflow}
@@ -338,208 +362,199 @@ export default function ProposalDetailView({ proposalId }: Props) {
         simulationHash={simulationHash}
       />
 
-      <FormControlLabel
-        control={
-          <Switch
-            size="small"
-            checked={includeEvidence}
-            onChange={(event) => {
-              setIncludeEvidence(event.target.checked);
-            }}
+      <div className={detailStyles.workspaceGrid}>
+        <section className={detailStyles.reviewStack} aria-label="Advisor review work areas">
+          <ProposalNarrativePosturePanel
+            proposalId={data.proposal.proposal_id}
+            currentVersionNo={data.proposal.current_version_no}
           />
-        }
-        label="Include Evidence Bundle"
-        sx={{ mb: 1 }}
-      />
-      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <div className="analytics-stat">
-          <Text variant="label">Current State</Text>
-          <Text variant="metricValueCompact">{data.proposal.current_state}</Text>
-          <Text variant="secondary">{proposalStageDescription(data.proposal.current_state)}</Text>
-        </div>
-        <div className="analytics-stat">
-          <Text variant="label">Portfolio</Text>
-          <Text variant="metricValueCompact">{data.proposal.portfolio_id ?? "N/A"}</Text>
-          <Text variant="secondary">Version: {String(data.proposal.current_version_no ?? "N/A")}</Text>
-        </div>
-      </Stack>
 
-      <Text variant="label">Workflow Progress</Text>
-      <Stack direction="row" spacing={0.7} flexWrap="wrap" sx={{ mb: 1 }}>
-        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 1 ? "success" : "default"}>Draft</SemanticBadge>
-        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 2 ? "success" : "default"}>Review</SemanticBadge>
-        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 3 ? "success" : "default"}>Client Consent</SemanticBadge>
-        <SemanticBadge tone={proposalStageOrder(data.proposal.current_state) >= 4 ? "success" : "default"}>Execution Ready</SemanticBadge>
-      </Stack>
-
-      <Text variant="label">Available Actions</Text>
-      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
-        {data.proposal.current_state === "DRAFT" ? (
-          <>
-            <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
-              Submit To Risk Review
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={() => void onSubmitForReview("COMPLIANCE")}
-              disabled={acting}
-            >
-              Submit To Compliance Review
-            </Button>
-          </>
-        ) : null}
-        {data.proposal.current_state === "RISK_REVIEW" ? (
-          <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
-            Approve Risk
-          </Button>
-        ) : null}
-        {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
-          <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
-            Approve Compliance
-          </Button>
-        ) : null}
-        {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
-          <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
-            Record Client Consent
-          </Button>
-        ) : null}
-        {data.proposal.current_state === "EXECUTION_READY" ? (
-          <Alert severity="success" sx={{ py: 0, alignItems: "center" }}>
-            Proposal is execution ready.
-          </Alert>
-        ) : null}
-      </Stack>
-
-      <Divider sx={{ my: 1 }} />
-      <ProposalNarrativePosturePanel
-        proposalId={data.proposal.proposal_id}
-        currentVersionNo={data.proposal.current_version_no}
-      />
-
-      <Divider sx={{ my: 1 }} />
-      <ProposalMemoPosturePanel
-        proposalId={data.proposal.proposal_id}
-        currentVersionNo={data.proposal.current_version_no}
-      />
-
-      <Divider sx={{ my: 1 }} />
-      <Text variant="sectionTitle">Version Management</Text>
-      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1 }}>
-        <Button type="button" variant="outlined" onClick={() => void onCreateNextVersion()} disabled={creatingVersion}>
-          {creatingVersion ? "Creating Version..." : "Create Next Version"}
-        </Button>
-        <Button type="button" variant="outlined" onClick={() => void onLoadVersion()}>
-          Load Version
-        </Button>
-      </Stack>
-      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
-        <div className="analytics-stat" style={{ minWidth: 220 }}>
-          <Text variant="label">Lookup Version Number</Text>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            value={versionLookupNo}
-            onChange={(event) => {
-              const next = Number.parseInt(event.target.value, 10);
-              setVersionLookupNo(Number.isNaN(next) ? 1 : next);
-            }}
-            style={{ marginTop: 6 }}
+          <ProposalMemoPosturePanel
+            proposalId={data.proposal.proposal_id}
+            currentVersionNo={data.proposal.current_version_no}
           />
-        </div>
-        <div className="analytics-stat" style={{ flex: 1 }}>
-          <Text variant="label">Current Version</Text>
-          <Text variant="metricValueCompact">{String(data.proposal.current_version_no ?? "N/A")}</Text>
-          {createdVersionNo ? (
-            <Text variant="secondary">Version created successfully: {createdVersionNo}</Text>
-          ) : null}
-        </div>
-      </Stack>
-      {versionLookup ? (
-        <SectionBlock className="proposal-version-lookup">
-          <Text variant="cardTitle">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Text>
-          <Text variant="body">Status At Creation: {String(versionLookup.status_at_creation ?? "N/A")}</Text>
-          <Text variant="body">Created At: {String(versionLookup.created_at ?? "N/A")}</Text>
-          <Text variant="body">
-            Artifact Hash: {String(versionLookup.artifact_hash ?? "N/A")}
-          </Text>
-        </SectionBlock>
-      ) : null}
-      {versionActionError ? (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          {versionActionError}
-        </Alert>
-      ) : null}
+        </section>
 
-      <Divider sx={{ my: 1 }} />
-      <Text variant="sectionTitle">Lineage Explorer</Text>
-      {lineage?.versions?.length ? (
-        <Stack spacing={0.8} sx={{ mt: 0.8, mb: 1 }}>
-          {lineage.versions.map((version) => (
-            <SectionBlock key={`lineage-${String(version.version_no ?? "na")}`}>
-              <Text variant="cardTitle">Version {String(version.version_no ?? "N/A")}</Text>
-              <Text variant="metadata">Request Hash: {String(version.request_hash ?? "N/A")}</Text>
-              <Text variant="metadata">Simulation Hash: {String(version.simulation_hash ?? "N/A")}</Text>
-              <Text variant="metadata">Artifact Hash: {String(version.artifact_hash ?? "N/A")}</Text>
-              <Text variant="metadata">Created At: {String(version.created_at ?? "N/A")}</Text>
-            </SectionBlock>
-          ))}
-        </Stack>
-      ) : (
-        <Text variant="secondary">No lineage metadata returned for this proposal yet.</Text>
-      )}
+        <aside className={detailStyles.evidenceRail} aria-label="Proposal controls and evidence">
+          <section className={detailStyles.railPanel}>
+            <div className={detailStyles.railPanelHeader}>
+              <Text variant="panelTitle">Advisor Actions</Text>
+              <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
+                {data.proposal.current_state}
+              </SemanticBadge>
+            </div>
+            <Text variant="secondary">{stageCopy}</Text>
+            <div className={detailStyles.stageList}>
+              {stageLabels.map((stage) => (
+                <span key={stage.label} className={stage.reached ? detailStyles.stageDone : detailStyles.stagePending}>
+                  {stage.label}
+                </span>
+              ))}
+            </div>
+            <div className={detailStyles.actionStack}>
+              {data.proposal.current_state === "DRAFT" ? (
+                <>
+                  <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
+                    Submit To Risk Review
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    onClick={() => void onSubmitForReview("COMPLIANCE")}
+                    disabled={acting}
+                  >
+                    Submit To Compliance Review
+                  </Button>
+                </>
+              ) : null}
+              {data.proposal.current_state === "RISK_REVIEW" ? (
+                <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
+                  Approve Risk
+                </Button>
+              ) : null}
+              {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
+                <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
+                  Approve Compliance
+                </Button>
+              ) : null}
+              {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
+                <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
+                  Record Client Consent
+                </Button>
+              ) : null}
+              {data.proposal.current_state === "EXECUTION_READY" ? (
+                <Alert severity="success" sx={{ py: 0, alignItems: "center" }}>
+                  Proposal is execution ready.
+                </Alert>
+              ) : null}
+            </div>
+          </section>
 
-      <Divider sx={{ my: 1 }} />
-      <Text variant="sectionTitle">Evidence And Auditability</Text>
-      <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 0.7, mb: 1.1 }}>
-        <div className="analytics-stat" style={{ flex: 1 }}>
-          <Text variant="label">Artifact Hash</Text>
-          <Text variant="metadata">{artifactHash ?? "Not available"}</Text>
-        </div>
-        <div className="analytics-stat" style={{ flex: 1 }}>
-          <Text variant="label">Request Hash</Text>
-          <Text variant="metadata">{requestHash ?? "Not available"}</Text>
-        </div>
-        <div className="analytics-stat" style={{ flex: 1 }}>
-          <Text variant="label">Simulation Hash</Text>
-          <Text variant="metadata">{simulationHash ?? "Not available"}</Text>
-        </div>
-      </Stack>
-      <Text variant="secondary">
-        {generatedAt
-          ? `Latest artifact generated at ${generatedAt}.`
-          : "Evidence metadata not available in current response. Turn on evidence or confirm backend evidence storage settings."}
-      </Text>
+          <section className={detailStyles.railPanel}>
+            <div className={detailStyles.railPanelHeader}>
+              <Text variant="panelTitle">Evidence Controls</Text>
+            </div>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={includeEvidence}
+                  onChange={(event) => {
+                    setIncludeEvidence(event.target.checked);
+                  }}
+                />
+              }
+              label="Load Full Evidence Bundle"
+            />
+            <div className={detailStyles.versionControls}>
+              <label>
+                <Text variant="label">Version Number</Text>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  value={versionLookupNo}
+                  onChange={(event) => {
+                    const next = Number.parseInt(event.target.value, 10);
+                    setVersionLookupNo(Number.isNaN(next) ? 1 : next);
+                  }}
+                />
+              </label>
+              <Button type="button" variant="outlined" onClick={() => void onLoadVersion()}>
+                Load Version
+              </Button>
+              <Button type="button" variant="outlined" onClick={() => void onCreateNextVersion()} disabled={creatingVersion}>
+                {creatingVersion ? "Creating Version..." : "Create Next Version"}
+              </Button>
+            </div>
+            {createdVersionNo ? (
+              <Text variant="secondary">Version created successfully: {createdVersionNo}</Text>
+            ) : null}
+            {versionLookup ? (
+              <div className={detailStyles.loadedVersion}>
+                <Text variant="cardTitle">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Text>
+                <Text variant="metadata">Status at creation: {String(versionLookup.status_at_creation ?? "N/A")}</Text>
+                <Text variant="metadata">Created at: {String(versionLookup.created_at ?? "N/A")}</Text>
+                <Text variant="metadata">Artifact hash: {String(versionLookup.artifact_hash ?? "N/A")}</Text>
+              </div>
+            ) : null}
+            {versionActionError ? <Alert severity="warning">{versionActionError}</Alert> : null}
+          </section>
 
-      <Divider sx={{ my: 1 }} />
-      <Text variant="sectionTitle">Workflow Timeline</Text>
-      {workflow?.events?.length ? (
-        <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
-          {workflow.events.map((event) => (
-            <li key={event.event_id} style={{ marginBottom: 8 }}>
-              <strong>{event.event_type}</strong> ({event.from_state ?? "N/A"} -&gt; {event.to_state}) by{" "}
-              {event.actor_id}
-            </li>
-          ))}
-        </Box>
-      ) : (
-        <Text variant="secondary">No workflow events.</Text>
-      )}
+          <section className={detailStyles.railPanel}>
+            <Text variant="panelTitle">Lineage And Audit</Text>
+            <div className={detailStyles.hashList}>
+              <div>
+                <span>Artifact Hash</span>
+                <strong>{artifactHash ?? "Not available"}</strong>
+              </div>
+              <div>
+                <span>Request Hash</span>
+                <strong>{requestHash ?? "Not available"}</strong>
+              </div>
+              <div>
+                <span>Simulation Hash</span>
+                <strong>{simulationHash ?? "Not available"}</strong>
+              </div>
+            </div>
+            <Text variant="secondary">
+              {generatedAt
+                ? `Latest artifact generated at ${generatedAt}.`
+                : "Evidence metadata is not available in the current Gateway response."}
+            </Text>
+            {lineage?.versions?.length ? (
+              <div className={detailStyles.timelineList}>
+                {lineage.versions.map((version) => (
+                  <div key={`lineage-${String(version.version_no ?? "na")}`}>
+                    <strong>Version {String(version.version_no ?? "N/A")}</strong>
+                    <span>{String(version.created_at ?? "Created time unavailable")}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Text variant="secondary">No lineage metadata returned for this proposal yet.</Text>
+            )}
+          </section>
 
-      <Text variant="sectionTitle">Approvals</Text>
-      {approvals?.approvals?.length ? (
-        <Box component="ul" sx={{ pl: 2.2, mt: 0.7, mb: 0 }}>
-          {approvals.approvals.map((approval) => (
-            <li key={approval.approval_id} style={{ marginBottom: 8 }}>
-              <strong>{approval.approval_type}</strong>: {approval.approved ? "APPROVED" : "REJECTED"} by{" "}
-              {approval.actor_id}
-            </li>
-          ))}
-        </Box>
-      ) : (
-        <Text variant="secondary">No approvals recorded.</Text>
-      )}
-    </SectionBlock>
+          <section className={detailStyles.railPanel}>
+            <Text variant="panelTitle">Review History</Text>
+            {visibleWorkflowEvents.length ? (
+              <div className={detailStyles.timelineList}>
+                {visibleWorkflowEvents.map((event) => (
+                  <div key={event.event_id}>
+                    <strong>{event.event_type}</strong>
+                    <span>
+                      {(event.from_state ?? "Start")} to {event.to_state} · {event.actor_id}
+                    </span>
+                  </div>
+                ))}
+                {hiddenWorkflowEventCount > 0 ? (
+                  <div className={detailStyles.timelineMore}>
+                    <strong>{hiddenWorkflowEventCount} earlier events retained in Gateway history</strong>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <Text variant="secondary">No workflow events.</Text>
+            )}
+            <Divider sx={{ my: 1 }} />
+            {approvals?.approvals?.length ? (
+              <div className={detailStyles.timelineList}>
+                {approvals.approvals.map((approval) => (
+                  <div key={approval.approval_id}>
+                    <strong>{approval.approval_type}</strong>
+                    <span>
+                      {approval.approved ? "Approved" : "Rejected"} by {approval.actor_id}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Text variant="secondary">No approvals recorded.</Text>
+            )}
+          </section>
+        </aside>
+      </div>
+    </main>
   );
 }

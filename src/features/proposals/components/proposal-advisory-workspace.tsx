@@ -61,7 +61,7 @@ export default function ProposalAdvisoryWorkspace({
       <div className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Advisory proposal</p>
-          <h1>{model.title}</h1>
+          <h2>{model.title}</h2>
           <p className={styles.context}>
             Portfolio {model.portfolioLabel} · Version {model.versionLabel}
           </p>
