@@ -117,6 +117,14 @@ describe("live validation contract modules", () => {
           (panel) => panel.panelId === "dpm.copilot_workspace" && panel.owningService === "lotus-ai"
         )
       ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
+            panel.panelId === "proposal.memo_evidence_pack" &&
+            panel.screenshotName === "proposal-memo-evidence-pack-live.png" &&
+            panel.owningService === "lotus-advise"
+        )
+      ).toBe(true);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

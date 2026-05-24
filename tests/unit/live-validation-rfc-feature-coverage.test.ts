@@ -14,6 +14,7 @@ function createReadySummary() {
     "dpm.outcome_review",
     "dpm.pm_operating_quality",
     "proposal.narrative_posture",
+    "proposal.memo_evidence_pack",
   ];
   return {
     portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -58,6 +59,8 @@ function createReadyEvidence() {
     copilotPanel: true,
     proposalNarrative: "proposal-narrative-1",
     proposalNarrativePanel: true,
+    proposalMemoEvidencePack: "proposal-1",
+    proposalMemoEvidencePackPanel: true,
   };
 }
 

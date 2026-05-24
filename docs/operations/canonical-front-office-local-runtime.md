@@ -288,7 +288,10 @@ plus bounded `ACCEPT`, `REVISE`, and `SUPERSEDE` review transitions with replace
 through the live `lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain. Proposal
 narrative checks prove Gateway-backed proposal creation with an advisor-review narrative request,
 Workbench advisor-use narrative review, reviewed report-package request, source narrative hash
-visibility, and screenshot evidence for `proposal.narrative_posture`.
+visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal memo checks prove
+the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
+review, request memo report-package posture, request non-authoritative commentary, preserve replay
+hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,

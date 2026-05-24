@@ -219,6 +219,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("proposalCreateIdempotencyKey");
     expect(script).toContain("proofPackIdempotencyKey");
     expect(script).toContain("proposal.narrative_posture");
+    expect(script).toContain("proposal.memo_evidence_pack");
     expect(browserWorkflows).toContain('getByLabel("Status Approved For Advisor Use")');
     expect(browserWorkflows).not.toContain('getByText("Approved For Advisor Use")');
     expect(calculationModule).toContain("calculationChecks");
@@ -485,11 +486,17 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).not.toContain('getByRole("group", { name: "Proof-Pack Evidence"');
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
+    expect(contractModule).toContain('panelId: "proposal.memo_evidence_pack"');
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(contractModule).toContain('screenshotName: "proposal-narrative-posture-live.png"');
+    expect(contractModule).toContain('screenshotName: "proposal-memo-evidence-pack-live.png"');
     expect(browserWorkflowModule).toContain("Proposal narrative posture review and report package");
+    expect(browserWorkflowModule).toContain("Proposal memo evidence-pack advisor-use review and support posture");
     expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
     expect(browserWorkflowModule).toContain("Request Reviewed Report");
+    expect(browserWorkflowModule).toContain("Create Or Replay Memo");
+    expect(browserWorkflowModule).toContain("Approve Memo For Advisor Use");
+    expect(browserWorkflowModule).toContain("Request Memo Report Package");
     expect(browserWorkflowModule).toContain("panel: panelId");
     expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
     expect(browserWorkflowModule).toContain("state: screenshotState");

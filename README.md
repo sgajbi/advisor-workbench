@@ -311,6 +311,21 @@ Important current product and route truths:
     clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
     Canonical front-office validation now creates a seeded advisor-review narrative proposal,
     exercises the panel, and captures governed `proposal.narrative_posture` screenshot evidence.
+14. RFC-0024 advisor memo and evidence-pack posture is rendered on `/proposals/{proposalId}`
+    through Gateway proposal memo endpoints only:
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo`,
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo/review`,
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo/projection`,
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo/report-package`,
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo/ai-commentary`,
+    `/api/v1/proposals/{proposal_id}/memos/lineage`, and
+    `/api/v1/proposals/{proposal_id}/versions/{version_no}/memo/replay-evidence`.
+    Workbench may create or replay an advisor-use memo, record advisor-use review, request
+    advisor-use report-package posture, and request non-authoritative commentary through Gateway,
+    but it must not infer memo facts, promote client-ready release, render documents, synthesize
+    archive references, treat commentary as authoritative evidence, contact clients, or call
+    source services directly. Canonical front-office validation captures governed
+    `proposal.memo_evidence_pack` screenshot evidence alongside `proposal.narrative_posture`.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 
