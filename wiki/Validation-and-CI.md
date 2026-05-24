@@ -42,6 +42,9 @@
   `output/playwright/live-canonical/`
 - construction alternatives live proof writes focused machine-readable evidence and a panel
   screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
+- DPM PM operating-quality live proof creates and re-reads Manage-backed score-run,
+  fairness-analysis, supervisory review-action, and summary-invocation evidence through Gateway
+  before the panel is classified as ready
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics
@@ -54,3 +57,10 @@ The governed front-office validation flow checks the seeded `PB_SG_GLOBAL_BAL_00
 - performance summary and analysis surfaces
 - advisor-brief and risk modes inside the performance experience
 - evidence-oriented product validation paths that are part of the current governed runtime
+- DPM outcome review, proof pack, command center, portfolio memory, rebalance-wave command center,
+  construction alternatives, PM operating quality, and PM copilot workspace
+
+When validating active Workbench source changes, use the governed local-app bring-up
+`npm run live:stack:up:workbench-local` so `workbench.dev.lotus` serves the current branch while
+Gateway and backend Lotus apps remain on the canonical stack. Docker-backed Workbench evidence is
+valid for released images, but it must not be used to prove newly changed Workbench panels.

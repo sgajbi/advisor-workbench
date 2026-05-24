@@ -258,6 +258,14 @@ Validation layers:
    - Proposal narrative posture
    - Performance risk
    - Performance evidence
+   - DPM outcome review
+   - DPM proof pack
+   - DPM command center
+   - DPM portfolio memory
+   - DPM rebalance-wave command center
+   - DPM construction alternatives
+   - DPM PM operating quality
+   - DPM PM copilot workspace
 
 Screenshots are written to:
 
@@ -278,6 +286,13 @@ through the live `lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract cha
 narrative checks prove Gateway-backed proposal creation with an advisor-review narrative request,
 Workbench advisor-use narrative review, reviewed report-package request, source narrative hash
 visibility, and screenshot evidence for `proposal.narrative_posture`.
+
+For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
+Gateway before classifying the panel as ready: score run, source-defined fairness analysis,
+bounded supervisory review action, and governed summary invocation. The browser proof then checks
+the persisted summary-invocation detail and list surface. This prevents a false ready claim when
+the PM quality endpoints are reachable but the canonical stack has no persisted operating-quality
+evidence.
 
 Machine-readable validation evidence is written to:
 
@@ -347,6 +362,12 @@ supportability summary is recorded as source-supportability evidence, including 
 reason when present; DPM panel proof is gated by the command-center, wave, outcome-review, proof-pack,
 portfolio-memory, construction-alternatives, PM operating-quality, and PM copilot workspace contracts
 instead of failing on unrelated historical action-register freshness.
+
+When validating active Workbench source changes, use `npm run live:stack:up:workbench-local` or
+`Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench` before collecting final browser proof.
+That path keeps the canonical backend stack but serves Workbench from the current branch, avoiding
+stale Docker image evidence for newly added panels or selectors.
+
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center
 supportability must not collapse into a false ready panel. Do not treat partial screenshot output
