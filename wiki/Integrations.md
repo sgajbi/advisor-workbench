@@ -186,6 +186,14 @@ must travel through Gateway-shaped contracts.
     call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly. The top-level
     shell `Proposal` entry remains capability-disabled until broader product promotion is
     separately proven.
+18. RFC-0024 advisor memo and evidence-pack posture is also owned by `lotus-advise` and consumed
+    through Gateway proposal memo endpoints only. Workbench can create or replay advisor-use memo
+    evidence, record advisor-use memo review, request memo report-package posture, request
+    non-authoritative commentary, and display memo lineage/replay posture. It does not infer memo
+    facts, promote client-ready release, render documents, synthesize archive references, treat
+    commentary as authoritative evidence, contact clients, or call source services directly.
+    Canonical Workbench proof classifies `proposal.memo_evidence_pack` as `lotus-advise` owned and
+    captures governed screenshot evidence after advisor-use memo review.
 
 ## Ownership Diagram
 

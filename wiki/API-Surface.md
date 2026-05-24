@@ -201,6 +201,21 @@ promote dormant labels into product ownership just because historical route file
   Canonical validation creates a Gateway-backed proposal with an advisor-review
   `narrative_request`, records advisor-use review, requests reviewed report packaging, and captures
   `proposal-narrative-posture-live.png` under the governed Workbench proof bundle.
+- RFC-0024 advisor memo and evidence-pack posture is implemented on `/proposals/{proposalId}`
+  through Gateway proposal memo endpoints. Workbench can create or replay an advisor-use memo with
+  `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo`, record advisor-use review with
+  `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo/review`, project memo posture
+  with `GET /api/v1/proposals/{proposal_id}/versions/{version_no}/memo/projection`, request
+  advisor-use report-package posture with
+  `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo/report-package`, request
+  non-authoritative commentary with
+  `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo/ai-commentary`, and display
+  lineage/replay posture from `GET /api/v1/proposals/{proposal_id}/memos/lineage` and
+  `GET /api/v1/proposals/{proposal_id}/versions/{version_no}/memo/replay-evidence`. Workbench
+  does not infer memo facts, promote client-ready release, render documents, synthesize archive
+  references, treat commentary as authoritative evidence, contact clients, or call source services
+  directly. Canonical validation captures `proposal-memo-evidence-pack-live.png` under the governed
+  Workbench proof bundle.
 
 ## Route examples
 
