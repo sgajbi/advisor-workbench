@@ -32,6 +32,7 @@ import {
   validateAdvisorBriefPanel,
   validateConstructionAlternativesPanel,
   validateDpmCopilotWorkspace,
+  validateProposalMemoEvidencePackPanel,
   validateProposalNarrativePosturePanel,
   validateDpmCommandCenterPanel,
   validatePortfolioMemoryPanel,
@@ -1502,6 +1503,13 @@ async function run() {
       performAcceptReviewActionProof: true,
     });
     await validateProposalNarrativePosturePanel(page, {
+      summary,
+      workbenchBaseUrl,
+      proposalId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateProposalMemoEvidencePackPanel(page, {
       summary,
       workbenchBaseUrl,
       proposalId,

@@ -304,7 +304,6 @@ export async function validateProposalNarrativePosturePanel(
     summary,
     workbenchBaseUrl,
     proposalId,
-    proposalVersionNo,
     timeoutMs,
     screenshotRegisteredPanel,
   }
@@ -348,7 +347,26 @@ export async function validateProposalNarrativePosturePanel(
   await screenshotRegisteredPanel(page, "proposal.narrative_posture", {
     route: `/proposals/${proposalId}`,
   });
+}
 
+export async function validateProposalMemoEvidencePackPanel(
+  page,
+  {
+    summary,
+    workbenchBaseUrl,
+    proposalId,
+    proposalVersionNo,
+    timeoutMs,
+    screenshotRegisteredPanel,
+  }
+) {
+  await page.goto(`${workbenchBaseUrl}/proposals/${encodeURIComponent(proposalId)}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: new RegExp(`Proposal ${proposalId}`) })).toBeVisible({
+    timeout: timeoutMs,
+  });
   const memoPanel = workbenchPanelByClass(page, "proposal-memo-posture-panel");
   await expect(memoPanel).toBeVisible({ timeout: timeoutMs });
   await expect(memoPanel.getByText("Advisor Memo And Evidence Pack")).toBeVisible({

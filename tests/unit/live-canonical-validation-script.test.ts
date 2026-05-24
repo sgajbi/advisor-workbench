@@ -213,6 +213,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validateAdvisorBriefWorkflowPackReviewChain");
     expect(script).toContain("workflowPackChecks.push");
     expect(script).toContain("validateProposalNarrativePosturePanel");
+    expect(script).toContain("validateProposalMemoEvidencePackPanel");
     expect(script).toContain("Create proposal narrative canonical proof");
     expect(script).toContain('import { createHash } from "node:crypto"');
     expect(script).toContain("buildPayloadScopedIdempotencyKey");
