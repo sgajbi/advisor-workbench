@@ -43,9 +43,9 @@ describe("buildProposalMemoPostureModel", () => {
     });
 
     expect(model).toMatchObject({
-      aiAuthorityLabel: "NON_AUTHORITATIVE",
-      aiCommentaryStatusLabel: "AVAILABLE",
       clientDraftPublicationLabel: "BLOCKED",
+      commentaryAuthorityLabel: "NON_AUTHORITATIVE",
+      commentaryStatusLabel: "AVAILABLE",
       hasMemo: true,
       lineageHashLabel: "sha256:memo-001",
       lineageStatusLabel: "APPROVED_FOR_ADVISOR_USE",
@@ -81,6 +81,6 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.supportabilityLabel).toBe("DEGRADED_SOURCE_EVIDENCE");
     expect(model.replayHashLabel).toBe("Not available");
     expect(model.reportPackageStatusLabel).toBe("Not requested");
-    expect(model.aiAuthorityLabel).toBe("Non-authoritative");
+    expect(model.commentaryAuthorityLabel).toBe("Non-authoritative");
   });
 });

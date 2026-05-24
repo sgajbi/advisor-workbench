@@ -16,9 +16,9 @@ export type ProposalMemoProjectionAudience =
   (typeof PROPOSAL_MEMO_PROJECTION_AUDIENCES)[number];
 
 export type ProposalMemoPostureModel = {
-  aiAuthorityLabel: string;
-  aiCommentaryStatusLabel: string;
   clientDraftPublicationLabel: string;
+  commentaryAuthorityLabel: string;
+  commentaryStatusLabel: string;
   hasMemo: boolean;
   lineageHashLabel: string;
   lineageStatusLabel: string;
@@ -94,12 +94,12 @@ export function buildProposalMemoPostureModel({
     firstString(replaySupportability, ["supportability", "status"]);
 
   return {
-    aiAuthorityLabel: textValue(recordValue(aiPosture, "authority"), "Non-authoritative"),
-    aiCommentaryStatusLabel: textValue(recordValue(aiPosture, "status"), "Not requested"),
     clientDraftPublicationLabel: textValue(
       recordValue(projection, "client_ready_publication"),
       "Blocked",
     ),
+    commentaryAuthorityLabel: textValue(recordValue(aiPosture, "authority"), "Non-authoritative"),
+    commentaryStatusLabel: textValue(recordValue(aiPosture, "status"), "Not requested"),
     hasMemo,
     lineageHashLabel: latestMemo?.memo_hash ?? "No lineage hash",
     lineageStatusLabel: textValue(latestMemo?.memo_status, "No lineage memo"),

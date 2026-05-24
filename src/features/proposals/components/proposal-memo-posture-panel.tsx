@@ -176,7 +176,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       );
       await refreshMemoState();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unknown AI commentary error");
+      setActionError(error instanceof Error ? error.message : "Unknown commentary request error");
     } finally {
       setPendingAction(null);
     }
@@ -232,9 +232,9 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           <Text variant="secondary">Archive refs: {memoPosture.reportArchiveRefsLabel}</Text>
         </div>
         <div className="analytics-stat">
-          <Text variant="label">AI Commentary</Text>
-          <Text variant="metricValueCompact">{memoPosture.aiCommentaryStatusLabel}</Text>
-          <Text variant="secondary">Authority: {memoPosture.aiAuthorityLabel}</Text>
+          <Text variant="label">Advisor Commentary</Text>
+          <Text variant="metricValueCompact">{memoPosture.commentaryStatusLabel}</Text>
+          <Text variant="secondary">Evidence role: {memoPosture.commentaryAuthorityLabel}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Lineage</Text>
@@ -319,7 +319,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           disabled={!memoHash || pendingAction !== null}
           onClick={handleRequestAiCommentary}
         >
-          {pendingAction === "ai" ? "Requesting Commentary..." : "Request AI Commentary"}
+          {pendingAction === "ai" ? "Requesting Commentary..." : "Request Advisor Commentary"}
         </Button>
       </Stack>
 

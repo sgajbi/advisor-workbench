@@ -152,7 +152,7 @@ describe("ProposalMemoPosturePanel", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Request AI Commentary" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request Advisor Commentary" }));
     await waitFor(() => {
       expect(requestProposalMemoAiCommentary).toHaveBeenCalledWith(
         "pp_1",

@@ -391,8 +391,8 @@ export async function validateProposalMemoEvidencePackPanel(
   await expect(memoPanel.getByRole("button", { name: "Request Memo Report Package" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await memoPanel.getByRole("button", { name: "Request AI Commentary" }).click();
-  await expect(memoPanel.getByRole("button", { name: "Request AI Commentary" })).toBeVisible({
+  await memoPanel.getByRole("button", { name: "Request Advisor Commentary" }).click();
+  await expect(memoPanel.getByRole("button", { name: "Request Advisor Commentary" })).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(memoPanel.getByText(/Replay hash: sha256:/)).toBeVisible({ timeout: timeoutMs });
