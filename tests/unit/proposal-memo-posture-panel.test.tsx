@@ -97,9 +97,9 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.getByRole("heading", { name: "Advisor Memo And Evidence Pack" }),
     ).toBeInTheDocument();
-    expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
-    expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
-    expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
+    expect((await screen.findAllByText("Approved for advisor use")).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Advisor-use evidence ready")).toBeInTheDocument();
+    expect(await screen.findByText(/Client draft: Blocked/)).toBeInTheDocument();
     expect((await screen.findAllByText("Advisor use")).length).toBeGreaterThanOrEqual(2);
     expect(await screen.findByRole("option", { name: "Client discussion draft" })).toBeInTheDocument();
     expect(await screen.findByText(/Memo evidence: sha256:memo-001/)).toBeInTheDocument();
@@ -112,6 +112,8 @@ describe("ProposalMemoPosturePanel", () => {
     expect(screen.queryByText("Actor")).not.toBeInTheDocument();
     expect(screen.queryByText("AI Commentary")).not.toBeInTheDocument();
     expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
+    expect(screen.queryByText("APPROVED_FOR_ADVISOR_USE")).not.toBeInTheDocument();
+    expect(screen.queryByText("SUPPORTED_ADVISOR_USE")).not.toBeInTheDocument();
     expect(screen.queryByText(/Archive refs:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Memo hash:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Replay hash:/)).not.toBeInTheDocument();
@@ -197,7 +199,8 @@ describe("ProposalMemoPosturePanel", () => {
       await screen.findByText(/Memo posture is degraded or blocked by source advisory evidence/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/supportability/i)).not.toBeInTheDocument();
-    expect(await screen.findByText("DEGRADED_SOURCE_EVIDENCE")).toBeInTheDocument();
+    expect(await screen.findByText("Source evidence degraded")).toBeInTheDocument();
+    expect(screen.queryByText("DEGRADED_SOURCE_EVIDENCE")).not.toBeInTheDocument();
     expect(screen.queryByText(/ready for client/i)).not.toBeInTheDocument();
   });
 });

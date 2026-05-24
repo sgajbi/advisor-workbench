@@ -25,6 +25,18 @@ export const PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS: Record<
   CLIENT_DRAFT: "Client discussion draft",
 };
 
+const PROPOSAL_MEMO_STATUS_LABELS: Record<string, string> = {
+  APPROVED_FOR_ADVISOR_USE: "Approved for advisor use",
+  AVAILABLE: "Available",
+  BLOCKED: "Blocked",
+  DEGRADED_SOURCE_EVIDENCE: "Source evidence degraded",
+  NON_AUTHORITATIVE: "Non-authoritative",
+  READY: "Ready",
+  REPLAY_PENDING: "Replay pending",
+  SOURCE_BACKED: "Source backed",
+  SUPPORTED_ADVISOR_USE: "Advisor-use evidence ready",
+};
+
 export type ProposalMemoPostureModel = {
   clientDraftPublicationLabel: string;
   commentaryAuthorityLabel: string;
@@ -53,6 +65,18 @@ export function textValue(value: unknown, fallback = "Not reported"): string {
     return value.map((item) => String(item)).join(", ");
   }
   return fallback;
+}
+
+function humanizeStatusToken(value: string): string {
+  const normalized = value.trim().replaceAll("_", " ").toLowerCase();
+  return normalized.length > 0 ? normalized[0].toUpperCase() + normalized.slice(1) : value;
+}
+
+export function proposalMemoStatusLabel(value: unknown, fallback = "Not reported"): string {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return PROPOSAL_MEMO_STATUS_LABELS[value] ?? humanizeStatusToken(value);
+  }
+  return textValue(value, fallback);
 }
 
 function recordValue(source: Record<string, unknown> | undefined, key: string): unknown {
@@ -117,28 +141,40 @@ export function buildProposalMemoPostureModel({
     firstString(replaySupportability, ["supportability", "status"]);
 
   return {
-    clientDraftPublicationLabel: textValue(
+    clientDraftPublicationLabel: proposalMemoStatusLabel(
       recordValue(projection, "client_ready_publication"),
       "Blocked",
     ),
-    commentaryAuthorityLabel: textValue(
+    commentaryAuthorityLabel: proposalMemoStatusLabel(
       recordValue(commentaryPosture, "authority"),
       "Non-authoritative",
     ),
-    commentaryStatusLabel: textValue(recordValue(commentaryPosture, "status"), "Not requested"),
+    commentaryStatusLabel: proposalMemoStatusLabel(
+      recordValue(commentaryPosture, "status"),
+      "Not requested",
+    ),
     hasMemo,
     lineageHashLabel: latestMemo?.memo_hash ?? "No lineage hash",
-    lineageStatusLabel: textValue(latestMemo?.memo_status, "No lineage memo"),
+    lineageStatusLabel: proposalMemoStatusLabel(latestMemo?.memo_status, "No lineage memo"),
     memoHash,
     projectionAudienceLabel: proposalMemoProjectionAudienceLabel(
       recordValue(projection, "audience"),
       selectedAudience,
     ),
     reportArchiveRefsLabel: textValue(recordValue(reportPosture, "archive_refs"), "None"),
-    reportPackageStatusLabel: textValue(recordValue(reportPosture, "status"), "Not requested"),
-    reviewPostureLabel: textValue(recordValue(reviewPosture, "advisor_use"), "Pending"),
-    statusLabel: textValue(memoData?.memo_status, hasMemo ? "Memo Available" : "Memo Pending"),
-    supportabilityLabel: supportability ?? "Not reported",
+    reportPackageStatusLabel: proposalMemoStatusLabel(
+      recordValue(reportPosture, "status"),
+      "Not requested",
+    ),
+    reviewPostureLabel: proposalMemoStatusLabel(
+      recordValue(reviewPosture, "advisor_use"),
+      "Pending",
+    ),
+    statusLabel: proposalMemoStatusLabel(
+      memoData?.memo_status,
+      hasMemo ? "Memo available" : "Memo pending",
+    ),
+    supportabilityLabel: proposalMemoStatusLabel(supportability),
     replayHashLabel: textValue(recordValue(replayHashes, "memo_hash"), "Not available"),
   };
 }

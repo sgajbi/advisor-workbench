@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildProposalMemoPostureModel } from "../../src/features/proposals/proposal-memo-posture-view-model";
+import {
+  buildProposalMemoPostureModel,
+  proposalMemoStatusLabel,
+} from "../../src/features/proposals/proposal-memo-posture-view-model";
 
 describe("buildProposalMemoPostureModel", () => {
   it("builds advisor memo posture from memo, projection, lineage, and replay evidence", () => {
@@ -43,19 +46,19 @@ describe("buildProposalMemoPostureModel", () => {
     });
 
     expect(model).toMatchObject({
-      clientDraftPublicationLabel: "BLOCKED",
-      commentaryAuthorityLabel: "NON_AUTHORITATIVE",
-      commentaryStatusLabel: "AVAILABLE",
+      clientDraftPublicationLabel: "Blocked",
+      commentaryAuthorityLabel: "Non-authoritative",
+      commentaryStatusLabel: "Available",
       hasMemo: true,
       lineageHashLabel: "sha256:memo-001",
-      lineageStatusLabel: "APPROVED_FOR_ADVISOR_USE",
+      lineageStatusLabel: "Approved for advisor use",
       memoHash: "sha256:memo-001",
       projectionAudienceLabel: "Compliance review",
       reportArchiveRefsLabel: "archive://memo/report/1",
-      reportPackageStatusLabel: "READY",
-      reviewPostureLabel: "APPROVED_FOR_ADVISOR_USE",
-      statusLabel: "APPROVED_FOR_ADVISOR_USE",
-      supportabilityLabel: "SUPPORTED_ADVISOR_USE",
+      reportPackageStatusLabel: "Ready",
+      reviewPostureLabel: "Approved for advisor use",
+      statusLabel: "Approved for advisor use",
+      supportabilityLabel: "Advisor-use evidence ready",
       replayHashLabel: "sha256:memo-001",
     });
   });
@@ -73,14 +76,19 @@ describe("buildProposalMemoPostureModel", () => {
     });
 
     expect(model.hasMemo).toBe(false);
-    expect(model.statusLabel).toBe("Memo Pending");
+    expect(model.statusLabel).toBe("Memo pending");
     expect(model.memoHash).toBeNull();
     expect(model.reviewPostureLabel).toBe("Pending");
     expect(model.projectionAudienceLabel).toBe("Client discussion draft");
     expect(model.clientDraftPublicationLabel).toBe("Blocked");
-    expect(model.supportabilityLabel).toBe("DEGRADED_SOURCE_EVIDENCE");
+    expect(model.supportabilityLabel).toBe("Source evidence degraded");
     expect(model.replayHashLabel).toBe("Not available");
     expect(model.reportPackageStatusLabel).toBe("Not requested");
     expect(model.commentaryAuthorityLabel).toBe("Non-authoritative");
+  });
+
+  it("humanizes future source states instead of leaking enum tokens", () => {
+    expect(proposalMemoStatusLabel("SOURCE_VALIDATED_BY_RISK")).toBe("Source validated by risk");
+    expect(proposalMemoStatusLabel("")).toBe("Not reported");
   });
 });
