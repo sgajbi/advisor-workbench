@@ -1,0 +1,127 @@
+.decisionPanel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.decisionPanel h2 {
+  margin: 4px 0;
+}
+
+.countStrip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
+  gap: 8px;
+  min-width: 220px;
+}
+
+.countStrip div {
+  border: 1px solid var(--border);
+  border-left: 4px solid #765a17;
+  border-radius: 8px;
+  background: #fffdf7;
+  padding: 10px 12px;
+  text-align: right;
+}
+
+.countStrip span,
+.countStrip strong {
+  display: block;
+}
+
+.countStrip span {
+  color: var(--text);
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.countStrip strong {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.tableWrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow-x: auto;
+}
+
+.lifecycleTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.lifecycleTable th {
+  background: var(--panel-alt);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 9px 12px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.lifecycleTable td {
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.lifecycleTable tbody tr:hover {
+  background: #fbfcfd;
+  box-shadow: inset 3px 0 0 #765a17;
+}
+
+.lifecycleTable td:first-child {
+  min-width: 220px;
+}
+
+.lifecycleTable td:first-child a {
+  color: var(--text);
+  display: block;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.lifecycleTable td:first-child a:hover {
+  text-decoration: underline;
+}
+
+.lifecycleTable td:first-child span {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 3px;
+}
+
+@media (max-width: 760px) {
+  .decisionPanel {
+    flex-direction: column;
+  }
+
+  .countStrip {
+    width: 100%;
+  }
+
+  .countStrip div {
+    text-align: left;
+  }
+
+  .lifecycleTable {
+    min-width: 920px;
+  }
+}

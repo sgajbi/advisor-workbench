@@ -5,6 +5,7 @@ import { render, screen } from "@testing-library/react";
 import HomeAppPage from "@/apps/home/page";
 import PerformanceAppPage from "@/apps/performance/page";
 import RecommendationsAppPage from "@/apps/recommendations/page";
+import ProposalsPage from "@/app/proposals/page";
 
 const redirectMock = vi.fn((target: string) => {
   throw new Error(`REDIRECT:${target}`);
@@ -46,6 +47,22 @@ vi.mock("@/features/proposals/components/advisory-opportunities-workspace", () =
     <section>
       <h2>Opportunities And Ideas</h2>
       <p>{portfolioId}</p>
+    </section>
+  ),
+}));
+
+vi.mock("@/features/proposals/components/proposal-lifecycle-workspace", () => ({
+  default: ({
+    portfolioId,
+    mode,
+  }: {
+    portfolioId: string;
+    mode: string;
+  }) => (
+    <section>
+      <h2>Proposal Lifecycle Workspace</h2>
+      <p>{portfolioId}</p>
+      <p>{mode}</p>
     </section>
   ),
 }));
@@ -220,5 +237,21 @@ describe("app route entrypoints", () => {
       screen.getAllByRole("heading", { name: "Opportunities And Ideas" }).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+  });
+
+  it("mounts proposal lifecycle modes from the proposals route", async () => {
+    render(
+      await ProposalsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          mode: "risk-impact",
+        }),
+      })
+    );
+
+    expect(screen.getByRole("heading", { name: "Risk And Impact" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Proposal Lifecycle Workspace" })).toBeInTheDocument();
+    expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+    expect(screen.getByText("risk-impact")).toBeInTheDocument();
   });
 });

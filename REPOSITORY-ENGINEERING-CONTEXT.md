@@ -134,6 +134,11 @@ Current repository posture:
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities` is a
     Gateway-backed idea triage view over draft advisory proposals; Workbench must not claim
     automated opportunity sourcing until Gateway exposes a supported idea/opportunity contract.
+    `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
+    `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
+    lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
+    states for advisor navigation but does not calculate suitability, risk impact, consent, or
+    implementation truth locally.
 
 ## Architecture And Module Map
 

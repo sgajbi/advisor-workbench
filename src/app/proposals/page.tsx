@@ -1,4 +1,9 @@
-import ProposalListView from "@/features/proposals/components/proposal-list-view";
+import ProposalLifecycleWorkspace from "@/features/proposals/components/proposal-lifecycle-workspace";
+import { normalizeAdvisoryJourneyMode } from "@/features/proposals/advisory-journey-navigation";
+import {
+  getProposalLifecycleModeDefinition,
+  normalizeProposalLifecycleMode,
+} from "@/features/proposals/proposal-lifecycle-workspace-view-model";
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
@@ -6,24 +11,22 @@ import ProposalWorkspaceShell, {
 export default async function ProposalsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ portfolioId?: string }>;
+  searchParams?: Promise<{ portfolioId?: string; mode?: string }>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const portfolioId = resolveProposalPortfolioId(resolvedSearchParams.portfolioId);
+  const activeMode = normalizeAdvisoryJourneyMode(resolvedSearchParams.mode);
+  const lifecycleMode = normalizeProposalLifecycleMode(activeMode);
+  const lifecycleDefinition = getProposalLifecycleModeDefinition(lifecycleMode);
   return (
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
       activeScreen="proposal"
-      activeMode="approval-queue"
-      title="Approval Queue"
-      subtitle="Manage proposal drafts, maker-checker posture, and advisor-ready next actions."
+      activeMode={lifecycleMode}
+      title={lifecycleDefinition.title}
+      subtitle={lifecycleDefinition.subtitle}
     >
-      <ProposalListView
-        initialPortfolioId={portfolioId}
-        title="Proposal Queue"
-        subtitle="Review advisor-use proposal drafts by portfolio and workflow stage."
-        createDraftHref={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
-      />
+      <ProposalLifecycleWorkspace portfolioId={portfolioId} mode={lifecycleMode} />
     </ProposalWorkspaceShell>
   );
 }
