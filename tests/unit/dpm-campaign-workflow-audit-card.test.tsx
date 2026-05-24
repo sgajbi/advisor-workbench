@@ -18,6 +18,13 @@ const selectedCampaign: DpmCampaignDefinitionRow = {
   expiryState: "ACTIVE",
   accessPurpose: "Portfolio review",
   sourcePosture: "Source-backed",
+  candidateSourceProduct: "BulkReviewCampaignDiscovery:v1",
+  candidateSourceReadiness: "READY",
+  candidateFilters: "As Of: 2026-05-10; Eligible Types: DISCRETIONARY",
+  candidateWarnings: "N/A",
+  lineageRefCount: "4",
+  nextAction: "Check launch readiness through Gateway.",
+  operatingBoundaries: "NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW",
 };
 
 describe("DpmCampaignWorkflowAuditCard", () => {

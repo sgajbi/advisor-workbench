@@ -492,7 +492,11 @@ BFF/Gateway boundary. It also loads active Manage-owned `BulkReviewCampaignDefin
 campaign definitions through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions` and renders campaign name, version,
 status, as-of date, candidate count, eligible portfolio type, governance posture, and source-backed
-posture without rendering campaign content hashes or recalculating membership. The panel can open
+posture without rendering campaign content hashes or recalculating membership. For the selected
+campaign, Workbench now renders a candidate-source review card with source product, readiness,
+applied filters, warnings, lineage-ref count, next action, and explicit no-OMS/no-client-contact
+boundaries. This is display-only Gateway-backed posture; Workbench does not discover campaign
+cohorts, page through source-owner stores, or calculate membership locally. The panel can open
 selected campaign lifecycle evidence through Gateway
 `GET /api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/lifecycle-events`
 and record bounded retire/supersede lifecycle commands through Gateway

@@ -1,6 +1,7 @@
 "use client";
 
 import { ScreenStatePanel, SemanticBadge } from "@/design-system";
+import DpmCampaignCandidateSourceCard from "@/features/workbench/components/dpm-campaign-candidate-source-card";
 import DpmCampaignDefinitionsTable from "@/features/workbench/components/dpm-campaign-definitions-table";
 import DpmCampaignLifecycleEvidenceCard from "@/features/workbench/components/dpm-campaign-lifecycle-evidence-card";
 import DpmCampaignLifecycleCommandCard from "@/features/workbench/components/dpm-campaign-lifecycle-command-card";
@@ -142,6 +143,7 @@ export default function DpmCampaignDefinitionsSection({
         onLoadLaunchHistory={onLoadLaunchHistory}
         onCheckLaunchReadiness={onCheckLaunchReadiness}
       />
+      <DpmCampaignCandidateSourceCard selectedCampaign={selectedCampaign} />
       <DpmCampaignLifecycleEvidenceCard
         rows={lifecycleRows}
         selectedCampaign={selectedCampaign}

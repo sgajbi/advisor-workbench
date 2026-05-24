@@ -277,6 +277,7 @@ describe("DPM wave command-center view model", () => {
           items: [
             {
               product_name: "BulkReviewCampaignDiscovery",
+              product_version: "v1",
               campaign_id: "campaign-holdings-202605",
               campaign_version: "2026.05",
               campaign_status: "ACTIVE",
@@ -286,6 +287,12 @@ describe("DPM wave command-center view model", () => {
               expiry_state: "ACTIVE",
               access_purpose: "rebalance_review",
               source_ref_count: 4,
+              supportability_state: "READY",
+              applied_filters: {
+                as_of_date: "2026-05-10",
+                eligible_portfolio_types: ["DISCRETIONARY"],
+              },
+              operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
             },
           ],
         },
@@ -300,6 +307,13 @@ describe("DPM wave command-center view model", () => {
       expiryState: "ACTIVE",
       accessPurpose: "rebalance_review",
       sourcePosture: "Source-backed",
+      candidateSourceProduct: "BulkReviewCampaignDiscovery:v1",
+      candidateSourceReadiness: "READY",
+      candidateFilters: "As Of Date: 2026-05-10; Eligible Portfolio Types: DISCRETIONARY",
+      candidateWarnings: "N/A",
+      lineageRefCount: "4",
+      nextAction: "Check launch readiness through Gateway.",
+      operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW",
     });
   });
 
