@@ -100,7 +100,10 @@ describe("ProposalMemoPosturePanel", () => {
     expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
     expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
     expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
+    expect(await screen.findByText(/Memo evidence: sha256:memo-001/)).toBeInTheDocument();
+    expect(await screen.findByText(/Replay evidence: sha256:memo-001/)).toBeInTheDocument();
     expect(await screen.findByText("Evidence Readiness")).toBeInTheDocument();
+    expect(await screen.findByText("Evidence Trail")).toBeInTheDocument();
     expect(await screen.findByText(/Evidence archive: archive:\/\/memo\/report\/1/)).toBeInTheDocument();
     expect(screen.getByText(/Advisor-use memo actions preserve source evidence/)).toBeInTheDocument();
     expect(screen.getByText("Advisor ID")).toBeInTheDocument();
@@ -108,6 +111,9 @@ describe("ProposalMemoPosturePanel", () => {
     expect(screen.queryByText("AI Commentary")).not.toBeInTheDocument();
     expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
     expect(screen.queryByText(/Archive refs:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Memo hash:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Replay hash:/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Lineage")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client-ready release/i })).not.toBeInTheDocument();
   });
@@ -187,6 +193,7 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       await screen.findByText(/Memo posture is degraded or blocked by source advisory evidence/),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/supportability/i)).not.toBeInTheDocument();
     expect(await screen.findByText("DEGRADED_SOURCE_EVIDENCE")).toBeInTheDocument();
     expect(screen.queryByText(/ready for client/i)).not.toBeInTheDocument();
   });

@@ -174,7 +174,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
     <SectionBlock
       className="proposal-memo-posture-panel"
       title="Advisor Memo And Evidence Pack"
-      subtitle="Review memo readiness, audience projection, report package, replay, and commentary posture before client discussion."
+      subtitle="Review memo readiness, audience projection, report package, evidence trail, and commentary posture before client discussion."
       actions={
         <SemanticBadge tone={memoPosture.hasMemo ? "success" : "warn"}>
           {memoPosture.statusLabel}
@@ -184,7 +184,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       {memoQuery.error || projectionQuery.error || lineageQuery.error || replayQuery.error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Memo posture is degraded or blocked by source advisory evidence. Existing memo facts,
-          supportability, and readiness remain unchanged.
+          source-evidence status, and readiness remain unchanged.
         </Alert>
       ) : null}
       {actionError ? (
@@ -197,7 +197,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         <div className="analytics-stat">
           <Text variant="label">Review Posture</Text>
           <Text variant="metricValueCompact">{memoPosture.reviewPostureLabel}</Text>
-          <Text variant="secondary">Memo hash: {memoHash ?? "Not available"}</Text>
+          <Text variant="secondary">Memo evidence: {memoHash ?? "Not available"}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Projection Audience</Text>
@@ -209,7 +209,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         <div className="analytics-stat">
           <Text variant="label">Evidence Readiness</Text>
           <Text variant="metricValueCompact">{memoPosture.supportabilityLabel}</Text>
-          <Text variant="secondary">Replay hash: {memoPosture.replayHashLabel}</Text>
+          <Text variant="secondary">Replay evidence: {memoPosture.replayHashLabel}</Text>
         </div>
       </Stack>
 
@@ -227,7 +227,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           <Text variant="secondary">Evidence role: {memoPosture.commentaryAuthorityLabel}</Text>
         </div>
         <div className="analytics-stat">
-          <Text variant="label">Lineage</Text>
+          <Text variant="label">Evidence Trail</Text>
           <Text variant="metricValueCompact">{memoPosture.lineageStatusLabel}</Text>
           <Text variant="secondary">{memoPosture.lineageHashLabel}</Text>
         </div>
