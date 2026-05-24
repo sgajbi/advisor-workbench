@@ -13,6 +13,7 @@ import {
 import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
 import ManageMandateHealth from "@/features/workbench/components/manage-mandate-health";
 import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
+import DpmCopilotWorkspace from "@/features/workbench/components/dpm-copilot-workspace";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
 import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
 import PmOperatingQualityPanel from "@/features/workbench/components/pm-operating-quality-panel";
@@ -179,6 +180,8 @@ function renderManageMode(
           sourceSearchErrorMessage={data.portfolioMemorySearchError}
         />
       );
+    case "copilot":
+      return <DpmCopilotWorkspace data={data} mandateId={mandateId} />;
     case "quality":
       return (
         <PmOperatingQualityPanel

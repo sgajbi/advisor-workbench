@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import ManageContextRail from "../../src/features/workbench/components/manage-context-rail";
+import DpmCopilotWorkspace from "../../src/features/workbench/components/dpm-copilot-workspace";
 import ManageOverview from "../../src/features/workbench/components/manage-overview";
 import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
 
@@ -41,5 +42,22 @@ describe("manage workspace split components", () => {
       "/portfolio?portfolioId=PF_1001"
     );
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
+  });
+
+  it("renders the governed PM copilot workspace without execution or client-contact claims", () => {
+    render(<DpmCopilotWorkspace data={buildManageWorkspaceData()} mandateId="mandate_001" />);
+
+    expect(screen.getByRole("heading", { name: "PM Copilot Workspace" })).toBeInTheDocument();
+    expect(screen.getByText("Proof-Pack PM Memo")).toBeInTheDocument();
+    expect(screen.getByText("Wave PM Memo")).toBeInTheDocument();
+    expect(screen.getByText("Operations Handoff Summary")).toBeInTheDocument();
+    expect(screen.getByText("Exception Summary")).toBeInTheDocument();
+    expect(screen.getByText("Outcome Narrative")).toBeInTheDocument();
+    expect(screen.getByText("PM Quality Support Summary")).toBeInTheDocument();
+    expect(screen.getByText("Gateway only")).toBeInTheDocument();
+    expect(screen.getByText("No prompt storage")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Request" })).toHaveLength(6);
+    expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /order/i })).not.toBeInTheDocument();
   });
 });

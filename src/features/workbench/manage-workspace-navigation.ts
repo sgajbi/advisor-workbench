@@ -6,6 +6,7 @@ export type ManageMode =
   | "waves"
   | "construction"
   | "memory"
+  | "copilot"
   | "quality"
   | "reviews"
   | "proof";
@@ -53,6 +54,13 @@ export const MANAGE_MODE_DEFINITIONS: ManageModeDefinition[] = [
     detail: "Portfolio memory",
     title: "Portfolio Memory",
     description: "Portfolio decision memory and operating history.",
+  },
+  {
+    key: "copilot",
+    label: "Copilot",
+    detail: "AI workflow packs",
+    title: "PM Copilot Workspace",
+    description: "Governed PM workflow-pack requests backed by Gateway, Manage, and lotus-ai.",
   },
   {
     key: "quality",

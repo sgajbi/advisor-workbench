@@ -56,14 +56,18 @@ Boundary rules that matter:
    live trust discovery.
 5. `/workbench/{portfolioId}` is the Manage workspace. It uses the shared Workbench left rail and
    focused `mode` sub-surfaces instead of stacking every Manage/DPM panel into one long page:
-   overview, `mode=mandate`, `mode=waves`, `mode=construction`, `mode=memory`, `mode=reviews`,
-   and `mode=proof`.
+   overview, `mode=mandate`, `mode=waves`, `mode=construction`, `mode=memory`, `mode=copilot`,
+   `mode=reviews`, `mode=quality`, and `mode=proof`.
 6. Manage surfaces are Gateway-backed and cover RFC-0038 mandate command center, RFC-0041
    rebalance waves, RFC-0039 construction alternatives, RFC40-WTBD-010 portfolio memory,
    RFC-0042 outcome reviews, RFC-0040 proof-pack evidence, RFC-0043 exception-summary requests,
    and rebalance action-register supportability. Workbench renders Gateway/manage/lotus-ai truth
    and does not calculate mandate health, wave readiness, optimizer output, outcome variance,
    proof-pack hashes, report inputs, AI prompts, PM memos, narratives, or execution claims locally.
+   `mode=copilot` centralizes the existing Gateway-backed proof-pack PM memo, wave PM memo,
+   operations handoff summary, exception summary, outcome narrative, and PM quality support-summary
+   workflow-pack requests without browser-owned prompt construction, generated text storage,
+   PM ranking, client contact, order, or OMS claims.
 7. Recommendations remain compatibility paths. Proposals are now a bounded direct advisory
    workspace surface for the Gateway-backed proposal queue and RFC-0023 advisor narrative delivery
    posture, while the top-level `Proposal` shell entry remains disabled pending broader product
@@ -289,7 +293,14 @@ Important current product and route truths:
    but must not build report input, construct AI prompts, generate memo text locally, calculate
    campaign membership or readiness, mutate maker-checker or assignment state, score PMs, approve
    trades independently, contact clients, place orders, or call upstream services directly.
-12. RFC-0023 advisor proposal narrative posture is rendered on `/proposals/{proposalId}` through
+12. RFC-0043 PM copilot workspace rendering on `/workbench/{portfolioId}?mode=copilot` is backed
+    by existing Gateway BFF routes for proof-pack PM memo, wave PM memo, operations handoff
+    summary, monitoring-exception summary, outcome-review narrative, and PM operating-quality
+    support summary. Workbench presents one governed action surface over Manage-owned evidence and
+    lotus-ai workflow-pack execution posture, but does not construct prompts, persist generated
+    model output, rank PMs, infer missing source facts, contact clients, approve trades, generate
+    orders, route orders, or claim OMS execution.
+13. RFC-0023 advisor proposal narrative posture is rendered on `/proposals/{proposalId}` through
     Gateway proposal endpoints only:
     `/api/v1/proposals/{proposal_id}/versions/{version_no}/narrative/review`,
     `/api/v1/proposals/{proposal_id}/report-requests`,

@@ -158,6 +158,14 @@ promote dormant labels into product ownership just because historical route file
   claims, and client communication workflow remain forbidden. Event drawers, lifecycle export,
   and retention or audit-policy controls remain future scope until separately implemented and
   proven.
+- RFC-0043 PM copilot workspace rendering is implemented on
+  `/workbench/{portfolioId}?mode=copilot` through existing Gateway BFF routes for proof-pack PM
+  memo, wave PM memo, operations handoff summary, monitoring-exception summary, outcome-review
+  narrative, and PM operating-quality support summary. Workbench centralizes these review-gated
+  workflow-pack requests over Manage-owned evidence and lotus-ai execution posture, but it does
+  not construct prompts, persist generated summary text or model responses, rank PMs, infer
+  missing source facts, contact clients, approve trades, generate orders, route orders, or claim
+  OMS execution.
 - RFC-0098/RFC-0041 action-register supportability is rendered on the Manage workspace from
   the Gateway portfolio overview `rebalance_snapshot`. The rebalance status panel shows
   manage-owned status, source support state, freshness, run count, operation count, workflow

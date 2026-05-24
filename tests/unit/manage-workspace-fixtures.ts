@@ -185,7 +185,29 @@ export function buildManageWorkspaceData(
       data: { policies: [], count: 1 },
     },
     pmOperatingQualityPoliciesError: null,
-    pmOperatingQualityScoreRuns: null,
+    pmOperatingQualityScoreRuns: {
+      correlation_id: "corr_score_run",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:pm-quality-score-run",
+        state: "READY",
+        reason_codes: ["READY"],
+        blocked_actions: [],
+      },
+      data: {
+        items: [
+          {
+            score_run_id: "pmq_run_001",
+            score_run_state: "READY",
+            policy_id: "pmq_sg_dpm",
+            policy_version: "2026.05",
+          },
+        ],
+      },
+    },
     pmOperatingQualityScoreRunsError: null,
     pmOperatingQualityFairnessAnalyses: null,
     pmOperatingQualityFairnessAnalysesError: null,
