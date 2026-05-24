@@ -24,9 +24,10 @@ describe("ProposalListView", () => {
       expect(screen.getByText(/ID:\s*pp_1/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Live Queue Mode/)).toBeInTheDocument();
-    expect(screen.getByText(/DRAFT: 1/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Advisory queue summary")).toHaveTextContent(/DRAFT\s*1/);
+    expect(screen.getByRole("columnheader", { name: "Next Action" })).toBeInTheDocument();
     expect(screen.getAllByText(/pp_1/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Next:\s*Submit for risk or compliance review/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Submit for risk or compliance review/i).length).toBeGreaterThan(0);
   });
 
   it("supports advisory workspace copy and portfolio-scoped draft entry", async () => {
