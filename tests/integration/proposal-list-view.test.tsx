@@ -28,4 +28,27 @@ describe("ProposalListView", () => {
     expect(screen.getAllByText(/pp_1/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Next:\s*Submit for risk or compliance review/i)).toBeInTheDocument();
   });
+
+  it("supports advisory workspace copy and portfolio-scoped draft entry", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalListView
+          initialPortfolioId="PB_SG_GLOBAL_BAL_001"
+          title="Advisory Workspace"
+          subtitle="Review live advisory proposals."
+          createDraftHref="/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
+        />
+      </QueryClientProvider>
+    );
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Advisory Workspace" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Review live advisory proposals.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create Draft" })).toHaveAttribute(
+      "href",
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
+  });
 });

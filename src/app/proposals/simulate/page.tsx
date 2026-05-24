@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import ProposalSimulateForm from "@/features/proposals/components/proposal-simulate-form";
 
 export default async function ProposalSimulatePage({
   searchParams,
@@ -6,9 +6,6 @@ export default async function ProposalSimulatePage({
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const portfolioId = resolvedSearchParams.portfolioId?.trim();
-  if (portfolioId) {
-    redirect(`/performance?portfolioId=${encodeURIComponent(portfolioId)}`);
-  }
-  redirect("/portfolio");
+  const portfolioId = resolvedSearchParams.portfolioId?.trim() || "PB_SG_GLOBAL_BAL_001";
+  return <ProposalSimulateForm initialPortfolioId={portfolioId} />;
 }

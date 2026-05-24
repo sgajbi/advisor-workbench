@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import ProposalListView from "@/features/proposals/components/proposal-list-view";
 
 export default async function RecommendationsAppPage({
   searchParams,
@@ -6,8 +6,16 @@ export default async function RecommendationsAppPage({
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
   const resolvedSearch = await searchParams;
-  if (resolvedSearch.portfolioId) {
-    redirect(`/performance?portfolioId=${encodeURIComponent(resolvedSearch.portfolioId)}&mode=advisor`);
-  }
-  redirect("/portfolio");
+  return (
+    <ProposalListView
+      initialPortfolioId={resolvedSearch.portfolioId}
+      title="Advisory Workspace"
+      subtitle="Review live advisory proposals, readiness gates, and next actions without leaving the advisor workflow."
+      createDraftHref={
+        resolvedSearch.portfolioId
+          ? `/proposals/simulate?portfolioId=${encodeURIComponent(resolvedSearch.portfolioId)}`
+          : "/proposals/simulate"
+      }
+    />
+  );
 }

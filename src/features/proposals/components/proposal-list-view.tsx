@@ -43,8 +43,14 @@ function groupedByStage(items: ProposalSummary[]): Record<ProposalStage, Proposa
 
 export default function ProposalListView({
   initialPortfolioId,
+  title = "Proposal Workspace",
+  subtitle = "Prioritize advisor tasks by workflow stage and jump directly to the next action.",
+  createDraftHref,
 }: {
   initialPortfolioId?: string;
+  title?: string;
+  subtitle?: string;
+  createDraftHref?: string;
 }) {
   const [searchText, setSearchText] = useState("");
   const [stateFilter, setStateFilter] = useState("");
@@ -93,14 +99,14 @@ export default function ProposalListView({
 
   return (
     <>
-      <h1 className="sr-only">Proposal Workspace</h1>
+      <h1 className="sr-only">{title}</h1>
       <SectionBlock
-        title="Proposal Workspace"
-        subtitle="Prioritize advisor tasks by workflow stage and jump directly to the next action."
+        title={title}
+        subtitle={subtitle}
         actions={
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
             <SemanticBadge tone={error ? "warn" : "success"}>Live Queue Mode</SemanticBadge>
-            <Link href="/proposals/simulate" className="nav-link">
+            <Link href={createDraftHref ?? "/proposals/simulate"} className="nav-link">
               Create Draft
             </Link>
           </Stack>

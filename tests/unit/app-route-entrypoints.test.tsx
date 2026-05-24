@@ -24,6 +24,21 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+vi.mock("@/features/proposals/components/proposal-list-view", () => ({
+  default: ({
+    title,
+    initialPortfolioId,
+  }: {
+    title?: string;
+    initialPortfolioId?: string;
+  }) => (
+    <section>
+      <h1>{title}</h1>
+      <p>{initialPortfolioId ?? "no portfolio selected"}</p>
+    </section>
+  ),
+}));
+
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
     return function MockDynamicComponent(props: Record<string, unknown>) {
@@ -138,15 +153,21 @@ describe("app route entrypoints", () => {
     ).toBeInTheDocument();
   });
 
-  it("routes recommendations into performance when portfolio context exists", async () => {
-    await expect(
-      RecommendationsAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
-    ).rejects.toThrowError("REDIRECT:/performance?portfolioId=PORT_1001&mode=advisor");
+  it("mounts recommendations as the advisory workspace when portfolio context exists", async () => {
+    render(
+      await RecommendationsAppPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_1001" }),
+      })
+    );
+
+    expect(screen.getByRole("heading", { name: "Advisory Workspace" })).toBeInTheDocument();
+    expect(screen.getByText("PORT_1001")).toBeInTheDocument();
   });
 
-  it("routes recommendations into portfolio when no portfolio is selected", async () => {
-    await expect(
-      RecommendationsAppPage({ searchParams: Promise.resolve({}) })
-    ).rejects.toThrowError("REDIRECT:/portfolio");
+  it("mounts recommendations without leaving the advisory route when no portfolio is selected", async () => {
+    render(await RecommendationsAppPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByRole("heading", { name: "Advisory Workspace" })).toBeInTheDocument();
+    expect(screen.getByText("no portfolio selected")).toBeInTheDocument();
   });
 });
