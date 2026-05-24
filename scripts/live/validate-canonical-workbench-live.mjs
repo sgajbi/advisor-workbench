@@ -28,6 +28,8 @@ import {
 import {
   createBrowserValidationHelpers,
   validateAdvisorBriefPanel,
+  validateConstructionAlternativesPanel,
+  validateDpmCopilotWorkspace,
   validateProposalNarrativePosturePanel,
   validateDpmCommandCenterPanel,
   validatePortfolioMemoryPanel,
@@ -36,6 +38,7 @@ import {
   validatePerformanceAnalysisPanel,
   validatePerformanceSummaryPanel,
   validatePortfolioPanels,
+  validatePmOperatingQualityPanel,
   validateOutcomeReviewPanel,
   validateProofPackPanel,
   validateRiskPanel,
@@ -837,6 +840,18 @@ async function run() {
     reportInputRef: dpmWaveReportInputPayload.report_input_ref,
     aiMemoRunId: dpmWaveAiPmMemoRunId,
   });
+  panelGovernance.recordPanelClassification("dpm.construction_alternatives", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}?mode=construction`,
+    source: "Gateway DPM construction alternatives",
+  });
+  panelGovernance.recordPanelClassification("dpm.pm_operating_quality", "ready", "lotus-manage", {
+    route: `/workbench/${portfolioId}?mode=quality`,
+    source: "Gateway DPM PM operating quality",
+  });
+  panelGovernance.recordPanelClassification("dpm.copilot_workspace", "ready", "lotus-ai", {
+    route: `/workbench/${portfolioId}?mode=copilot`,
+    source: "Gateway/lotus-ai DPM workflow-pack workspace",
+  });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
 
@@ -962,6 +977,24 @@ async function run() {
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateDpmWaveCommandCenterPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateConstructionAlternativesPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validatePmOperatingQualityPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateDpmCopilotWorkspace(page, {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,

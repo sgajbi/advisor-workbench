@@ -352,6 +352,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("canonicalAsOfDate");
     expect(script).toContain("createBrowserValidationHelpers");
     expect(script).toContain("validatePortfolioMemoryPanel");
+    expect(script).toContain("validateConstructionAlternativesPanel");
+    expect(script).toContain("validatePmOperatingQualityPanel");
+    expect(script).toContain("validateDpmCopilotWorkspace");
     expect(browserWorkflowModule).toContain("validateDpmCommandCenterPanel");
     expect(browserWorkflowModule).toContain("Portfolio Memory");
     expect(browserWorkflowModule).toContain("Portfolio memory event timeline");
@@ -363,6 +366,18 @@ describe("canonical live validation script", () => {
     expect(script).toContain("/memory?limit=100");
     expect(script).toContain("DPM portfolio memory returned no manage-owned timeline events.");
     expect(script).toContain('recordPanelClassification("dpm.portfolio_memory"');
+    expect(script).toContain('recordPanelClassification("dpm.construction_alternatives"');
+    expect(script).toContain('recordPanelClassification("dpm.pm_operating_quality"');
+    expect(script).toContain('recordPanelClassification("dpm.copilot_workspace"');
+    expect(browserWorkflowModule).toContain("Construction alternatives generated.");
+    expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.construction_alternatives")');
+    expect(browserWorkflowModule).toContain("PM operating quality summary-invocation posture");
+    expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.pm_operating_quality")');
+    expect(browserWorkflowModule).toContain("PM copilot posture");
+    expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.copilot_workspace")');
+    expect(contractModule).toContain("dpm-construction-alternatives-live.png");
+    expect(contractModule).toContain("dpm-pm-operating-quality-live.png");
+    expect(contractModule).toContain("dpm-copilot-workspace-live.png");
     expect(browserWorkflowModule).toContain("Mandate Health");
     expect(script).toContain("classifyCommandCenterPanelState");
     expect(script).toContain("DPM command-center summary did not return canonical populated posture");

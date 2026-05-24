@@ -201,6 +201,45 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
+    {
+      panelId: "dpm.construction_alternatives",
+      owningService: "lotus-manage",
+      gatewayEndpoint: "/api/v1/dpm/command-center/construction/alternative-sets/generate",
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}?mode=construction",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-construction-alternatives-live.png",
+      knownLimitations: [
+        "Workbench renders Gateway/manage construction truth only; it does not calculate alternatives, route orders, execute trades, or claim OMS execution",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
+    {
+      panelId: "dpm.pm_operating_quality",
+      owningService: "lotus-manage",
+      gatewayEndpoint: "/api/v1/dpm/command-center/pm-operating-quality/score-runs",
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}?mode=quality",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-pm-operating-quality-live.png",
+      knownLimitations: [
+        "Workbench renders Gateway/manage PM operating-quality truth only; it does not rank PMs, generate summary text, make HR decisions, contact clients, or execute trades",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
+    {
+      panelId: "dpm.copilot_workspace",
+      owningService: "lotus-ai",
+      gatewayEndpoint: null,
+      requiredSupportState: "ready",
+      route: "/workbench/{portfolioId}?mode=copilot",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "dpm-copilot-workspace-live.png",
+      knownLimitations: [
+        "Workbench renders Gateway/lotus-ai workflow-pack posture only; it does not store prompts, store generated responses, contact clients, route orders, or claim OMS execution",
+      ],
+      ownerFollowUpRfc: "RFC-0098",
+    },
   ],
 };
 
