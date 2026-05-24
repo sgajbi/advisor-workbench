@@ -118,6 +118,11 @@ function extractHandoffProposalId(envelope: AdvisoryWorkspaceEnvelopeResponse): 
   return stringValue(proposalRecord?.proposal_id);
 }
 
+function isCashPosition(position: PortfolioPositionView): boolean {
+  const assetClass = position.asset_class?.trim().toLowerCase();
+  return assetClass === "cash" || position.security_id.toUpperCase().startsWith("CASH_");
+}
+
 export default function ProposalSimulateForm({
   initialPortfolioId = DEFAULT_CANONICAL_PORTFOLIO_ID,
 }: {
@@ -180,10 +185,19 @@ export default function ProposalSimulateForm({
     ...workbenchStrictQueryDefaults,
   });
   const positions = useMemo(() => portfolioBook?.positions ?? [], [portfolioBook?.positions]);
-  const sourceCashAmount = portfolioShell?.summary?.total_cash_base ?? cashAmount ?? 0;
+  const tradablePositions = useMemo(() => positions.filter((position) => !isCashPosition(position)), [positions]);
+  const cashPositionAmount = useMemo(
+    () =>
+      positions
+        .filter(isCashPosition)
+        .reduce((sum, position) => sum + (position.market_value_base ?? 0), 0),
+    [positions]
+  );
+  const sourceCashAmount =
+    portfolioShell?.summary?.total_cash_base ?? (cashPositionAmount || cashAmount || 0);
   const draftPreview = useMemo(
-    () => buildProposalDraftPreview(positions, sourceCashAmount, cashFlows, trades),
-    [cashFlows, positions, sourceCashAmount, trades]
+    () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
+    [cashFlows, sourceCashAmount, tradablePositions, trades]
   );
 
   function updateCashFlow(id: string, patch: Partial<ProposalDraftCashFlowIntent>) {
@@ -522,7 +536,7 @@ export default function ProposalSimulateForm({
             </section>
 
             <CurrentPositionsPanel
-              positions={positions}
+              positions={tradablePositions}
               positionsLoading={positionsLoading}
               baseCurrency={baseCurrency || "USD"}
               onAddPositionTrade={addPositionTrade}
