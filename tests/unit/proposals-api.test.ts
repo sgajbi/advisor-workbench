@@ -505,6 +505,10 @@ describe("proposal api", () => {
         }),
       })
     );
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("/memo/advisor-commentary"),
+      expect.anything()
+    );
     expect(fetchMock).toHaveBeenCalledWith(`${expectedBaseUrl}/proposals/pp_1/memos/lineage`);
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/replay-evidence`

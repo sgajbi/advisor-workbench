@@ -317,6 +317,8 @@ export type ProposalMemoAiCommentaryRequest = {
   reason?: Record<string, unknown>;
 };
 
+export type ProposalMemoAdvisorCommentaryRequest = ProposalMemoAiCommentaryRequest;
+
 export type ProposalMemoData = {
   proposal?: ProposalSummary;
   proposal_version_no?: number;
@@ -359,6 +361,8 @@ export type ProposalMemoAiCommentaryData = {
   replayed?: boolean;
   [key: string]: unknown;
 };
+
+export type ProposalMemoAdvisorCommentaryData = ProposalMemoAiCommentaryData;
 
 export type ProposalMemoLineageData = {
   proposal?: ProposalSummary;

@@ -15,6 +15,8 @@ import {
   ProposalEnvelopeResponse,
   ProposalListData,
   ProposalLineageData,
+  ProposalMemoAdvisorCommentaryData,
+  ProposalMemoAdvisorCommentaryRequest,
   ProposalMemoAiCommentaryData,
   ProposalMemoAiCommentaryRequest,
   ProposalMemoCreateRequest,
@@ -498,9 +500,9 @@ export async function requestProposalMemoAiCommentary(
 export async function requestProposalMemoAdvisorCommentary(
   proposalId: string,
   versionNo: number,
-  payload: ProposalMemoAiCommentaryRequest,
+  payload: ProposalMemoAdvisorCommentaryRequest,
   idempotencyKey?: string
-): Promise<ProposalMemoAiCommentaryData> {
+): Promise<ProposalMemoAdvisorCommentaryData> {
   return await requestProposalMemoAiCommentary(proposalId, versionNo, payload, idempotencyKey);
 }
 
