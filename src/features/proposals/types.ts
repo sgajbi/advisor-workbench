@@ -219,3 +219,97 @@ export type ProposalDeliveryEventsData = {
   explanation?: Record<string, unknown>;
   [key: string]: unknown;
 };
+
+export type ProposalMemoCreateRequest = {
+  created_by: string;
+  lifecycle_status?: string;
+  reason?: Record<string, unknown>;
+};
+
+export type ProposalMemoReviewRequest = {
+  action: "APPROVE_FOR_ADVISOR_USE" | "REJECT" | "REQUEST_CHANGES";
+  reviewed_by: string;
+  reason: string;
+  source_memo_hash: string;
+  client_ready_release_requested?: boolean;
+};
+
+export type ProposalMemoReportPackageRequest = {
+  requested_by: string;
+  source_memo_hash: string;
+  requested_output_formats?: string[];
+  client_ready_document_requested?: boolean;
+  reason?: Record<string, unknown>;
+};
+
+export type ProposalMemoAiCommentaryRequest = {
+  requested_by: string;
+  source_memo_hash: string;
+  requested_sections?: string[];
+  reason?: Record<string, unknown>;
+};
+
+export type ProposalMemoData = {
+  proposal?: ProposalSummary;
+  proposal_version_no?: number;
+  memo_id?: string;
+  memo_status?: string;
+  lifecycle_status?: string;
+  memo_hash?: string;
+  memo?: Record<string, unknown>;
+  projection?: Record<string, unknown>;
+  review_posture?: Record<string, unknown>;
+  report_package_posture?: Record<string, unknown>;
+  ai_commentary_posture?: Record<string, unknown>;
+  replay_metadata?: Record<string, unknown>;
+  audit_events?: Array<Record<string, unknown>>;
+  event_count?: number;
+  read_posture?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoProjectionData = {
+  proposal?: ProposalSummary;
+  projection?: Record<string, unknown>;
+  sections?: Array<Record<string, unknown>>;
+  projection_posture?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoReportPackageData = {
+  memo?: Record<string, unknown>;
+  report_package_event?: Record<string, unknown>;
+  report?: Record<string, unknown>;
+  replayed?: boolean;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoAiCommentaryData = {
+  memo?: Record<string, unknown>;
+  ai_event?: Record<string, unknown>;
+  commentary?: Record<string, unknown>;
+  replayed?: boolean;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoLineageData = {
+  proposal?: ProposalSummary;
+  proposal_id?: string;
+  memos?: Array<{
+    memo_id?: string;
+    memo_hash?: string;
+    memo_status?: string;
+    report_package_posture?: Record<string, unknown>;
+    ai_commentary_posture?: Record<string, unknown>;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoReplayEvidenceData = {
+  proposal?: ProposalSummary;
+  hashes?: Record<string, unknown>;
+  audit_events?: Array<Record<string, unknown>>;
+  supportability?: Record<string, unknown>;
+  [key: string]: unknown;
+};

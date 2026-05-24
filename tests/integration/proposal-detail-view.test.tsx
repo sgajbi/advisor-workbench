@@ -15,6 +15,14 @@ const {
   getWorkflowEventsMock,
   getApprovalsMock,
   getLineageMock,
+  getProposalMemoMock,
+  getProposalMemoProjectionMock,
+  getProposalMemoLineageMock,
+  getProposalMemoReplayEvidenceMock,
+  createProposalMemoMock,
+  reviewProposalMemoMock,
+  requestProposalMemoReportPackageMock,
+  requestProposalMemoAiCommentaryMock,
 } = vi.hoisted(() => ({
   createProposalVersionMock: vi.fn(async () => ({
     data: {
@@ -92,6 +100,32 @@ const {
       },
     ],
   })),
+  getProposalMemoMock: vi.fn(async () => ({
+    memo_id: "memo_1",
+    memo_status: "APPROVED_FOR_ADVISOR_USE",
+    memo_hash: "sha256:memo-001",
+    review_posture: { advisor_use: "APPROVED_FOR_ADVISOR_USE" },
+    report_package_posture: { status: "READY" },
+    ai_commentary_posture: { status: "AVAILABLE" },
+    read_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+  })),
+  getProposalMemoProjectionMock: vi.fn(async () => ({
+    projection: { audience: "ADVISOR", client_ready_publication: "BLOCKED" },
+    projection_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+  })),
+  getProposalMemoLineageMock: vi.fn(async () => ({
+    memos: [{ memo_hash: "sha256:memo-001", memo_status: "APPROVED_FOR_ADVISOR_USE" }],
+  })),
+  getProposalMemoReplayEvidenceMock: vi.fn(async () => ({
+    hashes: { memo_hash: "sha256:memo-001" },
+    supportability: { client_ready_publication: "BLOCKED" },
+  })),
+  createProposalMemoMock: vi.fn(async () => ({ memo_hash: "sha256:memo-001" })),
+  reviewProposalMemoMock: vi.fn(async () => ({ memo_hash: "sha256:memo-001" })),
+  requestProposalMemoReportPackageMock: vi.fn(async () => ({ report: { status: "READY" } })),
+  requestProposalMemoAiCommentaryMock: vi.fn(async () => ({
+    commentary: { authority: "NON_AUTHORITATIVE" },
+  })),
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
@@ -104,6 +138,14 @@ vi.mock("../../src/features/proposals/api", () => ({
   getProposalWorkflowEvents: getWorkflowEventsMock,
   getProposalApprovals: getApprovalsMock,
   getProposalLineage: getLineageMock,
+  createProposalMemo: createProposalMemoMock,
+  getProposalMemo: getProposalMemoMock,
+  getProposalMemoProjection: getProposalMemoProjectionMock,
+  getProposalMemoLineage: getProposalMemoLineageMock,
+  getProposalMemoReplayEvidence: getProposalMemoReplayEvidenceMock,
+  reviewProposalMemo: reviewProposalMemoMock,
+  requestProposalMemoReportPackage: requestProposalMemoReportPackageMock,
+  requestProposalMemoAiCommentary: requestProposalMemoAiCommentaryMock,
 }));
 
 describe("ProposalDetailView", () => {
