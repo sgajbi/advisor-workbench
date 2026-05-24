@@ -113,14 +113,74 @@ function ProposalWorkflowContextRail({
   portfolioId: string;
   activeScreen: Extract<PortfolioScreenNavigationKey, "proposal" | "advisory">;
 }) {
+  const isAdvisory = activeScreen === "advisory";
   return (
     <div className={styles.proposalSide}>
+      <Panel className={`${styles.contextPanel} ${styles.evidenceDrawer}`}>
+        <div className={styles.drawerHeader}>
+          <span>Contextual Evidence</span>
+          <strong>{isAdvisory ? "Workflow Status" : "Tasks"}</strong>
+        </div>
+        <div className={styles.evidenceAlert} role="status">
+          Evidence pack: advisor-use review in progress
+        </div>
+        <div className={styles.evidenceTabs} aria-label="Evidence drawer sections">
+          <span>Evidence Log</span>
+          <strong>{isAdvisory ? "Workflow Status" : "Tasks"}</strong>
+          <span>Audit Trail</span>
+        </div>
+        <div className={styles.reviewPosture}>
+          <h3>{isAdvisory ? "Latest Review Posture" : "Package Readiness"}</h3>
+          <p>
+            {isAdvisory
+              ? "Select an advisory proposal to review the evidence gates before risk routing."
+              : "Proposal drafts remain advisor-use only until suitability, disclosure, and approval gates pass."}
+          </p>
+        </div>
+        {isAdvisory ? (
+          <ol className={styles.reviewStepper} aria-label="Advisory workflow status">
+            <li className={styles.stepComplete}>
+              <span>Draft captured</span>
+              <strong>Proposal context and rationale recorded</strong>
+            </li>
+            <li className={styles.stepActive}>
+              <span>Advisor review</span>
+              <strong>Relationship manager action required</strong>
+              <div className={styles.checklist}>
+                <label>
+                  <input type="checkbox" checked readOnly />
+                  KYC validity verified
+                </label>
+                <label>
+                  <input type="checkbox" readOnly />
+                  Suitability evidence complete
+                </label>
+              </div>
+            </li>
+            <li>
+              <span>Risk and compliance review</span>
+              <strong>Awaiting advisor sign-off</strong>
+            </li>
+          </ol>
+        ) : (
+          <ul className={styles.taskList} aria-label="Proposal evidence tasks">
+            <li>
+              <span>Pre-trade disclosure</span>
+              <strong>Prepare disclosure pack after advisor approval.</strong>
+            </li>
+            <li>
+              <span>Suitability evidence</span>
+              <strong>Attach rationale for mandate and portfolio fit.</strong>
+            </li>
+            <li className={styles.taskComplete}>
+              <span>KYC verification</span>
+              <strong>Current profile evidence is available.</strong>
+            </li>
+          </ul>
+        )}
+      </Panel>
       <Panel className={styles.contextPanel}>
-        <h3>Workflow Posture</h3>
-        <p>
-          Proposal and advisory work remains gated for advisor review until risk, disclosure, and
-          compliance evidence is complete.
-        </p>
+        <Text variant="label">Advisor Decision Path</Text>
         <ul className={styles.contextList}>
           <li>
             <span>Portfolio</span>
@@ -128,28 +188,11 @@ function ProposalWorkflowContextRail({
           </li>
           <li>
             <span>Current Surface</span>
-            <strong>{activeScreen === "advisory" ? "Advisory next actions" : "Proposal lifecycle"}</strong>
+            <strong>{isAdvisory ? "Advisory next actions" : "Proposal lifecycle"}</strong>
           </li>
           <li>
             <span>Client Readiness</span>
             <strong>Not client ready until evidence gates pass</strong>
-          </li>
-        </ul>
-      </Panel>
-      <Panel className={styles.contextPanel}>
-        <Text variant="label">Advisor Decision Path</Text>
-        <ul className={styles.contextList}>
-          <li>
-            <span>1. Prepare</span>
-            <strong>Capture portfolio context, cash movements, and security orders.</strong>
-          </li>
-          <li>
-            <span>2. Simulate</span>
-            <strong>Review projected impact before saving an advisor-use draft.</strong>
-          </li>
-          <li>
-            <span>3. Route</span>
-            <strong>Send the proposal through risk and compliance review before client use.</strong>
           </li>
         </ul>
       </Panel>

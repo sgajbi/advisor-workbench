@@ -16,6 +16,8 @@ import { ProposalSummary } from "../types";
 import {
   PROPOSAL_STAGES,
   proposalNextAction,
+  proposalReadinessLabel,
+  proposalReadinessTone,
   proposalStageLabel,
   proposalStageTone,
   type ProposalStage,
@@ -75,10 +77,12 @@ export default function ProposalListView({
     return items.filter((item) => {
       const title = (item.title ?? "").toLowerCase();
       const portfolio = (item.portfolio_id ?? "").toLowerCase();
+      const advisor = (item.created_by ?? "").toLowerCase();
       return (
         item.proposal_id.toLowerCase().includes(query) ||
         title.includes(query) ||
         portfolio.includes(query) ||
+        advisor.includes(query) ||
         item.current_state.toLowerCase().includes(query)
       );
     });
@@ -119,12 +123,18 @@ export default function ProposalListView({
         ) : null}
 
         <div className={styles.queueSummary} aria-label="Advisory queue summary">
-          {PROPOSAL_STAGES.map((stage) => (
-            <div key={stage} className={styles.summaryMetric}>
-              <span>{proposalStageLabel(stage)}</span>
-              <strong>{grouped[stage].length}</strong>
-            </div>
-          ))}
+          {PROPOSAL_STAGES.map((stage) => {
+            const count = grouped[stage].length;
+            return (
+              <div
+                key={stage}
+                className={`${styles.summaryMetric} ${count > 0 ? styles.summaryMetricActive : ""}`}
+              >
+                <span>{proposalStageLabel(stage)}</span>
+                <strong>{count}</strong>
+              </div>
+            );
+          })}
         </div>
 
         <Stack
@@ -178,7 +188,7 @@ export default function ProposalListView({
             onChange={(event) => {
               setSearchText(event.target.value);
             }}
-            placeholder="proposal id, portfolio, title, state"
+            placeholder="proposal id, portfolio, advisor, title, state"
             sx={{ flex: "2 1 240px", minWidth: 0 }}
           />
         </Stack>
@@ -201,6 +211,7 @@ export default function ProposalListView({
                     <th>Proposal</th>
                     <th>Portfolio</th>
                     <th>Stage</th>
+                    <th>Readiness</th>
                     <th>Next Action</th>
                   </tr>
                 </thead>
@@ -219,11 +230,22 @@ export default function ProposalListView({
                           {proposalStageLabel(item.current_state)}
                         </SemanticBadge>
                       </td>
+                      <td>
+                        <SemanticBadge tone={proposalReadinessTone(item.current_state)}>
+                          {proposalReadinessLabel(item.current_state)}
+                        </SemanticBadge>
+                      </td>
                       <td>{proposalNextAction(item.current_state)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div className={styles.queueFooter}>
+                <span>
+                  Showing {primaryQueue.length} of {visibleItems.length} proposals in the current view
+                </span>
+                <Link href={createDraftHref ?? "/proposals/simulate"}>Create advisor-use draft</Link>
+              </div>
               {visibleItems.length > primaryQueue.length ? (
                 <Text variant="metadata">
                   Showing first {primaryQueue.length} proposals. Narrow the filters to review the full queue.
