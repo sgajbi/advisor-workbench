@@ -370,8 +370,20 @@ describe("canonical live validation script", () => {
     expect(script).toContain('recordPanelClassification("dpm.pm_operating_quality"');
     expect(script).toContain('recordPanelClassification("dpm.copilot_workspace"');
     expect(browserWorkflowModule).toContain("Construction alternatives generated.");
+    expect(browserWorkflowModule).toContain(
+      'constructionPanel.locator(".construction-alternatives-summary")'
+    );
+    expect(browserWorkflowModule).toContain(
+      'getByText("Recommended Path", { exact: true })'
+    );
     expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.construction_alternatives")');
     expect(browserWorkflowModule).toContain("PM operating quality summary-invocation posture");
+    expect(browserWorkflowModule).toContain(
+      'qualityPanel.locator(".pm-quality-status-strip")'
+    );
+    expect(browserWorkflowModule).toContain(
+      'qualityStatusStrip.getByText(label, { exact: true })'
+    );
     expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.pm_operating_quality")');
     expect(browserWorkflowModule).toContain("PM copilot posture");
     expect(browserWorkflowModule).toContain('screenshotRegisteredPanel(page, "dpm.copilot_workspace")');
