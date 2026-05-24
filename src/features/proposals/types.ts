@@ -25,6 +25,10 @@ export type ProposalCreateRequest = {
   };
 };
 
+export type ProposalBodyRequest = {
+  body: Record<string, unknown>;
+};
+
 export type AdvisoryWorkspaceEnvelopeResponse = {
   correlation_id: string;
   contract_version: string;
@@ -82,6 +86,10 @@ export type AdvisoryWorkspaceHandoffRequest = {
       mandate_id?: string;
     };
   };
+};
+
+export type AdvisoryWorkspaceBodyRequest = {
+  body: Record<string, unknown>;
 };
 
 export type ProposalEnvelopeResponse = {
