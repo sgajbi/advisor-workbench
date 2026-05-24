@@ -388,6 +388,11 @@ The summary also includes `panelClassifications` for the product surfaces valida
 Panels must be classified as `ready`, `partial`, `unavailable`, or another explicit governed state.
 The validator fails if a supported panel is recorded as blank without a governed empty, partial, or
 unavailable posture.
+The summary also includes a `supportabilityMatrix` with registered versus classified panel counts,
+required and observed supportability-state counts, owning-service counts, non-ready panel evidence,
+and missing-panel evidence. Reviewers should inspect this matrix before accepting screenshots as
+demo-ready proof, because it shows whether the run covered both ready panels and governed bounded
+partial/degraded states.
 
 ## Gateway startup rule
 

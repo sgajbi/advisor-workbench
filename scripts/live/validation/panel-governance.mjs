@@ -1,6 +1,58 @@
 export function createPanelGovernance(summary, panelRegistry) {
   const panelRegistryById = new Map(panelRegistry.panels.map((panel) => [panel.panelId, panel]));
 
+  function incrementCount(target, key) {
+    const normalizedKey = typeof key === "string" && key ? key : "unknown";
+    target[normalizedKey] = (target[normalizedKey] ?? 0) + 1;
+  }
+
+  function sortCountMap(counts) {
+    return Object.fromEntries(Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)));
+  }
+
+  function buildSupportabilityMatrix() {
+    const classifiedPanels = new Set(summary.panelClassifications.map((panel) => panel.panel));
+    const requiredStateCounts = {};
+    const observedStateCounts = {};
+    const ownerCounts = {};
+    const nonReadyPanels = [];
+    const missingPanels = [];
+
+    for (const panelSpec of panelRegistry.panels) {
+      incrementCount(requiredStateCounts, panelSpec.requiredSupportState);
+      if (!classifiedPanels.has(panelSpec.panelId)) {
+        missingPanels.push(panelSpec.panelId);
+      }
+    }
+
+    for (const panel of summary.panelClassifications) {
+      const panelSpec = panelRegistryById.get(panel.panel);
+      incrementCount(observedStateCounts, panel.state);
+      incrementCount(ownerCounts, panel.owner);
+      if (panel.state !== "ready") {
+        nonReadyPanels.push({
+          panel: panel.panel,
+          state: panel.state,
+          requiredSupportState: panelSpec?.requiredSupportState ?? null,
+          owner: panel.owner,
+          reason: panel.reason ?? null,
+          knownLimitations: panelSpec?.knownLimitations ?? [],
+          ownerFollowUpRfc: panelSpec?.ownerFollowUpRfc ?? null,
+        });
+      }
+    }
+
+    return {
+      registeredPanelCount: panelRegistry.panels.length,
+      classifiedPanelCount: summary.panelClassifications.length,
+      requiredStateCounts: sortCountMap(requiredStateCounts),
+      observedStateCounts: sortCountMap(observedStateCounts),
+      ownerCounts: sortCountMap(ownerCounts),
+      nonReadyPanels: nonReadyPanels.sort((left, right) => left.panel.localeCompare(right.panel)),
+      missingPanels: missingPanels.sort(),
+    };
+  }
+
   function recordSupportabilityCheck(panel, evidence) {
     summary.supportabilityChecks.push({ panel, ...evidence });
   }
@@ -70,6 +122,8 @@ export function createPanelGovernance(summary, panelRegistry) {
         ownerFollowUpRfc: panelSpec.ownerFollowUpRfc,
       });
     }
+
+    summary.supportabilityMatrix = buildSupportabilityMatrix();
   }
 
   return {

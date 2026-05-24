@@ -36,6 +36,7 @@ import {
   ProposalWorkflowEventsData,
 } from "../types";
 import ProposalNarrativePosturePanel from "./proposal-narrative-posture-panel";
+import ProposalMemoPosturePanel from "./proposal-memo-posture-panel";
 import {
   buildProposalActionIdempotencyKey,
   isValidProposalId,
@@ -400,6 +401,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
 
       <Divider sx={{ my: 1 }} />
       <ProposalNarrativePosturePanel
+        proposalId={data.proposal.proposal_id}
+        currentVersionNo={data.proposal.current_version_no}
+      />
+
+      <Divider sx={{ my: 1 }} />
+      <ProposalMemoPosturePanel
         proposalId={data.proposal.proposal_id}
         currentVersionNo={data.proposal.current_version_no}
       />

@@ -40,6 +40,10 @@
 
 - canonical browser validation writes screenshots and structured summary output under
   `output/playwright/live-canonical/`
+- `live-validation-summary.json` includes a `supportabilityMatrix` with registered/classified
+  panel counts, required and observed supportability states, owning services, non-ready panel
+  evidence, and missing-panel checks; review this matrix before accepting screenshots as
+  demo-ready evidence
 - construction alternatives live proof writes focused machine-readable evidence and a panel
   screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
 - DPM PM operating-quality live proof creates and re-reads Manage-backed score-run,

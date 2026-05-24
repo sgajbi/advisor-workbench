@@ -4,6 +4,7 @@ import type { ValidationPanelState } from "../../scripts/live/validation/shared-
 function createSummary() {
   return {
     panelClassifications: [],
+    supportabilityMatrix: null,
     supportabilityChecks: [],
   };
 }
@@ -59,6 +60,33 @@ describe("live validation panel governance", () => {
     governance.assertPanelSupportabilityAlignment();
 
     expect(summary.panelClassifications).toHaveLength(2);
+    expect(summary.supportabilityMatrix).toEqual({
+      registeredPanelCount: 2,
+      classifiedPanelCount: 2,
+      requiredStateCounts: {
+        partial: 1,
+        ready: 1,
+      },
+      observedStateCounts: {
+        partial: 1,
+        ready: 1,
+      },
+      ownerCounts: {
+        "lotus-gateway": 2,
+      },
+      nonReadyPanels: [
+        {
+          panel: "performance.evidence",
+          state: "partial",
+          requiredSupportState: "partial",
+          owner: "lotus-gateway",
+          reason: "lineage evidence remains partial",
+          knownLimitations: ["deferred to RFC-0079"],
+          ownerFollowUpRfc: "RFC-0079",
+        },
+      ],
+      missingPanels: [],
+    });
     expect(summary.supportabilityChecks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

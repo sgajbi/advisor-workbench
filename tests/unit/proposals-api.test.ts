@@ -5,13 +5,21 @@ import {
   approveRisk,
   createProposalVersion,
   createProposalReportRequest,
+  createProposalMemo,
   getProposalDeliveryEvents,
   getProposalDeliverySummary,
   getProposalApprovals,
+  getProposalMemo,
+  getProposalMemoLineage,
+  getProposalMemoProjection,
+  getProposalMemoReplayEvidence,
   getProposalVersion,
   getProposalWorkflowEvents,
   listProposals,
   recordClientConsent,
+  requestProposalMemoAiCommentary,
+  requestProposalMemoReportPackage,
+  reviewProposalMemo,
   reviewProposalNarrative,
   submitProposal,
 } from "../../src/features/proposals/api";
@@ -257,6 +265,115 @@ describe("proposal api", () => {
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/delivery-events`
+    );
+  });
+
+  it("calls proposal memo Gateway endpoints", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data: {
+              memo_hash: "sha256:memo-001",
+              projection: { audience: "COMPLIANCE" },
+              report: { archive_refs: ["archive://memo/report/1"] },
+              commentary: { authority: "NON_AUTHORITATIVE" },
+              hashes: { memo_hash: "sha256:memo-001" },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
+
+    await createProposalMemo(
+      "pp_1",
+      2,
+      { created_by: "advisor_1", lifecycle_status: "DRAFT" },
+      "idem-memo-create-1"
+    );
+    await getProposalMemo("pp_1", 2);
+    await getProposalMemoProjection("pp_1", 2, "COMPLIANCE");
+    await reviewProposalMemo(
+      "pp_1",
+      2,
+      {
+        action: "APPROVE_FOR_ADVISOR_USE",
+        reviewed_by: "compliance_1",
+        reason: "Evidence-backed memo.",
+        source_memo_hash: "sha256:memo-001",
+        client_ready_release_requested: false,
+      },
+      "idem-memo-review-1"
+    );
+    await requestProposalMemoReportPackage(
+      "pp_1",
+      2,
+      {
+        requested_by: "advisor_1",
+        source_memo_hash: "sha256:memo-001",
+        requested_output_formats: ["pdf"],
+        client_ready_document_requested: false,
+      },
+      "idem-memo-report-1"
+    );
+    await requestProposalMemoAiCommentary(
+      "pp_1",
+      2,
+      {
+        requested_by: "advisor_1",
+        source_memo_hash: "sha256:memo-001",
+        requested_sections: ["EXECUTIVE_SUMMARY"],
+      },
+      "idem-memo-ai-1"
+    );
+    await getProposalMemoLineage("pp_1");
+    await getProposalMemoReplayEvidence("pp_1", 2);
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Idempotency-Key": "idem-memo-create-1" }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo`
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/projection?audience=COMPLIANCE`
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/review`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Idempotency-Key": "idem-memo-review-1" }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/report-packages`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Idempotency-Key": "idem-memo-report-1" }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/ai-commentary`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Idempotency-Key": "idem-memo-ai-1" }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(`${expectedBaseUrl}/proposals/pp_1/memos/lineage`);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/replay-evidence`
     );
   });
 });
