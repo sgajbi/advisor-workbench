@@ -14,7 +14,7 @@ export default async function ProposalSimulatePage({
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
       activeScreen="proposal"
-      activeMode="draft"
+      activeMode="proposal-builder"
       title="Proposal Workspace"
       subtitle="Build and test an advisor-use proposal before routing it for review."
     >

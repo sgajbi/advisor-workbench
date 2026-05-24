@@ -14,8 +14,8 @@ export default async function RecommendationsAppPage({
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
       activeScreen="advisory"
-      activeMode="advisory"
-      title="Advisory Workspace"
+      activeMode="overview"
+      title="Advisory Overview"
       subtitle="Review live advisory proposals, readiness gates, and next actions in the portfolio workflow."
     >
       <ProposalListView

@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
-import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
+import {
+  buildAdvisoryJourneyModeItems,
+  type AdvisoryJourneyMode,
+} from "../advisory-journey-navigation";
 import {
   AppPageShell,
   MainWithSideRailLayout,
@@ -24,14 +27,14 @@ export function resolveProposalPortfolioId(portfolioId?: string | null): string 
 export default function ProposalWorkspaceShell({
   portfolioId,
   activeScreen,
-  activeMode = activeScreen === "advisory" ? "advisory" : "queue",
+  activeMode = activeScreen === "advisory" ? "overview" : "approval-queue",
   title,
   subtitle,
   children,
 }: {
   portfolioId: string;
   activeScreen: Extract<PortfolioScreenNavigationKey, "proposal" | "advisory">;
-  activeMode?: "queue" | "draft" | "advisory";
+  activeMode?: AdvisoryJourneyMode;
   title: string;
   subtitle: string;
   children: ReactNode;
@@ -49,8 +52,8 @@ export default function ProposalWorkspaceShell({
             <PortfolioScreenRail
               portfolioId={portfolioId}
               activeScreen={activeScreen}
-              modeItems={buildProposalModeItems(portfolioId, activeMode)}
-              modeNavigationLabel="Proposal and advisory workflow navigation"
+              modeItems={buildAdvisoryJourneyModeItems(portfolioId, activeMode)}
+              modeNavigationLabel="Advisory lifecycle navigation"
             />
           }
           main={
@@ -74,36 +77,6 @@ export default function ProposalWorkspaceShell({
       </WorkbenchPageContainer>
     </AppPageShell>
   );
-}
-
-function buildProposalModeItems(
-  portfolioId: string,
-  activeMode: "queue" | "draft" | "advisory"
-): PortfolioScreenRailModeItem[] {
-  const portfolioQuery = `portfolioId=${encodeURIComponent(portfolioId)}`;
-  return [
-    {
-      key: "proposal-queue",
-      label: "Proposal Queue",
-      detail: "Drafts and workflow state",
-      active: activeMode === "queue",
-      href: `/proposals?${portfolioQuery}`,
-    },
-    {
-      key: "proposal-draft",
-      label: "Create Draft",
-      detail: "Simulate and save proposal",
-      active: activeMode === "draft",
-      href: `/proposals/simulate?${portfolioQuery}`,
-    },
-    {
-      key: "advisory-queue",
-      label: "Advisory Queue",
-      detail: "Advisor next actions",
-      active: activeMode === "advisory",
-      href: `/recommendations?${portfolioQuery}`,
-    },
-  ];
 }
 
 function ProposalWorkflowContextRail({
