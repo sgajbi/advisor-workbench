@@ -24,12 +24,14 @@ export function resolveProposalPortfolioId(portfolioId?: string | null): string 
 export default function ProposalWorkspaceShell({
   portfolioId,
   activeScreen,
+  activeMode = activeScreen === "advisory" ? "advisory" : "queue",
   title,
   subtitle,
   children,
 }: {
   portfolioId: string;
   activeScreen: Extract<PortfolioScreenNavigationKey, "proposal" | "advisory">;
+  activeMode?: "queue" | "draft" | "advisory";
   title: string;
   subtitle: string;
   children: ReactNode;
@@ -47,7 +49,7 @@ export default function ProposalWorkspaceShell({
             <PortfolioScreenRail
               portfolioId={portfolioId}
               activeScreen={activeScreen}
-              modeItems={buildProposalModeItems(portfolioId, activeScreen)}
+              modeItems={buildProposalModeItems(portfolioId, activeMode)}
               modeNavigationLabel="Proposal and advisory workflow navigation"
             />
           }
@@ -76,7 +78,7 @@ export default function ProposalWorkspaceShell({
 
 function buildProposalModeItems(
   portfolioId: string,
-  activeScreen: Extract<PortfolioScreenNavigationKey, "proposal" | "advisory">
+  activeMode: "queue" | "draft" | "advisory"
 ): PortfolioScreenRailModeItem[] {
   const portfolioQuery = `portfolioId=${encodeURIComponent(portfolioId)}`;
   return [
@@ -84,21 +86,21 @@ function buildProposalModeItems(
       key: "proposal-queue",
       label: "Proposal Queue",
       detail: "Drafts and workflow state",
-      active: activeScreen === "proposal",
+      active: activeMode === "queue",
       href: `/proposals?${portfolioQuery}`,
     },
     {
       key: "proposal-draft",
       label: "Create Draft",
       detail: "Simulate and save proposal",
-      active: false,
+      active: activeMode === "draft",
       href: `/proposals/simulate?${portfolioQuery}`,
     },
     {
       key: "advisory-queue",
       label: "Advisory Queue",
       detail: "Advisor next actions",
-      active: activeScreen === "advisory",
+      active: activeMode === "advisory",
       href: `/recommendations?${portfolioQuery}`,
     },
   ];

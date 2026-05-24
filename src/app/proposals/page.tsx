@@ -14,6 +14,7 @@ export default async function ProposalsPage({
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
       activeScreen="proposal"
+      activeMode="queue"
       title="Proposal Workspace"
       subtitle="Manage proposal drafts, lifecycle posture, and advisor-ready next actions."
     >

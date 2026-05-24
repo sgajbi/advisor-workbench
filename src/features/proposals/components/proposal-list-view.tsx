@@ -157,12 +157,12 @@ export default function ProposalListView({
           />
           <TextField
             size="small"
-            label="Created By"
+            label="Advisor"
             value={createdByFilter}
             onChange={(event) => {
               setCreatedByFilter(event.target.value);
             }}
-            placeholder="advisor id"
+            placeholder="advisor"
             sx={{ minWidth: { md: 200 } }}
           />
           <TextField
