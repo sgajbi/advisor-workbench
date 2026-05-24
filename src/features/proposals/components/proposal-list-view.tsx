@@ -127,7 +127,13 @@ export default function ProposalListView({
           ))}
         </div>
 
-        <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ mb: 1 }}
+        >
           <TextField
             select
             size="small"
@@ -136,7 +142,7 @@ export default function ProposalListView({
             onChange={(event) => {
               setStateFilter(event.target.value);
             }}
-            sx={{ minWidth: { md: 180 } }}
+            sx={{ flex: "1 1 160px", minWidth: 0 }}
           >
             <MenuItem value="">All</MenuItem>
             {PROPOSAL_STAGES.map((stage) => (
@@ -153,7 +159,7 @@ export default function ProposalListView({
               setPortfolioFilter(event.target.value);
             }}
             placeholder="portfolio id"
-            sx={{ minWidth: { md: 220 } }}
+            sx={{ flex: "1 1 190px", minWidth: 0 }}
           />
           <TextField
             size="small"
@@ -163,7 +169,7 @@ export default function ProposalListView({
               setCreatedByFilter(event.target.value);
             }}
             placeholder="advisor"
-            sx={{ minWidth: { md: 200 } }}
+            sx={{ flex: "1 1 170px", minWidth: 0 }}
           />
           <TextField
             size="small"
@@ -173,7 +179,7 @@ export default function ProposalListView({
               setSearchText(event.target.value);
             }}
             placeholder="proposal id, portfolio, title, state"
-            sx={{ minWidth: { md: 360 } }}
+            sx={{ flex: "2 1 240px", minWidth: 0 }}
           />
         </Stack>
 
