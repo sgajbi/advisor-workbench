@@ -24,17 +24,15 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/features/proposals/components/proposal-list-view", () => ({
+vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
   default: ({
-    title,
-    initialPortfolioId,
+    portfolioId,
   }: {
-    title?: string;
-    initialPortfolioId?: string;
+    portfolioId: string;
   }) => (
     <section>
-      <h1>{title}</h1>
-      <p>{initialPortfolioId ?? "no portfolio selected"}</p>
+      <h2>Advisory Overview</h2>
+      <p>{portfolioId}</p>
     </section>
   ),
 }));
@@ -180,15 +178,18 @@ describe("app route entrypoints", () => {
       })
     );
 
-    expect(screen.getByRole("heading", { name: "Advisory Workspace" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Advisory Queue" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Advisory Overview" }).length).toBeGreaterThan(
+      0
+    );
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
   });
 
   it("mounts recommendations without leaving the advisory route when no portfolio is selected", async () => {
     render(await RecommendationsAppPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole("heading", { name: "Advisory Workspace" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Advisory Overview" }).length).toBeGreaterThan(
+      0
+    );
     expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
   });
 });

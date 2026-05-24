@@ -1,4 +1,4 @@
-import ProposalListView from "@/features/proposals/components/proposal-list-view";
+import AdvisoryOverviewWorkspace from "@/features/proposals/components/advisory-overview-workspace";
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
@@ -18,12 +18,7 @@ export default async function RecommendationsAppPage({
       title="Advisory Overview"
       subtitle="Review live advisory proposals, readiness gates, and next actions in the portfolio workflow."
     >
-      <ProposalListView
-        initialPortfolioId={portfolioId}
-        title="Advisory Queue"
-        subtitle="Prioritize advisor actions by workflow stage without leaving the front-office workbench."
-        createDraftHref={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
-      />
+      <AdvisoryOverviewWorkspace portfolioId={portfolioId} />
     </ProposalWorkspaceShell>
   );
 }
