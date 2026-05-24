@@ -4,6 +4,7 @@ import type {
   ProposalMemoReportPackageRequest,
   ProposalMemoReviewRequest,
 } from "./types";
+import { buildProposalActionIdempotencyKey } from "./proposal-workflow-copy";
 
 export const DEFAULT_MEMO_ADVISOR_ID = "advisor_1";
 
@@ -14,6 +15,24 @@ export const ADVISOR_MEMO_COMMENTARY_SECTIONS = [
 
 export function resolveMemoAdvisorId(advisorId: string): string {
   return advisorId.trim() || DEFAULT_MEMO_ADVISOR_ID;
+}
+
+export type MemoActionIdempotencyOperation =
+  | "create"
+  | "review"
+  | "report-package"
+  | "advisor-commentary";
+
+export function buildMemoActionIdempotencyKey({
+  proposalId,
+  versionNo,
+  operation,
+}: {
+  proposalId: string;
+  versionNo: number;
+  operation: MemoActionIdempotencyOperation;
+}): string {
+  return buildProposalActionIdempotencyKey(proposalId, `memo-${operation}-${versionNo}`);
 }
 
 export function buildCreateMemoPayload(advisorId: string): ProposalMemoCreateRequest {

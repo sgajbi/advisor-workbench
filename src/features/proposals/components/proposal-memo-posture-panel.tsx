@@ -18,10 +18,10 @@ import {
   buildAdvisorCommentaryPayload,
   buildApproveMemoPayload,
   buildCreateMemoPayload,
+  buildMemoActionIdempotencyKey,
   buildMemoReportPackagePayload,
   DEFAULT_MEMO_ADVISOR_ID,
 } from "../proposal-memo-action-payloads";
-import { buildProposalActionIdempotencyKey } from "../proposal-workflow-copy";
 import {
   buildProposalMemoPostureModel,
   PROPOSAL_MEMO_PROJECTION_AUDIENCES,
@@ -96,7 +96,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         buildCreateMemoPayload(advisorId),
-        buildProposalActionIdempotencyKey(proposalId, `memo-create-${versionNo}`)
+        buildMemoActionIdempotencyKey({ proposalId, versionNo, operation: "create" })
       );
       await refreshMemoState();
     } catch (error) {
@@ -117,7 +117,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         buildApproveMemoPayload({ advisorId, memoHash, reviewReason }),
-        buildProposalActionIdempotencyKey(proposalId, `memo-review-${versionNo}`)
+        buildMemoActionIdempotencyKey({ proposalId, versionNo, operation: "review" })
       );
       setReviewReason("");
       await refreshMemoState();
@@ -139,7 +139,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         buildMemoReportPackagePayload({ advisorId, memoHash }),
-        buildProposalActionIdempotencyKey(proposalId, `memo-report-package-${versionNo}`)
+        buildMemoActionIdempotencyKey({ proposalId, versionNo, operation: "report-package" })
       );
       await refreshMemoState();
     } catch (error) {
@@ -160,7 +160,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         buildAdvisorCommentaryPayload({ advisorId, memoHash }),
-        buildProposalActionIdempotencyKey(proposalId, `memo-ai-commentary-${versionNo}`)
+        buildMemoActionIdempotencyKey({ proposalId, versionNo, operation: "advisor-commentary" })
       );
       await refreshMemoState();
     } catch (error) {

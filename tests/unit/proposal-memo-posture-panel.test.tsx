@@ -164,7 +164,7 @@ describe("ProposalMemoPosturePanel", () => {
           source_memo_hash: "sha256:memo-001",
           requested_sections: ["EXECUTIVE_SUMMARY", "LIMITATIONS_AND_DISCLOSURES"],
         }),
-        expect.stringContaining("ui-memo-ai-commentary-2-pp_1"),
+        expect.stringContaining("ui-memo-advisor-commentary-2-pp_1"),
       );
     });
   });

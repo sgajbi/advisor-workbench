@@ -4,6 +4,7 @@ import {
   buildAdvisorCommentaryPayload,
   buildApproveMemoPayload,
   buildCreateMemoPayload,
+  buildMemoActionIdempotencyKey,
   buildMemoReportPackagePayload,
   resolveMemoAdvisorId,
 } from "../../src/features/proposals/proposal-memo-action-payloads";
@@ -12,6 +13,17 @@ describe("proposal memo action payloads", () => {
   it("normalizes advisor identity with a governed fallback", () => {
     expect(resolveMemoAdvisorId(" advisor_9 ")).toBe("advisor_9");
     expect(resolveMemoAdvisorId("   ")).toBe("advisor_1");
+  });
+
+  it("builds domain-named idempotency keys for memo actions", () => {
+    const key = buildMemoActionIdempotencyKey({
+      proposalId: "pp_1",
+      versionNo: 2,
+      operation: "advisor-commentary",
+    });
+
+    expect(key).toContain("ui-memo-advisor-commentary-2-pp_1");
+    expect(key).not.toContain("ai-commentary");
   });
 
   it("builds advisor-use memo creation and review payloads without client release", () => {
