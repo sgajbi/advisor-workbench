@@ -627,7 +627,8 @@ export async function validateConstructionAlternativesPanel(
   await expect(constructionPanel.getByText("Alternatives Comparison")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(constructionPanel.getByText("Recommended Path")).toBeVisible({
+  const constructionSummary = constructionPanel.locator(".construction-alternatives-summary");
+  await expect(constructionSummary.getByText("Recommended Path", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.construction_alternatives");
@@ -645,6 +646,7 @@ export async function validatePmOperatingQualityPanel(
   await expect(qualityPanel.getByRole("heading", { name: "PM Operating Quality" })).toBeVisible({
     timeout: timeoutMs,
   });
+  const qualityStatusStrip = qualityPanel.locator(".pm-quality-status-strip");
   for (const label of [
     "Policy",
     "Latest Score Run",
@@ -652,7 +654,7 @@ export async function validatePmOperatingQualityPanel(
     "Summary Invocation",
     "Authority",
   ]) {
-    await expect(qualityPanel.getByText(label, { exact: true })).toBeVisible({
+    await expect(qualityStatusStrip.getByText(label, { exact: true })).toBeVisible({
       timeout: timeoutMs,
     });
   }
@@ -665,7 +667,10 @@ export async function validatePmOperatingQualityPanel(
   await expect(page.getByLabel("PM operating quality summary-invocation readiness")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("PM operating quality persisted summary-invocation evidence")).toBeVisible({
+  await expect(qualityPanel.getByText("Summary Invocation Detail", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM operating quality summary invocations")).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.pm_operating_quality");
