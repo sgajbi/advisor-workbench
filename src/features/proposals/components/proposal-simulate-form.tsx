@@ -27,6 +27,13 @@ import {
   type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
 import type { AdvisoryWorkspaceEnvelopeResponse, ProposalSimulateResponse } from "../types";
+import {
+  extractAdvisoryWorkspaceId,
+  extractEvaluationSummary,
+  extractHandoffProposalId,
+  extractLatestProposalResult,
+  recordValue,
+} from "../advisory-workspace-response";
 import { SectionBlock } from "@/design-system";
 import {
   AdviseEvaluationSummaryPanel,
@@ -70,16 +77,6 @@ function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: 
   return highlights.slice(0, 8);
 }
 
-function recordValue(source: unknown): Record<string, unknown> | null {
-  return source && typeof source === "object" && !Array.isArray(source)
-    ? (source as Record<string, unknown>)
-    : null;
-}
-
-function stringValue(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
-}
-
 function decimalString(value: number, digits: number): string {
   return value.toFixed(digits);
 }
@@ -87,35 +84,6 @@ function decimalString(value: number, digits: number): string {
 function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
   const amount = Math.abs(item.amount || 0);
   return decimalString(item.direction === "OUT" ? -amount : amount, 2);
-}
-
-function extractWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse): Record<string, unknown> {
-  const data = recordValue(envelope.data) ?? {};
-  return recordValue(data.workspace) ?? data;
-}
-
-function extractWorkspaceId(envelope: AdvisoryWorkspaceEnvelopeResponse): string | null {
-  return stringValue(extractWorkspace(envelope).workspace_id);
-}
-
-function extractLatestProposalResult(
-  envelope: AdvisoryWorkspaceEnvelopeResponse
-): Record<string, unknown> | null {
-  return recordValue(extractWorkspace(envelope).latest_proposal_result);
-}
-
-function extractEvaluationSummary(
-  envelope: AdvisoryWorkspaceEnvelopeResponse | null
-): Record<string, unknown> | null {
-  return envelope ? recordValue(extractWorkspace(envelope).evaluation_summary) : null;
-}
-
-function extractHandoffProposalId(envelope: AdvisoryWorkspaceEnvelopeResponse): string | null {
-  const data = recordValue(envelope.data) ?? {};
-  const proposalEnvelope = recordValue(data.proposal);
-  const proposal = recordValue(proposalEnvelope?.proposal) ?? recordValue(proposalEnvelope?.data)?.proposal;
-  const proposalRecord = recordValue(proposal);
-  return stringValue(proposalRecord?.proposal_id);
 }
 
 function isCashPosition(position: PortfolioPositionView): boolean {
@@ -269,7 +237,7 @@ export default function ProposalSimulateForm({
         },
       },
     });
-    const workspaceId = extractWorkspaceId(workspaceResponse);
+    const workspaceId = extractAdvisoryWorkspaceId(workspaceResponse);
     if (!workspaceId) {
       throw new Error("Advisory workspace was created without a workspace identifier.");
     }
@@ -345,7 +313,7 @@ export default function ProposalSimulateForm({
     setSavingDraft(true);
     try {
       const evaluatedWorkspace = await createEvaluatedWorkspace(values);
-      const workspaceId = extractWorkspaceId(evaluatedWorkspace);
+      const workspaceId = extractAdvisoryWorkspaceId(evaluatedWorkspace);
       if (!workspaceId) {
         throw new Error("Advisory workspace cannot be handed off without a workspace identifier.");
       }
