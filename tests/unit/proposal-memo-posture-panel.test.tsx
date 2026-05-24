@@ -91,17 +91,17 @@ describe("ProposalMemoPosturePanel", () => {
     });
   });
 
-  it("renders Gateway memo posture and keeps client-ready actions absent", async () => {
+  it("renders advisor memo posture and keeps client-ready actions absent", async () => {
     renderPanel();
 
     expect(
-      screen.getByRole("heading", { name: "Advisor Memo Product Surface" }),
+      screen.getByRole("heading", { name: "Advisor Memo And Evidence Pack" }),
     ).toBeInTheDocument();
     expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
     expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
     expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
     expect(await screen.findByText(/archive:\/\/memo\/report\/1/)).toBeInTheDocument();
-    expect(screen.getByText(/Workbench uses Gateway memo endpoints only/)).toBeInTheDocument();
+    expect(screen.getByText(/Advisor-use memo actions preserve source evidence/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client-ready release/i })).not.toBeInTheDocument();
   });
@@ -166,7 +166,7 @@ describe("ProposalMemoPosturePanel", () => {
     });
   });
 
-  it("shows degraded Gateway posture without inventing readiness", async () => {
+  it("shows degraded memo posture without inventing readiness", async () => {
     vi.mocked(getProposalMemo).mockRejectedValue(new Error("Proposal memo fetch failed (409)"));
     vi.mocked(getProposalMemoProjection).mockResolvedValue({
       projection: {
@@ -179,7 +179,7 @@ describe("ProposalMemoPosturePanel", () => {
     renderPanel();
 
     expect(
-      await screen.findByText(/Memo posture is degraded or blocked by Gateway/),
+      await screen.findByText(/Memo posture is degraded or blocked by source advisory evidence/),
     ).toBeInTheDocument();
     expect(await screen.findByText("DEGRADED_SOURCE_EVIDENCE")).toBeInTheDocument();
     expect(screen.queryByText(/ready for client/i)).not.toBeInTheDocument();

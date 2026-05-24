@@ -15,6 +15,11 @@ import {
   reviewProposalMemo,
 } from "../api";
 import { buildProposalActionIdempotencyKey } from "../proposal-workflow-copy";
+import {
+  buildProposalMemoPostureModel,
+  PROPOSAL_MEMO_PROJECTION_AUDIENCES,
+  type ProposalMemoProjectionAudience,
+} from "../proposal-memo-posture-view-model";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { SectionBlock, SemanticBadge, Text } from "@/design-system";
 
@@ -23,40 +28,11 @@ type Props = {
   currentVersionNo?: number | null;
 };
 
-const projectionAudiences = ["ADVISOR", "COMPLIANCE", "OPERATIONS", "CLIENT_DRAFT"] as const;
-
-function textValue(value: unknown, fallback = "Not reported"): string {
-  if (typeof value === "string" && value.trim().length > 0) {
-    return value;
-  }
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  if (Array.isArray(value) && value.length > 0) {
-    return value.map((item) => String(item)).join(", ");
-  }
-  return fallback;
-}
-
-function recordValue(source: Record<string, unknown> | undefined, key: string): unknown {
-  return source?.[key];
-}
-
-function firstString(source: Record<string, unknown> | undefined, keys: string[]): string | null {
-  for (const key of keys) {
-    const value = source?.[key];
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value;
-    }
-  }
-  return null;
-}
-
 export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo }: Props) {
   const [versionNo, setVersionNo] = useState(currentVersionNo ?? 1);
   const [actorId, setActorId] = useState("advisor_1");
   const [reviewReason, setReviewReason] = useState("");
-  const [audience, setAudience] = useState<(typeof projectionAudiences)[number]>("ADVISOR");
+  const [audience, setAudience] = useState<ProposalMemoProjectionAudience>("ADVISOR");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -81,22 +57,18 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
     ...workbenchStrictQueryDefaults,
   });
 
-  const memoHash = useMemo(() => {
-    const memo = memoQuery.data?.memo as Record<string, unknown> | undefined;
-    return (
-      firstString(memoQuery.data, ["memo_hash", "source_memo_hash"]) ??
-      firstString(memo, ["memo_hash", "source_memo_hash"])
-    );
-  }, [memoQuery.data]);
-  const reviewPosture = memoQuery.data?.review_posture as Record<string, unknown> | undefined;
-  const reportPosture = memoQuery.data?.report_package_posture as Record<string, unknown> | undefined;
-  const aiPosture = memoQuery.data?.ai_commentary_posture as Record<string, unknown> | undefined;
-  const readPosture = memoQuery.data?.read_posture as Record<string, unknown> | undefined;
-  const projection = projectionQuery.data?.projection;
-  const projectionPosture = projectionQuery.data?.projection_posture;
-  const latestMemo = lineageQuery.data?.memos?.[0];
-  const replayHashes = replayQuery.data?.hashes;
-  const replaySupportability = replayQuery.data?.supportability;
+  const memoPosture = useMemo(
+    () =>
+      buildProposalMemoPostureModel({
+        lineageData: lineageQuery.data,
+        memoData: memoQuery.data,
+        projectionData: projectionQuery.data,
+        replayData: replayQuery.data,
+        selectedAudience: audience,
+      }),
+    [audience, lineageQuery.data, memoQuery.data, projectionQuery.data, replayQuery.data],
+  );
+  const memoHash = memoPosture.memoHash;
 
   async function refreshMemoState() {
     await Promise.all([
@@ -210,27 +182,21 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
     }
   }
 
-  const hasMemo = Boolean(memoQuery.data?.memo_id || memoHash);
-  const supportability =
-    firstString(readPosture, ["supportability", "status"]) ??
-    firstString(projectionPosture, ["supportability", "status"]) ??
-    firstString(replaySupportability, ["supportability", "status"]);
-
   return (
     <SectionBlock
       className="proposal-memo-posture-panel"
-      title="Advisor Memo Product Surface"
-      subtitle="Memo review, projection, report-package, archive-reference, replay, and AI-commentary posture from the Gateway advisory contract."
+      title="Advisor Memo And Evidence Pack"
+      subtitle="Review memo readiness, audience projection, report package, replay, and commentary posture before client discussion."
       actions={
-        <SemanticBadge tone={hasMemo ? "success" : "warn"}>
-          {textValue(memoQuery.data?.memo_status, hasMemo ? "Memo Available" : "Memo Pending")}
+        <SemanticBadge tone={memoPosture.hasMemo ? "success" : "warn"}>
+          {memoPosture.statusLabel}
         </SemanticBadge>
       }
     >
       {memoQuery.error || projectionQuery.error || lineageQuery.error || replayQuery.error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Memo posture is degraded or blocked by Gateway. Workbench keeps source-owned memo facts,
-          supportability, and readiness unchanged.
+          Memo posture is degraded or blocked by source advisory evidence. Existing memo facts,
+          supportability, and readiness remain unchanged.
         </Alert>
       ) : null}
       {actionError ? (
@@ -242,54 +208,38 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
         <div className="analytics-stat">
           <Text variant="label">Review Posture</Text>
-          <Text variant="metricValueCompact">
-            {textValue(recordValue(reviewPosture, "advisor_use"), "Pending")}
-          </Text>
+          <Text variant="metricValueCompact">{memoPosture.reviewPostureLabel}</Text>
           <Text variant="secondary">Memo hash: {memoHash ?? "Not available"}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Projection Audience</Text>
-          <Text variant="metricValueCompact">
-            {textValue(recordValue(projection, "audience"), audience)}
-          </Text>
+          <Text variant="metricValueCompact">{memoPosture.projectionAudienceLabel}</Text>
           <Text variant="secondary">
-            Client draft: {textValue(recordValue(projection, "client_ready_publication"), "Blocked")}
+            Client draft: {memoPosture.clientDraftPublicationLabel}
           </Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Supportability</Text>
-          <Text variant="metricValueCompact">{supportability ?? "Not reported"}</Text>
-          <Text variant="secondary">
-            Replay hash: {textValue(recordValue(replayHashes, "memo_hash"), "Not available")}
-          </Text>
+          <Text variant="metricValueCompact">{memoPosture.supportabilityLabel}</Text>
+          <Text variant="secondary">Replay hash: {memoPosture.replayHashLabel}</Text>
         </div>
       </Stack>
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
         <div className="analytics-stat">
           <Text variant="label">Report Package</Text>
-          <Text variant="metricValueCompact">
-            {textValue(recordValue(reportPosture, "status"), "Not requested")}
-          </Text>
-          <Text variant="secondary">
-            Archive refs: {textValue(recordValue(reportPosture, "archive_refs"), "None")}
-          </Text>
+          <Text variant="metricValueCompact">{memoPosture.reportPackageStatusLabel}</Text>
+          <Text variant="secondary">Archive refs: {memoPosture.reportArchiveRefsLabel}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">AI Commentary</Text>
-          <Text variant="metricValueCompact">
-            {textValue(recordValue(aiPosture, "status"), "Not requested")}
-          </Text>
-          <Text variant="secondary">
-            Authority: {textValue(recordValue(aiPosture, "authority"), "Non-authoritative")}
-          </Text>
+          <Text variant="metricValueCompact">{memoPosture.aiCommentaryStatusLabel}</Text>
+          <Text variant="secondary">Authority: {memoPosture.aiAuthorityLabel}</Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Lineage</Text>
-          <Text variant="metricValueCompact">
-            {textValue(latestMemo?.memo_status, "No lineage memo")}
-          </Text>
-          <Text variant="secondary">{latestMemo?.memo_hash ?? "No lineage hash"}</Text>
+          <Text variant="metricValueCompact">{memoPosture.lineageStatusLabel}</Text>
+          <Text variant="secondary">{memoPosture.lineageHashLabel}</Text>
         </div>
       </Stack>
 
@@ -322,11 +272,9 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           <select
             className="input"
             value={audience}
-            onChange={(event) =>
-              setAudience(event.target.value as (typeof projectionAudiences)[number])
-            }
+            onChange={(event) => setAudience(event.target.value as ProposalMemoProjectionAudience)}
           >
-            {projectionAudiences.map((item) => (
+            {PROPOSAL_MEMO_PROJECTION_AUDIENCES.map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
@@ -376,9 +324,9 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       </Stack>
 
       <Text variant="secondary">
-        Workbench uses Gateway memo endpoints only. It does not infer memo facts, promote
-        client-ready release, render documents, synthesize archive references, or treat AI
-        commentary as authoritative memo evidence.
+        Advisor-use memo actions preserve source evidence and do not promote client-ready release,
+        render documents, synthesize archive references, or treat AI commentary as authoritative
+        memo evidence.
       </Text>
     </SectionBlock>
   );
