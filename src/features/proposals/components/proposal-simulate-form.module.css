@@ -1,11 +1,12 @@
 .form {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .summaryStrip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 8px;
 }
 
@@ -23,7 +24,8 @@
 
 .summaryStrip span,
 .resultGrid span,
-.outputGrid span {
+.outputGrid span,
+.impactSummaryGrid span {
   color: #5f6670;
   font-size: 11px;
   font-weight: 700;
@@ -34,7 +36,8 @@
 
 .summaryStrip strong,
 .resultGrid strong,
-.outputGrid strong {
+.outputGrid strong,
+.impactSummaryGrid strong {
   overflow-wrap: anywhere;
   color: #131b2e;
   font-size: 16px;
@@ -43,8 +46,8 @@
 
 .workspaceGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
   align-items: start;
 }
 
@@ -68,6 +71,7 @@
 
 .panelHeader {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
@@ -105,8 +109,14 @@
 
 .inputGrid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
+}
+
+.inputGrid :global(.MuiFormControl-root),
+.cashRow :global(.MuiFormControl-root),
+.tradeRow :global(.MuiFormControl-root) {
+  min-width: 0;
 }
 
 .intentRows {
@@ -122,19 +132,107 @@
 }
 
 .cashRow {
-  grid-template-columns: 120px 120px 140px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(100px, 0.6fr) minmax(130px, 0.8fr) minmax(220px, 1fr) auto;
 }
 
 .tradeRow {
-  grid-template-columns: 120px minmax(0, 1fr) 150px auto;
+  grid-template-columns: minmax(100px, 0.55fr) minmax(190px, 1.15fr) minmax(140px, 0.85fr) minmax(120px, 0.7fr) minmax(140px, 0.8fr) auto;
+}
+
+.positionsTableWrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.positionsTable {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.positionsTable th {
+  padding: 8px 10px;
+  border-bottom: 1px solid #c6c6cd;
+  background: #f2f4f6;
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 15px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.positionsTable td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e0e3e5;
+  color: #191c1e;
+  line-height: 18px;
+  vertical-align: top;
+}
+
+.positionsTable td:first-child strong {
+  display: block;
+  color: #191c1e;
+  font-size: 13px;
+}
+
+.positionsTable td:first-child span {
+  display: block;
+  margin-top: 2px;
+  color: #5f6670;
+  font-size: 11px;
+}
+
+.positionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emptyBookNotice {
+  padding: 14px;
+  border: 1px dashed #c6c6cd;
+  border-radius: 4px;
+  background: #fbfcfd;
+  color: #45464d;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.impactSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.impactSummaryGrid > div {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid #d6dbe0;
+  border-radius: 4px;
+  background: #fbfcfd;
+}
+
+.positive {
+  color: #047857 !important;
+  font-weight: 700;
+}
+
+.negative {
+  color: #b91c1c !important;
+  font-weight: 700;
 }
 
 .actionRail {
-  position: sticky;
-  top: 92px;
+  position: static;
 }
 
 .actionPanel {
+  grid-template-columns: minmax(220px, 0.9fr) minmax(240px, 1fr) minmax(220px, 0.8fr);
+  align-items: start;
   border-left: 3px solid #131b2e;
   background:
     linear-gradient(180deg, #ffffff, #f8fafc);
@@ -148,6 +246,10 @@
   color: #45464d;
   font-size: 13px;
   line-height: 18px;
+}
+
+.actionButtons {
+  min-width: 0;
 }
 
 .message {
@@ -183,20 +285,20 @@
 }
 
 @media (max-width: 1180px) {
-  .workspaceGrid {
+  .actionPanel {
     grid-template-columns: 1fr;
   }
 
-  .actionRail {
-    position: static;
+  .cashRow,
+  .tradeRow {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 }
 
 @media (max-width: 900px) {
-  .summaryStrip,
-  .inputGrid,
   .resultGrid,
-  .outputGrid {
+  .outputGrid,
+  .impactSummaryGrid {
     grid-template-columns: 1fr;
   }
 

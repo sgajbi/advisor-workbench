@@ -3,17 +3,32 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, MenuItem, Stack, TextField } from "@mui/material";
 
-import { createProposal, simulateProposal } from "../api";
+import { getPortfolioBook, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
+import type { PortfolioPositionView } from "@/apps/portfolio/types";
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
-  buildSimulatePayload,
-  CashFlowIntentInput,
-  TradeIntentInput,
-} from "../simulation-payload";
-import { ProposalSimulateResponse } from "../types";
+  applyAdvisoryWorkspaceDraftAction,
+  createAdvisoryWorkspace,
+  evaluateAdvisoryWorkspace,
+  handoffAdvisoryWorkspace,
+} from "../api";
+import {
+  buildProposalDraftPreview,
+  createCashFlowIntent,
+  createTradeIntent,
+  createTradeIntentFromPosition,
+  formatCurrencyValue,
+  formatPercentValue,
+  formatUnitValue,
+  type ProposalDraftCashFlowIntent,
+  type ProposalDraftTradeIntent,
+} from "../proposal-draft-preview";
+import type { AdvisoryWorkspaceEnvelopeResponse, ProposalSimulateResponse } from "../types";
 import { SectionBlock, Text } from "@/design-system";
 import styles from "./proposal-simulate-form.module.css";
 
@@ -22,38 +37,16 @@ const schema = z.object({
   createdBy: z.string().min(1, "Advisor identity is required"),
   proposalTitle: z.string().min(1, "Advisory draft title is required"),
   portfolioId: z.string().min(1, "Portfolio ID is required"),
+  asOfDate: z.string().min(10, "As-of date is required"),
+  mandateId: z.string().optional(),
   baseCurrency: z.string().min(3, "Base currency is required"),
   cashAmount: z.number().positive("Investable cash must be greater than 0"),
 });
 
 type FormInput = z.infer<typeof schema>;
 
-type CashFlowIntentRow = CashFlowIntentInput & {
-  id: string;
-};
-
-type TradeIntentRow = TradeIntentInput & {
-  id: string;
-};
-
-function createCashFlowIntent(index: number, baseCurrency: string): CashFlowIntentRow {
-  return {
-    id: `cash_${index}`,
-    currency: baseCurrency,
-    amount: 0,
-    direction: "IN",
-    description: "",
-  };
-}
-
-function createTradeIntent(index: number): TradeIntentRow {
-  return {
-    id: `trade_${index}`,
-    side: "BUY",
-    instrumentId: "",
-    quantity: 0,
-  };
-}
+const DEFAULT_ADVISORY_AS_OF_DATE = "2026-04-10";
+const DEFAULT_CANONICAL_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
 
 function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: string; value: string }> {
   const highlights: Array<{ label: string; value: string }> = [];
@@ -71,8 +64,56 @@ function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: 
   return highlights.slice(0, 8);
 }
 
+function recordValue(source: unknown): Record<string, unknown> | null {
+  return source && typeof source === "object" && !Array.isArray(source)
+    ? (source as Record<string, unknown>)
+    : null;
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function decimalString(value: number, digits: number): string {
+  return value.toFixed(digits);
+}
+
+function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
+  const amount = Math.abs(item.amount || 0);
+  return decimalString(item.direction === "OUT" ? -amount : amount, 2);
+}
+
+function extractWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse): Record<string, unknown> {
+  const data = recordValue(envelope.data) ?? {};
+  return recordValue(data.workspace) ?? data;
+}
+
+function extractWorkspaceId(envelope: AdvisoryWorkspaceEnvelopeResponse): string | null {
+  return stringValue(extractWorkspace(envelope).workspace_id);
+}
+
+function extractLatestProposalResult(
+  envelope: AdvisoryWorkspaceEnvelopeResponse
+): Record<string, unknown> | null {
+  return recordValue(extractWorkspace(envelope).latest_proposal_result);
+}
+
+function extractEvaluationSummary(
+  envelope: AdvisoryWorkspaceEnvelopeResponse | null
+): Record<string, unknown> | null {
+  return envelope ? recordValue(extractWorkspace(envelope).evaluation_summary) : null;
+}
+
+function extractHandoffProposalId(envelope: AdvisoryWorkspaceEnvelopeResponse): string | null {
+  const data = recordValue(envelope.data) ?? {};
+  const proposalEnvelope = recordValue(data.proposal);
+  const proposal = recordValue(proposalEnvelope?.proposal) ?? recordValue(proposalEnvelope?.data)?.proposal;
+  const proposalRecord = recordValue(proposal);
+  return stringValue(proposalRecord?.proposal_id);
+}
+
 export default function ProposalSimulateForm({
-  initialPortfolioId = "DEMO_DPM_EUR_001",
+  initialPortfolioId = DEFAULT_CANONICAL_PORTFOLIO_ID,
 }: {
   initialPortfolioId?: string;
 }) {
@@ -90,30 +131,60 @@ export default function ProposalSimulateForm({
       createdBy: "advisor_1",
       proposalTitle: "Tactical rebalance proposal",
       portfolioId: initialPortfolioId,
+      asOfDate: DEFAULT_ADVISORY_AS_OF_DATE,
+      mandateId:
+        initialPortfolioId === "PB_SG_GLOBAL_BAL_001"
+          ? "MANDATE_PB_SG_GLOBAL_BAL_001"
+          : "",
       baseCurrency: "USD",
       cashAmount: 10000,
     },
   });
 
-  const [cashFlows, setCashFlows] = useState<CashFlowIntentRow[]>([
+  const [cashFlows, setCashFlows] = useState<ProposalDraftCashFlowIntent[]>([
     createCashFlowIntent(1, "USD"),
   ]);
-  const [trades, setTrades] = useState<TradeIntentRow[]>([createTradeIntent(1)]);
+  const [trades, setTrades] = useState<ProposalDraftTradeIntent[]>([createTradeIntent(1)]);
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
+  const [workspaceEnvelope, setWorkspaceEnvelope] =
+    useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
 
   const portfolioId = form.watch("portfolioId");
+  const asOfDate = form.watch("asOfDate");
   const baseCurrency = form.watch("baseCurrency");
   const cashAmount = form.watch("cashAmount");
+  const { data: portfolioBook, isLoading: positionsLoading } = useQuery({
+    queryKey: ["proposal-position-builder-book", portfolioId, baseCurrency],
+    queryFn: async () =>
+      await getPortfolioBook(portfolioId, {
+        reportingCurrency: baseCurrency || "USD",
+      }),
+    enabled: portfolioId.trim().length > 0,
+    ...workbenchStrictQueryDefaults,
+  });
+  const { data: portfolioShell } = useQuery({
+    queryKey: ["proposal-position-builder-shell", portfolioId],
+    queryFn: async () => await getPortfolioWorkspaceShell(portfolioId),
+    enabled: portfolioId.trim().length > 0,
+    ...workbenchStrictQueryDefaults,
+  });
+  const positions = useMemo(() => portfolioBook?.positions ?? [], [portfolioBook?.positions]);
+  const sourceCashAmount = portfolioShell?.summary?.total_cash_base ?? cashAmount ?? 0;
+  const draftPreview = useMemo(
+    () => buildProposalDraftPreview(positions, sourceCashAmount, cashFlows, trades),
+    [cashFlows, positions, sourceCashAmount, trades]
+  );
 
-  function updateCashFlow(id: string, patch: Partial<CashFlowIntentRow>) {
+  function updateCashFlow(id: string, patch: Partial<ProposalDraftCashFlowIntent>) {
     setCashFlows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
-  function updateTrade(id: string, patch: Partial<TradeIntentRow>) {
+  function updateTrade(id: string, patch: Partial<ProposalDraftTradeIntent>) {
     setTrades((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
@@ -123,6 +194,13 @@ export default function ProposalSimulateForm({
 
   function addTrade() {
     setTrades((current) => [...current, createTradeIntent(current.length + 1)]);
+  }
+
+  function addPositionTrade(position: PortfolioPositionView, side: "BUY" | "SELL") {
+    setTrades((current) => [
+      ...current,
+      createTradeIntentFromPosition(current.length + 1, position, side),
+    ]);
   }
 
   function netCashImpact(): string {
@@ -137,15 +215,97 @@ export default function ProposalSimulateForm({
     return trades.filter((item) => item.instrumentId.trim().length > 0 && item.quantity > 0).length;
   }
 
+  function validCashFlowRows(): ProposalDraftCashFlowIntent[] {
+    return cashFlows.filter((item) => item.currency.trim().length > 0 && item.amount > 0);
+  }
+
+  function validTradeRows(): ProposalDraftTradeIntent[] {
+    return trades.filter((item) => item.instrumentId.trim().length > 0 && item.quantity > 0);
+  }
+
+  function syncEvaluationFromWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse) {
+    setWorkspaceEnvelope(envelope);
+    const latestProposalResult = extractLatestProposalResult(envelope);
+    if (latestProposalResult) {
+      setResult({
+        correlation_id: envelope.correlation_id,
+        contract_version: envelope.contract_version,
+        data: latestProposalResult,
+      });
+    }
+  }
+
+  async function createEvaluatedWorkspace(values: FormInput): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+    const mandateId = values.mandateId?.trim();
+    const workspaceResponse = await createAdvisoryWorkspace({
+      body: {
+        workspace_name: values.proposalTitle,
+        created_by: values.createdBy,
+        input_mode: "stateful",
+        stateful_input: {
+          portfolio_id: values.portfolioId,
+          as_of: values.asOfDate,
+          ...(mandateId ? { mandate_id: mandateId } : {}),
+        },
+      },
+    });
+    const workspaceId = extractWorkspaceId(workspaceResponse);
+    if (!workspaceId) {
+      throw new Error("Advisory workspace was created without a workspace identifier.");
+    }
+
+    setActiveWorkspaceId(workspaceId);
+    let latestResponse = workspaceResponse;
+    let actionCount = 0;
+
+    for (const item of validCashFlowRows()) {
+      latestResponse = await applyAdvisoryWorkspaceDraftAction(workspaceId, {
+        body: {
+          actor_id: values.createdBy,
+          action_type: "ADD_CASH_FLOW",
+          cash_flow: {
+            intent_type: "CASH_FLOW",
+            currency: item.currency.toUpperCase(),
+            amount: signedCashAmount(item),
+            ...(item.description?.trim() ? { description: item.description.trim() } : {}),
+          },
+        },
+      });
+      actionCount += 1;
+    }
+
+    for (const item of validTradeRows()) {
+      latestResponse = await applyAdvisoryWorkspaceDraftAction(workspaceId, {
+        body: {
+          actor_id: values.createdBy,
+          action_type: "ADD_TRADE",
+          trade: {
+            intent_type: "SECURITY_TRADE",
+            side: item.side,
+            instrument_id: item.instrumentId.trim(),
+            quantity: decimalString(item.quantity, 4),
+          },
+        },
+      });
+      actionCount += 1;
+    }
+
+    if (actionCount === 0) {
+      latestResponse = await evaluateAdvisoryWorkspace(workspaceId);
+    }
+
+    syncEvaluationFromWorkspace(latestResponse);
+    return latestResponse;
+  }
+
   async function onSubmit(values: FormInput) {
     setError(null);
     setResult(null);
     setSavedProposalId(null);
+    setWorkspaceEnvelope(null);
     setLoading(true);
     try {
-      const payload = buildSimulatePayload(values, cashFlows, trades);
-      const response = await simulateProposal(payload, values.idempotencyKey);
-      setResult(response);
+      await createEvaluatedWorkspace(values);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -164,21 +324,25 @@ export default function ProposalSimulateForm({
     setError(null);
     setSavingDraft(true);
     try {
-      const payload = buildSimulatePayload(values, cashFlows, trades);
-      const createResponse = await createProposal(
+      const evaluatedWorkspace = await createEvaluatedWorkspace(values);
+      const workspaceId = extractWorkspaceId(evaluatedWorkspace);
+      if (!workspaceId) {
+        throw new Error("Advisory workspace cannot be handed off without a workspace identifier.");
+      }
+      const handoffResponse = await handoffAdvisoryWorkspace(
+        workspaceId,
         {
           body: {
-            created_by: values.createdBy,
-            simulate_request: payload.body,
+            handoff_by: values.createdBy,
             metadata: {
               title: values.proposalTitle,
+              ...(values.mandateId?.trim() ? { mandate_id: values.mandateId.trim() } : {}),
             },
           },
         },
-        `${values.idempotencyKey}-create`
+        `${values.idempotencyKey}-handoff`
       );
-      const proposal = (createResponse.data.proposal as { proposal_id?: string } | undefined) ?? {};
-      setSavedProposalId(proposal.proposal_id ?? null);
+      setSavedProposalId(extractHandoffProposalId(handoffResponse));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -214,18 +378,54 @@ export default function ProposalSimulateForm({
             <strong>{baseCurrency || "N/A"}</strong>
           </div>
           <div>
-            <span>Investable Cash</span>
+            <span>Source Cash</span>
             <strong>
-              {baseCurrency || "USD"} {Number(cashAmount || 0).toLocaleString()}
+              {formatCurrencyValue(sourceCashAmount, baseCurrency || "USD")}
             </strong>
           </div>
           <div>
             <span>Trade Lines Ready</span>
             <strong>{validTradeCount()}</strong>
           </div>
+          <div>
+            <span>As-of Date</span>
+            <strong>{asOfDate || "Not selected"}</strong>
+          </div>
+          <div>
+            <span>Indicative Cash After Draft</span>
+            <strong>{formatCurrencyValue(draftPreview.proposedCash, baseCurrency || "USD")}</strong>
+          </div>
         </div>
 
         <div className={styles.workspaceGrid}>
+          <aside className={styles.actionRail} aria-label="Proposal workflow actions">
+            <section className={styles.actionPanel}>
+              <div>
+                <h3>Advisor Workflow</h3>
+                <p>
+                  Simulate first to review portfolio impact, then save a draft for risk and compliance routing.
+                </p>
+              </div>
+              <ul>
+                <li>Portfolio context captured</li>
+                <li>Cash movement model ready</li>
+                <li>{validTradeCount()} security order lines ready</li>
+                {activeWorkspaceId ? <li>Workspace {activeWorkspaceId} evaluated by Advise</li> : null}
+              </ul>
+              <Stack spacing={1} className={styles.actionButtons}>
+                <Button type="submit" variant="contained" disabled={loading} fullWidth>
+                  {loading ? "Evaluating..." : "Evaluate Workspace"}
+                </Button>
+                <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft} fullWidth>
+                  {savingDraft ? "Handing Off..." : "Save Advisor Draft"}
+                </Button>
+                <Button component={Link} href="/proposals" variant="text" fullWidth>
+                  View Proposal Queue
+                </Button>
+              </Stack>
+            </section>
+          </aside>
+
           <div className={styles.mainLane}>
             <section className={styles.panel} aria-labelledby="portfolio-context-heading">
               <div className={styles.panelHeader}>
@@ -265,10 +465,37 @@ export default function ProposalSimulateForm({
                 />
                 <Controller
                   control={form.control}
+                  name="asOfDate"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label="Advisory As-of Date"
+                      size="small"
+                      fullWidth
+                      {...field}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? "Source portfolio context resolved by Advise"}
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="mandateId"
+                  render={({ field }) => (
+                    <TextField
+                      label="Mandate ID"
+                      size="small"
+                      fullWidth
+                      {...field}
+                      helperText="Optional advisory mandate context"
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
                   name="cashAmount"
                   render={({ field, fieldState }) => (
                     <TextField
-                      label="Investable Cash"
+                      label="Fallback Cash"
                       size="small"
                       fullWidth
                       type="number"
@@ -278,11 +505,91 @@ export default function ProposalSimulateForm({
                         field.onChange(Number.isNaN(next) ? 0 : next);
                       }}
                       error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Cash available for investment decisions"}
+                      helperText={
+                        fieldState.error?.message ??
+                        "Used only when portfolio-book cash is unavailable; Advise resolves source cash"
+                      }
                     />
                   )}
                 />
               </div>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="current-positions-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="current-positions-heading">Current Positions</h3>
+                  <p>
+                    Start from the live portfolio book, then buy more units or sell down holdings into
+                    the advisor-use draft.
+                  </p>
+                </div>
+                <span>{positionsLoading ? "Loading" : `${positions.length} positions`}</span>
+              </div>
+              {positions.length ? (
+                <div className={styles.positionsTableWrap}>
+                  <table className={styles.positionsTable}>
+                    <thead>
+                      <tr>
+                        <th>Instrument</th>
+                        <th>Asset Class</th>
+                        <th>Units</th>
+                        <th>Market Value</th>
+                        <th>Weight</th>
+                        <th>Draft Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {positions.slice(0, 12).map((position) => (
+                        <tr key={position.security_id}>
+                          <td>
+                            <strong>{position.instrument_name}</strong>
+                            <span>{position.security_id}</span>
+                          </td>
+                          <td>{position.asset_class ?? "Unclassified"}</td>
+                          <td>{formatUnitValue(position.quantity)}</td>
+                          <td>
+                            {formatCurrencyValue(position.market_value_base ?? 0, baseCurrency || "USD")}
+                          </td>
+                          <td>{formatPercentValue(position.weight_pct ?? 0)}</td>
+                          <td>
+                            <div className={styles.positionActions}>
+                              <Button
+                                type="button"
+                                size="small"
+                                variant="outlined"
+                                onClick={() => addPositionTrade(position, "BUY")}
+                              >
+                                Buy More
+                              </Button>
+                              <Button
+                                type="button"
+                                size="small"
+                                variant="outlined"
+                                color="inherit"
+                                onClick={() => addPositionTrade(position, "SELL")}
+                              >
+                                Sell Down
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {positions.length > 12 ? (
+                    <Text variant="metadata">
+                      Showing first 12 holdings. Use the instrument field below to add another held or off-book security.
+                    </Text>
+                  ) : null}
+                </div>
+              ) : (
+                <div className={styles.emptyBookNotice}>
+                  {positionsLoading
+                    ? "Loading current holdings from the portfolio book."
+                    : "No current positions are available. Add cash or an off-book instrument to begin the draft."}
+                </div>
+              )}
             </section>
 
             <section className={styles.panel} aria-labelledby="cash-movements-heading">
@@ -355,8 +662,11 @@ export default function ProposalSimulateForm({
             <section className={styles.panel} aria-labelledby="security-orders-heading">
               <div className={styles.panelHeader}>
                 <div>
-                  <h3 id="security-orders-heading">Security Orders</h3>
-                  <p>Enter proposed buy or sell lines that should be tested before advisor review.</p>
+                  <h3 id="security-orders-heading">Draft Order Blotter</h3>
+                  <p>
+                    Edit units for held positions or add an off-book instrument that is not already in
+                    the portfolio.
+                  </p>
                 </div>
                 <span>{validTradeCount()} ready</span>
               </div>
@@ -381,6 +691,13 @@ export default function ProposalSimulateForm({
                       onChange={(event) => updateTrade(item.id, { instrumentId: event.target.value })}
                     />
                     <TextField
+                      label="Asset Class"
+                      size="small"
+                      value={item.assetClass ?? ""}
+                      onChange={(event) => updateTrade(item.id, { assetClass: event.target.value })}
+                      placeholder="Equities"
+                    />
+                    <TextField
                       label="Quantity"
                       size="small"
                       type="number"
@@ -389,6 +706,17 @@ export default function ProposalSimulateForm({
                         const next = (event.target as HTMLInputElement).valueAsNumber;
                         updateTrade(item.id, { quantity: Number.isNaN(next) ? 0 : next });
                       }}
+                    />
+                    <TextField
+                      label="Reference Price"
+                      size="small"
+                      type="number"
+                      value={item.referencePrice ?? 0}
+                      onChange={(event) => {
+                        const next = (event.target as HTMLInputElement).valueAsNumber;
+                        updateTrade(item.id, { referencePrice: Number.isNaN(next) ? 0 : next });
+                      }}
+                      helperText={item.source === "NEW_INSTRUMENT" ? "Used for indicative preview" : undefined}
                     />
                     <Button
                       type="button"
@@ -403,8 +731,78 @@ export default function ProposalSimulateForm({
                 ))}
               </div>
               <Button type="button" variant="outlined" onClick={addTrade}>
-                Add Security Order
+                Add Off-Book Instrument
               </Button>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="draft-impact-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="draft-impact-heading">Indicative Draft Impact</h3>
+                  <p>
+                    Live advisor preview from current holdings, draft orders, and cash movements.
+                    Formal suitability, risk, and allocation proof is produced by simulation.
+                  </p>
+                </div>
+                <span>
+                  {formatCurrencyValue(draftPreview.proposedPortfolioValue, baseCurrency || "USD")}
+                </span>
+              </div>
+              <div className={styles.impactSummaryGrid}>
+                <div>
+                  <span>Current Value</span>
+                  <strong>
+                    {formatCurrencyValue(draftPreview.currentPortfolioValue, baseCurrency || "USD")}
+                  </strong>
+                </div>
+                <div>
+                  <span>Proposed Value</span>
+                  <strong>
+                    {formatCurrencyValue(draftPreview.proposedPortfolioValue, baseCurrency || "USD")}
+                  </strong>
+                </div>
+                <div>
+                  <span>Largest Position</span>
+                  <strong>
+                    {formatPercentValue(draftPreview.currentLargestWeight)} →{" "}
+                    {formatPercentValue(draftPreview.proposedLargestWeight)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Unpriced Draft Lines</span>
+                  <strong>{draftPreview.unpricedTradeCount}</strong>
+                </div>
+              </div>
+              <div className={styles.positionsTableWrap}>
+                <table className={styles.positionsTable}>
+                  <thead>
+                    <tr>
+                      <th>Asset Class</th>
+                      <th>Current Weight</th>
+                      <th>Proposed Weight</th>
+                      <th>Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {draftPreview.allocationRows.map((row) => (
+                      <tr key={row.assetClass}>
+                        <td>{row.assetClass}</td>
+                        <td>{formatPercentValue(row.currentWeight)}</td>
+                        <td>{formatPercentValue(row.proposedWeight)}</td>
+                        <td className={row.proposedWeight >= row.currentWeight ? styles.positive : styles.negative}>
+                          {row.proposedWeight >= row.currentWeight ? "+" : ""}
+                          {formatPercentValue(row.proposedWeight - row.currentWeight)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {draftPreview.unpricedTradeCount ? (
+                <Alert severity="warning">
+                  Add reference prices for all draft lines to complete the indicative allocation preview.
+                </Alert>
+              ) : null}
             </section>
 
             <section className={styles.panel} aria-labelledby="draft-details-heading">
@@ -431,30 +829,6 @@ export default function ProposalSimulateForm({
             </section>
           </div>
 
-          <aside className={styles.actionRail} aria-label="Proposal workflow actions">
-            <section className={styles.actionPanel}>
-              <h3>Advisor Workflow</h3>
-              <p>
-                Simulate first to review portfolio impact, then save a draft for risk and compliance routing.
-              </p>
-              <ul>
-                <li>Portfolio context captured</li>
-                <li>Cash movement model ready</li>
-                <li>{validTradeCount()} security order lines ready</li>
-              </ul>
-              <Stack spacing={1}>
-                <Button type="submit" variant="contained" disabled={loading} fullWidth>
-                  {loading ? "Simulating..." : "Simulate Impact"}
-                </Button>
-                <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft} fullWidth>
-                  {savingDraft ? "Saving Draft..." : "Save Advisor Draft"}
-                </Button>
-                <Button component={Link} href="/proposals" variant="text" fullWidth>
-                  View Proposal Queue
-                </Button>
-              </Stack>
-            </section>
-          </aside>
         </div>
       </form>
 
@@ -466,7 +840,7 @@ export default function ProposalSimulateForm({
 
       {result ? (
         <section className={styles.resultPanel} aria-label="Simulation summary">
-          <Text variant="sectionTitle">Simulation Summary</Text>
+          <Text variant="sectionTitle">Advise Evaluation Summary</Text>
           <div className={styles.resultGrid}>
             <div>
               <span>Status</span>
@@ -493,6 +867,26 @@ export default function ProposalSimulateForm({
           ) : (
             <Text variant="secondary">No additional scalar metrics were returned by the simulation engine.</Text>
           )}
+          {extractEvaluationSummary(workspaceEnvelope) ? (
+            <div className={styles.outputGrid}>
+              <div>
+                <span>Review Issues</span>
+                <strong>{String(extractEvaluationSummary(workspaceEnvelope)?.review_issue_count ?? 0)}</strong>
+              </div>
+              <div>
+                <span>Blocking Issues</span>
+                <strong>{String(extractEvaluationSummary(workspaceEnvelope)?.blocking_issue_count ?? 0)}</strong>
+              </div>
+              <div>
+                <span>Draft Trades</span>
+                <strong>
+                  {String(
+                    recordValue(extractEvaluationSummary(workspaceEnvelope)?.impact_summary)?.trade_count ?? 0
+                  )}
+                </strong>
+              </div>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
