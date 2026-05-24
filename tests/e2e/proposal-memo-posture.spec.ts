@@ -14,7 +14,28 @@ async function mockProposalDetail(page: import("@playwright/test").Page, blocked
             current_version_no: 2,
           },
           current_version: {
-            simulate_request: { options: { enable_proposal_simulation: true } },
+            artifact_hash: "sha256:artifact-001",
+            evidence_bundle: {
+              generated_at: "2026-05-24T10:00:00Z",
+              hashes: {
+                request_hash: "sha256:request-001",
+                simulation_hash: "sha256:simulation-001",
+                artifact_hash: "sha256:artifact-001",
+              },
+              allocation_comparison: [
+                { label: "Global Equities", current: "65.2%", proposed: "60.0%" },
+                { label: "Fixed Income", current: "28.4%", proposed: "35.0%" },
+              ],
+            },
+            simulate_request: {
+              body: {
+                options: { enable_proposal_simulation: true },
+                proposed_trades: [
+                  { side: "BUY", instrument_id: "VTI", quantity: "450.0000" },
+                  { side: "SELL", instrument_id: "AAPL", quantity: "200.0000" },
+                ],
+              },
+            },
           },
         },
       },
@@ -133,6 +154,11 @@ test.describe("proposal memo posture", () => {
     await mockProposalDetail(page);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
 
+    await expect(page.getByRole("region", { name: "Advisor proposal workspace" })).toBeVisible();
+    await expect(page.getByText("Advisor use only - not client ready")).toBeVisible();
+    await expect(page.getByText("VTI")).toBeVisible();
+    await expect(page.getByText("Global Equities")).toBeVisible();
+    await expect(page.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Advisor Memo Product Surface" })).toBeVisible();
     await expect(page.getByText("APPROVED_FOR_ADVISOR_USE").first()).toBeVisible();
     await expect(page.getByText("SUPPORTED_ADVISOR_USE").first()).toBeVisible();

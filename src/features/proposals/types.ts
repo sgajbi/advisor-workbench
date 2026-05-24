@@ -51,6 +51,7 @@ export type ProposalDetailData = {
   current_version?: {
     version_no?: number;
     status_at_creation?: string;
+    [key: string]: unknown;
   };
   [key: string]: unknown;
 };

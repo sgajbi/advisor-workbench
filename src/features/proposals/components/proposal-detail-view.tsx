@@ -43,6 +43,7 @@ import {
   proposalStageDescription,
   proposalStageOrder,
 } from "../proposal-workflow-copy";
+import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 
 type Props = {
   proposalId: string;
@@ -326,6 +327,17 @@ export default function ProposalDetailView({ proposalId }: Props) {
         </SemanticBadge>
       }
     >
+      <ProposalAdvisoryWorkspace
+        data={data}
+        workflow={workflow}
+        approvals={approvals}
+        lineage={lineage}
+        generatedAt={generatedAt}
+        artifactHash={artifactHash}
+        requestHash={requestHash}
+        simulationHash={simulationHash}
+      />
+
       <FormControlLabel
         control={
           <Switch
