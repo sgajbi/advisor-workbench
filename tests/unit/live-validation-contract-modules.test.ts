@@ -91,6 +91,25 @@ describe("live validation contract modules", () => {
             panel.gatewayEndpoint === "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory"
         )
       ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
+            panel.panelId === "dpm.construction_alternatives" &&
+            panel.screenshotName === "dpm-construction-alternatives-live.png"
+        )
+      ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
+            panel.panelId === "dpm.pm_operating_quality" &&
+            panel.gatewayEndpoint === "/api/v1/dpm/command-center/pm-operating-quality/score-runs"
+        )
+      ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) => panel.panelId === "dpm.copilot_workspace" && panel.owningService === "lotus-ai"
+        )
+      ).toBe(true);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

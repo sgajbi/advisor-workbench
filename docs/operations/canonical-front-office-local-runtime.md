@@ -345,7 +345,8 @@ these artifact paths are stable even when `lotus-platform` or another orchestrat
 script. Browser validation failures must fail the PowerShell command. The Manage action-register
 supportability summary is recorded as source-supportability evidence, including stale state and
 reason when present; DPM panel proof is gated by the command-center, wave, outcome-review, proof-pack,
-and portfolio-memory contracts instead of failing on unrelated historical action-register freshness.
+portfolio-memory, construction-alternatives, PM operating-quality, and PM copilot workspace contracts
+instead of failing on unrelated historical action-register freshness.
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center
 supportability must not collapse into a false ready panel. Do not treat partial screenshot output

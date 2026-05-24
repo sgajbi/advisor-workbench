@@ -599,6 +599,108 @@ export async function validatePortfolioMemoryPanel(
   await screenshotRegisteredPanel(page, "dpm.portfolio_memory");
 }
 
+export async function validateConstructionAlternativesPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=construction`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const constructionPanel = workbenchPanelByClass(page, "construction-alternatives-panel");
+  await expect(
+    constructionPanel.getByRole("heading", { name: "Construction Alternatives" })
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    constructionPanel.getByRole("button", { name: "Generate alternatives" })
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await constructionPanel.getByRole("button", { name: "Generate alternatives" }).click({
+    timeout: timeoutMs,
+  });
+  await expect(constructionPanel.getByText("Construction alternatives generated.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(constructionPanel.getByText("Alternatives Comparison")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(constructionPanel.getByText("Recommended Path")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await screenshotRegisteredPanel(page, "dpm.construction_alternatives");
+}
+
+export async function validatePmOperatingQualityPanel(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=quality`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const qualityPanel = workbenchPanelByClass(page, "pm-operating-quality-panel");
+  await expect(qualityPanel.getByRole("heading", { name: "PM Operating Quality" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  for (const label of [
+    "Policy",
+    "Latest Score Run",
+    "Fairness Analysis",
+    "Summary Invocation",
+    "Authority",
+  ]) {
+    await expect(qualityPanel.getByText(label, { exact: true })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+  await expect(page.getByLabel("PM operating quality summary-invocation posture")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM operating quality summary-invocation control")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM operating quality summary-invocation readiness")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM operating quality persisted summary-invocation evidence")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await screenshotRegisteredPanel(page, "dpm.pm_operating_quality");
+}
+
+export async function validateDpmCopilotWorkspace(
+  page,
+  { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel }
+) {
+  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=copilot`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  const copilotWorkspace = workbenchPanelByClass(page, "dpm-copilot-workspace");
+  await expect(copilotWorkspace.getByRole("heading", { name: "PM Copilot Workspace" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM copilot posture")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  for (const label of [
+    "Gateway only",
+    "No prompt storage",
+    "Evidence Owner",
+    "Workflow Owner",
+    "Forbidden Uses",
+    "Operating boundaries",
+  ]) {
+    await expect(copilotWorkspace.getByText(label, { exact: true })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+  await screenshotRegisteredPanel(page, "dpm.copilot_workspace");
+}
+
 export async function validateProofPackPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, assertTableHasRows, screenshotRegisteredPanel }
