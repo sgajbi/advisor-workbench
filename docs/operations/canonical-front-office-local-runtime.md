@@ -394,6 +394,13 @@ and missing-panel evidence. Reviewers should inspect this matrix before acceptin
 demo-ready proof, because it shows whether the run covered both ready panels and governed bounded
 partial/degraded states.
 
+The summary also includes `rfc3643FeatureCoverage`, a feature-by-feature evidence matrix for the
+implemented RFC-0036 through RFC-0043 front-office product paths. Each row maps the RFC feature to
+the API, workflow-pack, seeded entity, and Workbench panel evidence that made the feature
+demo-ready. The matrix is not a blanket future-scope certification: it records the current scenario
+scope and explicitly lists scenario expansion still needed, such as companion canonical DPM
+portfolios for broader multi-portfolio wave proof.
+
 ## Gateway startup rule
 
 Canonical local Gateway startup must use the governed script when `gateway` is listed in

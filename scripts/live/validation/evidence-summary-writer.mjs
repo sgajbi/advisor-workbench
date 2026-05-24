@@ -30,6 +30,7 @@ export function createValidationSummary({
     uiChecks: [],
     calculationChecks: [],
     panelClassifications: [],
+    rfc3643FeatureCoverage: null,
     supportabilityMatrix: null,
     supportabilityChecks: [],
     screenshots: [],

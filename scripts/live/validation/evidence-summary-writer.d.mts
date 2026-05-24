@@ -10,6 +10,7 @@ export type InitializedValidationSummary = ValidationSummary & {
   uiChecks: Array<Record<string, unknown>>;
   calculationChecks: Array<Record<string, unknown>>;
   panelClassifications: Array<Record<string, unknown>>;
+  rfc3643FeatureCoverage: Record<string, unknown> | null;
   supportabilityMatrix: Record<string, unknown> | null;
   supportabilityChecks: Array<Record<string, unknown>>;
   screenshots: Array<Record<string, unknown>>;
