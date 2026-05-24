@@ -6,7 +6,7 @@ import {
 } from "../../src/features/proposals/proposal-narrative-posture-view-model";
 
 describe("proposal narrative posture view model", () => {
-  it("prioritizes reviewed narrative and report-package posture from Gateway payloads", () => {
+  it("prioritizes reviewed narrative and report-package posture from advisory payloads", () => {
     const model = buildProposalNarrativePostureModel({
       review: {
         policy_version: "proposal-narrative-deterministic.v1",

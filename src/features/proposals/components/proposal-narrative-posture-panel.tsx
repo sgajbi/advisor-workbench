@@ -113,7 +113,7 @@ export default function ProposalNarrativePosturePanel({
     <SectionBlock
       className="proposal-narrative-posture-panel"
       title="Advisor Narrative And Delivery"
-      subtitle="Review advisor-use narrative posture, request reviewed narrative report packaging, and inspect delivery events from the Gateway advisory contract."
+      subtitle="Review advisor-use rationale, request reviewed report packaging, and inspect delivery posture before client discussion."
       actions={
         <SemanticBadge tone={posture.sourceNarrativeHash ? "success" : "warn"}>
           {posture.reviewState}
@@ -122,8 +122,8 @@ export default function ProposalNarrativePosturePanel({
     >
       {summaryQuery.error || eventsQuery.error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Delivery posture is not fully available from Gateway. Review and report actions remain
-          bounded by the advisory workflow authority.
+          Delivery posture is not fully available from advisory evidence. Review and report actions
+          remain bounded by the advisory workflow authority.
         </Alert>
       ) : null}
       {actionError ? (
@@ -212,9 +212,9 @@ export default function ProposalNarrativePosturePanel({
         <Text variant="metadata">Latest delivery event time: {posture.latestEventTime}</Text>
       ) : null}
       <Text variant="secondary">
-        Workbench records advisor-use review and report packaging through Gateway only. It does not
-        generate narrative, infer client-ready publication, render documents, archive artifacts, or
-        contact clients.
+        Advisor-use review and report packaging preserve approved source evidence. This workspace
+        does not generate narrative, infer client-ready publication, render documents, archive
+        artifacts, or contact clients.
       </Text>
     </SectionBlock>
   );
