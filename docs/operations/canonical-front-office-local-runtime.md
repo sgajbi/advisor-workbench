@@ -398,8 +398,9 @@ The summary also includes `rfc3643FeatureCoverage`, a feature-by-feature evidenc
 implemented RFC-0036 through RFC-0043 front-office product paths. Each row maps the RFC feature to
 the API, workflow-pack, seeded entity, and Workbench panel evidence that made the feature
 demo-ready. The matrix is not a blanket future-scope certification: it records the current scenario
-scope and explicitly lists scenario expansion still needed, such as companion canonical DPM
-portfolios for broader multi-portfolio wave proof.
+scope, now including the governed RFC-0041 multi-portfolio explicit-list wave preview from the
+canonical contract. Broader source-owner cohort products remain listed as scenario expansion until
+their source products and downstream realization are proven.
 
 ## Gateway startup rule
 

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { chromium, expect } from "@playwright/test";
 import { resolveValidationConfig } from "./validation/args.mjs";
 import {
+  DEFAULT_CANONICAL_CONTRACT,
   loadCanonicalContractMetadata,
   loadWorkbenchPanelRegistryMetadata,
 } from "./validation/contract-metadata.mjs";
@@ -63,11 +64,22 @@ const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
 const canonicalContract = await loadCanonicalContractMetadata();
 const panelRegistry = await loadWorkbenchPanelRegistryMetadata();
 const dpmCommandCenterDefaults = {
-  tenantId: process.env.WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID ?? "default",
+  tenantId:
+    process.env.WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID ??
+    canonicalContract.dpmCommandCenter?.tenantId ??
+    "default",
   portfolioManagerId:
-    process.env.WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID ?? "PM_SG_DPM_001",
-  bookId: process.env.WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID ?? "BOOK_SG_BALANCED_DPM",
-  asOfDate: process.env.WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE ?? "2026-05-03",
+    process.env.WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID ??
+    canonicalContract.dpmCommandCenter?.portfolioManagerId ??
+    "PM_SG_DPM_001",
+  bookId:
+    process.env.WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID ??
+    canonicalContract.dpmCommandCenter?.bookId ??
+    "BOOK_SG_BALANCED_DPM",
+  asOfDate:
+    process.env.WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE ??
+    canonicalContract.dpmCommandCenter?.commandCenterAsOfDate ??
+    "2026-05-03",
 };
 
 const summary = createValidationSummary({
@@ -153,6 +165,24 @@ function extractDpmWaveId(response) {
     readString(response?.supportability?.wave_id) ||
     null
   );
+}
+
+function extractDpmWaveItemCount(response) {
+  const payload = extractGatewayEnvelopeData(response);
+  const wave = payload?.wave ?? payload;
+  for (const candidate of [
+    wave?.items,
+    payload?.items,
+    wave?.portfolios,
+    payload?.portfolios,
+    wave?.affected_portfolios,
+    payload?.affected_portfolios,
+  ]) {
+    if (Array.isArray(candidate)) {
+      return candidate.length;
+    }
+  }
+  return 0;
 }
 
 function extractWorkbenchRebalanceRunId(gatewayOverview) {
@@ -1019,6 +1049,42 @@ async function run() {
       }.`
     );
   }
+  const multiPortfolioWaveScenario =
+    canonicalContract.dpmCommandCenter?.multiPortfolioWaveScenario ??
+    DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.multiPortfolioWaveScenario;
+  const multiPortfolioWavePreview = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
+    "DPM rebalance-wave multi-portfolio preview",
+    timeoutMs,
+    {
+      body: {
+        trigger_type: multiPortfolioWaveScenario.triggerType,
+        trigger_id: `live-validation-wave-${multiPortfolioWaveScenario.scenarioId}-${dpmCommandCenterDefaults.asOfDate}`,
+        rationale:
+          "Canonical Workbench live validation previewed an RFC-0041 multi-portfolio explicit-list wave.",
+        as_of_date: dpmCommandCenterDefaults.asOfDate,
+        actor_id: "workbench-system",
+        portfolios: multiPortfolioWaveScenario.portfolios,
+      },
+    }
+  );
+  const multiPortfolioWavePreviewSupportabilityState = readSupportabilityState(
+    multiPortfolioWavePreview?.supportability
+  );
+  if (multiPortfolioWavePreviewSupportabilityState?.toLowerCase() !== "ready") {
+    throw new Error(
+      `DPM rebalance-wave multi-portfolio preview did not return ready manage supportability; observed ${
+        multiPortfolioWavePreviewSupportabilityState ?? "missing"
+      }.`
+    );
+  }
+  const multiPortfolioWaveItemCount = extractDpmWaveItemCount(multiPortfolioWavePreview);
+  if (multiPortfolioWaveItemCount < multiPortfolioWaveScenario.minimumPortfolioCount) {
+    throw new Error(
+      `DPM rebalance-wave multi-portfolio preview returned ${multiPortfolioWaveItemCount} item(s); expected at least ${multiPortfolioWaveScenario.minimumPortfolioCount}.`
+    );
+  }
   if (!dpmWaveId) {
     const dpmWaveCreate = await postJson(
       summary,
@@ -1214,6 +1280,9 @@ async function run() {
     proofPackPanel: true,
     proofPackAiMemo: proofPackAiPmMemoRunId,
     wavePreview: dpmWavePreviewSupportabilityState?.toLowerCase() === "ready",
+    multiPortfolioWavePreview:
+      multiPortfolioWavePreviewSupportabilityState?.toLowerCase() === "ready" &&
+      multiPortfolioWaveItemCount >= multiPortfolioWaveScenario.minimumPortfolioCount,
     waveId: dpmWaveId,
     waveReportInput: dpmWaveReportInputRef,
     waveAiMemo: dpmWaveAiPmMemoRunId,

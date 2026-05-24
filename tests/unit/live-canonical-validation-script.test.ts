@@ -72,6 +72,8 @@ describe("canonical live validation script", () => {
       "lotus-manage supportability summary returned non-ready supportability"
     );
     expect(browserValidator).toContain("DPM rebalance-wave preview did not return ready manage supportability");
+    expect(browserValidator).toContain("DPM rebalance-wave multi-portfolio preview");
+    expect(browserValidator).toContain("multiPortfolioWaveScenario.minimumPortfolioCount");
     expect(browserValidator).toContain("supportedPortfolioMemoryStates");
     expect(browserValidator).toContain('"degraded"');
     expect(browserValidator).toContain("DPM portfolio memory did not return populated manage supportability");
@@ -238,6 +240,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("canonicalContract");
     expect(contractModule).toContain("DEFAULT_CANONICAL_CONTRACT");
     expect(contractModule).toContain("canonical-front-office-demo-data-contract.json");
+    expect(contractModule).toContain("multiPortfolioWaveScenario");
+    expect(contractModule).toContain("RFC41_MULTI_PORTFOLIO_EXPLICIT_LIST_CANONICAL");
     expect(contractModule).toContain("LOTUS_PLATFORM_REPO");
     expect(contractModule).toContain('sourcePath: "deterministic-fallback"');
     expect(runbook).toContain("contract identity and version");
@@ -411,7 +415,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("assertRfc3643FeatureCoverage");
     expect(script).toContain("summary.rfc3643FeatureCoverage");
     expect(rfcFeatureCoverageModule).toContain("scenarioExpansionNeeded");
-    expect(rfcFeatureCoverageModule).toContain("companion canonical DPM portfolios");
+    expect(rfcFeatureCoverageModule).toContain("multiPortfolioWavePreview");
+    expect(rfcFeatureCoverageModule).toContain("single-portfolio and multi-portfolio explicit-list waves");
     expect(browserWorkflowModule).toContain("Mandate Readiness");
     expect(browserWorkflowModule).toContain("Attention Required");
     expect(browserWorkflowModule).toContain("Recommended Actions");

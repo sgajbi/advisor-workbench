@@ -8,6 +8,65 @@ export const DEFAULT_CANONICAL_CONTRACT = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
   benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
   canonicalAsOfDate: "2026-04-10",
+  dpmCommandCenter: {
+    portfolioManagerId: "PM_SG_DPM_001",
+    bookId: "BOOK_SG_BALANCED_DPM",
+    tenantId: "default",
+    commandCenterAsOfDate: "2026-05-03",
+    multiPortfolioWaveScenario: {
+      scenarioId: "RFC41_MULTI_PORTFOLIO_EXPLICIT_LIST_CANONICAL",
+      triggerType: "EXPLICIT_PORTFOLIO_LIST",
+      sourceScope: "manage_live_validation_scenario_seed",
+      minimumPortfolioCount: 3,
+      portfolios: [
+        {
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+          portfolio_manager_id: "PM_SG_DPM_001",
+          portfolio_type: "DISCRETIONARY",
+          source_refs: [
+            {
+              source_system: "lotus-platform",
+              source_type: "CanonicalFrontOfficeDemoDataContract",
+              source_id: "canonical-front-office-demo-data-contract",
+              source_version: "1.0.0",
+              supportability_state: "READY",
+            },
+          ],
+        },
+        {
+          portfolio_id: "PB_SG_GLOBAL_INC_002",
+          mandate_id: "MANDATE_PB_SG_GLOBAL_INC_002",
+          portfolio_manager_id: "PM_SG_DPM_001",
+          portfolio_type: "DISCRETIONARY",
+          source_refs: [
+            {
+              source_system: "lotus-platform",
+              source_type: "CanonicalFrontOfficeMultiPortfolioWaveScenario",
+              source_id: "RFC41_MULTI_PORTFOLIO_EXPLICIT_LIST_CANONICAL",
+              source_version: "1.0.0",
+              supportability_state: "READY",
+            },
+          ],
+        },
+        {
+          portfolio_id: "PB_SG_GLOBAL_GROWTH_003",
+          mandate_id: "MANDATE_PB_SG_GLOBAL_GROWTH_003",
+          portfolio_manager_id: "PM_SG_DPM_001",
+          portfolio_type: "DISCRETIONARY",
+          source_refs: [
+            {
+              source_system: "lotus-platform",
+              source_type: "CanonicalFrontOfficeMultiPortfolioWaveScenario",
+              source_id: "RFC41_MULTI_PORTFOLIO_EXPLICIT_LIST_CANONICAL",
+              source_version: "1.0.0",
+              supportability_state: "READY",
+            },
+          ],
+        },
+      ],
+    },
+  },
 };
 
 export const DEFAULT_PANEL_REGISTRY = {
@@ -277,6 +336,23 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
         canonicalAsOfDate:
           payload.date_policy?.canonical_as_of_date ??
           DEFAULT_CANONICAL_CONTRACT.canonicalAsOfDate,
+        dpmCommandCenter: {
+          portfolioManagerId:
+            payload.dpm_command_center?.portfolio_manager_id ??
+            DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.portfolioManagerId,
+          bookId:
+            payload.dpm_command_center?.book_id ??
+            DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.bookId,
+          tenantId:
+            payload.dpm_command_center?.tenant_id ??
+            DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.tenantId,
+          commandCenterAsOfDate:
+            payload.dpm_command_center?.command_center_as_of_date ??
+            DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.commandCenterAsOfDate,
+          multiPortfolioWaveScenario: normalizeMultiPortfolioWaveScenario(
+            payload.dpm_command_center?.multi_portfolio_wave_scenario
+          ),
+        },
         sourcePath: candidatePath,
       };
     } catch (error) {
@@ -294,6 +370,23 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
   return {
     ...DEFAULT_CANONICAL_CONTRACT,
     sourcePath: "deterministic-fallback",
+  };
+}
+
+function normalizeMultiPortfolioWaveScenario(rawScenario) {
+  const fallback = DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.multiPortfolioWaveScenario;
+  if (!rawScenario || typeof rawScenario !== "object") {
+    return fallback;
+  }
+
+  return {
+    scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
+    triggerType: rawScenario.trigger_type ?? fallback.triggerType,
+    sourceScope: rawScenario.source_scope ?? fallback.sourceScope,
+    minimumPortfolioCount:
+      Number(rawScenario.minimum_portfolio_count ?? fallback.minimumPortfolioCount) ||
+      fallback.minimumPortfolioCount,
+    portfolios: Array.isArray(rawScenario.portfolios) ? rawScenario.portfolios : fallback.portfolios,
   };
 }
 

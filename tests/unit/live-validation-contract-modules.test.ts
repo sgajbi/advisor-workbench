@@ -79,6 +79,13 @@ describe("live validation contract modules", () => {
       expect(persistedSummary.canonicalContract.contractId).toBe(
         "canonical-front-office-demo-data-contract"
       );
+      expect(
+        persistedSummary.canonicalContract.dpmCommandCenter.multiPortfolioWaveScenario
+          .minimumPortfolioCount
+      ).toBe(3);
+      expect(
+        persistedSummary.canonicalContract.dpmCommandCenter.multiPortfolioWaveScenario.portfolios
+      ).toHaveLength(3);
       expect(shotIndex).toContain("performance-risk-live.png");
       expect(shotIndex).toContain("performance.risk.snapshot");
       expect(shotIndex).toContain(summaryPath);
