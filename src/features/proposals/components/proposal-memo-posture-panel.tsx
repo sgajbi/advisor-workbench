@@ -28,12 +28,14 @@ type Props = {
   currentVersionNo?: number | null;
 };
 
+type PendingMemoAction = "create" | "review" | "report" | "commentary";
+
 export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo }: Props) {
   const [versionNo, setVersionNo] = useState(currentVersionNo ?? 1);
-  const [actorId, setActorId] = useState("advisor_1");
+  const [advisorId, setAdvisorId] = useState("advisor_1");
   const [reviewReason, setReviewReason] = useState("");
   const [audience, setAudience] = useState<ProposalMemoProjectionAudience>("ADVISOR");
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingMemoAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const memoQuery = useQuery({
@@ -87,7 +89,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         {
-          created_by: actorId.trim() || "advisor_1",
+          created_by: advisorId.trim() || "advisor_1",
           lifecycle_status: "DRAFT",
           reason: { source: "workbench", purpose: "advisor memo review" },
         },
@@ -113,7 +115,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         versionNo,
         {
           action: "APPROVE_FOR_ADVISOR_USE",
-          reviewed_by: actorId.trim() || "advisor_1",
+          reviewed_by: advisorId.trim() || "advisor_1",
           reason: reviewReason.trim(),
           source_memo_hash: memoHash,
           client_ready_release_requested: false,
@@ -140,7 +142,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         {
-          requested_by: actorId.trim() || "advisor_1",
+          requested_by: advisorId.trim() || "advisor_1",
           source_memo_hash: memoHash,
           requested_output_formats: ["pdf"],
           client_ready_document_requested: false,
@@ -156,18 +158,18 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
     }
   }
 
-  async function handleRequestAiCommentary() {
+  async function handleRequestAdvisorCommentary() {
     if (!memoHash) {
       return;
     }
-    setPendingAction("ai");
+    setPendingAction("commentary");
     setActionError(null);
     try {
       await requestProposalMemoAiCommentary(
         proposalId,
         versionNo,
         {
-          requested_by: actorId.trim() || "advisor_1",
+          requested_by: advisorId.trim() || "advisor_1",
           source_memo_hash: memoHash,
           requested_sections: ["EXECUTIVE_SUMMARY", "LIMITATIONS_AND_DISCLOSURES"],
           reason: { source: "workbench", purpose: "advisor-use commentary" },
@@ -258,11 +260,11 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           />
         </label>
         <label className="proposal-review-field">
-          <Text variant="label">Actor</Text>
+          <Text variant="label">Advisor ID</Text>
           <input
             className="input"
-            value={actorId}
-            onChange={(event) => setActorId(event.target.value)}
+            value={advisorId}
+            onChange={(event) => setAdvisorId(event.target.value)}
             placeholder="advisor_1"
             autoComplete="off"
           />
@@ -317,15 +319,17 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           type="button"
           variant="outlined"
           disabled={!memoHash || pendingAction !== null}
-          onClick={handleRequestAiCommentary}
+          onClick={handleRequestAdvisorCommentary}
         >
-          {pendingAction === "ai" ? "Requesting Commentary..." : "Request Advisor Commentary"}
+          {pendingAction === "commentary"
+            ? "Requesting Commentary..."
+            : "Request Advisor Commentary"}
         </Button>
       </Stack>
 
       <Text variant="secondary">
         Advisor-use memo actions preserve source evidence and do not promote client-ready release,
-        render documents, synthesize archive references, or treat AI commentary as authoritative
+        render documents, synthesize archive references, or treat advisor commentary as authoritative
         memo evidence.
       </Text>
     </SectionBlock>
