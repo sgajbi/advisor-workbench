@@ -5,12 +5,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
-  Button,
   CircularProgress,
-  Divider,
-  FormControlLabel,
   Stack,
-  Switch,
 } from "@mui/material";
 
 import {
@@ -41,9 +37,15 @@ import {
   buildProposalActionIdempotencyKey,
   isValidProposalId,
   proposalStageDescription,
-  proposalStageOrder,
 } from "../proposal-workflow-copy";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
+import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
+import {
+  ProposalAdvisorActionsPanel,
+  ProposalEvidenceControlsPanel,
+  ProposalLineageAuditPanel,
+  ProposalReviewHistoryPanel,
+} from "./proposal-detail-domain-panels";
 
 type Props = {
   proposalId: string;
@@ -300,33 +302,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const workflow = workflowQuery.data as ProposalWorkflowEventsData | undefined;
   const approvals = approvalsQuery.data as ProposalApprovalsData | undefined;
   const lineage = lineageQuery.data as ProposalLineageData | undefined;
-  const currentVersion = (data.current_version as Record<string, unknown> | undefined) ?? {};
-  const artifact = (currentVersion.artifact as Record<string, unknown> | undefined) ?? {};
-  const evidence =
-    ((artifact.evidence_bundle as Record<string, unknown> | undefined) ??
-      (currentVersion.evidence_bundle as Record<string, unknown> | undefined)) ??
-    null;
-  const evidenceHashes =
-    ((evidence?.hashes as Record<string, unknown> | undefined) ??
-      (currentVersion.hashes as Record<string, unknown> | undefined)) ??
-    {};
-  const artifactHash = (currentVersion.artifact_hash as string | undefined) ?? (evidenceHashes.artifact_hash as string | undefined);
-  const requestHash = evidenceHashes.request_hash as string | undefined;
-  const simulationHash = evidenceHashes.simulation_hash as string | undefined;
-  const generatedAt =
-    (artifact.generated_at as string | undefined) ??
-    (currentVersion.created_at as string | undefined) ??
-    (evidence?.generated_at as string | undefined);
-  const workflowStage = proposalStageOrder(data.proposal.current_state);
-  const stageLabels = [
-    { label: "Draft", reached: workflowStage >= 1 },
-    { label: "Review", reached: workflowStage >= 2 },
-    { label: "Client Consent", reached: workflowStage >= 3 },
-    { label: "Execution Ready", reached: workflowStage >= 4 },
-  ];
+  const evidenceModel = buildProposalDetailEvidenceModel({ data, workflow, lineage });
   const stageCopy = proposalStageDescription(data.proposal.current_state);
-  const visibleWorkflowEvents = workflow?.events?.slice(0, 8) ?? [];
-  const hiddenWorkflowEventCount = Math.max((workflow?.events?.length ?? 0) - visibleWorkflowEvents.length, 0);
 
   return (
     <main className={detailStyles.page} aria-label="Proposal advisory workspace">
@@ -356,10 +333,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
         workflow={workflow}
         approvals={approvals}
         lineage={lineage}
-        generatedAt={generatedAt}
-        artifactHash={artifactHash}
-        requestHash={requestHash}
-        simulationHash={simulationHash}
+        generatedAt={evidenceModel.generatedAt}
+        artifactHash={evidenceModel.artifactHash}
+        requestHash={evidenceModel.requestHash}
+        simulationHash={evidenceModel.simulationHash}
       />
 
       <div className={detailStyles.workspaceGrid}>
@@ -376,183 +353,44 @@ export default function ProposalDetailView({ proposalId }: Props) {
         </section>
 
         <aside className={detailStyles.evidenceRail} aria-label="Proposal controls and evidence">
-          <section className={detailStyles.railPanel}>
-            <div className={detailStyles.railPanelHeader}>
-              <Text variant="panelTitle">Advisor Actions</Text>
-              <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
-                {data.proposal.current_state}
-              </SemanticBadge>
-            </div>
-            <Text variant="secondary">{stageCopy}</Text>
-            <div className={detailStyles.stageList}>
-              {stageLabels.map((stage) => (
-                <span key={stage.label} className={stage.reached ? detailStyles.stageDone : detailStyles.stagePending}>
-                  {stage.label}
-                </span>
-              ))}
-            </div>
-            <div className={detailStyles.actionStack}>
-              {data.proposal.current_state === "DRAFT" ? (
-                <>
-                  <Button type="button" variant="contained" onClick={() => void onSubmitForReview("RISK")} disabled={acting}>
-                    Submit To Risk Review
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    onClick={() => void onSubmitForReview("COMPLIANCE")}
-                    disabled={acting}
-                  >
-                    Submit To Compliance Review
-                  </Button>
-                </>
-              ) : null}
-              {data.proposal.current_state === "RISK_REVIEW" ? (
-                <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
-                  Approve Risk
-                </Button>
-              ) : null}
-              {data.proposal.current_state === "COMPLIANCE_REVIEW" ? (
-                <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
-                  Approve Compliance
-                </Button>
-              ) : null}
-              {data.proposal.current_state === "AWAITING_CLIENT_CONSENT" ? (
-                <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
-                  Record Client Consent
-                </Button>
-              ) : null}
-              {data.proposal.current_state === "EXECUTION_READY" ? (
-                <Alert severity="success" sx={{ py: 0, alignItems: "center" }}>
-                  Proposal is execution ready.
-                </Alert>
-              ) : null}
-            </div>
-          </section>
+          <ProposalAdvisorActionsPanel
+            currentState={data.proposal.current_state}
+            stageCopy={stageCopy}
+            stageItems={evidenceModel.stageItems}
+            acting={acting}
+            onSubmitForRiskReview={() => void onSubmitForReview("RISK")}
+            onSubmitForComplianceReview={() => void onSubmitForReview("COMPLIANCE")}
+            onApproveRisk={() => void onApproveRisk()}
+            onApproveCompliance={() => void onApproveCompliance()}
+            onRecordClientConsent={() => void onRecordClientConsent()}
+          />
 
-          <section className={detailStyles.railPanel}>
-            <div className={detailStyles.railPanelHeader}>
-              <Text variant="panelTitle">Evidence Controls</Text>
-            </div>
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={includeEvidence}
-                  onChange={(event) => {
-                    setIncludeEvidence(event.target.checked);
-                  }}
-                />
-              }
-              label="Load Full Evidence Bundle"
-            />
-            <div className={detailStyles.versionControls}>
-              <label>
-                <Text variant="label">Version Number</Text>
-                <input
-                  className="input"
-                  type="number"
-                  min={1}
-                  value={versionLookupNo}
-                  onChange={(event) => {
-                    const next = Number.parseInt(event.target.value, 10);
-                    setVersionLookupNo(Number.isNaN(next) ? 1 : next);
-                  }}
-                />
-              </label>
-              <Button type="button" variant="outlined" onClick={() => void onLoadVersion()}>
-                Load Version
-              </Button>
-              <Button type="button" variant="outlined" onClick={() => void onCreateNextVersion()} disabled={creatingVersion}>
-                {creatingVersion ? "Creating Version..." : "Create Next Version"}
-              </Button>
-            </div>
-            {createdVersionNo ? (
-              <Text variant="secondary">Version created successfully: {createdVersionNo}</Text>
-            ) : null}
-            {versionLookup ? (
-              <div className={detailStyles.loadedVersion}>
-                <Text variant="cardTitle">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Text>
-                <Text variant="metadata">Status at creation: {String(versionLookup.status_at_creation ?? "N/A")}</Text>
-                <Text variant="metadata">Created at: {String(versionLookup.created_at ?? "N/A")}</Text>
-                <Text variant="metadata">Artifact hash: {String(versionLookup.artifact_hash ?? "N/A")}</Text>
-              </div>
-            ) : null}
-            {versionActionError ? <Alert severity="warning">{versionActionError}</Alert> : null}
-          </section>
+          <ProposalEvidenceControlsPanel
+            includeEvidence={includeEvidence}
+            onIncludeEvidenceChange={setIncludeEvidence}
+            versionLookupNo={versionLookupNo}
+            onVersionLookupNoChange={setVersionLookupNo}
+            onLoadVersion={() => void onLoadVersion()}
+            onCreateNextVersion={() => void onCreateNextVersion()}
+            creatingVersion={creatingVersion}
+            createdVersionNo={createdVersionNo}
+            versionLookup={versionLookup}
+            versionActionError={versionActionError}
+          />
 
-          <section className={detailStyles.railPanel}>
-            <Text variant="panelTitle">Lineage And Audit</Text>
-            <div className={detailStyles.hashList}>
-              <div>
-                <span>Artifact Hash</span>
-                <strong>{artifactHash ?? "Not available"}</strong>
-              </div>
-              <div>
-                <span>Request Hash</span>
-                <strong>{requestHash ?? "Not available"}</strong>
-              </div>
-              <div>
-                <span>Simulation Hash</span>
-                <strong>{simulationHash ?? "Not available"}</strong>
-              </div>
-            </div>
-            <Text variant="secondary">
-              {generatedAt
-                ? `Latest artifact generated at ${generatedAt}.`
-                : "Evidence metadata is not available in the current Gateway response."}
-            </Text>
-            {lineage?.versions?.length ? (
-              <div className={detailStyles.timelineList}>
-                {lineage.versions.map((version) => (
-                  <div key={`lineage-${String(version.version_no ?? "na")}`}>
-                    <strong>Version {String(version.version_no ?? "N/A")}</strong>
-                    <span>{String(version.created_at ?? "Created time unavailable")}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Text variant="secondary">No lineage metadata returned for this proposal yet.</Text>
-            )}
-          </section>
+          <ProposalLineageAuditPanel
+            artifactHash={evidenceModel.artifactHash}
+            requestHash={evidenceModel.requestHash}
+            simulationHash={evidenceModel.simulationHash}
+            generatedAt={evidenceModel.generatedAt}
+            lineageVersions={evidenceModel.lineageVersions}
+          />
 
-          <section className={detailStyles.railPanel}>
-            <Text variant="panelTitle">Review History</Text>
-            {visibleWorkflowEvents.length ? (
-              <div className={detailStyles.timelineList}>
-                {visibleWorkflowEvents.map((event) => (
-                  <div key={event.event_id}>
-                    <strong>{event.event_type}</strong>
-                    <span>
-                      {(event.from_state ?? "Start")} to {event.to_state} · {event.actor_id}
-                    </span>
-                  </div>
-                ))}
-                {hiddenWorkflowEventCount > 0 ? (
-                  <div className={detailStyles.timelineMore}>
-                    <strong>{hiddenWorkflowEventCount} earlier events retained in Gateway history</strong>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <Text variant="secondary">No workflow events.</Text>
-            )}
-            <Divider sx={{ my: 1 }} />
-            {approvals?.approvals?.length ? (
-              <div className={detailStyles.timelineList}>
-                {approvals.approvals.map((approval) => (
-                  <div key={approval.approval_id}>
-                    <strong>{approval.approval_type}</strong>
-                    <span>
-                      {approval.approved ? "Approved" : "Rejected"} by {approval.actor_id}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Text variant="secondary">No approvals recorded.</Text>
-            )}
-          </section>
+          <ProposalReviewHistoryPanel
+            workflowEvents={evidenceModel.visibleWorkflowEvents}
+            hiddenWorkflowEventCount={evidenceModel.hiddenWorkflowEventCount}
+            approvals={approvals?.approvals ?? []}
+          />
         </aside>
       </div>
     </main>
