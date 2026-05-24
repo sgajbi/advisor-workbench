@@ -35,7 +35,7 @@ describe("portfolio screen navigation", () => {
       "/performance?mode=risk&portfolioId=PB%20SG%2F001"
     );
     expect(items.find((item) => item.key === "advisory")?.href).toBe(
-      "/performance?mode=advisor&portfolioId=PB%20SG%2F001"
+      "/recommendations?portfolioId=PB%20SG%2F001"
     );
     expect(items.find((item) => item.key === "manage")?.href).toBe("/workbench/PB%20SG%2F001");
   });

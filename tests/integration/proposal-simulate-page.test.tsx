@@ -20,6 +20,26 @@ vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => 
   ),
 }));
 
+vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () => ({
+  default: ({
+    title,
+    portfolioId,
+    children,
+  }: {
+    title: string;
+    portfolioId: string;
+    children: React.ReactNode;
+  }) => (
+    <section>
+      <h1>{title}</h1>
+      <p>{portfolioId}</p>
+      {children}
+    </section>
+  ),
+  resolveProposalPortfolioId: (portfolioId?: string | null) =>
+    portfolioId?.trim() || "PB_SG_GLOBAL_BAL_001",
+}));
+
 describe("ProposalSimulatePage", () => {
   afterEach(() => {
     redirectMock.mockClear();
@@ -34,7 +54,7 @@ describe("ProposalSimulatePage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
-    expect(screen.getByText("PORT_UI_1001")).toBeInTheDocument();
+    expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
   });
 
   it("defaults proposal simulation to the canonical front-office portfolio", async () => {
@@ -44,7 +64,7 @@ describe("ProposalSimulatePage", () => {
       })
     );
 
-    expect(screen.getByText("PB_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
   });
 });
 

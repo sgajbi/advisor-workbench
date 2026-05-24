@@ -32,7 +32,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
     key: "advisory",
     label: "Advisory",
     detail: "Advisor brief and recommendations",
-    href: "/performance?mode=advisor",
+    href: "/recommendations",
   },
 ];
 

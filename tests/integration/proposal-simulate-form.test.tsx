@@ -6,8 +6,11 @@ import ProposalSimulateForm from "../../src/features/proposals/components/propos
 describe("ProposalSimulateForm", () => {
   it("renders proposal simulation form", () => {
     render(<ProposalSimulateForm />);
-    expect(screen.getByText("Create And Simulate Proposal")).toBeInTheDocument();
-    expect(screen.getByText("Simulate Proposal")).toBeInTheDocument();
+    expect(screen.getByText("Create Advisory Proposal")).toBeInTheDocument();
+    expect(screen.getByText("Simulate Impact")).toBeInTheDocument();
+    expect(screen.getByText("Security Orders")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Idempotency Key")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Created By")).not.toBeInTheDocument();
   });
 
   it("uses provided initial portfolio id", () => {
