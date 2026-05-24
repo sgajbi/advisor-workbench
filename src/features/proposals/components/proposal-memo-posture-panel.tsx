@@ -28,11 +28,17 @@ type Props = {
   currentVersionNo?: number | null;
 };
 
+const DEFAULT_ADVISOR_ID = "advisor_1";
+const ADVISOR_COMMENTARY_SECTIONS = [
+  "EXECUTIVE_SUMMARY",
+  "LIMITATIONS_AND_DISCLOSURES",
+] as const;
+
 type PendingMemoAction = "create" | "review" | "report" | "commentary";
 
 export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo }: Props) {
   const [versionNo, setVersionNo] = useState(currentVersionNo ?? 1);
-  const [advisorId, setAdvisorId] = useState("advisor_1");
+  const [advisorId, setAdvisorId] = useState(DEFAULT_ADVISOR_ID);
   const [reviewReason, setReviewReason] = useState("");
   const [audience, setAudience] = useState<ProposalMemoProjectionAudience>("ADVISOR");
   const [pendingAction, setPendingAction] = useState<PendingMemoAction | null>(null);
@@ -89,7 +95,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         {
-          created_by: advisorId.trim() || "advisor_1",
+          created_by: advisorId.trim() || DEFAULT_ADVISOR_ID,
           lifecycle_status: "DRAFT",
           reason: { source: "workbench", purpose: "advisor memo review" },
         },
@@ -115,7 +121,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         versionNo,
         {
           action: "APPROVE_FOR_ADVISOR_USE",
-          reviewed_by: advisorId.trim() || "advisor_1",
+          reviewed_by: advisorId.trim() || DEFAULT_ADVISOR_ID,
           reason: reviewReason.trim(),
           source_memo_hash: memoHash,
           client_ready_release_requested: false,
@@ -142,7 +148,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         {
-          requested_by: advisorId.trim() || "advisor_1",
+          requested_by: advisorId.trim() || DEFAULT_ADVISOR_ID,
           source_memo_hash: memoHash,
           requested_output_formats: ["pdf"],
           client_ready_document_requested: false,
@@ -169,9 +175,9 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         proposalId,
         versionNo,
         {
-          requested_by: advisorId.trim() || "advisor_1",
+          requested_by: advisorId.trim() || DEFAULT_ADVISOR_ID,
           source_memo_hash: memoHash,
-          requested_sections: ["EXECUTIVE_SUMMARY", "LIMITATIONS_AND_DISCLOSURES"],
+          requested_sections: [...ADVISOR_COMMENTARY_SECTIONS],
           reason: { source: "workbench", purpose: "advisor-use commentary" },
         },
         buildProposalActionIdempotencyKey(proposalId, `memo-ai-commentary-${versionNo}`)
