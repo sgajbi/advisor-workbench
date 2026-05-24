@@ -477,6 +477,8 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("structured screenshot evidence");
     expect(runbook).toContain("SHOT-INDEX.md");
     expect(runbook).toContain("workflowPackChecks");
+    expect(runbook).toContain("supportabilityMatrix");
+    expect(runbook).toContain("registered versus classified panel counts");
     expect(runbook).toContain("ACCEPT`, `REVISE`, and");
   });
 });
