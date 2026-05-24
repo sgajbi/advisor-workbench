@@ -38,6 +38,13 @@ type Props = {
 
 type PendingMemoAction = "create" | "review" | "report" | "commentary";
 
+const MEMO_ACTION_FAILURE_COPY: Record<PendingMemoAction, string> = {
+  create: "Memo preparation did not complete. Review source evidence and try again.",
+  review: "Advisor memo approval was not recorded. Review source evidence and try again.",
+  report: "Report package preparation did not complete. Review source evidence and try again.",
+  commentary: "Advisor commentary request did not complete. Review source evidence and try again.",
+};
+
 export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo }: Props) {
   const [versionNo, setVersionNo] = useState(currentVersionNo ?? 1);
   const [advisorId, setAdvisorId] = useState(DEFAULT_MEMO_ADVISOR_ID);
@@ -101,7 +108,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       );
       await refreshMemoState();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unknown memo creation error");
+      setActionError(error instanceof Error ? error.message : MEMO_ACTION_FAILURE_COPY.create);
     } finally {
       setPendingAction(null);
     }
@@ -123,7 +130,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       setReviewReason("");
       await refreshMemoState();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unknown memo review error");
+      setActionError(error instanceof Error ? error.message : MEMO_ACTION_FAILURE_COPY.review);
     } finally {
       setPendingAction(null);
     }
@@ -144,7 +151,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       );
       await refreshMemoState();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unknown memo report-package error");
+      setActionError(error instanceof Error ? error.message : MEMO_ACTION_FAILURE_COPY.report);
     } finally {
       setPendingAction(null);
     }
@@ -165,7 +172,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
       );
       await refreshMemoState();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unknown commentary request error");
+      setActionError(error instanceof Error ? error.message : MEMO_ACTION_FAILURE_COPY.commentary);
     } finally {
       setPendingAction(null);
     }
@@ -286,7 +293,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 1 }}>
         <Button type="button" variant="outlined" disabled={pendingAction !== null} onClick={handleCreateMemo}>
-          {pendingAction === "create" ? "Creating Memo..." : "Create Or Replay Memo"}
+          {pendingAction === "create" ? "Preparing Memo..." : "Prepare Or Refresh Memo"}
         </Button>
         <Button
           type="button"
@@ -302,7 +309,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           disabled={!memoHash || pendingAction !== null}
           onClick={handleRequestReportPackage}
         >
-          {pendingAction === "report" ? "Requesting Package..." : "Request Memo Report Package"}
+          {pendingAction === "report" ? "Preparing Package..." : "Prepare Report Package"}
         </Button>
         <Button
           type="button"

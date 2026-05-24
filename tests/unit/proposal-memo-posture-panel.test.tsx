@@ -126,7 +126,7 @@ describe("ProposalMemoPosturePanel", () => {
   it("routes memo actions through Gateway APIs with source memo hash", async () => {
     renderPanel();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Create Or Replay Memo" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
     await waitFor(() => {
       expect(createProposalMemo).toHaveBeenCalledWith(
         "pp_1",
@@ -156,7 +156,7 @@ describe("ProposalMemoPosturePanel", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Request Memo Report Package" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare Report Package" }));
     await waitFor(() => {
       expect(requestProposalMemoReportPackage).toHaveBeenCalledWith(
         "pp_1",
@@ -202,5 +202,20 @@ describe("ProposalMemoPosturePanel", () => {
     expect(await screen.findByText("Source evidence degraded")).toBeInTheDocument();
     expect(screen.queryByText("DEGRADED_SOURCE_EVIDENCE")).not.toBeInTheDocument();
     expect(screen.queryByText(/ready for client/i)).not.toBeInTheDocument();
+  });
+
+  it("shows business-readable action failure copy for non-error failures", async () => {
+    vi.mocked(createProposalMemo).mockRejectedValueOnce("network failure");
+
+    renderPanel();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
+
+    expect(
+      await screen.findByText(
+        "Memo preparation did not complete. Review source evidence and try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Unknown memo/i)).not.toBeInTheDocument();
   });
 });
