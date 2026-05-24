@@ -40,6 +40,7 @@ function createReadyEvidence() {
     proofPackPanel: true,
     proofPackAiMemo: "ai-proof-1",
     wavePreview: true,
+    multiPortfolioWavePreview: true,
     waveId: "wave-1",
     waveReportInput: "report-input-1",
     waveAiMemo: "ai-wave-1",
@@ -82,11 +83,11 @@ describe("RFC36-43 live validation feature coverage", () => {
       expect.arrayContaining([
         expect.objectContaining({
           rfcId: "RFC-0041",
-          featureId: "rebalance_wave_single_portfolio_product_path",
+          featureId: "rebalance_wave_explicit_portfolio_product_path",
           coverageStatus: "validated",
-          scenarioScope: "single canonical portfolio explicit-list wave",
+          scenarioScope: "single-portfolio and multi-portfolio explicit-list waves",
           scenarioExpansionNeeded: expect.arrayContaining([
-            "companion canonical DPM portfolios for multi-portfolio wave proof",
+            "source-owner cohort products for broader campaign discovery scenarios",
           ]),
         }),
         expect.objectContaining({

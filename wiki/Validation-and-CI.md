@@ -46,8 +46,9 @@
   demo-ready evidence
 - `live-validation-summary.json` also includes `rfc3643FeatureCoverage`, which maps implemented
   RFC-0036 through RFC-0043 front-office features to live API, workflow-pack, seeded entity, and
-  panel evidence. Treat its scenario-expansion notes as open validation depth, not as implemented
-  product claims.
+  panel evidence. RFC-0041 coverage includes the governed multi-portfolio explicit-list wave
+  preview from the canonical contract. Treat remaining scenario-expansion notes as open validation
+  depth, not as implemented product claims.
 - construction alternatives live proof writes focused machine-readable evidence and a panel
   screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
 - DPM PM operating-quality live proof creates and re-reads Manage-backed score-run,
