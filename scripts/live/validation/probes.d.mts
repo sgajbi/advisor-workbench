@@ -24,3 +24,22 @@ export function fetchText(
   timeoutMs: number,
   fetchImpl?: (input: string, init?: Record<string, unknown>) => Promise<Response>
 ): Promise<string>;
+
+export function postJson<T = unknown>(
+  summary: ValidationSummary,
+  url: string,
+  description: string,
+  timeoutMs: number,
+  body: unknown,
+  fetchImpl?: (input: string, init?: Record<string, unknown>) => Promise<Response>
+): Promise<T>;
+
+export function postJsonExpectingStatus<T = unknown>(
+  summary: ValidationSummary,
+  url: string,
+  description: string,
+  timeoutMs: number,
+  expectedStatus: number,
+  body: unknown,
+  fetchImpl?: (input: string, init?: Record<string, unknown>) => Promise<Response>
+): Promise<T>;

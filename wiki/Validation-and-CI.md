@@ -47,8 +47,10 @@
 - `live-validation-summary.json` also includes `rfc3643FeatureCoverage`, which maps implemented
   RFC-0036 through RFC-0043 front-office features to live API, workflow-pack, seeded entity, and
   panel evidence. RFC-0041 coverage includes the governed multi-portfolio explicit-list wave
-  preview from the canonical contract. Treat remaining scenario-expansion notes as open validation
-  depth, not as implemented product claims.
+  preview from the canonical contract. RFC-0037 coverage includes bounded Core
+  `DpmPortfolioUniverseCandidate:v1` candidate-source preview and the required rejection of mixed
+  Core-discovery/manual-portfolio requests. Treat remaining scenario-expansion notes as open
+  validation depth, not as implemented product claims.
 - construction alternatives live proof writes focused machine-readable evidence and a panel
   screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
 - DPM PM operating-quality live proof creates and re-reads Manage-backed score-run,
@@ -67,7 +69,8 @@ The governed front-office validation flow checks the seeded `PB_SG_GLOBAL_BAL_00
 - advisor-brief and risk modes inside the performance experience
 - evidence-oriented product validation paths that are part of the current governed runtime
 - DPM outcome review, proof pack, command center, portfolio memory, rebalance-wave command center,
-  construction alternatives, PM operating quality, and PM copilot workspace
+  Core candidate-source wave preview/no-caller-portfolio guard, construction alternatives,
+  PM operating quality, and PM copilot workspace
 
 When validating active Workbench source changes, use the governed local-app bring-up
 `npm run live:stack:up:workbench-local` so `workbench.dev.lotus` serves the current branch while

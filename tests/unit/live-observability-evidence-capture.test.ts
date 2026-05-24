@@ -70,6 +70,8 @@ describe("canonical observability evidence capture", () => {
     expect(wiki).toContain("offline client-demo preparation");
     expect(runbook).toContain("Observability evidence capture");
     expect(validation).toContain("post-validation observability");
+    expect(validation).toContain("DpmPortfolioUniverseCandidate:v1");
+    expect(validation).toContain("no-caller-portfolio guard");
     expect(sidebar).toContain("Observability-Evidence");
   });
 });

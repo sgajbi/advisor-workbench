@@ -74,6 +74,11 @@ describe("canonical live validation script", () => {
     expect(browserValidator).toContain("DPM rebalance-wave preview did not return ready manage supportability");
     expect(browserValidator).toContain("DPM rebalance-wave multi-portfolio preview");
     expect(browserValidator).toContain("multiPortfolioWaveScenario.minimumPortfolioCount");
+    expect(browserValidator).toContain("DPM Core candidate-source wave preview");
+    expect(browserValidator).toContain("CORE_DPM_PORTFOLIO_UNIVERSE");
+    expect(browserValidator).toContain("postJsonExpectingStatus");
+    expect(browserValidator).toContain("dpm-core-candidate-source-preview");
+    expect(browserValidator).toContain("coreCandidateSourceInvalidRequestRejected");
     expect(browserValidator).toContain("supportedPortfolioMemoryStates");
     expect(browserValidator).toContain('"degraded"');
     expect(browserValidator).toContain("DPM portfolio memory did not return populated manage supportability");
@@ -416,7 +421,11 @@ describe("canonical live validation script", () => {
     expect(script).toContain("summary.rfc3643FeatureCoverage");
     expect(rfcFeatureCoverageModule).toContain("scenarioExpansionNeeded");
     expect(rfcFeatureCoverageModule).toContain("multiPortfolioWavePreview");
+    expect(rfcFeatureCoverageModule).toContain("coreCandidateSourcePreview");
+    expect(rfcFeatureCoverageModule).toContain("bounded Core DPM candidate-source preview");
     expect(rfcFeatureCoverageModule).toContain("single-portfolio and multi-portfolio explicit-list waves");
+    expect(runbook).toContain("DpmPortfolioUniverseCandidate:v1");
+    expect(runbook).toContain("candidate-source preview/no-caller-portfolio guard");
     expect(browserWorkflowModule).toContain("Mandate Readiness");
     expect(browserWorkflowModule).toContain("Attention Required");
     expect(browserWorkflowModule).toContain("Recommended Actions");
