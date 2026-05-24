@@ -9,7 +9,7 @@ import {
   getProposalMemoLineage,
   getProposalMemoProjection,
   getProposalMemoReplayEvidence,
-  requestProposalMemoAiCommentary,
+  requestProposalMemoAdvisorCommentary,
   requestProposalMemoReportPackage,
   reviewProposalMemo,
 } from "../../src/features/proposals/api";
@@ -20,7 +20,7 @@ vi.mock("../../src/features/proposals/api", () => ({
   getProposalMemoLineage: vi.fn(),
   getProposalMemoProjection: vi.fn(),
   getProposalMemoReplayEvidence: vi.fn(),
-  requestProposalMemoAiCommentary: vi.fn(),
+  requestProposalMemoAdvisorCommentary: vi.fn(),
   requestProposalMemoReportPackage: vi.fn(),
   reviewProposalMemo: vi.fn(),
 }));
@@ -86,7 +86,7 @@ describe("ProposalMemoPosturePanel", () => {
     vi.mocked(requestProposalMemoReportPackage).mockResolvedValue({
       report: { archive_refs: ["archive://memo/report/1"] },
     });
-    vi.mocked(requestProposalMemoAiCommentary).mockResolvedValue({
+    vi.mocked(requestProposalMemoAdvisorCommentary).mockResolvedValue({
       commentary: { authority: "NON_AUTHORITATIVE" },
     });
   });
@@ -157,7 +157,7 @@ describe("ProposalMemoPosturePanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Request Advisor Commentary" }));
     await waitFor(() => {
-      expect(requestProposalMemoAiCommentary).toHaveBeenCalledWith(
+      expect(requestProposalMemoAdvisorCommentary).toHaveBeenCalledWith(
         "pp_1",
         2,
         expect.objectContaining({

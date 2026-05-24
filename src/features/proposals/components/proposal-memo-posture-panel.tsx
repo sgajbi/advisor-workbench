@@ -10,7 +10,7 @@ import {
   getProposalMemoLineage,
   getProposalMemoProjection,
   getProposalMemoReplayEvidence,
-  requestProposalMemoAiCommentary,
+  requestProposalMemoAdvisorCommentary,
   requestProposalMemoReportPackage,
   reviewProposalMemo,
 } from "../api";
@@ -171,7 +171,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
     setPendingAction("commentary");
     setActionError(null);
     try {
-      await requestProposalMemoAiCommentary(
+      await requestProposalMemoAdvisorCommentary(
         proposalId,
         versionNo,
         {

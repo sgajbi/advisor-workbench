@@ -495,6 +495,15 @@ export async function requestProposalMemoAiCommentary(
   return envelope.data as unknown as ProposalMemoAiCommentaryData;
 }
 
+export async function requestProposalMemoAdvisorCommentary(
+  proposalId: string,
+  versionNo: number,
+  payload: ProposalMemoAiCommentaryRequest,
+  idempotencyKey?: string
+): Promise<ProposalMemoAiCommentaryData> {
+  return await requestProposalMemoAiCommentary(proposalId, versionNo, payload, idempotencyKey);
+}
+
 export async function getProposalMemoLineage(
   proposalId: string
 ): Promise<ProposalMemoLineageData> {

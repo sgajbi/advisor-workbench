@@ -22,7 +22,7 @@ const {
   createProposalMemoMock,
   reviewProposalMemoMock,
   requestProposalMemoReportPackageMock,
-  requestProposalMemoAiCommentaryMock,
+  requestProposalMemoAdvisorCommentaryMock,
 } = vi.hoisted(() => ({
   createProposalVersionMock: vi.fn(async () => ({
     data: {
@@ -152,7 +152,7 @@ const {
   createProposalMemoMock: vi.fn(async () => ({ memo_hash: "sha256:memo-001" })),
   reviewProposalMemoMock: vi.fn(async () => ({ memo_hash: "sha256:memo-001" })),
   requestProposalMemoReportPackageMock: vi.fn(async () => ({ report: { status: "READY" } })),
-  requestProposalMemoAiCommentaryMock: vi.fn(async () => ({
+  requestProposalMemoAdvisorCommentaryMock: vi.fn(async () => ({
     commentary: { authority: "NON_AUTHORITATIVE" },
   })),
 }));
@@ -174,7 +174,7 @@ vi.mock("../../src/features/proposals/api", () => ({
   getProposalMemoReplayEvidence: getProposalMemoReplayEvidenceMock,
   reviewProposalMemo: reviewProposalMemoMock,
   requestProposalMemoReportPackage: requestProposalMemoReportPackageMock,
-  requestProposalMemoAiCommentary: requestProposalMemoAiCommentaryMock,
+  requestProposalMemoAdvisorCommentary: requestProposalMemoAdvisorCommentaryMock,
 }));
 
 describe("ProposalDetailView", () => {

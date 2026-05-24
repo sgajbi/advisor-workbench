@@ -35,6 +35,7 @@ import {
   recordClientConsent,
   regenerateProposalNarrative,
   requestAdvisoryWorkspaceRationale,
+  requestProposalMemoAdvisorCommentary,
   requestProposalMemoAiCommentary,
   requestProposalMemoReportPackage,
   resumeAdvisoryWorkspace,
@@ -440,6 +441,16 @@ describe("proposal api", () => {
       },
       "idem-memo-ai-1"
     );
+    await requestProposalMemoAdvisorCommentary(
+      "pp_1",
+      2,
+      {
+        requested_by: "advisor_1",
+        source_memo_hash: "sha256:memo-001",
+        requested_sections: ["LIMITATIONS_AND_DISCLOSURES"],
+      },
+      "idem-memo-advisor-commentary-1"
+    );
     await getProposalMemoLineage("pp_1");
     await getProposalMemoReplayEvidence("pp_1", 2);
 
@@ -483,6 +494,15 @@ describe("proposal api", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({ "Idempotency-Key": "idem-memo-ai-1" }),
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/ai-commentary`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Idempotency-Key": "idem-memo-advisor-commentary-1",
+        }),
       })
     );
     expect(fetchMock).toHaveBeenCalledWith(`${expectedBaseUrl}/proposals/pp_1/memos/lineage`);
