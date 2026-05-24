@@ -15,6 +15,16 @@ export const PROPOSAL_MEMO_PROJECTION_AUDIENCES = [
 export type ProposalMemoProjectionAudience =
   (typeof PROPOSAL_MEMO_PROJECTION_AUDIENCES)[number];
 
+export const PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS: Record<
+  ProposalMemoProjectionAudience,
+  string
+> = {
+  ADVISOR: "Advisor use",
+  COMPLIANCE: "Compliance review",
+  OPERATIONS: "Operations handoff",
+  CLIENT_DRAFT: "Client discussion draft",
+};
+
 export type ProposalMemoPostureModel = {
   clientDraftPublicationLabel: string;
   commentaryAuthorityLabel: string;
@@ -57,6 +67,19 @@ function firstString(source: Record<string, unknown> | undefined, keys: string[]
     }
   }
   return null;
+}
+
+export function proposalMemoProjectionAudienceLabel(
+  value: unknown,
+  fallback: ProposalMemoProjectionAudience,
+): string {
+  if (
+    typeof value === "string" &&
+    Object.hasOwn(PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS, value)
+  ) {
+    return PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS[value as ProposalMemoProjectionAudience];
+  }
+  return textValue(value, PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS[fallback]);
 }
 
 type BuildProposalMemoPostureModelInput = {
@@ -107,7 +130,10 @@ export function buildProposalMemoPostureModel({
     lineageHashLabel: latestMemo?.memo_hash ?? "No lineage hash",
     lineageStatusLabel: textValue(latestMemo?.memo_status, "No lineage memo"),
     memoHash,
-    projectionAudienceLabel: textValue(recordValue(projection, "audience"), selectedAudience),
+    projectionAudienceLabel: proposalMemoProjectionAudienceLabel(
+      recordValue(projection, "audience"),
+      selectedAudience,
+    ),
     reportArchiveRefsLabel: textValue(recordValue(reportPosture, "archive_refs"), "None"),
     reportPackageStatusLabel: textValue(recordValue(reportPosture, "status"), "Not requested"),
     reviewPostureLabel: textValue(recordValue(reviewPosture, "advisor_use"), "Pending"),

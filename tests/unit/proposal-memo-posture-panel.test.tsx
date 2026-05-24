@@ -100,6 +100,8 @@ describe("ProposalMemoPosturePanel", () => {
     expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
     expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
     expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
+    expect((await screen.findAllByText("Advisor use")).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByRole("option", { name: "Client discussion draft" })).toBeInTheDocument();
     expect(await screen.findByText(/Memo evidence: sha256:memo-001/)).toBeInTheDocument();
     expect(await screen.findByText(/Replay evidence: sha256:memo-001/)).toBeInTheDocument();
     expect(await screen.findByText("Evidence Readiness")).toBeInTheDocument();
@@ -114,6 +116,7 @@ describe("ProposalMemoPosturePanel", () => {
     expect(screen.queryByText(/Memo hash:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Replay hash:/)).not.toBeInTheDocument();
     expect(screen.queryByText("Lineage")).not.toBeInTheDocument();
+    expect(screen.queryByText("CLIENT_DRAFT")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client-ready release/i })).not.toBeInTheDocument();
   });

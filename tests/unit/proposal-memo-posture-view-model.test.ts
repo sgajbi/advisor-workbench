@@ -50,7 +50,7 @@ describe("buildProposalMemoPostureModel", () => {
       lineageHashLabel: "sha256:memo-001",
       lineageStatusLabel: "APPROVED_FOR_ADVISOR_USE",
       memoHash: "sha256:memo-001",
-      projectionAudienceLabel: "COMPLIANCE",
+      projectionAudienceLabel: "Compliance review",
       reportArchiveRefsLabel: "archive://memo/report/1",
       reportPackageStatusLabel: "READY",
       reviewPostureLabel: "APPROVED_FOR_ADVISOR_USE",
@@ -76,7 +76,7 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.statusLabel).toBe("Memo Pending");
     expect(model.memoHash).toBeNull();
     expect(model.reviewPostureLabel).toBe("Pending");
-    expect(model.projectionAudienceLabel).toBe("CLIENT_DRAFT");
+    expect(model.projectionAudienceLabel).toBe("Client discussion draft");
     expect(model.clientDraftPublicationLabel).toBe("Blocked");
     expect(model.supportabilityLabel).toBe("DEGRADED_SOURCE_EVIDENCE");
     expect(model.replayHashLabel).toBe("Not available");

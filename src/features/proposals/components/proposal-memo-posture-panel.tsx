@@ -24,6 +24,7 @@ import {
 } from "../proposal-memo-action-payloads";
 import {
   buildProposalMemoPostureModel,
+  PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS,
   PROPOSAL_MEMO_PROJECTION_AUDIENCES,
   type ProposalMemoProjectionAudience,
 } from "../proposal-memo-posture-view-model";
@@ -266,7 +267,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           >
             {PROPOSAL_MEMO_PROJECTION_AUDIENCES.map((item) => (
               <option key={item} value={item}>
-                {item}
+                {PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS[item]}
               </option>
             ))}
           </select>
