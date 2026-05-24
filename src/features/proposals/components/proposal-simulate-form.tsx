@@ -5,16 +5,7 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  Grid,
-  MenuItem,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Alert, Button, MenuItem, Stack, TextField } from "@mui/material";
 
 import { createProposal, simulateProposal } from "../api";
 import {
@@ -24,14 +15,15 @@ import {
 } from "../simulation-payload";
 import { ProposalSimulateResponse } from "../types";
 import { SectionBlock, Text } from "@/design-system";
+import styles from "./proposal-simulate-form.module.css";
 
 const schema = z.object({
-  idempotencyKey: z.string().min(6, "Idempotency key is required"),
-  createdBy: z.string().min(1, "Created by is required"),
-  proposalTitle: z.string().min(1, "Proposal title is required"),
+  idempotencyKey: z.string().min(6, "Draft control key is required"),
+  createdBy: z.string().min(1, "Advisor identity is required"),
+  proposalTitle: z.string().min(1, "Advisory draft title is required"),
   portfolioId: z.string().min(1, "Portfolio ID is required"),
   baseCurrency: z.string().min(3, "Base currency is required"),
-  cashAmount: z.number().positive("Cash amount must be greater than 0"),
+  cashAmount: z.number().positive("Investable cash must be greater than 0"),
 });
 
 type FormInput = z.infer<typeof schema>;
@@ -96,7 +88,7 @@ export default function ProposalSimulateForm({
     defaultValues: {
       idempotencyKey: defaultIdempotencyKey,
       createdBy: "advisor_1",
-      proposalTitle: "lotus-manage proposal draft",
+      proposalTitle: "Tactical rebalance proposal",
       portfolioId: initialPortfolioId,
       baseCurrency: "USD",
       cashAmount: 10000,
@@ -113,6 +105,10 @@ export default function ProposalSimulateForm({
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
 
+  const portfolioId = form.watch("portfolioId");
+  const baseCurrency = form.watch("baseCurrency");
+  const cashAmount = form.watch("cashAmount");
+
   function updateCashFlow(id: string, patch: Partial<CashFlowIntentRow>) {
     setCashFlows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
@@ -121,8 +117,8 @@ export default function ProposalSimulateForm({
     setTrades((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
-  function addCashFlow(baseCurrency: string) {
-    setCashFlows((current) => [...current, createCashFlowIntent(current.length + 1, baseCurrency)]);
+  function addCashFlow(currency: string) {
+    setCashFlows((current) => [...current, createCashFlowIntent(current.length + 1, currency)]);
   }
 
   function addTrade() {
@@ -193,285 +189,321 @@ export default function ProposalSimulateForm({
 
   return (
     <SectionBlock
-      title="Create And Simulate Proposal"
-      subtitle="Build iterative intent sets, simulate impact, and persist an advisory draft."
+      title="Create Advisory Proposal"
+      subtitle="Prepare advisor-use proposal inputs, simulate portfolio impact, and save a governed draft."
     >
-      <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
-        <Stack spacing={1.2}>
-          <Text variant="label">Portfolio Inputs</Text>
-          <Controller
-            control={form.control}
-            name="portfolioId"
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Portfolio ID"
-                size="small"
-                fullWidth
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message ?? "Internal portfolio identifier"}
+      <form onSubmit={form.handleSubmit(onSubmit)} className={styles.form}>
+        <Controller
+          control={form.control}
+          name="idempotencyKey"
+          render={({ field }) => <input type="hidden" {...field} />}
+        />
+        <Controller
+          control={form.control}
+          name="createdBy"
+          render={({ field }) => <input type="hidden" {...field} />}
+        />
+
+        <div className={styles.summaryStrip} aria-label="Proposal setup summary">
+          <div>
+            <span>Portfolio</span>
+            <strong>{portfolioId || "Not selected"}</strong>
+          </div>
+          <div>
+            <span>Base Currency</span>
+            <strong>{baseCurrency || "N/A"}</strong>
+          </div>
+          <div>
+            <span>Investable Cash</span>
+            <strong>
+              {baseCurrency || "USD"} {Number(cashAmount || 0).toLocaleString()}
+            </strong>
+          </div>
+          <div>
+            <span>Trade Lines Ready</span>
+            <strong>{validTradeCount()}</strong>
+          </div>
+        </div>
+
+        <div className={styles.workspaceGrid}>
+          <div className={styles.mainLane}>
+            <section className={styles.panel} aria-labelledby="portfolio-context-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="portfolio-context-heading">Portfolio Context</h3>
+                  <p>Confirm the account, currency, and available liquidity before building the draft.</p>
+                </div>
+              </div>
+              <div className={styles.inputGrid}>
+                <Controller
+                  control={form.control}
+                  name="portfolioId"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label="Portfolio ID"
+                      size="small"
+                      fullWidth
+                      {...field}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? "Private banking portfolio under review"}
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="baseCurrency"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label="Base Currency"
+                      size="small"
+                      fullWidth
+                      {...field}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? "Reporting currency for the proposal"}
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="cashAmount"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label="Investable Cash"
+                      size="small"
+                      fullWidth
+                      type="number"
+                      value={field.value}
+                      onChange={(event) => {
+                        const next = (event.target as HTMLInputElement).valueAsNumber;
+                        field.onChange(Number.isNaN(next) ? 0 : next);
+                      }}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? "Cash available for investment decisions"}
+                    />
+                  )}
+                />
+              </div>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="cash-movements-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="cash-movements-heading">Cash Movements</h3>
+                  <p>Model client subscriptions, withdrawals, and liquidity changes.</p>
+                </div>
+                <span>Net {netCashImpact()}</span>
+              </div>
+              <div className={styles.intentRows}>
+                {cashFlows.map((item) => (
+                  <div key={item.id} className={styles.cashRow}>
+                    <TextField
+                      label="Movement"
+                      size="small"
+                      select
+                      value={item.direction}
+                      onChange={(event) =>
+                        updateCashFlow(item.id, { direction: event.target.value as "IN" | "OUT" })
+                      }
+                    >
+                      <MenuItem value="IN">Inflow</MenuItem>
+                      <MenuItem value="OUT">Outflow</MenuItem>
+                    </TextField>
+                    <TextField
+                      label="Currency"
+                      size="small"
+                      value={item.currency}
+                      onChange={(event) => updateCashFlow(item.id, { currency: event.target.value })}
+                    />
+                    <TextField
+                      label="Amount"
+                      size="small"
+                      type="number"
+                      value={item.amount}
+                      onChange={(event) => {
+                        const next = (event.target as HTMLInputElement).valueAsNumber;
+                        updateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
+                      }}
+                    />
+                    <TextField
+                      label="Advisor Note"
+                      size="small"
+                      fullWidth
+                      value={item.description ?? ""}
+                      onChange={(event) => updateCashFlow(item.id, { description: event.target.value })}
+                    />
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      color="inherit"
+                      disabled={cashFlows.length === 1}
+                      onClick={() => setCashFlows((current) => current.filter((row) => row.id !== item.id))}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => addCashFlow(form.getValues().baseCurrency || "USD")}
+              >
+                Add Cash Movement
+              </Button>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="security-orders-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="security-orders-heading">Security Orders</h3>
+                  <p>Enter proposed buy or sell lines that should be tested before advisor review.</p>
+                </div>
+                <span>{validTradeCount()} ready</span>
+              </div>
+              <div className={styles.intentRows}>
+                {trades.map((item) => (
+                  <div key={item.id} className={styles.tradeRow}>
+                    <TextField
+                      label="Order"
+                      size="small"
+                      select
+                      value={item.side}
+                      onChange={(event) => updateTrade(item.id, { side: event.target.value as "BUY" | "SELL" })}
+                    >
+                      <MenuItem value="BUY">Buy</MenuItem>
+                      <MenuItem value="SELL">Sell</MenuItem>
+                    </TextField>
+                    <TextField
+                      label="Instrument"
+                      size="small"
+                      fullWidth
+                      value={item.instrumentId}
+                      onChange={(event) => updateTrade(item.id, { instrumentId: event.target.value })}
+                    />
+                    <TextField
+                      label="Quantity"
+                      size="small"
+                      type="number"
+                      value={item.quantity}
+                      onChange={(event) => {
+                        const next = (event.target as HTMLInputElement).valueAsNumber;
+                        updateTrade(item.id, { quantity: Number.isNaN(next) ? 0 : next });
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      color="inherit"
+                      disabled={trades.length === 1}
+                      onClick={() => setTrades((current) => current.filter((row) => row.id !== item.id))}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button type="button" variant="outlined" onClick={addTrade}>
+                Add Security Order
+              </Button>
+            </section>
+
+            <section className={styles.panel} aria-labelledby="draft-details-heading">
+              <div className={styles.panelHeader}>
+                <div>
+                  <h3 id="draft-details-heading">Draft Details</h3>
+                  <p>Name the advisor-use draft before saving it into the proposal workflow.</p>
+                </div>
+              </div>
+              <Controller
+                control={form.control}
+                name="proposalTitle"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    label="Advisory Draft Title"
+                    size="small"
+                    fullWidth
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message ?? "Visible in the proposal queue"}
+                  />
+                )}
               />
-            )}
-          />
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-            <Controller
-              control={form.control}
-              name="baseCurrency"
-              render={({ field, fieldState }) => (
-                <TextField
-                  label="Base Currency"
-                  size="small"
-                  fullWidth
-                  {...field}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? "Reporting currency (for example USD)"}
-                />
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="cashAmount"
-              render={({ field, fieldState }) => (
-                <TextField
-                  label="Available Cash"
-                  size="small"
-                  fullWidth
-                  type="number"
-                  value={field.value}
-                  onChange={(event) => {
-                    const next = (event.target as HTMLInputElement).valueAsNumber;
-                    field.onChange(Number.isNaN(next) ? 0 : next);
-                  }}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message ?? "Amount available for investment decisions"}
-                />
-              )}
-            />
-          </Stack>
+            </section>
+          </div>
 
-          <Text variant="label">Scenario Intent Builder</Text>
-          <Text variant="secondary">
-            Net cash impact: {netCashImpact()} | Valid trades: {validTradeCount()}
-          </Text>
-
-          <Stack spacing={1}>
-            <Text variant="subsectionTitle">Cash Flow Intents</Text>
-            {cashFlows.map((item) => (
-              <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
-                <TextField
-                  label="Direction"
-                  size="small"
-                  select
-                  value={item.direction}
-                  onChange={(event) =>
-                    updateCashFlow(item.id, { direction: event.target.value as "IN" | "OUT" })
-                  }
-                  sx={{ minWidth: 120 }}
-                >
-                  <MenuItem value="IN">IN</MenuItem>
-                  <MenuItem value="OUT">OUT</MenuItem>
-                </TextField>
-                <TextField
-                  label="Currency"
-                  size="small"
-                  value={item.currency}
-                  onChange={(event) => updateCashFlow(item.id, { currency: event.target.value })}
-                />
-                <TextField
-                  label="Amount"
-                  size="small"
-                  type="number"
-                  value={item.amount}
-                  onChange={(event) => {
-                    const next = (event.target as HTMLInputElement).valueAsNumber;
-                    updateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
-                  }}
-                />
-                <TextField
-                  label="Description"
-                  size="small"
-                  fullWidth
-                  value={item.description ?? ""}
-                  onChange={(event) => updateCashFlow(item.id, { description: event.target.value })}
-                />
-                <Button
-                  type="button"
-                  variant="outlined"
-                  color="inherit"
-                  disabled={cashFlows.length === 1}
-                  onClick={() => setCashFlows((current) => current.filter((row) => row.id !== item.id))}
-                >
-                  Remove
+          <aside className={styles.actionRail} aria-label="Proposal workflow actions">
+            <section className={styles.actionPanel}>
+              <h3>Advisor Workflow</h3>
+              <p>
+                Simulate first to review portfolio impact, then save a draft for risk and compliance routing.
+              </p>
+              <ul>
+                <li>Portfolio context captured</li>
+                <li>Cash movement model ready</li>
+                <li>{validTradeCount()} security order lines ready</li>
+              </ul>
+              <Stack spacing={1}>
+                <Button type="submit" variant="contained" disabled={loading} fullWidth>
+                  {loading ? "Simulating..." : "Simulate Impact"}
+                </Button>
+                <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft} fullWidth>
+                  {savingDraft ? "Saving Draft..." : "Save Advisor Draft"}
+                </Button>
+                <Button component={Link} href="/proposals" variant="text" fullWidth>
+                  View Proposal Queue
                 </Button>
               </Stack>
-            ))}
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={() => addCashFlow(form.getValues().baseCurrency || "USD")}
-            >
-              Add Cash Flow
-            </Button>
-          </Stack>
-
-          <Stack spacing={1}>
-            <Text variant="subsectionTitle">Trade Intents</Text>
-            {trades.map((item) => (
-              <Stack key={item.id} direction={{ xs: "column", md: "row" }} spacing={1}>
-                <TextField
-                  label="Side"
-                  size="small"
-                  select
-                  value={item.side}
-                  onChange={(event) => updateTrade(item.id, { side: event.target.value as "BUY" | "SELL" })}
-                  sx={{ minWidth: 120 }}
-                >
-                  <MenuItem value="BUY">BUY</MenuItem>
-                  <MenuItem value="SELL">SELL</MenuItem>
-                </TextField>
-                <TextField
-                  label="Instrument ID"
-                  size="small"
-                  fullWidth
-                  value={item.instrumentId}
-                  onChange={(event) => updateTrade(item.id, { instrumentId: event.target.value })}
-                />
-                <TextField
-                  label="Quantity"
-                  size="small"
-                  type="number"
-                  value={item.quantity}
-                  onChange={(event) => {
-                    const next = (event.target as HTMLInputElement).valueAsNumber;
-                    updateTrade(item.id, { quantity: Number.isNaN(next) ? 0 : next });
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outlined"
-                  color="inherit"
-                  disabled={trades.length === 1}
-                  onClick={() => setTrades((current) => current.filter((row) => row.id !== item.id))}
-                >
-                  Remove
-                </Button>
-              </Stack>
-            ))}
-            <Button type="button" variant="outlined" onClick={addTrade}>
-              Add Trade
-            </Button>
-          </Stack>
-
-          <Text variant="label">Proposal Metadata</Text>
-          <Controller
-            control={form.control}
-            name="idempotencyKey"
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Idempotency Key"
-                size="small"
-                fullWidth
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message ?? "Used to prevent duplicate submissions"}
-              />
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="createdBy"
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Created By"
-                size="small"
-                fullWidth
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message ?? "Advisor or user identifier"}
-              />
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="proposalTitle"
-            render={({ field, fieldState }) => (
-              <TextField
-                label="Proposal Title"
-                size="small"
-                fullWidth
-                {...field}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message ?? "Human-readable draft title"}
-              />
-            )}
-          />
-        </Stack>
-
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1.2 }}>
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? "Simulating..." : "Simulate Proposal"}
-          </Button>
-          <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft}>
-            {savingDraft ? "Saving Draft..." : "Save Draft"}
-          </Button>
-        </Stack>
-      </Box>
+            </section>
+          </aside>
+        </div>
+      </form>
 
       {error ? (
-        <Alert severity="error" sx={{ mt: 1.2 }}>
-          Error: {error}
+        <Alert severity="error" className={styles.message}>
+          {error}
         </Alert>
       ) : null}
 
       {result ? (
-        <Box sx={{ mt: 1.2 }}>
+        <section className={styles.resultPanel} aria-label="Simulation summary">
           <Text variant="sectionTitle">Simulation Summary</Text>
-          <div className="kpi-grid" style={{ marginTop: 8 }}>
-            <div className="kpi-box">
-              <p className="kpi-label">Status</p>
-              <p className="kpi-value">{result.data.status ?? "UNKNOWN"}</p>
+          <div className={styles.resultGrid}>
+            <div>
+              <span>Status</span>
+              <strong>{result.data.status ?? "UNKNOWN"}</strong>
             </div>
-            <div className="kpi-box">
-              <p className="kpi-label">Proposal Run ID</p>
-              <p className="kpi-value">{String(result.data.proposal_run_id ?? "N/A")}</p>
+            <div>
+              <span>Proposal Run</span>
+              <strong>{String(result.data.proposal_run_id ?? "N/A")}</strong>
             </div>
-            <div className="kpi-box">
-              <p className="kpi-label">Correlation ID</p>
-              <p className="kpi-value" style={{ fontSize: "0.9rem" }}>
-                {result.correlation_id}
-              </p>
+            <div>
+              <span>Correlation</span>
+              <strong>{result.correlation_id}</strong>
             </div>
           </div>
-          <Divider sx={{ my: 1 }} />
-          <Text variant="label">Key Output Signals</Text>
           {simulationHighlights(result).length ? (
-            <Grid container spacing={1}>
+            <div className={styles.outputGrid}>
               {simulationHighlights(result).map((highlight) => (
-                <Grid size={{ xs: 12, md: 6 }} key={highlight.label}>
-                  <div className="analytics-stat">
-                    <Text variant="label">{highlight.label}</Text>
-                    <Text variant="metricValueCompact">{highlight.value}</Text>
-                  </div>
-                </Grid>
+                <div key={highlight.label}>
+                  <span>{highlight.label}</span>
+                  <strong>{highlight.value}</strong>
+                </div>
               ))}
-            </Grid>
+            </div>
           ) : (
             <Text variant="secondary">No additional scalar metrics were returned by the simulation engine.</Text>
           )}
-        </Box>
+        </section>
       ) : null}
 
       {savedProposalId ? (
-        <Box sx={{ mt: 1.2 }}>
+        <section className={styles.resultPanel} aria-label="Saved advisory draft">
           <Text variant="body">Draft saved as Proposal ID: {savedProposalId}</Text>
           <Text variant="body">
             <Link href={`/proposals/${savedProposalId}`}>Open Proposal Details</Link>
           </Text>
-        </Box>
+        </section>
       ) : null}
-      <Text variant="body">
-        <Link href="/proposals">View Proposal Workspace</Link>
-      </Text>
     </SectionBlock>
   );
 }

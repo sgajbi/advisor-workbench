@@ -13,7 +13,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
 | Advisor proposal narrative posture | `/proposals`, `/proposals/{proposalId}` | Gateway `/api/v1/proposals*` | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, delivery-event posture, and governed canonical proof through Gateway only. Canonical validation creates a seeded advisor-review narrative proposal, exercises the panel, and captures `proposal-narrative-posture-live.png`. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
-| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only. |
+| DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, selected-campaign candidate-source review, read-only campaign lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. Canonical panel proof is governed as `dpm.construction_alternatives` and does not claim Workbench-local construction methodology, order routing, trade execution, or OMS truth. |
 | DPM proof-pack evidence | `/workbench/{portfolioId}?mode=proof` | Gateway `/api/v1/dpm/command-center/proof-packs*` | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo request posture. |
 | DPM portfolio memory | `/workbench/{portfolioId}?mode=memory` | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory. |
@@ -99,25 +99,27 @@ Implemented:
 8. reads bounded `BulkReviewCampaignDiscovery:v1` posture through Gateway and renders Manage-owned
    eligible candidate count, expiry posture, access purpose, governance posture, and source-ref
    posture without discovering global campaign cohorts,
-9. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
+9. renders selected campaign candidate-source product, source readiness, applied filters, warnings,
+   lineage count, next action, and no-OMS/no-client-contact boundaries without local cohort discovery,
+10. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
    bounded Gateway-backed retire/supersede controls that require actor, reason, and replacement
    lineage for supersede, then refreshes campaign definitions and lifecycle evidence without
    inferring lifecycle state or recalculating membership locally,
-10. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
+11. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
    displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
    correlation id, idempotency key, page counts, and operating boundaries without recomputing launch
    state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
    routing, fills, settlement, or OMS execution,
-11. checks campaign preview readiness and launch-package readiness through Gateway and enables
+12. checks campaign preview readiness and launch-package readiness through Gateway and enables
    launch only when Manage returns `READY`, preserving source-owned reason codes, blocked actions,
    source posture, durable wave, and idempotency evidence without recomputing membership,
    readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
-12. renders read-only Manage campaign workflow audit evidence from Gateway operating queue,
+13. renders read-only Manage campaign workflow audit evidence from Gateway operating queue,
    approval inbox, workflow board, assignment plan, workflow automation, approval-decision,
    assignment-action, assignment-task, and maker-checker read endpoints, preserving source refs,
    count/page metadata, reason codes, content hashes, task-transition posture, and operating
    boundaries without mutating assignment or maker-checker state,
-13. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+14. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
    report-input refs,
    workflow-pack run ids, request bodies, or response bodies as metric labels.
 

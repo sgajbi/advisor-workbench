@@ -63,6 +63,13 @@ export type DpmCampaignDefinitionRow = {
   expiryState: string;
   accessPurpose: string;
   sourcePosture: string;
+  candidateSourceProduct: string;
+  candidateSourceReadiness: string;
+  candidateFilters: string;
+  candidateWarnings: string;
+  lineageRefCount: string;
+  nextAction: string;
+  operatingBoundaries: string;
 };
 
 export type DpmCampaignLifecycleEventRow = {
@@ -632,6 +639,19 @@ function buildCampaignDefinitionRows(
       readString(discovery, "governance_status") ||
       readString(record, "governance_state") ||
       (governance.approval_ref || governance.approved_by ? "GOVERNED" : "NOT_PROVIDED");
+    const sourceRefCount =
+      readNumber(discovery, "source_ref_count") ??
+      extractRecordArray(record.source_refs).length +
+        extractRecordArray(governance.source_refs).length +
+        candidateSourceRefCount;
+    const candidateSourceReadiness = resolveCampaignCandidateSourceReadiness(
+      discovery,
+      sourceRefCount
+    );
+    const pageTruncated =
+      readValue(discovery, "page_truncated") === true ||
+      readValue(record, "page_truncated") === true ||
+      readString(discovery, "page_truncated").toLowerCase() === "true";
     return {
       key: buildCampaignKey(record, index),
       campaignId: readString(record, "campaign_id") || "N/A",
@@ -655,14 +675,128 @@ function buildCampaignDefinitionRows(
       expiryState: normalizeState(readString(discovery, "expiry_state") || "N/A"),
       accessPurpose: readString(discovery, "access_purpose") || "N/A",
       sourcePosture:
-        readValue(discovery, "source_ref_count") ||
+        sourceRefCount > 0 ||
         extractRecordArray(record.source_refs).length > 0 ||
         extractRecordArray(governance.source_refs).length > 0 ||
         candidateSourceRefCount > 0
           ? "Source-backed"
           : "Review source refs",
+      candidateSourceProduct: resolveCampaignCandidateSourceProduct(record, discovery),
+      candidateSourceReadiness,
+      candidateFilters: resolveCampaignCandidateFilters(record, discovery),
+      candidateWarnings: resolveCampaignCandidateWarnings(
+        discovery,
+        candidateSourceReadiness,
+        pageTruncated
+      ),
+      lineageRefCount: formatValue(sourceRefCount),
+      nextAction: resolveCampaignCandidateNextAction(candidateSourceReadiness, pageTruncated),
+      operatingBoundaries: resolveCampaignCandidateOperatingBoundaries(record, discovery),
     };
   });
+}
+
+function resolveCampaignCandidateSourceProduct(
+  record: Record<string, unknown>,
+  discovery: Record<string, unknown>
+): string {
+  const productName =
+    readString(discovery, "product_name") ||
+    readString(record, "product_name") ||
+    readString(discovery, "source_product") ||
+    readString(record, "source_product");
+  const productVersion =
+    readString(discovery, "product_version") || readString(record, "product_version");
+  if (productName && productVersion) {
+    return `${productName}:${productVersion}`;
+  }
+  return productName || "BulkReviewCampaignMembership:v1";
+}
+
+function resolveCampaignCandidateSourceReadiness(
+  discovery: Record<string, unknown>,
+  sourceRefCount: number
+): string {
+  const supportability = readRecord(discovery.supportability);
+  return normalizeState(
+    readString(discovery, "source_readiness_state") ||
+      readString(discovery, "supportability_state") ||
+      readString(supportability, "state") ||
+      readString(discovery, "candidate_source_ref_posture") ||
+      (sourceRefCount > 0 ? "READY" : "UNKNOWN")
+  );
+}
+
+function resolveCampaignCandidateFilters(
+  record: Record<string, unknown>,
+  discovery: Record<string, unknown>
+): string {
+  const appliedFilters = readRecord(discovery.applied_filters ?? record.applied_filters);
+  const filterEntries = Object.entries(appliedFilters)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .map(([key, value]) => `${formatLabel(key)}: ${formatValue(value)}`);
+  if (filterEntries.length > 0) {
+    return filterEntries.join("; ");
+  }
+  return [
+    ["As Of", readString(record, "as_of_date") || readString(discovery, "as_of_date")],
+    [
+      "Eligible Types",
+      extractStringArray(record.eligible_portfolio_types).join(", ") ||
+        extractStringArray(discovery.eligible_portfolio_types).join(", "),
+    ],
+    ["Access Purpose", readString(discovery, "access_purpose")],
+  ]
+    .filter(([, value]) => value)
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("; ") || "N/A";
+}
+
+function resolveCampaignCandidateWarnings(
+  discovery: Record<string, unknown>,
+  candidateSourceReadiness: string,
+  pageTruncated: boolean
+): string {
+  const warnings = [
+    ...extractStringArray(discovery.warnings),
+    ...extractStringArray(discovery.reason_codes),
+  ];
+  if (pageTruncated) {
+    warnings.push("TRUNCATED_PAGE");
+  }
+  if (["INCOMPLETE", "DEGRADED", "PARTIAL", "BLOCKED"].includes(candidateSourceReadiness)) {
+    warnings.push(`SOURCE_${candidateSourceReadiness}`);
+  }
+  return formatStringList([...new Set(warnings)]);
+}
+
+function resolveCampaignCandidateNextAction(
+  candidateSourceReadiness: string,
+  pageTruncated: boolean
+): string {
+  if (pageTruncated) {
+    return "Narrow candidate filters or page through source evidence before launch readiness.";
+  }
+  if (["INCOMPLETE", "DEGRADED", "PARTIAL", "BLOCKED"].includes(candidateSourceReadiness)) {
+    return "Resolve source readiness before checking campaign launch posture.";
+  }
+  if (candidateSourceReadiness === "READY") {
+    return "Check launch readiness through Gateway.";
+  }
+  return "Review source refs before campaign action.";
+}
+
+function resolveCampaignCandidateOperatingBoundaries(
+  record: Record<string, unknown>,
+  discovery: Record<string, unknown>
+): string {
+  const boundaries = [
+    ...extractStringArray(discovery.operating_boundaries),
+    ...extractStringArray(record.operating_boundaries),
+    "NO_OMS_EXECUTION_CLAIM",
+    "NO_CLIENT_CONTACT_WORKFLOW",
+  ];
+  return formatStringList([...new Set(boundaries)]);
 }
 
 function buildCampaignKey(record: Record<string, unknown>, index: number): string {

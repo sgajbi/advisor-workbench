@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import ProposalSimulatePage from "../../src/app/proposals/simulate/page";
 
@@ -10,26 +11,60 @@ vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirectMock(target),
 }));
 
+vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => ({
+  default: ({ initialPortfolioId }: { initialPortfolioId?: string }) => (
+    <section>
+      <h1>Create Advisory Proposal</h1>
+      <p>{initialPortfolioId}</p>
+    </section>
+  ),
+}));
+
+vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () => ({
+  default: ({
+    title,
+    portfolioId,
+    children,
+  }: {
+    title: string;
+    portfolioId: string;
+    children: React.ReactNode;
+  }) => (
+    <section>
+      <h1>{title}</h1>
+      <p>{portfolioId}</p>
+      {children}
+    </section>
+  ),
+  resolveProposalPortfolioId: (portfolioId?: string | null) =>
+    portfolioId?.trim() || "PB_SG_GLOBAL_BAL_001",
+}));
+
 describe("ProposalSimulatePage", () => {
   afterEach(() => {
     redirectMock.mockClear();
     vi.unstubAllGlobals();
   });
 
-  it("redirects proposal simulation into performance when a portfolio is selected", async () => {
-    await expect(
-      ProposalSimulatePage({
+  it("renders proposal simulation with the selected portfolio", async () => {
+    render(
+      await ProposalSimulatePage({
         searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
       })
-    ).rejects.toThrowError("REDIRECT:/performance?portfolioId=PORT_UI_1001");
+    );
+
+    expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
+    expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
   });
 
-  it("redirects proposal simulation into portfolio when no portfolio is selected", async () => {
-    await expect(
-      ProposalSimulatePage({
+  it("defaults proposal simulation to the canonical front-office portfolio", async () => {
+    render(
+      await ProposalSimulatePage({
         searchParams: Promise.resolve({}),
       })
-    ).rejects.toThrowError("REDIRECT:/portfolio");
+    );
+
+    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
   });
 });
 

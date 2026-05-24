@@ -53,8 +53,37 @@ const {
       current_version_no: 1,
     },
     current_version: {
+      artifact_hash: "sha256:artifact-001",
+      evidence_bundle: {
+        generated_at: "2026-02-22T00:02:00Z",
+        hashes: {
+          request_hash: "sha256:request-001",
+          simulation_hash: "sha256:simulation-001",
+          artifact_hash: "sha256:artifact-001",
+        },
+        allocation_comparison: [
+          { label: "Global Equities", current: "65.2%", proposed: "60.0%" },
+          { label: "Fixed Income", current: "28.4%", proposed: "35.0%" },
+        ],
+      },
       simulate_request: {
-        options: { enable_proposal_simulation: true },
+        body: {
+          options: { enable_proposal_simulation: true },
+          proposed_trades: [
+            {
+              intent_type: "SECURITY_TRADE",
+              side: "BUY",
+              instrument_id: "VTI",
+              quantity: "450.0000",
+            },
+            {
+              intent_type: "SECURITY_TRADE",
+              side: "SELL",
+              instrument_id: "AAPL",
+              quantity: "200.0000",
+            },
+          ],
+        },
       },
     },
   })),
@@ -162,13 +191,29 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByText("Current State")).toBeInTheDocument();
+      expect(screen.getByText("Review History")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("DRAFT")).toBeInTheDocument();
+    expect(screen.getAllByText("DRAFT").length).toBeGreaterThan(0);
     expect(screen.getByText(/CREATED/)).toBeInTheDocument();
     expect(screen.getByText("RISK")).toBeInTheDocument();
     expect(screen.getByText(/risk_1/)).toBeInTheDocument();
+  });
+
+  it("renders a dense advisor proposal workspace from Gateway proposal evidence", async () => {
+    renderWithQueryClient();
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Advisor proposal workspace" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Advisor use only - not client ready")).toBeInTheDocument();
+    expect(screen.getByText("VTI")).toBeInTheDocument();
+    expect(screen.getByText("AAPL")).toBeInTheDocument();
+    expect(screen.getByText("Global Equities")).toBeInTheDocument();
+    expect(screen.getByText("65.2% → 60.0%")).toBeInTheDocument();
+    expect(screen.getAllByText("sha256:artifact-001").length).toBeGreaterThan(0);
+    expect(screen.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeInTheDocument();
   });
 
   it("submits draft to risk review", async () => {
@@ -203,8 +248,21 @@ describe("ProposalDetailView", () => {
         current_version_no: 1,
       },
       current_version: {
+        artifact_hash: "sha256:artifact-001",
+        evidence_bundle: {
+          generated_at: "2026-02-22T00:02:00Z",
+          hashes: {
+            request_hash: "sha256:request-001",
+            simulation_hash: "sha256:simulation-001",
+            artifact_hash: "sha256:artifact-001",
+          },
+          allocation_comparison: [],
+        },
         simulate_request: {
-          options: { enable_proposal_simulation: true },
+          body: {
+            options: { enable_proposal_simulation: true },
+            proposed_trades: [],
+          },
         },
       },
     });
@@ -239,8 +297,21 @@ describe("ProposalDetailView", () => {
         current_version_no: 1,
       },
       current_version: {
+        artifact_hash: "sha256:artifact-001",
+        evidence_bundle: {
+          generated_at: "2026-02-22T00:02:00Z",
+          hashes: {
+            request_hash: "sha256:request-001",
+            simulation_hash: "sha256:simulation-001",
+            artifact_hash: "sha256:artifact-001",
+          },
+          allocation_comparison: [],
+        },
         simulate_request: {
-          options: { enable_proposal_simulation: true },
+          body: {
+            options: { enable_proposal_simulation: true },
+            proposed_trades: [],
+          },
         },
       },
     });

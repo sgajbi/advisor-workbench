@@ -54,7 +54,11 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
         in rfc
     )
     assert "BulkReviewCampaignDefinition:v1" in rfc
-    assert "campaign-definition list and read-only lifecycle evidence" in integrations
+    assert "candidate-source review card" in rfc
+    assert "selected-campaign candidate-source review" in supported_features
+    assert "no-OMS/no-client-contact boundaries" in supported_features
+    assert "selected-campaign candidate-source\n    review" in integrations
+    assert "client-contact workflow" in integrations
     assert "preview-readiness posture" in integrations
     assert "approval, staging, handoff" in rfc
     assert "`GET /api/v1/dpm/command-center/waves/{wave_id}/report-input`" in rfc

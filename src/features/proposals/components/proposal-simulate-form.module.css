@@ -1,0 +1,207 @@
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summaryStrip > div {
+  display: grid;
+  gap: 3px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid #d6dbe0;
+  border-left: 3px solid #725b26;
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, #ffffff, #fbfcfd);
+}
+
+.summaryStrip span,
+.resultGrid span,
+.outputGrid span {
+  color: #5f6670;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 15px;
+  text-transform: uppercase;
+}
+
+.summaryStrip strong,
+.resultGrid strong,
+.outputGrid strong {
+  overflow-wrap: anywhere;
+  color: #131b2e;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+}
+
+.mainLane {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.panel,
+.actionPanel,
+.resultPanel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.panelHeader h3,
+.actionPanel h3 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.panelHeader p,
+.actionPanel p {
+  margin: 3px 0 0;
+  color: #45464d;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.panelHeader > span {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid #e6c275;
+  border-radius: 999px;
+  background: #fff6e8;
+  color: #5b4300;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15px;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 10px;
+}
+
+.intentRows {
+  display: grid;
+  gap: 8px;
+}
+
+.cashRow,
+.tradeRow {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.cashRow {
+  grid-template-columns: 120px 120px 140px minmax(0, 1fr) auto;
+}
+
+.tradeRow {
+  grid-template-columns: 120px minmax(0, 1fr) 150px auto;
+}
+
+.actionRail {
+  position: sticky;
+  top: 92px;
+}
+
+.actionPanel {
+  border-left: 3px solid #131b2e;
+  background:
+    linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.actionPanel ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: #45464d;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.message {
+  margin-top: 12px;
+}
+
+.resultPanel {
+  margin-top: 12px;
+}
+
+.resultGrid,
+.outputGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.resultGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.outputGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.resultGrid > div,
+.outputGrid > div {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid #d6dbe0;
+  border-radius: 4px;
+  background: #fbfcfd;
+}
+
+@media (max-width: 1180px) {
+  .workspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionRail {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .summaryStrip,
+  .inputGrid,
+  .resultGrid,
+  .outputGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cashRow,
+  .tradeRow {
+    grid-template-columns: 1fr;
+  }
+}

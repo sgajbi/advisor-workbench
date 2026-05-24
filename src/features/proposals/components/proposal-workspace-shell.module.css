@@ -1,0 +1,95 @@
+.proposalScope :global(.workbench-page-container) {
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(242, 244, 246, 0.92), rgba(247, 249, 251, 0.98) 220px),
+    #f7f9fb;
+}
+
+.proposalScope :global(.proposal-layout) {
+  --workstation-rail-width: 280px;
+  --workbench-rail-width: 320px;
+  align-items: start;
+}
+
+.proposalScope :global(.proposal-page-frame-body),
+.proposalScope :global(.proposal-page-sections) {
+  gap: 14px;
+}
+
+.proposalScope :global(.workbench-page-frame) {
+  border-color: #c6c6cd;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.proposalScope :global(.workbench-page-frame-header) {
+  border-bottom-color: #c6c6cd;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 244, 246, 0.82));
+}
+
+.proposalSide {
+  display: grid;
+  gap: 12px;
+}
+
+.contextPanel {
+  display: grid;
+  gap: 12px;
+  border-color: #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.contextPanel h3 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.contextPanel p {
+  margin: 0;
+  color: #45464d;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.contextList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contextList li {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid #d6dbe0;
+  border-left: 3px solid #725b26;
+  border-radius: 4px;
+  background: #fbfcfd;
+}
+
+.contextList span {
+  color: #5f6670;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 15px;
+  text-transform: uppercase;
+}
+
+.contextList strong {
+  overflow-wrap: anywhere;
+  color: #131b2e;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+@media (max-width: 1100px) {
+  .proposalScope :global(.proposal-layout) {
+    grid-template-columns: 1fr;
+  }
+}

@@ -5,9 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
-  Box,
   CircularProgress,
-  Divider,
   MenuItem,
   Stack,
   TextField,
@@ -24,6 +22,7 @@ import {
 } from "../proposal-workflow-copy";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import styles from "./proposal-list-view.module.css";
 
 function groupedByStage(items: ProposalSummary[]): Record<ProposalStage, ProposalSummary[]> {
   return PROPOSAL_STAGES.reduce(
@@ -43,8 +42,14 @@ function groupedByStage(items: ProposalSummary[]): Record<ProposalStage, Proposa
 
 export default function ProposalListView({
   initialPortfolioId,
+  title = "Proposal Workspace",
+  subtitle = "Prioritize advisor tasks by workflow stage and jump directly to the next action.",
+  createDraftHref,
 }: {
   initialPortfolioId?: string;
+  title?: string;
+  subtitle?: string;
+  createDraftHref?: string;
 }) {
   const [searchText, setSearchText] = useState("");
   const [stateFilter, setStateFilter] = useState("");
@@ -79,6 +84,7 @@ export default function ProposalListView({
     });
   }, [items, searchText]);
   const grouped = useMemo(() => groupedByStage(visibleItems), [visibleItems]);
+  const primaryQueue = visibleItems.slice(0, 50);
 
   if (isLoading) {
     return (
@@ -93,14 +99,14 @@ export default function ProposalListView({
 
   return (
     <>
-      <h1 className="sr-only">Proposal Workspace</h1>
+      <h1 className="sr-only">{title}</h1>
       <SectionBlock
-        title="Proposal Workspace"
-        subtitle="Prioritize advisor tasks by workflow stage and jump directly to the next action."
+        title={title}
+        subtitle={subtitle}
         actions={
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
             <SemanticBadge tone={error ? "warn" : "success"}>Live Queue Mode</SemanticBadge>
-            <Link href="/proposals/simulate" className="nav-link">
+            <Link href={createDraftHref ?? "/proposals/simulate"} className="nav-link">
               Create Draft
             </Link>
           </Stack>
@@ -111,6 +117,15 @@ export default function ProposalListView({
             Live proposal queue is unavailable. No fallback proposals are shown.
           </Alert>
         ) : null}
+
+        <div className={styles.queueSummary} aria-label="Advisory queue summary">
+          {PROPOSAL_STAGES.map((stage) => (
+            <div key={stage} className={styles.summaryMetric}>
+              <span>{proposalStageLabel(stage)}</span>
+              <strong>{grouped[stage].length}</strong>
+            </div>
+          ))}
+        </div>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 1 }}>
           <TextField
@@ -160,13 +175,6 @@ export default function ProposalListView({
             placeholder="proposal id, portfolio, title, state"
             sx={{ minWidth: { md: 360 } }}
           />
-          <Stack direction="row" spacing={0.7} flexWrap="wrap">
-            {PROPOSAL_STAGES.map((stage) => (
-              <SemanticBadge key={stage} tone={proposalStageTone(stage)}>
-                {proposalStageLabel(stage)}: {grouped[stage].length}
-              </SemanticBadge>
-            ))}
-          </Stack>
         </Stack>
 
         {visibleItems.length === 0 ? (
@@ -178,41 +186,74 @@ export default function ProposalListView({
           />
         ) : null}
 
-        <Box
-          sx={{
-            display: "grid",
-            gap: 1,
-            gridTemplateColumns: { xs: "1fr", lg: "repeat(3, minmax(0, 1fr))" },
-          }}
-        >
-          {PROPOSAL_STAGES.map((stage) => (
-            <SectionBlock key={stage} className="proposal-stage-block">
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.4 }}>
-                <Text variant="subsectionTitle">{proposalStageLabel(stage)}</Text>
-                <SemanticBadge tone={proposalStageTone(stage)}>{grouped[stage].length}</SemanticBadge>
-              </Stack>
-              <Divider sx={{ mb: 0.8 }} />
-              {grouped[stage].length === 0 ? (
-                <Text variant="secondary">No proposals in this stage.</Text>
-              ) : (
-                <Stack spacing={0.8}>
-                  {grouped[stage].map((item) => (
-                    <SectionBlock key={item.proposal_id} className="proposal-stage-card">
-                      <Text variant="cardTitle">
-                        <Link href={`/proposals/${item.proposal_id}`}>
+        {visibleItems.length ? (
+          <div className={styles.queueGrid}>
+            <section className={styles.queueTablePanel} aria-label="Advisory proposal queue">
+              <table className={styles.queueTable}>
+                <thead>
+                  <tr>
+                    <th>Proposal</th>
+                    <th>Portfolio</th>
+                    <th>Stage</th>
+                    <th>Next Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {primaryQueue.map((item) => (
+                    <tr key={item.proposal_id}>
+                      <td>
+                        <Link href={`/proposals/${item.proposal_id}`} className={styles.proposalLink}>
                           {item.title || item.proposal_id}
                         </Link>
-                      </Text>
-                      <Text variant="metadata">ID: {item.proposal_id}</Text>
-                      <Text variant="metadata">Portfolio: {item.portfolio_id ?? "N/A"}</Text>
-                      <Text variant="body">Next: {proposalNextAction(item.current_state)}</Text>
-                    </SectionBlock>
+                        <span>ID: {item.proposal_id}</span>
+                      </td>
+                      <td>{item.portfolio_id ?? "N/A"}</td>
+                      <td>
+                        <SemanticBadge tone={proposalStageTone(item.current_state)}>
+                          {proposalStageLabel(item.current_state)}
+                        </SemanticBadge>
+                      </td>
+                      <td>{proposalNextAction(item.current_state)}</td>
+                    </tr>
                   ))}
-                </Stack>
-              )}
-            </SectionBlock>
-          ))}
-        </Box>
+                </tbody>
+              </table>
+              {visibleItems.length > primaryQueue.length ? (
+                <Text variant="metadata">
+                  Showing first {primaryQueue.length} proposals. Narrow the filters to review the full queue.
+                </Text>
+              ) : null}
+            </section>
+
+            <aside className={styles.stageRail} aria-label="Workflow readiness by stage">
+              {PROPOSAL_STAGES.map((stage) => {
+                const stageItems = grouped[stage].slice(0, 3);
+                return (
+                  <section key={stage} className={styles.stagePanel}>
+                    <div className={styles.stagePanelHeader}>
+                      <Text variant="subsectionTitle">{proposalStageLabel(stage)}</Text>
+                      <SemanticBadge tone={proposalStageTone(stage)}>{grouped[stage].length}</SemanticBadge>
+                    </div>
+                    {stageItems.length ? (
+                      <ul>
+                        {stageItems.map((item) => (
+                          <li key={`${stage}-${item.proposal_id}`}>
+                            <Link href={`/proposals/${item.proposal_id}`}>
+                              {item.title || item.proposal_id}
+                            </Link>
+                            <span>{proposalNextAction(item.current_state)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Text variant="secondary">No proposals in this stage.</Text>
+                    )}
+                  </section>
+                );
+              })}
+            </aside>
+          </div>
+        ) : null}
       </SectionBlock>
     </>
   );

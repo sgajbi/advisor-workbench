@@ -24,6 +24,13 @@ const campaign: DpmCampaignDefinitionRow = {
   expiryState: "VALID",
   accessPurpose: "rebalance_review",
   sourcePosture: "Source-backed",
+  candidateSourceProduct: "BulkReviewCampaignDiscovery:v1",
+  candidateSourceReadiness: "READY",
+  candidateFilters: "As Of: 2026-05-10; Eligible Types: DISCRETIONARY",
+  candidateWarnings: "N/A",
+  lineageRefCount: "4",
+  nextAction: "Check launch readiness through Gateway.",
+  operatingBoundaries: "NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW",
 };
 
 const lifecycleRows: DpmCampaignLifecycleEventRow[] = [
@@ -107,12 +114,16 @@ describe("DpmCampaignDefinitionsSection", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Lifecycle Control" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
+    expect(screen.getByText("BulkReviewCampaignDiscovery:v1")).toBeInTheDocument();
+    expect(screen.getByText("Check launch readiness through Gateway.")).toBeInTheDocument();
+    expect(screen.getByText("NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW")).toBeInTheDocument();
     expect(screen.getByText("campaign_definition_launched")).toBeInTheDocument();
     expect(
       screen.getByText(
