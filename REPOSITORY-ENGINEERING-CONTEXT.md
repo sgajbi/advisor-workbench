@@ -131,7 +131,9 @@ Current repository posture:
     review and reviewed report-package requests through Gateway proposal endpoints only, renders
     delivery-summary and delivery-event posture, and does not generate narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
-    advisory/report/archive/render services directly.
+    advisory/report/archive/render services directly. `/recommendations?mode=opportunities` is a
+    Gateway-backed idea triage view over draft advisory proposals; Workbench must not claim
+    automated opportunity sourcing until Gateway exposes a supported idea/opportunity contract.
 
 ## Architecture And Module Map
 

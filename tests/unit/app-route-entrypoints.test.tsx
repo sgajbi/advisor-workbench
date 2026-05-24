@@ -37,6 +37,19 @@ vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
   ),
 }));
 
+vi.mock("@/features/proposals/components/advisory-opportunities-workspace", () => ({
+  default: ({
+    portfolioId,
+  }: {
+    portfolioId: string;
+  }) => (
+    <section>
+      <h2>Opportunities And Ideas</h2>
+      <p>{portfolioId}</p>
+    </section>
+  ),
+}));
+
 vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
   default: ({
     title,
@@ -191,5 +204,21 @@ describe("app route entrypoints", () => {
       0
     );
     expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
+  });
+
+  it("mounts recommendations ideas mode as a focused advisory screen", async () => {
+    render(
+      await RecommendationsAppPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          mode: "opportunities",
+        }),
+      })
+    );
+
+    expect(
+      screen.getAllByRole("heading", { name: "Opportunities And Ideas" }).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
   });
 });
