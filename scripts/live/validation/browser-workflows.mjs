@@ -667,7 +667,10 @@ export async function validatePmOperatingQualityPanel(
   await expect(page.getByLabel("PM operating quality summary-invocation readiness")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("PM operating quality persisted summary-invocation evidence")).toBeVisible({
+  await expect(qualityPanel.getByText("Summary Invocation Detail", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("PM operating quality summary invocations")).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "dpm.pm_operating_quality");

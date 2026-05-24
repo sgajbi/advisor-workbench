@@ -210,6 +210,336 @@ function extractGatewayEnvelopeData(payload) {
   return payload?.data ?? payload;
 }
 
+function buildPmQualitySourceRef({
+  sourceSystem,
+  sourceType,
+  sourceId,
+  sourceVersion,
+  contentHash,
+}) {
+  return {
+    source_system: sourceSystem,
+    source_type: sourceType,
+    source_id: sourceId,
+    source_version: sourceVersion,
+    content_hash: contentHash,
+  };
+}
+
+function buildCanonicalPmQualityPolicy(asOfDate) {
+  return {
+    policy_id: "pmq_canonical_dpm",
+    policy_version: "2026.05",
+    as_of_date: asOfDate,
+    access_purpose: "SUPERVISORY_CONTROL_REVIEW",
+    indicator_weights: [
+      {
+        indicator: "OUTCOME_DISCIPLINE",
+        weight: "70",
+        minimum_evidence_count: 1,
+      },
+      {
+        indicator: "SOURCE_QUALITY",
+        weight: "30",
+        minimum_evidence_count: 1,
+      },
+    ],
+    governance_evidence: {
+      approval_ref: "PMQ-CANONICAL-APPROVAL-2026-05",
+      approved_by: "pm_quality_committee",
+      approved_at: "2026-05-03T09:00:00Z",
+      fairness_review_ref: "PMQ-CANONICAL-FAIRNESS-2026-05",
+      fairness_reviewed_by: "model_risk_governance",
+      fairness_reviewed_at: "2026-05-03T10:00:00Z",
+      expires_on: "2026-06-30",
+      entitled_actor_ids: [
+        "workbench-system",
+        "workbench-pm-operating-quality-supervisor",
+        "ops",
+      ],
+      source_refs: [
+        buildPmQualitySourceRef({
+          sourceSystem: "bank-governance",
+          sourceType: "PM_QUALITY_POLICY_APPROVAL",
+          sourceId: "PMQ-CANONICAL-APPROVAL-2026-05",
+          sourceVersion: "2026.05",
+          contentHash: "sha256:pmq-canonical-approval",
+        }),
+      ],
+    },
+  };
+}
+
+function buildCanonicalPmQualityScoreRunRequest(asOfDate) {
+  return {
+    pm_id: dpmCommandCenterDefaults.portfolioManagerId,
+    book_id: dpmCommandCenterDefaults.bookId,
+    as_of_date: asOfDate,
+    policy: buildCanonicalPmQualityPolicy(asOfDate),
+    evidence_items: [
+      {
+        indicator: "OUTCOME_DISCIPLINE",
+        evidence_state: "READY",
+        score: "92",
+        source_system: "lotus-manage",
+        source_type: "DPM_OUTCOME_REVIEW_POSTURE",
+        source_id: "canonical-outcome-review-posture",
+        source_version: asOfDate,
+        content_hash: "sha256:pmq-canonical-outcome",
+      },
+      {
+        indicator: "SOURCE_QUALITY",
+        evidence_state: "READY",
+        score: "88",
+        source_system: "lotus-core",
+        source_type: "PortfolioManagerBookMembership",
+        source_id: dpmCommandCenterDefaults.bookId,
+        source_version: asOfDate,
+        content_hash: "sha256:pmq-canonical-source-quality",
+      },
+    ],
+    actor_id: "workbench-system",
+  };
+}
+
+function extractPmQualityScoreRunId(response) {
+  const data = extractGatewayEnvelopeData(response);
+  return (
+    readString(data?.score_run?.score_run_id) ||
+    readString(data?.score_run_id) ||
+    readString(data?.score_runs?.[0]?.score_run_id) ||
+    readString(response?.supportability?.score_run_id) ||
+    null
+  );
+}
+
+function extractPmQualityFairnessAnalysisId(response) {
+  const data = extractGatewayEnvelopeData(response);
+  return (
+    readString(data?.fairness_analysis?.fairness_analysis_id) ||
+    readString(data?.fairness_analysis_id) ||
+    readString(data?.fairness_analyses?.[0]?.fairness_analysis_id) ||
+    readString(response?.supportability?.fairness_analysis_id) ||
+    null
+  );
+}
+
+function extractPmQualityReviewActionId(response) {
+  const data = extractGatewayEnvelopeData(response);
+  return (
+    readString(data?.review_action?.review_action_id) ||
+    readString(data?.review_action_id) ||
+    readString(data?.review_actions?.[0]?.review_action_id) ||
+    readString(response?.supportability?.review_action_id) ||
+    null
+  );
+}
+
+function extractPmQualitySummaryInvocationId(response) {
+  const data = extractGatewayEnvelopeData(response);
+  return (
+    readString(data?.summary_invocation?.summary_invocation_id) ||
+    readString(data?.summary_invocation_id) ||
+    readString(data?.summary_invocations?.[0]?.summary_invocation_id) ||
+    readString(response?.supportability?.summary_invocation_id) ||
+    null
+  );
+}
+
+async function ensureCanonicalPmOperatingQualityEvidence() {
+  const asOfDate = dpmCommandCenterDefaults.asOfDate;
+  const pmQualityBaseUrl = `${gatewayBaseUrl}/api/v1/dpm/command-center/pm-operating-quality`;
+  const scoreRunRequest = buildCanonicalPmQualityScoreRunRequest(asOfDate);
+  const scoreRunResponse = await postJson(
+    summary,
+    `${pmQualityBaseUrl}/score-runs`,
+    "DPM PM operating-quality score-run create",
+    timeoutMs,
+    { body: scoreRunRequest }
+  );
+  const scoreRunId = extractPmQualityScoreRunId(scoreRunResponse);
+  if (!scoreRunId) {
+    throw new Error("DPM PM operating-quality score-run create returned no score-run id.");
+  }
+
+  const bookSourceRef = buildPmQualitySourceRef({
+    sourceSystem: "lotus-core",
+    sourceType: "PortfolioManagerBookMembership",
+    sourceId: dpmCommandCenterDefaults.bookId,
+    sourceVersion: asOfDate,
+    contentHash: "sha256:pmq-canonical-source-quality",
+  });
+  const fairnessResponse = await postJson(
+    summary,
+    `${pmQualityBaseUrl}/fairness-analyses`,
+    "DPM PM operating-quality fairness-analysis create",
+    timeoutMs,
+    {
+      body: {
+        policy_id: "pmq_canonical_dpm",
+        policy_version: "2026.05",
+        as_of_date: asOfDate,
+        actor_id: "workbench-system",
+        minimum_segment_score_run_count: 1,
+        maximum_average_score_spread: "5.00",
+        segments: [
+          {
+            segment_id: "canonical_sg_dpm_balanced",
+            segment_type: "BOOK_PROFILE",
+            display_name: "Singapore DPM balanced book",
+            score_run_ids: [scoreRunId],
+            source_refs: [bookSourceRef],
+          },
+          {
+            segment_id: "canonical_apac_balanced",
+            segment_type: "REGION",
+            display_name: "APAC balanced DPM",
+            score_run_ids: [scoreRunId],
+            source_refs: [bookSourceRef],
+          },
+        ],
+      },
+    }
+  );
+  const fairnessAnalysisId = extractPmQualityFairnessAnalysisId(fairnessResponse);
+  if (!fairnessAnalysisId) {
+    throw new Error(
+      "DPM PM operating-quality fairness-analysis create returned no fairness-analysis id."
+    );
+  }
+
+  const reviewResponse = await postJson(
+    summary,
+    `${pmQualityBaseUrl}/review-actions`,
+    "DPM PM operating-quality review-action create",
+    timeoutMs,
+    {
+      body: {
+        target_type: "SCORE_RUN",
+        target_id: scoreRunId,
+        action_type: "ACKNOWLEDGE",
+        action_state: "REVIEW_REQUIRED",
+        review_action_ref: `PMQ-CANONICAL-REVIEW-${scoreRunId}`,
+        review_reason: "Canonical live validation recorded bounded supervisory review evidence.",
+        actor_id: "workbench-system",
+        policy_id: "pmq_canonical_dpm",
+        policy_version: "2026.05",
+        as_of_date: asOfDate,
+        source_refs: [
+          buildPmQualitySourceRef({
+            sourceSystem: "lotus-workbench",
+            sourceType: "CANONICAL_FRONT_OFFICE_VALIDATION",
+            sourceId: "rfc36-43-audit-20260524",
+            sourceVersion: "2026-05-24",
+            contentHash: "sha256:pmq-canonical-review",
+          }),
+        ],
+      },
+    }
+  );
+  const reviewActionId = extractPmQualityReviewActionId(reviewResponse);
+  if (!reviewActionId) {
+    throw new Error("DPM PM operating-quality review-action create returned no review-action id.");
+  }
+
+  const summaryResponse = await postJson(
+    summary,
+    `${pmQualityBaseUrl}/summary-invocations`,
+    "DPM PM operating-quality summary-invocation create",
+    timeoutMs,
+    {
+      body: {
+        score_run_id: scoreRunId,
+        review_action_id: reviewActionId,
+        invocation_state: "COMPLETED",
+        summary_ref: `PMQ-CANONICAL-SUMMARY-${scoreRunId}`,
+        workflow_pack_name: "pm_quality_summary.pack",
+        workflow_pack_version: "v1",
+        workflow_run_id: `pmq-canonical-summary-${scoreRunId}`,
+        summary_artifact_ref: `pmq-canonical-summary-artifact-${scoreRunId}`,
+        summary_content_hash: "sha256:pmq-canonical-summary",
+        requested_by: "workbench-system",
+        source_refs: [
+          buildPmQualitySourceRef({
+            sourceSystem: "lotus-ai",
+            sourceType: "pm_quality_summary.pack",
+            sourceId: `pmq-canonical-summary-${scoreRunId}`,
+            sourceVersion: "v1",
+            contentHash: "sha256:pmq-canonical-summary",
+          }),
+        ],
+      },
+    }
+  );
+  const summaryInvocationId = extractPmQualitySummaryInvocationId(summaryResponse);
+  if (!summaryInvocationId) {
+    throw new Error(
+      "DPM PM operating-quality summary-invocation create returned no summary-invocation id."
+    );
+  }
+
+  const scoreRunList = await fetchJson(
+    summary,
+    `${pmQualityBaseUrl}/score-runs?book_id=${encodeURIComponent(
+      dpmCommandCenterDefaults.bookId
+    )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
+    "DPM PM operating-quality score-run list",
+    timeoutMs
+  );
+  const reviewActionList = await fetchJson(
+    summary,
+    `${pmQualityBaseUrl}/review-actions?target_type=SCORE_RUN&target_id=${encodeURIComponent(
+      scoreRunId
+    )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
+    "DPM PM operating-quality review-action list",
+    timeoutMs
+  );
+  const fairnessAnalysisList = await fetchJson(
+    summary,
+    `${pmQualityBaseUrl}/fairness-analyses?policy_id=pmq_canonical_dpm&policy_version=2026.05&as_of_date=${encodeURIComponent(
+      asOfDate
+    )}&limit=10&offset=0`,
+    "DPM PM operating-quality fairness-analysis list",
+    timeoutMs
+  );
+  const summaryInvocationList = await fetchJson(
+    summary,
+    `${pmQualityBaseUrl}/summary-invocations?score_run_id=${encodeURIComponent(
+      scoreRunId
+    )}&review_action_id=${encodeURIComponent(reviewActionId)}&as_of_date=${encodeURIComponent(
+      asOfDate
+    )}&limit=10&offset=0`,
+    "DPM PM operating-quality summary-invocation list",
+    timeoutMs
+  );
+  if (extractPmQualityScoreRunId(scoreRunList) !== scoreRunId) {
+    throw new Error("DPM PM operating-quality score-run list did not return the seeded score run.");
+  }
+  if (extractPmQualityReviewActionId(reviewActionList) !== reviewActionId) {
+    throw new Error(
+      "DPM PM operating-quality review-action list did not return the seeded review action."
+    );
+  }
+  if (extractPmQualityFairnessAnalysisId(fairnessAnalysisList) !== fairnessAnalysisId) {
+    throw new Error(
+      "DPM PM operating-quality fairness-analysis list did not return the seeded analysis."
+    );
+  }
+  if (extractPmQualitySummaryInvocationId(summaryInvocationList) !== summaryInvocationId) {
+    throw new Error(
+      "DPM PM operating-quality summary-invocation list did not return the seeded invocation."
+    );
+  }
+
+  return {
+    scoreRunId,
+    fairnessAnalysisId,
+    reviewActionId,
+    summaryInvocationId,
+    asOfDate,
+  };
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -755,6 +1085,8 @@ async function run() {
       "UNKNOWN",
   });
 
+  const pmOperatingQualityEvidence = await ensureCanonicalPmOperatingQualityEvidence();
+
   const reportCapabilities = await fetchJson(
     summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
@@ -847,6 +1179,11 @@ async function run() {
   panelGovernance.recordPanelClassification("dpm.pm_operating_quality", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}?mode=quality`,
     source: "Gateway DPM PM operating quality",
+    scoreRunId: pmOperatingQualityEvidence.scoreRunId,
+    fairnessAnalysisId: pmOperatingQualityEvidence.fairnessAnalysisId,
+    reviewActionId: pmOperatingQualityEvidence.reviewActionId,
+    summaryInvocationId: pmOperatingQualityEvidence.summaryInvocationId,
+    asOfDate: pmOperatingQualityEvidence.asOfDate,
   });
   panelGovernance.recordPanelClassification("dpm.copilot_workspace", "ready", "lotus-ai", {
     route: `/workbench/${portfolioId}?mode=copilot`,
