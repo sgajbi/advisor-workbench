@@ -100,11 +100,14 @@ describe("ProposalMemoPosturePanel", () => {
     expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
     expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
     expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
-    expect(await screen.findByText(/archive:\/\/memo\/report\/1/)).toBeInTheDocument();
+    expect(await screen.findByText("Evidence Readiness")).toBeInTheDocument();
+    expect(await screen.findByText(/Evidence archive: archive:\/\/memo\/report\/1/)).toBeInTheDocument();
     expect(screen.getByText(/Advisor-use memo actions preserve source evidence/)).toBeInTheDocument();
     expect(screen.getByText("Advisor ID")).toBeInTheDocument();
     expect(screen.queryByText("Actor")).not.toBeInTheDocument();
     expect(screen.queryByText("AI Commentary")).not.toBeInTheDocument();
+    expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Archive refs:/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client-ready release/i })).not.toBeInTheDocument();
   });

@@ -207,7 +207,7 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
           </Text>
         </div>
         <div className="analytics-stat">
-          <Text variant="label">Supportability</Text>
+          <Text variant="label">Evidence Readiness</Text>
           <Text variant="metricValueCompact">{memoPosture.supportabilityLabel}</Text>
           <Text variant="secondary">Replay hash: {memoPosture.replayHashLabel}</Text>
         </div>
@@ -217,7 +217,9 @@ export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo 
         <div className="analytics-stat">
           <Text variant="label">Report Package</Text>
           <Text variant="metricValueCompact">{memoPosture.reportPackageStatusLabel}</Text>
-          <Text variant="secondary">Archive refs: {memoPosture.reportArchiveRefsLabel}</Text>
+          <Text variant="secondary">
+            Evidence archive: {memoPosture.reportArchiveRefsLabel}
+          </Text>
         </div>
         <div className="analytics-stat">
           <Text variant="label">Advisor Commentary</Text>

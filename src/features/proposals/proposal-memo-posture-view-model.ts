@@ -80,7 +80,7 @@ export function buildProposalMemoPostureModel({
     firstString(memo, ["memo_hash", "source_memo_hash"]);
   const reviewPosture = memoData?.review_posture;
   const reportPosture = memoData?.report_package_posture;
-  const aiPosture = memoData?.ai_commentary_posture;
+  const commentaryPosture = memoData?.ai_commentary_posture;
   const readPosture = memoData?.read_posture;
   const projection = projectionData?.projection;
   const projectionPosture = projectionData?.projection_posture;
@@ -98,8 +98,11 @@ export function buildProposalMemoPostureModel({
       recordValue(projection, "client_ready_publication"),
       "Blocked",
     ),
-    commentaryAuthorityLabel: textValue(recordValue(aiPosture, "authority"), "Non-authoritative"),
-    commentaryStatusLabel: textValue(recordValue(aiPosture, "status"), "Not requested"),
+    commentaryAuthorityLabel: textValue(
+      recordValue(commentaryPosture, "authority"),
+      "Non-authoritative",
+    ),
+    commentaryStatusLabel: textValue(recordValue(commentaryPosture, "status"), "Not requested"),
     hasMemo,
     lineageHashLabel: latestMemo?.memo_hash ?? "No lineage hash",
     lineageStatusLabel: textValue(latestMemo?.memo_status, "No lineage memo"),
