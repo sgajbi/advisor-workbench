@@ -170,7 +170,9 @@ drain window than the default `900` seconds.
 
 The canonical bring-up script accepts `-LotusAiEnvFile` to make the `lotus-ai` provider posture
 explicit for proof runs. It defaults to `.env.example` for deterministic provider-disabled
-front-office proof, even when the local `lotus-ai/.env` requests a live or local provider. Use the
+front-office proof, even when the local `lotus-ai/.env` requests a live or local provider. Use
+`canonical-stub.env.example` when the proof target includes RFC-0023/RFC-0024 workflow-pack
+execution through `lotus-advise` and no local model server is intentionally running. Use the
 repo-local `.env` only when the required live provider dependency, such as the `local-llm` Ollama
 compose profile and model, is intentionally running.
 
