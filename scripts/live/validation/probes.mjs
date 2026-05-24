@@ -95,6 +95,22 @@ export async function postJson(
   });
 }
 
+export async function postJsonExpectingStatus(
+  summary,
+  url,
+  description,
+  timeoutMs,
+  expectedStatus,
+  body,
+  fetchImpl = globalThis.fetch
+) {
+  return await sendJsonExpectingStatus(summary, url, description, timeoutMs, expectedStatus, {
+    method: "POST",
+    body,
+    fetchImpl,
+  });
+}
+
 export async function sendJson(
   summary,
   url,
@@ -145,6 +161,62 @@ export async function sendJson(
       url,
       status: response.status,
       kind: "json",
+      method,
+    });
+    return payload;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function sendJsonExpectingStatus(
+  summary,
+  url,
+  description,
+  timeoutMs,
+  expectedStatus,
+  { method = "GET", body: requestBody, headers = {}, fetchImpl = globalThis.fetch } = {}
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(url, {
+      method,
+      signal: controller.signal,
+      headers:
+        requestBody === undefined
+          ? {
+              ...CANONICAL_CALLER_CONTEXT_HEADERS,
+              ...headers,
+            }
+          : {
+              "Content-Type": "application/json",
+              ...CANONICAL_CALLER_CONTEXT_HEADERS,
+              ...headers,
+            },
+      body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
+    });
+    const responseBody = await response.text();
+    let payload = responseBody;
+    if (responseBody.trim()) {
+      try {
+        payload = JSON.parse(responseBody);
+      } catch {
+        payload = responseBody;
+      }
+    }
+    if (response.status !== expectedStatus) {
+      const detail = responseBody.trim() ? `: ${responseBody.trim()}` : "";
+      throw new Error(
+        `${description} returned HTTP ${response.status}; expected ${expectedStatus} at ${url}${detail}`
+      );
+    }
+    summary.apiChecks.push({
+      description,
+      url,
+      status: response.status,
+      expectedStatus,
+      kind: "json-expected-status",
       method,
     });
     return payload;

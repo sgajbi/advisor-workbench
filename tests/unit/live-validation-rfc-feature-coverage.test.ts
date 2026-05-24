@@ -30,6 +30,8 @@ function createReadyEvidence() {
     commandCenterSummary: {},
     dpmCommandCenterPanel: true,
     activeExceptions: true,
+    coreCandidateSourcePreview: true,
+    coreCandidateSourceInvalidRequestRejected: true,
     portfolioMemory: [{ event_id: "evt-1" }],
     mandateLookup: "MANDATE_PB_SG_GLOBAL_BAL_001",
     mandateHealth: true,
@@ -81,6 +83,12 @@ describe("RFC36-43 live validation feature coverage", () => {
     );
     expect(coverage.coverageRows).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          rfcId: "RFC-0037",
+          featureId: "dpm_operating_system",
+          coverageStatus: "validated",
+          scenarioScope: "bounded Core DPM candidate-source preview and no-caller-portfolio guard",
+        }),
         expect.objectContaining({
           rfcId: "RFC-0041",
           featureId: "rebalance_wave_explicit_portfolio_product_path",

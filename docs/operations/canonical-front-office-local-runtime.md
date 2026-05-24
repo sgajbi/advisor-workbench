@@ -265,6 +265,7 @@ Validation layers:
    - DPM command center
    - DPM portfolio memory
    - DPM rebalance-wave command center
+   - DPM Core candidate-source wave preview and no-caller-portfolio guard
    - DPM construction alternatives
    - DPM PM operating quality
    - DPM PM copilot workspace
@@ -295,6 +296,15 @@ bounded supervisory review action, and governed summary invocation. The browser 
 the persisted summary-invocation detail and list surface. This prevents a false ready claim when
 the PM quality endpoints are reachable but the canonical stack has no persisted operating-quality
 evidence.
+
+For bounded RFC37-WTBD-004 candidate-source proof, validation now previews a
+`BULK_REVIEW_CAMPAIGN` wave through Gateway with
+`campaign_candidate_source=CORE_DPM_PORTFOLIO_UNIVERSE`, requires lotus-core
+`DpmPortfolioUniverseCandidate:v1` source refs and at least one candidate item, and separately
+proves that a mixed Core-discovery/manual-portfolio request is rejected. This validates the
+implemented source-consumer guard without claiming relationship householding, global portfolio
+universe ownership, PM ranking, client communication workflow, OMS, fills, settlement, or
+execution.
 
 Machine-readable validation evidence is written to:
 
@@ -401,8 +411,9 @@ implemented RFC-0036 through RFC-0043 front-office product paths. Each row maps 
 the API, workflow-pack, seeded entity, and Workbench panel evidence that made the feature
 demo-ready. The matrix is not a blanket future-scope certification: it records the current scenario
 scope, now including the governed RFC-0041 multi-portfolio explicit-list wave preview from the
-canonical contract. Broader source-owner cohort products remain listed as scenario expansion until
-their source products and downstream realization are proven.
+canonical contract and the RFC-0037 bounded Core `DpmPortfolioUniverseCandidate:v1`
+candidate-source preview/no-caller-portfolio guard. Broader source-owner cohort products remain
+listed as scenario expansion until their source products and downstream realization are proven.
 
 ## Gateway startup rule
 

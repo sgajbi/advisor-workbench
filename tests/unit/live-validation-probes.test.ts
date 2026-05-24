@@ -1,6 +1,7 @@
 import * as probeHelpers from "../../scripts/live/validation/probes.mjs";
 
-const { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } = probeHelpers as {
+const { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson, postJsonExpectingStatus } =
+  probeHelpers as {
   checkDns: (
     summary: { dns: unknown[]; apiChecks: unknown[] },
     hostname: string,
@@ -41,6 +42,15 @@ const { checkDns, fetchJson, fetchJsonUntil, fetchText, postJson } = probeHelper
     url: string,
     description: string,
     timeoutMs: number,
+    body: unknown,
+    fetchImpl?: typeof fetch
+  ) => Promise<T>;
+  postJsonExpectingStatus: <T = unknown>(
+    summary: { dns: unknown[]; apiChecks: unknown[] },
+    url: string,
+    description: string,
+    timeoutMs: number,
+    expectedStatus: number,
     body: unknown,
     fetchImpl?: typeof fetch
   ) => Promise<T>;
@@ -180,6 +190,58 @@ describe("live validation probe helpers", () => {
         method: "POST",
       },
     ]);
+  });
+
+  it("records expected bounded problem responses without failing validation", async () => {
+    const summary = createSummary();
+
+    const payload = await postJsonExpectingStatus<{ detail: string }>(
+      summary,
+      "http://gateway.dev.lotus/api/v1/dpm/command-center/waves/preview",
+      "DPM Core candidate-source rejects caller portfolios",
+      1000,
+      422,
+      { body: { campaign_candidate_source: "CORE_DPM_PORTFOLIO_UNIVERSE" } },
+      async () =>
+        new Response(
+          JSON.stringify({
+            detail:
+              "CORE_DPM_PORTFOLIO_UNIVERSE candidate discovery supplies the portfolio set from lotus-core DpmPortfolioUniverseCandidate:v1.",
+          }),
+          {
+            status: 422,
+            headers: { "content-type": "application/json" },
+          }
+        )
+    );
+
+    expect(payload.detail).toContain("DpmPortfolioUniverseCandidate:v1");
+    expect(summary.apiChecks).toEqual([
+      {
+        description: "DPM Core candidate-source rejects caller portfolios",
+        url: "http://gateway.dev.lotus/api/v1/dpm/command-center/waves/preview",
+        status: 422,
+        expectedStatus: 422,
+        kind: "json-expected-status",
+        method: "POST",
+      },
+    ]);
+  });
+
+  it("fails expected-status probes when the status differs", async () => {
+    const summary = createSummary();
+
+    await expect(
+      postJsonExpectingStatus(
+        summary,
+        "http://gateway.dev.lotus/api/v1/dpm/command-center/waves/preview",
+        "DPM Core candidate-source rejects caller portfolios",
+        1000,
+        422,
+        { body: {} },
+        async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+      )
+    ).rejects.toThrow("returned HTTP 200; expected 422");
   });
 
   it("polls JSON probes until live readiness evidence is available", async () => {

@@ -20,6 +20,7 @@ import {
   fetchJsonUntil,
   fetchText,
   postJson,
+  postJsonExpectingStatus,
   sendJson,
 } from "./validation/probes.mjs";
 import {
@@ -183,6 +184,44 @@ function extractDpmWaveItemCount(response) {
     }
   }
   return 0;
+}
+
+function extractDpmWaveSourceRefs(response) {
+  const sourceRefs = [];
+  const visit = (candidate) => {
+    if (!candidate || typeof candidate !== "object") {
+      return;
+    }
+    if (Array.isArray(candidate)) {
+      for (const item of candidate) {
+        visit(item);
+      }
+      return;
+    }
+    if (Array.isArray(candidate.source_refs)) {
+      sourceRefs.push(...candidate.source_refs.filter((item) => item && typeof item === "object"));
+    }
+    for (const value of Object.values(candidate)) {
+      if (value && typeof value === "object") {
+        visit(value);
+      }
+    }
+  };
+  visit(response);
+  return sourceRefs;
+}
+
+function hasCoreDpmPortfolioUniverseSourceRef(response) {
+  return extractDpmWaveSourceRefs(response).some((sourceRef) => {
+    const sourceSystem = readString(sourceRef.source_system)?.toLowerCase();
+    const sourceType = readString(sourceRef.source_type);
+    return sourceSystem === "lotus-core" && sourceType === "DpmPortfolioUniverseCandidate";
+  });
+}
+
+function payloadTextIncludes(payload, expectedText) {
+  const text = typeof payload === "string" ? payload : JSON.stringify(payload);
+  return text.includes(expectedText);
 }
 
 function extractWorkbenchRebalanceRunId(gatewayOverview) {
@@ -1085,6 +1124,86 @@ async function run() {
       `DPM rebalance-wave multi-portfolio preview returned ${multiPortfolioWaveItemCount} item(s); expected at least ${multiPortfolioWaveScenario.minimumPortfolioCount}.`
     );
   }
+  const coreCandidateSourcePreviewBody = {
+    trigger_type: "BULK_REVIEW_CAMPAIGN",
+    trigger_id: `live-validation-core-candidates-${dpmCommandCenterDefaults.asOfDate}`,
+    rationale:
+      "Canonical Workbench live validation previewed bounded Core-owned DPM candidate discovery.",
+    as_of_date: dpmCommandCenterDefaults.asOfDate,
+    actor_id: "workbench-system",
+    campaign_candidate_source: "CORE_DPM_PORTFOLIO_UNIVERSE",
+    model_portfolio_ids: ["MODEL_PB_SG_GLOBAL_BAL_DPM"],
+    include_inactive_mandates: false,
+    campaign_candidate_page_size: 500,
+  };
+  const coreCandidateSourcePreview = await postJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
+    "DPM Core candidate-source wave preview",
+    timeoutMs,
+    {
+      body: coreCandidateSourcePreviewBody,
+    }
+  );
+  const coreCandidateSourcePreviewState = readSupportabilityState(
+    coreCandidateSourcePreview?.supportability
+  );
+  if (coreCandidateSourcePreviewState?.toLowerCase() !== "ready") {
+    throw new Error(
+      `DPM Core candidate-source preview did not return ready manage supportability; observed ${
+        coreCandidateSourcePreviewState ?? "missing"
+      }.`
+    );
+  }
+  const coreCandidateSourceItemCount = extractDpmWaveItemCount(coreCandidateSourcePreview);
+  if (coreCandidateSourceItemCount < 1) {
+    throw new Error("DPM Core candidate-source preview returned no candidate portfolios.");
+  }
+  if (!hasCoreDpmPortfolioUniverseSourceRef(coreCandidateSourcePreview)) {
+    throw new Error(
+      "DPM Core candidate-source preview did not preserve lotus-core DpmPortfolioUniverseCandidate source refs."
+    );
+  }
+  const coreCandidateSourceRejected = await postJsonExpectingStatus(
+    summary,
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
+    "DPM Core candidate-source rejects caller portfolios",
+    timeoutMs,
+    422,
+    {
+      body: {
+        ...coreCandidateSourcePreviewBody,
+        trigger_id: `${coreCandidateSourcePreviewBody.trigger_id}-invalid-mixed-request`,
+        portfolios: [{ portfolio_id: portfolioId }],
+      },
+    }
+  );
+  if (
+    !payloadTextIncludes(
+      coreCandidateSourceRejected,
+      "CORE_DPM_PORTFOLIO_UNIVERSE candidate discovery supplies the portfolio set"
+    ) ||
+    !payloadTextIncludes(coreCandidateSourceRejected, "DpmPortfolioUniverseCandidate:v1")
+  ) {
+    throw new Error(
+      "DPM Core candidate-source invalid request did not return the governed no-caller-portfolio boundary message."
+    );
+  }
+  summary.supportabilityChecks.push({
+    checkId: "dpm-core-candidate-source-preview",
+    sourceProduct: "DpmPortfolioUniverseCandidate:v1",
+    supportabilityState: coreCandidateSourcePreviewState,
+    candidateCount: coreCandidateSourceItemCount,
+    invalidMixedRequestRejected: true,
+    unsupportedClaimsExcluded: [
+      "global portfolio-universe ownership",
+      "relationship householding",
+      "PM ranking",
+      "external workflow orchestration",
+      "client communication workflow",
+      "OMS execution",
+    ],
+  });
   if (!dpmWaveId) {
     const dpmWaveCreate = await postJson(
       summary,
@@ -1270,6 +1389,11 @@ async function run() {
     commandCenterSummary: dpmCommandCenterPayload,
     dpmCommandCenterPanel: true,
     activeExceptions: true,
+    coreCandidateSourcePreview:
+      coreCandidateSourcePreviewState?.toLowerCase() === "ready" &&
+      coreCandidateSourceItemCount > 0 &&
+      hasCoreDpmPortfolioUniverseSourceRef(coreCandidateSourcePreview),
+    coreCandidateSourceInvalidRequestRejected: true,
     portfolioMemory: portfolioMemoryEvents,
     mandateLookup: mandateId,
     mandateHealth: mandateHealthObserved,

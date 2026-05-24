@@ -24,10 +24,13 @@ const RFC_FEATURE_COVERAGE_ROWS = [
     requiredEvidence: [
       "commandCenterSummary",
       "activeExceptions",
+      "coreCandidateSourcePreview",
+      "coreCandidateSourceInvalidRequestRejected",
       "portfolioMemory",
       "copilotWorkspace",
     ],
     uiPanels: ["dpm.command_center", "dpm.portfolio_memory", "dpm.copilot_workspace"],
+    scenarioScope: "bounded Core DPM candidate-source preview and no-caller-portfolio guard",
     unsupportedClaimsExcluded: ["OMS execution", "order routing", "client communication workflow"],
   },
   {
