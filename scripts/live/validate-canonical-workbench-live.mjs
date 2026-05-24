@@ -44,6 +44,10 @@ import {
   validateRiskPanel,
 } from "./validation/browser-workflows.mjs";
 import { createPanelGovernance } from "./validation/panel-governance.mjs";
+import {
+  assertRfc3643FeatureCoverage,
+  buildRfc3643FeatureCoverage,
+} from "./validation/rfc36-43-feature-coverage.mjs";
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
 
 const {
@@ -957,6 +961,7 @@ async function run() {
     dpmMandatePayload?.mandate?.mandate_id ??
     dpmMandatePayload?.mandate?.mandateId;
 
+  let mandateHealthObserved = false;
   if (mandateId) {
     const dpmMandateHealth = await fetchJson(
       summary,
@@ -968,6 +973,7 @@ async function run() {
     if (!dpmMandateHealthPayload?.health_state && !dpmMandateHealthPayload?.state) {
       throw new Error("DPM command-center mandate health returned no health state.");
     }
+    mandateHealthObserved = true;
   }
 
   const dpmWaveParams = new URLSearchParams({
@@ -1191,6 +1197,40 @@ async function run() {
   });
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
+  summary.rfc3643FeatureCoverage = buildRfc3643FeatureCoverage(summary, {
+    foundationWorkspace,
+    manageSupportabilitySummary,
+    gatewayOverview,
+    commandCenterSummary: dpmCommandCenterPayload,
+    dpmCommandCenterPanel: true,
+    activeExceptions: true,
+    portfolioMemory: portfolioMemoryEvents,
+    mandateLookup: mandateId,
+    mandateHealth: mandateHealthObserved,
+    constructionAlternativesPanel: true,
+    proofPackId,
+    proofPackSections: proofPackSectionCount,
+    proofPackSourceEvidence: proofPackSourceHashCount,
+    proofPackPanel: true,
+    proofPackAiMemo: proofPackAiPmMemoRunId,
+    wavePreview: dpmWavePreviewSupportabilityState?.toLowerCase() === "ready",
+    waveId: dpmWaveId,
+    waveReportInput: dpmWaveReportInputRef,
+    waveAiMemo: dpmWaveAiPmMemoRunId,
+    wavePanel: true,
+    outcomeReviewRows: outcomeReviewItems,
+    outcomeReviewPanel: true,
+    pmQualityScoreRun: pmOperatingQualityEvidence.scoreRunId,
+    pmQualityFairnessAnalysis: pmOperatingQualityEvidence.fairnessAnalysisId,
+    pmQualityReviewAction: pmOperatingQualityEvidence.reviewActionId,
+    pmQualitySummaryInvocation: pmOperatingQualityEvidence.summaryInvocationId,
+    pmQualityPanel: true,
+    copilotWorkspace: true,
+    copilotPanel: true,
+    proposalNarrative: proposalNarrative.narrative_id,
+    proposalNarrativePanel: true,
+  });
+  assertRfc3643FeatureCoverage(summary);
 
   const portfolioShell = await fetchText(
     summary,

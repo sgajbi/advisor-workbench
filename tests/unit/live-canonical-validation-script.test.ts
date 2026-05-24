@@ -340,6 +340,10 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "evidence-summary-writer.mjs"),
       "utf8"
     );
+    const rfcFeatureCoverageModule = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "rfc36-43-feature-coverage.mjs"),
+      "utf8"
+    );
     const browserWorkflowModule = readFileSync(
       join(process.cwd(), "scripts", "live", "validation", "browser-workflows.mjs"),
       "utf8"
@@ -403,6 +407,11 @@ describe("canonical live validation script", () => {
     expect(script).toContain("classifyCommandCenterPanelState");
     expect(script).toContain("DPM command-center summary did not return canonical populated posture");
     expect(script).toContain("supportabilityState: readSupportabilityState");
+    expect(script).toContain("buildRfc3643FeatureCoverage");
+    expect(script).toContain("assertRfc3643FeatureCoverage");
+    expect(script).toContain("summary.rfc3643FeatureCoverage");
+    expect(rfcFeatureCoverageModule).toContain("scenarioExpansionNeeded");
+    expect(rfcFeatureCoverageModule).toContain("companion canonical DPM portfolios");
     expect(browserWorkflowModule).toContain("Mandate Readiness");
     expect(browserWorkflowModule).toContain("Attention Required");
     expect(browserWorkflowModule).toContain("Recommended Actions");
