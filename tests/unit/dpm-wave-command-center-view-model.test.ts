@@ -317,6 +317,67 @@ describe("DPM wave command-center view model", () => {
     });
   });
 
+  it("uses source-backed candidate lineage as the campaign source product when present", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignDefinitions: {
+        correlation_id: "corr-campaign-definitions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDefinition",
+              product_version: "v1",
+              campaign_id: "campaign-core-universe-202605",
+              campaign_version: "2026.05",
+              display_name: "Core universe campaign",
+              status: "ACTIVE",
+              as_of_date: "2026-05-03",
+              eligible_portfolio_types: ["DISCRETIONARY"],
+              candidates: [
+                {
+                  portfolio_id: "PB_SG_GLOBAL_BAL_001",
+                  portfolio_type: "DISCRETIONARY",
+                  source_refs: [
+                    {
+                      source_system: "lotus-core",
+                      source_type: "DpmPortfolioUniverseCandidate",
+                      source_id: "PB_SG_GLOBAL_BAL_001:2026-05-03",
+                      source_version: "v1",
+                      supportability_state: "READY",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      campaignDiscovery: {
+        correlation_id: "corr-campaign-discovery",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDiscovery",
+              product_version: "v1",
+              campaign_id: "campaign-core-universe-202605",
+              campaign_version: "2026.05",
+              supportability_state: "READY",
+              source_ref_count: 1,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignRows[0].candidateSourceProduct).toBe("DpmPortfolioUniverseCandidate:v1");
+  });
+
   it("preserves Manage-owned campaign preview readiness without deriving readiness", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,
