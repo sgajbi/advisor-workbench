@@ -412,11 +412,14 @@ partial/degraded states.
 The summary also includes `rfc3643FeatureCoverage`, a feature-by-feature evidence matrix for the
 implemented RFC-0036 through RFC-0043 front-office product paths. Each row maps the RFC feature to
 the API, workflow-pack, seeded entity, and Workbench panel evidence that made the feature
-demo-ready. The matrix is not a blanket future-scope certification: it records the current scenario
-scope, now including the governed RFC-0041 multi-portfolio explicit-list wave preview from the
-canonical contract and the RFC-0037 bounded Core `DpmPortfolioUniverseCandidate:v1`
-candidate-source preview/no-caller-portfolio guard. Broader source-owner cohort products remain
-listed as scenario expansion until their source products and downstream realization are proven.
+demo-ready. Rows that support adjacent front-office proposal proof, such as RFC-0024 proposal
+memo/evidence-pack validation, are marked with `auditScope=adjacent-front-office` and counted
+separately from the RFC36-43 feature totals. The matrix is not a blanket future-scope
+certification: it records the current scenario scope, now including the governed RFC-0041
+multi-portfolio explicit-list wave preview from the canonical contract and the RFC-0037 bounded
+Core `DpmPortfolioUniverseCandidate:v1` candidate-source preview/no-caller-portfolio guard. Broader
+source-owner cohort products remain listed as scenario expansion until their source products and
+downstream realization are proven.
 
 ## Gateway startup rule
 

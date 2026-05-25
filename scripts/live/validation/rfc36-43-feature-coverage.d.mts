@@ -6,6 +6,7 @@ export interface RfcFeatureCoverageEvidence {
 
 export interface RfcFeatureCoverageRow {
   rfcId: string;
+  auditScope: "rfc36-43" | "adjacent-front-office";
   featureId: string;
   featureName: string;
   owner: string;
@@ -28,6 +29,10 @@ export interface RfcFeatureCoverageMatrix {
   coverageRows: RfcFeatureCoverageRow[];
   validatedFeatureCount: number;
   gapFeatureCount: number;
+  rfc3643FeatureCount: number;
+  validatedRfc3643FeatureCount: number;
+  adjacentEvidenceFeatureCount: number;
+  validatedAdjacentEvidenceFeatureCount: number;
   scenarioExpansionNeeded: string[];
 }
 

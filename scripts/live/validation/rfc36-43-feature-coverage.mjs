@@ -1,6 +1,7 @@
 const RFC_FEATURE_COVERAGE_ROWS = [
   {
     rfcId: "RFC-0036",
+    auditScope: "rfc36-43",
     featureId: "stateful_core_sourcing",
     featureName: "Stateful core sourcing and canonical manage API boundary",
     owner: "lotus-manage",
@@ -18,6 +19,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0037",
+    auditScope: "rfc36-43",
     featureId: "dpm_operating_system",
     featureName: "DPM operating system command-center realization",
     owner: "lotus-manage",
@@ -35,6 +37,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0038",
+    auditScope: "rfc36-43",
     featureId: "mandate_digital_twin",
     featureName: "Mandate digital twin and health command center",
     owner: "lotus-manage",
@@ -44,6 +47,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0039",
+    auditScope: "rfc36-43",
     featureId: "construction_alternatives",
     featureName: "Construction alternatives product path",
     owner: "lotus-manage",
@@ -53,6 +57,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0040",
+    auditScope: "rfc36-43",
     featureId: "proof_pack_evidence",
     featureName: "Pre-trade proof pack and evidence fabric",
     owner: "lotus-manage",
@@ -62,6 +67,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0041",
+    auditScope: "rfc36-43",
     featureId: "rebalance_wave_explicit_portfolio_product_path",
     featureName: "Rebalance-wave command center for canonical explicit portfolio-list paths",
     owner: "lotus-manage",
@@ -82,6 +88,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0042",
+    auditScope: "rfc36-43",
     featureId: "outcome_review_feedback_loop",
     featureName: "Post-trade outcome review and feedback loop",
     owner: "lotus-manage",
@@ -91,6 +98,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0042",
+    auditScope: "rfc36-43",
     featureId: "pm_operating_quality",
     featureName: "PM operating-quality governance evidence",
     owner: "lotus-manage",
@@ -111,6 +119,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0043",
+    auditScope: "rfc36-43",
     featureId: "governed_ai_pm_copilot",
     featureName: "Governed AI PM copilot workflow-pack posture",
     owner: "lotus-ai",
@@ -124,9 +133,11 @@ const RFC_FEATURE_COVERAGE_ROWS = [
     ],
   },
   {
-    rfcId: "RFC-0043",
-    featureId: "proposal_memo_and_narrative_posture_cross_front_office",
-    featureName: "Gateway-backed proposal narrative and memo evidence posture as adjacent front-office proof",
+    rfcId: "RFC-0024",
+    auditScope: "adjacent-front-office",
+    featureId: "advisor_proposal_memo_evidence_pack",
+    featureName:
+      "Gateway-backed proposal narrative and memo evidence posture as adjacent front-office proof",
     owner: "lotus-advise",
     requiredEvidence: [
       "proposalNarrative",
@@ -139,6 +150,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
       "client-ready release",
       "report archive publication by Workbench",
       "memo fact inference by Workbench",
+      "approved-state inference by Workbench",
     ],
   },
 ];
@@ -177,6 +189,8 @@ export function buildRfc3643FeatureCoverage(summary, evidence) {
       missingPanels,
     };
   });
+  const rfc3643Rows = rows.filter((row) => row.auditScope === "rfc36-43");
+  const adjacentEvidenceRows = rows.filter((row) => row.auditScope === "adjacent-front-office");
 
   return {
     contractId: "rfc36-43-front-office-feature-coverage",
@@ -186,6 +200,13 @@ export function buildRfc3643FeatureCoverage(summary, evidence) {
     coverageRows: rows,
     validatedFeatureCount: rows.filter((row) => row.coverageStatus === "validated").length,
     gapFeatureCount: rows.filter((row) => row.coverageStatus !== "validated").length,
+    rfc3643FeatureCount: rfc3643Rows.length,
+    validatedRfc3643FeatureCount: rfc3643Rows.filter((row) => row.coverageStatus === "validated")
+      .length,
+    adjacentEvidenceFeatureCount: adjacentEvidenceRows.length,
+    validatedAdjacentEvidenceFeatureCount: adjacentEvidenceRows.filter(
+      (row) => row.coverageStatus === "validated"
+    ).length,
     scenarioExpansionNeeded: rows.flatMap((row) => row.scenarioExpansionNeeded ?? []),
   };
 }

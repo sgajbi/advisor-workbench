@@ -72,6 +72,10 @@ describe("RFC36-43 live validation feature coverage", () => {
     expect(coverage.contractId).toBe("rfc36-43-front-office-feature-coverage");
     expect(coverage.validatedFeatureCount).toBe(10);
     expect(coverage.gapFeatureCount).toBe(0);
+    expect(coverage.rfc3643FeatureCount).toBe(9);
+    expect(coverage.validatedRfc3643FeatureCount).toBe(9);
+    expect(coverage.adjacentEvidenceFeatureCount).toBe(1);
+    expect(coverage.validatedAdjacentEvidenceFeatureCount).toBe(1);
     expect(coverage.coverageRows.map((row) => row.rfcId)).toEqual(
       expect.arrayContaining([
         "RFC-0036",
@@ -84,6 +88,11 @@ describe("RFC36-43 live validation feature coverage", () => {
         "RFC-0043",
       ])
     );
+    expect(
+      coverage.coverageRows
+        .filter((row) => row.auditScope === "rfc36-43")
+        .map((row) => row.rfcId)
+    ).not.toContain("RFC-0024");
     expect(coverage.coverageRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -106,6 +115,16 @@ describe("RFC36-43 live validation feature coverage", () => {
           featureId: "governed_ai_pm_copilot",
           coverageStatus: "validated",
           unsupportedClaimsExcluded: expect.arrayContaining(["raw prompt storage"]),
+        }),
+        expect.objectContaining({
+          rfcId: "RFC-0024",
+          auditScope: "adjacent-front-office",
+          featureId: "advisor_proposal_memo_evidence_pack",
+          coverageStatus: "validated",
+          uiPanels: ["proposal.narrative_posture", "proposal.memo_evidence_pack"],
+          unsupportedClaimsExcluded: expect.arrayContaining([
+            "approved-state inference by Workbench",
+          ]),
         }),
       ])
     );
