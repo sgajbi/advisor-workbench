@@ -495,9 +495,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Proposal memo evidence-pack advisor-use review and support posture");
     expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
     expect(browserWorkflowModule).toContain("Request Reviewed Report");
-    expect(browserWorkflowModule).toContain("Create Or Replay Memo");
+    expect(browserWorkflowModule).toContain("Prepare Or Refresh Memo");
+    expect(browserWorkflowModule).toContain("Memo evidence: sha256:");
     expect(browserWorkflowModule).toContain("Approve Memo For Advisor Use");
-    expect(browserWorkflowModule).toContain("Request Memo Report Package");
+    expect(browserWorkflowModule).toContain("Prepare Report Package");
+    expect(browserWorkflowModule).toContain("Request Advisor Commentary");
+    expect(browserWorkflowModule).toContain("Replay evidence: sha256:");
     expect(browserWorkflowModule).toContain("panel: panelId");
     expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
     expect(browserWorkflowModule).toContain("state: screenshotState");
