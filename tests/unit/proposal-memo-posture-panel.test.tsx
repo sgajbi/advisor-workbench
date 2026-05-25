@@ -106,7 +106,7 @@ describe("ProposalMemoPosturePanel", () => {
     expect(await screen.findByText(/Replay evidence: sha256:memo-001/)).toBeInTheDocument();
     expect(await screen.findByText("Evidence Readiness")).toBeInTheDocument();
     expect(await screen.findByText("Evidence Trail")).toBeInTheDocument();
-    expect(await screen.findByText(/Evidence archive: archive:\/\/memo\/report\/1/)).toBeInTheDocument();
+    expect(await screen.findByText(/Evidence archive: 1 archived report item/)).toBeInTheDocument();
     expect(screen.getByText(/Advisor-use memo actions preserve source evidence/)).toBeInTheDocument();
     expect(screen.getByText("Advisor ID")).toBeInTheDocument();
     expect(screen.queryByText("Actor")).not.toBeInTheDocument();
@@ -115,6 +115,7 @@ describe("ProposalMemoPosturePanel", () => {
     expect(screen.queryByText("APPROVED_FOR_ADVISOR_USE")).not.toBeInTheDocument();
     expect(screen.queryByText("SUPPORTED_ADVISOR_USE")).not.toBeInTheDocument();
     expect(screen.queryByText(/Archive refs:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/archive:\/\//)).not.toBeInTheDocument();
     expect(screen.queryByText(/Memo hash:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Replay hash:/)).not.toBeInTheDocument();
     expect(screen.queryByText("Lineage")).not.toBeInTheDocument();

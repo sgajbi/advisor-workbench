@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildProposalMemoPostureModel,
+  proposalMemoArchiveRefsLabel,
   proposalMemoStatusLabel,
 } from "../../src/features/proposals/proposal-memo-posture-view-model";
 
@@ -54,7 +55,7 @@ describe("buildProposalMemoPostureModel", () => {
       lineageStatusLabel: "Approved for advisor use",
       memoHash: "sha256:memo-001",
       projectionAudienceLabel: "Compliance review",
-      reportArchiveRefsLabel: "archive://memo/report/1",
+      reportArchiveRefsLabel: "1 archived report item",
       reportPackageStatusLabel: "Ready",
       reviewPostureLabel: "Approved for advisor use",
       statusLabel: "Approved for advisor use",
@@ -90,5 +91,13 @@ describe("buildProposalMemoPostureModel", () => {
   it("humanizes future source states instead of leaking enum tokens", () => {
     expect(proposalMemoStatusLabel("SOURCE_VALIDATED_BY_RISK")).toBe("Source validated by risk");
     expect(proposalMemoStatusLabel("")).toBe("Not reported");
+  });
+
+  it("summarizes report archive references without exposing archive URIs", () => {
+    expect(proposalMemoArchiveRefsLabel(["archive://memo/report/1"])).toBe("1 archived report item");
+    expect(proposalMemoArchiveRefsLabel(["archive://memo/report/1", "archive://memo/report/2"])).toBe(
+      "2 archived report items",
+    );
+    expect(proposalMemoArchiveRefsLabel([])).toBe("No archived report items");
   });
 });

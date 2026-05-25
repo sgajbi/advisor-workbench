@@ -79,6 +79,20 @@ export function proposalMemoStatusLabel(value: unknown, fallback = "Not reported
   return textValue(value, fallback);
 }
 
+export function proposalMemoArchiveRefsLabel(value: unknown): string {
+  if (Array.isArray(value)) {
+    const count = value.length;
+    if (count === 0) {
+      return "No archived report items";
+    }
+    return count === 1 ? "1 archived report item" : `${count} archived report items`;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    return "1 archived report item";
+  }
+  return "No archived report items";
+}
+
 function recordValue(source: Record<string, unknown> | undefined, key: string): unknown {
   return source?.[key];
 }
@@ -161,7 +175,7 @@ export function buildProposalMemoPostureModel({
       recordValue(projection, "audience"),
       selectedAudience,
     ),
-    reportArchiveRefsLabel: textValue(recordValue(reportPosture, "archive_refs"), "None"),
+    reportArchiveRefsLabel: proposalMemoArchiveRefsLabel(recordValue(reportPosture, "archive_refs")),
     reportPackageStatusLabel: proposalMemoStatusLabel(
       recordValue(reportPosture, "status"),
       "Not requested",
