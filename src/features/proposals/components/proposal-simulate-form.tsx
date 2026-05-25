@@ -252,7 +252,6 @@ export default function ProposalSimulateForm({
 
     setActiveWorkspaceId(workspaceId);
     let latestResponse = workspaceResponse;
-    let actionCount = 0;
 
     for (const item of validCashFlowRows()) {
       latestResponse = await applyAdvisoryWorkspaceDraftAction(workspaceId, {
@@ -267,7 +266,6 @@ export default function ProposalSimulateForm({
           },
         },
       });
-      actionCount += 1;
     }
 
     for (const item of validTradeRows()) {
@@ -283,12 +281,9 @@ export default function ProposalSimulateForm({
           },
         },
       });
-      actionCount += 1;
     }
 
-    if (actionCount === 0) {
-      latestResponse = await evaluateAdvisoryWorkspace(workspaceId);
-    }
+    latestResponse = await evaluateAdvisoryWorkspace(workspaceId);
 
     syncEvaluationFromWorkspace(latestResponse);
     return latestResponse;

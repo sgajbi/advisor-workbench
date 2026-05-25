@@ -311,6 +311,12 @@ visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal m
 the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
 review, request memo report-package posture, request non-authoritative commentary, preserve replay
 hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.
+The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
+Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal Simulation,
+Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and Implementation
+Status. These journey checks are route-level evidence over existing Gateway-backed Workbench
+screens; they do not promote new backend capability, client-ready release, client communication, or
+execution truth.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,
