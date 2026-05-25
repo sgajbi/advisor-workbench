@@ -79,9 +79,18 @@ export function createBrowserValidationHelpers({
     });
   }
 
+  async function screenshotAdvisoryJourney(page, name, metadata) {
+    await screenshot(page, name, {
+      route: metadata.route,
+      panel: metadata.panel,
+      state: metadata.state,
+    });
+  }
+
   return {
     assertListHasItems,
     assertTableHasRows,
+    screenshotAdvisoryJourney,
     screenshotRegisteredPanel,
     resolveRegistryRoute,
   };
@@ -99,6 +108,268 @@ function tableByExactLabel(page, label) {
 
 function workbenchPanelByClass(page, className) {
   return page.locator(`article.${className}`).first();
+}
+
+function advisoryJourneyRoute({ workbenchBaseUrl, portfolioId, path }) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${workbenchBaseUrl}${path}${separator}portfolioId=${encodeURIComponent(portfolioId)}`;
+}
+
+function recordAdvisoryJourneyCheck(summary, payload) {
+  summary.advisoryJourneyChecks ??= [];
+  summary.advisoryJourneyChecks.push({
+    ...payload,
+    state: payload.state ?? "ready",
+    owner: payload.owner ?? "lotus-workbench",
+    gatewayBacked: payload.gatewayBacked ?? true,
+  });
+}
+
+async function validateAdvisoryJourneyRoute(
+  page,
+  {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key,
+    title,
+    route,
+    screenshotName,
+    panel,
+    owner,
+    sourcePosture,
+    validate,
+    screenshotAdvisoryJourney,
+  }
+) {
+  await page.goto(route, { waitUntil: "networkidle", timeout: timeoutMs });
+  await expect(page.getByRole("heading", { name: title, exact: true }).first()).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await validate();
+  await screenshotAdvisoryJourney(page, screenshotName, {
+    route: route.replace(workbenchBaseUrl, ""),
+    panel,
+    state: "demo_ready",
+  });
+  recordAdvisoryJourneyCheck(summary, {
+    key,
+    title,
+    route: route.replace(workbenchBaseUrl, ""),
+    panel,
+    owner,
+    sourcePosture,
+  });
+}
+
+export async function validateAdvisoryJourneyScreens(
+  page,
+  {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    screenshotAdvisoryJourney,
+  }
+) {
+  const recommendationsRoute = advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path: "/recommendations",
+  });
+  const opportunitiesRoute = advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path: "/recommendations?mode=opportunities",
+  });
+  const portfolioRoute = advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path: "/portfolio",
+  });
+  const proposalBuilderRoute = advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path: "/proposals/simulate",
+  });
+
+  await validateAdvisoryJourneyRoute(page, {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key: "overview",
+    title: "Advisory Overview",
+    route: recommendationsRoute,
+    screenshotName: "advisory-overview-live.png",
+    panel: "advisory.overview",
+    owner: "lotus-advise",
+    sourcePosture: "proposal-list-through-gateway",
+    screenshotAdvisoryJourney,
+    validate: async () => {
+      await expect(page.getByLabel("Advisory overview summary")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByLabel("Advisory journey screens")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Priority Advisory Actions")).toBeVisible({
+        timeout: timeoutMs,
+      });
+    },
+  });
+
+  await validateAdvisoryJourneyRoute(page, {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key: "client-context",
+    title: "Portfolio Review",
+    route: portfolioRoute,
+    screenshotName: "advisory-client-context-live.png",
+    panel: "advisory.client_context",
+    owner: "lotus-core",
+    sourcePosture: "portfolio-context-through-gateway",
+    screenshotAdvisoryJourney,
+    validate: async () => {
+      await expect(page.getByRole("region", { name: "Portfolio decision review" })).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Balanced Mandate")).toBeVisible({ timeout: timeoutMs });
+      await expect(page.getByText("Review Evidence")).toBeVisible({ timeout: timeoutMs });
+    },
+  });
+
+  await validateAdvisoryJourneyRoute(page, {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key: "opportunities",
+    title: "Opportunities And Ideas",
+    route: opportunitiesRoute,
+    screenshotName: "advisory-opportunities-live.png",
+    panel: "advisory.opportunities",
+    owner: "lotus-advise",
+    sourcePosture: "draft-proposals-through-gateway",
+    screenshotAdvisoryJourney,
+    validate: async () => {
+      await expect(page.getByLabel("Draft advisory ideas")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Advisor Decision", { exact: true })).toBeVisible({ timeout: timeoutMs });
+    },
+  });
+
+  await validateAdvisoryJourneyRoute(page, {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key: "proposal-builder",
+    title: "Proposal Workspace",
+    route: proposalBuilderRoute,
+    screenshotName: "advisory-proposal-builder-live.png",
+    panel: "advisory.proposal_builder",
+    owner: "lotus-advise",
+    sourcePosture: "portfolio-book-and-workspace-through-gateway",
+    screenshotAdvisoryJourney,
+    validate: async () => {
+      await expect(page.getByText("Create Advisory Proposal")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Current Positions")).toBeVisible({ timeout: timeoutMs });
+      await expect(page.getByText("Draft Order Blotter")).toBeVisible({ timeout: timeoutMs });
+      await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeVisible({
+        timeout: timeoutMs,
+      });
+    },
+  });
+
+  await page.goto(`${proposalBuilderRoute}#simulation`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Proposal Workspace", exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await page.getByRole("button", { name: "Evaluate Workspace" }).click({ timeout: timeoutMs });
+  await expect(page.getByText("Advise Evaluation Summary")).toBeVisible({ timeout: timeoutMs });
+  await screenshotAdvisoryJourney(page, "advisory-proposal-simulation-live.png", {
+    route: `/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}#simulation`,
+    panel: "advisory.proposal_simulation",
+    state: "demo_ready",
+  });
+  recordAdvisoryJourneyCheck(summary, {
+    key: "simulation",
+    title: "Proposal Simulation",
+    route: `/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}#simulation`,
+    panel: "advisory.proposal_simulation",
+    owner: "lotus-advise",
+    sourcePosture: "workspace-evaluation-through-gateway",
+  });
+
+  for (const lifecycle of [
+    {
+      key: "suitability",
+      title: "Suitability Review",
+      screenshotName: "advisory-suitability-review-live.png",
+      panel: "advisory.suitability_review",
+      sourcePosture: "proposal-lifecycle-through-gateway",
+    },
+    {
+      key: "risk-impact",
+      title: "Risk And Impact",
+      screenshotName: "advisory-risk-impact-live.png",
+      panel: "advisory.risk_impact",
+      sourcePosture: "risk-review-proposals-through-gateway",
+    },
+    {
+      key: "approval-queue",
+      title: "Approval Queue",
+      screenshotName: "advisory-approval-queue-live.png",
+      panel: "advisory.approval_queue",
+      sourcePosture: "proposal-approval-queue-through-gateway",
+    },
+    {
+      key: "discussion-pack",
+      title: "Client Discussion Pack",
+      screenshotName: "advisory-client-discussion-pack-live.png",
+      panel: "advisory.client_discussion_pack",
+      sourcePosture: "discussion-pack-posture-through-gateway",
+    },
+    {
+      key: "implementation",
+      title: "Implementation Status",
+      screenshotName: "advisory-implementation-status-live.png",
+      panel: "advisory.implementation_status",
+      sourcePosture: "implementation-follow-up-through-gateway",
+    },
+  ]) {
+    const route = advisoryJourneyRoute({
+      workbenchBaseUrl,
+      portfolioId,
+      path: `/proposals?mode=${lifecycle.key}`,
+    });
+    await validateAdvisoryJourneyRoute(page, {
+      summary,
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      ...lifecycle,
+      owner: "lotus-advise",
+      route,
+      screenshotAdvisoryJourney,
+      validate: async () => {
+        await expect(page.getByLabel("Proposal lifecycle counts")).toBeVisible({
+          timeout: timeoutMs,
+        });
+        await expect(page.getByText("Advisor Decision", { exact: true })).toBeVisible({ timeout: timeoutMs });
+      },
+    });
+  }
 }
 
 export async function validatePortfolioPanels(

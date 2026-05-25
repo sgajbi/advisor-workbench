@@ -59,6 +59,11 @@
 - DPM PM operating-quality live proof creates and re-reads Manage-backed score-run,
   fairness-analysis, supervisory review-action, and summary-invocation evidence through Gateway
   before the panel is classified as ready
+- RFC-0024 advisory journey route proof is recorded in `advisoryJourneyChecks` with screenshots for
+  Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal
+  Simulation, Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and
+  Implementation Status. This is route evidence over existing Gateway-backed screens, not a new
+  client-ready, communication, execution, or backend capability claim.
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics
@@ -70,6 +75,8 @@ The governed front-office validation flow checks the seeded `PB_SG_GLOBAL_BAL_00
 - portfolio summary and detailed surfaces
 - performance summary and analysis surfaces
 - advisor-brief and risk modes inside the performance experience
+- RFC-0024 advisory journey routes and proposal memo/evidence-pack posture through Gateway-backed
+  Workbench screens
 - evidence-oriented product validation paths that are part of the current governed runtime
 - DPM outcome review, proof pack, command center, portfolio memory, rebalance-wave command center,
   Core candidate-source wave preview/no-caller-portfolio guard, construction alternatives,

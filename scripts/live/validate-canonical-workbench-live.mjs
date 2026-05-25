@@ -29,6 +29,7 @@ import {
 } from "./validation/calculation-sanity.mjs";
 import {
   createBrowserValidationHelpers,
+  validateAdvisoryJourneyScreens,
   validateAdvisorBriefPanel,
   validateConstructionAlternativesPanel,
   validateDpmCopilotWorkspace,
@@ -1516,6 +1517,13 @@ async function run() {
       proposalVersionNo,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateAdvisoryJourneyScreens(page, {
+      summary,
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      screenshotAdvisoryJourney: browserHelpers.screenshotAdvisoryJourney,
     });
     await validateRiskPanel(page, {
       workbenchBaseUrl,

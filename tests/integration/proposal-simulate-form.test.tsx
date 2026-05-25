@@ -158,6 +158,10 @@ describe("ProposalSimulateForm", () => {
         }
       )
     );
+    await waitFor(() =>
+      expect(advisoryApiMocks.evaluateAdvisoryWorkspace).toHaveBeenCalledWith("aws_test_001")
+    );
+    expect(await screen.findByText("Advise Evaluation Summary")).toBeInTheDocument();
   });
 
   it("caps submitted sell-down quantities to source-backed available units", async () => {
