@@ -46,8 +46,10 @@
   demo-ready evidence
 - `live-validation-summary.json` also includes `rfc3643FeatureCoverage`, which maps implemented
   RFC-0036 through RFC-0043 front-office features to live API, workflow-pack, seeded entity, and
-  panel evidence. RFC-0041 coverage includes the governed multi-portfolio explicit-list wave
-  preview from the canonical contract. RFC-0037 coverage includes bounded Core
+  panel evidence. Adjacent proposal evidence, including RFC-0024 proposal memo/evidence-pack
+  validation, is marked as `auditScope=adjacent-front-office` and counted separately so it cannot
+  inflate RFC36-43 completion counts. RFC-0041 coverage includes the governed multi-portfolio
+  explicit-list wave preview from the canonical contract. RFC-0037 coverage includes bounded Core
   `DpmPortfolioUniverseCandidate:v1` candidate-source preview and the required rejection of mixed
   Core-discovery/manual-portfolio requests. Treat remaining scenario-expansion notes as open
   validation depth, not as implemented product claims.
