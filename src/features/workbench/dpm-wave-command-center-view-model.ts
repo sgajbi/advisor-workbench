@@ -700,6 +700,10 @@ function resolveCampaignCandidateSourceProduct(
   record: Record<string, unknown>,
   discovery: Record<string, unknown>
 ): string {
+  const lineageProduct = resolveCampaignCandidateLineageProduct(record);
+  if (lineageProduct) {
+    return lineageProduct;
+  }
   const productName =
     readString(discovery, "product_name") ||
     readString(record, "product_name") ||
@@ -711,6 +715,23 @@ function resolveCampaignCandidateSourceProduct(
     return `${productName}:${productVersion}`;
   }
   return productName || "BulkReviewCampaignMembership:v1";
+}
+
+function resolveCampaignCandidateLineageProduct(record: Record<string, unknown>): string {
+  const sourceRefs = extractRecordArray(record.candidates).flatMap((candidate) =>
+    extractRecordArray(candidate.source_refs)
+  );
+  const sourceProduct = sourceRefs
+    .map((sourceRef) => {
+      const sourceType = readString(sourceRef, "source_type");
+      if (!sourceType || sourceType.startsWith("BulkReviewCampaign")) {
+        return "";
+      }
+      const sourceVersion = readString(sourceRef, "source_version");
+      return sourceVersion ? `${sourceType}:${sourceVersion}` : sourceType;
+    })
+    .find((value) => value.length > 0);
+  return sourceProduct ?? "";
 }
 
 function resolveCampaignCandidateSourceReadiness(
