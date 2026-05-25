@@ -119,13 +119,26 @@ Current repository posture:
     prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
     OMS claims.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
-16. `/proposals` and `/proposals/{proposalId}` are direct Gateway-backed advisory routes for the
-    proposal queue, proposal detail, and RFC-0023 advisor narrative delivery posture. The detail
-    route records advisor-use narrative review and reviewed report-package requests through
-    Gateway proposal endpoints only, renders delivery-summary and delivery-event posture, and does
-    not generate narrative, infer client-ready release, render reports, archive artifacts, contact
-    clients, or call advisory/report/archive/render services directly. The top-level shell
-    `Proposal` capability remains disabled until broader shell promotion is separately proven.
+16. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
+    active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
+    model across overview, opportunities, proposal builder, suitability, risk impact, approval
+    queue, client discussion pack, and implementation follow-up so future screens can evolve like
+    Manage modes instead of page-local route fragments. The proposal builder sources positions and
+    cash through Gateway/Core/Advise, lets advisors model buys, sells, off-book instruments, and
+    cash movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
+    allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
+    risk, performance, or execution truth locally. The detail route records advisor-use narrative
+    review and reviewed report-package requests through Gateway proposal endpoints only, renders
+    delivery-summary and delivery-event posture, and does not generate narrative, infer
+    client-ready release, render reports, archive artifacts, contact clients, route orders, or call
+    advisory/report/archive/render services directly. `/recommendations?mode=opportunities` is a
+    Gateway-backed idea triage view over draft advisory proposals; Workbench must not claim
+    automated opportunity sourcing until Gateway exposes a supported idea/opportunity contract.
+    `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
+    `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
+    lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
+    states for advisor navigation but does not calculate suitability, risk impact, consent, or
+    implementation truth locally.
 
 ## Architecture And Module Map
 

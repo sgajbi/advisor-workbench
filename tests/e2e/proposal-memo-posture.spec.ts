@@ -150,7 +150,7 @@ async function mockProposalDetail(page: import("@playwright/test").Page, blocked
 }
 
 test.describe("proposal memo posture", () => {
-  test("renders Gateway-backed memo audiences and blocked client draft posture", async ({ page }) => {
+  test("renders advisor memo audiences and blocked client draft posture", async ({ page }) => {
     await mockProposalDetail(page);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
 
@@ -159,29 +159,37 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByText("VTI")).toBeVisible();
     await expect(page.getByText("Global Equities")).toBeVisible();
     await expect(page.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Advisor Memo Product Surface" })).toBeVisible();
-    await expect(page.getByText("APPROVED_FOR_ADVISOR_USE").first()).toBeVisible();
-    await expect(page.getByText("SUPPORTED_ADVISOR_USE").first()).toBeVisible();
-    await expect(page.getByText(/Client draft: BLOCKED/)).toBeVisible();
-    await expect(page.getByText(/archive:\/\/memo\/report\/1/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
+    await expect(page.getByText("Approved for advisor use").first()).toBeVisible();
+    await expect(page.getByText("Advisor-use evidence ready").first()).toBeVisible();
+    await expect(page.getByText(/Client draft: Blocked/)).toBeVisible();
+    await expect(page.getByText(/Evidence archive: 1 archived report item/)).toBeVisible();
+    await expect(page.getByText("APPROVED_FOR_ADVISOR_USE")).toHaveCount(0);
+    await expect(page.getByText("SUPPORTED_ADVISOR_USE")).toHaveCount(0);
+    await expect(page.getByText(/archive:\/\//)).toHaveCount(0);
 
     await page.locator("select.input").selectOption("COMPLIANCE");
-    await expect(page.getByText("COMPLIANCE").first()).toBeVisible();
+    await expect(page.getByText("Compliance review").first()).toBeVisible();
     await page.locator("select.input").selectOption("OPERATIONS");
-    await expect(page.getByText("OPERATIONS").first()).toBeVisible();
+    await expect(page.getByText("Operations handoff").first()).toBeVisible();
     await page.locator("select.input").selectOption("CLIENT_DRAFT");
-    await expect(page.getByText("CLIENT_DRAFT").first()).toBeVisible();
+    await expect(page.getByText("Client discussion draft").first()).toBeVisible();
+    await expect(page.getByText("CLIENT_DRAFT")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /send to client/i })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /client-ready release/i })).toHaveCount(0);
   });
 
-  test("renders degraded and blocked memo posture from Gateway responses", async ({ page }) => {
+  test("renders degraded and blocked memo posture from source responses", async ({ page }) => {
     await mockProposalDetail(page, true);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText(/Memo posture is degraded or blocked by Gateway/)).toBeVisible();
-    await expect(page.getByText("DEGRADED_SOURCE_EVIDENCE").first()).toBeVisible();
-    await expect(page.getByText(/Client draft: BLOCKED_BY_SOURCE_EVIDENCE/)).toBeVisible();
+    await expect(
+      page.getByText(/Memo posture is degraded or blocked by source advisory evidence/),
+    ).toBeVisible();
+    await expect(page.getByText("Source evidence degraded").first()).toBeVisible();
+    await expect(page.getByText(/Client draft: Blocked by source evidence/)).toBeVisible();
+    await expect(page.getByText("DEGRADED_SOURCE_EVIDENCE")).toHaveCount(0);
+    await expect(page.getByText("BLOCKED_BY_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText(/ready for client/i)).toHaveCount(0);
   });
 });

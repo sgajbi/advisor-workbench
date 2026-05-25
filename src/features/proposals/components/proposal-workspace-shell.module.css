@@ -40,6 +40,72 @@
   background: #ffffff;
 }
 
+.evidenceDrawer {
+  gap: 18px;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.drawerHeader span {
+  color: #45464d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 15px;
+  text-transform: uppercase;
+}
+
+.drawerHeader strong {
+  color: #5b4300;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.evidenceAlert {
+  border: 1px solid #f2afa8;
+  border-radius: 4px;
+  background: #ffdad6;
+  color: #93000a;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.evidenceTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #c6c6cd;
+}
+
+.evidenceTabs span,
+.evidenceTabs strong {
+  min-width: 0;
+  padding: 0 4px 9px;
+  color: #5f6670;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.evidenceTabs strong {
+  border-bottom: 2px solid #765a17;
+  color: #765a17;
+}
+
+.reviewPosture {
+  display: grid;
+  gap: 5px;
+}
+
 .contextPanel h3 {
   margin: 0;
   color: #191c1e;
@@ -52,6 +118,138 @@
   color: #45464d;
   font-size: 13px;
   line-height: 18px;
+}
+
+.reviewStepper,
+.taskList {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewStepper {
+  position: relative;
+  margin-left: 9px;
+  padding-left: 22px;
+}
+
+.reviewStepper::before {
+  position: absolute;
+  top: 6px;
+  bottom: 7px;
+  left: 0;
+  width: 1px;
+  background: #c6c6cd;
+  content: "";
+}
+
+.reviewStepper li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  color: #8a8f96;
+}
+
+.reviewStepper li::before {
+  position: absolute;
+  top: 4px;
+  left: -27px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #c6c6cd;
+  box-shadow: 0 0 0 1px #d8dadc;
+  content: "";
+}
+
+.reviewStepper span,
+.taskList span {
+  color: #45464d;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.reviewStepper strong,
+.taskList strong {
+  color: #45464d;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.reviewStepper .stepComplete::before {
+  background: #7a7f87;
+}
+
+.reviewStepper .stepActive::before {
+  background: #765a17;
+  box-shadow: 0 0 0 3px #ffdf9d;
+}
+
+.reviewStepper .stepActive span,
+.reviewStepper .stepActive strong {
+  color: #191c1e;
+}
+
+.checklist {
+  display: grid;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #c6c6cd;
+  border-radius: 4px;
+  background: #f7f9fb;
+}
+
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.checklist input {
+  width: 16px;
+  height: 16px;
+  accent-color: #765a17;
+}
+
+.taskList li {
+  display: grid;
+  gap: 3px;
+  padding-left: 30px;
+  position: relative;
+}
+
+.taskList li::before {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #9da3aa;
+  border-radius: 4px;
+  content: "";
+}
+
+.taskList .taskComplete {
+  opacity: 0.7;
+}
+
+.taskList .taskComplete span {
+  text-decoration: line-through;
+}
+
+.taskList .taskComplete::before {
+  border-radius: 999px;
+  border-color: #765a17;
+  background: #ffdf9d;
 }
 
 .contextList {

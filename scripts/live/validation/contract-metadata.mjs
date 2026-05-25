@@ -156,6 +156,19 @@ export const DEFAULT_PANEL_REGISTRY = {
       ownerFollowUpRfc: null,
     },
     {
+      panelId: "proposal.memo_evidence_pack",
+      owningService: "lotus-advise",
+      gatewayEndpoint: "/api/v1/proposals/{proposal_id}/versions/{version_no}/memo",
+      requiredSupportState: "ready",
+      route: "/proposals/{proposalId}",
+      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      screenshotName: "proposal-memo-evidence-pack-live.png",
+      knownLimitations: [
+        "Workbench validates advisor-use memo evidence only; client-ready release and document rendering remain outside this surface",
+      ],
+      ownerFollowUpRfc: null,
+    },
+    {
       panelId: "performance.risk.snapshot",
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/summary",

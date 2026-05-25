@@ -32,6 +32,7 @@ import {
   validateAdvisorBriefPanel,
   validateConstructionAlternativesPanel,
   validateDpmCopilotWorkspace,
+  validateProposalMemoEvidencePackPanel,
   validateProposalNarrativePosturePanel,
   validateDpmCommandCenterPanel,
   validatePortfolioMemoryPanel,
@@ -1333,6 +1334,12 @@ async function run() {
     narrativeId: proposalNarrative.narrative_id,
     generationMode: proposalNarrative.generation_mode,
   });
+  panelGovernance.recordPanelClassification("proposal.memo_evidence_pack", "ready", "lotus-advise", {
+    route: `/proposals/${proposalId}`,
+    proposalId,
+    versionNo: proposalVersionNo,
+    source: "lotus-advise memo evidence-pack posture",
+  });
   panelGovernance.recordPanelClassification("dpm.outcome_review", "ready", "lotus-manage", {
     route: `/workbench/${portfolioId}`,
     outcomeReviewMinimum: 1,
@@ -1422,6 +1429,8 @@ async function run() {
     copilotPanel: true,
     proposalNarrative: proposalNarrative.narrative_id,
     proposalNarrativePanel: true,
+    proposalMemoEvidencePack: proposalId,
+    proposalMemoEvidencePackPanel: true,
   });
   assertRfc3643FeatureCoverage(summary);
 
@@ -1497,6 +1506,14 @@ async function run() {
       summary,
       workbenchBaseUrl,
       proposalId,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateProposalMemoEvidencePackPanel(page, {
+      summary,
+      workbenchBaseUrl,
+      proposalId,
+      proposalVersionNo,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });

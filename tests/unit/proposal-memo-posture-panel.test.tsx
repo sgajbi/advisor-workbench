@@ -9,7 +9,7 @@ import {
   getProposalMemoLineage,
   getProposalMemoProjection,
   getProposalMemoReplayEvidence,
-  requestProposalMemoAiCommentary,
+  requestProposalMemoAdvisorCommentary,
   requestProposalMemoReportPackage,
   reviewProposalMemo,
 } from "../../src/features/proposals/api";
@@ -20,7 +20,7 @@ vi.mock("../../src/features/proposals/api", () => ({
   getProposalMemoLineage: vi.fn(),
   getProposalMemoProjection: vi.fn(),
   getProposalMemoReplayEvidence: vi.fn(),
-  requestProposalMemoAiCommentary: vi.fn(),
+  requestProposalMemoAdvisorCommentary: vi.fn(),
   requestProposalMemoReportPackage: vi.fn(),
   reviewProposalMemo: vi.fn(),
 }));
@@ -86,22 +86,40 @@ describe("ProposalMemoPosturePanel", () => {
     vi.mocked(requestProposalMemoReportPackage).mockResolvedValue({
       report: { archive_refs: ["archive://memo/report/1"] },
     });
-    vi.mocked(requestProposalMemoAiCommentary).mockResolvedValue({
+    vi.mocked(requestProposalMemoAdvisorCommentary).mockResolvedValue({
       commentary: { authority: "NON_AUTHORITATIVE" },
     });
   });
 
-  it("renders Gateway memo posture and keeps client-ready actions absent", async () => {
+  it("renders advisor memo posture and keeps client-ready actions absent", async () => {
     renderPanel();
 
     expect(
-      screen.getByRole("heading", { name: "Advisor Memo Product Surface" }),
+      screen.getByRole("heading", { name: "Advisor Memo And Evidence Pack" }),
     ).toBeInTheDocument();
-    expect((await screen.findAllByText("APPROVED_FOR_ADVISOR_USE")).length).toBeGreaterThan(0);
-    expect(await screen.findByText("SUPPORTED_ADVISOR_USE")).toBeInTheDocument();
-    expect(await screen.findByText(/Client draft: BLOCKED/)).toBeInTheDocument();
-    expect(await screen.findByText(/archive:\/\/memo\/report\/1/)).toBeInTheDocument();
-    expect(screen.getByText(/Workbench uses Gateway memo endpoints only/)).toBeInTheDocument();
+    expect((await screen.findAllByText("Approved for advisor use")).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Advisor-use evidence ready")).toBeInTheDocument();
+    expect(await screen.findByText(/Client draft: Blocked/)).toBeInTheDocument();
+    expect((await screen.findAllByText("Advisor use")).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByRole("option", { name: "Client discussion draft" })).toBeInTheDocument();
+    expect(await screen.findByText(/Memo evidence: sha256:memo-001/)).toBeInTheDocument();
+    expect(await screen.findByText(/Replay evidence: sha256:memo-001/)).toBeInTheDocument();
+    expect(await screen.findByText("Evidence Readiness")).toBeInTheDocument();
+    expect(await screen.findByText("Evidence Trail")).toBeInTheDocument();
+    expect(await screen.findByText(/Evidence archive: 1 archived report item/)).toBeInTheDocument();
+    expect(screen.getByText(/Advisor-use memo actions preserve source evidence/)).toBeInTheDocument();
+    expect(screen.getByText("Advisor ID")).toBeInTheDocument();
+    expect(screen.queryByText("Actor")).not.toBeInTheDocument();
+    expect(screen.queryByText("AI Commentary")).not.toBeInTheDocument();
+    expect(screen.queryByText("Supportability")).not.toBeInTheDocument();
+    expect(screen.queryByText("APPROVED_FOR_ADVISOR_USE")).not.toBeInTheDocument();
+    expect(screen.queryByText("SUPPORTED_ADVISOR_USE")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Archive refs:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/archive:\/\//)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Memo hash:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Replay hash:/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Lineage")).not.toBeInTheDocument();
+    expect(screen.queryByText("CLIENT_DRAFT")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client-ready release/i })).not.toBeInTheDocument();
   });
@@ -109,7 +127,7 @@ describe("ProposalMemoPosturePanel", () => {
   it("routes memo actions through Gateway APIs with source memo hash", async () => {
     renderPanel();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Create Or Replay Memo" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
     await waitFor(() => {
       expect(createProposalMemo).toHaveBeenCalledWith(
         "pp_1",
@@ -139,7 +157,7 @@ describe("ProposalMemoPosturePanel", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Request Memo Report Package" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare Report Package" }));
     await waitFor(() => {
       expect(requestProposalMemoReportPackage).toHaveBeenCalledWith(
         "pp_1",
@@ -152,21 +170,21 @@ describe("ProposalMemoPosturePanel", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Request AI Commentary" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request Advisor Commentary" }));
     await waitFor(() => {
-      expect(requestProposalMemoAiCommentary).toHaveBeenCalledWith(
+      expect(requestProposalMemoAdvisorCommentary).toHaveBeenCalledWith(
         "pp_1",
         2,
         expect.objectContaining({
           source_memo_hash: "sha256:memo-001",
           requested_sections: ["EXECUTIVE_SUMMARY", "LIMITATIONS_AND_DISCLOSURES"],
         }),
-        expect.stringContaining("ui-memo-ai-commentary-2-pp_1"),
+        expect.stringContaining("ui-memo-advisor-commentary-2-pp_1"),
       );
     });
   });
 
-  it("shows degraded Gateway posture without inventing readiness", async () => {
+  it("shows degraded memo posture without inventing readiness", async () => {
     vi.mocked(getProposalMemo).mockRejectedValue(new Error("Proposal memo fetch failed (409)"));
     vi.mocked(getProposalMemoProjection).mockResolvedValue({
       projection: {
@@ -179,9 +197,26 @@ describe("ProposalMemoPosturePanel", () => {
     renderPanel();
 
     expect(
-      await screen.findByText(/Memo posture is degraded or blocked by Gateway/),
+      await screen.findByText(/Memo posture is degraded or blocked by source advisory evidence/),
     ).toBeInTheDocument();
-    expect(await screen.findByText("DEGRADED_SOURCE_EVIDENCE")).toBeInTheDocument();
+    expect(screen.queryByText(/supportability/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Source evidence degraded")).toBeInTheDocument();
+    expect(screen.queryByText("DEGRADED_SOURCE_EVIDENCE")).not.toBeInTheDocument();
     expect(screen.queryByText(/ready for client/i)).not.toBeInTheDocument();
+  });
+
+  it("shows business-readable action failure copy for non-error failures", async () => {
+    vi.mocked(createProposalMemo).mockRejectedValueOnce("network failure");
+
+    renderPanel();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
+
+    expect(
+      await screen.findByText(
+        "Memo preparation did not complete. Review source evidence and try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Unknown memo/i)).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,13 @@
 import {
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
+  AdvisoryWorkspaceBodyRequest,
+  AdvisoryWorkspaceCreateRequest,
+  AdvisoryWorkspaceDraftActionRequest,
+  AdvisoryWorkspaceEnvelopeResponse,
+  AdvisoryWorkspaceHandoffRequest,
+  AdvisoryWorkspaceSaveRequest,
+  ProposalBodyRequest,
   ProposalCreateRequest,
   ProposalDeliveryEventsData,
   ProposalDeliverySummaryData,
@@ -8,6 +15,8 @@ import {
   ProposalEnvelopeResponse,
   ProposalListData,
   ProposalLineageData,
+  ProposalMemoAdvisorCommentaryData,
+  ProposalMemoAdvisorCommentaryRequest,
   ProposalMemoAiCommentaryData,
   ProposalMemoAiCommentaryRequest,
   ProposalMemoCreateRequest,
@@ -62,11 +71,116 @@ export async function simulateProposal(
   return (await response.json()) as ProposalSimulateResponse;
 }
 
+export async function createProposalArtifact(
+  payload: ProposalBodyRequest,
+  idempotencyKey: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson("/proposals/artifact", payload, idempotencyKey);
+}
+
+export async function createAdvisoryWorkspace(
+  payload: AdvisoryWorkspaceCreateRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson("", payload);
+}
+
+export async function getAdvisoryWorkspace(
+  workspaceId: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces/${workspaceId}`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory workspace fetch failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
+}
+
+export async function applyAdvisoryWorkspaceDraftAction(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceDraftActionRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/draft-actions`, payload);
+}
+
+export async function evaluateAdvisoryWorkspace(
+  workspaceId: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/evaluate`, { body: {} });
+}
+
+export async function saveAdvisoryWorkspace(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceSaveRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/save`, payload);
+}
+
+export async function listAdvisoryWorkspaceSavedVersions(
+  workspaceId: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await getAdvisoryWorkspaceJson(`/${workspaceId}/saved-versions`);
+}
+
+export async function getAdvisoryWorkspaceSavedVersionReplayEvidence(
+  workspaceId: string,
+  workspaceVersionId: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await getAdvisoryWorkspaceJson(
+    `/${workspaceId}/saved-versions/${workspaceVersionId}/replay-evidence`
+  );
+}
+
+export async function resumeAdvisoryWorkspace(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceBodyRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/resume`, payload);
+}
+
+export async function compareAdvisoryWorkspace(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceBodyRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/compare`, payload);
+}
+
+export async function requestAdvisoryWorkspaceRationale(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceBodyRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/assistant/rationale`, payload);
+}
+
+export async function reviewAdvisoryWorkspaceRationale(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceBodyRequest
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(
+    `/${workspaceId}/assistant/rationale/review-actions`,
+    payload
+  );
+}
+
+export async function handoffAdvisoryWorkspace(
+  workspaceId: string,
+  payload: AdvisoryWorkspaceHandoffRequest,
+  idempotencyKey: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/handoff`, payload, idempotencyKey);
+}
+
 export async function createProposal(
   payload: ProposalCreateRequest,
   idempotencyKey: string
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson("/proposals", payload, idempotencyKey);
+}
+
+export async function createProposalAsync(
+  payload: ProposalBodyRequest,
+  idempotencyKey: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson("/proposals/async", payload, idempotencyKey);
 }
 
 export async function listProposals(filters: ProposalListFilters = {}): Promise<ProposalListData> {
@@ -139,6 +253,49 @@ export async function createProposalVersion(
   return await postJson(`/proposals/${proposalId}/versions`, payload, idempotencyKey);
 }
 
+export async function createProposalVersionAsync(
+  proposalId: string,
+  payload: ProposalBodyRequest,
+  idempotencyKey: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(`/proposals/${proposalId}/versions/async`, payload, idempotencyKey);
+}
+
+export async function getProposalOperation(
+  operationId: string
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(`/proposals/operations/${operationId}`);
+}
+
+export async function getProposalOperationByCorrelation(
+  operationCorrelationId: string
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(
+    `/proposals/operations/by-correlation/${operationCorrelationId}`
+  );
+}
+
+export async function getProposalOperationReplayEvidence(
+  operationId: string
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(`/proposals/operations/${operationId}/replay-evidence`);
+}
+
+export async function getProposalVersionReplayEvidence(
+  proposalId: string,
+  versionNo: number
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(
+    `/proposals/${proposalId}/versions/${versionNo}/replay-evidence`
+  );
+}
+
+export async function getProposalIdempotencyRecord(
+  idempotencyKey: string
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(`/proposals/idempotency/${idempotencyKey}`);
+}
+
 export async function getProposalLineage(
   proposalId: string
 ): Promise<ProposalLineageData> {
@@ -149,6 +306,24 @@ export async function getProposalLineage(
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalLineageData;
+}
+
+export async function regenerateProposalNarrative(
+  proposalId: string,
+  versionNo: number,
+  payload: ProposalBodyRequest
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(
+    `/proposals/${proposalId}/versions/${versionNo}/narrative/regenerate`,
+    payload
+  );
+}
+
+export async function getProposalNarrative(
+  proposalId: string,
+  versionNo: number
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(`/proposals/${proposalId}/versions/${versionNo}/narrative`);
 }
 
 export async function reviewProposalNarrative(
@@ -173,6 +348,14 @@ export async function createProposalReportRequest(
   return envelope.data as unknown as ProposalReportRequestData;
 }
 
+export async function createProposalExecutionHandoff(
+  proposalId: string,
+  payload: ProposalBodyRequest,
+  idempotencyKey?: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(`/proposals/${proposalId}/execution-handoffs`, payload, idempotencyKey);
+}
+
 export async function getProposalDeliverySummary(
   proposalId: string
 ): Promise<ProposalDeliverySummaryData> {
@@ -195,6 +378,20 @@ export async function getProposalDeliveryEvents(
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDeliveryEventsData;
+}
+
+export async function getProposalExecutionStatus(
+  proposalId: string
+): Promise<ProposalEnvelopeResponse> {
+  return await getProposalEnvelope(`/proposals/${proposalId}/execution-status`);
+}
+
+export async function recordProposalExecutionUpdate(
+  proposalId: string,
+  payload: ProposalBodyRequest,
+  idempotencyKey?: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(`/proposals/${proposalId}/execution-updates`, payload, idempotencyKey);
 }
 
 export async function createProposalMemo(
@@ -259,6 +456,19 @@ export async function reviewProposalMemo(
   return envelope.data as unknown as ProposalMemoData;
 }
 
+export async function recordProposalMemoReportPackageEvent(
+  proposalId: string,
+  versionNo: number,
+  payload: ProposalBodyRequest,
+  idempotencyKey?: string
+): Promise<ProposalEnvelopeResponse> {
+  return await postJson(
+    `/proposals/${proposalId}/versions/${versionNo}/memo/report-package-events`,
+    payload,
+    idempotencyKey
+  );
+}
+
 export async function requestProposalMemoReportPackage(
   proposalId: string,
   versionNo: number,
@@ -285,6 +495,15 @@ export async function requestProposalMemoAiCommentary(
     idempotencyKey
   );
   return envelope.data as unknown as ProposalMemoAiCommentaryData;
+}
+
+export async function requestProposalMemoAdvisorCommentary(
+  proposalId: string,
+  versionNo: number,
+  payload: ProposalMemoAdvisorCommentaryRequest,
+  idempotencyKey?: string
+): Promise<ProposalMemoAdvisorCommentaryData> {
+  return await requestProposalMemoAiCommentary(proposalId, versionNo, payload, idempotencyKey);
 }
 
 export async function getProposalMemoLineage(
@@ -391,4 +610,47 @@ async function postJson(
     throw new Error(`Proposal request failed (${response.status}): ${body}`);
   }
   return (await response.json()) as ProposalEnvelopeResponse;
+}
+
+async function getProposalEnvelope(path: string): Promise<ProposalEnvelopeResponse> {
+  const response = await fetch(`${BFF_PROXY_BASE}${path}`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Proposal request failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as ProposalEnvelopeResponse;
+}
+
+async function getAdvisoryWorkspaceJson(
+  path: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces${path}`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory workspace request failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
+}
+
+async function postAdvisoryWorkspaceJson(
+  path: string,
+  payload: unknown,
+  idempotencyKey?: string
+): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory workspace request failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
 }

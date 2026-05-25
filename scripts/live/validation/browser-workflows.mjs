@@ -349,6 +349,67 @@ export async function validateProposalNarrativePosturePanel(
   });
 }
 
+export async function validateProposalMemoEvidencePackPanel(
+  page,
+  {
+    summary,
+    workbenchBaseUrl,
+    proposalId,
+    proposalVersionNo,
+    timeoutMs,
+    screenshotRegisteredPanel,
+  }
+) {
+  await page.goto(`${workbenchBaseUrl}/proposals/${encodeURIComponent(proposalId)}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: new RegExp(`Proposal ${proposalId}`) })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  const memoPanel = workbenchPanelByClass(page, "proposal-memo-posture-panel");
+  await expect(memoPanel).toBeVisible({ timeout: timeoutMs });
+  await expect(memoPanel.getByText("Advisor Memo And Evidence Pack")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoPanel.getByText("Review Posture")).toBeVisible({ timeout: timeoutMs });
+  if (proposalVersionNo) {
+    await expect(memoPanel.getByLabel("Version")).toHaveValue(String(proposalVersionNo), {
+      timeout: timeoutMs,
+    });
+  }
+  await memoPanel.getByRole("button", { name: "Create Or Replay Memo" }).click();
+  await expect(memoPanel.getByText(/Memo hash: sha256:/)).toBeVisible({ timeout: timeoutMs });
+  await memoPanel.getByLabel("Review rationale").fill(
+    "Live canonical validator approved this advisor-use memo from source evidence."
+  );
+  await memoPanel.getByRole("button", { name: "Approve Memo For Advisor Use" }).click();
+  await expect(memoPanel.getByLabel("Status Approved For Advisor Use")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await memoPanel.getByRole("button", { name: "Request Memo Report Package" }).click();
+  await expect(memoPanel.getByRole("button", { name: "Request Memo Report Package" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await memoPanel.getByRole("button", { name: "Request Advisor Commentary" }).click();
+  await expect(memoPanel.getByRole("button", { name: "Request Advisor Commentary" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(memoPanel.getByText(/Replay hash: sha256:/)).toBeVisible({ timeout: timeoutMs });
+
+  summary.uiChecks.push({
+    description: "Proposal memo evidence-pack advisor-use review and support posture",
+    kind: "proposal-memo-evidence-pack",
+    proposalId,
+    versionNo: proposalVersionNo,
+    reviewState: "APPROVED_FOR_ADVISOR_USE",
+    clientReadyRelease: "not-requested",
+  });
+  await screenshotRegisteredPanel(page, "proposal.memo_evidence_pack", {
+    route: `/proposals/${proposalId}`,
+  });
+}
+
 export async function validateRiskPanel(
   page,
   {

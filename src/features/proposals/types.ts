@@ -25,6 +25,73 @@ export type ProposalCreateRequest = {
   };
 };
 
+export type ProposalBodyRequest = {
+  body: Record<string, unknown>;
+};
+
+export type AdvisoryWorkspaceEnvelopeResponse = {
+  correlation_id: string;
+  contract_version: string;
+  data: Record<string, unknown>;
+};
+
+export type AdvisoryWorkspaceCreateRequest = {
+  body: {
+    workspace_name: string;
+    created_by: string;
+    input_mode: "stateful";
+    stateful_input: {
+      portfolio_id: string;
+      as_of: string;
+      household_id?: string;
+      mandate_id?: string;
+      benchmark_id?: string;
+    };
+  };
+};
+
+export type AdvisoryWorkspaceDraftActionRequest = {
+  body: {
+    actor_id: string;
+    action_type:
+      | "ADD_TRADE"
+      | "UPDATE_TRADE"
+      | "REMOVE_TRADE"
+      | "ADD_CASH_FLOW"
+      | "UPDATE_CASH_FLOW"
+      | "REMOVE_CASH_FLOW"
+      | "REPLACE_OPTIONS";
+    workspace_trade_id?: string;
+    workspace_cash_flow_id?: string;
+    trade?: Record<string, unknown>;
+    cash_flow?: Record<string, unknown>;
+    options?: Record<string, unknown>;
+  };
+};
+
+export type AdvisoryWorkspaceSaveRequest = {
+  body: {
+    saved_by: string;
+    version_label?: string;
+  };
+};
+
+export type AdvisoryWorkspaceHandoffRequest = {
+  body: {
+    handoff_by: string;
+    metadata?: {
+      title?: string;
+      advisor_notes?: string;
+      jurisdiction?: string;
+      mandate_id?: string;
+    };
+  };
+};
+
+export type AdvisoryWorkspaceBodyRequest = {
+  body: Record<string, unknown>;
+};
+
 export type ProposalEnvelopeResponse = {
   correlation_id: string;
   contract_version: string;
@@ -250,6 +317,8 @@ export type ProposalMemoAiCommentaryRequest = {
   reason?: Record<string, unknown>;
 };
 
+export type ProposalMemoAdvisorCommentaryRequest = ProposalMemoAiCommentaryRequest;
+
 export type ProposalMemoData = {
   proposal?: ProposalSummary;
   proposal_version_no?: number;
@@ -292,6 +361,8 @@ export type ProposalMemoAiCommentaryData = {
   replayed?: boolean;
   [key: string]: unknown;
 };
+
+export type ProposalMemoAdvisorCommentaryData = ProposalMemoAiCommentaryData;
 
 export type ProposalMemoLineageData = {
   proposal?: ProposalSummary;

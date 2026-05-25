@@ -1,0 +1,422 @@
+"use client";
+
+import Link from "next/link";
+import { Alert, Button, MenuItem, TextField } from "@mui/material";
+
+import type { PortfolioPositionView } from "@/apps/portfolio/types";
+import { Text } from "@/design-system";
+import type { ProposalDraftCashFlowIntent, ProposalDraftPreview, ProposalDraftTradeIntent } from "../proposal-draft-preview";
+import { formatCurrencyValue, formatPercentValue, formatUnitValue } from "../proposal-draft-preview";
+import type { ProposalSimulateResponse } from "../types";
+
+import styles from "./proposal-simulate-form.module.css";
+
+export function CurrentPositionsPanel({
+  positions,
+  positionsLoading,
+  baseCurrency,
+  onAddPositionTrade,
+}: {
+  positions: PortfolioPositionView[];
+  positionsLoading: boolean;
+  baseCurrency: string;
+  onAddPositionTrade: (position: PortfolioPositionView, side: "BUY" | "SELL") => void;
+}) {
+  return (
+    <section className={styles.panel} aria-labelledby="current-positions-heading">
+      <div className={styles.panelHeader}>
+        <div>
+          <h3 id="current-positions-heading">Current Positions</h3>
+          <p>
+            Start from the live portfolio book, then buy more units or sell down holdings into the
+            advisor-use draft.
+          </p>
+        </div>
+        <span>{positionsLoading ? "Loading" : `${positions.length} positions`}</span>
+      </div>
+      {positions.length ? (
+        <div className={styles.positionsTableWrap}>
+          <table className={styles.positionsTable}>
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Asset Class</th>
+                <th>Units</th>
+                <th>Market Value</th>
+                <th>Weight</th>
+                <th>Draft Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {positions.slice(0, 12).map((position) => (
+                <tr key={position.security_id}>
+                  <td>
+                    <strong>{position.instrument_name}</strong>
+                    <span>{position.security_id}</span>
+                  </td>
+                  <td>{position.asset_class ?? "Unclassified"}</td>
+                  <td>{formatUnitValue(position.quantity)}</td>
+                  <td>{formatCurrencyValue(position.market_value_base ?? 0, baseCurrency)}</td>
+                  <td>{formatPercentValue(position.weight_pct ?? 0)}</td>
+                  <td>
+                    <div className={styles.positionActions}>
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="outlined"
+                        onClick={() => onAddPositionTrade(position, "BUY")}
+                      >
+                        Buy More
+                      </Button>
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="outlined"
+                        color="inherit"
+                        onClick={() => onAddPositionTrade(position, "SELL")}
+                      >
+                        Sell Down
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {positions.length > 12 ? (
+            <Text variant="metadata">
+              Showing first 12 holdings. Use the instrument field below to add another held or
+              off-book security.
+            </Text>
+          ) : null}
+        </div>
+      ) : (
+        <div className={styles.emptyBookNotice}>
+          {positionsLoading
+            ? "Loading current holdings from the portfolio book."
+            : "No current positions are available. Add cash or an off-book instrument to begin the draft."}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function CashMovementsPanel({
+  cashFlows,
+  netCashImpact,
+  onUpdateCashFlow,
+  onRemoveCashFlow,
+  onAddCashFlow,
+}: {
+  cashFlows: ProposalDraftCashFlowIntent[];
+  netCashImpact: string;
+  onUpdateCashFlow: (id: string, patch: Partial<ProposalDraftCashFlowIntent>) => void;
+  onRemoveCashFlow: (id: string) => void;
+  onAddCashFlow: () => void;
+}) {
+  return (
+    <section className={styles.panel} aria-labelledby="cash-movements-heading">
+      <div className={styles.panelHeader}>
+        <div>
+          <h3 id="cash-movements-heading">Cash Movements</h3>
+          <p>Model client subscriptions, withdrawals, and liquidity changes.</p>
+        </div>
+        <span>Net {netCashImpact}</span>
+      </div>
+      <div className={styles.intentRows}>
+        {cashFlows.map((item) => (
+          <div key={item.id} className={styles.cashRow}>
+            <TextField
+              label="Movement"
+              size="small"
+              select
+              value={item.direction}
+              onChange={(event) =>
+                onUpdateCashFlow(item.id, { direction: event.target.value as "IN" | "OUT" })
+              }
+            >
+              <MenuItem value="IN">Inflow</MenuItem>
+              <MenuItem value="OUT">Outflow</MenuItem>
+            </TextField>
+            <TextField
+              label="Currency"
+              size="small"
+              value={item.currency}
+              onChange={(event) => onUpdateCashFlow(item.id, { currency: event.target.value })}
+            />
+            <TextField
+              label="Amount"
+              size="small"
+              type="number"
+              value={item.amount}
+              onChange={(event) => {
+                const next = (event.target as HTMLInputElement).valueAsNumber;
+                onUpdateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
+              }}
+            />
+            <TextField
+              label="Advisor Note"
+              size="small"
+              fullWidth
+              value={item.description ?? ""}
+              onChange={(event) => onUpdateCashFlow(item.id, { description: event.target.value })}
+            />
+            <Button
+              type="button"
+              variant="outlined"
+              color="inherit"
+              disabled={cashFlows.length === 1}
+              onClick={() => onRemoveCashFlow(item.id)}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button type="button" variant="outlined" onClick={onAddCashFlow}>
+        Add Cash Movement
+      </Button>
+    </section>
+  );
+}
+
+export function DraftOrderBlotterPanel({
+  trades,
+  readyTradeCount,
+  onUpdateTrade,
+  onRemoveTrade,
+  onAddTrade,
+}: {
+  trades: ProposalDraftTradeIntent[];
+  readyTradeCount: number;
+  onUpdateTrade: (id: string, patch: Partial<ProposalDraftTradeIntent>) => void;
+  onRemoveTrade: (id: string) => void;
+  onAddTrade: () => void;
+}) {
+  return (
+    <section className={styles.panel} aria-labelledby="security-orders-heading">
+      <div className={styles.panelHeader}>
+        <div>
+          <h3 id="security-orders-heading">Draft Order Blotter</h3>
+          <p>
+            Edit units for held positions or add an off-book instrument that is not already in the
+            portfolio.
+          </p>
+        </div>
+        <span>{readyTradeCount} ready</span>
+      </div>
+      <div className={styles.intentRows}>
+        {trades.map((item) => (
+          <div key={item.id} className={styles.tradeRow}>
+            <TextField
+              label="Order"
+              size="small"
+              select
+              value={item.side}
+              onChange={(event) =>
+                onUpdateTrade(item.id, { side: event.target.value as "BUY" | "SELL" })
+              }
+            >
+              <MenuItem value="BUY">Buy</MenuItem>
+              <MenuItem value="SELL">Sell</MenuItem>
+            </TextField>
+            <TextField
+              label="Instrument"
+              size="small"
+              fullWidth
+              value={item.instrumentId}
+              onChange={(event) => onUpdateTrade(item.id, { instrumentId: event.target.value })}
+            />
+            <TextField
+              label="Asset Class"
+              size="small"
+              value={item.assetClass ?? ""}
+              onChange={(event) => onUpdateTrade(item.id, { assetClass: event.target.value })}
+              placeholder="Equities"
+            />
+            <TextField
+              label="Quantity"
+              size="small"
+              type="number"
+              value={item.quantity}
+              onChange={(event) => {
+                const next = (event.target as HTMLInputElement).valueAsNumber;
+                onUpdateTrade(item.id, { quantity: Number.isNaN(next) ? 0 : next });
+              }}
+            />
+            <TextField
+              label="Reference Price"
+              size="small"
+              type="number"
+              value={item.referencePrice ?? 0}
+              onChange={(event) => {
+                const next = (event.target as HTMLInputElement).valueAsNumber;
+                onUpdateTrade(item.id, { referencePrice: Number.isNaN(next) ? 0 : next });
+              }}
+              helperText={item.source === "NEW_INSTRUMENT" ? "Used for indicative preview" : undefined}
+            />
+            <Button
+              type="button"
+              variant="outlined"
+              color="inherit"
+              disabled={trades.length === 1}
+              onClick={() => onRemoveTrade(item.id)}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button type="button" variant="outlined" onClick={onAddTrade}>
+        Add Off-Book Instrument
+      </Button>
+    </section>
+  );
+}
+
+export function IndicativeDraftImpactPanel({
+  draftPreview,
+  baseCurrency,
+}: {
+  draftPreview: ProposalDraftPreview;
+  baseCurrency: string;
+}) {
+  return (
+    <section className={styles.panel} aria-labelledby="draft-impact-heading">
+      <div className={styles.panelHeader}>
+        <div>
+          <h3 id="draft-impact-heading">Indicative Draft Impact</h3>
+          <p>
+            Live advisor preview from current holdings, draft orders, and cash movements. Formal
+            suitability, risk, and allocation proof is produced by simulation.
+          </p>
+        </div>
+        <span>{formatCurrencyValue(draftPreview.proposedPortfolioValue, baseCurrency)}</span>
+      </div>
+      <div className={styles.impactSummaryGrid}>
+        <div>
+          <span>Current Value</span>
+          <strong>{formatCurrencyValue(draftPreview.currentPortfolioValue, baseCurrency)}</strong>
+        </div>
+        <div>
+          <span>Proposed Value</span>
+          <strong>{formatCurrencyValue(draftPreview.proposedPortfolioValue, baseCurrency)}</strong>
+        </div>
+        <div>
+          <span>Largest Position</span>
+          <strong>
+            {formatPercentValue(draftPreview.currentLargestWeight)} →{" "}
+            {formatPercentValue(draftPreview.proposedLargestWeight)}
+          </strong>
+        </div>
+        <div>
+          <span>Unpriced Draft Lines</span>
+          <strong>{draftPreview.unpricedTradeCount}</strong>
+        </div>
+      </div>
+      <div className={styles.positionsTableWrap}>
+        <table className={styles.positionsTable}>
+          <thead>
+            <tr>
+              <th>Asset Class</th>
+              <th>Current Weight</th>
+              <th>Proposed Weight</th>
+              <th>Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {draftPreview.allocationRows.map((row) => (
+              <tr key={row.assetClass}>
+                <td>{row.assetClass}</td>
+                <td>{formatPercentValue(row.currentWeight)}</td>
+                <td>{formatPercentValue(row.proposedWeight)}</td>
+                <td className={row.proposedWeight >= row.currentWeight ? styles.positive : styles.negative}>
+                  {row.proposedWeight >= row.currentWeight ? "+" : ""}
+                  {formatPercentValue(row.proposedWeight - row.currentWeight)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {draftPreview.unpricedTradeCount ? (
+        <Alert severity="warning">
+          Add reference prices for all draft lines to complete the indicative allocation preview.
+        </Alert>
+      ) : null}
+    </section>
+  );
+}
+
+export function AdviseEvaluationSummaryPanel({
+  result,
+  highlights,
+  reviewIssueCount,
+  blockingIssueCount,
+  draftTradeCount,
+}: {
+  result: ProposalSimulateResponse;
+  highlights: Array<{ label: string; value: string }>;
+  reviewIssueCount?: unknown;
+  blockingIssueCount?: unknown;
+  draftTradeCount?: unknown;
+}) {
+  return (
+    <section className={styles.resultPanel} aria-label="Simulation summary">
+      <Text variant="sectionTitle">Advise Evaluation Summary</Text>
+      <div className={styles.resultGrid}>
+        <div>
+          <span>Status</span>
+          <strong>{result.data.status ?? "UNKNOWN"}</strong>
+        </div>
+        <div>
+          <span>Proposal Run</span>
+          <strong>{String(result.data.proposal_run_id ?? "N/A")}</strong>
+        </div>
+        <div>
+          <span>Correlation</span>
+          <strong>{result.correlation_id}</strong>
+        </div>
+      </div>
+      {highlights.length ? (
+        <div className={styles.outputGrid}>
+          {highlights.map((highlight) => (
+            <div key={highlight.label}>
+              <span>{highlight.label}</span>
+              <strong>{highlight.value}</strong>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Text variant="secondary">No additional scalar metrics were returned by the simulation engine.</Text>
+      )}
+      {reviewIssueCount !== undefined || blockingIssueCount !== undefined || draftTradeCount !== undefined ? (
+        <div className={styles.outputGrid}>
+          <div>
+            <span>Review Issues</span>
+            <strong>{String(reviewIssueCount ?? 0)}</strong>
+          </div>
+          <div>
+            <span>Blocking Issues</span>
+            <strong>{String(blockingIssueCount ?? 0)}</strong>
+          </div>
+          <div>
+            <span>Draft Trades</span>
+            <strong>{String(draftTradeCount ?? 0)}</strong>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+export function SavedAdvisoryDraftPanel({ proposalId }: { proposalId: string }) {
+  return (
+    <section className={styles.resultPanel} aria-label="Saved advisory draft">
+      <Text variant="body">Draft saved as Proposal ID: {proposalId}</Text>
+      <Text variant="body">
+        <Link href={`/proposals/${proposalId}`}>Open Proposal Details</Link>
+      </Text>
+    </section>
+  );
+}

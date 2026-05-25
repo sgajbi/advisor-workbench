@@ -82,7 +82,7 @@ describe("ProposalNarrativePosturePanel", () => {
     expect(screen.queryByRole("button", { name: /render/i })).not.toBeInTheDocument();
   });
 
-  it("records narrative review and report request through Gateway-backed actions", async () => {
+  it("records narrative review and report request through advisory actions", async () => {
     renderPanel();
 
     fireEvent.change(screen.getByPlaceholderText("Evidence-grounded and suitable for advisor use."), {

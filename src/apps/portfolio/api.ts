@@ -267,6 +267,31 @@ export async function getPortfolioWorkspaceShell(
   }
 }
 
+export async function getPortfolioBook(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+  } = {}
+): Promise<PortfolioBookResponse | null> {
+  try {
+    const bookQuery = new URLSearchParams();
+    if (params.asOfDate) {
+      bookQuery.set("as_of_date", params.asOfDate);
+    }
+    if (params.reportingCurrency) {
+      bookQuery.set("reporting_currency", params.reportingCurrency);
+    }
+    return await fetchPortfolioJson<PortfolioBookResponse>(
+      resolvePortfolioRequestTarget(),
+      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
+      { query: bookQuery }
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function getPortfolioWorkspaceSummaryDetails(
   portfolioId: string,
   params: {

@@ -125,12 +125,21 @@ const RFC_FEATURE_COVERAGE_ROWS = [
   },
   {
     rfcId: "RFC-0043",
-    featureId: "proposal_narrative_posture_cross_front_office",
-    featureName: "Gateway-backed proposal narrative posture as adjacent front-office proof",
+    featureId: "proposal_memo_and_narrative_posture_cross_front_office",
+    featureName: "Gateway-backed proposal narrative and memo evidence posture as adjacent front-office proof",
     owner: "lotus-advise",
-    requiredEvidence: ["proposalNarrative", "proposalNarrativePanel"],
-    uiPanels: ["proposal.narrative_posture"],
-    unsupportedClaimsExcluded: ["client-ready release", "report archive publication by Workbench"],
+    requiredEvidence: [
+      "proposalNarrative",
+      "proposalNarrativePanel",
+      "proposalMemoEvidencePack",
+      "proposalMemoEvidencePackPanel",
+    ],
+    uiPanels: ["proposal.narrative_posture", "proposal.memo_evidence_pack"],
+    unsupportedClaimsExcluded: [
+      "client-ready release",
+      "report archive publication by Workbench",
+      "memo fact inference by Workbench",
+    ],
   },
 ];
 

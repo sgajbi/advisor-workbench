@@ -41,7 +41,13 @@ Implemented:
    version, and source narrative hash,
 6. participates in canonical Workbench proof as `proposal.narrative_posture` with a governed
    screenshot after advisor-use review and reviewed report-package request pass,
-7. renders missing evidence as explicit not-reviewed, not-requested, no-report, or no-event states
+7. creates or replays advisor-use memo/evidence-pack posture, records advisor-use memo review,
+   requests memo report-package posture, requests non-authoritative commentary, and displays memo
+   lineage and replay hash visibility through Gateway-backed proposal memo endpoints,
+8. participates in canonical Workbench proof as `proposal.memo_evidence_pack` with a governed
+   screenshot after advisor-use memo review and memo evidence-pack checks pass,
+9. renders missing evidence as explicit not-reviewed, not-requested, no-report, no-event,
+   memo-pending, no-lineage, or no-replay states
    rather than inferring client-ready status.
 
 Not supported in Workbench:
@@ -50,8 +56,10 @@ Not supported in Workbench:
 2. client-ready publication inference,
 3. PDF rendering,
 4. archive publication,
-5. client contact or client messaging,
-6. direct calls to `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive`.
+5. memo fact inference,
+6. authoritative AI commentary claims,
+7. client contact or client messaging,
+8. direct calls to `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive`.
 
 The RFC40-WTBD-010 portfolio-memory panel gives portfolio managers, operations, audit, and
 sales/pre-sales a single readable event trail for DPM evidence.
