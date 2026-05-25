@@ -31,8 +31,10 @@ export interface RfcFeatureCoverageMatrix {
   gapFeatureCount: number;
   rfc3643FeatureCount: number;
   validatedRfc3643FeatureCount: number;
+  rfc3643GapFeatureCount: number;
   adjacentEvidenceFeatureCount: number;
   validatedAdjacentEvidenceFeatureCount: number;
+  adjacentEvidenceGapFeatureCount: number;
   scenarioExpansionNeeded: string[];
 }
 
