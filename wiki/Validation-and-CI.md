@@ -79,3 +79,7 @@ When validating active Workbench source changes, use the governed local-app brin
 `npm run live:stack:up:workbench-local` so `workbench.dev.lotus` serves the current branch while
 Gateway and backend Lotus apps remain on the canonical stack. Docker-backed Workbench evidence is
 valid for released images, but it must not be used to prove newly changed Workbench panels.
+After a merge that changes Workbench routes, panels, labels, or live-validation scripts, rebuild the
+Docker-backed Workbench image with `docker compose up -d --build` from `lotus-workbench` before
+accepting containerized canonical proof. Stale containers can render old panel text and turn the live
+validator into evidence for the wrong UI build.

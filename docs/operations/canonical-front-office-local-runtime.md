@@ -168,6 +168,25 @@ runtime without waiting for the full validation lane to finish.
 The canonical bring-up script also accepts `-SeedWaitSeconds` when the governed seed needs a longer
 drain window than the default `900` seconds.
 
+When validating after Workbench source changes or after a merge that changed Workbench routes,
+panels, labels, or live-validation scripts, refresh the Workbench runtime before accepting evidence.
+Use either the source-backed local app path:
+
+```powershell
+npm run live:stack:up:workbench-local
+```
+
+or rebuild the Docker-backed Workbench image when proving the containerized runtime:
+
+```powershell
+docker compose up -d --build
+```
+
+from `lotus-workbench` while the canonical backend stack is running. A stale Workbench container can
+render old panel labels and create false live-validation failures or, worse, false proof against an
+older UI. Diagnostic screenshots taken before this refresh must stay separate from demo-ready
+evidence.
+
 The canonical bring-up script accepts `-LotusAiEnvFile` to make the `lotus-ai` provider posture
 explicit for proof runs. It defaults to `.env.example` for deterministic provider-disabled
 front-office proof, even when the local `lotus-ai/.env` requests a live or local provider. Use
