@@ -722,16 +722,29 @@ function resolveCampaignCandidateLineageProduct(record: Record<string, unknown>)
     extractRecordArray(candidate.source_refs)
   );
   const sourceProduct = sourceRefs
-    .map((sourceRef) => {
-      const sourceType = readString(sourceRef, "source_type");
-      if (!sourceType || sourceType.startsWith("BulkReviewCampaign")) {
-        return "";
-      }
-      const sourceVersion = readString(sourceRef, "source_version");
-      return sourceVersion ? `${sourceType}:${sourceVersion}` : sourceType;
-    })
+    .map(formatCandidateLineageSourceProduct)
     .find((value) => value.length > 0);
   return sourceProduct ?? "";
+}
+
+function formatCandidateLineageSourceProduct(sourceRef: Record<string, unknown>): string {
+  const sourceType = (
+    readString(sourceRef, "source_type") ||
+    readString(sourceRef, "source_product_name") ||
+    readString(sourceRef, "product_name")
+  ).trim();
+  if (!sourceType || sourceType.startsWith("BulkReviewCampaign")) {
+    return "";
+  }
+  const sourceVersion = (
+    readString(sourceRef, "source_version") ||
+    readString(sourceRef, "source_product_version") ||
+    readString(sourceRef, "product_version")
+  ).trim();
+  if (!sourceVersion || sourceType.endsWith(`:${sourceVersion}`)) {
+    return sourceType;
+  }
+  return `${sourceType}:${sourceVersion}`;
 }
 
 function resolveCampaignCandidateSourceReadiness(
