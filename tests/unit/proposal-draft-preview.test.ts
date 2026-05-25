@@ -94,4 +94,17 @@ describe("proposal draft preview", () => {
     expect(preview.rows.find((row) => row.instrumentId === "VTI")?.proposedValue).toBe(1250);
     expect(preview.proposedCash).toBe(3750);
   });
+
+  it("does not credit cash for sell quantity above the available holding", () => {
+    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL");
+    oversellApple.quantity = 150;
+
+    const preview = buildProposalDraftPreview([applePosition], 5000, [], [oversellApple]);
+
+    expect(preview.rows.find((row) => row.instrumentId === "AAPL")?.proposedQuantity).toBe(0);
+    expect(preview.rows.find((row) => row.instrumentId === "AAPL")?.proposedValue).toBe(0);
+    expect(preview.tradeNotional).toBe(-19000);
+    expect(preview.proposedCash).toBe(24000);
+    expect(preview.proposedPortfolioValue).toBe(24000);
+  });
 });
