@@ -378,6 +378,70 @@ describe("DPM wave command-center view model", () => {
     expect(model.campaignRows[0].candidateSourceProduct).toBe("DpmPortfolioUniverseCandidate:v1");
   });
 
+  it("normalizes candidate lineage source product versions without using Manage wrapper refs", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignDefinitions: {
+        correlation_id: "corr-campaign-definitions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDefinition",
+              product_version: "v1",
+              campaign_id: "campaign-core-universe-202605",
+              campaign_version: "2026.05",
+              display_name: "Core universe campaign",
+              status: "ACTIVE",
+              as_of_date: "2026-05-03",
+              candidates: [
+                {
+                  portfolio_id: "PB_SG_GLOBAL_BAL_001",
+                  source_refs: [
+                    {
+                      source_system: "lotus-manage",
+                      source_type: "BulkReviewCampaignDefinition",
+                      source_version: "v1",
+                    },
+                    {
+                      source_system: "lotus-core",
+                      source_type: "DpmPortfolioUniverseCandidate:v1",
+                      source_version: "v1",
+                      source_id: "PB_SG_GLOBAL_BAL_001:2026-05-03",
+                      supportability_state: "READY",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      campaignDiscovery: {
+        correlation_id: "corr-campaign-discovery",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              product_name: "BulkReviewCampaignDiscovery",
+              product_version: "v1",
+              campaign_id: "campaign-core-universe-202605",
+              campaign_version: "2026.05",
+              supportability_state: "READY",
+              source_ref_count: 2,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignRows[0].candidateSourceProduct).toBe("DpmPortfolioUniverseCandidate:v1");
+  });
+
   it("preserves Manage-owned campaign preview readiness without deriving readiness", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,
