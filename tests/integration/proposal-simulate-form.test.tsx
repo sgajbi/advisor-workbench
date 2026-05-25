@@ -75,6 +75,7 @@ function renderForm(initialPortfolioId?: string) {
 
 describe("ProposalSimulateForm", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     advisoryApiMocks.createAdvisoryWorkspace.mockResolvedValue(workspaceEnvelope());
     advisoryApiMocks.applyAdvisoryWorkspaceDraftAction.mockResolvedValue(workspaceEnvelope());
     advisoryApiMocks.evaluateAdvisoryWorkspace.mockResolvedValue(workspaceEnvelope());
@@ -152,6 +153,37 @@ describe("ProposalSimulateForm", () => {
               side: "BUY",
               instrument_id: "AAPL",
               quantity: "10.0000",
+            }),
+          }),
+        }
+      )
+    );
+  });
+
+  it("caps submitted sell-down quantities to source-backed available units", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    expect(await screen.findByText("Apple Inc.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sell Down" }));
+
+    const quantityInputs = screen.getAllByLabelText("Quantity") as HTMLInputElement[];
+    fireEvent.change(quantityInputs[quantityInputs.length - 1], { target: { value: "150" } });
+    expect(
+      screen.getByText("1 sell line capped to source-backed available units")
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    await waitFor(() =>
+      expect(advisoryApiMocks.applyAdvisoryWorkspaceDraftAction).toHaveBeenCalledWith(
+        "aws_test_001",
+        {
+          body: expect.objectContaining({
+            action_type: "ADD_TRADE",
+            trade: expect.objectContaining({
+              intent_type: "SECURITY_TRADE",
+              side: "SELL",
+              instrument_id: "AAPL",
+              quantity: "100.0000",
             }),
           }),
         }

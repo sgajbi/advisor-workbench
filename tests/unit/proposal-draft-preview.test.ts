@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PortfolioPositionView } from "../../src/apps/portfolio/types";
 import {
+  buildExecutableTradeRows,
   buildProposalDraftPreview,
   createCashFlowIntent,
   createTradeIntentFromPosition,
@@ -106,5 +107,21 @@ describe("proposal draft preview", () => {
     expect(preview.tradeNotional).toBe(-19000);
     expect(preview.proposedCash).toBe(24000);
     expect(preview.proposedPortfolioValue).toBe(24000);
+  });
+
+  it("caps submitted sell rows to the available source-backed holding quantity", () => {
+    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL");
+    oversellApple.quantity = 150;
+
+    const executableRows = buildExecutableTradeRows([applePosition], [oversellApple]);
+
+    expect(executableRows).toHaveLength(1);
+    expect(executableRows[0]).toMatchObject({
+      instrumentId: "AAPL",
+      side: "SELL",
+      requestedQuantity: 150,
+      executableQuantity: 100,
+      cappedToAvailableQuantity: true,
+    });
   });
 });

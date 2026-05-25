@@ -18,6 +18,7 @@ import {
   handoffAdvisoryWorkspace,
 } from "../api";
 import {
+  buildExecutableTradeRows,
   buildProposalDraftPreview,
   createCashFlowIntent,
   createTradeIntent,
@@ -167,6 +168,13 @@ export default function ProposalSimulateForm({
     () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
     [cashFlows, sourceCashAmount, tradablePositions, trades]
   );
+  const executableTradeRows = useMemo(
+    () => buildExecutableTradeRows(tradablePositions, trades),
+    [tradablePositions, trades]
+  );
+  const cappedTradeCount = executableTradeRows.filter(
+    (item) => item.cappedToAvailableQuantity
+  ).length;
 
   function updateCashFlow(id: string, patch: Partial<ProposalDraftCashFlowIntent>) {
     setCashFlows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
@@ -200,15 +208,15 @@ export default function ProposalSimulateForm({
   }
 
   function validTradeCount(): number {
-    return trades.filter((item) => item.instrumentId.trim().length > 0 && item.quantity > 0).length;
+    return executableTradeRows.length;
   }
 
   function validCashFlowRows(): ProposalDraftCashFlowIntent[] {
     return cashFlows.filter((item) => item.currency.trim().length > 0 && item.amount > 0);
   }
 
-  function validTradeRows(): ProposalDraftTradeIntent[] {
-    return trades.filter((item) => item.instrumentId.trim().length > 0 && item.quantity > 0);
+  function validTradeRows() {
+    return executableTradeRows;
   }
 
   function syncEvaluationFromWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse) {
@@ -271,7 +279,7 @@ export default function ProposalSimulateForm({
             intent_type: "SECURITY_TRADE",
             side: item.side,
             instrument_id: item.instrumentId.trim(),
-            quantity: decimalString(item.quantity, 4),
+            quantity: decimalString(item.executableQuantity, 4),
           },
         },
       });
@@ -398,6 +406,9 @@ export default function ProposalSimulateForm({
                 <li>Portfolio context captured</li>
                 <li>Cash movement model ready</li>
                 <li>{validTradeCount()} security order lines ready</li>
+                {cappedTradeCount ? (
+                  <li>{cappedTradeCount} sell line capped to source-backed available units</li>
+                ) : null}
                 {activeWorkspaceId ? <li>Workspace {activeWorkspaceId} evaluated by Advise</li> : null}
               </ul>
               <Stack spacing={1} className={styles.actionButtons}>

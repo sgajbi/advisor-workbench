@@ -14,6 +14,12 @@ export type ProposalDraftTradeIntent = TradeIntentInput & {
   referencePrice?: number;
 };
 
+export type ExecutableProposalDraftTradeIntent = ProposalDraftTradeIntent & {
+  requestedQuantity: number;
+  executableQuantity: number;
+  cappedToAvailableQuantity: boolean;
+};
+
 export type DraftPositionPreviewRow = {
   key: string;
   instrumentId: string;
@@ -116,6 +122,45 @@ export function formatUnitValue(value: number): string {
 
 export function formatPercentValue(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+export function buildExecutableTradeRows(
+  positions: PortfolioPositionView[],
+  trades: ProposalDraftTradeIntent[]
+): ExecutableProposalDraftTradeIntent[] {
+  const quantityByInstrument = new Map<string, number>();
+  positions.forEach((position) => {
+    quantityByInstrument.set(position.security_id, Math.max(0, position.quantity));
+  });
+
+  const executableRows: ExecutableProposalDraftTradeIntent[] = [];
+  trades.forEach((trade) => {
+    const instrumentId = trade.instrumentId.trim();
+    if (!instrumentId || trade.quantity <= 0) {
+      return;
+    }
+
+    const availableQuantity = Math.max(0, quantityByInstrument.get(instrumentId) ?? 0);
+    const executableQuantity =
+      trade.side === "SELL" ? Math.min(trade.quantity, availableQuantity) : trade.quantity;
+    if (executableQuantity <= 0) {
+      return;
+    }
+
+    quantityByInstrument.set(
+      instrumentId,
+      Math.max(0, availableQuantity + (trade.side === "SELL" ? -executableQuantity : executableQuantity))
+    );
+    executableRows.push({
+      ...trade,
+      instrumentId,
+      requestedQuantity: trade.quantity,
+      executableQuantity,
+      cappedToAvailableQuantity: executableQuantity < trade.quantity,
+    });
+  });
+
+  return executableRows;
 }
 
 export function buildProposalDraftPreview(
