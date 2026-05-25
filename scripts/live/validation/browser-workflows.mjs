@@ -378,31 +378,30 @@ export async function validateProposalMemoEvidencePackPanel(
       timeout: timeoutMs,
     });
   }
-  await memoPanel.getByRole("button", { name: "Create Or Replay Memo" }).click();
-  await expect(memoPanel.getByText(/Memo hash: sha256:/)).toBeVisible({ timeout: timeoutMs });
+  await memoPanel.getByRole("button", { name: "Prepare Or Refresh Memo" }).click();
+  await expect(memoPanel.getByText(/Memo evidence: sha256:/)).toBeVisible({ timeout: timeoutMs });
   await memoPanel.getByLabel("Review rationale").fill(
-    "Live canonical validator approved this advisor-use memo from source evidence."
+    "Live canonical validator requested advisor-use memo review from source evidence."
   );
   await memoPanel.getByRole("button", { name: "Approve Memo For Advisor Use" }).click();
-  await expect(memoPanel.getByLabel("Status Approved For Advisor Use")).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await memoPanel.getByRole("button", { name: "Request Memo Report Package" }).click();
-  await expect(memoPanel.getByRole("button", { name: "Request Memo Report Package" })).toBeVisible({
+  await expect(memoPanel.getByText("Review Posture")).toBeVisible({ timeout: timeoutMs });
+  await expect(memoPanel.getByText("Pending")).toBeVisible({ timeout: timeoutMs });
+  await memoPanel.getByRole("button", { name: "Prepare Report Package" }).click();
+  await expect(memoPanel.getByRole("button", { name: "Prepare Report Package" })).toBeVisible({
     timeout: timeoutMs,
   });
   await memoPanel.getByRole("button", { name: "Request Advisor Commentary" }).click();
   await expect(memoPanel.getByRole("button", { name: "Request Advisor Commentary" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(memoPanel.getByText(/Replay hash: sha256:/)).toBeVisible({ timeout: timeoutMs });
+  await expect(memoPanel.getByText(/Replay evidence: sha256:/)).toBeVisible({ timeout: timeoutMs });
 
   summary.uiChecks.push({
     description: "Proposal memo evidence-pack advisor-use review and support posture",
     kind: "proposal-memo-evidence-pack",
     proposalId,
     versionNo: proposalVersionNo,
-    reviewState: "APPROVED_FOR_ADVISOR_USE",
+    reviewState: "review-requested-source-posture-preserved",
     clientReadyRelease: "not-requested",
   });
   await screenshotRegisteredPanel(page, "proposal.memo_evidence_pack", {
