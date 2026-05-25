@@ -169,12 +169,14 @@ export function buildProposalDraftPreview(
         deltaValue: 0,
       };
 
-    const quantityDelta = trade.side === "SELL" ? -trade.quantity : trade.quantity;
+    const executableQuantity =
+      trade.side === "SELL" ? Math.min(trade.quantity, Math.max(0, row.proposedQuantity)) : trade.quantity;
+    const quantityDelta = trade.side === "SELL" ? -executableQuantity : executableQuantity;
     row.proposedQuantity = Math.max(0, row.proposedQuantity + quantityDelta);
     row.proposedValue = Math.max(0, row.proposedQuantity * price);
     row.deltaValue = row.proposedValue - row.currentValue;
     rowMap.set(instrumentId, row);
-    tradeNotional += trade.side === "SELL" ? -(trade.quantity * price) : trade.quantity * price;
+    tradeNotional += trade.side === "SELL" ? -(executableQuantity * price) : executableQuantity * price;
   });
 
   const cashDelta = cashFlows.reduce((sum, item) => {
