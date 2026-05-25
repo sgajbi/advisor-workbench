@@ -203,9 +203,13 @@ export function buildRfc3643FeatureCoverage(summary, evidence) {
     rfc3643FeatureCount: rfc3643Rows.length,
     validatedRfc3643FeatureCount: rfc3643Rows.filter((row) => row.coverageStatus === "validated")
       .length,
+    rfc3643GapFeatureCount: rfc3643Rows.filter((row) => row.coverageStatus !== "validated").length,
     adjacentEvidenceFeatureCount: adjacentEvidenceRows.length,
     validatedAdjacentEvidenceFeatureCount: adjacentEvidenceRows.filter(
       (row) => row.coverageStatus === "validated"
+    ).length,
+    adjacentEvidenceGapFeatureCount: adjacentEvidenceRows.filter(
+      (row) => row.coverageStatus !== "validated"
     ).length,
     scenarioExpansionNeeded: rows.flatMap((row) => row.scenarioExpansionNeeded ?? []),
   };
@@ -217,7 +221,9 @@ export function assertRfc3643FeatureCoverage(summary) {
     throw new Error("RFC36-43 feature coverage matrix was not recorded.");
   }
 
-  const gaps = coverage.coverageRows.filter((row) => row.coverageStatus !== "validated");
+  const gaps = coverage.coverageRows.filter(
+    (row) => row.auditScope === "rfc36-43" && row.coverageStatus !== "validated"
+  );
   if (gaps.length > 0) {
     throw new Error(
       `RFC36-43 feature coverage gaps remain: ${gaps

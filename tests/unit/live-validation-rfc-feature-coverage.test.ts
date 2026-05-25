@@ -74,8 +74,10 @@ describe("RFC36-43 live validation feature coverage", () => {
     expect(coverage.gapFeatureCount).toBe(0);
     expect(coverage.rfc3643FeatureCount).toBe(9);
     expect(coverage.validatedRfc3643FeatureCount).toBe(9);
+    expect(coverage.rfc3643GapFeatureCount).toBe(0);
     expect(coverage.adjacentEvidenceFeatureCount).toBe(1);
     expect(coverage.validatedAdjacentEvidenceFeatureCount).toBe(1);
+    expect(coverage.adjacentEvidenceGapFeatureCount).toBe(0);
     expect(coverage.coverageRows.map((row) => row.rfcId)).toEqual(
       expect.arrayContaining([
         "RFC-0036",
@@ -142,5 +144,18 @@ describe("RFC36-43 live validation feature coverage", () => {
     expect(() => assertRfc3643FeatureCoverage(summary)).toThrow(
       "RFC36-43 feature coverage gaps remain: RFC-0040/proof_pack_evidence"
     );
+  });
+
+  it("does not fail RFC36-43 validation when adjacent front-office proof is incomplete", () => {
+    const summary = createReadySummary();
+    const evidence = createReadyEvidence();
+    delete (evidence as Record<string, unknown>).proposalMemoEvidencePack;
+    const coverage = buildRfc3643FeatureCoverage(summary, evidence);
+    (summary as Record<string, unknown>).rfc3643FeatureCoverage = coverage;
+
+    expect(coverage.gapFeatureCount).toBe(1);
+    expect(coverage.rfc3643GapFeatureCount).toBe(0);
+    expect(coverage.adjacentEvidenceGapFeatureCount).toBe(1);
+    expect(() => assertRfc3643FeatureCoverage(summary)).not.toThrow();
   });
 });

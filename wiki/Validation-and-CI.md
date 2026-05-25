@@ -48,10 +48,11 @@
   RFC-0036 through RFC-0043 front-office features to live API, workflow-pack, seeded entity, and
   panel evidence. Adjacent proposal evidence, including RFC-0024 proposal memo/evidence-pack
   validation, is marked as `auditScope=adjacent-front-office` and counted separately so it cannot
-  inflate RFC36-43 completion counts. RFC-0041 coverage includes the governed multi-portfolio
-  explicit-list wave preview from the canonical contract. RFC-0037 coverage includes bounded Core
-  `DpmPortfolioUniverseCandidate:v1` candidate-source preview and the required rejection of mixed
-  Core-discovery/manual-portfolio requests. Treat remaining scenario-expansion notes as open
+  inflate RFC36-43 completion counts or fail the RFC36-43 assertion by itself. Adjacent gaps remain
+  visible through the aggregate and adjacent gap counts. RFC-0041 coverage includes the governed
+  multi-portfolio explicit-list wave preview from the canonical contract. RFC-0037 coverage includes
+  bounded Core `DpmPortfolioUniverseCandidate:v1` candidate-source preview and the required rejection
+  of mixed Core-discovery/manual-portfolio requests. Treat remaining scenario-expansion notes as open
   validation depth, not as implemented product claims.
 - construction alternatives live proof writes focused machine-readable evidence and a panel
   screenshot under `output/rfc39-wtbd002-construction-lab/construction-live/`
