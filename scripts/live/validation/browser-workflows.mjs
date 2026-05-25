@@ -862,6 +862,41 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(wavePanel.getByRole("heading", { name: "Proposed Changes" })).toBeVisible({
     timeout: timeoutMs,
   });
+  const candidateSourceReview = page
+    .locator(".rebalance-campaign-evidence")
+    .filter({ hasText: "Candidate Source Review" })
+    .first();
+  await expect(candidateSourceReview).toBeVisible({ timeout: timeoutMs });
+  for (const label of [
+    "Source Product",
+    "Readiness",
+    "Candidates",
+    "Eligible",
+    "Filters",
+    "Warnings",
+    "Lineage Refs",
+    "Next Action",
+    "Boundaries",
+  ]) {
+    await expect(candidateSourceReview.getByText(label, { exact: true })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+  await expect(
+    candidateSourceReview.getByText("DpmPortfolioUniverseCandidate:v1", { exact: true })
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(candidateSourceReview.getByText("Check launch readiness through Gateway.")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(candidateSourceReview.getByText("NO_OMS_EXECUTION_CLAIM")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(candidateSourceReview.getByText("NO_CLIENT_CONTACT_WORKFLOW")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(candidateSourceReview.getByRole("button", { name: /oms/i })).toHaveCount(0);
+  await expect(candidateSourceReview.getByRole("button", { name: /client/i })).toHaveCount(0);
+  await expect(candidateSourceReview.getByRole("button", { name: /order/i })).toHaveCount(0);
   for (const actionName of [
     "Preview",
     "Create Rebalance",
