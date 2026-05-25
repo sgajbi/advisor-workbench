@@ -888,6 +888,9 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(candidateSourceReview.getByText("Check launch readiness through Gateway.")).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(candidateSourceReview.getByText("NO_ORDER_GENERATION")).toBeVisible({
+    timeout: timeoutMs,
+  });
   await expect(candidateSourceReview.getByText("NO_OMS_EXECUTION_CLAIM")).toBeVisible({
     timeout: timeoutMs,
   });

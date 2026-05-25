@@ -430,6 +430,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Candidate Source Review");
     expect(browserWorkflowModule).toContain("DpmPortfolioUniverseCandidate:v1");
     expect(browserWorkflowModule).toContain("Check launch readiness through Gateway.");
+    expect(browserWorkflowModule).toContain("NO_ORDER_GENERATION");
     expect(browserWorkflowModule).toContain("NO_OMS_EXECUTION_CLAIM");
     expect(browserWorkflowModule).toContain("NO_CLIENT_CONTACT_WORKFLOW");
     expect(browserWorkflowModule).toContain('getByRole("button", { name: /oms/i })');
