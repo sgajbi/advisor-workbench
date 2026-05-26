@@ -12,7 +12,9 @@ import {
   createProposalReportRequest,
   createProposalMemo,
   getAdvisoryWorkspaceSavedVersionReplayEvidence,
+  getAdvisoryPolicyEvaluation,
   getAdvisoryPolicyReviewQueue,
+  getAdvisoryPolicySignOffPackage,
   getProposalExecutionStatus,
   getProposalIdempotencyRecord,
   getProposalDeliveryEvents,
@@ -214,6 +216,46 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW`
     );
     expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
+  });
+
+  it("loads Gateway-backed advisory policy detail and sign-off package", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const data = url.endsWith("/sign-off-package")
+          ? {
+              package_posture: {
+                sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+              },
+            }
+          : { evaluation_id: "pev_1", evaluation_status: "PENDING_REVIEW" };
+        return new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      })
+    );
+
+    const evaluation = await getAdvisoryPolicyEvaluation("pev_1");
+    const signOffPackage = await getAdvisoryPolicySignOffPackage("pev_1");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-policy-evaluations/pev_1`
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-policy-evaluations/pev_1/sign-off-package`
+    );
+    expect(evaluation.evaluation_id).toBe("pev_1");
+    expect(signOffPackage.package_posture?.sign_off_source_package).toContain("SUPPORTED");
   });
 
   it("calls proposal version endpoints", async () => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPolicyReviewQueueModel } from "../../src/features/proposals/proposal-policy-review-view-model";
+import {
+  buildPolicyEvaluationEvidenceModel,
+  buildPolicyReviewQueueModel,
+} from "../../src/features/proposals/proposal-policy-review-view-model";
 
 describe("proposal policy review view model", () => {
   it("turns policy evaluation records into advisor-facing suitability review rows", () => {
@@ -68,5 +71,52 @@ describe("proposal policy review view model", () => {
     expect(model.rows[0].signOffStatus).toBe("Sign-off recorded");
     expect(model.rows[1].policyStatus).toBe("Blocked");
     expect(model.rows[1].nextAction).toBe("Resolve blocking policy evidence before advisor sign-off.");
+  });
+
+  it("builds selected policy evidence without exposing source payload names", () => {
+    const model = buildPolicyEvaluationEvidenceModel({
+      evaluation: {
+        evaluation_id: "pev_001",
+        evaluation_status: "PENDING_REVIEW",
+        source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+        source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
+        approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
+        disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+        consent_requirements: ["client_consent:SG_STRUCTURED_NOTE"],
+        evaluation_json: {
+          rule_results: [
+            { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+            { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+          ],
+        },
+      },
+      signOffPackage: {
+        package_posture: {
+          sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+          client_ready_publication: "BLOCKED",
+        },
+        lineage: {
+          audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+          lineage_posture: { client_ready_publication: "BLOCKED" },
+        },
+      },
+    });
+
+    expect(model).toMatchObject({
+      evaluationId: "pev_001",
+      policyStatus: "Review required",
+      sourcePosture: "1 evidence gap",
+      ruleCount: 2,
+      blockingRuleCount: 0,
+      signOffPackagePosture: "Source package available",
+      clientPublicationPosture: "Client publication blocked",
+      approvalDependencies: ["SG Structured Note"],
+      disclosureRequirements: ["SG Structured Note"],
+      consentRequirements: ["SG Structured Note"],
+      sourceRefs: ["Core Product Eligibility Target Market Complexity"],
+      sourceGaps: ["SG Structured Note"],
+    });
+    expect(JSON.stringify(model)).not.toContain("client_consent");
+    expect(JSON.stringify(model)).not.toContain("SUPPORTED_BY_RFC0025");
   });
 });

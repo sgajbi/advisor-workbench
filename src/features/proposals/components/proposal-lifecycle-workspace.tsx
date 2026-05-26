@@ -1,19 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
 import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
-import { getAdvisoryPolicyReviewQueue, listProposals } from "../api";
+import {
+  getAdvisoryPolicyEvaluation,
+  getAdvisoryPolicyReviewQueue,
+  getAdvisoryPolicySignOffPackage,
+  listProposals,
+} from "../api";
 import {
   buildProposalLifecycleWorkspaceModel,
   type ProposalLifecycleMode,
 } from "../proposal-lifecycle-workspace-view-model";
-import { buildPolicyReviewQueueModel } from "../proposal-policy-review-view-model";
+import {
+  buildPolicyEvaluationEvidenceModel,
+  buildPolicyReviewQueueModel,
+} from "../proposal-policy-review-view-model";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
 export default function ProposalLifecycleWorkspace({
@@ -43,6 +51,27 @@ export default function ProposalLifecycleWorkspace({
   const policyReviewModel = useMemo(
     () => buildPolicyReviewQueueModel({ records: policyQueueQuery.data?.items ?? [] }),
     [policyQueueQuery.data?.items]
+  );
+  const selectedPolicyEvaluationId = policyReviewModel.rows[0]?.evaluationId;
+  const policyEvaluationQuery = useQuery({
+    queryKey: ["advisory-policy-evaluation", selectedPolicyEvaluationId],
+    queryFn: async () => await getAdvisoryPolicyEvaluation(selectedPolicyEvaluationId),
+    enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
+    ...workbenchStrictQueryDefaults,
+  });
+  const policySignOffPackageQuery = useQuery({
+    queryKey: ["advisory-policy-sign-off-package", selectedPolicyEvaluationId],
+    queryFn: async () => await getAdvisoryPolicySignOffPackage(selectedPolicyEvaluationId),
+    enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
+    ...workbenchStrictQueryDefaults,
+  });
+  const policyEvidenceModel = useMemo(
+    () =>
+      buildPolicyEvaluationEvidenceModel({
+        evaluation: policyEvaluationQuery.data,
+        signOffPackage: policySignOffPackageQuery.data,
+      }),
+    [policyEvaluationQuery.data, policySignOffPackageQuery.data]
   );
 
   if (isLoading) {
@@ -106,6 +135,9 @@ export default function ProposalLifecycleWorkspace({
           isLoading={policyQueueQuery.isLoading}
           hasError={Boolean(policyQueueQuery.error)}
           model={policyReviewModel}
+          evidenceModel={policyEvidenceModel}
+          evidenceLoading={policyEvaluationQuery.isLoading || policySignOffPackageQuery.isLoading}
+          evidenceError={Boolean(policyEvaluationQuery.error || policySignOffPackageQuery.error)}
         />
       ) : null}
 
@@ -175,11 +207,17 @@ function PolicyReviewQueueSection({
   isLoading,
   hasError,
   model,
+  evidenceModel,
+  evidenceLoading,
+  evidenceError,
 }: {
   portfolioId: string;
   isLoading: boolean;
   hasError: boolean;
   model: ReturnType<typeof buildPolicyReviewQueueModel>;
+  evidenceModel: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
+  evidenceLoading: boolean;
+  evidenceError: boolean;
 }) {
   if (isLoading) {
     return (
@@ -262,6 +300,102 @@ function PolicyReviewQueueSection({
           </tbody>
         </table>
       </div>
+      <PolicyEvaluationEvidenceSection
+        isLoading={evidenceLoading}
+        hasError={evidenceError}
+        model={evidenceModel}
+      />
+    </div>
+  );
+}
+
+function PolicyEvaluationEvidenceSection({
+  isLoading,
+  hasError,
+  model,
+}: {
+  isLoading: boolean;
+  hasError: boolean;
+  model: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
+}) {
+  if (isLoading) {
+    return (
+      <div className={styles.policyEvidencePanel}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={16} />
+          <Text variant="body">Loading policy evidence...</Text>
+        </Stack>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <ScreenStatePanel
+        kind="error"
+        title="Policy evidence unavailable"
+        body="Policy detail and sign-off package posture could not be loaded from the approved advisory workflow."
+        surface="default"
+      />
+    );
+  }
+
+  if (!model) {
+    return null;
+  }
+
+  return (
+    <div className={styles.policyEvidencePanel}>
+      <div>
+        <Text variant="microLabel">Selected Policy Evidence</Text>
+        <Text variant="subsectionTitle" as="h4">
+          Sign-off source package and source evidence
+        </Text>
+      </div>
+      <div className={styles.policyEvidenceGrid}>
+        <EvidenceMetric label="Policy status">
+          <SemanticBadge tone={model.policyStatusTone}>{model.policyStatus}</SemanticBadge>
+        </EvidenceMetric>
+        <EvidenceMetric label="Source evidence">{model.sourcePosture}</EvidenceMetric>
+        <EvidenceMetric label="Rule results">{model.ruleCount} reviewed</EvidenceMetric>
+        <EvidenceMetric label="Blocking rules">{model.blockingRuleCount} blocking</EvidenceMetric>
+        <EvidenceMetric label="Sign-off package">{model.signOffPackagePosture}</EvidenceMetric>
+        <EvidenceMetric label="Client publication">{model.clientPublicationPosture}</EvidenceMetric>
+      </div>
+      <div className={styles.policyEvidenceColumns}>
+        <EvidenceList title="Approval dependencies" values={model.approvalDependencies} />
+        <EvidenceList title="Disclosure reviews" values={model.disclosureRequirements} />
+        <EvidenceList title="Client consent evidence" values={model.consentRequirements} />
+        <EvidenceList title="Source references" values={model.sourceRefs} />
+        <EvidenceList title="Source gaps" values={model.sourceGaps} />
+        <EvidenceMetric label="Next action">{model.nextAction}</EvidenceMetric>
+      </div>
+    </div>
+  );
+}
+
+function EvidenceMetric({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className={styles.policyEvidenceMetric}>
+      <Text variant="microLabel">{label}</Text>
+      <Text variant="body">{children}</Text>
+    </div>
+  );
+}
+
+function EvidenceList({ title, values }: { title: string; values: string[] }) {
+  return (
+    <div className={styles.policyEvidenceList}>
+      <Text variant="microLabel">{title}</Text>
+      {values.length === 0 ? (
+        <Text variant="secondary">None reported</Text>
+      ) : (
+        <ul>
+          {values.map((value) => (
+            <li key={value}>{value}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

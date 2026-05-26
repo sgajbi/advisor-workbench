@@ -130,6 +130,22 @@ export type AdvisoryPolicyReviewQueueData = {
   [key: string]: unknown;
 };
 
+export type AdvisoryPolicyEvaluationData = AdvisoryPolicyEvaluationRecord;
+
+export type AdvisoryPolicySignOffPackageData = {
+  evaluation?: AdvisoryPolicyEvaluationRecord;
+  lineage?: {
+    evaluation_id?: string;
+    source_refs?: string[];
+    source_gaps?: string[];
+    audit_events?: Array<Record<string, unknown>>;
+    lineage_posture?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  package_posture?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type ProposalSummary = {
   proposal_id: string;
   portfolio_id?: string;
