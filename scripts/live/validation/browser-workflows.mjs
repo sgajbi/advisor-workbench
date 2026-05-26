@@ -869,6 +869,7 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(candidateSourceReview).toBeVisible({ timeout: timeoutMs });
   for (const label of [
     "Source Product",
+    "Selection Basis",
     "Readiness",
     "Candidates",
     "Eligible",
@@ -885,6 +886,15 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(
     candidateSourceReview.getByText("DpmPortfolioUniverseCandidate:v1", { exact: true })
   ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    candidateSourceReview.getByText("Effective Discretionary Mandate Binding")
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(candidateSourceReview.getByText("portfolio_mandate_bindings")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(candidateSourceReview.getByText("mandate_type=discretionary")).toBeVisible({
+    timeout: timeoutMs,
+  });
   await expect(candidateSourceReview.getByText("Check launch readiness through Gateway.")).toBeVisible({
     timeout: timeoutMs,
   });

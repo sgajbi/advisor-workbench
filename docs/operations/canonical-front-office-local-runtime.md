@@ -444,7 +444,8 @@ separately from the RFC36-43 feature totals. RFC36-43 validation fails only on r
 counts without being treated as RFC36-43 implementation regressions. The matrix is not a blanket future-scope
 certification: it records the current scenario scope, now including the governed RFC-0041
 multi-portfolio explicit-list wave preview from the canonical contract and the RFC-0037 bounded
-Core `DpmPortfolioUniverseCandidate:v1` candidate-source preview/no-caller-portfolio guard. Broader
+Core `DpmPortfolioUniverseCandidate:v1` candidate-source preview/no-caller-portfolio guard and
+source-owned mandate-binding selection-basis evidence. Broader
 source-owner cohort products remain listed as scenario expansion until their source products and
 downstream realization are proven.
 
