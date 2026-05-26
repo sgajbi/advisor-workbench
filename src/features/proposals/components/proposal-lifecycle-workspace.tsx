@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useMemo, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
-import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import { ActionButton, ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 import {
   getAdvisoryPolicyEvaluation,
   getAdvisoryPolicyReviewQueue,
   getAdvisoryPolicySignOffPackage,
+  getAdvisoryPolicyWorkflow,
   listProposals,
+  recordAdvisoryPolicySignOffDecision,
 } from "../api";
 import {
   buildProposalLifecycleWorkspaceModel,
@@ -31,6 +33,7 @@ export default function ProposalLifecycleWorkspace({
   portfolioId: string;
   mode: ProposalLifecycleMode;
 }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["proposal-lifecycle-workspace", portfolioId, mode],
     queryFn: async () => await listProposals({ portfolioId }),
@@ -65,14 +68,51 @@ export default function ProposalLifecycleWorkspace({
     enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
     ...workbenchStrictQueryDefaults,
   });
+  const policyWorkflowQuery = useQuery({
+    queryKey: ["advisory-policy-workflow", selectedPolicyEvaluationId],
+    queryFn: async () => await getAdvisoryPolicyWorkflow(selectedPolicyEvaluationId),
+    enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
+    ...workbenchStrictQueryDefaults,
+  });
   const policyEvidenceModel = useMemo(
     () =>
       buildPolicyEvaluationEvidenceModel({
         evaluation: policyEvaluationQuery.data,
         signOffPackage: policySignOffPackageQuery.data,
+        workflow: policyWorkflowQuery.data,
       }),
-    [policyEvaluationQuery.data, policySignOffPackageQuery.data]
+    [policyEvaluationQuery.data, policySignOffPackageQuery.data, policyWorkflowQuery.data]
   );
+  const requestMoreEvidenceMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPolicyEvaluationId || !policyEvidenceModel?.sourceEvaluationHash) {
+        throw new Error("Policy evaluation evidence is not ready for review request.");
+      }
+      return await recordAdvisoryPolicySignOffDecision(
+        selectedPolicyEvaluationId,
+        {
+          body: {
+            actor_id: "advisor_1",
+            decision: "REQUEST_MORE_EVIDENCE",
+            source_evaluation_hash: policyEvidenceModel.sourceEvaluationHash,
+            reason: {
+              purpose: "advisor_policy_review",
+              source: "lotus-workbench",
+            },
+          },
+        },
+        `ui-policy-review-request-${selectedPolicyEvaluationId}-${Date.now()}`
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["advisory-policy-workflow"] }),
+        queryClient.invalidateQueries({ queryKey: ["advisory-policy-evaluation"] }),
+        queryClient.invalidateQueries({ queryKey: ["advisory-policy-sign-off-package"] }),
+        queryClient.invalidateQueries({ queryKey: ["advisory-policy-review-queue"] }),
+      ]);
+    },
+  });
 
   if (isLoading) {
     return (
@@ -136,8 +176,20 @@ export default function ProposalLifecycleWorkspace({
           hasError={Boolean(policyQueueQuery.error)}
           model={policyReviewModel}
           evidenceModel={policyEvidenceModel}
-          evidenceLoading={policyEvaluationQuery.isLoading || policySignOffPackageQuery.isLoading}
-          evidenceError={Boolean(policyEvaluationQuery.error || policySignOffPackageQuery.error)}
+          evidenceLoading={
+            policyEvaluationQuery.isLoading ||
+            policySignOffPackageQuery.isLoading ||
+            policyWorkflowQuery.isLoading
+          }
+          evidenceError={Boolean(
+            policyEvaluationQuery.error ||
+              policySignOffPackageQuery.error ||
+              policyWorkflowQuery.error
+          )}
+          reviewRequestPending={requestMoreEvidenceMutation.isPending}
+          reviewRequestSucceeded={requestMoreEvidenceMutation.isSuccess}
+          reviewRequestFailed={Boolean(requestMoreEvidenceMutation.error)}
+          onRequestMoreEvidence={() => requestMoreEvidenceMutation.mutate()}
         />
       ) : null}
 
@@ -210,6 +262,10 @@ function PolicyReviewQueueSection({
   evidenceModel,
   evidenceLoading,
   evidenceError,
+  reviewRequestPending,
+  reviewRequestSucceeded,
+  reviewRequestFailed,
+  onRequestMoreEvidence,
 }: {
   portfolioId: string;
   isLoading: boolean;
@@ -218,6 +274,10 @@ function PolicyReviewQueueSection({
   evidenceModel: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
   evidenceLoading: boolean;
   evidenceError: boolean;
+  reviewRequestPending: boolean;
+  reviewRequestSucceeded: boolean;
+  reviewRequestFailed: boolean;
+  onRequestMoreEvidence: () => void;
 }) {
   if (isLoading) {
     return (
@@ -304,6 +364,10 @@ function PolicyReviewQueueSection({
         isLoading={evidenceLoading}
         hasError={evidenceError}
         model={evidenceModel}
+        reviewRequestPending={reviewRequestPending}
+        reviewRequestSucceeded={reviewRequestSucceeded}
+        reviewRequestFailed={reviewRequestFailed}
+        onRequestMoreEvidence={onRequestMoreEvidence}
       />
     </div>
   );
@@ -313,10 +377,18 @@ function PolicyEvaluationEvidenceSection({
   isLoading,
   hasError,
   model,
+  reviewRequestPending,
+  reviewRequestSucceeded,
+  reviewRequestFailed,
+  onRequestMoreEvidence,
 }: {
   isLoading: boolean;
   hasError: boolean;
   model: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
+  reviewRequestPending: boolean;
+  reviewRequestSucceeded: boolean;
+  reviewRequestFailed: boolean;
+  onRequestMoreEvidence: () => void;
 }) {
   if (isLoading) {
     return (
@@ -360,15 +432,37 @@ function PolicyEvaluationEvidenceSection({
         <EvidenceMetric label="Rule results">{model.ruleCount} reviewed</EvidenceMetric>
         <EvidenceMetric label="Blocking rules">{model.blockingRuleCount} blocking</EvidenceMetric>
         <EvidenceMetric label="Sign-off package">{model.signOffPackagePosture}</EvidenceMetric>
+        <EvidenceMetric label="Workflow status">
+          <SemanticBadge tone={model.workflowTone}>{model.workflowStatus}</SemanticBadge>
+        </EvidenceMetric>
+        <EvidenceMetric label="Maker-checker">{model.makerCheckerPosture}</EvidenceMetric>
+        <EvidenceMetric label="Review SLA">{model.slaPosture}</EvidenceMetric>
         <EvidenceMetric label="Client publication">{model.clientPublicationPosture}</EvidenceMetric>
       </div>
       <div className={styles.policyEvidenceColumns}>
         <EvidenceList title="Approval dependencies" values={model.approvalDependencies} />
         <EvidenceList title="Disclosure reviews" values={model.disclosureRequirements} />
         <EvidenceList title="Client consent evidence" values={model.consentRequirements} />
+        <EvidenceList title="Sign-off blockers" values={model.workflowBlockers} />
         <EvidenceList title="Source references" values={model.sourceRefs} />
         <EvidenceList title="Source gaps" values={model.sourceGaps} />
         <EvidenceMetric label="Next action">{model.nextAction}</EvidenceMetric>
+      </div>
+      <div className={styles.policyEvidenceActions}>
+        <ActionButton
+          priority="secondary"
+          onClick={onRequestMoreEvidence}
+          disabled={reviewRequestPending || !model.sourceEvaluationHash}
+        >
+          {reviewRequestPending ? "Recording request..." : "Request more evidence"}
+        </ActionButton>
+        <Text variant="secondary">
+          {reviewRequestSucceeded
+            ? "Evidence review request recorded through the advisory policy workflow."
+            : reviewRequestFailed
+              ? "Evidence review request could not be recorded from the advisory policy workflow."
+              : "Records a review request only; it does not approve sign-off or client publication."}
+        </Text>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import type { SemanticBadgeTone } from "@/design-system";
 import type {
   AdvisoryPolicyEvaluationRecord,
   AdvisoryPolicySignOffPackageData,
+  AdvisoryPolicyWorkflowData,
 } from "./types";
 
 export type PolicyReviewQueueRow = {
@@ -28,6 +29,7 @@ export type PolicyReviewQueueModel = {
 
 export type PolicyEvaluationEvidenceModel = {
   evaluationId: string;
+  sourceEvaluationHash: string | null;
   policyStatus: string;
   policyStatusTone: SemanticBadgeTone;
   sourcePosture: string;
@@ -41,6 +43,11 @@ export type PolicyEvaluationEvidenceModel = {
   auditEventCount: number;
   signOffPackagePosture: string;
   clientPublicationPosture: string;
+  workflowStatus: string;
+  workflowTone: SemanticBadgeTone;
+  makerCheckerPosture: string;
+  slaPosture: string;
+  workflowBlockers: string[];
   nextAction: string;
 };
 
@@ -92,9 +99,11 @@ export function buildPolicyReviewQueueModel({
 export function buildPolicyEvaluationEvidenceModel({
   evaluation,
   signOffPackage,
+  workflow,
 }: {
   evaluation?: AdvisoryPolicyEvaluationRecord | null;
   signOffPackage?: AdvisoryPolicySignOffPackageData | null;
+  workflow?: AdvisoryPolicyWorkflowData | null;
 }): PolicyEvaluationEvidenceModel | null {
   if (!evaluation) {
     return null;
@@ -110,9 +119,12 @@ export function buildPolicyEvaluationEvidenceModel({
   const approvalDependencies = stringArray(evaluation.approval_dependencies);
   const disclosureRequirements = stringArray(evaluation.disclosure_requirements);
   const consentRequirements = stringArray(evaluation.consent_requirements);
+  const workflowBlockers = stringArray(workflow?.sign_off_blockers);
+  const sourceEvaluationHash = stringValue(evaluation.evaluation_hash, "");
 
   return {
     evaluationId: stringValue(evaluation.evaluation_id, "Evaluation not reported"),
+    sourceEvaluationHash: sourceEvaluationHash || null,
     policyStatus: policyStatusLabel(evaluation.evaluation_status),
     policyStatusTone: policyStatusTone(evaluation.evaluation_status),
     sourcePosture: evidencePosture(sourceGaps),
@@ -126,6 +138,14 @@ export function buildPolicyEvaluationEvidenceModel({
     auditEventCount: auditEvents.length,
     signOffPackagePosture: signOffPackagePosture(packagePosture),
     clientPublicationPosture: clientPublicationPosture(packagePosture, lineagePosture),
+    workflowStatus: workflowStatusLabel(workflow?.sign_off_status),
+    workflowTone: workflowStatusTone(workflow?.sign_off_status),
+    makerCheckerPosture:
+      workflow?.maker_checker_required === true
+        ? "Independent checker required"
+        : "Maker-checker requirement not reported",
+    slaPosture: slaPosture(recordValue(workflow?.sla_posture)),
+    workflowBlockers: workflowBlockers.map(friendlyRequirement).slice(0, 4),
     nextAction: nextAction({
       policyStatus: evaluation.evaluation_status,
       approvalDependencies,
@@ -214,6 +234,35 @@ function signOffTone(record: AdvisoryPolicyEvaluationRecord): SemanticBadgeTone 
   return record.evaluation_status === "READY" ? "success" : "warn";
 }
 
+function workflowStatusLabel(status: unknown): string {
+  switch (status) {
+    case "READY_FOR_SIGN_OFF":
+      return "Ready for sign-off";
+    case "SIGNED_OFF":
+      return "Signed off";
+    case "PENDING_REVIEW":
+      return "Review required";
+    case "BLOCKED":
+      return "Blocked";
+    default:
+      return "Workflow not reported";
+  }
+}
+
+function workflowStatusTone(status: unknown): SemanticBadgeTone {
+  switch (status) {
+    case "READY_FOR_SIGN_OFF":
+    case "SIGNED_OFF":
+      return "success";
+    case "PENDING_REVIEW":
+      return "warn";
+    case "BLOCKED":
+      return "danger";
+    default:
+      return "default";
+  }
+}
+
 function requirementSummary({
   approvalDependencies,
   disclosureRequirements,
@@ -293,12 +342,22 @@ function clientPublicationPosture(
   return value === "BLOCKED" ? "Client publication blocked" : "Client publication not supported";
 }
 
+function slaPosture(posture: Record<string, unknown> | null): string {
+  const status = stringValue(posture?.status, "");
+  const openCount = typeof posture?.open_requirement_count === "number"
+    ? posture.open_requirement_count
+    : null;
+  const label = status === "OVERDUE" ? "SLA overdue" : "Within review SLA";
+  return openCount === null ? label : `${label}, ${openCount} open`;
+}
+
 function friendlySourceRef(value: string): string {
   return friendlyPhrase(value.replace(/^lotus-[^:]+:/, "").replace(/^lotus-/, ""));
 }
 
 function friendlyRequirement(value: string): string {
-  return friendlyPhrase(value.replace(/^[^:]+:/, ""));
+  const parts = value.split(":").filter(Boolean);
+  return friendlyPhrase(parts.at(-1) ?? value);
 }
 
 function friendlyPhrase(value: string): string {

@@ -78,6 +78,7 @@ describe("proposal policy review view model", () => {
       evaluation: {
         evaluation_id: "pev_001",
         evaluation_status: "PENDING_REVIEW",
+        evaluation_hash: "sha256:policy-evaluation-1",
         source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
         source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
         approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
@@ -100,10 +101,20 @@ describe("proposal policy review view model", () => {
           lineage_posture: { client_ready_publication: "BLOCKED" },
         },
       },
+      workflow: {
+        sign_off_status: "PENDING_REVIEW",
+        sign_off_blockers: [
+          "DISCLOSURE_REQUIREMENT_OPEN:advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+        ],
+        maker_checker_required: true,
+        sla_posture: { status: "WITHIN_SLA", open_requirement_count: 3 },
+        client_ready_publication: "BLOCKED",
+      },
     });
 
     expect(model).toMatchObject({
       evaluationId: "pev_001",
+      sourceEvaluationHash: "sha256:policy-evaluation-1",
       policyStatus: "Review required",
       sourcePosture: "1 evidence gap",
       ruleCount: 2,
@@ -115,8 +126,13 @@ describe("proposal policy review view model", () => {
       consentRequirements: ["SG Structured Note"],
       sourceRefs: ["Core Product Eligibility Target Market Complexity"],
       sourceGaps: ["SG Structured Note"],
+      workflowStatus: "Review required",
+      makerCheckerPosture: "Independent checker required",
+      slaPosture: "Within review SLA, 3 open",
+      workflowBlockers: ["SG Structured Note"],
     });
     expect(JSON.stringify(model)).not.toContain("client_consent");
     expect(JSON.stringify(model)).not.toContain("SUPPORTED_BY_RFC0025");
+    expect(JSON.stringify(model)).not.toContain("DISCLOSURE_REQUIREMENT_OPEN");
   });
 });
