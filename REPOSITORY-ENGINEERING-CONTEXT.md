@@ -277,6 +277,12 @@ Important validation expectations:
     explicit about advisor-use review, reviewed narrative package inclusion, report delivery
     posture, and latest delivery event, without presenting report rendering, archive publication,
     client messaging, or client-ready release as Workbench-owned capabilities.
+18. Advisor suitability policy review queue reads are Workbench gateway-only operations backed by
+    Gateway advisory-policy evaluation contracts. Workbench may display Advise-owned evaluation
+    posture, sign-off posture, open approval/disclosure/consent requirements, source-evidence
+    completeness, and advisor next action, but it must not calculate suitability locally, mutate
+    policy sign-off, approve waivers, infer client-ready release, or expose raw policy payload
+    field names on advisor-facing screens.
 
 ### Visual Review Gate
 

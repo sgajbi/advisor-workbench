@@ -12,6 +12,7 @@ import {
   createProposalReportRequest,
   createProposalMemo,
   getAdvisoryWorkspaceSavedVersionReplayEvidence,
+  getAdvisoryPolicyReviewQueue,
   getProposalExecutionStatus,
   getProposalIdempotencyRecord,
   getProposalDeliveryEvents,
@@ -186,6 +187,33 @@ describe("proposal api", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals?portfolio_id=pf_1&state=DRAFT&created_by=advisor_1`
     );
+  });
+
+  it("loads the Gateway-backed advisory policy review queue", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data: { items: [{ evaluation_id: "pev_1" }], queue_posture: {} },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
+
+    const result = await getAdvisoryPolicyReviewQueue("PENDING_REVIEW");
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW`
+    );
+    expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
   });
 
   it("calls proposal version endpoints", async () => {
