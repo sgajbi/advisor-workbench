@@ -1,6 +1,8 @@
 import {
   AdvisoryPolicyEnvelopeResponse,
+  AdvisoryPolicyEvaluationData,
   AdvisoryPolicyReviewQueueData,
+  AdvisoryPolicySignOffPackageData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
   AdvisoryWorkspaceBodyRequest,
@@ -233,6 +235,36 @@ export async function getAdvisoryPolicyReviewQueue(
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyReviewQueueData;
+}
+
+export async function getAdvisoryPolicyEvaluation(
+  evaluationId: string
+): Promise<AdvisoryPolicyEvaluationData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}`
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory policy evaluation failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
+  return envelope.data as unknown as AdvisoryPolicyEvaluationData;
+}
+
+export async function getAdvisoryPolicySignOffPackage(
+  evaluationId: string
+): Promise<AdvisoryPolicySignOffPackageData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
+      evaluationId
+    )}/sign-off-package`
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory policy sign-off package failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
+  return envelope.data as unknown as AdvisoryPolicySignOffPackageData;
 }
 
 export async function getProposal(

@@ -40,9 +40,33 @@ const listProposalsMock = vi.fn(async (_filters?: unknown) => proposalListFixtur
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_status?: string) => policyReviewQueueFixture
 );
+const getAdvisoryPolicyEvaluationMock = vi.fn(async (_evaluationId: string) => ({
+  ...policyReviewQueueFixture.items[0],
+  source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+  evaluation_json: {
+    rule_results: [
+      { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+      { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+    ],
+  },
+}));
+const getAdvisoryPolicySignOffPackageMock = vi.fn(async (_evaluationId: string) => ({
+  package_posture: {
+    sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+    client_ready_publication: "BLOCKED",
+  },
+  lineage: {
+    audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+    lineage_posture: { client_ready_publication: "BLOCKED" },
+  },
+}));
 
 vi.mock("../../src/features/proposals/api", () => ({
+  getAdvisoryPolicyEvaluation: (evaluationId: string) =>
+    getAdvisoryPolicyEvaluationMock(evaluationId),
   getAdvisoryPolicyReviewQueue: (status: string) => getAdvisoryPolicyReviewQueueMock(status),
+  getAdvisoryPolicySignOffPackage: (evaluationId: string) =>
+    getAdvisoryPolicySignOffPackageMock(evaluationId),
   listProposals: (filters: unknown) => listProposalsMock(filters),
 }));
 
@@ -65,6 +89,28 @@ describe("ProposalLifecycleWorkspace", () => {
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
       async (_status?: string) => policyReviewQueueFixture
     );
+    getAdvisoryPolicyEvaluationMock.mockReset();
+    getAdvisoryPolicyEvaluationMock.mockImplementation(async (_evaluationId: string) => ({
+      ...policyReviewQueueFixture.items[0],
+      source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+      evaluation_json: {
+        rule_results: [
+          { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+          { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+        ],
+      },
+    }));
+    getAdvisoryPolicySignOffPackageMock.mockReset();
+    getAdvisoryPolicySignOffPackageMock.mockImplementation(async (_evaluationId: string) => ({
+      package_posture: {
+        sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+        client_ready_publication: "BLOCKED",
+      },
+      lineage: {
+        audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+        lineage_posture: { client_ready_publication: "BLOCKED" },
+      },
+    }));
   });
 
   it("renders a focused risk and impact screen from proposal lifecycle data", async () => {
@@ -106,16 +152,22 @@ describe("ProposalLifecycleWorkspace", () => {
 
     await waitFor(() => {
       expect(getAdvisoryPolicyReviewQueueMock).toHaveBeenCalledWith("PENDING_REVIEW");
+      expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
+      expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith("pev_001");
     });
 
     expect(await screen.findByRole("heading", { level: 3, name: "Policy evaluations needing review" })).toBeInTheDocument();
-    expect(screen.getByText("Review required")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 4, name: "Sign-off source package and source evidence" })).toBeInTheDocument();
+    expect(screen.getAllByText("Review required")).toHaveLength(2);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();
     expect(screen.getByText("1 approval dependency, 1 disclosure review")).toBeInTheDocument();
-    expect(screen.getByText("Complete required approval review.")).toBeInTheDocument();
+    expect(screen.getAllByText("Complete required approval review.")).toHaveLength(2);
+    expect(screen.getByText("Source package available")).toBeInTheDocument();
+    expect(screen.getByText("Client publication blocked")).toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(screen.queryByText("advisor_reviewed_disclosure:SG_STRUCTURED_NOTE")).not.toBeInTheDocument();
     expect(screen.queryByText("advisory-policy-evaluations")).not.toBeInTheDocument();
+    expect(screen.queryByText("SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API")).not.toBeInTheDocument();
   });
 
   it("does not show fallback policy evaluations when the suitability queue is unavailable", async () => {

@@ -1,6 +1,9 @@
 import type { SemanticBadgeTone } from "@/design-system";
 
-import type { AdvisoryPolicyEvaluationRecord } from "./types";
+import type {
+  AdvisoryPolicyEvaluationRecord,
+  AdvisoryPolicySignOffPackageData,
+} from "./types";
 
 export type PolicyReviewQueueRow = {
   evaluationId: string;
@@ -21,6 +24,24 @@ export type PolicyReviewQueueModel = {
   totalCount: number;
   actionCount: number;
   rows: PolicyReviewQueueRow[];
+};
+
+export type PolicyEvaluationEvidenceModel = {
+  evaluationId: string;
+  policyStatus: string;
+  policyStatusTone: SemanticBadgeTone;
+  sourcePosture: string;
+  sourceRefs: string[];
+  sourceGaps: string[];
+  ruleCount: number;
+  blockingRuleCount: number;
+  approvalDependencies: string[];
+  disclosureRequirements: string[];
+  consentRequirements: string[];
+  auditEventCount: number;
+  signOffPackagePosture: string;
+  clientPublicationPosture: string;
+  nextAction: string;
 };
 
 export function buildPolicyReviewQueueModel({
@@ -68,8 +89,70 @@ export function buildPolicyReviewQueueModel({
   };
 }
 
+export function buildPolicyEvaluationEvidenceModel({
+  evaluation,
+  signOffPackage,
+}: {
+  evaluation?: AdvisoryPolicyEvaluationRecord | null;
+  signOffPackage?: AdvisoryPolicySignOffPackageData | null;
+}): PolicyEvaluationEvidenceModel | null {
+  if (!evaluation) {
+    return null;
+  }
+
+  const sourceRefs = stringArray(evaluation.source_refs);
+  const sourceGaps = stringArray(evaluation.source_gaps);
+  const ruleResults = recordArray(recordValue(evaluation.evaluation_json)?.rule_results);
+  const packagePosture = recordValue(signOffPackage?.package_posture);
+  const lineage = recordValue(signOffPackage?.lineage);
+  const lineagePosture = recordValue(lineage?.lineage_posture);
+  const auditEvents = recordArray(lineage?.audit_events);
+  const approvalDependencies = stringArray(evaluation.approval_dependencies);
+  const disclosureRequirements = stringArray(evaluation.disclosure_requirements);
+  const consentRequirements = stringArray(evaluation.consent_requirements);
+
+  return {
+    evaluationId: stringValue(evaluation.evaluation_id, "Evaluation not reported"),
+    policyStatus: policyStatusLabel(evaluation.evaluation_status),
+    policyStatusTone: policyStatusTone(evaluation.evaluation_status),
+    sourcePosture: evidencePosture(sourceGaps),
+    sourceRefs: sourceRefs.map(friendlySourceRef).slice(0, 4),
+    sourceGaps: sourceGaps.map(friendlyRequirement).slice(0, 4),
+    ruleCount: ruleResults.length,
+    blockingRuleCount: ruleResults.filter((rule) => policyStatusTone(rule.status) === "danger").length,
+    approvalDependencies: approvalDependencies.map(friendlyRequirement).slice(0, 4),
+    disclosureRequirements: disclosureRequirements.map(friendlyRequirement).slice(0, 4),
+    consentRequirements: consentRequirements.map(friendlyRequirement).slice(0, 4),
+    auditEventCount: auditEvents.length,
+    signOffPackagePosture: signOffPackagePosture(packagePosture),
+    clientPublicationPosture: clientPublicationPosture(packagePosture, lineagePosture),
+    nextAction: nextAction({
+      policyStatus: evaluation.evaluation_status,
+      approvalDependencies,
+      disclosureRequirements,
+      consentRequirements,
+    }),
+  };
+}
+
 function stringValue(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function recordValue(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function recordArray(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (item): item is Record<string, unknown> =>
+      Boolean(item) && typeof item === "object" && !Array.isArray(item)
+  );
 }
 
 function stringArray(value: unknown): string[] {
@@ -192,6 +275,32 @@ function evidencePosture(sourceGaps: string[]): string {
   return `${sourceGaps.length} evidence ${sourceGaps.length === 1 ? "gap" : "gaps"}`;
 }
 
+function signOffPackagePosture(posture: Record<string, unknown> | null): string {
+  const sourcePackage = stringValue(posture?.sign_off_source_package, "");
+  if (sourcePackage.includes("SUPPORTED")) {
+    return "Source package available";
+  }
+  return "Source package posture not reported";
+}
+
+function clientPublicationPosture(
+  packagePosture: Record<string, unknown> | null,
+  lineagePosture: Record<string, unknown> | null
+): string {
+  const value =
+    stringValue(packagePosture?.client_ready_publication, "") ||
+    stringValue(lineagePosture?.client_ready_publication, "");
+  return value === "BLOCKED" ? "Client publication blocked" : "Client publication not supported";
+}
+
+function friendlySourceRef(value: string): string {
+  return friendlyPhrase(value.replace(/^lotus-[^:]+:/, "").replace(/^lotus-/, ""));
+}
+
+function friendlyRequirement(value: string): string {
+  return friendlyPhrase(value.replace(/^[^:]+:/, ""));
+}
+
 function friendlyPhrase(value: string): string {
   if (!value || value === "Policy pack not reported") {
     return value;
@@ -200,7 +309,9 @@ function friendlyPhrase(value: string): string {
     .split(/[_:\s-]+/)
     .filter(Boolean)
     .map((part) =>
-      part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+      part.length <= 3
+        ? part.toUpperCase()
+        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
     )
     .join(" ");
 }
