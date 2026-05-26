@@ -98,6 +98,38 @@ export type ProposalEnvelopeResponse = {
   data: Record<string, unknown>;
 };
 
+export type AdvisoryPolicyEnvelopeResponse = {
+  correlation_id: string;
+  contract_version: string;
+  data: Record<string, unknown>;
+};
+
+export type AdvisoryPolicyEvaluationRecord = {
+  evaluation_id?: string;
+  proposal_id?: string;
+  proposal_version_id?: string;
+  policy_pack_id?: string;
+  policy_version?: string;
+  evaluation_status?: string;
+  source_refs?: string[];
+  source_gaps?: string[];
+  approval_dependencies?: string[];
+  disclosure_requirements?: string[];
+  consent_requirements?: string[];
+  review_events_json?: Array<Record<string, unknown>>;
+  sign_off_events_json?: Array<Record<string, unknown>>;
+  report_archive_refs_json?: Array<Record<string, unknown>>;
+  replay_metadata_json?: Record<string, unknown>;
+  evaluation_json?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AdvisoryPolicyReviewQueueData = {
+  items?: AdvisoryPolicyEvaluationRecord[];
+  queue_posture?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type ProposalSummary = {
   proposal_id: string;
   portfolio_id?: string;

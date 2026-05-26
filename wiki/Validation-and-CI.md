@@ -64,6 +64,10 @@
   Simulation, Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and
   Implementation Status. This is route evidence over existing Gateway-backed screens, not a new
   client-ready, communication, execution, or backend capability claim.
+- RFC-0025 Suitability Review policy-queue proof must use the Gateway-backed advisory policy
+  review queue and verify that Workbench renders source-owned policy posture in advisor language
+  without claiming local suitability calculation, policy approval, waiver authority, or
+  client-ready publication.
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics

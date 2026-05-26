@@ -12,6 +12,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Performance and risk review | `/performance` route modes | Gateway performance/risk APIs | Supported with bounded observability and canonical proof. |
 | Data-product discovery | `/data-products` | Gateway domain-product APIs | Supported for catalog, dependencies, and live trust posture. |
 | Advisor proposal narrative posture | `/proposals`, `/proposals/{proposalId}` | Gateway `/api/v1/proposals*` | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, delivery-event posture, and governed canonical proof through Gateway only. Canonical validation creates a seeded advisor-review narrative proposal, exercises the panel, and captures `proposal-narrative-posture-live.png`. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven. |
+| Advisor suitability policy review queue | `/proposals?mode=suitability` | Gateway `/api/v1/advisory-policy-evaluations/review-queue` | Implemented for read-only review of Advise-owned suitability policy evaluations that need advisor, compliance, or supervisory attention. Workbench renders advisor-facing policy status, sign-off posture, open approval/disclosure/consent requirements, source-evidence completeness, and next action through Gateway only. Workbench does not calculate suitability, approve/waive policy findings, publish client-ready material, or call `lotus-advise` directly. |
 | DPM mandate command center | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit. |
 | DPM rebalance-wave command center | `/workbench/{portfolioId}?mode=waves` | Gateway `/api/v1/dpm/command-center/waves*` | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, selected-campaign candidate-source review, read-only campaign lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only. |
 | DPM construction alternatives | `/workbench/{portfolioId}?mode=construction` | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*` | Implemented for generation, comparison, and PM selection through Gateway only. Canonical panel proof is governed as `dpm.construction_alternatives` and does not claim Workbench-local construction methodology, order routing, trade execution, or OMS truth. |
@@ -27,6 +28,30 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 
 The RFC-0023 proposal detail panel gives advisors and supervisors a bounded way to review
 advisor-use narrative posture before downstream report packaging.
+
+## Advisor Suitability Policy Review Queue
+
+The RFC-0025 Suitability Review surface gives advisors and supervisors a read-only queue of
+source-owned policy evaluations that need review before client discussion.
+
+Implemented:
+
+1. loads the policy review queue through the Workbench BFF and Gateway only,
+2. requests the source review posture for evaluations requiring review,
+3. renders proposal identity, proposal version, policy pack/version, policy status, sign-off
+   posture, open approval/disclosure/consent requirements, source-evidence completeness, and
+   advisor next action,
+4. translates source statuses and requirement arrays into private-banking workflow language,
+5. shows explicit unavailable and empty states without fallback policy rows.
+
+Not supported in Workbench:
+
+1. local suitability calculation,
+2. policy approval, waiver, or sign-off mutation,
+3. client-ready publication,
+4. direct calls to `lotus-advise`,
+5. local interpretation of policy rule hashes, source refs, or technical payload fields as
+   advisor decisions.
 
 Implemented:
 
