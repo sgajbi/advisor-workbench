@@ -55,6 +55,8 @@ def test_rfc0098_experience_uses_gateway_and_manage_truth() -> None:
     )
     assert "BulkReviewCampaignDefinition:v1" in rfc
     assert "candidate-source review card" in rfc
+    assert "source-owned\nselection basis" in rfc
+    assert "source-owned selection basis" in supported_features
     assert "selected-campaign candidate-source review" in supported_features
     assert "no-OMS/no-client-contact boundaries" in supported_features
     assert "selected-campaign candidate-source\n    review" in integrations

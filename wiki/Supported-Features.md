@@ -107,8 +107,9 @@ Implemented:
 8. reads bounded `BulkReviewCampaignDiscovery:v1` posture through Gateway and renders Manage-owned
    eligible candidate count, expiry posture, access purpose, governance posture, and source-ref
    posture without discovering global campaign cohorts,
-9. renders selected campaign candidate-source product, source readiness, applied filters, warnings,
-   lineage count, next action, and no-OMS/no-client-contact boundaries without local cohort discovery,
+9. renders selected campaign candidate-source product, source-owned selection basis when supplied by
+   Gateway/Manage, source readiness, applied filters, warnings, lineage count, next action, and
+   no-OMS/no-client-contact boundaries without local cohort discovery,
 10. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
    bounded Gateway-backed retire/supersede controls that require actor, reason, and replacement
    lineage for supersede, then refreshes campaign definitions and lifecycle evidence without

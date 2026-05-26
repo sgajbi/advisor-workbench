@@ -308,6 +308,7 @@ describe("DPM wave command-center view model", () => {
       accessPurpose: "rebalance_review",
       sourcePosture: "Source-backed",
       candidateSourceProduct: "BulkReviewCampaignDiscovery:v1",
+      candidateSelectionBasis: "N/A",
       candidateSourceReadiness: "READY",
       candidateFilters: "As Of Date: 2026-05-10; Eligible Portfolio Types: DISCRETIONARY",
       candidateWarnings: "N/A",
@@ -347,6 +348,16 @@ describe("DPM wave command-center view model", () => {
                       source_id: "PB_SG_GLOBAL_BAL_001:2026-05-03",
                       source_version: "v1",
                       supportability_state: "READY",
+                      selection_basis: {
+                        basis_type: "EFFECTIVE_DISCRETIONARY_MANDATE_BINDING",
+                        source_table: "portfolio_mandate_bindings",
+                        included_when: [
+                          "mandate_type=discretionary",
+                          "effective_from<=as_of_date",
+                        ],
+                        downstream_boundary:
+                          "Candidate membership is not relationship householding.",
+                      },
                     },
                   ],
                 },
@@ -376,6 +387,9 @@ describe("DPM wave command-center view model", () => {
     });
 
     expect(model.campaignRows[0].candidateSourceProduct).toBe("DpmPortfolioUniverseCandidate:v1");
+    expect(model.campaignRows[0].candidateSelectionBasis).toBe(
+      "Effective Discretionary Mandate Binding; Source: portfolio_mandate_bindings; Predicates: mandate_type=discretionary, effective_from<=as_of_date"
+    );
   });
 
   it("normalizes candidate lineage source product versions without using Manage wrapper refs", () => {

@@ -34,6 +34,7 @@ export default function DpmCampaignCandidateSourceCard({ selectedCampaign }: Pro
       ) : (
         <div className="rebalance-campaign-workflow-command-grid">
           <MetricRow label="Source Product" value={selectedCampaign.candidateSourceProduct} />
+          <MetricRow label="Selection Basis" value={selectedCampaign.candidateSelectionBasis} />
           <MetricRow
             label="Readiness"
             value={<DpmWaveStateBadge state={selectedCampaign.candidateSourceReadiness} />}
