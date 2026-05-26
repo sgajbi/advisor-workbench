@@ -19,6 +19,8 @@ const campaign: DpmCampaignDefinitionRow = {
   accessPurpose: "SUPERVISORY_BULK_REVIEW",
   sourcePosture: "Source-backed",
   candidateSourceProduct: "DpmPortfolioUniverseCandidate:v1",
+  candidateSelectionBasis:
+    "Effective Discretionary Mandate Binding; Source: portfolio_mandate_bindings; Predicates: mandate_type=discretionary",
   candidateSourceReadiness: "READY",
   candidateFilters:
     "As Of: 2026-05-03; Booking Center Code: Singapore; Model Portfolio Ids: MODEL_PB_SG_GLOBAL_BAL_DPM",
@@ -34,6 +36,8 @@ describe("DpmCampaignCandidateSourceCard", () => {
 
     expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
     expect(screen.getByText("DpmPortfolioUniverseCandidate:v1")).toBeInTheDocument();
+    expect(screen.getByText("Selection Basis")).toBeInTheDocument();
+    expect(screen.getByText(campaign.candidateSelectionBasis)).toBeInTheDocument();
     expect(screen.getByLabelText("Status Ready")).toBeInTheDocument();
     expect(screen.getAllByText("1")).toHaveLength(2);
     expect(screen.getByText(campaign.candidateFilters)).toBeInTheDocument();

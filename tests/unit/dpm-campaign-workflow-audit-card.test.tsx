@@ -19,6 +19,7 @@ const selectedCampaign: DpmCampaignDefinitionRow = {
   accessPurpose: "Portfolio review",
   sourcePosture: "Source-backed",
   candidateSourceProduct: "BulkReviewCampaignDiscovery:v1",
+  candidateSelectionBasis: "N/A",
   candidateSourceReadiness: "READY",
   candidateFilters: "As Of: 2026-05-10; Eligible Types: DISCRETIONARY",
   candidateWarnings: "N/A",

@@ -111,7 +111,8 @@ must travel through Gateway-shaped contracts.
     and
     `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede`.
     Workbench renders the bounded campaign-definition list, selected-campaign candidate-source
-    review, lifecycle evidence, append-only launch history, campaign-discovery posture,
+    review including source-owned selection basis when present, lifecycle evidence, append-only
+    launch history, campaign-discovery posture,
     preview-readiness posture, campaign workflow audit evidence, ready-only launch action, and
     bounded retire/supersede lifecycle controls but does
     not discover global campaign cohorts, recalculate membership or launch readiness, infer

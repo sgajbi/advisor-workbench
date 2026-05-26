@@ -64,6 +64,7 @@ export type DpmCampaignDefinitionRow = {
   accessPurpose: string;
   sourcePosture: string;
   candidateSourceProduct: string;
+  candidateSelectionBasis: string;
   candidateSourceReadiness: string;
   candidateFilters: string;
   candidateWarnings: string;
@@ -682,6 +683,7 @@ function buildCampaignDefinitionRows(
           ? "Source-backed"
           : "Review source refs",
       candidateSourceProduct: resolveCampaignCandidateSourceProduct(record, discovery),
+      candidateSelectionBasis: resolveCampaignCandidateSelectionBasis(record),
       candidateSourceReadiness,
       candidateFilters: resolveCampaignCandidateFilters(record, discovery),
       candidateWarnings: resolveCampaignCandidateWarnings(
@@ -745,6 +747,27 @@ function formatCandidateLineageSourceProduct(sourceRef: Record<string, unknown>)
     return sourceType;
   }
   return `${sourceType}:${sourceVersion}`;
+}
+
+function resolveCampaignCandidateSelectionBasis(record: Record<string, unknown>): string {
+  const sourceRefs = extractRecordArray(record.candidates).flatMap((candidate) =>
+    extractRecordArray(candidate.source_refs)
+  );
+  const basis = sourceRefs.map((sourceRef) => readRecord(sourceRef.selection_basis)).find((value) => {
+    return Object.keys(value).length > 0;
+  });
+  if (!basis) {
+    return "N/A";
+  }
+  const basisType = readString(basis, "basis_type");
+  const sourceTable = readString(basis, "source_table");
+  const predicates = extractStringArray(basis.included_when);
+  const parts = [
+    basisType ? formatLabel(basisType) : "",
+    sourceTable ? `Source: ${sourceTable}` : "",
+    predicates.length > 0 ? `Predicates: ${predicates.join(", ")}` : "",
+  ].filter((value) => value.length > 0);
+  return parts.length > 0 ? parts.join("; ") : "N/A";
 }
 
 function resolveCampaignCandidateSourceReadiness(
