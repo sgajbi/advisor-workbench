@@ -429,6 +429,10 @@ describe("canonical live validation script", () => {
     expect(rfcFeatureCoverageModule).toContain("single-portfolio and multi-portfolio explicit-list waves");
     expect(browserWorkflowModule).toContain("Candidate Source Review");
     expect(browserWorkflowModule).toContain("DpmPortfolioUniverseCandidate:v1");
+    expect(browserWorkflowModule).toContain("Selection Basis");
+    expect(browserWorkflowModule).toContain("Effective Discretionary Mandate Binding");
+    expect(browserWorkflowModule).toContain("portfolio_mandate_bindings");
+    expect(browserWorkflowModule).toContain("mandate_type=discretionary");
     expect(browserWorkflowModule).toContain("Check launch readiness through Gateway.");
     expect(browserWorkflowModule).toContain("NO_ORDER_GENERATION");
     expect(browserWorkflowModule).toContain("NO_OMS_EXECUTION_CLAIM");

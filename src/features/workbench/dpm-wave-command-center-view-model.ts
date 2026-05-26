@@ -847,8 +847,10 @@ function resolveCampaignCandidateOperatingBoundaries(
   record: Record<string, unknown>,
   discovery: Record<string, unknown>
 ): string {
+  const universePosture = readRecord(discovery.universe_posture);
   const boundaries = [
     ...extractStringArray(discovery.operating_boundaries),
+    ...extractStringArray(universePosture.operating_boundaries),
     ...extractStringArray(record.operating_boundaries),
     "NO_OMS_EXECUTION_CLAIM",
     "NO_CLIENT_CONTACT_WORKFLOW",

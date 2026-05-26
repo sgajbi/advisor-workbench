@@ -380,6 +380,9 @@ describe("DPM wave command-center view model", () => {
               campaign_version: "2026.05",
               supportability_state: "READY",
               source_ref_count: 1,
+              universe_posture: {
+                operating_boundaries: ["NO_ORDER_GENERATION", "NO_SOURCE_FACT_RECALCULATION"],
+              },
             },
           ],
         },
@@ -389,6 +392,9 @@ describe("DPM wave command-center view model", () => {
     expect(model.campaignRows[0].candidateSourceProduct).toBe("DpmPortfolioUniverseCandidate:v1");
     expect(model.campaignRows[0].candidateSelectionBasis).toBe(
       "Effective Discretionary Mandate Binding; Source: portfolio_mandate_bindings; Predicates: mandate_type=discretionary, effective_from<=as_of_date"
+    );
+    expect(model.campaignRows[0].operatingBoundaries).toBe(
+      "NO_ORDER_GENERATION, NO_SOURCE_FACT_RECALCULATION, NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW"
     );
   });
 
