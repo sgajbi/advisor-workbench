@@ -2,7 +2,10 @@ import {
   AdvisoryPolicyEnvelopeResponse,
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicyReviewQueueData,
+  AdvisoryPolicySignOffDecisionData,
+  AdvisoryPolicySignOffDecisionRequest,
   AdvisoryPolicySignOffPackageData,
+  AdvisoryPolicyWorkflowData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
   AdvisoryWorkspaceBodyRequest,
@@ -265,6 +268,49 @@ export async function getAdvisoryPolicySignOffPackage(
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicySignOffPackageData;
+}
+
+export async function getAdvisoryPolicyWorkflow(
+  evaluationId: string
+): Promise<AdvisoryPolicyWorkflowData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}/workflow`
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory policy workflow failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
+  return envelope.data as unknown as AdvisoryPolicyWorkflowData;
+}
+
+export async function recordAdvisoryPolicySignOffDecision(
+  evaluationId: string,
+  payload: AdvisoryPolicySignOffDecisionRequest,
+  idempotencyKey?: string
+): Promise<AdvisoryPolicySignOffDecisionData> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
+      evaluationId
+    )}/sign-off-decisions`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisory policy sign-off decision failed (${response.status}): ${body}`);
+  }
+  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
+  return envelope.data as unknown as AdvisoryPolicySignOffDecisionData;
 }
 
 export async function getProposal(

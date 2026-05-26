@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +42,7 @@ const getAdvisoryPolicyReviewQueueMock = vi.fn(
 );
 const getAdvisoryPolicyEvaluationMock = vi.fn(async (_evaluationId: string) => ({
   ...policyReviewQueueFixture.items[0],
+  evaluation_hash: "sha256:policy-evaluation-1",
   source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
   evaluation_json: {
     rule_results: [
@@ -60,6 +61,23 @@ const getAdvisoryPolicySignOffPackageMock = vi.fn(async (_evaluationId: string) 
     lineage_posture: { client_ready_publication: "BLOCKED" },
   },
 }));
+const getAdvisoryPolicyWorkflowMock = vi.fn(async (_evaluationId: string) => ({
+  sign_off_status: "PENDING_REVIEW",
+  sign_off_blockers: [
+    "DISCLOSURE_REQUIREMENT_OPEN:advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+  ],
+  maker_checker_required: true,
+  sla_posture: { status: "WITHIN_SLA", open_requirement_count: 2 },
+  client_ready_publication: "BLOCKED",
+}));
+const recordAdvisoryPolicySignOffDecisionMock = vi.fn(
+  async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
+    workflow: {
+      sign_off_status: "PENDING_REVIEW",
+      client_ready_publication: "BLOCKED",
+    },
+  })
+);
 
 vi.mock("../../src/features/proposals/api", () => ({
   getAdvisoryPolicyEvaluation: (evaluationId: string) =>
@@ -67,7 +85,14 @@ vi.mock("../../src/features/proposals/api", () => ({
   getAdvisoryPolicyReviewQueue: (status: string) => getAdvisoryPolicyReviewQueueMock(status),
   getAdvisoryPolicySignOffPackage: (evaluationId: string) =>
     getAdvisoryPolicySignOffPackageMock(evaluationId),
+  getAdvisoryPolicyWorkflow: (evaluationId: string) =>
+    getAdvisoryPolicyWorkflowMock(evaluationId),
   listProposals: (filters: unknown) => listProposalsMock(filters),
+  recordAdvisoryPolicySignOffDecision: (
+    evaluationId: string,
+    payload: unknown,
+    idempotencyKey?: string
+  ) => recordAdvisoryPolicySignOffDecisionMock(evaluationId, payload, idempotencyKey),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -92,6 +117,7 @@ describe("ProposalLifecycleWorkspace", () => {
     getAdvisoryPolicyEvaluationMock.mockReset();
     getAdvisoryPolicyEvaluationMock.mockImplementation(async (_evaluationId: string) => ({
       ...policyReviewQueueFixture.items[0],
+      evaluation_hash: "sha256:policy-evaluation-1",
       source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
       evaluation_json: {
         rule_results: [
@@ -111,6 +137,25 @@ describe("ProposalLifecycleWorkspace", () => {
         lineage_posture: { client_ready_publication: "BLOCKED" },
       },
     }));
+    getAdvisoryPolicyWorkflowMock.mockReset();
+    getAdvisoryPolicyWorkflowMock.mockImplementation(async (_evaluationId: string) => ({
+      sign_off_status: "PENDING_REVIEW",
+      sign_off_blockers: [
+        "DISCLOSURE_REQUIREMENT_OPEN:advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+      ],
+      maker_checker_required: true,
+      sla_posture: { status: "WITHIN_SLA", open_requirement_count: 2 },
+      client_ready_publication: "BLOCKED",
+    }));
+    recordAdvisoryPolicySignOffDecisionMock.mockReset();
+    recordAdvisoryPolicySignOffDecisionMock.mockImplementation(
+      async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
+        workflow: {
+          sign_off_status: "PENDING_REVIEW",
+          client_ready_publication: "BLOCKED",
+        },
+      })
+    );
   });
 
   it("renders a focused risk and impact screen from proposal lifecycle data", async () => {
@@ -154,20 +199,54 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(getAdvisoryPolicyReviewQueueMock).toHaveBeenCalledWith("PENDING_REVIEW");
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
       expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith("pev_001");
+      expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledWith("pev_001");
     });
 
     expect(await screen.findByRole("heading", { level: 3, name: "Policy evaluations needing review" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 4, name: "Sign-off source package and source evidence" })).toBeInTheDocument();
-    expect(screen.getAllByText("Review required")).toHaveLength(2);
+    expect(screen.getAllByText("Review required")).toHaveLength(3);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();
     expect(screen.getByText("1 approval dependency, 1 disclosure review")).toBeInTheDocument();
     expect(screen.getAllByText("Complete required approval review.")).toHaveLength(2);
     expect(screen.getByText("Source package available")).toBeInTheDocument();
     expect(screen.getByText("Client publication blocked")).toBeInTheDocument();
+    expect(screen.getByText("Independent checker required")).toBeInTheDocument();
+    expect(screen.getByText("Within review SLA, 2 open")).toBeInTheDocument();
+    expect(screen.getByText("Request more evidence")).toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(screen.queryByText("advisor_reviewed_disclosure:SG_STRUCTURED_NOTE")).not.toBeInTheDocument();
     expect(screen.queryByText("advisory-policy-evaluations")).not.toBeInTheDocument();
     expect(screen.queryByText("SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API")).not.toBeInTheDocument();
+    expect(screen.queryByText("DISCLOSURE_REQUIREMENT_OPEN")).not.toBeInTheDocument();
+  });
+
+  it("records bounded policy evidence review requests through Gateway only", async () => {
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Request more evidence" }));
+
+    await waitFor(() => {
+      expect(recordAdvisoryPolicySignOffDecisionMock).toHaveBeenCalledWith(
+        "pev_001",
+        expect.objectContaining({
+          body: expect.objectContaining({
+            actor_id: "advisor_1",
+            decision: "REQUEST_MORE_EVIDENCE",
+            source_evaluation_hash: "sha256:policy-evaluation-1",
+          }),
+        }),
+        expect.stringMatching(/^ui-policy-review-request-pev_001-\d+$/)
+      );
+    });
+
+    expect(
+      await screen.findByText(
+        "Evidence review request recorded through the advisory policy workflow."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("APPROVE_FOR_POLICY_SIGN_OFF")).not.toBeInTheDocument();
   });
 
   it("does not show fallback policy evaluations when the suitability queue is unavailable", async () => {

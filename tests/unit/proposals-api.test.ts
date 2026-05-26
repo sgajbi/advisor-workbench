@@ -15,6 +15,7 @@ import {
   getAdvisoryPolicyEvaluation,
   getAdvisoryPolicyReviewQueue,
   getAdvisoryPolicySignOffPackage,
+  getAdvisoryPolicyWorkflow,
   getProposalExecutionStatus,
   getProposalIdempotencyRecord,
   getProposalDeliveryEvents,
@@ -35,6 +36,7 @@ import {
   recordProposalExecutionUpdate,
   recordProposalMemoReportPackageEvent,
   listProposals,
+  recordAdvisoryPolicySignOffDecision,
   recordClientConsent,
   regenerateProposalNarrative,
   requestAdvisoryWorkspaceRationale,
@@ -256,6 +258,59 @@ describe("proposal api", () => {
     );
     expect(evaluation.evaluation_id).toBe("pev_1");
     expect(signOffPackage.package_posture?.sign_off_source_package).toContain("SUPPORTED");
+  });
+
+  it("loads advisory policy workflow and records review requests through Gateway", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        const data = init?.method === "POST"
+          ? { workflow: { sign_off_status: "PENDING_REVIEW" } }
+          : { sign_off_status: "PENDING_REVIEW", maker_checker_required: true };
+        return new Response(
+          JSON.stringify({
+            correlation_id: "c",
+            contract_version: "v1",
+            data,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      })
+    );
+
+    const workflow = await getAdvisoryPolicyWorkflow("pev_1");
+    const decision = await recordAdvisoryPolicySignOffDecision(
+      "pev_1",
+      {
+        body: {
+          actor_id: "advisor_1",
+          decision: "REQUEST_MORE_EVIDENCE",
+          source_evaluation_hash: "sha256:policy-evaluation-1",
+          reason: { purpose: "advisor_policy_review" },
+        },
+      },
+      "idem-policy-review-request"
+    );
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-policy-evaluations/pev_1/workflow`
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-policy-evaluations/pev_1/sign-off-decisions`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Idempotency-Key": "idem-policy-review-request",
+        }),
+      })
+    );
+    expect(workflow.sign_off_status).toBe("PENDING_REVIEW");
+    expect(decision.workflow?.sign_off_status).toBe("PENDING_REVIEW");
   });
 
   it("calls proposal version endpoints", async () => {

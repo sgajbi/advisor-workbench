@@ -132,6 +132,35 @@ export type AdvisoryPolicyReviewQueueData = {
 
 export type AdvisoryPolicyEvaluationData = AdvisoryPolicyEvaluationRecord;
 
+export type AdvisoryPolicyRequirementProjection = {
+  requirement_id?: string;
+  requirement_type?: string;
+  status?: string;
+  owner_role?: string;
+  review_sla?: string;
+  due_at?: string | null;
+  reason_codes?: string[];
+  [key: string]: unknown;
+};
+
+export type AdvisoryPolicyWorkflowData = {
+  evaluation_id?: string;
+  proposal_id?: string;
+  proposal_version_id?: string;
+  evaluation_status?: string;
+  approval_dependencies?: AdvisoryPolicyRequirementProjection[];
+  disclosure_requirements?: AdvisoryPolicyRequirementProjection[];
+  consent_requirements?: AdvisoryPolicyRequirementProjection[];
+  conflict_posture?: Record<string, unknown>;
+  sla_posture?: Record<string, unknown>;
+  sign_off_status?: string;
+  sign_off_blockers?: string[];
+  maker_checker_required?: boolean;
+  latest_sign_off_event?: Record<string, unknown> | null;
+  client_ready_publication?: string;
+  [key: string]: unknown;
+};
+
 export type AdvisoryPolicySignOffPackageData = {
   evaluation?: AdvisoryPolicyEvaluationRecord;
   lineage?: {
@@ -143,6 +172,26 @@ export type AdvisoryPolicySignOffPackageData = {
     [key: string]: unknown;
   };
   package_posture?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AdvisoryPolicySignOffDecisionRequest = {
+  body: {
+    actor_id: string;
+    decision: "APPROVE_FOR_POLICY_SIGN_OFF" | "REQUEST_MORE_EVIDENCE" | "REJECT_POLICY_SIGN_OFF";
+    source_evaluation_hash: string;
+    resolved_approval_dependencies?: string[];
+    satisfied_disclosure_requirements?: string[];
+    satisfied_consent_requirements?: string[];
+    conflict_review_outcome?: string | null;
+    reason?: Record<string, unknown>;
+  };
+};
+
+export type AdvisoryPolicySignOffDecisionData = {
+  workflow?: AdvisoryPolicyWorkflowData;
+  sign_off_event?: Record<string, unknown>;
+  replay_metadata?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
