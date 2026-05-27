@@ -158,6 +158,13 @@ export async function validateCanonicalAdvisorCockpit({
     acknowledgement_note:
       "Canonical validation recorded advisor cockpit acknowledgement without clearing source-owned blockers.",
   };
+  const acknowledgementIdempotencyMaterial = {
+    portfolio_id: portfolioId,
+    advisor_id: advisorId,
+    role,
+    action_item_id: actionItemId,
+    ...acknowledgementBody,
+  };
   const acknowledgement = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
@@ -171,7 +178,7 @@ export async function validateCanonicalAdvisorCockpit({
       headers: {
         "Idempotency-Key": buildPayloadScopedIdempotencyKey(
           "wb-advisor-cockpit-ack",
-          acknowledgementBody,
+          acknowledgementIdempotencyMaterial,
         ),
       },
     },

@@ -33,13 +33,16 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
-function actionListResponse({ portfolioId = PORTFOLIO_ID } = {}): Response {
+function actionListResponse({
+  actionItemId = "aci_policy_review_001",
+  portfolioId = PORTFOLIO_ID,
+} = {}): Response {
   return jsonResponse({
     data: {
       total_count: 1,
       items: [
         {
-          action_item_id: "aci_policy_review_001",
+          action_item_id: actionItemId,
           action_item_version: 7,
           action_family: "POLICY_REVIEW_REQUIRED",
           status: "PENDING_REVIEW",
@@ -149,6 +152,50 @@ describe("advisor cockpit live proof", () => {
       clientReadyPublication: "BLOCKED",
       replayed: true,
     });
+  });
+
+  it("scopes acknowledgement idempotency keys to the action identity", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        actionListResponse({ actionItemId: "aci_policy_review_001" }),
+      )
+      .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(supportabilityResponse())
+      .mockResolvedValueOnce(acknowledgementResponse())
+      .mockResolvedValueOnce(
+        actionListResponse({ actionItemId: "aci_policy_review_002" }),
+      )
+      .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(supportabilityResponse())
+      .mockResolvedValueOnce(acknowledgementResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const baseArgs = {
+      summary: { apiChecks: [], workflowPackChecks: [] },
+      scenario: { expectedClientReadyPublication: "BLOCKED" },
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: PORTFOLIO_ID,
+      proposalId: "proposal_001",
+      proposalVersionId: "version_001",
+      timeoutMs: 1000,
+    };
+
+    await validateCanonicalAdvisorCockpit(baseArgs);
+    await validateCanonicalAdvisorCockpit({
+      ...baseArgs,
+      summary: { apiChecks: [], workflowPackChecks: [] },
+    });
+
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toMatch(
+      /^wb-advisor-cockpit-ack-/,
+    );
+    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
+      /^wb-advisor-cockpit-ack-/,
+    );
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).not.toBe(
+      fetchMock.mock.calls[7][1].headers["Idempotency-Key"],
+    );
   });
 
   it("rejects action lists that escape the requested portfolio scope", async () => {
