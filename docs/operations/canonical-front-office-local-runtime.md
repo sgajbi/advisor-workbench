@@ -270,6 +270,7 @@ Validation layers:
    - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
    - proposal creation with advisor-review narrative request
    - proposal narrative review and reviewed report-package request
+   - RFC-0026 advisor cockpit action list, snapshot, supportability, and idempotent acknowledgement
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
@@ -277,6 +278,7 @@ Validation layers:
    - Performance analysis
    - Performance advisor brief
    - Proposal narrative posture
+   - Advisor cockpit
    - Performance risk
    - Performance evidence
    - DPM outcome review
@@ -320,12 +322,18 @@ and a bounded request-more-evidence decision, and then render the Suitability Re
 same source-owned queue. The validator records this as
 `POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
 route-only screenshot.
+RFC-0026 advisor cockpit checks then read the Gateway-backed cockpit action list, operating
+snapshot, and supportability posture for the same portfolio, record an idempotent advisor
+acknowledgement, preserve blocked client-publication posture, and render
+`/recommendations?mode=cockpit` as `advisory.advisor_cockpit`. The proof records
+`ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`; it does not clear source-owned blockers, approve policy
+findings, contact clients, generate orders, or claim OMS execution.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
-Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal Simulation,
-Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
-Status. These journey checks are route-level evidence over existing Gateway-backed Workbench
-screens; they do not promote new backend capability, client-ready release, client communication, or
-execution truth.
+Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
+Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review,
+and Implementation Status. These journey checks are route-level evidence over existing
+Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
+client communication, or execution truth.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,

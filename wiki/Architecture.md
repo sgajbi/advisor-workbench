@@ -19,6 +19,9 @@
   compatibility workspace entry and portfolio-linked operational route
 - `Proposals`
   direct Gateway-backed proposal queue/detail route for bounded advisor narrative delivery posture
+- `Advisor Cockpit`
+  `/recommendations?mode=cockpit` Gateway-backed operating workflow over Advise-owned action items,
+  supportability, meeting preparation, and bounded acknowledgements
 - legacy compatibility surfaces
   recommendations redirects and proposal draft compatibility entry
 
@@ -40,6 +43,7 @@ flowchart LR
   Performance --> AdvisorBrief[Advisor Brief]
   Performance --> Risk[Risk Review]
   Performance --> Evidence[Evidence]
+  Shell --> Cockpit[Advisor Cockpit]
 
   Portfolio --> Gateway[lotus-gateway]
   Summary --> Gateway
@@ -47,6 +51,7 @@ flowchart LR
   AdvisorBrief --> Gateway
   Risk --> Gateway
   Evidence --> Gateway
+  Cockpit --> Gateway
 
   Gateway --> Core[lotus-core]
   Gateway --> PerfSvc[lotus-performance]

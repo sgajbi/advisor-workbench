@@ -68,10 +68,11 @@ Boundary rules that matter:
    operations handoff summary, exception summary, outcome narrative, and PM quality support-summary
    workflow-pack requests without browser-owned prompt construction, generated text storage,
    PM ranking, client contact, order, or OMS claims.
-7. Recommendations remain compatibility paths. Proposals are now a bounded direct advisory
-   workspace surface for the Gateway-backed proposal queue and RFC-0023 advisor narrative delivery
-   posture, while the top-level `Proposal` shell entry remains disabled pending broader product
-   promotion.
+7. Recommendations remain compatibility paths. `mode=cockpit` is now the Gateway-backed RFC-0026
+   advisor operating cockpit for Advise-owned action items, supportability, meeting preparation,
+   and bounded acknowledgements. Proposals are a bounded direct advisory workspace surface for the
+   Gateway-backed proposal queue and RFC-0023 advisor narrative delivery posture, while the
+   top-level `Proposal` shell entry remains disabled pending broader product promotion.
 8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
    active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
    bootstrap contract.
@@ -108,6 +109,9 @@ Current route posture:
 
 - `/recommendations`
   redirects to supported active surfaces
+- `/recommendations?mode=cockpit`
+  Gateway-backed RFC-0026 advisor cockpit over Advise-owned action items, supportability, and
+  acknowledgement posture
 - `/proposals`
   direct Gateway-backed proposal queue for advisor follow-up
 - `/proposals/[proposalId]`
@@ -205,6 +209,7 @@ Quick local browser-facing path:
 http://workbench.dev.lotus/portfolio
 http://workbench.dev.lotus/performance
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
+http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001&mode=cockpit
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/data-products
 ```
@@ -281,18 +286,18 @@ Important current product and route truths:
    stateless portfolio snapshots, prices, optimization results, objective scores, supportability,
    or PM selection truth.
 10. RFC-0040 proof-pack evidence rendering on `/workbench/{portfolioId}?mode=proof` is backed by Gateway
-   `/api/v1/dpm/command-center/proof-packs*`; Workbench may render Gateway/manage proof-pack
-   identity, sections, hashes, Markdown, report-input readiness, AI-evidence readiness, and
-   lotus-ai PM memo workflow-pack posture through Gateway, but must not rebuild proof-pack
-   sections, compute hashes, synthesize Markdown, construct report input, construct AI evidence,
-   construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
+    `/api/v1/dpm/command-center/proof-packs*`; Workbench may render Gateway/manage proof-pack
+    identity, sections, hashes, Markdown, report-input readiness, AI-evidence readiness, and
+    lotus-ai PM memo workflow-pack posture through Gateway, but must not rebuild proof-pack
+    sections, compute hashes, synthesize Markdown, construct report input, construct AI evidence,
+    construct PM memo prompts, or call `lotus-manage`, `lotus-report`, or `lotus-ai` directly.
 11. RFC-0041 rebalance-wave rendering on `/workbench/{portfolioId}?mode=waves` is backed by Gateway
-   `/api/v1/dpm/command-center/waves*`; Workbench may render Gateway/manage wave state,
-   report-input readiness, lotus-ai wave PM memo workflow-pack posture, lotus-ai
-   operations-handoff summary posture, and Manage campaign workflow audit evidence through Gateway,
-   but must not build report input, construct AI prompts, generate memo text locally, calculate
-   campaign membership or readiness, mutate maker-checker or assignment state, score PMs, approve
-   trades independently, contact clients, place orders, or call upstream services directly.
+    `/api/v1/dpm/command-center/waves*`; Workbench may render Gateway/manage wave state,
+    report-input readiness, lotus-ai wave PM memo workflow-pack posture, lotus-ai
+    operations-handoff summary posture, and Manage campaign workflow audit evidence through Gateway,
+    but must not build report input, construct AI prompts, generate memo text locally, calculate
+    campaign membership or readiness, mutate maker-checker or assignment state, score PMs, approve
+    trades independently, contact clients, place orders, or call upstream services directly.
 12. RFC-0043 PM copilot workspace rendering on `/workbench/{portfolioId}?mode=copilot` is backed
     by existing Gateway BFF routes for proof-pack PM memo, wave PM memo, operations handoff
     summary, monitoring-exception summary, outcome-review narrative, and PM operating-quality
@@ -326,6 +331,17 @@ Important current product and route truths:
     archive references, treat commentary as authoritative evidence, contact clients, or call
     source services directly. Canonical front-office validation captures governed
     `proposal.memo_evidence_pack` screenshot evidence alongside `proposal.narrative_posture`.
+15. RFC-0026 advisor cockpit rendering on `/recommendations?mode=cockpit` is backed by Gateway
+    advisor cockpit endpoints only:
+    `/api/v1/advisor-cockpit/actions`, `/api/v1/advisor-cockpit/actions/{action_item_id}`,
+    `/api/v1/advisor-cockpit/snapshot`, `/api/v1/advisor-cockpit/supportability`, and
+    `/api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements`.
+    Workbench may render source-owned action items, snapshot counts, supportability posture,
+    unsupported-capability boundaries, meeting-preparation packets, and bounded advisor
+    acknowledgements through Gateway, but it must not calculate suitability, clear blockers, infer
+    client-ready publication, contact clients, place orders, or call `lotus-advise` directly.
+    Canonical front-office validation now proves the action list, snapshot, supportability, an
+    idempotent acknowledgement, and `advisory.advisor_cockpit` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

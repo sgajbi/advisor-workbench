@@ -65,6 +65,7 @@ export interface ValidationSummary {
   gatewayBaseUrl?: string;
   dns?: Array<Record<string, unknown>>;
   apiChecks?: Array<Record<string, unknown>>;
+  workflowPackChecks?: Array<Record<string, unknown>>;
   uiChecks?: Array<Record<string, unknown>>;
   calculationChecks?: Array<Record<string, unknown>>;
   panelClassifications?: Array<Record<string, unknown>>;
@@ -90,11 +91,15 @@ export interface BrowserValidationPage {
 
 export interface BrowserValidationHelpers {
   assertListHasItems(locator: unknown, description: string): Promise<void>;
-  assertTableHasRows(locator: unknown, minimumRows: number, description: string): Promise<void>;
+  assertTableHasRows(
+    locator: unknown,
+    minimumRows: number,
+    description: string,
+  ): Promise<void>;
   screenshotRegisteredPanel(
     page: BrowserValidationPage,
     panelId: string,
-    metadata?: { route?: string; state?: string }
+    metadata?: { route?: string; state?: string },
   ): Promise<void>;
   resolveRegistryRoute(routeTemplate: string): string;
 }

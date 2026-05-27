@@ -52,6 +52,7 @@ import {
   buildRfc3643FeatureCoverage,
 } from "./validation/rfc36-43-feature-coverage.mjs";
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
+import { validateCanonicalAdvisorCockpit } from "./validation/advisor-cockpit-proof.mjs";
 import { createCanonicalPolicyEvaluation } from "./validation/advisory-policy-proof.mjs";
 import {
   buildPayloadScopedIdempotencyKey,
@@ -118,7 +119,10 @@ async function fetchOptionalJson(description, url) {
 }
 
 function readSupportabilityState(supportability) {
-  return readString(supportability?.state) || readString(supportability?.supportability_state);
+  return (
+    readString(supportability?.state) ||
+    readString(supportability?.supportability_state)
+  );
 }
 
 function classifyCommandCenterPanelState(commandCenterPayload) {
@@ -127,13 +131,19 @@ function classifyCommandCenterPanelState(commandCenterPayload) {
   if (explicitState === "ready") {
     return "ready";
   }
-  if (explicitState === "partial" || explicitState === "degraded" || explicitState === "blocked") {
+  if (
+    explicitState === "partial" ||
+    explicitState === "degraded" ||
+    explicitState === "blocked"
+  ) {
     return "partial";
   }
   if (explicitState === "empty") {
     return "empty";
   }
-  const completenessState = readString(supportability?.data_completeness_state)?.toLowerCase();
+  const completenessState = readString(
+    supportability?.data_completeness_state,
+  )?.toLowerCase();
   if (completenessState === "complete") {
     return "ready";
   }
@@ -197,7 +207,11 @@ function extractDpmWaveSourceRefs(response) {
       return;
     }
     if (Array.isArray(candidate.source_refs)) {
-      sourceRefs.push(...candidate.source_refs.filter((item) => item && typeof item === "object"));
+      sourceRefs.push(
+        ...candidate.source_refs.filter(
+          (item) => item && typeof item === "object",
+        ),
+      );
     }
     for (const value of Object.values(candidate)) {
       if (value && typeof value === "object") {
@@ -213,7 +227,10 @@ function hasCoreDpmPortfolioUniverseSourceRef(response) {
   return extractDpmWaveSourceRefs(response).some((sourceRef) => {
     const sourceSystem = readString(sourceRef.source_system)?.toLowerCase();
     const sourceType = readString(sourceRef.source_type);
-    return sourceSystem === "lotus-core" && sourceType === "DpmPortfolioUniverseCandidate";
+    return (
+      sourceSystem === "lotus-core" &&
+      sourceType === "DpmPortfolioUniverseCandidate"
+    );
   });
 }
 
@@ -228,13 +245,19 @@ function extractWorkbenchRebalanceRunId(gatewayOverview) {
   if (latestRunId) {
     return latestRunId;
   }
-  const recentRuns = Array.isArray(snapshot?.recent_runs) ? snapshot.recent_runs : [];
-  const recentRun = recentRuns.find((item) => readString(item?.rebalance_run_id));
+  const recentRuns = Array.isArray(snapshot?.recent_runs)
+    ? snapshot.recent_runs
+    : [];
+  const recentRun = recentRuns.find((item) =>
+    readString(item?.rebalance_run_id),
+  );
   return readString(recentRun?.rebalance_run_id);
 }
 
 function recordArrayCount(value) {
-  return Array.isArray(value) ? value.filter((item) => item && typeof item === "object").length : 0;
+  return Array.isArray(value)
+    ? value.filter((item) => item && typeof item === "object").length
+    : 0;
 }
 
 function recordMapCount(value) {
@@ -251,7 +274,8 @@ function recordMapCount(value) {
 
 function sourceEvidenceCount(proofPackPayload) {
   const sourceHashCount =
-    recordArrayCount(proofPackPayload.source_hashes) || recordMapCount(proofPackPayload.source_hashes);
+    recordArrayCount(proofPackPayload.source_hashes) ||
+    recordMapCount(proofPackPayload.source_hashes);
   const lineageCount = recordArrayCount(proofPackPayload.source_lineage);
   return sourceHashCount + lineageCount;
 }
@@ -422,11 +446,13 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     `${pmQualityBaseUrl}/score-runs`,
     "DPM PM operating-quality score-run create",
     timeoutMs,
-    { body: scoreRunRequest }
+    { body: scoreRunRequest },
   );
   const scoreRunId = extractPmQualityScoreRunId(scoreRunResponse);
   if (!scoreRunId) {
-    throw new Error("DPM PM operating-quality score-run create returned no score-run id.");
+    throw new Error(
+      "DPM PM operating-quality score-run create returned no score-run id.",
+    );
   }
 
   const bookSourceRef = buildPmQualitySourceRef({
@@ -466,12 +492,13 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
           },
         ],
       },
-    }
+    },
   );
-  const fairnessAnalysisId = extractPmQualityFairnessAnalysisId(fairnessResponse);
+  const fairnessAnalysisId =
+    extractPmQualityFairnessAnalysisId(fairnessResponse);
   if (!fairnessAnalysisId) {
     throw new Error(
-      "DPM PM operating-quality fairness-analysis create returned no fairness-analysis id."
+      "DPM PM operating-quality fairness-analysis create returned no fairness-analysis id.",
     );
   }
 
@@ -487,7 +514,8 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
         action_type: "ACKNOWLEDGE",
         action_state: "REVIEW_REQUIRED",
         review_action_ref: `PMQ-CANONICAL-REVIEW-${scoreRunId}`,
-        review_reason: "Canonical live validation recorded bounded supervisory review evidence.",
+        review_reason:
+          "Canonical live validation recorded bounded supervisory review evidence.",
         actor_id: "workbench-system",
         policy_id: "pmq_canonical_dpm",
         policy_version: "2026.05",
@@ -502,11 +530,13 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
           }),
         ],
       },
-    }
+    },
   );
   const reviewActionId = extractPmQualityReviewActionId(reviewResponse);
   if (!reviewActionId) {
-    throw new Error("DPM PM operating-quality review-action create returned no review-action id.");
+    throw new Error(
+      "DPM PM operating-quality review-action create returned no review-action id.",
+    );
   }
 
   const summaryResponse = await postJson(
@@ -536,65 +566,74 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
           }),
         ],
       },
-    }
+    },
   );
-  const summaryInvocationId = extractPmQualitySummaryInvocationId(summaryResponse);
+  const summaryInvocationId =
+    extractPmQualitySummaryInvocationId(summaryResponse);
   if (!summaryInvocationId) {
     throw new Error(
-      "DPM PM operating-quality summary-invocation create returned no summary-invocation id."
+      "DPM PM operating-quality summary-invocation create returned no summary-invocation id.",
     );
   }
 
   const scoreRunList = await fetchJson(
     summary,
     `${pmQualityBaseUrl}/score-runs?book_id=${encodeURIComponent(
-      dpmCommandCenterDefaults.bookId
+      dpmCommandCenterDefaults.bookId,
     )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
     "DPM PM operating-quality score-run list",
-    timeoutMs
+    timeoutMs,
   );
   const reviewActionList = await fetchJson(
     summary,
     `${pmQualityBaseUrl}/review-actions?target_type=SCORE_RUN&target_id=${encodeURIComponent(
-      scoreRunId
+      scoreRunId,
     )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
     "DPM PM operating-quality review-action list",
-    timeoutMs
+    timeoutMs,
   );
   const fairnessAnalysisList = await fetchJson(
     summary,
     `${pmQualityBaseUrl}/fairness-analyses?policy_id=pmq_canonical_dpm&policy_version=2026.05&as_of_date=${encodeURIComponent(
-      asOfDate
+      asOfDate,
     )}&limit=10&offset=0`,
     "DPM PM operating-quality fairness-analysis list",
-    timeoutMs
+    timeoutMs,
   );
   const summaryInvocationList = await fetchJson(
     summary,
     `${pmQualityBaseUrl}/summary-invocations?score_run_id=${encodeURIComponent(
-      scoreRunId
+      scoreRunId,
     )}&review_action_id=${encodeURIComponent(reviewActionId)}&as_of_date=${encodeURIComponent(
-      asOfDate
+      asOfDate,
     )}&limit=10&offset=0`,
     "DPM PM operating-quality summary-invocation list",
-    timeoutMs
+    timeoutMs,
   );
   if (extractPmQualityScoreRunId(scoreRunList) !== scoreRunId) {
-    throw new Error("DPM PM operating-quality score-run list did not return the seeded score run.");
+    throw new Error(
+      "DPM PM operating-quality score-run list did not return the seeded score run.",
+    );
   }
   if (extractPmQualityReviewActionId(reviewActionList) !== reviewActionId) {
     throw new Error(
-      "DPM PM operating-quality review-action list did not return the seeded review action."
+      "DPM PM operating-quality review-action list did not return the seeded review action.",
     );
   }
-  if (extractPmQualityFairnessAnalysisId(fairnessAnalysisList) !== fairnessAnalysisId) {
+  if (
+    extractPmQualityFairnessAnalysisId(fairnessAnalysisList) !==
+    fairnessAnalysisId
+  ) {
     throw new Error(
-      "DPM PM operating-quality fairness-analysis list did not return the seeded analysis."
+      "DPM PM operating-quality fairness-analysis list did not return the seeded analysis.",
     );
   }
-  if (extractPmQualitySummaryInvocationId(summaryInvocationList) !== summaryInvocationId) {
+  if (
+    extractPmQualitySummaryInvocationId(summaryInvocationList) !==
+    summaryInvocationId
+  ) {
     throw new Error(
-      "DPM PM operating-quality summary-invocation list did not return the seeded invocation."
+      "DPM PM operating-quality summary-invocation list did not return the seeded invocation.",
     );
   }
 
@@ -634,7 +673,7 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/foundation/portfolios/${portfolioId}/workspace`,
     "Foundation workspace",
-    timeoutMs
+    timeoutMs,
   );
   if (foundationWorkspace?.portfolio?.portfolio_id !== portfolioId) {
     throw new Error(`Foundation workspace did not resolve ${portfolioId}.`);
@@ -649,7 +688,7 @@ async function run() {
     (payload) =>
       payload?.capabilities?.evidence?.state === "supported"
         ? true
-        : `evidence state is ${payload?.capabilities?.evidence?.state ?? "missing"}`
+        : `evidence state is ${payload?.capabilities?.evidence?.state ?? "missing"}`,
   );
   if (!performanceSummary?.portfolio_id) {
     throw new Error("Performance summary returned no portfolio payload.");
@@ -659,7 +698,7 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     "Performance details",
-    timeoutMs
+    timeoutMs,
   );
   if (!performanceDetails?.portfolio_id) {
     throw new Error("Performance details returned no portfolio payload.");
@@ -669,7 +708,7 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
     "Risk summary",
-    timeoutMs
+    timeoutMs,
   );
   if (!riskSummary?.portfolio_id) {
     throw new Error("Risk summary returned no portfolio payload.");
@@ -679,25 +718,25 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?period=YTD&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
     "Risk concentration",
-    timeoutMs
+    timeoutMs,
   );
   const riskDrawdown = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_underwater_series=true`,
     "Risk drawdown",
-    timeoutMs
+    timeoutMs,
   );
   const riskRolling = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_time_series=true`,
     "Risk rolling",
-    timeoutMs
+    timeoutMs,
   );
   const riskAttribution = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&attribution_type=total_risk&grouping_dimension=sector`,
     "Risk attribution",
-    timeoutMs
+    timeoutMs,
   );
   for (const [description, payload] of [
     ["Risk concentration", riskConcentration],
@@ -706,7 +745,9 @@ async function run() {
     ["Risk attribution", riskAttribution],
   ]) {
     if (payload?.state !== "ready") {
-      throw new Error(`${description} returned non-ready state: ${String(payload?.state)}.`);
+      throw new Error(
+        `${description} returned non-ready state: ${String(payload?.state)}.`,
+      );
     }
   }
   assertPerformanceCalculationSanity({
@@ -729,7 +770,7 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     "Advisor brief",
-    timeoutMs
+    timeoutMs,
   );
   if (!advisorBrief?.summary) {
     throw new Error("Advisor brief returned no summary.");
@@ -742,7 +783,8 @@ async function run() {
     route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
     sourceRunId: advisorBrief.workflow_pack_run.run_id,
     resultReviewState: advisorBrief.workflow_pack_run.review_state,
-    resultSupportabilityStatus: advisorBrief.workflow_pack_run.supportability_status,
+    resultSupportabilityStatus:
+      advisorBrief.workflow_pack_run.supportability_status,
   });
 
   await validateAdvisorBriefWorkflowPackReviewChain({
@@ -779,7 +821,7 @@ async function run() {
   };
   const proposalCreateIdempotencyKey = buildPayloadScopedIdempotencyKey(
     "wb-canonical-narrative",
-    proposalCreateBody
+    proposalCreateBody,
   );
   const proposalCreate = await sendJson(
     summary,
@@ -792,15 +834,20 @@ async function run() {
       headers: {
         "Idempotency-Key": proposalCreateIdempotencyKey,
       },
-    }
+    },
   );
   const proposalCreateData = extractGatewayEnvelopeData(proposalCreate);
   const proposalId = readString(proposalCreateData?.proposal?.proposal_id);
   const proposalVersionNo = proposalCreateData?.version?.version_no ?? null;
-  const proposalVersionId = readString(proposalCreateData?.version?.proposal_version_id);
-  const proposalNarrative = proposalCreateData?.version?.artifact?.proposal_narrative;
+  const proposalVersionId = readString(
+    proposalCreateData?.version?.proposal_version_id,
+  );
+  const proposalNarrative =
+    proposalCreateData?.version?.artifact?.proposal_narrative;
   if (!proposalId || !proposalVersionId || !proposalNarrative?.narrative_id) {
-    throw new Error("Canonical proposal narrative proof did not create a narrative proposal.");
+    throw new Error(
+      "Canonical proposal narrative proof did not create a narrative proposal.",
+    );
   }
   summary.workflowPackChecks.push({
     actionType: "PROPOSAL_NARRATIVE_CREATED",
@@ -812,10 +859,19 @@ async function run() {
     versionNo: proposalVersionNo,
   });
 
-  await createCanonicalPolicyEvaluation({
+  const policyEvaluationProof = await createCanonicalPolicyEvaluation({
     summary,
     scenario: advisoryScenario.policyEvaluation,
     gatewayBaseUrl,
+    proposalId,
+    proposalVersionId,
+    timeoutMs,
+  });
+  const advisorCockpitProof = await validateCanonicalAdvisorCockpit({
+    summary,
+    scenario: advisoryScenario.advisorCockpit,
+    gatewayBaseUrl,
+    portfolioId,
     proposalId,
     proposalVersionId,
     timeoutMs,
@@ -825,24 +881,30 @@ async function run() {
     summary,
     "http://manage.dev.lotus/api/v1/rebalance/supportability/summary",
     "lotus-manage supportability summary",
-    timeoutMs
+    timeoutMs,
   );
   const manageSupportabilityState = readSupportabilityState(
-    manageSupportabilitySummary?.supportability
+    manageSupportabilitySummary?.supportability,
   );
   if (!manageSupportabilityState) {
-    throw new Error("lotus-manage supportability summary returned no bounded supportability state.");
+    throw new Error(
+      "lotus-manage supportability summary returned no bounded supportability state.",
+    );
   }
   summary.sourceSupportability = {
     ...(summary.sourceSupportability ?? {}),
     lotusManageActionRegister: {
       state: manageSupportabilityState,
       reason: readString(manageSupportabilitySummary?.supportability?.reason),
-      freshnessBucket: readString(manageSupportabilitySummary?.supportability?.freshness_bucket),
+      freshnessBucket: readString(
+        manageSupportabilitySummary?.supportability?.freshness_bucket,
+      ),
       runCount: manageSupportabilitySummary?.supportability?.run_count ?? null,
-      operationCount: manageSupportabilitySummary?.supportability?.operation_count ?? null,
+      operationCount:
+        manageSupportabilitySummary?.supportability?.operation_count ?? null,
       workflowDecisionCount:
-        manageSupportabilitySummary?.supportability?.workflow_decision_count ?? null,
+        manageSupportabilitySummary?.supportability?.workflow_decision_count ??
+        null,
     },
   };
 
@@ -850,25 +912,34 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/outcome-reviews?portfolio_id=${portfolioId}&limit=5`,
     "DPM outcome reviews",
-    timeoutMs
+    timeoutMs,
   );
-  const outcomeReviewItems = outcomeReviews?.data?.items ?? outcomeReviews?.items ?? [];
+  const outcomeReviewItems =
+    outcomeReviews?.data?.items ?? outcomeReviews?.items ?? [];
   if (!Array.isArray(outcomeReviewItems) || outcomeReviewItems.length < 1) {
-    throw new Error("DPM outcome-review list returned no manage-backed reviews.");
+    throw new Error(
+      "DPM outcome-review list returned no manage-backed reviews.",
+    );
   }
   const gatewayOverview = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/overview`,
     "Gateway workbench overview",
-    timeoutMs
+    timeoutMs,
   );
   if (gatewayOverview?.portfolio?.portfolio_id !== portfolioId) {
-    throw new Error("Gateway workbench overview returned no portfolio payload.");
+    throw new Error(
+      "Gateway workbench overview returned no portfolio payload.",
+    );
   }
-  const proofPackSourceReview = outcomeReviewItems.find((item) => readString(item?.mandate_id));
+  const proofPackSourceReview = outcomeReviewItems.find((item) =>
+    readString(item?.mandate_id),
+  );
   const rebalanceRunId = extractWorkbenchRebalanceRunId(gatewayOverview);
   if (!rebalanceRunId) {
-    throw new Error("Gateway workbench overview returned no manage rebalance-run reference for proof-pack generation.");
+    throw new Error(
+      "Gateway workbench overview returned no manage rebalance-run reference for proof-pack generation.",
+    );
   }
   const proofPackRequestBody = {
     source_type: "REBALANCE_RUN",
@@ -878,11 +949,12 @@ async function run() {
     include_report_input: true,
     include_ai_evidence_input: true,
     actor_id: "workbench-proof-pack-operator",
-    reason: "Workbench PM generated proof pack from Gateway-backed rebalance run.",
+    reason:
+      "Workbench PM generated proof pack from Gateway-backed rebalance run.",
   };
   const proofPackIdempotencyKey = buildPayloadScopedIdempotencyKey(
     "wb-proof-pack",
-    proofPackRequestBody
+    proofPackRequestBody,
   );
   const generatedProofPack = await postJson(
     summary,
@@ -892,33 +964,47 @@ async function run() {
     {
       idempotency_key: proofPackIdempotencyKey,
       body: proofPackRequestBody,
-    }
+    },
   );
   const proofPackId = extractGeneratedProofPackId(generatedProofPack);
   if (!proofPackId) {
-    throw new Error("DPM proof-pack generation returned no proof-pack reference.");
+    throw new Error(
+      "DPM proof-pack generation returned no proof-pack reference.",
+    );
   }
   const proofPack = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}`,
     "DPM proof-pack evidence",
-    timeoutMs
+    timeoutMs,
   );
-  const proofPackPayload = proofPack?.data?.proof_pack ?? proofPack?.data ?? proofPack;
+  const proofPackPayload =
+    proofPack?.data?.proof_pack ?? proofPack?.data ?? proofPack;
   if (!proofPackPayload?.proof_pack_id) {
     throw new Error("DPM proof-pack evidence returned no proof-pack identity.");
   }
-  const proofPackSectionCount = recordArrayCount(proofPackPayload.sections ?? proofPackPayload.section_posture);
+  const proofPackSectionCount = recordArrayCount(
+    proofPackPayload.sections ?? proofPackPayload.section_posture,
+  );
   const proofPackSourceHashCount = sourceEvidenceCount(proofPackPayload);
   if (proofPackSectionCount < 1) {
-    throw new Error("DPM proof-pack evidence returned no reviewable proof-pack sections.");
+    throw new Error(
+      "DPM proof-pack evidence returned no reviewable proof-pack sections.",
+    );
   }
   if (proofPackSourceHashCount < 1) {
-    throw new Error("DPM proof-pack evidence returned no source hashes or lineage references.");
+    throw new Error(
+      "DPM proof-pack evidence returned no source hashes or lineage references.",
+    );
   }
   const proofPackSupportability = proofPack?.supportability;
-  if (proofPackSupportability?.state && !isReviewableProofPackState(proofPackSupportability.state)) {
-    throw new Error(`DPM proof-pack evidence returned non-reviewable state: ${proofPackSupportability.state}.`);
+  if (
+    proofPackSupportability?.state &&
+    !isReviewableProofPackState(proofPackSupportability.state)
+  ) {
+    throw new Error(
+      `DPM proof-pack evidence returned non-reviewable state: ${proofPackSupportability.state}.`,
+    );
   }
   const proofPackAiPmMemo = await postJson(
     summary,
@@ -928,17 +1014,24 @@ async function run() {
     {
       requested_outputs: ["pm_memo", "rationale_summary", "evidence_gaps"],
       audience: ["portfolio_manager", "investment_control"],
-    }
+    },
   );
   const proofPackAiPmMemoPayload = proofPackAiPmMemo?.data ?? proofPackAiPmMemo;
   const proofPackAiPmMemoSourceService =
-    readString(proofPackAiPmMemo?.source_service) ?? readString(proofPackAiPmMemo?.sourceService);
+    readString(proofPackAiPmMemo?.source_service) ??
+    readString(proofPackAiPmMemo?.sourceService);
   if (proofPackAiPmMemoSourceService !== "lotus-ai") {
-    throw new Error("DPM proof-pack AI PM memo did not return lotus-ai source authority.");
+    throw new Error(
+      "DPM proof-pack AI PM memo did not return lotus-ai source authority.",
+    );
   }
-  const proofPackAiPmMemoRunId = extractWorkflowPackRunId(proofPackAiPmMemoPayload);
+  const proofPackAiPmMemoRunId = extractWorkflowPackRunId(
+    proofPackAiPmMemoPayload,
+  );
   if (!proofPackAiPmMemoRunId) {
-    throw new Error("DPM proof-pack AI PM memo returned no workflow-pack run reference.");
+    throw new Error(
+      "DPM proof-pack AI PM memo returned no workflow-pack run reference.",
+    );
   }
   summary.workflowPackChecks.push({
     description: "DPM proof-pack AI PM memo",
@@ -966,16 +1059,20 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center?${commandCenterParams.toString()}`,
     "DPM command-center summary",
-    timeoutMs
+    timeoutMs,
   );
   const dpmCommandCenterPayload = dpmCommandCenter?.data ?? dpmCommandCenter;
   if (!dpmCommandCenterPayload?.supportability) {
-    throw new Error("DPM command-center summary returned no manage supportability envelope.");
+    throw new Error(
+      "DPM command-center summary returned no manage supportability envelope.",
+    );
   }
-  const dpmCommandCenterPanelState = classifyCommandCenterPanelState(dpmCommandCenterPayload);
+  const dpmCommandCenterPanelState = classifyCommandCenterPanelState(
+    dpmCommandCenterPayload,
+  );
   if (!["ready", "partial"].includes(dpmCommandCenterPanelState)) {
     throw new Error(
-      `DPM command-center summary did not return canonical populated posture; observed ${dpmCommandCenterPanelState}.`
+      `DPM command-center summary did not return canonical populated posture; observed ${dpmCommandCenterPanelState}.`,
     );
   }
 
@@ -983,24 +1080,35 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/portfolios/${encodeURIComponent(portfolioId)}/memory?limit=100`,
     "DPM portfolio memory",
-    timeoutMs
+    timeoutMs,
   );
   const portfolioMemorySupportability = portfolioMemory?.supportability;
   const portfolioMemoryPayload = portfolioMemory?.data ?? portfolioMemory;
   const portfolioMemoryEvents = Array.isArray(portfolioMemoryPayload?.events)
     ? portfolioMemoryPayload.events
     : [];
-  const portfolioMemoryState = readSupportabilityState(portfolioMemorySupportability);
-  const supportedPortfolioMemoryStates = new Set(["ready", "partial", "degraded", "blocked"]);
-  if (!supportedPortfolioMemoryStates.has(portfolioMemoryState?.toLowerCase())) {
+  const portfolioMemoryState = readSupportabilityState(
+    portfolioMemorySupportability,
+  );
+  const supportedPortfolioMemoryStates = new Set([
+    "ready",
+    "partial",
+    "degraded",
+    "blocked",
+  ]);
+  if (
+    !supportedPortfolioMemoryStates.has(portfolioMemoryState?.toLowerCase())
+  ) {
     throw new Error(
       `DPM portfolio memory did not return populated manage supportability; observed ${
         portfolioMemoryState ?? "missing"
-      }.`
+      }.`,
     );
   }
   if (portfolioMemoryEvents.length < 1) {
-    throw new Error("DPM portfolio memory returned no manage-owned timeline events.");
+    throw new Error(
+      "DPM portfolio memory returned no manage-owned timeline events.",
+    );
   }
   if (!readString(portfolioMemorySupportability?.content_hash)) {
     throw new Error("DPM portfolio memory returned no content hash.");
@@ -1009,22 +1117,25 @@ async function run() {
   const dpmExceptions = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/exceptions?tenant_id=${encodeURIComponent(
-      dpmCommandCenterDefaults.tenantId
+      dpmCommandCenterDefaults.tenantId,
     )}&portfolio_manager_id=${encodeURIComponent(
-      dpmCommandCenterDefaults.portfolioManagerId
+      dpmCommandCenterDefaults.portfolioManagerId,
     )}&limit=25&state=ACTIVE`,
     "DPM command-center active exceptions",
-    timeoutMs
+    timeoutMs,
   );
   const dpmExceptionItems =
-    dpmExceptions?.data?.items ?? dpmExceptions?.items ?? dpmExceptions?.exceptions ?? [];
+    dpmExceptions?.data?.items ??
+    dpmExceptions?.items ??
+    dpmExceptions?.exceptions ??
+    [];
   if (!Array.isArray(dpmExceptionItems)) {
     throw new Error("DPM command-center exceptions returned no list envelope.");
   }
 
   const dpmMandate = await fetchOptionalJson(
     "DPM command-center mandate by portfolio",
-    `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/by-portfolio/${portfolioId}`
+    `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/by-portfolio/${portfolioId}`,
   );
   const dpmMandatePayload = dpmMandate?.data ?? dpmMandate;
   const mandateId =
@@ -1039,11 +1150,16 @@ async function run() {
       summary,
       `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health`,
       "DPM command-center mandate health",
-      timeoutMs
+      timeoutMs,
     );
     const dpmMandateHealthPayload = dpmMandateHealth?.data ?? dpmMandateHealth;
-    if (!dpmMandateHealthPayload?.health_state && !dpmMandateHealthPayload?.state) {
-      throw new Error("DPM command-center mandate health returned no health state.");
+    if (
+      !dpmMandateHealthPayload?.health_state &&
+      !dpmMandateHealthPayload?.state
+    ) {
+      throw new Error(
+        "DPM command-center mandate health returned no health state.",
+      );
     }
     mandateHealthObserved = true;
   }
@@ -1058,11 +1174,13 @@ async function run() {
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves?${dpmWaveParams.toString()}`,
     "DPM rebalance waves",
-    timeoutMs
+    timeoutMs,
   );
   const dpmWaveSupportability = dpmWaves?.supportability;
   if (!readSupportabilityState(dpmWaveSupportability)) {
-    throw new Error("DPM rebalance-wave list returned no manage supportability state.");
+    throw new Error(
+      "DPM rebalance-wave list returned no manage supportability state.",
+    );
   }
   const dpmWavePayload = dpmWaves?.data ?? dpmWaves;
   let dpmWaveId = extractDpmWaveId(dpmWavePayload);
@@ -1075,20 +1193,23 @@ async function run() {
       body: {
         trigger_type: "EXPLICIT_PORTFOLIO_LIST",
         trigger_id: `live-validation-wave-${portfolioId}-${dpmCommandCenterDefaults.asOfDate}`,
-        rationale: "Canonical Workbench live validation previewed an RFC-0041 rebalance wave.",
+        rationale:
+          "Canonical Workbench live validation previewed an RFC-0041 rebalance wave.",
         as_of_date: dpmCommandCenterDefaults.asOfDate,
         actor_id: "workbench-system",
         portfolios: [{ portfolio_id: portfolioId }],
       },
-    }
+    },
   );
   const dpmWavePreviewSupportability = dpmWavePreview?.supportability;
-  const dpmWavePreviewSupportabilityState = readSupportabilityState(dpmWavePreviewSupportability);
+  const dpmWavePreviewSupportabilityState = readSupportabilityState(
+    dpmWavePreviewSupportability,
+  );
   if (dpmWavePreviewSupportabilityState?.toLowerCase() !== "ready") {
     throw new Error(
       `DPM rebalance-wave preview did not return ready manage supportability; observed ${
         dpmWavePreviewSupportabilityState ?? "missing"
-      }.`
+      }.`,
     );
   }
   const multiPortfolioWaveScenario =
@@ -1109,22 +1230,27 @@ async function run() {
         actor_id: "workbench-system",
         portfolios: multiPortfolioWaveScenario.portfolios,
       },
-    }
+    },
   );
   const multiPortfolioWavePreviewSupportabilityState = readSupportabilityState(
-    multiPortfolioWavePreview?.supportability
+    multiPortfolioWavePreview?.supportability,
   );
   if (multiPortfolioWavePreviewSupportabilityState?.toLowerCase() !== "ready") {
     throw new Error(
       `DPM rebalance-wave multi-portfolio preview did not return ready manage supportability; observed ${
         multiPortfolioWavePreviewSupportabilityState ?? "missing"
-      }.`
+      }.`,
     );
   }
-  const multiPortfolioWaveItemCount = extractDpmWaveItemCount(multiPortfolioWavePreview);
-  if (multiPortfolioWaveItemCount < multiPortfolioWaveScenario.minimumPortfolioCount) {
+  const multiPortfolioWaveItemCount = extractDpmWaveItemCount(
+    multiPortfolioWavePreview,
+  );
+  if (
+    multiPortfolioWaveItemCount <
+    multiPortfolioWaveScenario.minimumPortfolioCount
+  ) {
     throw new Error(
-      `DPM rebalance-wave multi-portfolio preview returned ${multiPortfolioWaveItemCount} item(s); expected at least ${multiPortfolioWaveScenario.minimumPortfolioCount}.`
+      `DPM rebalance-wave multi-portfolio preview returned ${multiPortfolioWaveItemCount} item(s); expected at least ${multiPortfolioWaveScenario.minimumPortfolioCount}.`,
     );
   }
   const coreCandidateSourcePreviewBody = {
@@ -1146,25 +1272,29 @@ async function run() {
     timeoutMs,
     {
       body: coreCandidateSourcePreviewBody,
-    }
+    },
   );
   const coreCandidateSourcePreviewState = readSupportabilityState(
-    coreCandidateSourcePreview?.supportability
+    coreCandidateSourcePreview?.supportability,
   );
   if (coreCandidateSourcePreviewState?.toLowerCase() !== "ready") {
     throw new Error(
       `DPM Core candidate-source preview did not return ready manage supportability; observed ${
         coreCandidateSourcePreviewState ?? "missing"
-      }.`
+      }.`,
     );
   }
-  const coreCandidateSourceItemCount = extractDpmWaveItemCount(coreCandidateSourcePreview);
+  const coreCandidateSourceItemCount = extractDpmWaveItemCount(
+    coreCandidateSourcePreview,
+  );
   if (coreCandidateSourceItemCount < 1) {
-    throw new Error("DPM Core candidate-source preview returned no candidate portfolios.");
+    throw new Error(
+      "DPM Core candidate-source preview returned no candidate portfolios.",
+    );
   }
   if (!hasCoreDpmPortfolioUniverseSourceRef(coreCandidateSourcePreview)) {
     throw new Error(
-      "DPM Core candidate-source preview did not preserve lotus-core DpmPortfolioUniverseCandidate source refs."
+      "DPM Core candidate-source preview did not preserve lotus-core DpmPortfolioUniverseCandidate source refs.",
     );
   }
   const coreCandidateSourceRejected = await postJsonExpectingStatus(
@@ -1179,17 +1309,20 @@ async function run() {
         trigger_id: `${coreCandidateSourcePreviewBody.trigger_id}-invalid-mixed-request`,
         portfolios: [{ portfolio_id: portfolioId }],
       },
-    }
+    },
   );
   if (
     !payloadTextIncludes(
       coreCandidateSourceRejected,
-      "CORE_DPM_PORTFOLIO_UNIVERSE candidate discovery supplies the portfolio set"
+      "CORE_DPM_PORTFOLIO_UNIVERSE candidate discovery supplies the portfolio set",
     ) ||
-    !payloadTextIncludes(coreCandidateSourceRejected, "DpmPortfolioUniverseCandidate:v1")
+    !payloadTextIncludes(
+      coreCandidateSourceRejected,
+      "DpmPortfolioUniverseCandidate:v1",
+    )
   ) {
     throw new Error(
-      "DPM Core candidate-source invalid request did not return the governed no-caller-portfolio boundary message."
+      "DPM Core candidate-source invalid request did not return the governed no-caller-portfolio boundary message.",
     );
   }
   summary.supportabilityChecks.push({
@@ -1222,30 +1355,36 @@ async function run() {
         body: {
           trigger_type: "EXPLICIT_PORTFOLIO_LIST",
           trigger_id: `live-validation-wave-${portfolioId}-${dpmCommandCenterDefaults.asOfDate}`,
-          rationale: "Canonical Workbench live validation created an RFC-0041 rebalance wave.",
+          rationale:
+            "Canonical Workbench live validation created an RFC-0041 rebalance wave.",
           as_of_date: dpmCommandCenterDefaults.asOfDate,
           actor_id: "workbench-system",
           portfolios: [{ portfolio_id: portfolioId }],
         },
-      }
+      },
     );
     dpmWaveId = extractDpmWaveId(dpmWaveCreate);
   }
   if (!dpmWaveId) {
-    throw new Error("DPM rebalance-wave create returned no manage-owned wave id.");
+    throw new Error(
+      "DPM rebalance-wave create returned no manage-owned wave id.",
+    );
   }
   const dpmWaveReportInput = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/${encodeURIComponent(dpmWaveId)}/report-input`,
     "DPM rebalance-wave report input",
-    timeoutMs
+    timeoutMs,
   );
-  const dpmWaveReportInputPayload = dpmWaveReportInput?.data ?? dpmWaveReportInput;
+  const dpmWaveReportInputPayload =
+    dpmWaveReportInput?.data ?? dpmWaveReportInput;
   const dpmWaveReportInputRef =
     readString(dpmWaveReportInputPayload?.report_input_ref) ||
     readString(dpmWaveReportInputPayload?.evidence_ref?.ref_id);
   if (!dpmWaveReportInputRef) {
-    throw new Error("DPM rebalance-wave report input returned no report input evidence ref.");
+    throw new Error(
+      "DPM rebalance-wave report input returned no report input evidence ref.",
+    );
   }
   const dpmWaveAiPmMemo = await postJson(
     summary,
@@ -1253,19 +1392,28 @@ async function run() {
     "DPM rebalance-wave AI PM memo",
     timeoutMs,
     {
-      requested_outputs: ["wave_pm_memo", "approval_checklist", "evidence_gaps"],
+      requested_outputs: [
+        "wave_pm_memo",
+        "approval_checklist",
+        "evidence_gaps",
+      ],
       audience: ["portfolio_manager", "investment_control", "operations"],
-    }
+    },
   );
   const dpmWaveAiPmMemoPayload = dpmWaveAiPmMemo?.data ?? dpmWaveAiPmMemo;
   const dpmWaveAiPmMemoSourceService =
-    readString(dpmWaveAiPmMemo?.source_service) ?? readString(dpmWaveAiPmMemo?.sourceService);
+    readString(dpmWaveAiPmMemo?.source_service) ??
+    readString(dpmWaveAiPmMemo?.sourceService);
   if (dpmWaveAiPmMemoSourceService !== "lotus-ai") {
-    throw new Error("DPM rebalance-wave AI PM memo did not return lotus-ai source authority.");
+    throw new Error(
+      "DPM rebalance-wave AI PM memo did not return lotus-ai source authority.",
+    );
   }
   const dpmWaveAiPmMemoRunId = extractWorkflowPackRunId(dpmWaveAiPmMemoPayload);
   if (!dpmWaveAiPmMemoRunId) {
-    throw new Error("DPM rebalance-wave AI PM memo returned no workflow-pack run reference.");
+    throw new Error(
+      "DPM rebalance-wave AI PM memo returned no workflow-pack run reference.",
+    );
   }
   summary.workflowPackChecks.push({
     description: "DPM rebalance-wave AI PM memo",
@@ -1279,116 +1427,221 @@ async function run() {
       "UNKNOWN",
   });
 
-  const pmOperatingQualityEvidence = await ensureCanonicalPmOperatingQualityEvidence();
+  const pmOperatingQualityEvidence =
+    await ensureCanonicalPmOperatingQualityEvidence();
 
   const reportCapabilities = await fetchJson(
     summary,
     "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default",
     "lotus-report integration capabilities",
-    timeoutMs
+    timeoutMs,
   );
-  if (!Array.isArray(reportCapabilities?.features) || reportCapabilities.features.length < 1) {
-    throw new Error("lotus-report integration capabilities returned no feature flags.");
+  if (
+    !Array.isArray(reportCapabilities?.features) ||
+    reportCapabilities.features.length < 1
+  ) {
+    throw new Error(
+      "lotus-report integration capabilities returned no feature flags.",
+    );
   }
 
   await fetchJson(
     summary,
     "http://archive.dev.lotus/health/ready",
     "lotus-archive readiness",
-    timeoutMs
+    timeoutMs,
   );
   await fetchJson(
     summary,
     "http://render.dev.lotus/health/ready",
     "lotus-render readiness",
-    timeoutMs
+    timeoutMs,
   );
 
   const gatewayCapabilities = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/platform/capabilities`,
     "Gateway platform capabilities",
-    timeoutMs
+    timeoutMs,
   );
-  const gatewayModuleHealth = gatewayCapabilities?.data?.normalized?.moduleHealth;
-  if (!gatewayModuleHealth || typeof gatewayModuleHealth.lotus_manage !== "string") {
-    throw new Error("Gateway platform capabilities returned no explicit lotus-manage module health.");
+  const gatewayModuleHealth =
+    gatewayCapabilities?.data?.normalized?.moduleHealth;
+  if (
+    !gatewayModuleHealth ||
+    typeof gatewayModuleHealth.lotus_manage !== "string"
+  ) {
+    throw new Error(
+      "Gateway platform capabilities returned no explicit lotus-manage module health.",
+    );
   }
-  for (const requiredSource of ["lotus_core", "lotus_performance", "lotus_risk"]) {
+  for (const requiredSource of [
+    "lotus_core",
+    "lotus_performance",
+    "lotus_risk",
+  ]) {
     if (gatewayModuleHealth[requiredSource] !== "available") {
-      throw new Error(`Gateway platform capabilities returned non-available ${requiredSource}.`);
+      throw new Error(
+        `Gateway platform capabilities returned non-available ${requiredSource}.`,
+      );
     }
   }
 
-  panelGovernance.recordPanelClassification("portfolio.summary", "ready", "lotus-gateway", {
-    portfolioId,
-  });
-  panelGovernance.recordPanelClassification("portfolio.detailed", "ready", "lotus-gateway", {
-    portfolioId,
-  });
-  panelGovernance.recordPanelClassification("performance.advisor_brief", "ready", "lotus-performance", {
-    sourceMetricMinimum: 3,
-  });
-  panelGovernance.recordPanelClassification("proposal.narrative_posture", "ready", "lotus-advise", {
-    route: `/proposals/${proposalId}`,
-    proposalId,
-    versionNo: proposalVersionNo,
-    narrativeId: proposalNarrative.narrative_id,
-    generationMode: proposalNarrative.generation_mode,
-  });
-  panelGovernance.recordPanelClassification("proposal.memo_evidence_pack", "ready", "lotus-advise", {
-    route: `/proposals/${proposalId}`,
-    proposalId,
-    versionNo: proposalVersionNo,
-    source: "lotus-advise memo evidence-pack posture",
-  });
-  panelGovernance.recordPanelClassification("dpm.outcome_review", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}`,
-    outcomeReviewMinimum: 1,
-  });
-  panelGovernance.recordPanelClassification("dpm.proof_pack", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}`,
-    proofPackId,
-    proofPackBusinessState: proofPackSupportability?.state ?? proofPackPayload.status ?? "UNKNOWN",
-    sectionCount: proofPackSectionCount,
-    sourceHashCount: proofPackSourceHashCount,
-  });
-  panelGovernance.recordPanelClassification("dpm.command_center", dpmCommandCenterPanelState, "lotus-manage", {
-    route: `/workbench/${portfolioId}`,
-    source: "Gateway DPM command-center summary",
-    supportabilityState: readSupportabilityState(dpmCommandCenterPayload.supportability),
-    dataCompletenessState: dpmCommandCenterPayload.supportability.data_completeness_state,
-    reason: readString(dpmCommandCenterPayload.supportability.reason),
-  });
-  panelGovernance.recordPanelClassification("dpm.portfolio_memory", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}`,
-    eventCount: portfolioMemoryEvents.length,
-    source: "Gateway DPM portfolio-memory composition",
-  });
-  panelGovernance.recordPanelClassification("dpm.wave_command_center", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}`,
-    source: "Gateway DPM rebalance-wave composition",
-    waveId: dpmWaveId,
-    reportInputRef: dpmWaveReportInputPayload.report_input_ref,
-    aiMemoRunId: dpmWaveAiPmMemoRunId,
-  });
-  panelGovernance.recordPanelClassification("dpm.construction_alternatives", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}?mode=construction`,
-    source: "Gateway DPM construction alternatives",
-  });
-  panelGovernance.recordPanelClassification("dpm.pm_operating_quality", "ready", "lotus-manage", {
-    route: `/workbench/${portfolioId}?mode=quality`,
-    source: "Gateway DPM PM operating quality",
-    scoreRunId: pmOperatingQualityEvidence.scoreRunId,
-    fairnessAnalysisId: pmOperatingQualityEvidence.fairnessAnalysisId,
-    reviewActionId: pmOperatingQualityEvidence.reviewActionId,
-    summaryInvocationId: pmOperatingQualityEvidence.summaryInvocationId,
-    asOfDate: pmOperatingQualityEvidence.asOfDate,
-  });
-  panelGovernance.recordPanelClassification("dpm.copilot_workspace", "ready", "lotus-ai", {
-    route: `/workbench/${portfolioId}?mode=copilot`,
-    source: "Gateway/lotus-ai DPM workflow-pack workspace",
-  });
+  panelGovernance.recordPanelClassification(
+    "portfolio.summary",
+    "ready",
+    "lotus-gateway",
+    {
+      portfolioId,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "portfolio.detailed",
+    "ready",
+    "lotus-gateway",
+    {
+      portfolioId,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "performance.advisor_brief",
+    "ready",
+    "lotus-performance",
+    {
+      sourceMetricMinimum: 3,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "proposal.narrative_posture",
+    "ready",
+    "lotus-advise",
+    {
+      route: `/proposals/${proposalId}`,
+      proposalId,
+      versionNo: proposalVersionNo,
+      narrativeId: proposalNarrative.narrative_id,
+      generationMode: proposalNarrative.generation_mode,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "proposal.memo_evidence_pack",
+    "ready",
+    "lotus-advise",
+    {
+      route: `/proposals/${proposalId}`,
+      proposalId,
+      versionNo: proposalVersionNo,
+      source: "lotus-advise memo evidence-pack posture",
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "advisory.advisor_cockpit",
+    "ready",
+    "lotus-advise",
+    {
+      route: `/recommendations?portfolioId=${portfolioId}&mode=cockpit`,
+      proposalId,
+      proposalVersionId,
+      policyEvaluationId: policyEvaluationProof.evaluationId,
+      actionItemId: advisorCockpitProof.actionItemId,
+      actionCount: advisorCockpitProof.actionCount,
+      snapshotId: advisorCockpitProof.snapshotId,
+      clientReadyPublication: advisorCockpitProof.clientReadyPublication,
+      supportabilityPosture: advisorCockpitProof.supportabilityPosture,
+      source:
+        "Gateway advisor cockpit action list, snapshot, supportability, and acknowledgement",
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.outcome_review",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}`,
+      outcomeReviewMinimum: 1,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.proof_pack",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}`,
+      proofPackId,
+      proofPackBusinessState:
+        proofPackSupportability?.state ?? proofPackPayload.status ?? "UNKNOWN",
+      sectionCount: proofPackSectionCount,
+      sourceHashCount: proofPackSourceHashCount,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.command_center",
+    dpmCommandCenterPanelState,
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}`,
+      source: "Gateway DPM command-center summary",
+      supportabilityState: readSupportabilityState(
+        dpmCommandCenterPayload.supportability,
+      ),
+      dataCompletenessState:
+        dpmCommandCenterPayload.supportability.data_completeness_state,
+      reason: readString(dpmCommandCenterPayload.supportability.reason),
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.portfolio_memory",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}`,
+      eventCount: portfolioMemoryEvents.length,
+      source: "Gateway DPM portfolio-memory composition",
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.wave_command_center",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}`,
+      source: "Gateway DPM rebalance-wave composition",
+      waveId: dpmWaveId,
+      reportInputRef: dpmWaveReportInputPayload.report_input_ref,
+      aiMemoRunId: dpmWaveAiPmMemoRunId,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.construction_alternatives",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}?mode=construction`,
+      source: "Gateway DPM construction alternatives",
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.pm_operating_quality",
+    "ready",
+    "lotus-manage",
+    {
+      route: `/workbench/${portfolioId}?mode=quality`,
+      source: "Gateway DPM PM operating quality",
+      scoreRunId: pmOperatingQualityEvidence.scoreRunId,
+      fairnessAnalysisId: pmOperatingQualityEvidence.fairnessAnalysisId,
+      reviewActionId: pmOperatingQualityEvidence.reviewActionId,
+      summaryInvocationId: pmOperatingQualityEvidence.summaryInvocationId,
+      asOfDate: pmOperatingQualityEvidence.asOfDate,
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "dpm.copilot_workspace",
+    "ready",
+    "lotus-ai",
+    {
+      route: `/workbench/${portfolioId}?mode=copilot`,
+      source: "Gateway/lotus-ai DPM workflow-pack workspace",
+    },
+  );
   panelGovernance.assertNoUnsupportedBlankPanels();
   panelGovernance.assertPanelSupportabilityAlignment();
   summary.rfc3643FeatureCoverage = buildRfc3643FeatureCoverage(summary, {
@@ -1415,7 +1668,8 @@ async function run() {
     wavePreview: dpmWavePreviewSupportabilityState?.toLowerCase() === "ready",
     multiPortfolioWavePreview:
       multiPortfolioWavePreviewSupportabilityState?.toLowerCase() === "ready" &&
-      multiPortfolioWaveItemCount >= multiPortfolioWaveScenario.minimumPortfolioCount,
+      multiPortfolioWaveItemCount >=
+        multiPortfolioWaveScenario.minimumPortfolioCount,
     waveId: dpmWaveId,
     waveReportInput: dpmWaveReportInputRef,
     waveAiMemo: dpmWaveAiPmMemoRunId,
@@ -1440,24 +1694,30 @@ async function run() {
     summary,
     `${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`,
     "Workbench portfolio route",
-    timeoutMs
+    timeoutMs,
   );
   if (!portfolioShell.includes("Portfolio")) {
-    throw new Error("Workbench portfolio route did not render the Portfolio shell.");
+    throw new Error(
+      "Workbench portfolio route did not render the Portfolio shell.",
+    );
   }
 
   const performanceShell = await fetchText(
     summary,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}`,
     "Workbench performance route",
-    timeoutMs
+    timeoutMs,
   );
   if (!performanceShell.includes("Performance")) {
-    throw new Error("Workbench performance route did not render the Performance shell.");
+    throw new Error(
+      "Workbench performance route did not render the Performance shell.",
+    );
   }
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } });
+  const page = await browser.newPage({
+    viewport: { width: 1600, height: 1200 },
+  });
   const browserHelpers = createBrowserValidationHelpers({
     outputDir,
     summary,
@@ -1602,7 +1862,9 @@ async function run() {
 
   await writeValidationSummary(summaryPath, summary);
   await writeShotIndex(shotIndexPath, summary, summaryPath);
-  console.log(`Live canonical Workbench validation passed for ${portfolioId}. Screenshots: ${outputDir}`);
+  console.log(
+    `Live canonical Workbench validation passed for ${portfolioId}. Screenshots: ${outputDir}`,
+  );
 }
 
 run().catch((error) => {

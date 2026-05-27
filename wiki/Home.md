@@ -20,9 +20,11 @@
   mandate command center, rebalance waves, construction alternatives, portfolio memory,
   PM copilot workflow-pack requests, outcome reviews, proof-pack evidence with governed PM memo
   requests, and manage-owned operating evidence
-- recommendations remain compatibility routes; proposals now have bounded direct Gateway-backed
-  queue/detail routes for RFC-0023 advisor narrative delivery posture, while the top-level shell
-  `Proposal` entry remains disabled
+- recommendations remain compatibility routes; `mode=cockpit` is the RFC-0026 Gateway-backed
+  advisor cockpit over Advise-owned action items, supportability, meeting preparation, and bounded
+  acknowledgements. Proposals have bounded direct Gateway-backed queue/detail routes for
+  RFC-0023 advisor narrative delivery posture, while the top-level shell `Proposal` entry remains
+  disabled
 - shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries
 
 ## Most important commands
