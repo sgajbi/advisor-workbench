@@ -1,0 +1,138 @@
+.cockpitHeader {
+  display: grid;
+  gap: 12px;
+}
+
+.decisionPanel {
+  align-items: flex-start;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.decisionPanel h2 {
+  margin: 4px 0;
+}
+
+.metricGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+
+.metricTile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid #765a17;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.metricTile strong {
+  color: var(--text);
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1;
+  margin: 4px 0 6px;
+}
+
+.supportabilityGrid,
+.preparationGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+}
+
+.supportabilityItem,
+.preparationItem {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.supportabilityItem strong,
+.preparationItem strong {
+  color: var(--text);
+  display: block;
+  margin-top: 4px;
+}
+
+.actionTableWrap {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.actionTable {
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  min-width: 1120px;
+  width: 100%;
+}
+
+.actionTable th {
+  background: var(--panel-alt);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 9px 12px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.actionTable td {
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.actionTitle {
+  color: var(--text);
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.actionMeta,
+.acknowledgementDetail {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 4px;
+}
+
+.evidenceCell {
+  min-width: 260px;
+}
+
+.evidenceCell p {
+  margin: 0 0 6px;
+}
+
+.unsupportedClaims {
+  background: #fff8f2;
+  border: 1px solid #f0d7bd;
+  border-radius: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 900px) {
+  .decisionPanel {
+    flex-direction: column;
+  }
+
+  .metricGrid,
+  .supportabilityGrid,
+  .preparationGrid {
+    grid-template-columns: 1fr;
+  }
+}

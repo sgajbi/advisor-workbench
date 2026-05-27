@@ -179,7 +179,10 @@ export type AdvisoryPolicySignOffPackageData = {
 export type AdvisoryPolicySignOffDecisionRequest = {
   body: {
     actor_id: string;
-    decision: "APPROVE_FOR_POLICY_SIGN_OFF" | "REQUEST_MORE_EVIDENCE" | "REJECT_POLICY_SIGN_OFF";
+    decision:
+      | "APPROVE_FOR_POLICY_SIGN_OFF"
+      | "REQUEST_MORE_EVIDENCE"
+      | "REJECT_POLICY_SIGN_OFF";
     source_evaluation_hash: string;
     resolved_approval_dependencies?: string[];
     satisfied_disclosure_requirements?: string[];
@@ -193,6 +196,167 @@ export type AdvisoryPolicySignOffDecisionData = {
   workflow?: AdvisoryPolicyWorkflowData;
   sign_off_event?: Record<string, unknown>;
   replay_metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitOwnerRole =
+  | "ADVISOR"
+  | "DESK_HEAD"
+  | "COMPLIANCE_REVIEWER"
+  | "INVESTMENT_DESK"
+  | "OPERATIONS"
+  | "CRM_OWNER"
+  | "REPORTING_OWNER"
+  | "ARCHIVE_OWNER"
+  | "EXECUTION_OWNER"
+  | "DPM_OWNER"
+  | "SYSTEM";
+
+export type AdvisorCockpitActionStatus =
+  | "READY"
+  | "PENDING_REVIEW"
+  | "BLOCKED"
+  | "ACKNOWLEDGED"
+  | "HANDOFF_REQUESTED"
+  | "COMPLETED"
+  | "SUPERSEDED";
+
+export type AdvisorCockpitActionPriority =
+  | "CRITICAL"
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "INFORMATIONAL";
+
+export type AdvisorCockpitSlaAgeBand =
+  | "NOT_DUE"
+  | "DUE_SOON"
+  | "DUE_NOW"
+  | "OVERDUE"
+  | "CRITICAL_OVERDUE"
+  | "NOT_APPLICABLE";
+
+export type AdvisorCockpitEvidenceRef = {
+  evidence_id?: string;
+  evidence_type?: string;
+  source_system?: string;
+  access_class?: string;
+  summary?: string;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitSourceReadinessGap = {
+  source_family?: string;
+  gap_code?: string;
+  owner_role?: AdvisorCockpitOwnerRole;
+  message?: string;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitDependencyReadiness = {
+  dependency?: string;
+  state?: "READY" | "DEGRADED" | "UNAVAILABLE" | "NOT_CONFIGURED" | string;
+  reason_code?: string;
+  summary?: string;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitAcknowledgementState = {
+  acknowledged?: boolean;
+  acknowledgement_id?: string | null;
+  acknowledged_by?: string | null;
+  acknowledged_at?: string | null;
+  acknowledgement_note?: string | null;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitActionItem = {
+  action_item_id: string;
+  action_item_version: number;
+  action_family?: string;
+  status: AdvisorCockpitActionStatus | string;
+  priority: AdvisorCockpitActionPriority | string;
+  owner_role: AdvisorCockpitOwnerRole | string;
+  owning_system?: string;
+  title: string;
+  next_required_action?: string;
+  reason_codes?: string[];
+  portfolio_id?: string | null;
+  proposal_id?: string | null;
+  workspace_id?: string | null;
+  memo_id?: string | null;
+  policy_evaluation_id?: string | null;
+  report_ref?: string | null;
+  execution_ref?: string | null;
+  due_at?: string | null;
+  sla_age_band?: AdvisorCockpitSlaAgeBand | string;
+  materiality_rank?: number;
+  source_timestamp?: string | null;
+  evidence_refs?: AdvisorCockpitEvidenceRef[];
+  source_readiness_gaps?: AdvisorCockpitSourceReadinessGap[];
+  dependency_readiness?: AdvisorCockpitDependencyReadiness[];
+  lineage_refs?: Array<Record<string, unknown>>;
+  acknowledgement_state?: AdvisorCockpitAcknowledgementState;
+  unsupported_capabilities?: string[];
+  correlation_id?: string | null;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitActionPageData = {
+  items?: AdvisorCockpitActionItem[];
+  next_cursor?: string | null;
+  page_size?: number;
+  total_count?: number | null;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitPreparationPacket = {
+  packet_id?: string;
+  context_type?: string;
+  context_ref?: string;
+  status?: string;
+  evidence_refs?: AdvisorCockpitEvidenceRef[];
+  sections?: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitSnapshotData = {
+  snapshot_id?: string;
+  as_of?: string;
+  action_counts?: Record<string, number>;
+  top_priority_actions?: AdvisorCockpitActionItem[];
+  preparation_packets?: AdvisorCockpitPreparationPacket[];
+  dependency_readiness?: AdvisorCockpitDependencyReadiness[];
+  source_readiness_gaps?: AdvisorCockpitSourceReadinessGap[];
+  unsupported_capabilities?: string[];
+  supportability?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitSupportabilityData = {
+  posture?: string;
+  supportability?: Record<string, unknown>;
+  unsupported_capabilities?: string[];
+  [key: string]: unknown;
+};
+
+export type AdvisorCockpitEnvelopeResponse = {
+  correlation_id: string;
+  contract_version: string;
+  data: Record<string, unknown>;
+};
+
+export type AdvisorCockpitAcknowledgeRequest = {
+  action_item_version: number;
+  acknowledged_by: string;
+  acknowledgement_note?: string;
+};
+
+export type AdvisorCockpitAcknowledgeData = {
+  action_item?: AdvisorCockpitActionItem;
+  acknowledgement?: AdvisorCockpitAcknowledgementState;
+  replayed?: boolean;
+  audit?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
@@ -415,7 +579,8 @@ export type ProposalMemoAiCommentaryRequest = {
   reason?: Record<string, unknown>;
 };
 
-export type ProposalMemoAdvisorCommentaryRequest = ProposalMemoAiCommentaryRequest;
+export type ProposalMemoAdvisorCommentaryRequest =
+  ProposalMemoAiCommentaryRequest;
 
 export type ProposalMemoData = {
   proposal?: ProposalSummary;

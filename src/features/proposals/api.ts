@@ -6,6 +6,13 @@ import {
   AdvisoryPolicySignOffDecisionRequest,
   AdvisoryPolicySignOffPackageData,
   AdvisoryPolicyWorkflowData,
+  AdvisorCockpitAcknowledgeData,
+  AdvisorCockpitAcknowledgeRequest,
+  AdvisorCockpitActionPageData,
+  AdvisorCockpitEnvelopeResponse,
+  AdvisorCockpitOwnerRole,
+  AdvisorCockpitSnapshotData,
+  AdvisorCockpitSupportabilityData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
   AdvisoryWorkspaceBodyRequest,
@@ -57,9 +64,17 @@ export type ProposalListFilters = {
   cursor?: string;
 };
 
+export type AdvisorCockpitFilters = {
+  portfolioId?: string;
+  advisorId?: string;
+  role?: AdvisorCockpitOwnerRole;
+  limit?: number;
+  cursor?: string;
+};
+
 export async function simulateProposal(
   payload: ProposalSimulateRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalSimulateResponse> {
   const response = await fetch(`${BFF_PROXY_BASE}/proposals/simulate`, {
     method: "POST",
@@ -80,117 +95,135 @@ export async function simulateProposal(
 
 export async function createProposalArtifact(
   payload: ProposalBodyRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson("/proposals/artifact", payload, idempotencyKey);
 }
 
 export async function createAdvisoryWorkspace(
-  payload: AdvisoryWorkspaceCreateRequest
+  payload: AdvisoryWorkspaceCreateRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await postAdvisoryWorkspaceJson("", payload);
 }
 
 export async function getAdvisoryWorkspace(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces/${workspaceId}`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-workspaces/${workspaceId}`,
+  );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory workspace fetch failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory workspace fetch failed (${response.status}): ${body}`,
+    );
   }
   return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
 }
 
 export async function applyAdvisoryWorkspaceDraftAction(
   workspaceId: string,
-  payload: AdvisoryWorkspaceDraftActionRequest
+  payload: AdvisoryWorkspaceDraftActionRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  return await postAdvisoryWorkspaceJson(`/${workspaceId}/draft-actions`, payload);
+  return await postAdvisoryWorkspaceJson(
+    `/${workspaceId}/draft-actions`,
+    payload,
+  );
 }
 
 export async function evaluateAdvisoryWorkspace(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  return await postAdvisoryWorkspaceJson(`/${workspaceId}/evaluate`, { body: {} });
+  return await postAdvisoryWorkspaceJson(`/${workspaceId}/evaluate`, {
+    body: {},
+  });
 }
 
 export async function saveAdvisoryWorkspace(
   workspaceId: string,
-  payload: AdvisoryWorkspaceSaveRequest
+  payload: AdvisoryWorkspaceSaveRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await postAdvisoryWorkspaceJson(`/${workspaceId}/save`, payload);
 }
 
 export async function listAdvisoryWorkspaceSavedVersions(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await getAdvisoryWorkspaceJson(`/${workspaceId}/saved-versions`);
 }
 
 export async function getAdvisoryWorkspaceSavedVersionReplayEvidence(
   workspaceId: string,
-  workspaceVersionId: string
+  workspaceVersionId: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await getAdvisoryWorkspaceJson(
-    `/${workspaceId}/saved-versions/${workspaceVersionId}/replay-evidence`
+    `/${workspaceId}/saved-versions/${workspaceVersionId}/replay-evidence`,
   );
 }
 
 export async function resumeAdvisoryWorkspace(
   workspaceId: string,
-  payload: AdvisoryWorkspaceBodyRequest
+  payload: AdvisoryWorkspaceBodyRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await postAdvisoryWorkspaceJson(`/${workspaceId}/resume`, payload);
 }
 
 export async function compareAdvisoryWorkspace(
   workspaceId: string,
-  payload: AdvisoryWorkspaceBodyRequest
+  payload: AdvisoryWorkspaceBodyRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await postAdvisoryWorkspaceJson(`/${workspaceId}/compare`, payload);
 }
 
 export async function requestAdvisoryWorkspaceRationale(
   workspaceId: string,
-  payload: AdvisoryWorkspaceBodyRequest
+  payload: AdvisoryWorkspaceBodyRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  return await postAdvisoryWorkspaceJson(`/${workspaceId}/assistant/rationale`, payload);
+  return await postAdvisoryWorkspaceJson(
+    `/${workspaceId}/assistant/rationale`,
+    payload,
+  );
 }
 
 export async function reviewAdvisoryWorkspaceRationale(
   workspaceId: string,
-  payload: AdvisoryWorkspaceBodyRequest
+  payload: AdvisoryWorkspaceBodyRequest,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   return await postAdvisoryWorkspaceJson(
     `/${workspaceId}/assistant/rationale/review-actions`,
-    payload
+    payload,
   );
 }
 
 export async function handoffAdvisoryWorkspace(
   workspaceId: string,
   payload: AdvisoryWorkspaceHandoffRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  return await postAdvisoryWorkspaceJson(`/${workspaceId}/handoff`, payload, idempotencyKey);
+  return await postAdvisoryWorkspaceJson(
+    `/${workspaceId}/handoff`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function createProposal(
   payload: ProposalCreateRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson("/proposals", payload, idempotencyKey);
 }
 
 export async function createProposalAsync(
   payload: ProposalBodyRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson("/proposals/async", payload, idempotencyKey);
 }
 
-export async function listProposals(filters: ProposalListFilters = {}): Promise<ProposalListData> {
+export async function listProposals(
+  filters: ProposalListFilters = {},
+): Promise<ProposalListData> {
   const params = new URLSearchParams();
   if (filters.portfolioId) {
     params.set("portfolio_id", filters.portfolioId);
@@ -238,54 +271,64 @@ export async function getAdvisoryPolicyReviewQueue({
     params.set("portfolio_id", portfolioId);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-policy-evaluations/review-queue${query}`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/review-queue${query}`,
+  );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory policy review queue failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory policy review queue failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyReviewQueueData;
 }
 
 export async function getAdvisoryPolicyEvaluation(
-  evaluationId: string
+  evaluationId: string,
 ): Promise<AdvisoryPolicyEvaluationData> {
   const response = await fetch(
-    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}`
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}`,
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory policy evaluation failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory policy evaluation failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyEvaluationData;
 }
 
 export async function getAdvisoryPolicySignOffPackage(
-  evaluationId: string
+  evaluationId: string,
 ): Promise<AdvisoryPolicySignOffPackageData> {
   const response = await fetch(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
-      evaluationId
-    )}/sign-off-package`
+      evaluationId,
+    )}/sign-off-package`,
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory policy sign-off package failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory policy sign-off package failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicySignOffPackageData;
 }
 
 export async function getAdvisoryPolicyWorkflow(
-  evaluationId: string
+  evaluationId: string,
 ): Promise<AdvisoryPolicyWorkflowData> {
   const response = await fetch(
-    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}/workflow`
+    `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}/workflow`,
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory policy workflow failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory policy workflow failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyWorkflowData;
@@ -294,7 +337,7 @@ export async function getAdvisoryPolicyWorkflow(
 export async function recordAdvisoryPolicySignOffDecision(
   evaluationId: string,
   payload: AdvisoryPolicySignOffDecisionRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<AdvisoryPolicySignOffDecisionData> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -304,28 +347,90 @@ export async function recordAdvisoryPolicySignOffDecision(
   }
   const response = await fetch(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
-      evaluationId
+      evaluationId,
     )}/sign-off-decisions`,
     {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
-    }
+    },
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory policy sign-off decision failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory policy sign-off decision failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicySignOffDecisionData;
 }
 
+export async function listAdvisorCockpitActions(
+  filters: AdvisorCockpitFilters = {},
+): Promise<AdvisorCockpitActionPageData> {
+  return (await getAdvisorCockpitData(
+    `/actions${buildAdvisorCockpitQuery(filters)}`,
+  )) as AdvisorCockpitActionPageData;
+}
+
+export async function getAdvisorCockpitSnapshot(
+  filters: AdvisorCockpitFilters = {},
+): Promise<AdvisorCockpitSnapshotData> {
+  return (await getAdvisorCockpitData(
+    `/snapshot${buildAdvisorCockpitQuery(filters)}`,
+  )) as AdvisorCockpitSnapshotData;
+}
+
+export async function getAdvisorCockpitSupportability(
+  filters: AdvisorCockpitFilters = {},
+): Promise<AdvisorCockpitSupportabilityData> {
+  return (await getAdvisorCockpitData(
+    `/supportability${buildAdvisorCockpitQuery(filters)}`,
+  )) as AdvisorCockpitSupportabilityData;
+}
+
+export async function acknowledgeAdvisorCockpitAction(
+  actionItemId: string,
+  payload: AdvisorCockpitAcknowledgeRequest,
+  {
+    filters = {},
+    idempotencyKey,
+  }: {
+    filters?: Omit<AdvisorCockpitFilters, "limit" | "cursor">;
+    idempotencyKey: string;
+  },
+): Promise<AdvisorCockpitAcknowledgeData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisor-cockpit/actions/${encodeURIComponent(
+      actionItemId,
+    )}/acknowledgements${buildAdvisorCockpitQuery(filters)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Advisor cockpit acknowledgement failed (${response.status}): ${body}`,
+    );
+  }
+  const envelope = (await response.json()) as AdvisorCockpitEnvelopeResponse;
+  return envelope.data as unknown as AdvisorCockpitAcknowledgeData;
+}
+
 export async function getProposal(
   proposalId: string,
-  includeEvidence = false
+  includeEvidence = false,
 ): Promise<ProposalDetailData> {
   const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}${query}`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}${query}`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal detail failed (${response.status}): ${body}`);
@@ -337,10 +442,12 @@ export async function getProposal(
 export async function getProposalVersion(
   proposalId: string,
   versionNo: number,
-  includeEvidence = false
+  includeEvidence = false,
 ): Promise<ProposalVersionData> {
   const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}${query}`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}${query}`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal version failed (${response.status}): ${body}`);
@@ -352,58 +459,70 @@ export async function getProposalVersion(
 export async function createProposalVersion(
   proposalId: string,
   payload: ProposalCreateRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/versions`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/versions`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function createProposalVersionAsync(
   proposalId: string,
   payload: ProposalBodyRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/versions/async`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/versions/async`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function getProposalOperation(
-  operationId: string
+  operationId: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await getProposalEnvelope(`/proposals/operations/${operationId}`);
 }
 
 export async function getProposalOperationByCorrelation(
-  operationCorrelationId: string
+  operationCorrelationId: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await getProposalEnvelope(
-    `/proposals/operations/by-correlation/${operationCorrelationId}`
+    `/proposals/operations/by-correlation/${operationCorrelationId}`,
   );
 }
 
 export async function getProposalOperationReplayEvidence(
-  operationId: string
+  operationId: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await getProposalEnvelope(`/proposals/operations/${operationId}/replay-evidence`);
+  return await getProposalEnvelope(
+    `/proposals/operations/${operationId}/replay-evidence`,
+  );
 }
 
 export async function getProposalVersionReplayEvidence(
   proposalId: string,
-  versionNo: number
+  versionNo: number,
 ): Promise<ProposalEnvelopeResponse> {
   return await getProposalEnvelope(
-    `/proposals/${proposalId}/versions/${versionNo}/replay-evidence`
+    `/proposals/${proposalId}/versions/${versionNo}/replay-evidence`,
   );
 }
 
 export async function getProposalIdempotencyRecord(
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await getProposalEnvelope(`/proposals/idempotency/${idempotencyKey}`);
 }
 
 export async function getProposalLineage(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalLineageData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/lineage`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/lineage`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal lineage failed (${response.status}): ${body}`);
@@ -415,77 +534,94 @@ export async function getProposalLineage(
 export async function regenerateProposalNarrative(
   proposalId: string,
   versionNo: number,
-  payload: ProposalBodyRequest
+  payload: ProposalBodyRequest,
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/narrative/regenerate`,
-    payload
+    payload,
   );
 }
 
 export async function getProposalNarrative(
   proposalId: string,
-  versionNo: number
+  versionNo: number,
 ): Promise<ProposalEnvelopeResponse> {
-  return await getProposalEnvelope(`/proposals/${proposalId}/versions/${versionNo}/narrative`);
+  return await getProposalEnvelope(
+    `/proposals/${proposalId}/versions/${versionNo}/narrative`,
+  );
 }
 
 export async function reviewProposalNarrative(
   proposalId: string,
   versionNo: number,
   payload: ProposalNarrativeReviewRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalNarrativeReviewData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/narrative/review`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
   return envelope.data as unknown as ProposalNarrativeReviewData;
 }
 
 export async function createProposalReportRequest(
   proposalId: string,
-  payload: ProposalReportRequest
+  payload: ProposalReportRequest,
 ): Promise<ProposalReportRequestData> {
-  const envelope = await postJson(`/proposals/${proposalId}/report-requests`, payload);
+  const envelope = await postJson(
+    `/proposals/${proposalId}/report-requests`,
+    payload,
+  );
   return envelope.data as unknown as ProposalReportRequestData;
 }
 
 export async function createProposalExecutionHandoff(
   proposalId: string,
   payload: ProposalBodyRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/execution-handoffs`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/execution-handoffs`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function getProposalDeliverySummary(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalDeliverySummaryData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-summary`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-summary`,
+  );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Proposal delivery summary failed (${response.status}): ${body}`);
+    throw new Error(
+      `Proposal delivery summary failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDeliverySummaryData;
 }
 
 export async function getProposalDeliveryEvents(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalDeliveryEventsData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-events`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-events`,
+  );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Proposal delivery events failed (${response.status}): ${body}`);
+    throw new Error(
+      `Proposal delivery events failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDeliveryEventsData;
 }
 
 export async function getProposalExecutionStatus(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await getProposalEnvelope(`/proposals/${proposalId}/execution-status`);
 }
@@ -493,30 +629,36 @@ export async function getProposalExecutionStatus(
 export async function recordProposalExecutionUpdate(
   proposalId: string,
   payload: ProposalBodyRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/execution-updates`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/execution-updates`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function createProposalMemo(
   proposalId: string,
   versionNo: number,
   payload: ProposalMemoCreateRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalMemoData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
   return envelope.data as unknown as ProposalMemoData;
 }
 
 export async function getProposalMemo(
   proposalId: string,
-  versionNo: number
+  versionNo: number,
 ): Promise<ProposalMemoData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Proposal memo fetch failed (${response.status}): ${body}`);
@@ -528,7 +670,7 @@ export async function getProposalMemo(
 export async function getProposalMemoProjection(
   proposalId: string,
   versionNo: number,
-  audience?: string
+  audience?: string,
 ): Promise<ProposalMemoProjectionData> {
   const params = new URLSearchParams();
   if (audience) {
@@ -536,11 +678,13 @@ export async function getProposalMemoProjection(
   }
   const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(
-    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/projection${query}`
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/projection${query}`,
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Proposal memo projection failed (${response.status}): ${body}`);
+    throw new Error(
+      `Proposal memo projection failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoProjectionData;
@@ -550,12 +694,12 @@ export async function reviewProposalMemo(
   proposalId: string,
   versionNo: number,
   payload: ProposalMemoReviewRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalMemoData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo/review`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
   return envelope.data as unknown as ProposalMemoData;
 }
@@ -564,12 +708,12 @@ export async function recordProposalMemoReportPackageEvent(
   proposalId: string,
   versionNo: number,
   payload: ProposalBodyRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalEnvelopeResponse> {
   return await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo/report-package-events`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
 }
 
@@ -577,12 +721,12 @@ export async function requestProposalMemoReportPackage(
   proposalId: string,
   versionNo: number,
   payload: ProposalMemoReportPackageRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalMemoReportPackageData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo/report-packages`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
   return envelope.data as unknown as ProposalMemoReportPackageData;
 }
@@ -591,12 +735,12 @@ export async function requestProposalMemoAiCommentary(
   proposalId: string,
   versionNo: number,
   payload: ProposalMemoAiCommentaryRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalMemoAiCommentaryData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo/ai-commentary`,
     payload,
-    idempotencyKey
+    idempotencyKey,
   );
   return envelope.data as unknown as ProposalMemoAiCommentaryData;
 }
@@ -605,18 +749,27 @@ export async function requestProposalMemoAdvisorCommentary(
   proposalId: string,
   versionNo: number,
   payload: ProposalMemoAdvisorCommentaryRequest,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalMemoAdvisorCommentaryData> {
-  return await requestProposalMemoAiCommentary(proposalId, versionNo, payload, idempotencyKey);
+  return await requestProposalMemoAiCommentary(
+    proposalId,
+    versionNo,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function getProposalMemoLineage(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalMemoLineageData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/memos/lineage`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/memos/lineage`,
+  );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Proposal memo lineage failed (${response.status}): ${body}`);
+    throw new Error(
+      `Proposal memo lineage failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoLineageData;
@@ -624,14 +777,16 @@ export async function getProposalMemoLineage(
 
 export async function getProposalMemoReplayEvidence(
   proposalId: string,
-  versionNo: number
+  versionNo: number,
 ): Promise<ProposalMemoReplayEvidenceData> {
   const response = await fetch(
-    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/replay-evidence`
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/replay-evidence`,
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Proposal memo replay evidence failed (${response.status}): ${body}`);
+    throw new Error(
+      `Proposal memo replay evidence failed (${response.status}): ${body}`,
+    );
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoReplayEvidenceData;
@@ -640,39 +795,57 @@ export async function getProposalMemoReplayEvidence(
 export async function submitProposal(
   proposalId: string,
   payload: ProposalSubmitRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/submit`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/submit`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function approveRisk(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/approve-risk`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/approve-risk`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function approveCompliance(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/approve-compliance`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/approve-compliance`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function recordClientConsent(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<ProposalEnvelopeResponse> {
-  return await postJson(`/proposals/${proposalId}/record-client-consent`, payload, idempotencyKey);
+  return await postJson(
+    `/proposals/${proposalId}/record-client-consent`,
+    payload,
+    idempotencyKey,
+  );
 }
 
 export async function getProposalWorkflowEvents(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalWorkflowEventsData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/workflow-events`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/workflow-events`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Workflow events failed (${response.status}): ${body}`);
@@ -682,9 +855,11 @@ export async function getProposalWorkflowEvents(
 }
 
 export async function getProposalApprovals(
-  proposalId: string
+  proposalId: string,
 ): Promise<ProposalApprovalsData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/${proposalId}/approvals`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/proposals/${proposalId}/approvals`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Approvals fetch failed (${response.status}): ${body}`);
@@ -696,7 +871,7 @@ export async function getProposalApprovals(
 async function postJson(
   path: string,
   payload: unknown,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<ProposalEnvelopeResponse> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -716,7 +891,9 @@ async function postJson(
   return (await response.json()) as ProposalEnvelopeResponse;
 }
 
-async function getProposalEnvelope(path: string): Promise<ProposalEnvelopeResponse> {
+async function getProposalEnvelope(
+  path: string,
+): Promise<ProposalEnvelopeResponse> {
   const response = await fetch(`${BFF_PROXY_BASE}${path}`);
   if (!response.ok) {
     const body = await response.text();
@@ -726,12 +903,14 @@ async function getProposalEnvelope(path: string): Promise<ProposalEnvelopeRespon
 }
 
 async function getAdvisoryWorkspaceJson(
-  path: string
+  path: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces${path}`);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory workspace request failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory workspace request failed (${response.status}): ${body}`,
+    );
   }
   return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
 }
@@ -739,7 +918,7 @@ async function getAdvisoryWorkspaceJson(
 async function postAdvisoryWorkspaceJson(
   path: string,
   payload: unknown,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -754,7 +933,43 @@ async function postAdvisoryWorkspaceJson(
   });
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisory workspace request failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisory workspace request failed (${response.status}): ${body}`,
+    );
   }
   return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
+}
+
+async function getAdvisorCockpitData(
+  path: string,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(`${BFF_PROXY_BASE}/advisor-cockpit${path}`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Advisor cockpit request failed (${response.status}): ${body}`,
+    );
+  }
+  const envelope = (await response.json()) as AdvisorCockpitEnvelopeResponse;
+  return envelope.data;
+}
+
+function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
+  const params = new URLSearchParams();
+  if (filters.portfolioId) {
+    params.set("portfolio_id", filters.portfolioId);
+  }
+  if (filters.advisorId) {
+    params.set("advisor_id", filters.advisorId);
+  }
+  if (filters.role) {
+    params.set("role", filters.role);
+  }
+  if (filters.limit) {
+    params.set("limit", String(filters.limit));
+  }
+  if (filters.cursor) {
+    params.set("cursor", filters.cursor);
+  }
+  return params.toString() ? `?${params.toString()}` : "";
 }

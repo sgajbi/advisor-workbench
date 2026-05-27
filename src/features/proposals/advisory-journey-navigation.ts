@@ -2,6 +2,7 @@ import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/po
 
 export type AdvisoryJourneyMode =
   | "overview"
+  | "cockpit"
   | "client-context"
   | "opportunities"
   | "proposal-builder"
@@ -30,10 +31,25 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Overview",
     detail: "Advisor priorities",
     title: "Advisory Overview",
-    description: "Portfolio-scoped advisory priorities, open proposal posture, and next actions.",
+    description:
+      "Portfolio-scoped advisory priorities, open proposal posture, and next actions.",
     primaryDecision: "Which client or portfolio action needs attention first?",
     nextAction: "Open the relevant opportunity, proposal, or approval item.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-core"],
+    shellVisible: true,
+  },
+  {
+    key: "cockpit",
+    label: "Cockpit",
+    detail: "Operating actions",
+    title: "Advisor Cockpit",
+    description:
+      "Gateway-backed advisor action items, supportability, evidence, and review posture.",
+    primaryDecision:
+      "Which source-backed action needs advisor attention first?",
+    nextAction:
+      "Review the action item and record acknowledgement only when appropriate.",
+    dataSources: ["lotus-gateway", "lotus-advise"],
     shellVisible: true,
   },
   {
@@ -41,8 +57,10 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Client Context",
     detail: "Profile and mandate",
     title: "Client Context",
-    description: "Client profile, mandate, liquidity, constraints, and suitability baseline.",
-    primaryDecision: "Is the advisory idea aligned to documented client context?",
+    description:
+      "Client profile, mandate, liquidity, constraints, and suitability baseline.",
+    primaryDecision:
+      "Is the advisory idea aligned to documented client context?",
     nextAction: "Confirm mandate and constraints before drafting an idea.",
     dataSources: ["lotus-gateway", "lotus-core", "lotus-manage"],
     shellVisible: false,
@@ -52,10 +70,16 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Ideas",
     detail: "Opportunities",
     title: "Opportunities And Ideas",
-    description: "Advisor ideas, monitored opportunities, and recommended follow-up candidates.",
+    description:
+      "Advisor ideas, monitored opportunities, and recommended follow-up candidates.",
     primaryDecision: "Which opportunity should become a proposal?",
     nextAction: "Promote the selected idea into the proposal builder.",
-    dataSources: ["lotus-gateway", "lotus-advise", "lotus-performance", "lotus-risk"],
+    dataSources: [
+      "lotus-gateway",
+      "lotus-advise",
+      "lotus-performance",
+      "lotus-risk",
+    ],
     shellVisible: true,
   },
   {
@@ -63,8 +87,10 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Builder",
     detail: "Draft trades",
     title: "Proposal Builder",
-    description: "Position-level proposal construction from the live portfolio book.",
-    primaryDecision: "What buy, sell, off-book, or cash movement should be tested?",
+    description:
+      "Position-level proposal construction from the live portfolio book.",
+    primaryDecision:
+      "What buy, sell, off-book, or cash movement should be tested?",
     nextAction: "Evaluate the workspace through Advise.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-core"],
     shellVisible: true,
@@ -74,10 +100,17 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Simulation",
     detail: "Portfolio impact",
     title: "Proposal Simulation",
-    description: "Advisor-use proposal impact across allocation, risk, and readiness.",
-    primaryDecision: "Does the simulated proposal improve the portfolio enough to proceed?",
+    description:
+      "Advisor-use proposal impact across allocation, risk, and readiness.",
+    primaryDecision:
+      "Does the simulated proposal improve the portfolio enough to proceed?",
     nextAction: "Review suitability and risk impact.",
-    dataSources: ["lotus-gateway", "lotus-advise", "lotus-performance", "lotus-risk"],
+    dataSources: [
+      "lotus-gateway",
+      "lotus-advise",
+      "lotus-performance",
+      "lotus-risk",
+    ],
     shellVisible: false,
   },
   {
@@ -86,7 +119,8 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     detail: "Mandate fit",
     title: "Suitability Review",
     description: "Mandate, suitability, disclosure, and blocking-issue review.",
-    primaryDecision: "Can the proposal proceed under documented client and product constraints?",
+    primaryDecision:
+      "Can the proposal proceed under documented client and product constraints?",
     nextAction: "Resolve blockers or request approval.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-manage"],
     shellVisible: true,
@@ -96,10 +130,16 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Risk Impact",
     detail: "Risk and allocation",
     title: "Risk And Impact",
-    description: "Concentration, risk, allocation, liquidity, and performance impact.",
+    description:
+      "Concentration, risk, allocation, liquidity, and performance impact.",
     primaryDecision: "Is the risk and performance trade-off acceptable?",
     nextAction: "Attach risk evidence to the approval pack.",
-    dataSources: ["lotus-gateway", "lotus-risk", "lotus-performance", "lotus-advise"],
+    dataSources: [
+      "lotus-gateway",
+      "lotus-risk",
+      "lotus-performance",
+      "lotus-advise",
+    ],
     shellVisible: true,
   },
   {
@@ -107,8 +147,10 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Approvals",
     detail: "Maker-checker",
     title: "Approval Queue",
-    description: "Advisor, risk, compliance, and maker-checker approval posture.",
-    primaryDecision: "Which proposals are ready, blocked, or waiting for review?",
+    description:
+      "Advisor, risk, compliance, and maker-checker approval posture.",
+    primaryDecision:
+      "Which proposals are ready, blocked, or waiting for review?",
     nextAction: "Approve, reject, or return the proposal for revision.",
     dataSources: ["lotus-gateway", "lotus-advise"],
     shellVisible: true,
@@ -118,9 +160,12 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Discussion Pack",
     detail: "Gated rationale",
     title: "Discussion Pack Review",
-    description: "Advisor-reviewed rationale, evidence, and gated discussion-pack posture.",
-    primaryDecision: "What evidence or review remains before client discussion?",
-    nextAction: "Resolve policy, memo, narrative, and consent blockers before using the pack.",
+    description:
+      "Advisor-reviewed rationale, evidence, and gated discussion-pack posture.",
+    primaryDecision:
+      "What evidence or review remains before client discussion?",
+    nextAction:
+      "Resolve policy, memo, narrative, and consent blockers before using the pack.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-report"],
     shellVisible: true,
   },
@@ -129,7 +174,8 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     label: "Implementation",
     detail: "Execution follow-up",
     title: "Implementation Status",
-    description: "Execution handoff, implementation status, and post-trade follow-up.",
+    description:
+      "Execution handoff, implementation status, and post-trade follow-up.",
     primaryDecision: "Has the approved proposal been implemented as intended?",
     nextAction: "Track execution status and follow-up exceptions.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-manage"],
@@ -137,13 +183,18 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
   },
 ];
 
-export function buildAdvisoryJourneyHref(portfolioId: string, mode: AdvisoryJourneyMode): string {
+export function buildAdvisoryJourneyHref(
+  portfolioId: string,
+  mode: AdvisoryJourneyMode,
+): string {
   const encoded = encodeURIComponent(portfolioId);
   switch (mode) {
     case "overview":
       return `/recommendations?portfolioId=${encoded}`;
     case "opportunities":
       return `/recommendations?portfolioId=${encoded}&mode=opportunities`;
+    case "cockpit":
+      return `/recommendations?portfolioId=${encoded}&mode=cockpit`;
     case "proposal-builder":
       return `/proposals/simulate?portfolioId=${encoded}`;
     case "simulation":
@@ -159,30 +210,37 @@ export function buildAdvisoryJourneyHref(portfolioId: string, mode: AdvisoryJour
 
 export function buildAdvisoryJourneyModeItems(
   portfolioId: string,
-  activeMode: AdvisoryJourneyMode
+  activeMode: AdvisoryJourneyMode,
 ): PortfolioScreenRailModeItem[] {
-  return ADVISORY_JOURNEY_DEFINITIONS.filter((definition) => definition.shellVisible).map(
-    (definition) => ({
-      key: definition.key,
-      label: definition.label,
-      detail: definition.detail,
-      active: activeMode === definition.key,
-      href: buildAdvisoryJourneyHref(portfolioId, definition.key),
-      title: definition.description,
-    })
-  );
+  return ADVISORY_JOURNEY_DEFINITIONS.filter(
+    (definition) => definition.shellVisible,
+  ).map((definition) => ({
+    key: definition.key,
+    label: definition.label,
+    detail: definition.detail,
+    active: activeMode === definition.key,
+    href: buildAdvisoryJourneyHref(portfolioId, definition.key),
+    title: definition.description,
+  }));
 }
 
-export function normalizeAdvisoryJourneyMode(value: string | undefined): AdvisoryJourneyMode {
+export function normalizeAdvisoryJourneyMode(
+  value: string | undefined,
+): AdvisoryJourneyMode {
   const requested = value?.trim().toLowerCase();
-  return ADVISORY_JOURNEY_DEFINITIONS.some((definition) => definition.key === requested)
+  return ADVISORY_JOURNEY_DEFINITIONS.some(
+    (definition) => definition.key === requested,
+  )
     ? (requested as AdvisoryJourneyMode)
     : "overview";
 }
 
-export function getAdvisoryJourneyDefinition(mode: AdvisoryJourneyMode): AdvisoryJourneyDefinition {
+export function getAdvisoryJourneyDefinition(
+  mode: AdvisoryJourneyMode,
+): AdvisoryJourneyDefinition {
   return (
-    ADVISORY_JOURNEY_DEFINITIONS.find((definition) => definition.key === mode) ??
-    ADVISORY_JOURNEY_DEFINITIONS[0]
+    ADVISORY_JOURNEY_DEFINITIONS.find(
+      (definition) => definition.key === mode,
+    ) ?? ADVISORY_JOURNEY_DEFINITIONS[0]
   );
 }

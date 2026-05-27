@@ -11,20 +11,25 @@ import {
 describe("advisory journey navigation", () => {
   it("normalizes requested modes into governed advisory journey screens", () => {
     expect(normalizeAdvisoryJourneyMode("RISK-IMPACT")).toBe("risk-impact");
-    expect(normalizeAdvisoryJourneyMode(" proposal-builder ")).toBe("proposal-builder");
+    expect(normalizeAdvisoryJourneyMode(" proposal-builder ")).toBe(
+      "proposal-builder",
+    );
     expect(normalizeAdvisoryJourneyMode("technical-route")).toBe("overview");
     expect(normalizeAdvisoryJourneyMode(undefined)).toBe("overview");
   });
 
   it("builds portfolio-scoped routes without leaking service terminology into navigation", () => {
     expect(buildAdvisoryJourneyHref("PB SG/001", "overview")).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001"
+      "/recommendations?portfolioId=PB%20SG%2F001",
+    );
+    expect(buildAdvisoryJourneyHref("PB SG/001", "cockpit")).toBe(
+      "/recommendations?portfolioId=PB%20SG%2F001&mode=cockpit",
     );
     expect(buildAdvisoryJourneyHref("PB SG/001", "proposal-builder")).toBe(
-      "/proposals/simulate?portfolioId=PB%20SG%2F001"
+      "/proposals/simulate?portfolioId=PB%20SG%2F001",
     );
     expect(buildAdvisoryJourneyHref("PB SG/001", "risk-impact")).toBe(
-      "/proposals?portfolioId=PB%20SG%2F001&mode=risk-impact"
+      "/proposals?portfolioId=PB%20SG%2F001&mode=risk-impact",
     );
   });
 
@@ -33,6 +38,7 @@ describe("advisory journey navigation", () => {
 
     expect(items.map((item) => item.key)).toEqual([
       "overview",
+      "cockpit",
       "opportunities",
       "proposal-builder",
       "suitability",
@@ -41,18 +47,20 @@ describe("advisory journey navigation", () => {
       "discussion-pack",
       "implementation",
     ]);
-    expect(items.filter((item) => item.active).map((item) => item.key)).toEqual([
-      "approval-queue",
-    ]);
-    expect(items.find((item) => item.key === "proposal-builder")).toMatchObject({
-      label: "Builder",
-      detail: "Draft trades",
-      href: "/proposals/simulate?portfolioId=PB_1",
-    });
+    expect(items.filter((item) => item.active).map((item) => item.key)).toEqual(
+      ["approval-queue"],
+    );
+    expect(items.find((item) => item.key === "proposal-builder")).toMatchObject(
+      {
+        label: "Builder",
+        detail: "Draft trades",
+        href: "/proposals/simulate?portfolioId=PB_1",
+      },
+    );
   });
 
   it("keeps each journey definition anchored to advisor decisions and source-owned data", () => {
-    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(10);
+    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(11);
     for (const definition of ADVISORY_JOURNEY_DEFINITIONS) {
       expect(definition.primaryDecision).toMatch(/\?$/);
       expect(definition.nextAction.length).toBeGreaterThan(10);
@@ -61,10 +69,10 @@ describe("advisory journey navigation", () => {
     const discussionPack = getAdvisoryJourneyDefinition("discussion-pack");
     expect(discussionPack.title).toBe("Discussion Pack Review");
     expect(
-      `${discussionPack.description} ${discussionPack.primaryDecision} ${discussionPack.nextAction}`
+      `${discussionPack.description} ${discussionPack.primaryDecision} ${discussionPack.nextAction}`,
     ).not.toMatch(/client-ready/i);
-    expect(getAdvisoryJourneyDefinition("implementation").description).toContain(
-      "Execution handoff"
-    );
+    expect(
+      getAdvisoryJourneyDefinition("implementation").description,
+    ).toContain("Execution handoff");
   });
 });
