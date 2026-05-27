@@ -322,7 +322,7 @@ same source-owned queue. The validator records this as
 route-only screenshot.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal Simulation,
-Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and Implementation
+Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
 Status. These journey checks are route-level evidence over existing Gateway-backed Workbench
 screens; they do not promote new backend capability, client-ready release, client communication, or
 execution truth.

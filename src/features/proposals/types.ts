@@ -108,6 +108,7 @@ export type AdvisoryPolicyEvaluationRecord = {
   evaluation_id?: string;
   proposal_id?: string;
   proposal_version_id?: string;
+  portfolio_id?: string;
   policy_pack_id?: string;
   policy_version?: string;
   evaluation_status?: string;

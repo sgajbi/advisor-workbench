@@ -64,7 +64,7 @@ async function ensureAdvisoryPolicyPackActive({ summary, scenario, gatewayBaseUr
 
   const activateBody = {
     body: {
-      activated_by: "workbench-canonical-validator",
+      activated_by: "workbench-canonical-policy-checker",
       source_content_hash: contentHash,
       reason: {
         purpose: "canonical_rfc0025_policy_validation",
@@ -151,17 +151,35 @@ export async function createCanonicalPolicyEvaluation({
       `Canonical policy evaluation returned ${record.evaluation_status}, expected ${scenario.expectedEvaluationStatus}.`
     );
   }
+  const portfolioId = readString(scenario.evidenceBundle?.inputs?.portfolio_snapshot?.portfolio_id);
+  if (!portfolioId) {
+    throw new Error("Canonical policy evaluation scenario did not declare a portfolio id.");
+  }
+  const recordPortfolioId = readString(record?.portfolio_id);
+  if (recordPortfolioId !== portfolioId) {
+    throw new Error(
+      `Canonical policy evaluation returned portfolio ${recordPortfolioId || "missing"}, expected ${portfolioId}.`
+    );
+  }
 
   const queue = await fetchJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisory-policy-evaluations/review-queue?evaluation_status=${encodeURIComponent(
       scenario.expectedEvaluationStatus
-    )}`,
+    )}&portfolio_id=${encodeURIComponent(portfolioId)}`,
     "Advisory policy review queue canonical proof",
     timeoutMs
   );
   const queueData = extractGatewayEnvelopeData(queue);
   const queueItems = Array.isArray(queueData?.items) ? queueData.items : [];
+  const outOfScopeItem = queueItems.find((item) => readString(item?.portfolio_id) !== portfolioId);
+  if (outOfScopeItem) {
+    throw new Error(
+      `Canonical policy review queue returned item outside portfolio scope ${portfolioId}: ${readString(
+        outOfScopeItem?.evaluation_id
+      ) || "unknown_evaluation"}.`
+    );
+  }
   if (!queueItems.some((item) => item?.evaluation_id === evaluationId)) {
     throw new Error("Canonical policy review queue did not include the seeded evaluation.");
   }
@@ -234,6 +252,7 @@ export async function createCanonicalPolicyEvaluation({
     scenarioId: scenario.scenarioId,
     proposalId,
     proposalVersionId,
+    portfolioId,
     evaluationId,
     resultReviewState: workflowData?.sign_off_status,
     resultSupportabilityStatus: record.evaluation_status,

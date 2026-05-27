@@ -223,12 +223,19 @@ export async function listProposals(filters: ProposalListFilters = {}): Promise<
   return envelope.data as unknown as ProposalListData;
 }
 
-export async function getAdvisoryPolicyReviewQueue(
-  evaluationStatus = "PENDING_REVIEW"
-): Promise<AdvisoryPolicyReviewQueueData> {
+export async function getAdvisoryPolicyReviewQueue({
+  evaluationStatus = "PENDING_REVIEW",
+  portfolioId,
+}: {
+  evaluationStatus?: string;
+  portfolioId?: string;
+} = {}): Promise<AdvisoryPolicyReviewQueueData> {
   const params = new URLSearchParams();
   if (evaluationStatus) {
     params.set("evaluation_status", evaluationStatus);
+  }
+  if (portfolioId) {
+    params.set("portfolio_id", portfolioId);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(`${BFF_PROXY_BASE}/advisory-policy-evaluations/review-queue${query}`);

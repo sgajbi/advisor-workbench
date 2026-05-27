@@ -227,6 +227,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Create proposal narrative canonical proof");
     expect(advisoryPolicyProof).toContain("Create advisory policy evaluation canonical proof");
     expect(advisoryPolicyProof).toContain("Advisory policy review queue canonical proof");
+    expect(advisoryPolicyProof).toContain("workbench-canonical-policy-checker");
+    expect(advisoryPolicyProof).toContain("portfolio_id=");
     expect(advisoryPolicyProof).toContain("POLICY_EVALUATION_PENDING_REVIEW_CREATED");
     expect(advisoryPolicyProof).toContain("POLICY_PACK_VERSION_ALREADY_ACTIVE_IMMUTABLE");
     expect(advisoryPolicyProof).toContain('status: "already_active"');
