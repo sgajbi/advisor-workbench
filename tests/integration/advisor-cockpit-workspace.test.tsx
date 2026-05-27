@@ -186,6 +186,40 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(screen.getByText(/Client-ready Blocked/)).toBeInTheDocument();
   });
 
+  it("keeps the meeting preparation section visible when source packets are absent", async () => {
+    getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
+      snapshot_id: "cockpit_snapshot_without_packets",
+      action_counts: {
+        "status.PENDING_REVIEW": 1,
+        "status.BLOCKED": 0,
+        "priority.HIGH": 1,
+      },
+      supportability: {
+        gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
+        workbench_posture: "SUPPORTED_BY_LOTUS_WORKBENCH_RFC0026",
+        client_ready_publication: "BLOCKED",
+      },
+      preparation_packets: [],
+      unsupported_capabilities: [],
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Meeting Preparation",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No preparation packets")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "No source-backed meeting preparation packets are currently available for this cockpit scope.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("does not render fallback actions when the Gateway cockpit route fails", async () => {
     listAdvisorCockpitActionsMock.mockRejectedValueOnce(
       new Error("gateway unavailable"),

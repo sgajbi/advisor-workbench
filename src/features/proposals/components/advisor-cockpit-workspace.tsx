@@ -203,11 +203,11 @@ export default function AdvisorCockpitWorkspace({
         ) : null}
       </SectionBlock>
 
-      {model.preparationRows.length > 0 ? (
-        <SectionBlock
-          title="Meeting Preparation"
-          subtitle="Source-backed preparation packets."
-        >
+      <SectionBlock
+        title="Meeting Preparation"
+        subtitle="Source-backed preparation packets."
+      >
+        {model.preparationRows.length > 0 ? (
           <div className={styles.preparationGrid}>
             {model.preparationRows.map((packet) => (
               <div className={styles.preparationItem} key={packet.packetId}>
@@ -217,8 +217,15 @@ export default function AdvisorCockpitWorkspace({
               </div>
             ))}
           </div>
-        </SectionBlock>
-      ) : null}
+        ) : (
+          <ScreenStatePanel
+            kind="empty"
+            title="No preparation packets"
+            body="No source-backed meeting preparation packets are currently available for this cockpit scope."
+            surface="default"
+          />
+        )}
+      </SectionBlock>
     </SectionBlock>
   );
 }
