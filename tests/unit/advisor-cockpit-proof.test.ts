@@ -5,6 +5,24 @@ const PROOF_MODULE_PATH: string =
   "../../scripts/live/validation/advisor-cockpit-proof.mjs";
 
 type ProofSummary = { apiChecks: unknown[]; workflowPackChecks: unknown[] };
+type ActionItemOptions = {
+  actionItemId?: string;
+  portfolioId?: string;
+  ownerRole?: string;
+  family?: string;
+  status?: string;
+  priority?: string;
+  reasonCodes?: string[];
+  acknowledged?: boolean;
+};
+type ActionListResponseOptions = Pick<
+  ActionItemOptions,
+  "actionItemId" | "portfolioId" | "ownerRole" | "acknowledged"
+> & {
+  includeHouseView?: boolean;
+  totalCount?: number;
+  nextCursor?: string;
+};
 type ValidateCanonicalAdvisorCockpit = (args: {
   summary: ProofSummary;
   scenario: {
@@ -54,7 +72,7 @@ function actionItem({
   priority = "HIGH",
   reasonCodes = ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
   acknowledged = false,
-} = {}): Record<string, unknown> {
+}: ActionItemOptions = {}): Record<string, unknown> {
   return {
     action_item_id: actionItemId,
     action_item_version: 7,
@@ -103,7 +121,7 @@ function actionListResponse({
   includeHouseView = false,
   totalCount,
   nextCursor,
-} = {}): Response {
+}: ActionListResponseOptions = {}): Response {
   const items = [
     actionItem({ actionItemId, portfolioId, ownerRole, acknowledged }),
   ];
