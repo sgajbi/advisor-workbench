@@ -210,7 +210,9 @@ npm run live:stack:up:validate
 ```
 
 This runs the same bring-up flow and then executes the end-to-end validation lane once the stack
-is live.
+is live. The npm entrypoint passes `-BuildImages` so one-command validation proves the current
+checked-out Docker-backed service sources rather than a previously built Gateway, Advise, Manage,
+or Workbench image.
 
 ## One-command teardown
 
@@ -424,10 +426,13 @@ reason when present; DPM panel proof is gated by the command-center, wave, outco
 portfolio-memory, construction-alternatives, PM operating-quality, and PM copilot workspace contracts
 instead of failing on unrelated historical action-register freshness.
 
-When validating active Workbench source changes, use `npm run live:stack:up:workbench-local` or
+When validating active Workbench source changes without rebuilding the whole stack, use
+`npm run live:stack:up:workbench-local` or
 `Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench` before collecting final browser proof.
 That path keeps the canonical backend stack but serves Workbench from the current branch, avoiding
-stale Docker image evidence for newly added panels or selectors.
+stale Docker image evidence for newly added panels or selectors. If Gateway, Advise, Manage, Core,
+or another source service changed, use the default `npm run live:stack:up:validate` path or pass
+`-BuildImages` explicitly before accepting live proof.
 
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center

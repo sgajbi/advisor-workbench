@@ -305,6 +305,9 @@ describe("canonical live validation script", () => {
     expect(browserValidator).toContain('checkDns(summary, "render.dev.lotus")');
     expect(packageJson).toContain('"live:stack:up:workbench-local"');
     expect(packageJson).toContain('"live:stack:up:core-manage"');
+    expect(packageJson).toContain(
+      '"live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation -BuildImages"',
+    );
   });
 
   it("asserts canonical performance and risk calculation sanity", () => {
