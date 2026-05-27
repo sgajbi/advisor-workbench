@@ -32,6 +32,8 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   supportabilityPosture: string;
   workbenchPosture: string;
   clientReadyPublication: string;
+  paginationCursor: string | null;
+  roleProjectionValidated: boolean;
 }>;
 
 let validateCanonicalAdvisorCockpit: ValidateCanonicalAdvisorCockpit;
@@ -43,47 +45,104 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
+function actionItem({
+  actionItemId = "aci_policy_review_001",
+  portfolioId = PORTFOLIO_ID,
+  ownerRole = "COMPLIANCE_REVIEWER",
+  family = "POLICY_REVIEW_REQUIRED",
+  status = "PENDING_REVIEW",
+  priority = "HIGH",
+  reasonCodes = ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
+  acknowledged = false,
+} = {}): Record<string, unknown> {
+  return {
+    action_item_id: actionItemId,
+    action_item_version: 7,
+    action_family: family,
+    status,
+    priority,
+    owner_role: ownerRole,
+    owning_system: "lotus-advise",
+    title: "Policy review required",
+    next_required_action: "Review policy evidence before client-ready posture can change.",
+    sla_age_band: "DUE_SOON",
+    portfolio_id: portfolioId,
+    reason_codes: reasonCodes,
+    evidence_refs: [
+      {
+        evidence_id: "policy_eval_001",
+        evidence_type: "POLICY_EVALUATION",
+        source_system: "lotus-advise",
+        access_class: "RESTRICTED_CUSTOMER_EVIDENCE",
+        summary: "Policy evaluation requires review.",
+      },
+    ],
+    lineage_refs: [
+      {
+        lineage_id: "policy_evaluation:policy_eval_001",
+        source_system: "lotus-advise",
+        content_hash: "sha256:policy-evaluation",
+      },
+    ],
+    acknowledgement_state: acknowledged
+      ? {
+          acknowledged: true,
+          acknowledgement_id: `ack_${actionItemId}`,
+          acknowledged_by: "workbench-canonical-validator",
+          acknowledged_at: "2026-05-27T00:00:00Z",
+        }
+      : { acknowledged: false },
+  };
+}
+
 function actionListResponse({
   actionItemId = "aci_policy_review_001",
   portfolioId = PORTFOLIO_ID,
+  ownerRole = "COMPLIANCE_REVIEWER",
   acknowledged = false,
   includeHouseView = false,
+  totalCount,
+  nextCursor,
 } = {}): Response {
   const items = [
-    {
-      action_item_id: actionItemId,
-      action_item_version: 7,
-      action_family: "POLICY_REVIEW_REQUIRED",
-      status: "PENDING_REVIEW",
-      portfolio_id: portfolioId,
-      reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
-      acknowledgement_state: acknowledged
-        ? {
-            acknowledged: true,
-            acknowledgement_id: `ack_${actionItemId}`,
-            acknowledged_by: "workbench-canonical-validator",
-            acknowledged_at: "2026-05-27T00:00:00Z",
-          }
-        : { acknowledged: false },
-    },
+    actionItem({ actionItemId, portfolioId, ownerRole, acknowledged }),
   ];
   if (includeHouseView) {
-    items.push({
-      action_item_id: "aci_house_view_impact_review_001",
-      action_item_version: 1,
-      action_family: "HOUSE_VIEW_IMPACT_REVIEW",
-      status: "PENDING_REVIEW",
-      portfolio_id: portfolioId,
-      reason_codes: ["TACTICAL_HOUSE_VIEW_PORTFOLIO_AFFECTED"],
-      acknowledgement_state: { acknowledged: false },
-    });
+    items.push(
+      actionItem({
+        actionItemId: "aci_house_view_impact_review_001",
+        portfolioId,
+        ownerRole: "DPM_OWNER",
+        family: "HOUSE_VIEW_IMPACT_REVIEW",
+        priority: "MEDIUM",
+        reasonCodes: ["TACTICAL_HOUSE_VIEW_PORTFOLIO_AFFECTED"],
+      }),
+    );
   }
   return jsonResponse({
     data: {
-      total_count: items.length,
+      total_count: totalCount ?? items.length,
+      next_cursor: nextCursor,
       items,
     },
   });
+}
+
+function actionDetailResponse(): Response {
+  return jsonResponse({
+    data: actionItem(),
+  });
+}
+
+function invalidCursorResponse(): Response {
+  return jsonResponse(
+    {
+      detail: {
+        code: "ADVISOR_COCKPIT_CURSOR_INVALID",
+      },
+    },
+    422,
+  );
 }
 
 function houseViewCohortResponse(): Response {
@@ -176,6 +235,9 @@ describe("advisor cockpit live proof", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(actionListResponse())
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
@@ -205,23 +267,25 @@ describe("advisor cockpit live proof", () => {
       supportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       workbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+      paginationCursor: null,
+      roleProjectionValidated: false,
     });
     expect(fetchMock.mock.calls[0][0].toString()).toContain(
       `/api/v1/advisor-cockpit/actions?portfolio_id=${PORTFOLIO_ID}`,
     );
-    expect(fetchMock.mock.calls[3][0].toString()).toContain(
+    expect(fetchMock.mock.calls[6][0].toString()).toContain(
       "/api/v1/advisor-cockpit/supportability",
     );
-    expect(fetchMock.mock.calls[2][0].toString()).toContain(
+    expect(fetchMock.mock.calls[5][0].toString()).toContain(
       "/api/v1/advisor-cockpit/preparation-packets",
     );
-    expect(fetchMock.mock.calls[4][0].toString()).toContain(
+    expect(fetchMock.mock.calls[7][0].toString()).toContain(
       "/api/v1/advisor-cockpit/actions/aci_policy_review_001/acknowledgements",
     );
-    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(JSON.parse(fetchMock.mock.calls[4][1].body as string)).toMatchObject(
+    expect(JSON.parse(fetchMock.mock.calls[7][1].body as string)).toMatchObject(
       {
         action_item_version: 7,
         acknowledged_by: "workbench-canonical-validator",
@@ -239,6 +303,15 @@ describe("advisor cockpit live proof", () => {
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       replayed: true,
     });
+    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+      "/api/v1/advisor-cockpit/actions/aci_policy_review_001",
+    );
+    expect(fetchMock.mock.calls[2][0].toString()).toContain(
+      "role=COMPLIANCE_REVIEWER",
+    );
+    expect(fetchMock.mock.calls[3][0].toString()).toContain(
+      "cursor=invalid-rfc0026-cursor",
+    );
   });
 
   it("seeds house-view cohort evidence and requires cockpit action projection", async () => {
@@ -246,6 +319,30 @@ describe("advisor cockpit live proof", () => {
       .fn()
       .mockResolvedValueOnce(houseViewCohortResponse())
       .mockResolvedValueOnce(actionListResponse({ includeHouseView: true }))
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(
+        actionListResponse({ totalCount: 2, nextCursor: "aci_policy_review_001" }),
+      )
+      .mockResolvedValueOnce(
+        actionListResponse({ actionItemId: "aci_house_view_impact_review_001", totalCount: 2 }),
+      )
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: {
+            items: [
+              actionItem({
+                actionItemId: "aci_house_view_impact_review_001",
+                ownerRole: "DPM_OWNER",
+                family: "HOUSE_VIEW_IMPACT_REVIEW",
+                reasonCodes: ["TACTICAL_HOUSE_VIEW_PORTFOLIO_AFFECTED"],
+              }),
+            ],
+            total_count: 1,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
@@ -284,8 +381,12 @@ describe("advisor cockpit live proof", () => {
       },
     );
     expect(proof.houseViewCohortId).toBe("thv_cohort_001");
+    expect(proof.paginationCursor).toBe("aci_policy_review_001");
+    expect(proof.roleProjectionValidated).toBe(true);
     expect(summary.workflowPackChecks[0]).toMatchObject({
       houseViewCohortId: "thv_cohort_001",
+      paginationCursor: "aci_policy_review_001",
+      roleProjectionValidated: true,
     });
   });
 
@@ -315,6 +416,9 @@ describe("advisor cockpit live proof", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(actionListResponse())
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(
@@ -347,6 +451,9 @@ describe("advisor cockpit live proof", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(actionListResponse())
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(
         jsonResponse({
           data: {
@@ -388,6 +495,9 @@ describe("advisor cockpit live proof", () => {
       .mockResolvedValueOnce(
         actionListResponse({ actionItemId: "aci_policy_review_001" }),
       )
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
@@ -395,6 +505,13 @@ describe("advisor cockpit live proof", () => {
       .mockResolvedValueOnce(
         actionListResponse({ actionItemId: "aci_policy_review_002" }),
       )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: actionItem({ actionItemId: "aci_policy_review_002" }),
+        }),
+      )
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
@@ -417,14 +534,14 @@ describe("advisor cockpit live proof", () => {
       summary: { apiChecks: [], workflowPackChecks: [] },
     });
 
-    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[9][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[15][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).not.toBe(
-      fetchMock.mock.calls[9][1].headers["Idempotency-Key"],
+    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).not.toBe(
+      fetchMock.mock.calls[15][1].headers["Idempotency-Key"],
     );
   });
 
@@ -432,6 +549,9 @@ describe("advisor cockpit live proof", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(actionListResponse({ acknowledged: true }))
+      .mockResolvedValueOnce(actionDetailResponse())
+      .mockResolvedValueOnce(actionListResponse({ ownerRole: "COMPLIANCE_REVIEWER" }))
+      .mockResolvedValueOnce(invalidCursorResponse())
       .mockResolvedValueOnce(snapshotResponse())
       .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse());
@@ -450,7 +570,7 @@ describe("advisor cockpit live proof", () => {
     });
 
     expect(proof.actionItemId).toBe("aci_policy_review_001");
-    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenCalledTimes(7);
     expect(
       fetchMock.mock.calls.some((call) =>
         call[0].toString().includes("/acknowledgements"),

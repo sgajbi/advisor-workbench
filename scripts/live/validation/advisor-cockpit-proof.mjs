@@ -1,4 +1,4 @@
-import { fetchJson, sendJson } from "./probes.mjs";
+import { fetchJson, sendJson, sendJsonExpectingStatus } from "./probes.mjs";
 import {
   buildPayloadScopedIdempotencyKey,
   extractGatewayEnvelopeData,
@@ -13,6 +13,7 @@ function advisorCockpitQuery({
   advisorId = DEFAULT_ADVISOR_ID,
   role = DEFAULT_ROLE,
   limit,
+  cursor,
 }) {
   const query = new URLSearchParams({
     portfolio_id: portfolioId,
@@ -21,6 +22,9 @@ function advisorCockpitQuery({
   });
   if (limit) {
     query.set("limit", String(limit));
+  }
+  if (cursor) {
+    query.set("cursor", String(cursor));
   }
   return query.toString();
 }
@@ -50,6 +54,63 @@ function findPolicyReviewAction(items, expectedActionFamily) {
       reasonCodes.includes("POLICY_PENDING_REVIEW")
     );
   });
+}
+
+function assertActionContract(action, portfolioId, context) {
+  const actionItemId = readString(action?.action_item_id);
+  if (!actionItemId || typeof action?.action_item_version !== "number") {
+    throw new Error(
+      `Advisor cockpit ${context} did not include stable action identity and version.`,
+    );
+  }
+  for (const field of [
+    "action_family",
+    "status",
+    "priority",
+    "owner_role",
+    "owning_system",
+    "title",
+    "next_required_action",
+    "sla_age_band",
+  ]) {
+    if (!readString(action?.[field])) {
+      throw new Error(
+        `Advisor cockpit ${context} action ${actionItemId} returned no ${field}.`,
+      );
+    }
+  }
+  if (readString(action?.portfolio_id) !== portfolioId) {
+    throw new Error(
+      `Advisor cockpit ${context} action ${actionItemId} was scoped to ${readString(action?.portfolio_id) ?? "missing"} instead of ${portfolioId}.`,
+    );
+  }
+  if (!Array.isArray(action?.reason_codes) || action.reason_codes.length < 1) {
+    throw new Error(
+      `Advisor cockpit ${context} action ${actionItemId} returned no reason codes.`,
+    );
+  }
+  if (!Array.isArray(action?.evidence_refs) || action.evidence_refs.length < 1) {
+    throw new Error(
+      `Advisor cockpit ${context} action ${actionItemId} returned no source evidence refs.`,
+    );
+  }
+  const evidenceWithoutSource = action.evidence_refs.find(
+    (ref) =>
+      !readString(ref?.evidence_id) ||
+      !readString(ref?.evidence_type) ||
+      !readString(ref?.source_system) ||
+      !readString(ref?.access_class),
+  );
+  if (evidenceWithoutSource) {
+    throw new Error(
+      `Advisor cockpit ${context} action ${actionItemId} returned incomplete evidence refs.`,
+    );
+  }
+  if (!Array.isArray(action?.lineage_refs) || action.lineage_refs.length < 1) {
+    throw new Error(
+      `Advisor cockpit ${context} action ${actionItemId} returned no lineage refs.`,
+    );
+  }
 }
 
 function expectedActionFamilies(scenario) {
@@ -156,6 +217,159 @@ function isAcknowledged(action) {
   return action?.acknowledgement_state?.acknowledged === true;
 }
 
+async function validateActionDetail({
+  summary,
+  gatewayBaseUrl,
+  query,
+  policyAction,
+  portfolioId,
+  timeoutMs,
+}) {
+  const actionItemId = readString(policyAction?.action_item_id);
+  const detail = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
+      actionItemId,
+    )}?${query}`,
+    "Advisor cockpit canonical action detail",
+    timeoutMs,
+  );
+  const detailData = extractGatewayEnvelopeData(detail);
+  if (readString(detailData?.action_item_id) !== actionItemId) {
+    throw new Error(
+      `Advisor cockpit action detail returned ${readString(detailData?.action_item_id) ?? "missing"} for ${actionItemId}.`,
+    );
+  }
+  if (detailData?.action_item_version !== policyAction.action_item_version) {
+    throw new Error(
+      `Advisor cockpit action detail returned version ${detailData?.action_item_version ?? "missing"} for ${actionItemId}; expected ${policyAction.action_item_version}.`,
+    );
+  }
+  assertActionContract(detailData, portfolioId, "detail");
+}
+
+async function validateActionPagination({
+  summary,
+  gatewayBaseUrl,
+  portfolioId,
+  advisorId,
+  role,
+  firstPage,
+  timeoutMs,
+}) {
+  const totalCount = Number(firstPage?.total_count ?? 0);
+  if (totalCount < 2) {
+    return null;
+  }
+  const pagedQuery = advisorCockpitQuery({
+    portfolioId,
+    advisorId,
+    role,
+    limit: 1,
+  });
+  const firstPaged = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${pagedQuery}`,
+    "Advisor cockpit canonical pagination first page",
+    timeoutMs,
+  );
+  const firstPagedData = extractGatewayEnvelopeData(firstPaged);
+  const firstItems = Array.isArray(firstPagedData?.items)
+    ? firstPagedData.items
+    : [];
+  const nextCursor = readString(firstPagedData?.next_cursor);
+  if (firstItems.length !== 1 || !nextCursor) {
+    throw new Error(
+      "Advisor cockpit pagination did not return one item and a stable next_cursor.",
+    );
+  }
+  const secondPaged = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
+      portfolioId,
+      advisorId,
+      role,
+      limit: 1,
+      cursor: nextCursor,
+    })}`,
+    "Advisor cockpit canonical pagination second page",
+    timeoutMs,
+  );
+  const secondPagedData = extractGatewayEnvelopeData(secondPaged);
+  const secondItems = Array.isArray(secondPagedData?.items)
+    ? secondPagedData.items
+    : [];
+  if (secondItems.length !== 1) {
+    throw new Error("Advisor cockpit pagination second page returned no action item.");
+  }
+  if (
+    readString(firstItems[0]?.action_item_id) ===
+    readString(secondItems[0]?.action_item_id)
+  ) {
+    throw new Error("Advisor cockpit pagination repeated the first action item.");
+  }
+  assertPortfolioScopedActions([...firstItems, ...secondItems], portfolioId);
+  return nextCursor;
+}
+
+async function validateRoleProjection({
+  summary,
+  gatewayBaseUrl,
+  portfolioId,
+  advisorId,
+  timeoutMs,
+  expectedActionFamilies: families,
+}) {
+  const compliance = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
+      portfolioId,
+      advisorId,
+      role: "COMPLIANCE_REVIEWER",
+      limit: 25,
+    })}`,
+    "Advisor cockpit canonical compliance projection",
+    timeoutMs,
+  );
+  const compliancePage = extractGatewayEnvelopeData(compliance);
+  const complianceItems = Array.isArray(compliancePage?.items)
+    ? compliancePage.items
+    : [];
+  if (!complianceItems.some((item) => readString(item?.owner_role) === "COMPLIANCE_REVIEWER")) {
+    throw new Error("Advisor cockpit compliance projection returned no compliance-owned action.");
+  }
+  const invalidOwner = complianceItems.find((item) => {
+    const owner = readString(item?.owner_role);
+    return owner !== "COMPLIANCE_REVIEWER" && owner !== "SYSTEM";
+  });
+  if (invalidOwner) {
+    throw new Error(
+      `Advisor cockpit compliance projection leaked ${readString(invalidOwner?.owner_role) ?? "missing"} action ownership.`,
+    );
+  }
+
+  if (!families.includes("HOUSE_VIEW_IMPACT_REVIEW")) {
+    return false;
+  }
+  const dpm = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
+      portfolioId,
+      advisorId,
+      role: "DPM_OWNER",
+      limit: 25,
+    })}`,
+    "Advisor cockpit canonical DPM house-view projection",
+    timeoutMs,
+  );
+  const dpmPage = extractGatewayEnvelopeData(dpm);
+  const dpmItems = Array.isArray(dpmPage?.items) ? dpmPage.items : [];
+  if (!dpmItems.some((item) => readString(item?.action_family) === "HOUSE_VIEW_IMPACT_REVIEW")) {
+    throw new Error("Advisor cockpit DPM projection did not expose house-view impact review.");
+  }
+  return true;
+}
+
 export async function validateCanonicalAdvisorCockpit({
   summary,
   scenario,
@@ -194,6 +408,9 @@ export async function validateCanonicalAdvisorCockpit({
     );
   }
   assertPortfolioScopedActions(items, portfolioId);
+  for (const action of items) {
+    assertActionContract(action, portfolioId, "list");
+  }
   for (const family of expectedActionFamilies(scenario)) {
     if (!items.some((item) => readString(item?.action_family) === family)) {
       throw new Error(
@@ -218,6 +435,43 @@ export async function validateCanonicalAdvisorCockpit({
       "Advisor cockpit canonical action item did not include stable identity and version.",
     );
   }
+  await validateActionDetail({
+    summary,
+    gatewayBaseUrl,
+    query,
+    policyAction,
+    portfolioId,
+    timeoutMs,
+  });
+  const paginationCursor = await validateActionPagination({
+    summary,
+    gatewayBaseUrl,
+    portfolioId,
+    advisorId,
+    role,
+    firstPage: actionPage,
+    timeoutMs,
+  });
+  const roleProjectionValidated = await validateRoleProjection({
+    summary,
+    gatewayBaseUrl,
+    portfolioId,
+    advisorId,
+    timeoutMs,
+    expectedActionFamilies: expectedActionFamilies(scenario),
+  });
+  await sendJsonExpectingStatus(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
+      portfolioId,
+      advisorId,
+      role,
+      cursor: "invalid-rfc0026-cursor",
+    })}`,
+    "Advisor cockpit canonical invalid cursor rejection",
+    timeoutMs,
+    422,
+  );
 
   const snapshot = await fetchJson(
     summary,
@@ -384,6 +638,8 @@ export async function validateCanonicalAdvisorCockpit({
     houseViewCohortId: readString(houseViewCohort?.cohort_id),
     workbenchPosture,
     supportabilityPosture,
+    paginationCursor,
+    roleProjectionValidated,
     alreadyAcknowledged,
     replayed: alreadyAcknowledged || Boolean(acknowledgementData?.replayed),
   });
@@ -399,5 +655,7 @@ export async function validateCanonicalAdvisorCockpit({
     supportabilityPosture,
     workbenchPosture,
     clientReadyPublication,
+    paginationCursor,
+    roleProjectionValidated,
   };
 }
