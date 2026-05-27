@@ -66,9 +66,12 @@
   client-ready, communication, execution, or backend capability claim.
 - RFC-0025 Suitability Review policy-queue proof must use the Gateway-backed advisory policy
   review queue, selected evaluation, sign-off package, workflow posture, and bounded
-  request-more-evidence decision route. It must verify that Workbench renders source-owned policy
-  posture in advisor language without claiming local suitability calculation, policy approval,
-  waiver authority, sign-off completion, or client-ready publication.
+  request-more-evidence decision route. The live validator seeds this from the governed
+  `RFC25_SG_STRUCTURED_NOTE_PENDING_REVIEW` scenario in the canonical front-office demo-data
+  contract, then records `POLICY_EVALUATION_PENDING_REVIEW_CREATED` in `workflowPackChecks`.
+  It must verify that Workbench renders source-owned policy posture in advisor language without
+  claiming local suitability calculation, policy approval, waiver authority, sign-off completion, or
+  client-ready publication.
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics

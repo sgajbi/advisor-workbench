@@ -67,6 +67,92 @@ export const DEFAULT_CANONICAL_CONTRACT = {
       ],
     },
   },
+  advisoryProposalScenarios: {
+    scenarioId: "RFC23_25_ADVISORY_PROPOSAL_POLICY_CANONICAL",
+    sourceScope: "workbench_live_validation_scenario_seed",
+    proposal: {
+      title: "Canonical advisor narrative and policy proof",
+      createdBy: "workbench-canonical-validator",
+      jurisdiction: "SG",
+      advisorNotes: "Workbench canonical validation proposal for RFC-0023, RFC-0024, and RFC-0025.",
+      narrativeRequest: {
+        audience: "ADVISOR_REVIEW",
+        jurisdiction: "SG",
+        client_audience: "ADVISOR_REVIEW",
+        sections: ["EXECUTIVE_SUMMARY", "RISK_AND_CONCENTRATION"],
+        requested_by: "workbench-canonical-validator",
+      },
+    },
+    policyEvaluation: {
+      scenarioId: "RFC25_SG_STRUCTURED_NOTE_PENDING_REVIEW",
+      policyPackId: "SG_PRIVATE_BANKING_REFERENCE",
+      policyVersion: "2026.05",
+      createdBy: "advisor_1",
+      expectedEvaluationStatus: "PENDING_REVIEW",
+      expectedClientReadyPublication: "BLOCKED",
+      expectedWorkbenchPanel: "advisory.suitability_review",
+      evidenceBundle: {
+        context_resolution: {
+          advisory_policy_context: {
+            household_id: "HH-PB-001",
+            jurisdiction: "SG",
+            client_classification: "ACCREDITED_INVESTOR",
+            booking_center_code: "SG",
+            account_id: "ACCT-PB-001",
+            time_horizon: "5Y",
+            liquidity_need: "MEDIUM",
+            mandate_id: "MANDATE-BALANCED-001",
+            objectives: ["capital_preservation", "balanced_growth"],
+            restrictions: ["no_single_name_above_10pct"],
+          },
+        },
+        inputs: {
+          portfolio_snapshot: {
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            positions: [{ instrument_id: "US_EQ_ETF", quantity: "100" }],
+            cash_balances: [{ currency: "USD", amount: "50000" }],
+          },
+          market_data_snapshot: {
+            prices: [{ instrument_id: "SG_STRUCTURED_NOTE", price: "100", currency: "USD" }],
+            fx_rates: [{ pair: "USD/SGD", rate: "1.35" }],
+          },
+          shelf_entries: [
+            {
+              instrument_id: "SG_STRUCTURED_NOTE",
+              eligibility: { jurisdictions: ["SG"] },
+              target_market: { client_segments: ["ACCREDITED_INVESTOR"] },
+              complexity: "COMPLEX",
+              private_asset: false,
+              structured_product: true,
+            },
+          ],
+          proposed_trades: [{ instrument_id: "SG_STRUCTURED_NOTE", side: "BUY" }],
+        },
+        risk_lens: {
+          source_service: "lotus-risk",
+          single_position_concentration: { top_position_weight_current: "0.10" },
+          issuer_concentration: { hhi_current: "1200" },
+          drawdown: { max_drawdown_1y: "0.08" },
+          var: { var_95_1m: "0.04" },
+          stress: { equity_down_20: "-0.09" },
+          liquidity_risk: { days_to_liquidate: "3" },
+          private_asset_risk: { private_asset_weight: "0.00" },
+          climate_geopolitical_risk: { status: "not_material" },
+        },
+        artifact: {
+          assumptions_and_limits: {
+            costs_and_fees: { included: true },
+            tax: { included: true },
+            execution: { included: true },
+          },
+          disclosures: {
+            product_docs: [{ instrument_id: "SG_STRUCTURED_NOTE", doc_ref: "Term sheet" }],
+          },
+        },
+        conflict_evidence: { material_conflict: false, review_ref: "conflict-review-001" },
+      },
+    },
+  },
 };
 
 export const DEFAULT_PANEL_REGISTRY = {
@@ -366,6 +452,9 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
             payload.dpm_command_center?.multi_portfolio_wave_scenario
           ),
         },
+        advisoryProposalScenarios: normalizeAdvisoryProposalScenarios(
+          payload.advisory_proposal_scenarios
+        ),
         sourcePath: candidatePath,
       };
     } catch (error) {
@@ -400,6 +489,44 @@ function normalizeMultiPortfolioWaveScenario(rawScenario) {
       Number(rawScenario.minimum_portfolio_count ?? fallback.minimumPortfolioCount) ||
       fallback.minimumPortfolioCount,
     portfolios: Array.isArray(rawScenario.portfolios) ? rawScenario.portfolios : fallback.portfolios,
+  };
+}
+
+function normalizeAdvisoryProposalScenarios(rawScenario) {
+  const fallback = DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios;
+  if (!rawScenario || typeof rawScenario !== "object") {
+    return fallback;
+  }
+  const rawProposal = rawScenario.proposal && typeof rawScenario.proposal === "object"
+    ? rawScenario.proposal
+    : {};
+  const rawPolicy = rawScenario.policy_evaluation && typeof rawScenario.policy_evaluation === "object"
+    ? rawScenario.policy_evaluation
+    : {};
+  return {
+    scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
+    sourceScope: rawScenario.source_scope ?? fallback.sourceScope,
+    proposal: {
+      title: rawProposal.title ?? fallback.proposal.title,
+      createdBy: rawProposal.created_by ?? fallback.proposal.createdBy,
+      jurisdiction: rawProposal.jurisdiction ?? fallback.proposal.jurisdiction,
+      advisorNotes: rawProposal.advisor_notes ?? fallback.proposal.advisorNotes,
+      narrativeRequest: rawProposal.narrative_request ?? fallback.proposal.narrativeRequest,
+    },
+    policyEvaluation: {
+      scenarioId: rawPolicy.scenario_id ?? fallback.policyEvaluation.scenarioId,
+      policyPackId: rawPolicy.policy_pack_id ?? fallback.policyEvaluation.policyPackId,
+      policyVersion: rawPolicy.policy_version ?? fallback.policyEvaluation.policyVersion,
+      createdBy: rawPolicy.created_by ?? fallback.policyEvaluation.createdBy,
+      expectedEvaluationStatus:
+        rawPolicy.expected_evaluation_status ?? fallback.policyEvaluation.expectedEvaluationStatus,
+      expectedClientReadyPublication:
+        rawPolicy.expected_client_ready_publication ??
+        fallback.policyEvaluation.expectedClientReadyPublication,
+      expectedWorkbenchPanel:
+        rawPolicy.expected_workbench_panel ?? fallback.policyEvaluation.expectedWorkbenchPanel,
+      evidenceBundle: rawPolicy.evidence_bundle ?? fallback.policyEvaluation.evidenceBundle,
+    },
   };
 }
 
