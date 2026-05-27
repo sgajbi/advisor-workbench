@@ -57,6 +57,10 @@ function snapshotCount(snapshot, key) {
   return typeof value === "number" ? value : 0;
 }
 
+function isAcknowledged(action) {
+  return action?.acknowledgement_state?.acknowledged === true;
+}
+
 export async function validateCanonicalAdvisorCockpit({
   summary,
   scenario,
@@ -152,41 +156,46 @@ export async function validateCanonicalAdvisorCockpit({
     );
   }
 
-  const acknowledgementBody = {
-    action_item_version: actionItemVersion,
-    acknowledged_by: "workbench-canonical-validator",
-    acknowledgement_note:
-      "Canonical validation recorded advisor cockpit acknowledgement without clearing source-owned blockers.",
-  };
-  const acknowledgementIdempotencyMaterial = {
-    portfolio_id: portfolioId,
-    advisor_id: advisorId,
-    role,
-    action_item_id: actionItemId,
-    ...acknowledgementBody,
-  };
-  const acknowledgement = await sendJson(
-    summary,
-    `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
-      actionItemId,
-    )}/acknowledgements?${advisorCockpitQuery({ portfolioId, advisorId, role })}`,
-    "Advisor cockpit canonical acknowledgement",
-    timeoutMs,
-    {
-      method: "POST",
-      body: acknowledgementBody,
-      headers: {
-        "Idempotency-Key": buildPayloadScopedIdempotencyKey(
-          "wb-advisor-cockpit-ack",
-          acknowledgementIdempotencyMaterial,
-        ),
+  const alreadyAcknowledged = isAcknowledged(policyAction);
+  let acknowledgementData = null;
+  let acknowledgementState = policyAction.acknowledgement_state;
+  if (!alreadyAcknowledged) {
+    const acknowledgementBody = {
+      action_item_version: actionItemVersion,
+      acknowledged_by: "workbench-canonical-validator",
+      acknowledgement_note:
+        "Canonical validation recorded advisor cockpit acknowledgement without clearing source-owned blockers.",
+    };
+    const acknowledgementIdempotencyMaterial = {
+      portfolio_id: portfolioId,
+      advisor_id: advisorId,
+      role,
+      action_item_id: actionItemId,
+      ...acknowledgementBody,
+    };
+    const acknowledgement = await sendJson(
+      summary,
+      `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
+        actionItemId,
+      )}/acknowledgements?${advisorCockpitQuery({ portfolioId, advisorId, role })}`,
+      "Advisor cockpit canonical acknowledgement",
+      timeoutMs,
+      {
+        method: "POST",
+        body: acknowledgementBody,
+        headers: {
+          "Idempotency-Key": buildPayloadScopedIdempotencyKey(
+            "wb-advisor-cockpit-ack",
+            acknowledgementIdempotencyMaterial,
+          ),
+        },
       },
-    },
-  );
-  const acknowledgementData = extractGatewayEnvelopeData(acknowledgement);
-  const acknowledgementState =
-    acknowledgementData?.acknowledgement ??
-    acknowledgementData?.action_item?.acknowledgement_state;
+    );
+    acknowledgementData = extractGatewayEnvelopeData(acknowledgement);
+    acknowledgementState =
+      acknowledgementData?.acknowledgement ??
+      acknowledgementData?.action_item?.acknowledgement_state;
+  }
   if (acknowledgementState?.acknowledged !== true) {
     throw new Error(
       "Advisor cockpit acknowledgement did not return acknowledged=true.",
@@ -206,7 +215,8 @@ export async function validateCanonicalAdvisorCockpit({
     resultReviewState: policyAction.status,
     clientReadyPublication,
     supportabilityPosture: supportabilityData.posture,
-    replayed: Boolean(acknowledgementData?.replayed),
+    alreadyAcknowledged,
+    replayed: alreadyAcknowledged || Boolean(acknowledgementData?.replayed),
   });
 
   return {

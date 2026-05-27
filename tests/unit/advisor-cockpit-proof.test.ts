@@ -36,6 +36,7 @@ function jsonResponse(payload: unknown, status = 200): Response {
 function actionListResponse({
   actionItemId = "aci_policy_review_001",
   portfolioId = PORTFOLIO_ID,
+  acknowledged = false,
 } = {}): Response {
   return jsonResponse({
     data: {
@@ -48,6 +49,14 @@ function actionListResponse({
           status: "PENDING_REVIEW",
           portfolio_id: portfolioId,
           reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
+          acknowledgement_state: acknowledged
+            ? {
+                acknowledged: true,
+                acknowledgement_id: `ack_${actionItemId}`,
+                acknowledged_by: "workbench-canonical-validator",
+                acknowledged_at: "2026-05-27T00:00:00Z",
+              }
+            : { acknowledged: false },
         },
       ],
     },
@@ -196,6 +205,42 @@ describe("advisor cockpit live proof", () => {
     expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).not.toBe(
       fetchMock.mock.calls[7][1].headers["Idempotency-Key"],
     );
+  });
+
+  it("treats already acknowledged source state as repeatable canonical proof", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(actionListResponse({ acknowledged: true }))
+      .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(supportabilityResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const summary = { apiChecks: [], workflowPackChecks: [] };
+
+    const proof = await validateCanonicalAdvisorCockpit({
+      summary,
+      scenario: { expectedClientReadyPublication: "BLOCKED" },
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: PORTFOLIO_ID,
+      proposalId: "proposal_001",
+      proposalVersionId: "version_001",
+      timeoutMs: 1000,
+    });
+
+    expect(proof.actionItemId).toBe("aci_policy_review_001");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(
+      fetchMock.mock.calls.some((call) =>
+        call[0].toString().includes("/acknowledgements"),
+      ),
+    ).toBe(false);
+    expect(summary.workflowPackChecks[0]).toMatchObject({
+      actionType: "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
+      portfolioId: PORTFOLIO_ID,
+      actionItemId: "aci_policy_review_001",
+      alreadyAcknowledged: true,
+      replayed: true,
+    });
   });
 
   it("rejects action lists that escape the requested portfolio scope", async () => {
