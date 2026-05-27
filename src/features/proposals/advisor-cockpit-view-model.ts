@@ -4,6 +4,7 @@ import type {
   AdvisorCockpitActionItem,
   AdvisorCockpitActionPageData,
   AdvisorCockpitDependencyReadiness,
+  AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitPreparationPacket,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSourceReadinessGap,
@@ -59,10 +60,12 @@ export type AdvisorCockpitModel = {
 export function buildAdvisorCockpitModel({
   snapshot,
   actionPage,
+  preparationPage,
   supportability,
 }: {
   snapshot?: AdvisorCockpitSnapshotData;
   actionPage?: AdvisorCockpitActionPageData;
+  preparationPage?: AdvisorCockpitPreparationPacketPageData;
   supportability?: AdvisorCockpitSupportabilityData;
 }): AdvisorCockpitModel {
   const actions = actionPage?.items ?? snapshot?.top_priority_actions ?? [];
@@ -116,9 +119,11 @@ export function buildAdvisorCockpitModel({
       },
     ],
     actionRows: actions.map(toActionRow),
-    preparationRows: (snapshot?.preparation_packets ?? []).map(
-      toPreparationRow,
-    ),
+    preparationRows: (
+      preparationPage?.items ??
+      snapshot?.preparation_packets ??
+      []
+    ).map(toPreparationRow),
     supportabilityRows: buildSupportabilityRows(
       snapshot,
       supportability,

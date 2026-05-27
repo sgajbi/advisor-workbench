@@ -24,6 +24,7 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   actionCount: number;
   snapshotId: string;
   preparationPacketCount: number;
+  preparationPacketRouteCount: number;
   supportabilityPosture: string;
   workbenchPosture: string;
   clientReadyPublication: string;
@@ -101,6 +102,22 @@ function supportabilityResponse(
   });
 }
 
+function preparationPacketsResponse(): Response {
+  return jsonResponse({
+    data: {
+      total_count: 1,
+      items: [
+        {
+          packet_id: "prep_proposal_sg_001_v1",
+          context_type: "PROPOSAL",
+          context_ref: "proposal_sg_001",
+          status: "READY",
+        },
+      ],
+    },
+  });
+}
+
 function acknowledgementResponse(): Response {
   return jsonResponse({
     data: {
@@ -132,6 +149,7 @@ describe("advisor cockpit live proof", () => {
       .fn()
       .mockResolvedValueOnce(actionListResponse())
       .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
       .mockResolvedValueOnce(acknowledgementResponse());
     vi.stubGlobal("fetch", fetchMock);
@@ -154,6 +172,7 @@ describe("advisor cockpit live proof", () => {
       actionCount: 1,
       snapshotId: "cockpit_snapshot_001",
       preparationPacketCount: 1,
+      preparationPacketRouteCount: 1,
       clientReadyPublication: "BLOCKED",
       supportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
@@ -163,12 +182,18 @@ describe("advisor cockpit live proof", () => {
       `/api/v1/advisor-cockpit/actions?portfolio_id=${PORTFOLIO_ID}`,
     );
     expect(fetchMock.mock.calls[3][0].toString()).toContain(
+      "/api/v1/advisor-cockpit/supportability",
+    );
+    expect(fetchMock.mock.calls[2][0].toString()).toContain(
+      "/api/v1/advisor-cockpit/preparation-packets",
+    );
+    expect(fetchMock.mock.calls[4][0].toString()).toContain(
       "/api/v1/advisor-cockpit/actions/aci_policy_review_001/acknowledgements",
     );
-    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(JSON.parse(fetchMock.mock.calls[3][1].body as string)).toMatchObject(
+    expect(JSON.parse(fetchMock.mock.calls[4][1].body as string)).toMatchObject(
       {
         action_item_version: 7,
         acknowledged_by: "workbench-canonical-validator",
@@ -180,6 +205,7 @@ describe("advisor cockpit live proof", () => {
       actionItemId: "aci_policy_review_001",
       clientReadyPublication: "BLOCKED",
       preparationPacketCount: 1,
+      preparationPacketRouteCount: 1,
       workbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       supportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
@@ -192,6 +218,7 @@ describe("advisor cockpit live proof", () => {
       .fn()
       .mockResolvedValueOnce(actionListResponse())
       .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(
         supportabilityResponse("ADVISE_API_SUPPORTED_DOWNSTREAM_GATED"),
       );
@@ -264,12 +291,14 @@ describe("advisor cockpit live proof", () => {
         actionListResponse({ actionItemId: "aci_policy_review_001" }),
       )
       .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
       .mockResolvedValueOnce(acknowledgementResponse())
       .mockResolvedValueOnce(
         actionListResponse({ actionItemId: "aci_policy_review_002" }),
       )
       .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse())
       .mockResolvedValueOnce(acknowledgementResponse());
     vi.stubGlobal("fetch", fetchMock);
@@ -290,14 +319,14 @@ describe("advisor cockpit live proof", () => {
       summary: { apiChecks: [], workflowPackChecks: [] },
     });
 
-    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchMock.mock.calls[9][1].headers["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).not.toBe(
-      fetchMock.mock.calls[7][1].headers["Idempotency-Key"],
+    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).not.toBe(
+      fetchMock.mock.calls[9][1].headers["Idempotency-Key"],
     );
   });
 
@@ -306,6 +335,7 @@ describe("advisor cockpit live proof", () => {
       .fn()
       .mockResolvedValueOnce(actionListResponse({ acknowledged: true }))
       .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
       .mockResolvedValueOnce(supportabilityResponse());
     vi.stubGlobal("fetch", fetchMock);
 
@@ -322,7 +352,7 @@ describe("advisor cockpit live proof", () => {
     });
 
     expect(proof.actionItemId).toBe("aci_policy_review_001");
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(
       fetchMock.mock.calls.some((call) =>
         call[0].toString().includes("/acknowledgements"),

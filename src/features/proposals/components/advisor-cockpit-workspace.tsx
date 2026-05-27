@@ -18,6 +18,7 @@ import {
   getAdvisorCockpitSnapshot,
   getAdvisorCockpitSupportability,
   listAdvisorCockpitActions,
+  listAdvisorCockpitPreparationPackets,
 } from "../api";
 import {
   buildAdvisorCockpitModel,
@@ -52,6 +53,11 @@ export default function AdvisorCockpitWorkspace({
     queryFn: async () => await listAdvisorCockpitActions(filters),
     ...workbenchStrictQueryDefaults,
   });
+  const preparationQuery = useQuery({
+    queryKey: ["advisor-cockpit-preparation-packets", filters],
+    queryFn: async () => await listAdvisorCockpitPreparationPackets(filters),
+    ...workbenchStrictQueryDefaults,
+  });
   const supportabilityQuery = useQuery({
     queryKey: ["advisor-cockpit-supportability", portfolioId],
     queryFn: async () =>
@@ -67,9 +73,15 @@ export default function AdvisorCockpitWorkspace({
       buildAdvisorCockpitModel({
         snapshot: snapshotQuery.data,
         actionPage: actionQuery.data,
+        preparationPage: preparationQuery.data,
         supportability: supportabilityQuery.data,
       }),
-    [snapshotQuery.data, actionQuery.data, supportabilityQuery.data],
+    [
+      snapshotQuery.data,
+      actionQuery.data,
+      preparationQuery.data,
+      supportabilityQuery.data,
+    ],
   );
   const acknowledgementMutation = useMutation({
     mutationFn: async (row: AdvisorCockpitActionRow) =>
@@ -98,6 +110,9 @@ export default function AdvisorCockpitWorkspace({
           queryKey: ["advisor-cockpit-actions"],
         }),
         queryClient.invalidateQueries({
+          queryKey: ["advisor-cockpit-preparation-packets"],
+        }),
+        queryClient.invalidateQueries({
           queryKey: ["advisor-cockpit-supportability"],
         }),
       ]);
@@ -106,9 +121,13 @@ export default function AdvisorCockpitWorkspace({
   const isLoading =
     snapshotQuery.isLoading ||
     actionQuery.isLoading ||
+    preparationQuery.isLoading ||
     supportabilityQuery.isLoading;
   const hasError = Boolean(
-    snapshotQuery.error || actionQuery.error || supportabilityQuery.error,
+    snapshotQuery.error ||
+      actionQuery.error ||
+      preparationQuery.error ||
+      supportabilityQuery.error,
   );
 
   if (isLoading) {

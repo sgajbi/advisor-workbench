@@ -320,6 +320,15 @@ export type AdvisorCockpitPreparationPacket = {
   [key: string]: unknown;
 };
 
+export type AdvisorCockpitPreparationPacketPageData = {
+  items?: AdvisorCockpitPreparationPacket[];
+  next_cursor?: string | null;
+  page_size?: number;
+  total_count?: number | null;
+  supportability?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type AdvisorCockpitSnapshotData = {
   snapshot_id?: string;
   as_of?: string;

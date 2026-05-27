@@ -400,6 +400,12 @@ describe("canonical live validation script", () => {
       "Advisor cockpit canonical operating snapshot",
     );
     expect(advisorCockpitProof).toContain(
+      "Advisor cockpit canonical preparation packets",
+    );
+    expect(advisorCockpitProof).toContain(
+      "/api/v1/advisor-cockpit/preparation-packets",
+    );
+    expect(advisorCockpitProof).toContain(
       "Advisor cockpit canonical acknowledgement",
     );
     expect(advisorCockpitProof).toContain(

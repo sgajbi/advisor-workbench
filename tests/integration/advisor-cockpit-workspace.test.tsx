@@ -45,17 +45,22 @@ const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
     data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
     client_ready_publication: "BLOCKED",
   },
-  preparation_packets: [
-    {
-      packet_id: "prep_1",
-      context_type: "PORTFOLIO",
-      context_ref: "PB_SG_GLOBAL_BAL_001",
-      status: "READY",
-      evidence_refs: [{ summary: "Proposal and policy evidence available." }],
-    },
-  ],
   unsupported_capabilities: ["EXTERNAL_CLIENT_COMMUNICATION"],
 }));
+const listAdvisorCockpitPreparationPacketsMock = vi.fn(
+  async (_filters?: unknown) => ({
+    total_count: 1,
+    items: [
+      {
+        packet_id: "prep_1",
+        context_type: "PORTFOLIO",
+        context_ref: "PB_SG_GLOBAL_BAL_001",
+        status: "READY",
+        evidence_refs: [{ summary: "Proposal and policy evidence available." }],
+      },
+    ],
+  }),
+);
 const getAdvisorCockpitSupportabilityMock = vi.fn(
   async (_filters?: unknown) => ({
     posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
@@ -82,6 +87,8 @@ vi.mock("../../src/features/proposals/api", () => ({
     getAdvisorCockpitSupportabilityMock(filters),
   listAdvisorCockpitActions: (filters: unknown) =>
     listAdvisorCockpitActionsMock(filters),
+  listAdvisorCockpitPreparationPackets: (filters: unknown) =>
+    listAdvisorCockpitPreparationPacketsMock(filters),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -101,6 +108,7 @@ describe("AdvisorCockpitWorkspace", () => {
   beforeEach(() => {
     listAdvisorCockpitActionsMock.mockClear();
     getAdvisorCockpitSnapshotMock.mockClear();
+    listAdvisorCockpitPreparationPacketsMock.mockClear();
     getAdvisorCockpitSupportabilityMock.mockClear();
     acknowledgeAdvisorCockpitActionMock.mockClear();
   });
@@ -118,6 +126,12 @@ describe("AdvisorCockpitWorkspace", () => {
         limit: 25,
       });
       expect(getAdvisorCockpitSnapshotMock).toHaveBeenCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        advisorId: "advisor_sg_001",
+        role: "ADVISOR",
+        limit: 25,
+      });
+      expect(listAdvisorCockpitPreparationPacketsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
         advisorId: "advisor_sg_001",
         role: "ADVISOR",
@@ -188,21 +202,9 @@ describe("AdvisorCockpitWorkspace", () => {
   });
 
   it("keeps the meeting preparation section visible when source packets are absent", async () => {
-    getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
-      snapshot_id: "cockpit_snapshot_without_packets",
-      action_counts: {
-        "status.PENDING_REVIEW": 1,
-        "status.BLOCKED": 0,
-        "priority.HIGH": 1,
-      },
-      supportability: {
-        gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
-        workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
-        data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
-        client_ready_publication: "BLOCKED",
-      },
-      preparation_packets: [],
-      unsupported_capabilities: [],
+    listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({
+      items: [],
+      total_count: 0,
     });
 
     renderWithQueryClient(

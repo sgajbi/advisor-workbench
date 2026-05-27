@@ -222,14 +222,16 @@ promote dormant labels into product ownership just because historical route file
 - RFC-0026 advisor cockpit operating workflow is implemented on
   `/recommendations?mode=cockpit` through Gateway advisor cockpit endpoints. Workbench reads
   action items from `GET /api/v1/advisor-cockpit/actions`, the operating snapshot from
-  `GET /api/v1/advisor-cockpit/snapshot`, supportability from
+  `GET /api/v1/advisor-cockpit/snapshot`, preparation packets from
+  `GET /api/v1/advisor-cockpit/preparation-packets`, supportability from
   `GET /api/v1/advisor-cockpit/supportability`, and records bounded advisor acknowledgement
   through `POST /api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements` with the
   source action-item version and idempotency key. Workbench does not reconstruct policy
   semantics, clear source blockers, approve or waive findings, infer client-ready publication,
   contact clients, generate orders, route orders, or call `lotus-advise` directly. Canonical
-  validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`, treats already acknowledged source
-  actions as replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
+  validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`, proves the dedicated preparation-packet
+  route, treats already acknowledged source actions as replay evidence on repeated runs, and
+  captures `advisory-advisor-cockpit-live.png`.
 
 ## Route examples
 

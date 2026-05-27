@@ -270,7 +270,8 @@ Validation layers:
    - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
    - proposal creation with advisor-review narrative request
    - proposal narrative review and reviewed report-package request
-   - RFC-0026 advisor cockpit action list, snapshot, supportability, and idempotent acknowledgement
+   - RFC-0026 advisor cockpit action list, preparation packets, snapshot, supportability, and
+     idempotent acknowledgement
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
@@ -322,9 +323,9 @@ and a bounded request-more-evidence decision, and then render the Suitability Re
 same source-owned queue. The validator records this as
 `POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
 route-only screenshot.
-RFC-0026 advisor cockpit checks then read the Gateway-backed cockpit action list, operating
-snapshot, and supportability posture for the same portfolio, record an idempotent advisor
-acknowledgement, preserve blocked client-publication posture, and render
+RFC-0026 advisor cockpit checks then read the Gateway-backed cockpit action list, dedicated
+preparation-packet route, operating snapshot, and supportability posture for the same portfolio,
+record an idempotent advisor acknowledgement, preserve blocked client-publication posture, and render
 `/recommendations?mode=cockpit` as `advisory.advisor_cockpit`. The proof records
 `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`; it does not clear source-owned blockers, approve policy
 findings, contact clients, generate orders, or claim OMS execution.

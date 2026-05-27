@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildAdvisorCockpitModel } from "../../src/features/proposals/advisor-cockpit-view-model";
 import type {
   AdvisorCockpitActionPageData,
+  AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
 } from "../../src/features/proposals/types";
@@ -78,11 +79,25 @@ const supportability: AdvisorCockpitSupportabilityData = {
   unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
 };
 
+const preparationPage: AdvisorCockpitPreparationPacketPageData = {
+  total_count: 1,
+  items: [
+    {
+      packet_id: "prep_gateway_1",
+      context_type: "PROPOSAL",
+      context_ref: "proposal_sg_001",
+      status: "READY",
+      evidence_refs: [{ summary: "Gateway preparation route evidence." }],
+    },
+  ],
+};
+
 describe("advisor cockpit view model", () => {
   it("projects source-owned cockpit fields into business-facing rows without changing posture", () => {
     const model = buildAdvisorCockpitModel({
       snapshot,
       actionPage,
+      preparationPage,
       supportability,
     });
 
@@ -127,8 +142,8 @@ describe("advisor cockpit view model", () => {
       "OMS Order Lifecycle",
     ]);
     expect(model.preparationRows[0]).toMatchObject({
-      packetId: "prep_1",
-      context: "Portfolio PB_SG_GLOBAL_BAL_001",
+      packetId: "prep_gateway_1",
+      context: "Proposal proposal_sg_001",
       status: "Ready",
     });
   });

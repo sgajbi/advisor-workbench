@@ -333,15 +333,17 @@ Important current product and route truths:
     `proposal.memo_evidence_pack` screenshot evidence alongside `proposal.narrative_posture`.
 15. RFC-0026 advisor cockpit rendering on `/recommendations?mode=cockpit` is backed by Gateway
     advisor cockpit endpoints only:
-    `/api/v1/advisor-cockpit/actions`, `/api/v1/advisor-cockpit/actions/{action_item_id}`,
+    `/api/v1/advisor-cockpit/actions`, `/api/v1/advisor-cockpit/preparation-packets`,
+    `/api/v1/advisor-cockpit/actions/{action_item_id}`,
     `/api/v1/advisor-cockpit/snapshot`, `/api/v1/advisor-cockpit/supportability`, and
     `/api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements`.
     Workbench may render source-owned action items, snapshot counts, supportability posture,
     unsupported-capability boundaries, meeting-preparation packets, and bounded advisor
     acknowledgements through Gateway, but it must not calculate suitability, clear blockers, infer
     client-ready publication, contact clients, place orders, or call `lotus-advise` directly.
-    Canonical front-office validation now proves the action list, snapshot, supportability, an
-    idempotent acknowledgement, replay-safe already-acknowledged source state, and
+    Canonical front-office validation now proves the action list, preparation packet route,
+    snapshot, supportability, an idempotent acknowledgement, replay-safe already-acknowledged
+    source state, and
     `advisory.advisor_cockpit` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).

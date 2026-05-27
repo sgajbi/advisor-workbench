@@ -136,6 +136,31 @@ export async function validateCanonicalAdvisorCockpit({
       `Advisor cockpit snapshot returned ${preparationPackets.length} preparation packets, expected at least ${expectedMinPreparationPackets}.`,
     );
   }
+  const preparationPacketResponse = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/preparation-packets?${query}`,
+    "Advisor cockpit canonical preparation packets",
+    timeoutMs,
+  );
+  const preparationPacketPage = extractGatewayEnvelopeData(
+    preparationPacketResponse,
+  );
+  const routedPreparationPackets = Array.isArray(preparationPacketPage?.items)
+    ? preparationPacketPage.items
+    : [];
+  if (routedPreparationPackets.length < expectedMinPreparationPackets) {
+    throw new Error(
+      `Advisor cockpit preparation route returned ${routedPreparationPackets.length} packets, expected at least ${expectedMinPreparationPackets}.`,
+    );
+  }
+  const missingPacketIdentity = routedPreparationPackets.find(
+    (packet) => !readString(packet?.packet_id) || !readString(packet?.status),
+  );
+  if (missingPacketIdentity) {
+    throw new Error(
+      "Advisor cockpit preparation route returned a packet without stable packet_id and status.",
+    );
+  }
   const clientReadyPublication = readString(
     snapshotData?.supportability?.client_ready_publication,
   );
@@ -246,6 +271,7 @@ export async function validateCanonicalAdvisorCockpit({
     resultReviewState: policyAction.status,
     clientReadyPublication,
     preparationPacketCount: preparationPackets.length,
+    preparationPacketRouteCount: routedPreparationPackets.length,
     workbenchPosture,
     supportabilityPosture,
     alreadyAcknowledged,
@@ -258,6 +284,7 @@ export async function validateCanonicalAdvisorCockpit({
     actionCount: items.length,
     snapshotId: snapshotData.snapshot_id,
     preparationPacketCount: preparationPackets.length,
+    preparationPacketRouteCount: routedPreparationPackets.length,
     supportabilityPosture,
     workbenchPosture,
     clientReadyPublication,

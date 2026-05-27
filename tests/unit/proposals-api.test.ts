@@ -37,6 +37,7 @@ import {
   getProposalWorkflowEvents,
   listAdvisoryWorkspaceSavedVersions,
   listAdvisorCockpitActions,
+  listAdvisorCockpitPreparationPackets,
   recordProposalExecutionUpdate,
   recordProposalMemoReportPackageEvent,
   listProposals,
@@ -402,6 +403,10 @@ describe("proposal api", () => {
     };
 
     const actions = await listAdvisorCockpitActions({ ...filters, limit: 25 });
+    const preparationPackets = await listAdvisorCockpitPreparationPackets({
+      ...filters,
+      limit: 25,
+    });
     const snapshot = await getAdvisorCockpitSnapshot(filters);
     const supportability = await getAdvisorCockpitSupportability(filters);
     const acknowledgement = await acknowledgeAdvisorCockpitAction(
@@ -420,6 +425,9 @@ describe("proposal api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR&limit=25`,
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisor-cockpit/preparation-packets?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR&limit=25`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/advisor-cockpit/snapshot?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR`,
@@ -442,6 +450,7 @@ describe("proposal api", () => {
       }),
     );
     expect(actions.total_count).toBe(1);
+    expect(preparationPackets.total_count).toBe(1);
     expect(snapshot.snapshot_id).toBe("cockpit_snapshot_1");
     expect(supportability.posture).toBe(
       "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",

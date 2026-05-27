@@ -11,6 +11,7 @@ import {
   AdvisorCockpitActionPageData,
   AdvisorCockpitEnvelopeResponse,
   AdvisorCockpitOwnerRole,
+  AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
   ProposalApprovalActionRequest,
@@ -371,6 +372,14 @@ export async function listAdvisorCockpitActions(
   return (await getAdvisorCockpitData(
     `/actions${buildAdvisorCockpitQuery(filters)}`,
   )) as AdvisorCockpitActionPageData;
+}
+
+export async function listAdvisorCockpitPreparationPackets(
+  filters: AdvisorCockpitFilters = {},
+): Promise<AdvisorCockpitPreparationPacketPageData> {
+  return (await getAdvisorCockpitData(
+    `/preparation-packets${buildAdvisorCockpitQuery(filters)}`,
+  )) as AdvisorCockpitPreparationPacketPageData;
 }
 
 export async function getAdvisorCockpitSnapshot(
