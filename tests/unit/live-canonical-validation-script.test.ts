@@ -201,6 +201,14 @@ describe("canonical live validation script", () => {
       join(process.cwd(), "scripts", "live", "validation", "browser-workflows.mjs"),
       "utf8"
     );
+    const advisoryPolicyProof = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "advisory-policy-proof.mjs"),
+      "utf8"
+    );
+    const payloadUtils = readFileSync(
+      join(process.cwd(), "scripts", "live", "validation", "payload-utils.mjs"),
+      "utf8"
+    );
 
     expect(script).toContain("assertPerformanceCalculationSanity");
     expect(script).toContain("assertRiskCalculationSanity");
@@ -215,10 +223,18 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validateAdvisoryJourneyScreens");
     expect(script).toContain("validateProposalNarrativePosturePanel");
     expect(script).toContain("validateProposalMemoEvidencePackPanel");
+    expect(script).toContain('from "./validation/advisory-policy-proof.mjs"');
     expect(script).toContain("Create proposal narrative canonical proof");
-    expect(script).toContain('import { createHash } from "node:crypto"');
+    expect(advisoryPolicyProof).toContain("Create advisory policy evaluation canonical proof");
+    expect(advisoryPolicyProof).toContain("Advisory policy review queue canonical proof");
+    expect(advisoryPolicyProof).toContain("POLICY_EVALUATION_PENDING_REVIEW_CREATED");
+    expect(advisoryPolicyProof).toContain("POLICY_PACK_VERSION_ALREADY_ACTIVE_IMMUTABLE");
+    expect(advisoryPolicyProof).toContain('status: "already_active"');
+    expect(payloadUtils).toContain('import { createHash } from "node:crypto"');
+    expect(payloadUtils).toContain("buildPayloadScopedIdempotencyKey");
     expect(script).toContain("buildPayloadScopedIdempotencyKey");
     expect(script).toContain("proposalCreateIdempotencyKey");
+    expect(advisoryPolicyProof).toContain("wb-policy-evaluation");
     expect(script).toContain("proofPackIdempotencyKey");
     expect(script).toContain("proposal.narrative_posture");
     expect(script).toContain("proposal.memo_evidence_pack");
@@ -502,6 +518,8 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain('panelId: "performance.risk.snapshot"');
     expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
     expect(contractModule).toContain('panelId: "proposal.memo_evidence_pack"');
+    expect(contractModule).toContain("advisoryProposalScenarios");
+    expect(contractModule).toContain("RFC25_SG_STRUCTURED_NOTE_PENDING_REVIEW");
     expect(contractModule).toContain('screenshotName: "performance-risk-live.png"');
     expect(contractModule).toContain('screenshotName: "proposal-narrative-posture-live.png"');
     expect(contractModule).toContain('screenshotName: "proposal-memo-evidence-pack-live.png"');

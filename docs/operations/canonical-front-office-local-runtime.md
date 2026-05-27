@@ -311,6 +311,15 @@ visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal m
 the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
 review, request memo report-package posture, request non-authoritative commentary, preserve replay
 hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.
+RFC-0025 policy checks now use the governed
+`advisory_proposal_scenarios.policy_evaluation` block in
+`lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` to activate the
+Singapore private-banking policy pack, create a structured-note `PENDING_REVIEW` policy evaluation
+through Gateway, verify the review queue, workflow, sign-off package, blocked client-ready posture,
+and a bounded request-more-evidence decision, and then render the Suitability Review route from the
+same source-owned queue. The validator records this as
+`POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
+route-only screenshot.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal Simulation,
 Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and Implementation

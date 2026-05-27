@@ -1,5 +1,4 @@
 import process from "node:process";
-import { createHash } from "node:crypto";
 import { chromium, expect } from "@playwright/test";
 import { resolveValidationConfig } from "./validation/args.mjs";
 import {
@@ -53,6 +52,12 @@ import {
   buildRfc3643FeatureCoverage,
 } from "./validation/rfc36-43-feature-coverage.mjs";
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
+import { createCanonicalPolicyEvaluation } from "./validation/advisory-policy-proof.mjs";
+import {
+  buildPayloadScopedIdempotencyKey,
+  extractGatewayEnvelopeData,
+  readString,
+} from "./validation/payload-utils.mjs";
 
 const {
   portfolioId,
@@ -96,11 +101,6 @@ const summary = createValidationSummary({
 });
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
 
-function buildPayloadScopedIdempotencyKey(prefix, payload) {
-  const digest = createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 16);
-  return `${prefix}-${digest}`.slice(0, 64);
-}
-
 async function fetchOptionalJson(description, url) {
   try {
     return await fetchJson(summary, url, description, timeoutMs);
@@ -115,10 +115,6 @@ async function fetchOptionalJson(description, url) {
     });
     return null;
   }
-}
-
-function readString(value) {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function readSupportabilityState(supportability) {
@@ -279,10 +275,6 @@ function extractWorkflowPackRunId(payload) {
     readString(payload?.audit?.workflow_pack_run_id) ||
     null
   );
-}
-
-function extractGatewayEnvelopeData(payload) {
-  return payload?.data ?? payload;
 }
 
 function buildPmQualitySourceRef({
@@ -764,25 +756,24 @@ async function run() {
     postJson,
   });
 
+  const advisoryScenario =
+    canonicalContract.advisoryProposalScenarios ??
+    DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios;
+  const proposalScenario = advisoryScenario.proposal;
   const proposalCreateBody = {
     body: {
-      created_by: "workbench-canonical-validator",
+      created_by: proposalScenario.createdBy,
       input_mode: "stateful",
       stateful_input: {
         portfolio_id: portfolioId,
         as_of: canonicalAsOfDate,
-        narrative_request: {
-          audience: "ADVISOR_REVIEW",
-          jurisdiction: "SG",
-          client_audience: "ADVISOR_REVIEW",
-          sections: ["EXECUTIVE_SUMMARY", "RISK_AND_CONCENTRATION"],
-          requested_by: "workbench-canonical-validator",
-        },
+        narrative_request: proposalScenario.narrativeRequest,
       },
       metadata: {
-        title: "Canonical advisor narrative proof",
-        advisor_notes: "Workbench canonical validation proposal for RFC-0023 Slice 12.",
-        jurisdiction: "SG",
+        title: proposalScenario.title,
+        advisor_notes: proposalScenario.advisorNotes,
+        jurisdiction: proposalScenario.jurisdiction,
+        canonical_scenario_id: advisoryScenario.scenarioId,
       },
     },
   };
@@ -806,8 +797,9 @@ async function run() {
   const proposalCreateData = extractGatewayEnvelopeData(proposalCreate);
   const proposalId = readString(proposalCreateData?.proposal?.proposal_id);
   const proposalVersionNo = proposalCreateData?.version?.version_no ?? null;
+  const proposalVersionId = readString(proposalCreateData?.version?.proposal_version_id);
   const proposalNarrative = proposalCreateData?.version?.artifact?.proposal_narrative;
-  if (!proposalId || !proposalNarrative?.narrative_id) {
+  if (!proposalId || !proposalVersionId || !proposalNarrative?.narrative_id) {
     throw new Error("Canonical proposal narrative proof did not create a narrative proposal.");
   }
   summary.workflowPackChecks.push({
@@ -818,6 +810,15 @@ async function run() {
     resultSupportabilityStatus: proposalNarrative.generation_mode,
     proposalId,
     versionNo: proposalVersionNo,
+  });
+
+  await createCanonicalPolicyEvaluation({
+    summary,
+    scenario: advisoryScenario.policyEvaluation,
+    gatewayBaseUrl,
+    proposalId,
+    proposalVersionId,
+    timeoutMs,
   });
 
   const manageSupportabilitySummary = await fetchJson(
