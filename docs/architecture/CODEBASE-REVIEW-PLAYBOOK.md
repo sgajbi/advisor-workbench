@@ -33,7 +33,7 @@ A scope is not signed off unless it has:
 
 ## Current Focus
 
-The current review focus is Portfolio and Performance production hardening:
+The current review focus is Portfolio, Performance, and Advisory product-surface hardening:
 
 1. only expose Gateway-backed features that are actually implemented upstream,
 2. keep business shaping in Gateway/domain services rather than page components,
