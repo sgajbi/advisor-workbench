@@ -11,6 +11,7 @@ type ValidateCanonicalAdvisorCockpit = (args: {
     expectedClientReadyPublication: string;
     expectedSupportabilityPosture?: string;
     expectedWorkbenchPosture?: string;
+    expectedMinPreparationPackets?: number;
   };
   gatewayBaseUrl: string;
   portfolioId: string;
@@ -22,6 +23,7 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   actionItemVersion: number;
   actionCount: number;
   snapshotId: string;
+  preparationPacketCount: number;
   supportabilityPosture: string;
   workbenchPosture: string;
   clientReadyPublication: string;
@@ -77,6 +79,14 @@ function snapshotResponse(): Response {
         client_ready_publication: "BLOCKED",
         workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       },
+      preparation_packets: [
+        {
+          packet_id: "prep_proposal_sg_001_v1",
+          context_type: "PROPOSAL",
+          context_ref: "proposal_sg_001",
+          status: "READY",
+        },
+      ],
     },
   });
 }
@@ -143,6 +153,7 @@ describe("advisor cockpit live proof", () => {
       actionItemVersion: 7,
       actionCount: 1,
       snapshotId: "cockpit_snapshot_001",
+      preparationPacketCount: 1,
       clientReadyPublication: "BLOCKED",
       supportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
@@ -168,6 +179,7 @@ describe("advisor cockpit live proof", () => {
       portfolioId: PORTFOLIO_ID,
       actionItemId: "aci_policy_review_001",
       clientReadyPublication: "BLOCKED",
+      preparationPacketCount: 1,
       workbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       supportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
@@ -193,6 +205,7 @@ describe("advisor cockpit live proof", () => {
           expectedSupportabilityPosture:
             "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
           expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+          expectedMinPreparationPackets: 1,
         },
         gatewayBaseUrl: "http://gateway.dev.lotus",
         portfolioId: PORTFOLIO_ID,
@@ -202,6 +215,45 @@ describe("advisor cockpit live proof", () => {
       }),
     ).rejects.toThrow(
       "Advisor cockpit supportability returned posture ADVISE_API_SUPPORTED_DOWNSTREAM_GATED",
+    );
+  });
+
+  it("rejects missing meeting-preparation packets when the canonical contract requires them", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(actionListResponse())
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: {
+            snapshot_id: "cockpit_snapshot_001",
+            action_counts: {
+              "status.PENDING_REVIEW": 1,
+            },
+            supportability: {
+              client_ready_publication: "BLOCKED",
+              workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+            },
+            preparation_packets: [],
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      validateCanonicalAdvisorCockpit({
+        summary: { apiChecks: [], workflowPackChecks: [] },
+        scenario: {
+          expectedClientReadyPublication: "BLOCKED",
+          expectedMinPreparationPackets: 1,
+        },
+        gatewayBaseUrl: "http://gateway.dev.lotus",
+        portfolioId: PORTFOLIO_ID,
+        proposalId: "proposal_001",
+        proposalVersionId: "version_001",
+        timeoutMs: 1000,
+      }),
+    ).rejects.toThrow(
+      "Advisor cockpit snapshot returned 0 preparation packets, expected at least 1",
     );
   });
 

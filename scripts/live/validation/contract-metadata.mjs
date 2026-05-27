@@ -179,6 +179,7 @@ export const DEFAULT_CANONICAL_CONTRACT = {
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       expectedClientReadyPublication: "BLOCKED",
+      expectedMinPreparationPackets: 1,
       unsupportedCapabilityBoundaries: [
         "CLIENT_READY_PUBLICATION",
         "EXTERNAL_CLIENT_COMMUNICATION",
@@ -790,6 +791,9 @@ function normalizeAdvisorCockpitScenario(rawScenario) {
     expectedClientReadyPublication:
       rawScenario.expected_client_ready_publication ??
       fallback.expectedClientReadyPublication,
+    expectedMinPreparationPackets:
+      rawScenario.expected_min_preparation_packets ??
+      fallback.expectedMinPreparationPackets,
     unsupportedCapabilityBoundaries: Array.isArray(
       rawScenario.unsupported_capability_boundaries,
     )

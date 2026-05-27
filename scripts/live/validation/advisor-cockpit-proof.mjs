@@ -125,6 +125,17 @@ export async function validateCanonicalAdvisorCockpit({
       "Advisor cockpit snapshot did not preserve pending-review action count.",
     );
   }
+  const preparationPackets = Array.isArray(snapshotData?.preparation_packets)
+    ? snapshotData.preparation_packets
+    : [];
+  const expectedMinPreparationPackets = Number(
+    scenario?.expectedMinPreparationPackets ?? 0,
+  );
+  if (preparationPackets.length < expectedMinPreparationPackets) {
+    throw new Error(
+      `Advisor cockpit snapshot returned ${preparationPackets.length} preparation packets, expected at least ${expectedMinPreparationPackets}.`,
+    );
+  }
   const clientReadyPublication = readString(
     snapshotData?.supportability?.client_ready_publication,
   );
@@ -234,6 +245,7 @@ export async function validateCanonicalAdvisorCockpit({
     actionItemVersion,
     resultReviewState: policyAction.status,
     clientReadyPublication,
+    preparationPacketCount: preparationPackets.length,
     workbenchPosture,
     supportabilityPosture,
     alreadyAcknowledged,
@@ -245,6 +257,7 @@ export async function validateCanonicalAdvisorCockpit({
     actionItemVersion,
     actionCount: items.length,
     snapshotId: snapshotData.snapshot_id,
+    preparationPacketCount: preparationPackets.length,
     supportabilityPosture,
     workbenchPosture,
     clientReadyPublication,
