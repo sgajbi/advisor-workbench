@@ -927,6 +927,7 @@ describe("canonical live validation script", () => {
     );
     expect(browserWorkflowModule).toContain("advisory-risk-impact-live.png");
     expect(browserWorkflowModule).toContain("advisory-approval-queue-live.png");
+    expect(browserWorkflowModule).toContain("Discussion Pack Review");
     expect(browserWorkflowModule).toContain(
       "advisory-client-discussion-pack-live.png",
     );

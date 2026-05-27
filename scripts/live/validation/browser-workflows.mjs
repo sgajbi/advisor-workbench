@@ -421,7 +421,7 @@ export async function validateAdvisoryJourneyScreens(
     },
     {
       key: "discussion-pack",
-      title: "Client Discussion Pack",
+      title: "Discussion Pack Review",
       screenshotName: "advisory-client-discussion-pack-live.png",
       panel: "advisory.client_discussion_pack",
       sourcePosture: "discussion-pack-posture-through-gateway",
