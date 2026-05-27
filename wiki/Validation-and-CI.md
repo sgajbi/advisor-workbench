@@ -61,7 +61,7 @@
   before the panel is classified as ready
 - RFC-0024 advisory journey route proof is recorded in `advisoryJourneyChecks` with screenshots for
   Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal
-  Simulation, Suitability Review, Risk and Impact, Approval Queue, Client Discussion Pack, and
+  Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and
   Implementation Status. This is route evidence over existing Gateway-backed screens, not a new
   client-ready, communication, execution, or backend capability claim.
 - RFC-0025 Suitability Review policy-queue proof must use the Gateway-backed advisory policy
