@@ -74,7 +74,8 @@ export const DEFAULT_CANONICAL_CONTRACT = {
       title: "Canonical advisor narrative and policy proof",
       createdBy: "workbench-canonical-validator",
       jurisdiction: "SG",
-      advisorNotes: "Workbench canonical validation proposal for RFC-0023, RFC-0024, and RFC-0025.",
+      advisorNotes:
+        "Workbench canonical validation proposal for RFC-0023, RFC-0024, and RFC-0025.",
       narrativeRequest: {
         audience: "ADVISOR_REVIEW",
         jurisdiction: "SG",
@@ -113,7 +114,13 @@ export const DEFAULT_CANONICAL_CONTRACT = {
             cash_balances: [{ currency: "USD", amount: "50000" }],
           },
           market_data_snapshot: {
-            prices: [{ instrument_id: "SG_STRUCTURED_NOTE", price: "100", currency: "USD" }],
+            prices: [
+              {
+                instrument_id: "SG_STRUCTURED_NOTE",
+                price: "100",
+                currency: "USD",
+              },
+            ],
             fx_rates: [{ pair: "USD/SGD", rate: "1.35" }],
           },
           shelf_entries: [
@@ -126,11 +133,15 @@ export const DEFAULT_CANONICAL_CONTRACT = {
               structured_product: true,
             },
           ],
-          proposed_trades: [{ instrument_id: "SG_STRUCTURED_NOTE", side: "BUY" }],
+          proposed_trades: [
+            { instrument_id: "SG_STRUCTURED_NOTE", side: "BUY" },
+          ],
         },
         risk_lens: {
           source_service: "lotus-risk",
-          single_position_concentration: { top_position_weight_current: "0.10" },
+          single_position_concentration: {
+            top_position_weight_current: "0.10",
+          },
           issuer_concentration: { hhi_current: "1200" },
           drawdown: { max_drawdown_1y: "0.08" },
           var: { var_95_1m: "0.04" },
@@ -146,11 +157,39 @@ export const DEFAULT_CANONICAL_CONTRACT = {
             execution: { included: true },
           },
           disclosures: {
-            product_docs: [{ instrument_id: "SG_STRUCTURED_NOTE", doc_ref: "Term sheet" }],
+            product_docs: [
+              { instrument_id: "SG_STRUCTURED_NOTE", doc_ref: "Term sheet" },
+            ],
           },
         },
-        conflict_evidence: { material_conflict: false, review_ref: "conflict-review-001" },
+        conflict_evidence: {
+          material_conflict: false,
+          review_ref: "conflict-review-001",
+        },
       },
+    },
+    advisorCockpit: {
+      scenarioId: "RFC26_ADVISOR_COCKPIT_POLICY_ACTION_CANONICAL",
+      advisorId: "advisor_sg_001",
+      role: "ADVISOR",
+      expectedWorkbenchPanel: "advisory.advisor_cockpit",
+      expectedActionFamily: "POLICY_REVIEW_REQUIRED",
+      expectedActionFamilies: [
+        "POLICY_REVIEW_REQUIRED",
+        "HOUSE_VIEW_IMPACT_REVIEW",
+      ],
+      expectedAcknowledgementMarker: "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
+      expectedSupportabilityPosture:
+        "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+      expectedClientReadyPublication: "BLOCKED",
+      expectedMinPreparationPackets: 1,
+      seedHouseViewCohort: true,
+      unsupportedCapabilityBoundaries: [
+        "CLIENT_READY_PUBLICATION",
+        "EXTERNAL_CLIENT_COMMUNICATION",
+        "OMS_ORDER_LIFECYCLE",
+      ],
     },
   },
 };
@@ -168,7 +207,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/overview",
       requiredSupportState: "ready",
       route: "/portfolio?portfolioId={portfolioId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "portfolio-summary-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -179,7 +225,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/overview",
       requiredSupportState: "ready",
       route: "/portfolio?portfolioId={portfolioId}&tab=detailed",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "portfolio-detailed-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -190,7 +243,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/summary",
       requiredSupportState: "ready",
       route: "/performance?portfolioId={portfolioId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-summary-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -200,8 +260,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-performance",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/details",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-analysis-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -211,8 +279,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-performance",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/details",
       requiredSupportState: "partial",
-      route: "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-analysis-live.png",
       knownLimitations: [
         "benchmark-relative attribution may remain partial until full source-backed detail is available",
@@ -222,10 +298,19 @@ export const DEFAULT_PANEL_REGISTRY = {
     {
       panelId: "performance.advisor_brief",
       owningService: "lotus-performance",
-      gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/advisor-brief",
+      gatewayEndpoint:
+        "/api/v1/workbench/{portfolio_id}/performance/advisor-brief",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-advisor-brief-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -236,7 +321,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/proposals/{proposal_id}/delivery-summary",
       requiredSupportState: "ready",
       route: "/proposals/{proposalId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "proposal-narrative-posture-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -244,10 +336,18 @@ export const DEFAULT_PANEL_REGISTRY = {
     {
       panelId: "proposal.memo_evidence_pack",
       owningService: "lotus-advise",
-      gatewayEndpoint: "/api/v1/proposals/{proposal_id}/versions/{version_no}/memo",
+      gatewayEndpoint:
+        "/api/v1/proposals/{proposal_id}/versions/{version_no}/memo",
       requiredSupportState: "ready",
       route: "/proposals/{proposalId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "proposal-memo-evidence-pack-live.png",
       knownLimitations: [
         "Workbench validates advisor-use memo evidence only; client-ready release and document rendering remain outside this surface",
@@ -255,12 +355,38 @@ export const DEFAULT_PANEL_REGISTRY = {
       ownerFollowUpRfc: null,
     },
     {
+      panelId: "advisory.advisor_cockpit",
+      owningService: "lotus-advise",
+      gatewayEndpoint: "/api/v1/advisor-cockpit/actions",
+      requiredSupportState: "ready",
+      route: "/recommendations?portfolioId={portfolio_id}&mode=cockpit",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
+      screenshotName: "advisory-advisor-cockpit-live.png",
+      knownLimitations: [],
+      ownerFollowUpRfc: null,
+    },
+    {
       panelId: "performance.risk.snapshot",
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/summary",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-risk-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -270,8 +396,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/drawdown",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-risk-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -281,8 +415,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/concentration",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-risk-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -292,8 +434,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/rolling",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-risk-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -303,8 +453,16 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-risk",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/attribution",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-risk-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
@@ -314,10 +472,20 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-gateway",
       gatewayEndpoint: null,
       requiredSupportState: "partial",
-      route: "/performance?portfolioId={portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      route:
+        "/performance?portfolioId={portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "performance-evidence-live.png",
-      knownLimitations: ["full evidence and lineage support is deferred pending RFC-0079"],
+      knownLimitations: [
+        "full evidence and lineage support is deferred pending RFC-0079",
+      ],
       ownerFollowUpRfc: "RFC-0079",
     },
     {
@@ -326,7 +494,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/dpm/command-center/outcome-reviews",
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-outcome-review-live.png",
       knownLimitations: [
         "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/outcomes workspace",
@@ -339,7 +514,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/dpm/command-center/waves",
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-wave-command-center-live.png",
       knownLimitations: [
         "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/waves workspace",
@@ -349,10 +531,18 @@ export const DEFAULT_PANEL_REGISTRY = {
     {
       panelId: "dpm.portfolio_memory",
       owningService: "lotus-manage",
-      gatewayEndpoint: "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory",
+      gatewayEndpoint:
+        "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory",
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-portfolio-memory-live.png",
       knownLimitations: [
         "embedded /workbench/{portfolioId} timeline is implemented before event filters and detail drawers",
@@ -362,10 +552,18 @@ export const DEFAULT_PANEL_REGISTRY = {
     {
       panelId: "dpm.construction_alternatives",
       owningService: "lotus-manage",
-      gatewayEndpoint: "/api/v1/dpm/command-center/construction/alternative-sets/generate",
+      gatewayEndpoint:
+        "/api/v1/dpm/command-center/construction/alternative-sets/generate",
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}?mode=construction",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-construction-alternatives-live.png",
       knownLimitations: [
         "Workbench renders Gateway/manage construction truth only; it does not calculate alternatives, route orders, execute trades, or claim OMS execution",
@@ -375,10 +573,18 @@ export const DEFAULT_PANEL_REGISTRY = {
     {
       panelId: "dpm.pm_operating_quality",
       owningService: "lotus-manage",
-      gatewayEndpoint: "/api/v1/dpm/command-center/pm-operating-quality/score-runs",
+      gatewayEndpoint:
+        "/api/v1/dpm/command-center/pm-operating-quality/score-runs",
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}?mode=quality",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-pm-operating-quality-live.png",
       knownLimitations: [
         "Workbench renders Gateway/manage PM operating-quality truth only; it does not rank PMs, generate summary text, make HR decisions, contact clients, or execute trades",
@@ -391,7 +597,14 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: null,
       requiredSupportState: "ready",
       route: "/workbench/{portfolioId}?mode=copilot",
-      allowedStates: ["ready", "loading", "empty", "partial", "unavailable", "error"],
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
       screenshotName: "dpm-copilot-workspace-live.png",
       knownLimitations: [
         "Workbench renders Gateway/lotus-ai workflow-pack posture only; it does not store prompts, store generated responses, contact clients, route orders, or claim OMS execution",
@@ -408,7 +621,7 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
           process.env.LOTUS_PLATFORM_REPO,
           "context",
           "contracts",
-          "canonical-front-office-demo-data-contract.json"
+          "canonical-front-office-demo-data-contract.json",
         )
       : null,
     path.resolve(
@@ -417,7 +630,7 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
       "lotus-platform",
       "context",
       "contracts",
-      "canonical-front-office-demo-data-contract.json"
+      "canonical-front-office-demo-data-contract.json",
     ),
   ].filter(Boolean);
 
@@ -426,12 +639,19 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
       const raw = await fs.readFile(candidatePath, "utf8");
       const payload = JSON.parse(raw);
       return {
-        contractId: payload.contract_id ?? DEFAULT_CANONICAL_CONTRACT.contractId,
-        contractVersion: payload.contract_version ?? DEFAULT_CANONICAL_CONTRACT.contractVersion,
-        governedByRfc: payload.governed_by_rfc ?? DEFAULT_CANONICAL_CONTRACT.governedByRfc,
-        portfolioId: payload.portfolio?.portfolio_id ?? DEFAULT_CANONICAL_CONTRACT.portfolioId,
+        contractId:
+          payload.contract_id ?? DEFAULT_CANONICAL_CONTRACT.contractId,
+        contractVersion:
+          payload.contract_version ??
+          DEFAULT_CANONICAL_CONTRACT.contractVersion,
+        governedByRfc:
+          payload.governed_by_rfc ?? DEFAULT_CANONICAL_CONTRACT.governedByRfc,
+        portfolioId:
+          payload.portfolio?.portfolio_id ??
+          DEFAULT_CANONICAL_CONTRACT.portfolioId,
         benchmarkCode:
-          payload.benchmark?.benchmark_id ?? DEFAULT_CANONICAL_CONTRACT.benchmarkCode,
+          payload.benchmark?.benchmark_id ??
+          DEFAULT_CANONICAL_CONTRACT.benchmarkCode,
         canonicalAsOfDate:
           payload.date_policy?.canonical_as_of_date ??
           DEFAULT_CANONICAL_CONTRACT.canonicalAsOfDate,
@@ -449,22 +669,27 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
             payload.dpm_command_center?.command_center_as_of_date ??
             DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.commandCenterAsOfDate,
           multiPortfolioWaveScenario: normalizeMultiPortfolioWaveScenario(
-            payload.dpm_command_center?.multi_portfolio_wave_scenario
+            payload.dpm_command_center?.multi_portfolio_wave_scenario,
           ),
         },
         advisoryProposalScenarios: normalizeAdvisoryProposalScenarios(
-          payload.advisory_proposal_scenarios
+          payload.advisory_proposal_scenarios,
         ),
         sourcePath: candidatePath,
       };
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
         continue;
       }
       throw new Error(
         `Unable to load governed canonical contract metadata from ${candidatePath}: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -476,7 +701,8 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
 }
 
 function normalizeMultiPortfolioWaveScenario(rawScenario) {
-  const fallback = DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.multiPortfolioWaveScenario;
+  const fallback =
+    DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.multiPortfolioWaveScenario;
   if (!rawScenario || typeof rawScenario !== "object") {
     return fallback;
   }
@@ -486,9 +712,12 @@ function normalizeMultiPortfolioWaveScenario(rawScenario) {
     triggerType: rawScenario.trigger_type ?? fallback.triggerType,
     sourceScope: rawScenario.source_scope ?? fallback.sourceScope,
     minimumPortfolioCount:
-      Number(rawScenario.minimum_portfolio_count ?? fallback.minimumPortfolioCount) ||
-      fallback.minimumPortfolioCount,
-    portfolios: Array.isArray(rawScenario.portfolios) ? rawScenario.portfolios : fallback.portfolios,
+      Number(
+        rawScenario.minimum_portfolio_count ?? fallback.minimumPortfolioCount,
+      ) || fallback.minimumPortfolioCount,
+    portfolios: Array.isArray(rawScenario.portfolios)
+      ? rawScenario.portfolios
+      : fallback.portfolios,
   };
 }
 
@@ -497,12 +726,15 @@ function normalizeAdvisoryProposalScenarios(rawScenario) {
   if (!rawScenario || typeof rawScenario !== "object") {
     return fallback;
   }
-  const rawProposal = rawScenario.proposal && typeof rawScenario.proposal === "object"
-    ? rawScenario.proposal
-    : {};
-  const rawPolicy = rawScenario.policy_evaluation && typeof rawScenario.policy_evaluation === "object"
-    ? rawScenario.policy_evaluation
-    : {};
+  const rawProposal =
+    rawScenario.proposal && typeof rawScenario.proposal === "object"
+      ? rawScenario.proposal
+      : {};
+  const rawPolicy =
+    rawScenario.policy_evaluation &&
+    typeof rawScenario.policy_evaluation === "object"
+      ? rawScenario.policy_evaluation
+      : {};
   return {
     scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
     sourceScope: rawScenario.source_scope ?? fallback.sourceScope,
@@ -511,22 +743,74 @@ function normalizeAdvisoryProposalScenarios(rawScenario) {
       createdBy: rawProposal.created_by ?? fallback.proposal.createdBy,
       jurisdiction: rawProposal.jurisdiction ?? fallback.proposal.jurisdiction,
       advisorNotes: rawProposal.advisor_notes ?? fallback.proposal.advisorNotes,
-      narrativeRequest: rawProposal.narrative_request ?? fallback.proposal.narrativeRequest,
+      narrativeRequest:
+        rawProposal.narrative_request ?? fallback.proposal.narrativeRequest,
     },
     policyEvaluation: {
       scenarioId: rawPolicy.scenario_id ?? fallback.policyEvaluation.scenarioId,
-      policyPackId: rawPolicy.policy_pack_id ?? fallback.policyEvaluation.policyPackId,
-      policyVersion: rawPolicy.policy_version ?? fallback.policyEvaluation.policyVersion,
+      policyPackId:
+        rawPolicy.policy_pack_id ?? fallback.policyEvaluation.policyPackId,
+      policyVersion:
+        rawPolicy.policy_version ?? fallback.policyEvaluation.policyVersion,
       createdBy: rawPolicy.created_by ?? fallback.policyEvaluation.createdBy,
       expectedEvaluationStatus:
-        rawPolicy.expected_evaluation_status ?? fallback.policyEvaluation.expectedEvaluationStatus,
+        rawPolicy.expected_evaluation_status ??
+        fallback.policyEvaluation.expectedEvaluationStatus,
       expectedClientReadyPublication:
         rawPolicy.expected_client_ready_publication ??
         fallback.policyEvaluation.expectedClientReadyPublication,
       expectedWorkbenchPanel:
-        rawPolicy.expected_workbench_panel ?? fallback.policyEvaluation.expectedWorkbenchPanel,
-      evidenceBundle: rawPolicy.evidence_bundle ?? fallback.policyEvaluation.evidenceBundle,
+        rawPolicy.expected_workbench_panel ??
+        fallback.policyEvaluation.expectedWorkbenchPanel,
+      evidenceBundle:
+        rawPolicy.evidence_bundle ?? fallback.policyEvaluation.evidenceBundle,
     },
+    advisorCockpit: normalizeAdvisorCockpitScenario(
+      rawScenario.advisor_cockpit,
+    ),
+  };
+}
+
+function normalizeAdvisorCockpitScenario(rawScenario) {
+  const fallback =
+    DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios.advisorCockpit;
+  if (!rawScenario || typeof rawScenario !== "object") {
+    return fallback;
+  }
+  return {
+    scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
+    advisorId: rawScenario.advisor_id ?? fallback.advisorId,
+    role: rawScenario.role ?? fallback.role,
+    expectedWorkbenchPanel:
+      rawScenario.expected_workbench_panel ?? fallback.expectedWorkbenchPanel,
+    expectedActionFamily:
+      rawScenario.expected_action_family ?? fallback.expectedActionFamily,
+    expectedActionFamilies: Array.isArray(rawScenario.expected_action_families)
+      ? rawScenario.expected_action_families
+      : fallback.expectedActionFamilies,
+    expectedAcknowledgementMarker:
+      rawScenario.expected_acknowledgement_marker ??
+      fallback.expectedAcknowledgementMarker,
+    expectedSupportabilityPosture:
+      rawScenario.expected_supportability_posture ??
+      fallback.expectedSupportabilityPosture,
+    expectedWorkbenchPosture:
+      rawScenario.expected_workbench_posture ?? fallback.expectedWorkbenchPosture,
+    expectedClientReadyPublication:
+      rawScenario.expected_client_ready_publication ??
+      fallback.expectedClientReadyPublication,
+    expectedMinPreparationPackets:
+      rawScenario.expected_min_preparation_packets ??
+      fallback.expectedMinPreparationPackets,
+    seedHouseViewCohort:
+      rawScenario.seed_house_view_cohort ?? fallback.seedHouseViewCohort,
+    houseViewCohort:
+      rawScenario.house_view_cohort ?? fallback.houseViewCohort,
+    unsupportedCapabilityBoundaries: Array.isArray(
+      rawScenario.unsupported_capability_boundaries,
+    )
+      ? rawScenario.unsupported_capability_boundaries
+      : fallback.unsupportedCapabilityBoundaries,
   };
 }
 
@@ -537,7 +821,7 @@ export async function loadWorkbenchPanelRegistryMetadata(cwd = process.cwd()) {
           process.env.LOTUS_PLATFORM_REPO,
           "context",
           "contracts",
-          "workbench-panel-registry.json"
+          "workbench-panel-registry.json",
         )
       : null,
     path.resolve(
@@ -546,7 +830,7 @@ export async function loadWorkbenchPanelRegistryMetadata(cwd = process.cwd()) {
       "lotus-platform",
       "context",
       "contracts",
-      "workbench-panel-registry.json"
+      "workbench-panel-registry.json",
     ),
   ].filter(Boolean);
 
@@ -556,10 +840,13 @@ export async function loadWorkbenchPanelRegistryMetadata(cwd = process.cwd()) {
       const payload = JSON.parse(raw);
       return {
         contractId: payload.contract_id ?? DEFAULT_PANEL_REGISTRY.contractId,
-        contractVersion: payload.contract_version ?? DEFAULT_PANEL_REGISTRY.contractVersion,
-        governedByRfc: payload.governed_by_rfc ?? DEFAULT_PANEL_REGISTRY.governedByRfc,
+        contractVersion:
+          payload.contract_version ?? DEFAULT_PANEL_REGISTRY.contractVersion,
+        governedByRfc:
+          payload.governed_by_rfc ?? DEFAULT_PANEL_REGISTRY.governedByRfc,
         canonicalDataContract:
-          payload.canonical_data_contract ?? DEFAULT_PANEL_REGISTRY.canonicalDataContract,
+          payload.canonical_data_contract ??
+          DEFAULT_PANEL_REGISTRY.canonicalDataContract,
         sourcePath: candidatePath,
         panels: (payload.panels ?? []).map((panel) => ({
           panelId: panel.panel_id,
@@ -574,13 +861,18 @@ export async function loadWorkbenchPanelRegistryMetadata(cwd = process.cwd()) {
         })),
       };
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
         continue;
       }
       throw new Error(
         `Unable to load governed panel registry metadata from ${candidatePath}: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }

@@ -1,6 +1,10 @@
 import AdvisoryOverviewWorkspace from "@/features/proposals/components/advisory-overview-workspace";
 import AdvisoryOpportunitiesWorkspace from "@/features/proposals/components/advisory-opportunities-workspace";
-import { normalizeAdvisoryJourneyMode } from "@/features/proposals/advisory-journey-navigation";
+import AdvisorCockpitWorkspace from "@/features/proposals/components/advisor-cockpit-workspace";
+import {
+  getAdvisoryJourneyDefinition,
+  normalizeAdvisoryJourneyMode,
+} from "@/features/proposals/advisory-journey-navigation";
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
@@ -13,17 +17,22 @@ export default async function RecommendationsAppPage({
   const resolvedSearch = await searchParams;
   const portfolioId = resolveProposalPortfolioId(resolvedSearch.portfolioId);
   const requestedMode = normalizeAdvisoryJourneyMode(resolvedSearch.mode);
-  const activeMode = requestedMode === "opportunities" ? "opportunities" : "overview";
-  const title = activeMode === "opportunities" ? "Opportunities And Ideas" : "Advisory Overview";
+  const activeMode =
+    requestedMode === "opportunities" || requestedMode === "cockpit"
+      ? requestedMode
+      : "overview";
+  const definition = getAdvisoryJourneyDefinition(activeMode);
   return (
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
       activeScreen="advisory"
       activeMode={activeMode}
-      title={title}
-      subtitle="Review live advisory proposals, readiness gates, and next actions in the portfolio workflow."
+      title={definition.title}
+      subtitle={definition.description}
     >
-      {activeMode === "opportunities" ? (
+      {activeMode === "cockpit" ? (
+        <AdvisorCockpitWorkspace portfolioId={portfolioId} />
+      ) : activeMode === "opportunities" ? (
         <AdvisoryOpportunitiesWorkspace portfolioId={portfolioId} />
       ) : (
         <AdvisoryOverviewWorkspace portfolioId={portfolioId} />

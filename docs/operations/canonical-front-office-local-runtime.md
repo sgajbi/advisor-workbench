@@ -210,7 +210,9 @@ npm run live:stack:up:validate
 ```
 
 This runs the same bring-up flow and then executes the end-to-end validation lane once the stack
-is live.
+is live. The npm entrypoint passes `-BuildImages` so one-command validation proves the current
+checked-out Docker-backed service sources rather than a previously built Gateway, Advise, Manage,
+or Workbench image.
 
 ## One-command teardown
 
@@ -270,6 +272,8 @@ Validation layers:
    - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
    - proposal creation with advisor-review narrative request
    - proposal narrative review and reviewed report-package request
+   - RFC-0026 advisor cockpit tactical house-view cohort seed, action list, preparation packets,
+     snapshot, supportability, and idempotent acknowledgement
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
@@ -277,6 +281,7 @@ Validation layers:
    - Performance analysis
    - Performance advisor brief
    - Proposal narrative posture
+   - Advisor cockpit
    - Performance risk
    - Performance evidence
    - DPM outcome review
@@ -320,12 +325,21 @@ and a bounded request-more-evidence decision, and then render the Suitability Re
 same source-owned queue. The validator records this as
 `POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
 route-only screenshot.
+RFC-0026 advisor cockpit checks then read the Gateway-backed cockpit action list, dedicated
+house-view cohort seed, preparation-packet route, operating snapshot, and supportability posture for the same portfolio,
+record an idempotent advisor acknowledgement, preserve blocked client-publication posture, and render
+`/recommendations?mode=cockpit` as `advisory.advisor_cockpit`. The proof records
+`ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`; it does not clear source-owned blockers, approve policy
+findings, contact clients, generate orders, or claim OMS execution.
+On repeated runs against a stack where the same source-owned action is already acknowledged, the
+validator treats the returned acknowledgement state as replay evidence and skips a second
+acknowledgement write rather than forcing a conflicting idempotency key.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
-Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal Simulation,
-Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
-Status. These journey checks are route-level evidence over existing Gateway-backed Workbench
-screens; they do not promote new backend capability, client-ready release, client communication, or
-execution truth.
+Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
+Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review,
+and Implementation Status. These journey checks are route-level evidence over existing
+Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
+client communication, or execution truth.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,
@@ -412,10 +426,13 @@ reason when present; DPM panel proof is gated by the command-center, wave, outco
 portfolio-memory, construction-alternatives, PM operating-quality, and PM copilot workspace contracts
 instead of failing on unrelated historical action-register freshness.
 
-When validating active Workbench source changes, use `npm run live:stack:up:workbench-local` or
+When validating active Workbench source changes without rebuilding the whole stack, use
+`npm run live:stack:up:workbench-local` or
 `Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench` before collecting final browser proof.
 That path keeps the canonical backend stack but serves Workbench from the current branch, avoiding
-stale Docker image evidence for newly added panels or selectors.
+stale Docker image evidence for newly added panels or selectors. If Gateway, Advise, Manage, Core,
+or another source service changed, use the default `npm run live:stack:up:validate` path or pass
+`-BuildImages` explicitly before accepting live proof.
 
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center

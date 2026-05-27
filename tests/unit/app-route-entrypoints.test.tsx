@@ -26,11 +26,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
-  default: ({
-    portfolioId,
-  }: {
-    portfolioId: string;
-  }) => (
+  default: ({ portfolioId }: { portfolioId: string }) => (
     <section>
       <h2>Advisory Overview</h2>
       <p>{portfolioId}</p>
@@ -38,27 +34,29 @@ vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
   ),
 }));
 
-vi.mock("@/features/proposals/components/advisory-opportunities-workspace", () => ({
-  default: ({
-    portfolioId,
-  }: {
-    portfolioId: string;
-  }) => (
+vi.mock(
+  "@/features/proposals/components/advisory-opportunities-workspace",
+  () => ({
+    default: ({ portfolioId }: { portfolioId: string }) => (
+      <section>
+        <h2>Opportunities And Ideas</h2>
+        <p>{portfolioId}</p>
+      </section>
+    ),
+  }),
+);
+
+vi.mock("@/features/proposals/components/advisor-cockpit-workspace", () => ({
+  default: ({ portfolioId }: { portfolioId: string }) => (
     <section>
-      <h2>Opportunities And Ideas</h2>
+      <h2>Advisor Cockpit</h2>
       <p>{portfolioId}</p>
     </section>
   ),
 }));
 
 vi.mock("@/features/proposals/components/proposal-lifecycle-workspace", () => ({
-  default: ({
-    portfolioId,
-    mode,
-  }: {
-    portfolioId: string;
-    mode: string;
-  }) => (
+  default: ({ portfolioId, mode }: { portfolioId: string; mode: string }) => (
     <section>
       <h2>Proposal Lifecycle Workspace</h2>
       <p>{portfolioId}</p>
@@ -90,12 +88,14 @@ vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
     return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState<
-        React.ComponentType<Record<string, unknown>> | null
-      >(null);
+      const [Component, setComponent] = React.useState<React.ComponentType<
+        Record<string, unknown>
+      > | null>(null);
       React.useEffect(() => {
         loader().then((mod: unknown) => {
-          const resolved = (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
+          const resolved = (
+            mod as { default?: React.ComponentType<Record<string, unknown>> }
+          ).default;
           setComponent(resolved ?? null);
         });
       }, []);
@@ -122,11 +122,15 @@ describe("app route entrypoints", () => {
         if (url.includes("/api/v1/lookups/portfolios")) {
           return {
             ok: true,
-            json: async () => ({ items: [{ id: "PORT_1001", label: "PORT_1001" }] }),
+            json: async () => ({
+              items: [{ id: "PORT_1001", label: "PORT_1001" }],
+            }),
           } as Response;
         }
         if (url.includes("/api/v1/workbench/PORT_1001/performance?")) {
-          throw new Error(`Deprecated aggregate performance route used: ${url}`);
+          throw new Error(
+            `Deprecated aggregate performance route used: ${url}`,
+          );
         }
         if (url.includes("/api/v1/workbench/PORT_1001/performance/summary?")) {
           return {
@@ -189,15 +193,17 @@ describe("app route entrypoints", () => {
           } as Response;
         }
         return { ok: false, json: async () => ({}) } as Response;
-      })
+      }),
     );
 
     render(
-      await PerformanceAppPage({ searchParams: Promise.resolve({ portfolioId: "PORT_1001" }) })
+      await PerformanceAppPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_1001" }),
+      }),
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Performance" })
+      await screen.findByRole("heading", { name: "Performance" }),
     ).toBeInTheDocument();
   });
 
@@ -205,22 +211,24 @@ describe("app route entrypoints", () => {
     render(
       await RecommendationsAppPage({
         searchParams: Promise.resolve({ portfolioId: "PORT_1001" }),
-      })
+      }),
     );
 
-    expect(screen.getAllByRole("heading", { name: "Advisory Overview" }).length).toBeGreaterThan(
-      0
-    );
+    expect(
+      screen.getAllByRole("heading", { name: "Advisory Overview" }).length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
   });
 
   it("mounts recommendations without leaving the advisory route when no portfolio is selected", async () => {
     render(await RecommendationsAppPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getAllByRole("heading", { name: "Advisory Overview" }).length).toBeGreaterThan(
-      0
+    expect(
+      screen.getAllByRole("heading", { name: "Advisory Overview" }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(
+      0,
     );
-    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
   });
 
   it("mounts recommendations ideas mode as a focused advisory screen", async () => {
@@ -230,11 +238,28 @@ describe("app route entrypoints", () => {
           portfolioId: "PORT_1001",
           mode: "opportunities",
         }),
-      })
+      }),
     );
 
     expect(
-      screen.getAllByRole("heading", { name: "Opportunities And Ideas" }).length
+      screen.getAllByRole("heading", { name: "Opportunities And Ideas" })
+        .length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+  });
+
+  it("mounts recommendations cockpit mode as a Gateway-backed advisory screen", async () => {
+    render(
+      await RecommendationsAppPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          mode: "cockpit",
+        }),
+      }),
+    );
+
+    expect(
+      screen.getAllByRole("heading", { name: "Advisor Cockpit" }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
   });
@@ -246,11 +271,15 @@ describe("app route entrypoints", () => {
           portfolioId: "PORT_1001",
           mode: "risk-impact",
         }),
-      })
+      }),
     );
 
-    expect(screen.getByRole("heading", { name: "Risk And Impact" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Proposal Lifecycle Workspace" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Risk And Impact" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Proposal Lifecycle Workspace" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
     expect(screen.getByText("risk-impact")).toBeInTheDocument();
   });

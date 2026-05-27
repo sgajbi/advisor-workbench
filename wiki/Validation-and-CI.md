@@ -18,6 +18,9 @@
   Docker parity
 - `npm run live:validate`
   canonical integrated product validation
+- `npm run live:stack:up:validate`
+  one-command canonical stack bring-up and validation; this rebuilds Docker-backed service images
+  so Gateway, Advise, Manage, and Workbench proof reflects the current checked-out sources
 - `npm run live:validate:construction`
   focused RFC-0039 construction alternatives proof against the running canonical stack
 - `npm run live:evidence`
@@ -94,7 +97,6 @@ When validating active Workbench source changes, use the governed local-app brin
 `npm run live:stack:up:workbench-local` so `workbench.dev.lotus` serves the current branch while
 Gateway and backend Lotus apps remain on the canonical stack. Docker-backed Workbench evidence is
 valid for released images, but it must not be used to prove newly changed Workbench panels.
-After a merge that changes Workbench routes, panels, labels, or live-validation scripts, rebuild the
-Docker-backed Workbench image with `docker compose up -d --build` from `lotus-workbench` before
-accepting containerized canonical proof. Stale containers can render old panel text and turn the live
-validator into evidence for the wrong UI build.
+For one-command proof, `npm run live:stack:up:validate` rebuilds Docker-backed service images before
+validation. Stale containers can hide new Gateway or Advise routes, render old panel text, and turn
+the live validator into evidence for the wrong runtime build.

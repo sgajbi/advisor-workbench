@@ -25,6 +25,9 @@ promote dormant labels into product ownership just because historical route file
 
 - `/recommendations`
   redirects to supported active surfaces
+- `/recommendations?mode=cockpit`
+  Gateway-backed RFC-0026 advisor cockpit for Advise-owned action items, supportability, meeting
+  preparation, tactical house-view impact review, and bounded acknowledgements
 - `/proposals`
   direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`
@@ -216,6 +219,22 @@ promote dormant labels into product ownership just because historical route file
   references, treat commentary as authoritative evidence, contact clients, or call source services
   directly. Canonical validation captures `proposal-memo-evidence-pack-live.png` under the governed
   Workbench proof bundle.
+- RFC-0026 advisor cockpit operating workflow is implemented on
+  `/recommendations?mode=cockpit` through Gateway advisor cockpit endpoints. Workbench reads
+  action items from `GET /api/v1/advisor-cockpit/actions`, the operating snapshot from
+  `GET /api/v1/advisor-cockpit/snapshot`, preparation packets from
+  `GET /api/v1/advisor-cockpit/preparation-packets`, supportability from
+  `GET /api/v1/advisor-cockpit/supportability`, and records bounded advisor acknowledgement
+  through `POST /api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements` with the
+  source action-item version and idempotency key. Canonical automation seeds source-backed
+  tactical house-view evidence through
+  `POST /api/v1/advisor-cockpit/house-view-cohorts/evaluate` before requiring the
+  `HOUSE_VIEW_IMPACT_REVIEW` action family. Workbench does not reconstruct policy
+  semantics, clear source blockers, approve or waive findings, infer client-ready publication,
+  infer tactical house-view membership, contact clients, generate orders, route orders, or call
+  `lotus-advise` directly. Canonical validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`,
+  proves the dedicated preparation-packet route, treats already acknowledged source actions as
+  replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
 
 ## Route examples
 
@@ -276,6 +295,12 @@ Compatibility recommendation redirect:
 
 ```txt
 http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001
+```
+
+Advisor cockpit:
+
+```txt
+http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001&mode=cockpit
 ```
 
 Proposal route posture:
