@@ -38,7 +38,8 @@ const policyReviewQueueFixture = {
 };
 const listProposalsMock = vi.fn(async (_filters?: unknown) => proposalListFixture);
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
-  async (_status?: string) => policyReviewQueueFixture
+  async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
+    policyReviewQueueFixture
 );
 const getAdvisoryPolicyEvaluationMock = vi.fn(async (_evaluationId: string) => ({
   ...policyReviewQueueFixture.items[0],
@@ -82,7 +83,10 @@ const recordAdvisoryPolicySignOffDecisionMock = vi.fn(
 vi.mock("../../src/features/proposals/api", () => ({
   getAdvisoryPolicyEvaluation: (evaluationId: string) =>
     getAdvisoryPolicyEvaluationMock(evaluationId),
-  getAdvisoryPolicyReviewQueue: (status: string) => getAdvisoryPolicyReviewQueueMock(status),
+  getAdvisoryPolicyReviewQueue: (filters: {
+    evaluationStatus?: string;
+    portfolioId?: string;
+  }) => getAdvisoryPolicyReviewQueueMock(filters),
   getAdvisoryPolicySignOffPackage: (evaluationId: string) =>
     getAdvisoryPolicySignOffPackageMock(evaluationId),
   getAdvisoryPolicyWorkflow: (evaluationId: string) =>
@@ -112,7 +116,8 @@ describe("ProposalLifecycleWorkspace", () => {
     listProposalsMock.mockImplementation(async (_filters?: unknown) => proposalListFixture);
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
-      async (_status?: string) => policyReviewQueueFixture
+      async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
+        policyReviewQueueFixture
     );
     getAdvisoryPolicyEvaluationMock.mockReset();
     getAdvisoryPolicyEvaluationMock.mockImplementation(async (_evaluationId: string) => ({
@@ -196,7 +201,10 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     await waitFor(() => {
-      expect(getAdvisoryPolicyReviewQueueMock).toHaveBeenCalledWith("PENDING_REVIEW");
+      expect(getAdvisoryPolicyReviewQueueMock).toHaveBeenCalledWith({
+        evaluationStatus: "PENDING_REVIEW",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      });
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
       expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith("pev_001");
       expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledWith("pev_001");

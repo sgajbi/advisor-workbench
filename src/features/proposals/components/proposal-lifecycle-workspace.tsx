@@ -41,7 +41,11 @@ export default function ProposalLifecycleWorkspace({
   });
   const policyQueueQuery = useQuery({
     queryKey: ["advisory-policy-review-queue", portfolioId],
-    queryFn: async () => await getAdvisoryPolicyReviewQueue("PENDING_REVIEW"),
+    queryFn: async () =>
+      await getAdvisoryPolicyReviewQueue({
+        evaluationStatus: "PENDING_REVIEW",
+        portfolioId,
+      }),
     enabled: mode === "suitability",
     ...workbenchStrictQueryDefaults,
   });

@@ -211,11 +211,14 @@ describe("proposal api", () => {
       )
     );
 
-    const result = await getAdvisoryPolicyReviewQueue("PENDING_REVIEW");
+    const result = await getAdvisoryPolicyReviewQueue({
+      evaluationStatus: "PENDING_REVIEW",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW`
+      `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW&portfolio_id=PB_SG_GLOBAL_BAL_001`
     );
     expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
   });
