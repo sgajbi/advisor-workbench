@@ -174,12 +174,17 @@ export const DEFAULT_CANONICAL_CONTRACT = {
       role: "ADVISOR",
       expectedWorkbenchPanel: "advisory.advisor_cockpit",
       expectedActionFamily: "POLICY_REVIEW_REQUIRED",
+      expectedActionFamilies: [
+        "POLICY_REVIEW_REQUIRED",
+        "HOUSE_VIEW_IMPACT_REVIEW",
+      ],
       expectedAcknowledgementMarker: "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
       expectedSupportabilityPosture:
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       expectedClientReadyPublication: "BLOCKED",
       expectedMinPreparationPackets: 1,
+      seedHouseViewCohort: true,
       unsupportedCapabilityBoundaries: [
         "CLIENT_READY_PUBLICATION",
         "EXTERNAL_CLIENT_COMMUNICATION",
@@ -780,6 +785,9 @@ function normalizeAdvisorCockpitScenario(rawScenario) {
       rawScenario.expected_workbench_panel ?? fallback.expectedWorkbenchPanel,
     expectedActionFamily:
       rawScenario.expected_action_family ?? fallback.expectedActionFamily,
+    expectedActionFamilies: Array.isArray(rawScenario.expected_action_families)
+      ? rawScenario.expected_action_families
+      : fallback.expectedActionFamilies,
     expectedAcknowledgementMarker:
       rawScenario.expected_acknowledgement_marker ??
       fallback.expectedAcknowledgementMarker,
@@ -794,6 +802,10 @@ function normalizeAdvisorCockpitScenario(rawScenario) {
     expectedMinPreparationPackets:
       rawScenario.expected_min_preparation_packets ??
       fallback.expectedMinPreparationPackets,
+    seedHouseViewCohort:
+      rawScenario.seed_house_view_cohort ?? fallback.seedHouseViewCohort,
+    houseViewCohort:
+      rawScenario.house_view_cohort ?? fallback.houseViewCohort,
     unsupportedCapabilityBoundaries: Array.isArray(
       rawScenario.unsupported_capability_boundaries,
     )

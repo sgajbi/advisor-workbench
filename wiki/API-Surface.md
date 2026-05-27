@@ -27,7 +27,7 @@ promote dormant labels into product ownership just because historical route file
   redirects to supported active surfaces
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit for Advise-owned action items, supportability, meeting
-  preparation, and bounded acknowledgements
+  preparation, tactical house-view impact review, and bounded acknowledgements
 - `/proposals`
   direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`
@@ -226,12 +226,15 @@ promote dormant labels into product ownership just because historical route file
   `GET /api/v1/advisor-cockpit/preparation-packets`, supportability from
   `GET /api/v1/advisor-cockpit/supportability`, and records bounded advisor acknowledgement
   through `POST /api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements` with the
-  source action-item version and idempotency key. Workbench does not reconstruct policy
+  source action-item version and idempotency key. Canonical automation seeds source-backed
+  tactical house-view evidence through
+  `POST /api/v1/advisor-cockpit/house-view-cohorts/evaluate` before requiring the
+  `HOUSE_VIEW_IMPACT_REVIEW` action family. Workbench does not reconstruct policy
   semantics, clear source blockers, approve or waive findings, infer client-ready publication,
-  contact clients, generate orders, route orders, or call `lotus-advise` directly. Canonical
-  validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`, proves the dedicated preparation-packet
-  route, treats already acknowledged source actions as replay evidence on repeated runs, and
-  captures `advisory-advisor-cockpit-live.png`.
+  infer tactical house-view membership, contact clients, generate orders, route orders, or call
+  `lotus-advise` directly. Canonical validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`,
+  proves the dedicated preparation-packet route, treats already acknowledged source actions as
+  replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
 
 ## Route examples
 

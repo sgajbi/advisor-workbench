@@ -357,6 +357,16 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
+    const contractModule = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validation",
+        "contract-metadata.mjs",
+      ),
+      "utf8",
+    );
     const payloadUtils = readFileSync(
       join(process.cwd(), "scripts", "live", "validation", "payload-utils.mjs"),
       "utf8",
@@ -406,6 +416,10 @@ describe("canonical live validation script", () => {
       "/api/v1/advisor-cockpit/preparation-packets",
     );
     expect(advisorCockpitProof).toContain(
+      "/api/v1/advisor-cockpit/house-view-cohorts/evaluate",
+    );
+    expect(contractModule).toContain("HOUSE_VIEW_IMPACT_REVIEW");
+    expect(advisorCockpitProof).toContain(
       "Advisor cockpit canonical acknowledgement",
     );
     expect(advisorCockpitProof).toContain(
@@ -414,6 +428,7 @@ describe("canonical live validation script", () => {
     expect(advisorCockpitProof).toContain("expectedSupportabilityPosture");
     expect(advisorCockpitProof).toContain("expectedWorkbenchPosture");
     expect(advisorCockpitProof).toContain("expectedMinPreparationPackets");
+    expect(contractModule).toContain("expectedActionFamilies");
     expect(advisorCockpitProof).toContain("wb-advisor-cockpit-ack");
     expect(payloadUtils).toContain('import { createHash } from "node:crypto"');
     expect(payloadUtils).toContain("buildPayloadScopedIdempotencyKey");

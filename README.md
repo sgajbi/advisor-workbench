@@ -110,8 +110,8 @@ Current route posture:
 - `/recommendations`
   redirects to supported active surfaces
 - `/recommendations?mode=cockpit`
-  Gateway-backed RFC-0026 advisor cockpit over Advise-owned action items, supportability, and
-  acknowledgement posture
+  Gateway-backed RFC-0026 advisor cockpit over Advise-owned action items, supportability, meeting
+  preparation, tactical house-view impact review, and acknowledgement posture
 - `/proposals`
   direct Gateway-backed proposal queue for advisor follow-up
 - `/proposals/[proposalId]`
@@ -336,14 +336,15 @@ Important current product and route truths:
     `/api/v1/advisor-cockpit/actions`, `/api/v1/advisor-cockpit/preparation-packets`,
     `/api/v1/advisor-cockpit/actions/{action_item_id}`,
     `/api/v1/advisor-cockpit/snapshot`, `/api/v1/advisor-cockpit/supportability`, and
-    `/api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements`.
+    `/api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements`; canonical automation also
+    seeds `/api/v1/advisor-cockpit/house-view-cohorts/evaluate` before proving the cockpit list.
     Workbench may render source-owned action items, snapshot counts, supportability posture,
-    unsupported-capability boundaries, meeting-preparation packets, and bounded advisor
-    acknowledgements through Gateway, but it must not calculate suitability, clear blockers, infer
-    client-ready publication, contact clients, place orders, or call `lotus-advise` directly.
-    Canonical front-office validation now proves the action list, preparation packet route,
-    snapshot, supportability, an idempotent acknowledgement, replay-safe already-acknowledged
-    source state, and
+    unsupported-capability boundaries, meeting-preparation packets, tactical house-view impact
+    review items, and bounded advisor acknowledgements through Gateway, but it must not calculate
+    suitability, clear blockers, infer client-ready publication, contact clients, place orders, or
+    call `lotus-advise` directly. Canonical front-office validation now proves the action list,
+    house-view cohort seed, preparation packet route, snapshot, supportability, an idempotent
+    acknowledgement, replay-safe already-acknowledged source state, and
     `advisory.advisor_cockpit` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).

@@ -21,7 +21,8 @@
   direct Gateway-backed proposal queue/detail route for bounded advisor narrative delivery posture
 - `Advisor Cockpit`
   `/recommendations?mode=cockpit` Gateway-backed operating workflow over Advise-owned action items,
-  supportability, meeting preparation, and bounded acknowledgements
+  supportability, meeting preparation, tactical house-view impact review, and bounded
+  acknowledgements
 - legacy compatibility surfaces
   recommendations redirects and proposal draft compatibility entry
 

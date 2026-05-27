@@ -52,6 +52,101 @@ function findPolicyReviewAction(items, expectedActionFamily) {
   });
 }
 
+function expectedActionFamilies(scenario) {
+  if (Array.isArray(scenario?.expectedActionFamilies)) {
+    return scenario.expectedActionFamilies
+      .map((family) => readString(family))
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function buildHouseViewCohortBody({ scenario, portfolioId }) {
+  if (scenario?.houseViewCohort && typeof scenario.houseViewCohort === "object") {
+    return scenario.houseViewCohort;
+  }
+  if (!scenario?.seedHouseViewCohort) {
+    return null;
+  }
+  return {
+    tactical_view: {
+      tactical_view_id: "thv_2026_05_asia_duration",
+      tactical_view_version: "2026.05",
+      theme_id: "asia_duration_reduce",
+      as_of_date: "2026-05-14",
+      target_action: "REDUCE",
+      rationale: "Reduce duration exposure in Asia balanced discretionary books.",
+      source_refs: [
+        {
+          source_system: "lotus-advise",
+          source_type: "TACTICAL_HOUSE_VIEW",
+          source_id: "thv_2026_05_asia_duration",
+          source_version: "2026.05",
+          content_hash: "sha256:house-view",
+        },
+      ],
+    },
+    candidate_portfolios: [
+      {
+        portfolio_id: portfolioId,
+        mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+        portfolio_type: "DPM",
+        discretionary_mandate: true,
+        booking_center_code: "Singapore",
+        current_exposure_weight: "0.18",
+        alignment_signal: "OVERWEIGHT",
+        source_refs: [
+          {
+            source_system: "lotus-core",
+            source_type: "HoldingsAsOf",
+            source_id: `holdings:${portfolioId}:2026-05-14`,
+            source_version: "v1",
+            content_hash: "sha256:holdings",
+          },
+        ],
+      },
+    ],
+    eligible_portfolio_types: ["DPM"],
+    correlation_id: "corr-rfc26-house-view-canonical",
+  };
+}
+
+async function seedHouseViewCohort({
+  summary,
+  scenario,
+  gatewayBaseUrl,
+  portfolioId,
+  timeoutMs,
+}) {
+  const body = buildHouseViewCohortBody({ scenario, portfolioId });
+  if (!body) {
+    return null;
+  }
+  const response = await sendJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-cockpit/house-view-cohorts/evaluate`,
+    "Advisor cockpit canonical house-view cohort",
+    timeoutMs,
+    {
+      method: "POST",
+      body: { body },
+    },
+  );
+  const cohort = extractGatewayEnvelopeData(response);
+  if (readString(cohort?.product_name) !== "TacticalHouseViewAffectedCohort") {
+    throw new Error("Advisor cockpit house-view cohort proof returned no cohort product.");
+  }
+  const affected = Array.isArray(cohort?.affected_portfolios)
+    ? cohort.affected_portfolios
+    : [];
+  if (!affected.some((item) => readString(item?.portfolio_id) === portfolioId)) {
+    throw new Error(
+      `Advisor cockpit house-view cohort did not include portfolio ${portfolioId}.`,
+    );
+  }
+  return cohort;
+}
+
 function snapshotCount(snapshot, key) {
   const value = snapshot?.action_counts?.[key];
   return typeof value === "number" ? value : 0;
@@ -72,6 +167,13 @@ export async function validateCanonicalAdvisorCockpit({
   advisorId = scenario?.advisorId ?? DEFAULT_ADVISOR_ID,
   role = scenario?.role ?? DEFAULT_ROLE,
 }) {
+  const houseViewCohort = await seedHouseViewCohort({
+    summary,
+    scenario,
+    gatewayBaseUrl,
+    portfolioId,
+    timeoutMs,
+  });
   const query = advisorCockpitQuery({
     portfolioId,
     advisorId,
@@ -92,6 +194,13 @@ export async function validateCanonicalAdvisorCockpit({
     );
   }
   assertPortfolioScopedActions(items, portfolioId);
+  for (const family of expectedActionFamilies(scenario)) {
+    if (!items.some((item) => readString(item?.action_family) === family)) {
+      throw new Error(
+        `Advisor cockpit canonical action list did not include expected action family ${family}.`,
+      );
+    }
+  }
 
   const policyAction = findPolicyReviewAction(
     items,
@@ -272,6 +381,7 @@ export async function validateCanonicalAdvisorCockpit({
     clientReadyPublication,
     preparationPacketCount: preparationPackets.length,
     preparationPacketRouteCount: routedPreparationPackets.length,
+    houseViewCohortId: readString(houseViewCohort?.cohort_id),
     workbenchPosture,
     supportabilityPosture,
     alreadyAcknowledged,
@@ -285,6 +395,7 @@ export async function validateCanonicalAdvisorCockpit({
     snapshotId: snapshotData.snapshot_id,
     preparationPacketCount: preparationPackets.length,
     preparationPacketRouteCount: routedPreparationPackets.length,
+    houseViewCohortId: readString(houseViewCohort?.cohort_id),
     supportabilityPosture,
     workbenchPosture,
     clientReadyPublication,

@@ -12,6 +12,9 @@ type ValidateCanonicalAdvisorCockpit = (args: {
     expectedSupportabilityPosture?: string;
     expectedWorkbenchPosture?: string;
     expectedMinPreparationPackets?: number;
+    expectedActionFamilies?: string[];
+    seedHouseViewCohort?: boolean;
+    houseViewCohort?: Record<string, unknown>;
   };
   gatewayBaseUrl: string;
   portfolioId: string;
@@ -25,6 +28,7 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   snapshotId: string;
   preparationPacketCount: number;
   preparationPacketRouteCount: number;
+  houseViewCohortId: string | null;
   supportabilityPosture: string;
   workbenchPosture: string;
   clientReadyPublication: string;
@@ -43,28 +47,52 @@ function actionListResponse({
   actionItemId = "aci_policy_review_001",
   portfolioId = PORTFOLIO_ID,
   acknowledged = false,
+  includeHouseView = false,
 } = {}): Response {
+  const items = [
+    {
+      action_item_id: actionItemId,
+      action_item_version: 7,
+      action_family: "POLICY_REVIEW_REQUIRED",
+      status: "PENDING_REVIEW",
+      portfolio_id: portfolioId,
+      reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
+      acknowledgement_state: acknowledged
+        ? {
+            acknowledged: true,
+            acknowledgement_id: `ack_${actionItemId}`,
+            acknowledged_by: "workbench-canonical-validator",
+            acknowledged_at: "2026-05-27T00:00:00Z",
+          }
+        : { acknowledged: false },
+    },
+  ];
+  if (includeHouseView) {
+    items.push({
+      action_item_id: "aci_house_view_impact_review_001",
+      action_item_version: 1,
+      action_family: "HOUSE_VIEW_IMPACT_REVIEW",
+      status: "PENDING_REVIEW",
+      portfolio_id: portfolioId,
+      reason_codes: ["TACTICAL_HOUSE_VIEW_PORTFOLIO_AFFECTED"],
+      acknowledgement_state: { acknowledged: false },
+    });
+  }
   return jsonResponse({
     data: {
-      total_count: 1,
-      items: [
-        {
-          action_item_id: actionItemId,
-          action_item_version: 7,
-          action_family: "POLICY_REVIEW_REQUIRED",
-          status: "PENDING_REVIEW",
-          portfolio_id: portfolioId,
-          reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
-          acknowledgement_state: acknowledged
-            ? {
-                acknowledged: true,
-                acknowledgement_id: `ack_${actionItemId}`,
-                acknowledged_by: "workbench-canonical-validator",
-                acknowledged_at: "2026-05-27T00:00:00Z",
-              }
-            : { acknowledged: false },
-        },
-      ],
+      total_count: items.length,
+      items,
+    },
+  });
+}
+
+function houseViewCohortResponse(): Response {
+  return jsonResponse({
+    data: {
+      product_name: "TacticalHouseViewAffectedCohort",
+      cohort_id: "thv_cohort_001",
+      affected_portfolios: [{ portfolio_id: PORTFOLIO_ID }],
+      supportability: { state: "READY" },
     },
   });
 }
@@ -211,6 +239,76 @@ describe("advisor cockpit live proof", () => {
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       replayed: true,
     });
+  });
+
+  it("seeds house-view cohort evidence and requires cockpit action projection", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(houseViewCohortResponse())
+      .mockResolvedValueOnce(actionListResponse({ includeHouseView: true }))
+      .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(preparationPacketsResponse())
+      .mockResolvedValueOnce(supportabilityResponse())
+      .mockResolvedValueOnce(acknowledgementResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const summary = { apiChecks: [], workflowPackChecks: [] };
+    const proof = await validateCanonicalAdvisorCockpit({
+      summary,
+      scenario: {
+        expectedClientReadyPublication: "BLOCKED",
+        expectedActionFamilies: [
+          "POLICY_REVIEW_REQUIRED",
+          "HOUSE_VIEW_IMPACT_REVIEW",
+        ],
+        seedHouseViewCohort: true,
+      },
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: PORTFOLIO_ID,
+      proposalId: "proposal_001",
+      proposalVersionId: "version_001",
+      timeoutMs: 1000,
+    });
+
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+      "/api/v1/advisor-cockpit/house-view-cohorts/evaluate",
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject(
+      {
+        body: {
+          tactical_view: {
+            tactical_view_id: "thv_2026_05_asia_duration",
+          },
+          candidate_portfolios: [{ portfolio_id: PORTFOLIO_ID }],
+        },
+      },
+    );
+    expect(proof.houseViewCohortId).toBe("thv_cohort_001");
+    expect(summary.workflowPackChecks[0]).toMatchObject({
+      houseViewCohortId: "thv_cohort_001",
+    });
+  });
+
+  it("rejects missing expected cockpit action families", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(actionListResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      validateCanonicalAdvisorCockpit({
+        summary: { apiChecks: [], workflowPackChecks: [] },
+        scenario: {
+          expectedClientReadyPublication: "BLOCKED",
+          expectedActionFamilies: ["HOUSE_VIEW_IMPACT_REVIEW"],
+        },
+        gatewayBaseUrl: "http://gateway.dev.lotus",
+        portfolioId: PORTFOLIO_ID,
+        proposalId: "proposal_001",
+        proposalVersionId: "version_001",
+        timeoutMs: 1000,
+      }),
+    ).rejects.toThrow(
+      "Advisor cockpit canonical action list did not include expected action family HOUSE_VIEW_IMPACT_REVIEW",
+    );
   });
 
   it("rejects supportability posture drift from the governed canonical contract", async () => {
