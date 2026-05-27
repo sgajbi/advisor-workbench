@@ -341,7 +341,8 @@ Important current product and route truths:
     acknowledgements through Gateway, but it must not calculate suitability, clear blockers, infer
     client-ready publication, contact clients, place orders, or call `lotus-advise` directly.
     Canonical front-office validation now proves the action list, snapshot, supportability, an
-    idempotent acknowledgement, and `advisory.advisor_cockpit` screenshot evidence.
+    idempotent acknowledgement, replay-safe already-acknowledged source state, and
+    `advisory.advisor_cockpit` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

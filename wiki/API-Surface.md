@@ -228,8 +228,8 @@ promote dormant labels into product ownership just because historical route file
   source action-item version and idempotency key. Workbench does not reconstruct policy
   semantics, clear source blockers, approve or waive findings, infer client-ready publication,
   contact clients, generate orders, route orders, or call `lotus-advise` directly. Canonical
-  validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED` and captures
-  `advisory-advisor-cockpit-live.png`.
+  validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`, treats already acknowledged source
+  actions as replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
 
 ## Route examples
 

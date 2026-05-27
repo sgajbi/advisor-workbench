@@ -78,8 +78,10 @@ Implemented:
    material,
 5. records a bounded advisor acknowledgement with an idempotency key and action-item version while
    leaving policy blockers and client-publication posture source-owned,
-6. shows explicit unavailable and empty states without fallback worklists,
-7. participates in canonical Workbench proof as `advisory.advisor_cockpit` with API proof and a
+6. treats already acknowledged source actions as replay evidence during repeated canonical
+   validation instead of posting a conflicting acknowledgement,
+7. shows explicit unavailable and empty states without fallback worklists,
+8. participates in canonical Workbench proof as `advisory.advisor_cockpit` with API proof and a
    governed screenshot.
 
 Not supported in Workbench:

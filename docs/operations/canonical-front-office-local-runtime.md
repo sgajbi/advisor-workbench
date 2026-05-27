@@ -328,6 +328,9 @@ acknowledgement, preserve blocked client-publication posture, and render
 `/recommendations?mode=cockpit` as `advisory.advisor_cockpit`. The proof records
 `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`; it does not clear source-owned blockers, approve policy
 findings, contact clients, generate orders, or claim OMS execution.
+On repeated runs against a stack where the same source-owned action is already acknowledged, the
+validator treats the returned acknowledgement state as replay evidence and skips a second
+acknowledgement write rather than forcing a conflicting idempotency key.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
 Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review,
