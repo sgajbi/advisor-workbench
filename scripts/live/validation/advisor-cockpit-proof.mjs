@@ -128,12 +128,23 @@ export async function validateCanonicalAdvisorCockpit({
   const clientReadyPublication = readString(
     snapshotData?.supportability?.client_ready_publication,
   );
+  const workbenchPosture = readString(
+    snapshotData?.supportability?.workbench_posture,
+  );
   if (
     scenario?.expectedClientReadyPublication &&
     clientReadyPublication !== scenario.expectedClientReadyPublication
   ) {
     throw new Error(
       `Advisor cockpit snapshot returned client publication ${clientReadyPublication ?? "missing"}, expected ${scenario.expectedClientReadyPublication}.`,
+    );
+  }
+  if (
+    scenario?.expectedWorkbenchPosture &&
+    workbenchPosture !== scenario.expectedWorkbenchPosture
+  ) {
+    throw new Error(
+      `Advisor cockpit snapshot returned Workbench posture ${workbenchPosture ?? "missing"}, expected ${scenario.expectedWorkbenchPosture}.`,
     );
   }
 
@@ -150,9 +161,18 @@ export async function validateCanonicalAdvisorCockpit({
     timeoutMs,
   );
   const supportabilityData = extractGatewayEnvelopeData(supportability);
-  if (!readString(supportabilityData?.posture)) {
+  const supportabilityPosture = readString(supportabilityData?.posture);
+  if (!supportabilityPosture) {
     throw new Error(
       "Advisor cockpit supportability returned no bounded posture.",
+    );
+  }
+  if (
+    scenario?.expectedSupportabilityPosture &&
+    supportabilityPosture !== scenario.expectedSupportabilityPosture
+  ) {
+    throw new Error(
+      `Advisor cockpit supportability returned posture ${supportabilityPosture}, expected ${scenario.expectedSupportabilityPosture}.`,
     );
   }
 
@@ -214,7 +234,8 @@ export async function validateCanonicalAdvisorCockpit({
     actionItemVersion,
     resultReviewState: policyAction.status,
     clientReadyPublication,
-    supportabilityPosture: supportabilityData.posture,
+    workbenchPosture,
+    supportabilityPosture,
     alreadyAcknowledged,
     replayed: alreadyAcknowledged || Boolean(acknowledgementData?.replayed),
   });
@@ -224,7 +245,8 @@ export async function validateCanonicalAdvisorCockpit({
     actionItemVersion,
     actionCount: items.length,
     snapshotId: snapshotData.snapshot_id,
-    supportabilityPosture: supportabilityData.posture,
+    supportabilityPosture,
+    workbenchPosture,
     clientReadyPublication,
   };
 }

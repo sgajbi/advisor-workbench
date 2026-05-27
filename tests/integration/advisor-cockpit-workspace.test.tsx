@@ -41,7 +41,8 @@ const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
   },
   supportability: {
     gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
-    workbench_posture: "SUPPORTED_BY_LOTUS_WORKBENCH_RFC0026",
+    workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+    data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
     client_ready_publication: "BLOCKED",
   },
   preparation_packets: [
@@ -57,7 +58,7 @@ const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
 }));
 const getAdvisorCockpitSupportabilityMock = vi.fn(
   async (_filters?: unknown) => ({
-    posture: "ADVISE_API_SUPPORTED_DOWNSTREAM_GATED",
+    posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
     unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
   }),
 );
@@ -196,7 +197,8 @@ describe("AdvisorCockpitWorkspace", () => {
       },
       supportability: {
         gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
-        workbench_posture: "SUPPORTED_BY_LOTUS_WORKBENCH_RFC0026",
+        workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+        data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
         client_ready_publication: "BLOCKED",
       },
       preparation_packets: [],

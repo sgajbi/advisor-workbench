@@ -405,6 +405,8 @@ describe("canonical live validation script", () => {
     expect(advisorCockpitProof).toContain(
       "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
     );
+    expect(advisorCockpitProof).toContain("expectedSupportabilityPosture");
+    expect(advisorCockpitProof).toContain("expectedWorkbenchPosture");
     expect(advisorCockpitProof).toContain("wb-advisor-cockpit-ack");
     expect(payloadUtils).toContain('import { createHash } from "node:crypto"');
     expect(payloadUtils).toContain("buildPayloadScopedIdempotencyKey");
@@ -889,6 +891,8 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
     expect(contractModule).toContain('panelId: "proposal.memo_evidence_pack"');
     expect(contractModule).toContain('panelId: "advisory.advisor_cockpit"');
+    expect(contractModule).toContain("expectedSupportabilityPosture");
+    expect(contractModule).toContain("expectedWorkbenchPosture");
     expect(contractModule).toContain("advisoryProposalScenarios");
     expect(contractModule).toContain("RFC25_SG_STRUCTURED_NOTE_PENDING_REVIEW");
     expect(contractModule).toContain(

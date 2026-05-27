@@ -121,6 +121,7 @@ export function buildAdvisorCockpitModel({
     ),
     supportabilityRows: buildSupportabilityRows(
       snapshot,
+      supportability,
       supportabilityPosture,
     ),
     unsupportedClaims: [
@@ -180,9 +181,11 @@ function toPreparationRow(packet: AdvisorCockpitPreparationPacket) {
 
 function buildSupportabilityRows(
   snapshot: AdvisorCockpitSnapshotData | undefined,
+  supportabilityResponse: AdvisorCockpitSupportabilityData | undefined,
   supportabilityPosture: string,
 ) {
-  const supportability = snapshot?.supportability ?? {};
+  const supportability =
+    snapshot?.supportability ?? supportabilityResponse?.supportability ?? {};
   return [
     { label: "Cockpit posture", value: formatCode(supportabilityPosture) },
     {
@@ -195,6 +198,12 @@ function buildSupportabilityRows(
       label: "Workbench posture",
       value: formatCode(
         stringValue(supportability.workbench_posture) ?? "Not reported",
+      ),
+    },
+    {
+      label: "Data product posture",
+      value: formatCode(
+        stringValue(supportability.data_product_posture) ?? "Not reported",
       ),
     },
     {

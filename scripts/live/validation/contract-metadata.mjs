@@ -175,6 +175,9 @@ export const DEFAULT_CANONICAL_CONTRACT = {
       expectedWorkbenchPanel: "advisory.advisor_cockpit",
       expectedActionFamily: "POLICY_REVIEW_REQUIRED",
       expectedAcknowledgementMarker: "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
+      expectedSupportabilityPosture:
+        "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       expectedClientReadyPublication: "BLOCKED",
       unsupportedCapabilityBoundaries: [
         "CLIENT_READY_PUBLICATION",
@@ -779,6 +782,11 @@ function normalizeAdvisorCockpitScenario(rawScenario) {
     expectedAcknowledgementMarker:
       rawScenario.expected_acknowledgement_marker ??
       fallback.expectedAcknowledgementMarker,
+    expectedSupportabilityPosture:
+      rawScenario.expected_supportability_posture ??
+      fallback.expectedSupportabilityPosture,
+    expectedWorkbenchPosture:
+      rawScenario.expected_workbench_posture ?? fallback.expectedWorkbenchPosture,
     expectedClientReadyPublication:
       rawScenario.expected_client_ready_publication ??
       fallback.expectedClientReadyPublication,

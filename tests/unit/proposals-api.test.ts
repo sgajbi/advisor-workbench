@@ -371,7 +371,10 @@ describe("proposal api", () => {
           init?.method === "POST"
             ? { action_item: { action_item_id: "aci_1" }, replayed: false }
             : url.includes("/supportability")
-              ? { posture: "ADVISE_API_SUPPORTED_DOWNSTREAM_GATED" }
+              ? {
+                  posture:
+                    "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+                }
               : url.includes("/snapshot")
                 ? {
                     snapshot_id: "cockpit_snapshot_1",
@@ -441,7 +444,7 @@ describe("proposal api", () => {
     expect(actions.total_count).toBe(1);
     expect(snapshot.snapshot_id).toBe("cockpit_snapshot_1");
     expect(supportability.posture).toBe(
-      "ADVISE_API_SUPPORTED_DOWNSTREAM_GATED",
+      "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
     );
     expect(acknowledgement.replayed).toBe(false);
   });

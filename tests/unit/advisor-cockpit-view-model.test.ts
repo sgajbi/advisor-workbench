@@ -57,7 +57,8 @@ const snapshot: AdvisorCockpitSnapshotData = {
   },
   supportability: {
     gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
-    workbench_posture: "SUPPORTED_BY_LOTUS_WORKBENCH_RFC0026",
+    workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+    data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
     client_ready_publication: "BLOCKED",
   },
   preparation_packets: [
@@ -73,7 +74,7 @@ const snapshot: AdvisorCockpitSnapshotData = {
 };
 
 const supportability: AdvisorCockpitSupportabilityData = {
-  posture: "ADVISE_API_SUPPORTED_DOWNSTREAM_GATED",
+  posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
   unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
 };
 
@@ -113,6 +114,10 @@ describe("advisor cockpit view model", () => {
     expect(model.actionRows[0].unsupportedClaims).toBe(
       "Client-ready Publication",
     );
+    expect(model.supportabilityRows).toContainEqual({
+      label: "Data product posture",
+      value: "Active Advisor Cockpit Products RFC 0026",
+    });
     expect(model.supportabilityRows).toContainEqual({
       label: "Client publication",
       value: "Blocked",

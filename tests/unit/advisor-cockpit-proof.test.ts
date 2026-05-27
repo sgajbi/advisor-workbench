@@ -9,6 +9,8 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   summary: ProofSummary;
   scenario: {
     expectedClientReadyPublication: string;
+    expectedSupportabilityPosture?: string;
+    expectedWorkbenchPosture?: string;
   };
   gatewayBaseUrl: string;
   portfolioId: string;
@@ -21,6 +23,7 @@ type ValidateCanonicalAdvisorCockpit = (args: {
   actionCount: number;
   snapshotId: string;
   supportabilityPosture: string;
+  workbenchPosture: string;
   clientReadyPublication: string;
 }>;
 
@@ -72,15 +75,18 @@ function snapshotResponse(): Response {
       },
       supportability: {
         client_ready_publication: "BLOCKED",
+        workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
       },
     },
   });
 }
 
-function supportabilityResponse(): Response {
+function supportabilityResponse(
+  posture = "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+): Response {
   return jsonResponse({
     data: {
-      posture: "SUPPORTED_BY_LOTUS_WORKBENCH_RFC0026",
+      posture,
     },
   });
 }
@@ -138,6 +144,9 @@ describe("advisor cockpit live proof", () => {
       actionCount: 1,
       snapshotId: "cockpit_snapshot_001",
       clientReadyPublication: "BLOCKED",
+      supportabilityPosture:
+        "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      workbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
     });
     expect(fetchMock.mock.calls[0][0].toString()).toContain(
       `/api/v1/advisor-cockpit/actions?portfolio_id=${PORTFOLIO_ID}`,
@@ -159,8 +168,41 @@ describe("advisor cockpit live proof", () => {
       portfolioId: PORTFOLIO_ID,
       actionItemId: "aci_policy_review_001",
       clientReadyPublication: "BLOCKED",
+      workbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+      supportabilityPosture:
+        "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       replayed: true,
     });
+  });
+
+  it("rejects supportability posture drift from the governed canonical contract", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(actionListResponse())
+      .mockResolvedValueOnce(snapshotResponse())
+      .mockResolvedValueOnce(
+        supportabilityResponse("ADVISE_API_SUPPORTED_DOWNSTREAM_GATED"),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      validateCanonicalAdvisorCockpit({
+        summary: { apiChecks: [], workflowPackChecks: [] },
+        scenario: {
+          expectedClientReadyPublication: "BLOCKED",
+          expectedSupportabilityPosture:
+            "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+          expectedWorkbenchPosture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+        },
+        gatewayBaseUrl: "http://gateway.dev.lotus",
+        portfolioId: PORTFOLIO_ID,
+        proposalId: "proposal_001",
+        proposalVersionId: "version_001",
+        timeoutMs: 1000,
+      }),
+    ).rejects.toThrow(
+      "Advisor cockpit supportability returned posture ADVISE_API_SUPPORTED_DOWNSTREAM_GATED",
+    );
   });
 
   it("scopes acknowledgement idempotency keys to the action identity", async () => {
