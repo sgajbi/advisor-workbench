@@ -58,7 +58,11 @@ describe("advisory journey navigation", () => {
       expect(definition.nextAction.length).toBeGreaterThan(10);
       expect(definition.dataSources).toContain("lotus-gateway");
     }
-    expect(getAdvisoryJourneyDefinition("discussion-pack").title).toBe("Client Discussion Pack");
+    const discussionPack = getAdvisoryJourneyDefinition("discussion-pack");
+    expect(discussionPack.title).toBe("Discussion Pack Review");
+    expect(
+      `${discussionPack.description} ${discussionPack.primaryDecision} ${discussionPack.nextAction}`
+    ).not.toMatch(/client-ready/i);
     expect(getAdvisoryJourneyDefinition("implementation").description).toContain(
       "Execution handoff"
     );

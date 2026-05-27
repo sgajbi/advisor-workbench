@@ -80,12 +80,12 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
     includedStates: ["RISK_REVIEW"],
   },
   "discussion-pack": {
-    title: "Client Discussion Pack",
-    subtitle: "Advisor-reviewed rationale and client-consent readiness.",
-    primaryDecision: "Is the proposal ready to discuss with the client?",
-    recommendedAction: "Prepare the client discussion pack and record consent after the meeting.",
-    emptyTitle: "No client discussion packs are pending",
-    emptyBody: "There are no proposals currently waiting for client consent.",
+    title: "Discussion Pack Review",
+    subtitle: "Advisor-reviewed rationale, evidence, and client-consent gate posture.",
+    primaryDecision: "What evidence or review remains before client discussion?",
+    recommendedAction: "Resolve policy, memo, narrative, and consent blockers before using the pack.",
+    emptyTitle: "No discussion-pack reviews are pending",
+    emptyBody: "There are no proposals currently waiting at the client-consent gate.",
     includedStates: ["AWAITING_CLIENT_CONSENT"],
   },
   implementation: {

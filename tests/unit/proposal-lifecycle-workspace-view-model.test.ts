@@ -68,6 +68,23 @@ describe("proposal lifecycle workspace view model", () => {
     });
   });
 
+  it("keeps discussion-pack mode gated instead of client-ready", () => {
+    const model = buildProposalLifecycleWorkspaceModel({
+      mode: "discussion-pack",
+      proposals,
+    });
+
+    expect(model.title).toBe("Discussion Pack Review");
+    expect(model.totalCount).toBe(1);
+    expect(`${model.subtitle} ${model.primaryDecision} ${model.recommendedAction}`).not.toMatch(
+      /client-ready/i
+    );
+    expect(model.rows[0]).toMatchObject({
+      proposalId: "PRP-CONSENT",
+      readiness: "Pending",
+    });
+  });
+
   it("normalizes unsupported route modes to approval queue", () => {
     expect(normalizeProposalLifecycleMode("overview")).toBe("approval-queue");
     expect(normalizeProposalLifecycleMode("proposal-builder")).toBe("approval-queue");
