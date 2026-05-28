@@ -54,6 +54,7 @@ import {
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
 import { validateCanonicalAdvisorCockpit } from "./validation/advisor-cockpit-proof.mjs";
 import { createCanonicalPolicyEvaluation } from "./validation/advisory-policy-proof.mjs";
+import { validateCanonicalAdvisoryCopilot } from "./validation/advisory-copilot-proof.mjs";
 import {
   buildPayloadScopedIdempotencyKey,
   extractGatewayEnvelopeData,
@@ -876,6 +877,16 @@ async function run() {
     proposalVersionId,
     timeoutMs,
   });
+  const advisoryCopilotProof = await validateCanonicalAdvisoryCopilot({
+    summary,
+    scenario: advisoryScenario.advisoryCopilot,
+    gatewayBaseUrl,
+    portfolioId,
+    proposalId,
+    proposalVersionId,
+    proposalVersionNo,
+    timeoutMs,
+  });
 
   const manageSupportabilitySummary = await fetchJson(
     summary,
@@ -1549,6 +1560,22 @@ async function run() {
       supportabilityPosture: advisorCockpitProof.supportabilityPosture,
       source:
         "Gateway advisor cockpit action list, snapshot, supportability, and acknowledgement",
+    },
+  );
+  panelGovernance.recordPanelClassification(
+    "advisory.advisory_copilot",
+    "ready",
+    "lotus-advise",
+    {
+      route: `/recommendations?portfolioId=${portfolioId}&mode=copilot`,
+      proposalId,
+      proposalVersionId,
+      actionRunCount: advisoryCopilotProof.actionRunCount,
+      sourcePacketCount: advisoryCopilotProof.sourcePacketCount,
+      guardrailPosture: advisoryCopilotProof.guardrailPosture,
+      clientReadyPublication: advisoryCopilotProof.clientReadyPublication,
+      source:
+        "Gateway advisory copilot source-packet, lotus-ai action, review, guardrail, and proposal-run proof",
     },
   );
   panelGovernance.recordPanelClassification(

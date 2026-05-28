@@ -202,6 +202,11 @@ export async function validateAdvisoryJourneyScreens(
     portfolioId,
     path: "/recommendations?mode=cockpit",
   });
+  const copilotRoute = advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path: "/recommendations?mode=copilot",
+  });
   const portfolioRoute = advisoryJourneyRoute({
     workbenchBaseUrl,
     portfolioId,
@@ -329,6 +334,54 @@ export async function validateAdvisoryJourneyScreens(
       ).toBeVisible({
         timeout: timeoutMs,
       });
+      await expect(page.getByText("CLIENT_READY_PUBLICATION")).toHaveCount(0);
+    },
+  });
+
+  await validateAdvisoryJourneyRoute(page, {
+    summary,
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    key: "advisory-copilot",
+    title: "Advisory Copilot",
+    route: copilotRoute,
+    screenshotName: "advisory-advisory-copilot-live.png",
+    panel: "advisory.advisory_copilot",
+    owner: "lotus-advise",
+    sourcePosture: "advisory-copilot-through-gateway",
+    screenshotAdvisoryJourney,
+    validate: async () => {
+      await expect(page.getByText("Advisor Decision", { exact: true })).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByLabel("Advisory copilot posture")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByLabel("Advisory copilot actions")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await page.getByRole("button", { name: "Prepare review" }).first().click();
+      await expect(page.getByText("Source Evidence", { exact: true })).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Review Posture", { exact: true })).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("Run posture", { exact: true })).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(
+        page.getByRole("button", { name: "Record internal review" }),
+      ).toBeEnabled({
+        timeout: timeoutMs,
+      });
+      await page.getByRole("button", { name: "Record internal review" }).click();
+      await expect(page.getByText("Approved For Internal Use")).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText("workflow_pack")).toHaveCount(0);
+      await expect(page.getByText("PROPOSAL_EXPLANATION")).toHaveCount(0);
       await expect(page.getByText("CLIENT_READY_PUBLICATION")).toHaveCount(0);
     },
   });

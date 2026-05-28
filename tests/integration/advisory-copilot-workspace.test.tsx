@@ -17,13 +17,16 @@ const listProposalsMock = vi.fn(async (_filters: unknown) => ({
   ],
 }));
 const getAdvisoryCopilotSupportabilityMock = vi.fn(async () => ({
-  support_status: "ADVISE_API_CERTIFIED_GATEWAY_WORKBENCH_PENDING",
+  support_status: "ADVISE_COPILOT_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
   client_ready_publication: "BLOCKED",
   supported_action_families: [
     "PROPOSAL_EXPLANATION",
     "MEETING_PREPARATION",
   ],
-  boundaries: ["No client-ready publication"],
+  boundaries: [
+    "CLIENT_READY_PUBLICATION is blocked",
+    "POLICY_APPROVAL_OR_SIGN_OFF is not delegated to copilot",
+  ],
 }));
 const createEvidencePacketMock = vi.fn(async (_payload: unknown) => ({
   evidence_packet: {
