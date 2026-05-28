@@ -247,7 +247,9 @@ promote dormant labels into product ownership just because historical route file
   `GET /api/v1/advisory-copilot/supportability`. Workbench does not construct evidence sections,
   prompts, guardrails, AI/model lineage, review state, policy semantics, client-ready publication,
   external client communication, orders, fills, settlement, or OMS posture locally. Canonical
-  RFC-0027 live proof remains pending before supported-feature promotion.
+  validation records `ADVISORY_COPILOT_CANONICAL_PROOF_CREATED`, proves all six first-wave action
+  families, internal review posture, client-ready guardrail rejection, proposal-version run
+  lineage, and captures `advisory-advisory-copilot-live.png`.
 
 ## Route examples
 

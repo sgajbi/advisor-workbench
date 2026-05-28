@@ -357,8 +357,10 @@ Important current product and route truths:
     `/api/v1/advisory-copilot/supportability`. Workbench requests proposal-version-scoped
     evidence projection from Gateway and does not construct evidence sections, prompts, guardrails,
     review state, model lineage, policy semantics, client-ready publication, client communication,
-    orders, or execution posture locally. Canonical RFC-0027 live proof remains a later slice before
-    supported-feature promotion.
+    orders, or execution posture locally. Canonical front-office validation now proves all six
+    first-wave copilot action families, internal review recording, client-ready guardrail rejection,
+    proposal-version run lineage, Gateway-backed rendering, and `advisory.advisory_copilot`
+    screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 
