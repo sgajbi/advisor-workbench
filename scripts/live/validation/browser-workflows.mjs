@@ -377,7 +377,7 @@ export async function validateAdvisoryJourneyScreens(
         timeout: timeoutMs,
       });
       await page.getByRole("button", { name: "Record internal review" }).click();
-      await expect(page.getByText("Approved For Internal Use")).toBeVisible({
+      await expect(page.getByLabel("Status Approved For Internal Use")).toBeVisible({
         timeout: timeoutMs,
       });
       await expect(page.getByText("workflow_pack")).toHaveCount(0);
