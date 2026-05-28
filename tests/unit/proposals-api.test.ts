@@ -19,6 +19,8 @@ import {
   getAdvisoryPolicyWorkflow,
   getAdvisorCockpitSnapshot,
   getAdvisorCockpitSupportability,
+  getBankDemoScenarioContract,
+  getBankDemoSupportedClaimRegister,
   getProposalExecutionStatus,
   getProposalIdempotencyRecord,
   getProposalDeliveryEvents,
@@ -261,6 +263,54 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW&portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
+  });
+
+  it("loads RFC28 bank demo proof contracts through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const data = url.endsWith("/scenario-contract")
+          ? {
+              scenario_id: "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL",
+              primary_portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            }
+          : {
+              claims: [
+                {
+                  claim_id: "client_ready_publication_blocked",
+                  classification: "UNSUPPORTED",
+                },
+              ],
+            };
+        return new Response(
+          JSON.stringify({
+            correlationId: "c",
+            contractVersion: "v1",
+            data,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }),
+    );
+
+    const scenario = await getBankDemoScenarioContract();
+    const claimRegister = await getBankDemoSupportedClaimRegister();
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory/bank-demo-proof/scenario-contract`,
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory/bank-demo-proof/supported-claim-register`,
+    );
+    expect(scenario.scenario_id).toBe(
+      "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL",
+    );
+    expect(claimRegister.claims?.[0]?.classification).toBe("UNSUPPORTED");
   });
 
   it("loads Gateway-backed advisory policy detail and sign-off package", async () => {

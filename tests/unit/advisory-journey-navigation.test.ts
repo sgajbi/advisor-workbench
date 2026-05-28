@@ -31,6 +31,9 @@ describe("advisory journey navigation", () => {
     expect(buildAdvisoryJourneyHref("PB SG/001", "risk-impact")).toBe(
       "/proposals?portfolioId=PB%20SG%2F001&mode=risk-impact",
     );
+    expect(buildAdvisoryJourneyHref("PB SG/001", "proof")).toBe(
+      "/recommendations?portfolioId=PB%20SG%2F001&mode=proof",
+    );
   });
 
   it("builds dense shell-visible journey items with one active mode", () => {
@@ -46,6 +49,7 @@ describe("advisory journey navigation", () => {
       "approval-queue",
       "discussion-pack",
       "implementation",
+      "proof",
     ]);
     expect(items.filter((item) => item.active).map((item) => item.key)).toEqual(
       ["approval-queue"],
@@ -60,7 +64,7 @@ describe("advisory journey navigation", () => {
   });
 
   it("keeps each journey definition anchored to advisor decisions and source-owned data", () => {
-    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(11);
+    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(12);
     for (const definition of ADVISORY_JOURNEY_DEFINITIONS) {
       expect(definition.primaryDecision).toMatch(/\?$/);
       expect(definition.nextAction.length).toBeGreaterThan(10);
@@ -74,5 +78,8 @@ describe("advisory journey navigation", () => {
     expect(
       getAdvisoryJourneyDefinition("implementation").description,
     ).toContain("Execution handoff");
+    expect(getAdvisoryJourneyDefinition("proof").description).toContain(
+      "supported claims",
+    );
   });
 });
