@@ -16,6 +16,7 @@ type ValidateCanonicalAdvisoryCopilot = (args: {
   proposalVersionId: string;
   proposalVersionNo: number;
   timeoutMs: number;
+  proofExecutionId?: string;
 }) => Promise<{
   actionRunCount: number;
   sourcePacketCount: number;
@@ -235,6 +236,7 @@ describe("advisory copilot live proof", () => {
       proposalVersionId: PROPOSAL_VERSION_ID,
       proposalVersionNo: 1,
       timeoutMs: 1000,
+      proofExecutionId: "proof-execution-001",
     });
 
     expect(proof).toMatchObject({
@@ -266,6 +268,51 @@ describe("advisory copilot live proof", () => {
       guardrailPosture: "GUARDRAIL_REJECTED",
       clientReadyPublication: "BLOCKED",
     });
+    expect(summary.workflowPackChecks[0]).toMatchObject({
+      proofExecutionId: "proof-execution-001",
+    });
+    expect(
+      fetchMock.mock.calls
+        .filter((call) => call[0].toString().endsWith("/api/v1/advisory-copilot/actions"))
+        .map((call) => JSON.parse(call[1]?.body?.toString() ?? "{}").body.reason),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ proof_execution_id: "proof-execution-001" }),
+      ]),
+    );
+  });
+
+  it("scopes action idempotency by proof execution so prior reviewed runs cannot be replayed", async () => {
+    const fetchMock = createFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+
+    for (const proofExecutionId of ["proof-execution-a", "proof-execution-b"]) {
+      await validateCanonicalAdvisoryCopilot({
+        summary: { apiChecks: [], workflowPackChecks: [] },
+        scenario: {},
+        gatewayBaseUrl: "http://gateway.dev.lotus",
+        portfolioId: PORTFOLIO_ID,
+        proposalId: PROPOSAL_ID,
+        proposalVersionId: PROPOSAL_VERSION_ID,
+        proposalVersionNo: 1,
+        timeoutMs: 1000,
+        proofExecutionId,
+      });
+    }
+
+    const proposalExplanationRunKeys = fetchMock.mock.calls
+      .filter((call) => call[0].toString().endsWith("/api/v1/advisory-copilot/actions"))
+      .filter((call) => {
+        const requestBody = JSON.parse(call[1]?.body?.toString() ?? "{}");
+        return (
+          requestBody.body.evidence_packet_id === "packet_proposal_explanation" &&
+          !requestBody.body.requested_intents?.includes("publish_client_ready")
+        );
+      })
+      .map((call) => (call[1]?.headers as Record<string, string>)["Idempotency-Key"]);
+
+    expect(proposalExplanationRunKeys).toHaveLength(2);
+    expect(new Set(proposalExplanationRunKeys).size).toBe(2);
   });
 
   it("rejects supportability drift before creating action runs", async () => {

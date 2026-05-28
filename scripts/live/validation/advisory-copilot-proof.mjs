@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { fetchJson, sendJson } from "./probes.mjs";
 import {
   buildPayloadScopedIdempotencyKey,
@@ -248,6 +250,7 @@ async function runCopilotAction({
   packet,
   action,
   timeoutMs,
+  proofExecutionId,
 }) {
   const requestBody = {
     body: {
@@ -261,6 +264,7 @@ async function runCopilotAction({
         purpose: "canonical_rfc0027_advisory_copilot_validation",
         scenario_id: scenario.scenarioId,
         evidence_packet_hash: packet.evidence_packet_hash,
+        proof_execution_id: proofExecutionId,
       },
     },
   };
@@ -291,6 +295,7 @@ async function reviewCopilotRun({
   run,
   action,
   timeoutMs,
+  proofExecutionId,
 }) {
   const requestBody = {
     body: {
@@ -299,6 +304,7 @@ async function reviewCopilotRun({
       reason: {
         decision: "Reviewed against cited source evidence for internal advisor use.",
         scenario_id: scenario.scenarioId,
+        proof_execution_id: proofExecutionId,
       },
     },
   };
@@ -330,6 +336,7 @@ async function createGuardrailRejectedRun({
   packet,
   action,
   timeoutMs,
+  proofExecutionId,
 }) {
   const requestBody = {
     body: {
@@ -343,6 +350,7 @@ async function createGuardrailRejectedRun({
         purpose: "canonical_rfc0027_guardrail_validation",
         scenario_id: scenario.scenarioId,
         evidence_packet_hash: packet.evidence_packet_hash,
+        proof_execution_id: proofExecutionId,
       },
     },
   };
@@ -375,8 +383,11 @@ export async function validateCanonicalAdvisoryCopilot({
   proposalVersionId,
   proposalVersionNo,
   timeoutMs,
+  proofExecutionId: rawProofExecutionId,
 }) {
   const scenario = normalizeScenario(rawScenario);
+  const proofExecutionId =
+    readString(rawProofExecutionId) ?? `wb-rfc0027-copilot-proof-${randomUUID()}`;
   const actions = actionsForScenario(scenario);
   if (actions.length !== scenario.actionFamilies.length) {
     throw new Error("Advisory copilot canonical scenario declares unknown action families.");
@@ -431,6 +442,7 @@ export async function validateCanonicalAdvisoryCopilot({
       packet,
       action,
       timeoutMs,
+      proofExecutionId,
     });
     assertRun(run, { action, scenario, packet });
 
@@ -441,6 +453,7 @@ export async function validateCanonicalAdvisoryCopilot({
       run,
       action,
       timeoutMs,
+      proofExecutionId,
     });
     assertReviewedRun(reviewResponse, { action, scenario });
     actionProofs.push({
@@ -473,6 +486,7 @@ export async function validateCanonicalAdvisoryCopilot({
     packet: guardrailPacket,
     action: guardrailAction,
     timeoutMs,
+    proofExecutionId,
   });
   assertGuardrailRun(guardrailRun, { scenario });
 
@@ -502,6 +516,7 @@ export async function validateCanonicalAdvisoryCopilot({
     portfolioId,
     proposalId,
     proposalVersionId,
+    proofExecutionId,
     actionFamilies: actionProofs.map((proof) => proof.actionFamily),
     actionRunCount: actionProofs.length,
     sourcePacketCount: actionProofs.length,
@@ -513,6 +528,7 @@ export async function validateCanonicalAdvisoryCopilot({
 
   return {
     scenarioId: scenario.scenarioId,
+    proofExecutionId,
     actionRunCount: actionProofs.length,
     sourcePacketCount: actionProofs.length,
     guardrailRunId: guardrailRun.run_id,
