@@ -34,6 +34,15 @@ vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
   ),
 }));
 
+vi.mock("@/features/proposals/components/advisory-copilot-workspace", () => ({
+  default: ({ portfolioId }: { portfolioId: string }) => (
+    <section>
+      <h2>Advisory Copilot</h2>
+      <p>{portfolioId}</p>
+    </section>
+  ),
+}));
+
 vi.mock(
   "@/features/proposals/components/advisory-opportunities-workspace",
   () => ({
@@ -260,6 +269,22 @@ describe("app route entrypoints", () => {
 
     expect(
       screen.getAllByRole("heading", { name: "Advisor Cockpit" }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+  });
+
+  it("mounts recommendations copilot mode as a Gateway-backed advisory screen", async () => {
+    render(
+      await RecommendationsAppPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          mode: "copilot",
+        }),
+      }),
+    );
+
+    expect(
+      screen.getAllByRole("heading", { name: "Advisory Copilot" }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
   });

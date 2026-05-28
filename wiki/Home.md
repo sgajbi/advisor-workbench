@@ -22,7 +22,9 @@
   requests, and manage-owned operating evidence
 - recommendations remain compatibility routes; `mode=cockpit` is the RFC-0026 Gateway-backed
   advisor cockpit over Advise-owned action items, supportability, meeting preparation, tactical
-  house-view impact review, and bounded acknowledgements. Proposals have bounded direct Gateway-backed queue/detail routes for
+  house-view impact review, and bounded acknowledgements. `mode=copilot` is the RFC-0027
+  Gateway-backed advisor-use copilot over Advise-owned proposal-version source projection and
+  internal review posture, with canonical proof still pending. Proposals have bounded direct Gateway-backed queue/detail routes for
   RFC-0023 advisor narrative delivery posture, while the top-level shell `Proposal` entry remains
   disabled
 - shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries

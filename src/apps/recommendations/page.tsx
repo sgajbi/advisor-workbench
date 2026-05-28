@@ -1,4 +1,5 @@
 import AdvisoryOverviewWorkspace from "@/features/proposals/components/advisory-overview-workspace";
+import AdvisoryCopilotWorkspace from "@/features/proposals/components/advisory-copilot-workspace";
 import AdvisoryOpportunitiesWorkspace from "@/features/proposals/components/advisory-opportunities-workspace";
 import AdvisorCockpitWorkspace from "@/features/proposals/components/advisor-cockpit-workspace";
 import {
@@ -18,7 +19,9 @@ export default async function RecommendationsAppPage({
   const portfolioId = resolveProposalPortfolioId(resolvedSearch.portfolioId);
   const requestedMode = normalizeAdvisoryJourneyMode(resolvedSearch.mode);
   const activeMode =
-    requestedMode === "opportunities" || requestedMode === "cockpit"
+    requestedMode === "opportunities" ||
+    requestedMode === "cockpit" ||
+    requestedMode === "copilot"
       ? requestedMode
       : "overview";
   const definition = getAdvisoryJourneyDefinition(activeMode);
@@ -32,6 +35,8 @@ export default async function RecommendationsAppPage({
     >
       {activeMode === "cockpit" ? (
         <AdvisorCockpitWorkspace portfolioId={portfolioId} />
+      ) : activeMode === "copilot" ? (
+        <AdvisoryCopilotWorkspace portfolioId={portfolioId} />
       ) : activeMode === "opportunities" ? (
         <AdvisoryOpportunitiesWorkspace portfolioId={portfolioId} />
       ) : (

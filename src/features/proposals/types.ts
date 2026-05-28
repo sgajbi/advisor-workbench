@@ -369,6 +369,118 @@ export type AdvisorCockpitAcknowledgeData = {
   [key: string]: unknown;
 };
 
+export type AdvisoryCopilotActionFamily =
+  | "PROPOSAL_EXPLANATION"
+  | "EVIDENCE_QA"
+  | "MEETING_PREPARATION"
+  | "COMPLIANCE_REVIEW_SUMMARY"
+  | "OPERATIONS_REPORT_HANDOFF"
+  | "CLIENT_FOLLOW_UP_DRAFT";
+
+export type AdvisoryCopilotAudience =
+  | "ADVISOR"
+  | "DESK_HEAD"
+  | "COMPLIANCE_REVIEWER"
+  | "OPERATIONS_SUPPORT"
+  | "MODEL_RISK_OPERATOR";
+
+export type AdvisoryCopilotEnvelopeResponse = {
+  correlation_id: string;
+  contract_version: string;
+  data: Record<string, unknown>;
+};
+
+export type AdvisoryCopilotEvidencePacketRequest = {
+  proposal_id: string;
+  proposal_version_no: number;
+  evidence_packet_id?: string;
+  action_family: AdvisoryCopilotActionFamily;
+  audience: AdvisoryCopilotAudience;
+  created_by: string;
+  reason?: Record<string, unknown>;
+};
+
+export type AdvisoryCopilotActionRequest = {
+  evidence_packet_id: string;
+  audience: AdvisoryCopilotAudience;
+  requested_outputs: string[];
+  requested_by: string;
+  reason?: Record<string, unknown>;
+  requested_intents?: string[];
+  user_instruction?: string;
+};
+
+export type AdvisoryCopilotReviewRequest = {
+  action:
+    | "APPROVE_FOR_INTERNAL_USE"
+    | "REJECT"
+    | "REQUEST_CHANGES"
+    | "SUPERSEDE"
+    | "EXPIRE";
+  actor_id: string;
+  reason?: Record<string, unknown>;
+};
+
+export type AdvisoryCopilotEvidencePacketData = {
+  evidence_packet?: {
+    evidence_packet_id?: string;
+    evidence_packet_hash?: string;
+    action_family?: AdvisoryCopilotActionFamily | string;
+    portfolio_id?: string;
+    proposal_id?: string | null;
+    sections?: Array<{
+      section_key?: string;
+      title?: string;
+      summary_items?: string[];
+      source_refs?: Array<Record<string, unknown>>;
+      [key: string]: unknown;
+    }>;
+    unsupported_evidence?: Array<{
+      reason_code?: string;
+      advisor_message?: string;
+      [key: string]: unknown;
+    }>;
+    client_ready_publication?: string;
+    [key: string]: unknown;
+  };
+  record?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AdvisoryCopilotRunData = {
+  run?: {
+    run_id?: string;
+    action_family?: AdvisoryCopilotActionFamily | string;
+    review_posture?: string;
+    client_ready_publication?: string;
+    output_sections_json?: Array<{
+      section_key?: string;
+      title?: string;
+      text?: string;
+      review_state?: string;
+      [key: string]: unknown;
+    }>;
+    review_guidance_json?: string[];
+    guardrail_results_json?: string[];
+    [key: string]: unknown;
+  };
+  reviews?: Array<Record<string, unknown>>;
+  replayed?: boolean;
+  [key: string]: unknown;
+};
+
+export type AdvisoryCopilotReviewData = AdvisoryCopilotRunData & {
+  review?: Record<string, unknown>;
+};
+
+export type AdvisoryCopilotSupportabilityData = {
+  support_status?: string;
+  client_ready_publication?: string;
+  supported_action_families?: AdvisoryCopilotActionFamily[];
+  boundaries?: string[];
+  [key: string]: unknown;
+};
+
 export type ProposalSummary = {
   proposal_id: string;
   portfolio_id?: string;
