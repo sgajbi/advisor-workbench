@@ -125,6 +125,27 @@ describe("live validation contract modules", () => {
             panel.owningService === "lotus-advise"
         )
       ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
+            panel.panelId === "advisory.bank_demo_proof" &&
+            panel.screenshotName === "advisory-bank-demo-proof-live.png" &&
+            panel.gatewayEndpoint === "/api/v1/advisory/bank-demo-proof/supported-claim-register"
+        )
+      ).toBe(true);
+      const bankDemoProof = DEFAULT_CANONICAL_CONTRACT
+        .advisoryProposalScenarios?.bankDemoProof as
+        | {
+            scenarioId: string;
+            expectedClaimPostures: Record<string, string>;
+          }
+        | undefined;
+      expect(bankDemoProof?.scenarioId).toBe(
+        "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL"
+      );
+      expect(
+        bankDemoProof?.expectedClaimPostures.client_ready_publication_blocked
+      ).toBe("UNSUPPORTED");
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

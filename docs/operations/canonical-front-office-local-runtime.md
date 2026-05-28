@@ -274,6 +274,7 @@ Validation layers:
    - proposal narrative review and reviewed report-package request
    - RFC-0026 advisor cockpit tactical house-view cohort seed, action list, preparation packets,
      snapshot, supportability, and idempotent acknowledgement
+   - RFC-0028 bank-demo proof scenario and supported-claim register through Gateway
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
@@ -282,6 +283,7 @@ Validation layers:
    - Performance advisor brief
    - Proposal narrative posture
    - Advisor cockpit
+   - Bank demo proof
    - Performance risk
    - Performance evidence
    - DPM outcome review
@@ -340,6 +342,12 @@ Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discus
 and Implementation Status. These journey checks are route-level evidence over existing
 Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
 client communication, or execution truth.
+RFC-0028 bank-demo proof checks read Gateway-backed scenario and supported-claim contracts,
+validate the governed scenario id, proof marker, and claim postures, then render
+`/recommendations?mode=proof` as `advisory.bank_demo_proof`. The proof captures
+`advisory-bank-demo-proof-live.png` only after the source contracts load and the UI shows blocked
+client-publication posture without approval, client communication, order, fill, settlement, or OMS
+claims.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,

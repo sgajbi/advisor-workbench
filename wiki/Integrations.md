@@ -195,6 +195,12 @@ must travel through Gateway-shaped contracts.
     commentary as authoritative evidence, contact clients, or call source services directly.
     Canonical Workbench proof classifies `proposal.memo_evidence_pack` as `lotus-advise` owned and
     captures governed screenshot evidence after advisor-use memo review.
+19. RFC-0028 bank-demo proof posture is owned by `lotus-advise` and exposed through Gateway
+    `/api/v1/advisory/bank-demo-proof/*`. Workbench consumes the scenario contract and
+    supported-claim register through the BFF only, renders source-owned classifications and
+    publication boundaries, and does not construct proof packs, classify claims, approve sign-off,
+    promote client-ready publication, contact clients, create orders, or claim OMS/fill/settlement
+    truth. Canonical Workbench proof classifies `advisory.bank_demo_proof` as `lotus-advise` owned.
 
 ## Ownership Diagram
 

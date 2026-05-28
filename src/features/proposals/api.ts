@@ -22,6 +22,9 @@ import {
   AdvisoryWorkspaceEnvelopeResponse,
   AdvisoryWorkspaceHandoffRequest,
   AdvisoryWorkspaceSaveRequest,
+  BankDemoProofEnvelopeResponse,
+  BankDemoScenarioContractData,
+  BankDemoSupportedClaimRegisterData,
   ProposalBodyRequest,
   ProposalCreateRequest,
   ProposalDeliveryEventsData,
@@ -72,6 +75,34 @@ export type AdvisorCockpitFilters = {
   limit?: number;
   cursor?: string;
 };
+
+export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory/bank-demo-proof/scenario-contract`,
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Bank demo scenario contract failed (${response.status}): ${body}`,
+    );
+  }
+  const envelope = (await response.json()) as BankDemoProofEnvelopeResponse;
+  return envelope.data as unknown as BankDemoScenarioContractData;
+}
+
+export async function getBankDemoSupportedClaimRegister(): Promise<BankDemoSupportedClaimRegisterData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory/bank-demo-proof/supported-claim-register`,
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Bank demo supported-claim register failed (${response.status}): ${body}`,
+    );
+  }
+  const envelope = (await response.json()) as BankDemoProofEnvelopeResponse;
+  return envelope.data as unknown as BankDemoSupportedClaimRegisterData;
+}
 
 export async function simulateProposal(
   payload: ProposalSimulateRequest,

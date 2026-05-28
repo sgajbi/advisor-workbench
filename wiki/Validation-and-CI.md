@@ -75,6 +75,11 @@
   It must verify that Workbench renders source-owned policy posture in advisor language without
   claiming local suitability calculation, policy approval, waiver authority, sign-off completion, or
   client-ready publication.
+- RFC-0028 bank-demo proof validation must read the Gateway-backed scenario contract and
+  supported-claim register, verify the governed scenario id, proof marker, and claim postures, and
+  render `/recommendations?mode=proof` as `advisory.bank_demo_proof`. The screenshot is accepted
+  only when Workbench shows blocked client-publication posture without local claim promotion,
+  approval, client communication, order, fill, settlement, or OMS claims.
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
 - final visual review should use canonical validated captures, not pre-validation diagnostics
@@ -88,6 +93,8 @@ The governed front-office validation flow checks the seeded `PB_SG_GLOBAL_BAL_00
 - advisor-brief and risk modes inside the performance experience
 - RFC-0024 advisory journey routes and proposal memo/evidence-pack posture through Gateway-backed
   Workbench screens
+- RFC-0028 bank-demo proof scenario and supported-claim posture through Gateway-backed Workbench
+  screens
 - evidence-oriented product validation paths that are part of the current governed runtime
 - DPM outcome review, proof pack, command center, portfolio memory, rebalance-wave command center,
   Core candidate-source wave preview/no-caller-portfolio guard, construction alternatives,
