@@ -260,6 +260,7 @@ async function runCopilotAction({
       reason: {
         purpose: "canonical_rfc0027_advisory_copilot_validation",
         scenario_id: scenario.scenarioId,
+        evidence_packet_hash: packet.evidence_packet_hash,
       },
     },
   };
@@ -341,6 +342,7 @@ async function createGuardrailRejectedRun({
       reason: {
         purpose: "canonical_rfc0027_guardrail_validation",
         scenario_id: scenario.scenarioId,
+        evidence_packet_hash: packet.evidence_packet_hash,
       },
     },
   };
