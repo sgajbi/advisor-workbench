@@ -346,6 +346,15 @@ Important current product and route truths:
     house-view cohort seed, preparation packet route, snapshot, supportability, an idempotent
     acknowledgement, replay-safe already-acknowledged source state, and
     `advisory.advisor_cockpit` screenshot evidence.
+16. RFC-0028 bank-demo proof rendering on `/recommendations?mode=proof` is backed by Gateway
+    RFC-0028 proof endpoints only:
+    `/api/v1/advisory/bank-demo-proof/scenario-contract` and
+    `/api/v1/advisory/bank-demo-proof/supported-claim-register`. Workbench renders the
+    Advise-owned scenario contract, supported-claim classifications, proof marker, publication
+    boundaries, proof-handling rules, and source-evidence posture without constructing proof
+    packs, promoting client-ready publication, approving sign-off, contacting clients, creating
+    orders, or claiming OMS/fill/settlement truth. Canonical front-office validation verifies the
+    Gateway proof contracts and captures governed `advisory.bank_demo_proof` screenshot evidence.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

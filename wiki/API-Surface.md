@@ -28,6 +28,9 @@ promote dormant labels into product ownership just because historical route file
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit for Advise-owned action items, supportability, meeting
   preparation, tactical house-view impact review, and bounded acknowledgements
+- `/recommendations?mode=proof`
+  Gateway-backed RFC-0028 bank-demo proof surface for Advise-owned scenario and supported-claim
+  posture
 - `/proposals`
   direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`
@@ -235,6 +238,14 @@ promote dormant labels into product ownership just because historical route file
   `lotus-advise` directly. Canonical validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`,
   proves the dedicated preparation-packet route, treats already acknowledged source actions as
   replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
+- RFC-0028 bank-demo proof is implemented on `/recommendations?mode=proof` through Gateway
+  bank-demo proof endpoints. Workbench reads the scenario contract from
+  `GET /api/v1/advisory/bank-demo-proof/scenario-contract` and the supported-claim register from
+  `GET /api/v1/advisory/bank-demo-proof/supported-claim-register`. It renders source-owned claim
+  posture and publication boundaries only; it does not construct proof packs, classify claims
+  locally, promote client-ready publication, approve sign-off, contact clients, generate orders,
+  route orders, or claim OMS/fill/settlement truth. Canonical validation verifies the Gateway
+  contracts and captures `advisory-bank-demo-proof-live.png`.
 
 ## Route examples
 
