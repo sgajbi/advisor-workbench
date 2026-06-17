@@ -8,6 +8,7 @@ import {
   getDpmProofPackReportInput,
   requestDpmProofPackAiPmMemo,
 } from "@/features/workbench/proof-pack-api";
+import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 import {
   buildProofPackPanelModel,
   type ProofPackPanelModel,
@@ -43,6 +44,7 @@ type UseProofPackActionsResult = {
 
 export function useProofPackActions({
   initialProofPack,
+  contextProofPackId,
   contextRebalanceRunId,
   contextMandateId,
   mandateId,
@@ -53,7 +55,8 @@ export function useProofPackActions({
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const model = buildProofPackPanelModel(proofPack);
-  const proofPackId = model.proofPackId !== "N/A" ? model.proofPackId : null;
+  const proofPackId =
+    model.proofPackId !== "N/A" ? model.proofPackId : contextProofPackId;
   const rebalanceRunId =
     contextRebalanceRunId ?? (model.rebalanceRunId !== "N/A" ? model.rebalanceRunId : null);
   const resolvedMandateId =
@@ -68,6 +71,12 @@ export function useProofPackActions({
     try {
       await action();
     } catch (error) {
+      if (getWorkbenchApiErrorStatus(error) === 404) {
+        setActionError(
+          "Evidence pack is not available from Gateway. Prepare evidence to generate the current review pack."
+        );
+        return;
+      }
       setActionError(error instanceof Error ? error.message : `${label} failed`);
     } finally {
       setPendingAction(null);
