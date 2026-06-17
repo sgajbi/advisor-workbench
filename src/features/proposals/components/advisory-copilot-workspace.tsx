@@ -99,7 +99,7 @@ export default function AdvisoryCopilotWorkspace({
             business_reason: "Prepare advisor-use copilot review.",
           },
         },
-        `ui-copilot-run-${option.family}-${proposal.proposal_id}-${proposal.current_version_no}`,
+        `ui-copilot-run-${option.family}-${proposal.proposal_id}-${proposal.current_version_no}-${evidencePacketId}`,
       );
       return { packet, run };
     },

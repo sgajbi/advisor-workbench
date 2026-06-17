@@ -154,7 +154,7 @@ describe("AdvisoryCopilotWorkspace", () => {
           business_reason: "Prepare advisor-use copilot review.",
         },
       },
-      "ui-copilot-run-PROPOSAL_EXPLANATION-proposal_sg_structured_note_001-1",
+      "ui-copilot-run-PROPOSAL_EXPLANATION-proposal_sg_structured_note_001-1-copilot_packet_1",
     );
     expect(JSON.stringify(createEvidencePacketMock.mock.calls)).not.toContain(
       "source_sections",
@@ -196,7 +196,7 @@ describe("AdvisoryCopilotWorkspace", () => {
         requested_outputs: ["compliance_review_summary"],
         requested_intents: ["summarize_compliance_review"],
       }),
-      "ui-copilot-run-COMPLIANCE_REVIEW_SUMMARY-proposal_sg_structured_note_001-1",
+      "ui-copilot-run-COMPLIANCE_REVIEW_SUMMARY-proposal_sg_structured_note_001-1-copilot_packet_1",
     );
   });
 
