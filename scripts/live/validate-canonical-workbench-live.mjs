@@ -30,6 +30,7 @@ import {
   createBrowserValidationHelpers,
   validateAdvisoryJourneyScreens,
   validateAdvisorBriefPanel,
+  validateBankDemoProofPanel,
   validateConstructionAlternativesPanel,
   validateDpmCopilotWorkspace,
   validateProposalMemoEvidencePackPanel,
@@ -887,6 +888,60 @@ async function run() {
     proposalVersionNo,
     timeoutMs,
   });
+  const bankDemoProofScenario = advisoryScenario.bankDemoProof;
+  const bankDemoScenarioContract = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisory/bank-demo-proof/scenario-contract`,
+    "RFC-0028 bank demo scenario contract",
+    timeoutMs,
+  );
+  const bankDemoScenarioData = extractGatewayEnvelopeData(bankDemoScenarioContract);
+  if (bankDemoScenarioData?.scenario_id !== bankDemoProofScenario.scenarioId) {
+    throw new Error(
+      "RFC-0028 bank demo scenario contract did not return the governed scenario id.",
+    );
+  }
+  if (
+    bankDemoScenarioData?.proof_marker !==
+    bankDemoProofScenario.expectedProofMarker
+  ) {
+    throw new Error(
+      "RFC-0028 bank demo scenario contract did not return the governed proof marker.",
+    );
+  }
+  const bankDemoClaimRegister = await fetchJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisory/bank-demo-proof/supported-claim-register`,
+    "RFC-0028 bank demo supported-claim register",
+    timeoutMs,
+  );
+  const bankDemoClaimData = extractGatewayEnvelopeData(bankDemoClaimRegister);
+  const bankDemoClaimPostures = new Map(
+    (bankDemoClaimData?.claims ?? []).map((claim) => [
+      claim.claim_id,
+      claim.classification,
+    ]),
+  );
+  for (const [claimId, expectedPosture] of Object.entries(
+    bankDemoProofScenario.expectedClaimPostures,
+  )) {
+    if (bankDemoClaimPostures.get(claimId) !== expectedPosture) {
+      throw new Error(
+        `RFC-0028 supported claim ${claimId} returned ${bankDemoClaimPostures.get(
+          claimId,
+        )}; expected ${expectedPosture}.`,
+      );
+    }
+  }
+  summary.uiChecks.push({
+    description: "RFC-0028 bank demo proof Gateway contracts",
+    kind: "bank-demo-proof-contracts",
+    scenarioId: bankDemoScenarioData.scenario_id,
+    proofMarker: bankDemoScenarioData.proof_marker,
+    claimCount: bankDemoClaimData?.claims?.length ?? 0,
+    clientReadyPublication:
+      bankDemoProofScenario.expectedClientReadyPublication.toLowerCase(),
+  });
 
   const manageSupportabilitySummary = await fetchJson(
     summary,
@@ -1579,6 +1634,20 @@ async function run() {
     },
   );
   panelGovernance.recordPanelClassification(
+    "advisory.bank_demo_proof",
+    "ready",
+    "lotus-advise",
+    {
+      route: `/recommendations?portfolioId=${portfolioId}&mode=proof`,
+      scenarioId: bankDemoScenarioData.scenario_id,
+      proofMarker: bankDemoScenarioData.proof_marker,
+      claimCount: bankDemoClaimData?.claims?.length ?? 0,
+      clientReadyPublication:
+        bankDemoProofScenario.expectedClientReadyPublication,
+      source: "Gateway RFC-0028 scenario contract and supported-claim register",
+    },
+  );
+  panelGovernance.recordPanelClassification(
     "dpm.outcome_review",
     "ready",
     "lotus-manage",
@@ -1803,6 +1872,13 @@ async function run() {
       workbenchBaseUrl,
       proposalId,
       proposalVersionNo,
+      timeoutMs,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateBankDemoProofPanel(page, {
+      summary,
+      workbenchBaseUrl,
+      portfolioId,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });

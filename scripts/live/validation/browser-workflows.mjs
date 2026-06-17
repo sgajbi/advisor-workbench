@@ -927,6 +927,64 @@ export async function validateProposalMemoEvidencePackPanel(
   });
 }
 
+export async function validateBankDemoProofPanel(
+  page,
+  { summary, workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
+) {
+  await page.goto(
+    `${workbenchBaseUrl}/recommendations?portfolioId=${encodeURIComponent(portfolioId)}&mode=proof`,
+    {
+      waitUntil: "networkidle",
+      timeout: timeoutMs,
+    },
+  );
+  await expect(
+    page.getByRole("heading", { name: "Bank Demo Proof", exact: true }).first(),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("Bank demo proof summary")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("Bank demo scenario steps")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByLabel("Supported claim register")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByText("Client Publication")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByText("Blocked").first()).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    page.getByText("Client-ready publication is blocked").first(),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByText("Unsupported").first()).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    page.getByRole("button", { name: /approve|publish|client-ready/i }),
+  ).toHaveCount(0);
+  await expect(page.getByText("CLIENT_READY_PUBLICATION")).toHaveCount(0);
+  await expect(page.getByText("OMS_ORDER_LIFECYCLE")).toHaveCount(0);
+
+  summary.uiChecks.push({
+    description: "RFC-0028 bank demo proof supported-claim surface",
+    kind: "bank-demo-proof",
+    portfolioId,
+    route: `/recommendations?portfolioId=${encodeURIComponent(portfolioId)}&mode=proof`,
+    clientReadyPublication: "blocked",
+    sourcePosture: "scenario-and-claims-through-gateway",
+  });
+  await screenshotRegisteredPanel(page, "advisory.bank_demo_proof", {
+    route: `/recommendations?portfolioId=${encodeURIComponent(portfolioId)}&mode=proof`,
+  });
+}
+
 export async function validateRiskPanel(
   page,
   {

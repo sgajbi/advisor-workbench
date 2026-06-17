@@ -216,6 +216,29 @@ export const DEFAULT_CANONICAL_CONTRACT = {
         "CLIENT_COMMUNICATION_DELIVERY",
       ],
     },
+    bankDemoProof: {
+      scenarioId: "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL",
+      expectedWorkbenchPanel: "advisory.bank_demo_proof",
+      expectedGatewayRoutes: [
+        "/api/v1/advisory/bank-demo-proof/scenario-contract",
+        "/api/v1/advisory/bank-demo-proof/supported-claim-register",
+        "/api/v1/advisory/bank-demo-proof/proof-packs",
+      ],
+      expectedProofMarker: "BANK_DEMO_PROOF_PACK_CREATED",
+      expectedClientReadyPublication: "BLOCKED",
+      expectedClaimPostures: {
+        backend_proof_capture_repeatable: "IMPLEMENTATION_BACKED",
+        advisor_journey_backend_evidence_available: "IMPLEMENTATION_BACKED",
+        advisor_use_document_proof_available: "IMPLEMENTATION_BACKED",
+        client_ready_publication_blocked: "UNSUPPORTED",
+      },
+      unsupportedCapabilityBoundaries: [
+        "CLIENT_READY_PUBLICATION",
+        "EXTERNAL_CLIENT_COMMUNICATION",
+        "OMS_ORDER_LIFECYCLE",
+        "ORDER_FILL_SETTLEMENT_SYSTEM_OF_RECORD",
+      ],
+    },
   },
 };
 
@@ -413,6 +436,25 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       screenshotName: "advisory-advisory-copilot-live.png",
       knownLimitations: [],
+      ownerFollowUpRfc: null,
+    },
+    {
+      panelId: "advisory.bank_demo_proof",
+      owningService: "lotus-advise",
+      gatewayEndpoint: "/api/v1/advisory/bank-demo-proof/supported-claim-register",
+      requiredSupportState: "ready",
+      route: "/recommendations?portfolioId={portfolio_id}&mode=proof",
+      allowedStates: [
+        "ready",
+        "loading",
+        "partial",
+        "unavailable",
+        "error",
+      ],
+      screenshotName: "advisory-bank-demo-proof-live.png",
+      knownLimitations: [
+        "Workbench renders source-owned RFC-0028 proof posture only; proof-pack capture and client-ready publication controls remain owned by lotus-advise and downstream evidence workflows",
+      ],
       ownerFollowUpRfc: null,
     },
     {
@@ -814,6 +856,7 @@ function normalizeAdvisoryProposalScenarios(rawScenario) {
     advisoryCopilot: normalizeAdvisoryCopilotScenario(
       rawScenario.advisory_copilot,
     ),
+    bankDemoProof: normalizeBankDemoProofScenario(rawScenario.bank_demo_proof),
   };
 }
 
@@ -886,6 +929,34 @@ function normalizeAdvisoryCopilotScenario(rawScenario) {
     actionFamilies: Array.isArray(rawScenario.action_families)
       ? rawScenario.action_families
       : fallback.actionFamilies,
+    unsupportedCapabilityBoundaries: Array.isArray(
+      rawScenario.unsupported_capability_boundaries,
+    )
+      ? rawScenario.unsupported_capability_boundaries
+      : fallback.unsupportedCapabilityBoundaries,
+  };
+}
+
+function normalizeBankDemoProofScenario(rawScenario) {
+  const fallback =
+    DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios.bankDemoProof;
+  if (!rawScenario || typeof rawScenario !== "object") {
+    return fallback;
+  }
+  return {
+    scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
+    expectedWorkbenchPanel:
+      rawScenario.expected_workbench_panel ?? fallback.expectedWorkbenchPanel,
+    expectedGatewayRoutes: Array.isArray(rawScenario.expected_gateway_routes)
+      ? rawScenario.expected_gateway_routes
+      : fallback.expectedGatewayRoutes,
+    expectedProofMarker:
+      rawScenario.expected_proof_marker ?? fallback.expectedProofMarker,
+    expectedClientReadyPublication:
+      rawScenario.expected_client_ready_publication ??
+      fallback.expectedClientReadyPublication,
+    expectedClaimPostures:
+      rawScenario.expected_claim_postures ?? fallback.expectedClaimPostures,
     unsupportedCapabilityBoundaries: Array.isArray(
       rawScenario.unsupported_capability_boundaries,
     )

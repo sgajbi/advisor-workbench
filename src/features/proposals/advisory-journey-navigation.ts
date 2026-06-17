@@ -12,7 +12,8 @@ export type AdvisoryJourneyMode =
   | "risk-impact"
   | "approval-queue"
   | "discussion-pack"
-  | "implementation";
+  | "implementation"
+  | "proof";
 
 export type AdvisoryJourneyDefinition = {
   key: AdvisoryJourneyMode;
@@ -196,6 +197,20 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-manage"],
     shellVisible: true,
   },
+  {
+    key: "proof",
+    label: "Proof",
+    detail: "Supported claims",
+    title: "Bank Demo Proof",
+    description:
+      "Gateway-backed scenario, supported claims, and publication boundaries for the advisory demo journey.",
+    primaryDecision:
+      "Which bank-demo claims are implementation-backed enough for advisor or pre-sales use?",
+    nextAction:
+      "Use source-owned claim wording and keep blocked claims out of client-ready material.",
+    dataSources: ["lotus-gateway", "lotus-advise"],
+    shellVisible: true,
+  },
 ];
 
 export function buildAdvisoryJourneyHref(
@@ -212,6 +227,8 @@ export function buildAdvisoryJourneyHref(
       return `/recommendations?portfolioId=${encoded}&mode=cockpit`;
     case "copilot":
       return `/recommendations?portfolioId=${encoded}&mode=copilot`;
+    case "proof":
+      return `/recommendations?portfolioId=${encoded}&mode=proof`;
     case "proposal-builder":
       return `/proposals/simulate?portfolioId=${encoded}`;
     case "simulation":

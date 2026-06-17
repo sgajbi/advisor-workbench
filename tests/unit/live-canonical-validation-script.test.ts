@@ -398,6 +398,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validateAdvisoryJourneyScreens");
     expect(script).toContain("validateProposalNarrativePosturePanel");
     expect(script).toContain("validateProposalMemoEvidencePackPanel");
+    expect(script).toContain("validateBankDemoProofPanel");
+    expect(script).toContain("RFC-0028 bank demo supported-claim register");
     expect(script).toContain('from "./validation/advisory-policy-proof.mjs"');
     expect(script).toContain('from "./validation/advisor-cockpit-proof.mjs"');
     expect(script).toContain('from "./validation/advisory-copilot-proof.mjs"');
@@ -477,6 +479,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("proposal.memo_evidence_pack");
     expect(script).toContain("advisory.advisor_cockpit");
     expect(script).toContain("advisory.advisory_copilot");
+    expect(script).toContain("advisory.bank_demo_proof");
     expect(browserWorkflows).toContain(
       'getByLabel("Status Approved For Advisor Use")',
     );
@@ -951,6 +954,10 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain('panelId: "proposal.narrative_posture"');
     expect(contractModule).toContain('panelId: "proposal.memo_evidence_pack"');
     expect(contractModule).toContain('panelId: "advisory.advisor_cockpit"');
+    expect(contractModule).toContain('panelId: "advisory.bank_demo_proof"');
+    expect(contractModule).toContain(
+      "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL",
+    );
     expect(contractModule).toContain("expectedSupportabilityPosture");
     expect(contractModule).toContain("expectedWorkbenchPosture");
     expect(contractModule).toContain("expectedMinPreparationPackets");
@@ -968,11 +975,17 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain(
       'screenshotName: "advisory-advisor-cockpit-live.png"',
     );
+    expect(contractModule).toContain(
+      'screenshotName: "advisory-bank-demo-proof-live.png"',
+    );
     expect(browserWorkflowModule).toContain(
       "Proposal narrative posture review and report package",
     );
     expect(browserWorkflowModule).toContain(
       "Proposal memo evidence-pack advisor-use review and support posture",
+    );
+    expect(browserWorkflowModule).toContain(
+      "RFC-0028 bank demo proof supported-claim surface",
     );
     expect(browserWorkflowModule).toContain("advisoryJourneyChecks");
     expect(browserWorkflowModule).toContain("advisory-overview-live.png");

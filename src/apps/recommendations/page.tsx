@@ -2,6 +2,7 @@ import AdvisoryOverviewWorkspace from "@/features/proposals/components/advisory-
 import AdvisoryCopilotWorkspace from "@/features/proposals/components/advisory-copilot-workspace";
 import AdvisoryOpportunitiesWorkspace from "@/features/proposals/components/advisory-opportunities-workspace";
 import AdvisorCockpitWorkspace from "@/features/proposals/components/advisor-cockpit-workspace";
+import BankDemoProofWorkspace from "@/features/proposals/components/bank-demo-proof-workspace";
 import {
   getAdvisoryJourneyDefinition,
   normalizeAdvisoryJourneyMode,
@@ -21,7 +22,8 @@ export default async function RecommendationsAppPage({
   const activeMode =
     requestedMode === "opportunities" ||
     requestedMode === "cockpit" ||
-    requestedMode === "copilot"
+    requestedMode === "copilot" ||
+    requestedMode === "proof"
       ? requestedMode
       : "overview";
   const definition = getAdvisoryJourneyDefinition(activeMode);
@@ -37,6 +39,8 @@ export default async function RecommendationsAppPage({
         <AdvisorCockpitWorkspace portfolioId={portfolioId} />
       ) : activeMode === "copilot" ? (
         <AdvisoryCopilotWorkspace portfolioId={portfolioId} />
+      ) : activeMode === "proof" ? (
+        <BankDemoProofWorkspace portfolioId={portfolioId} />
       ) : activeMode === "opportunities" ? (
         <AdvisoryOpportunitiesWorkspace portfolioId={portfolioId} />
       ) : (

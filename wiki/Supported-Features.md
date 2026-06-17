@@ -15,6 +15,7 @@ It is intended for developers, business users, operations, sales/pre-sales, and 
 | Advisor suitability policy review queue | `/proposals?mode=suitability`                                       | Gateway `/api/v1/advisory-policy-evaluations/review-queue`, `/api/v1/advisory-policy-evaluations/{evaluation_id}`, `/api/v1/advisory-policy-evaluations/{evaluation_id}/sign-off-package`, `/api/v1/advisory-policy-evaluations/{evaluation_id}/workflow`, and `/api/v1/advisory-policy-evaluations/{evaluation_id}/sign-off-decisions` | Implemented for review of Advise-owned suitability policy evaluations that need advisor, compliance, or supervisory attention. Workbench requests the queue through Gateway with the active portfolio id, then renders advisor-facing policy status, sign-off posture, selected evaluation evidence, sign-off source-package posture, policy workflow posture, client-publication block posture, open approval/disclosure/consent requirements, source-evidence completeness, and next action through Gateway only. Workbench can record a bounded request for more evidence against the source evaluation hash; it does not calculate suitability, approve/waive policy findings, record sign-off approval, publish client-ready material, or call `lotus-advise` directly. |
 | Advisor cockpit operating workflow      | `/recommendations?mode=cockpit`                                     | Gateway `/api/v1/advisor-cockpit*`                                                                                                                                                                                                                                                                                                      | Implemented for source-owned action list, snapshot counts, supportability posture, unsupported-capability boundaries, meeting-preparation packets, tactical house-view impact review items, and bounded advisor acknowledgement. Workbench renders Gateway/Advise truth only; it does not reconstruct policy semantics, clear blockers, approve policy findings, infer tactical house-view membership, infer client-ready publication, contact clients, generate orders, or claim OMS execution. Canonical validation proves the house-view cohort seed, action list, preparation-packet route, snapshot, supportability, idempotent acknowledgement, and `advisory-advisor-cockpit-live.png`.                                                                                                                                                                                                                |
 | Advisory copilot advisor review         | `/recommendations?mode=copilot`                                     | Gateway `/api/v1/advisory-copilot*`                                                                                                                                                                                                                                                                                                    | Supported for Gateway-backed proposal-version source projection, all six first-wave advisor/reviewer copilot action families, internal review recording, unsupported-evidence posture, guardrail rejection, proposal-version run lineage, and blocked client-publication posture. Workbench requests Advise-owned evidence projection through Gateway and does not construct evidence sections, prompts, guardrails, AI/model lineage, review state, policy semantics, client-ready publication, client communication, order, fill, settlement, or OMS posture locally. Canonical `PB_SG_GLOBAL_BAL_001` validation records `ADVISORY_COPILOT_CANONICAL_PROOF_CREATED` and captures `advisory-advisory-copilot-live.png`. |
+| Bank demo proof                         | `/recommendations?mode=proof`                                       | Gateway `/api/v1/advisory/bank-demo-proof/scenario-contract` and `/api/v1/advisory/bank-demo-proof/supported-claim-register`                                                                                                                                                                                                             | Implemented for RFC-0028 scenario and supported-claim proof posture owned by `lotus-advise` and exposed through Gateway. Workbench renders scenario steps, proof marker, supported-claim classifications, approved wording, publication boundaries, proof-handling rules, and source-evidence posture without constructing proof packs, promoting client-ready publication, approving sign-off, contacting clients, creating orders, or claiming OMS/fill/settlement truth. Canonical validation verifies the Gateway contracts and captures `advisory-bank-demo-proof-live.png` as governed screenshot evidence.                                                                                                                                                                                                               |
 | DPM mandate command center              | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*`                                                                                                                                                                                                                                                                                                   | Supported for embedded canonical mandate cockpit, PM-book-backed monitoring action, active exception queue, and governed exception-summary request through Gateway/Manage/lotus-ai. Workbench preserves Manage supportability posture: populated canonical `READY` is demo-ready, `PARTIAL`/`DEGRADED`/`BLOCKED` render as explicit partial states, and `EMPTY` stays an empty state rather than a false ready cockpit.                                                                                                                                                                                                                                                                                                                                                      |
 | DPM rebalance-wave command center       | `/workbench/{portfolioId}?mode=waves`                               | Gateway `/api/v1/dpm/command-center/waves*`                                                                                                                                                                                                                                                                                             | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, governed AI PM memo, governed operations-handoff summary, active Manage-owned campaign-definition list rendering, selected-campaign candidate-source review, read-only campaign lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only.                                                                                                                                                                                                                                                                     |
 | DPM construction alternatives           | `/workbench/{portfolioId}?mode=construction`                        | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*`                                                                                                                                                                                                                                                                     | Implemented for generation, comparison, and PM selection through Gateway only. Canonical panel proof is governed as `dpm.construction_alternatives` and does not claim Workbench-local construction methodology, order routing, trade execution, or OMS truth.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -61,11 +62,6 @@ Not supported in Workbench:
 The RFC-0026 cockpit gives advisors a portfolio-scoped operating worklist that is owned by
 `lotus-advise` and exposed through Gateway.
 
-## Advisor Proposal Narrative And Memo Evidence
-
-The RFC-0023/RFC-0024 proposal detail panels give advisors and supervisors a bounded way to review
-advisor-use narrative and memo evidence posture before downstream report packaging.
-
 Implemented:
 
 1. loads action items, operating snapshot, and supportability through the Workbench BFF and Gateway
@@ -92,6 +88,38 @@ Not supported in Workbench:
 3. client-ready publication,
 4. client communication, OMS, order generation, execution, fills, or settlement,
 5. direct calls to `lotus-advise`.
+
+## Bank Demo Proof
+
+The RFC-0028 proof surface gives advisors, sales, pre-sales, and demo reviewers a governed view of
+which advisory demo claims are implementation-backed, blocked, or not yet suitable for client-ready
+material.
+
+Implemented:
+
+1. loads the Advise-owned scenario contract and supported-claim register through the Workbench BFF
+   and Gateway only,
+2. renders scenario steps, proof marker, source products, proof-handling rules, supported-claim
+   classifications, approved claim wording, and unsupported boundaries in business-facing language,
+3. keeps client-ready publication, sign-off approval, external client communication, order,
+   fill, settlement, and OMS truth visibly blocked where the source register says they are blocked,
+4. shows explicit unavailable/error state without fallback proof claims,
+5. participates in canonical Workbench proof as `advisory.bank_demo_proof` with Gateway contract
+   checks and a governed screenshot.
+
+Not supported in Workbench:
+
+1. proof-pack construction,
+2. local supported-claim classification,
+3. client-ready publication approval,
+4. sign-off approval,
+5. client communication, order creation, OMS execution, fills, or settlement,
+6. direct calls to `lotus-advise`.
+
+## Advisor Proposal Narrative And Memo Evidence
+
+The RFC-0023/RFC-0024 proposal detail panels give advisors and supervisors a bounded way to review
+advisor-use narrative and memo evidence posture before downstream report packaging.
 
 Implemented:
 

@@ -121,9 +121,9 @@ Current repository posture:
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 16. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
-    model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, opportunities,
-    proposal builder,
-    suitability, risk impact, approval queue, client discussion pack, and implementation follow-up
+    model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
+    bank-demo proof, opportunities, proposal builder, suitability, risk impact, approval queue,
+    client discussion pack, and implementation follow-up
     so future screens can evolve like Manage modes instead of page-local route fragments.
     `/recommendations?mode=cockpit` renders Advise-owned cockpit action items, source evidence,
     supportability, meeting-preparation packets, and bounded advisor acknowledgements through
@@ -145,6 +145,11 @@ Current repository posture:
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities` is a
     Gateway-backed idea triage view over draft advisory proposals; Workbench must not claim
     automated opportunity sourcing until Gateway exposes a supported idea/opportunity contract.
+    `/recommendations?mode=proof` renders Advise-owned RFC-0028 scenario and supported-claim
+    posture through Gateway bank-demo proof endpoints only. It preserves source-owned
+    classifications, blocked client-publication boundaries, and proof-handling rules without
+    constructing proof packs, promoting client-ready release, approving sign-off, contacting
+    clients, routing orders, or calling `lotus-advise` directly.
     `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
     `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle

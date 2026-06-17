@@ -26,6 +26,7 @@ export interface CanonicalContractMetadata {
   benchmarkCode: string;
   canonicalAsOfDate: string;
   sourcePath?: string;
+  advisoryProposalScenarios?: Record<string, unknown>;
 }
 
 export interface PanelRegistryEntry {

@@ -481,6 +481,74 @@ export type AdvisoryCopilotSupportabilityData = {
   [key: string]: unknown;
 };
 
+export type BankDemoProofEnvelopeResponse = {
+  correlationId?: string;
+  correlation_id?: string;
+  contractVersion?: string;
+  contract_version?: string;
+  data: Record<string, unknown>;
+};
+
+export type BankDemoScenarioStep = {
+  step_id?: string;
+  title?: string;
+  owner_repository?: string;
+  required_evidence_refs?: string[];
+  required_workbench_panels?: string[];
+  [key: string]: unknown;
+};
+
+export type BankDemoScenarioContractData = {
+  contract_name?: string;
+  contract_version?: string;
+  scenario_id?: string;
+  primary_portfolio_id?: string;
+  governed_as_of_date?: string;
+  proof_marker?: string;
+  required_evidence_markers?: string[];
+  required_source_products?: string[];
+  unsupported_boundaries?: string[];
+  steps?: BankDemoScenarioStep[];
+  [key: string]: unknown;
+};
+
+export type BankDemoSupportedClaimClassification =
+  | "IMPLEMENTATION_BACKED"
+  | "BACKEND_BACKED_UI_PENDING"
+  | "DEGRADED_SUPPORTED"
+  | "PLANNED_RFC"
+  | "UNSUPPORTED"
+  | string;
+
+export type BankDemoSupportedClaim = {
+  claim_id?: string;
+  title?: string;
+  classification?: BankDemoSupportedClaimClassification;
+  audiences?: string[];
+  allowed_materials?: string[];
+  claim_text?: string;
+  evidence_refs?: string[];
+  proof_requirements?: Array<{
+    requirement_id?: string;
+    evidence_ref?: string;
+    blocking?: boolean;
+    [key: string]: unknown;
+  }>;
+  wording_rules?: string[];
+  [key: string]: unknown;
+};
+
+export type BankDemoSupportedClaimRegisterData = {
+  contract_name?: string;
+  contract_version?: string;
+  scenario_id?: string;
+  primary_portfolio_id?: string;
+  proof_marker?: string;
+  claims?: BankDemoSupportedClaim[];
+  artifact_policy?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type ProposalSummary = {
   proposal_id: string;
   portfolio_id?: string;
