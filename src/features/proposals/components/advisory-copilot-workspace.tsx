@@ -132,6 +132,9 @@ export default function AdvisoryCopilotWorkspace({
   });
   const isLoading = proposalQuery.isLoading || supportabilityQuery.isLoading;
   const hasError = Boolean(proposalQuery.error || supportabilityQuery.error);
+  const canRecordInternalReview =
+    Boolean(latestRun?.run?.run_id) &&
+    latestRun?.run?.review_posture === "REVIEW_REQUIRED";
 
   if (isLoading) {
     return (
@@ -253,7 +256,7 @@ export default function AdvisoryCopilotWorkspace({
               <SemanticBadge tone={model.runTone}>{model.runPosture}</SemanticBadge>
               <ActionButton
                 priority="secondary"
-                disabled={!latestRun?.run?.run_id || reviewMutation.isPending}
+                disabled={!canRecordInternalReview || reviewMutation.isPending}
                 onClick={() => reviewMutation.mutate()}
               >
                 {reviewMutation.isPending

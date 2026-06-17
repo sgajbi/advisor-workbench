@@ -61,7 +61,7 @@ const runAdvisoryCopilotActionMock = vi.fn(
       },
     ],
     review_guidance_json: ["Review source evidence before internal use."],
-    guardrail_results_json: [],
+    guardrail_results_json: [] as string[],
   },
   }),
 );
@@ -79,7 +79,7 @@ const reviewAdvisoryCopilotRunMock = vi.fn(
       },
     ],
     review_guidance_json: ["Review source evidence before internal use."],
-    guardrail_results_json: [],
+    guardrail_results_json: [] as string[],
   },
   }),
 );
@@ -216,6 +216,40 @@ describe("AdvisoryCopilotWorkspace", () => {
       screen.queryByRole("button", { name: "Prepare review" }),
     ).not.toBeInTheDocument();
     expect(createEvidencePacketMock).not.toHaveBeenCalled();
+  });
+
+  it("does not allow internal approval for non-reviewable copilot runs", async () => {
+    runAdvisoryCopilotActionMock.mockResolvedValueOnce({
+      run: {
+        run_id: "copilot_run_guardrail_rejected",
+        review_posture: "GUARDRAIL_REJECTED",
+        client_ready_publication: "BLOCKED",
+        output_sections_json: [
+          {
+            section_key: "SUMMARY",
+            title: "Advisor summary",
+            text: "Client-ready publication is forbidden.",
+          },
+        ],
+        review_guidance_json: [],
+        guardrail_results_json: ["CLIENT_READY_PUBLICATION_FORBIDDEN"],
+      },
+    });
+    renderWithQueryClient(
+      <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    fireEvent.click(
+      (await screen.findAllByRole("button", { name: "Prepare review" }))[0],
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Guardrail Rejected").length).toBeGreaterThan(0);
+    });
+    expect(
+      screen.getByRole("button", { name: "Record internal review" }),
+    ).toBeDisabled();
+    expect(reviewAdvisoryCopilotRunMock).not.toHaveBeenCalled();
   });
 
   it("records internal review without presenting client-ready approval", async () => {
