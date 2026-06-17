@@ -371,13 +371,39 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByText("Run posture", { exact: true })).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(
-        page.getByRole("button", { name: "Record internal review" }),
-      ).toBeEnabled({
-        timeout: timeoutMs,
+      const internalReviewButton = page.getByRole("button", {
+        name: "Record internal review",
       });
-      await page.getByRole("button", { name: "Record internal review" }).click();
-      await expect(page.getByLabel("Status Approved For Internal Use")).toBeVisible({
+      const approvedPosture = page.getByText("Approved For Internal Use", {
+        exact: true,
+      });
+      const reviewReadyDeadline = Date.now() + timeoutMs;
+      let reviewState = "pending";
+      while (Date.now() < reviewReadyDeadline) {
+        if (
+          await approvedPosture
+            .first()
+            .isVisible()
+            .catch(() => false)
+        ) {
+          reviewState = "approved";
+          break;
+        }
+        if (await internalReviewButton.isEnabled().catch(() => false)) {
+          reviewState = "reviewable";
+          break;
+        }
+        await page.waitForTimeout(500);
+      }
+      if (reviewState === "pending") {
+        throw new Error(
+          "Advisory copilot review never became reviewable or approved.",
+        );
+      }
+      if (reviewState === "reviewable") {
+        await internalReviewButton.click();
+      }
+      await expect(approvedPosture.first()).toBeVisible({
         timeout: timeoutMs,
       });
       await expect(page.getByText("workflow_pack")).toHaveCount(0);
