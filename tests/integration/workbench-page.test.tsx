@@ -295,7 +295,7 @@ describe("WorkbenchPage", () => {
     ).toBe(true);
   });
 
-  it("renders the evidence pack from the linked Gateway proof pack", async () => {
+  it("renders the evidence pack without preloading context-only outcome review proof refs", async () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_5001" }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -308,16 +308,16 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getAllByRole("heading", { name: "Evidence Pack" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Evidence Areas")).toBeInTheDocument();
-    expect(screen.getAllByText("Mandate Alignment").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Ready for advisor review").length).toBeGreaterThan(0);
-    expect(screen.getByText("Signature Pending")).toBeInTheDocument();
+    expect(screen.queryByText("Mandate Alignment")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ready for advisor review")).not.toBeInTheDocument();
+    expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input.toString().includes("/api/v1/dpm/command-center/proof-packs/ppack_1")
       )
-    ).toBe(true);
+    ).toBe(false);
   });
 });
 

@@ -9,6 +9,7 @@ import {
   getDpmProofPackReportInput,
   requestDpmProofPackAiPmMemo,
 } from "../../src/features/workbench/proof-pack-api";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 import type { DpmProofPackGatewayResponse } from "../../src/features/workbench/types";
 
 vi.mock("../../src/features/workbench/proof-pack-api", () => ({
@@ -85,6 +86,8 @@ describe("useProofPackActions", () => {
     vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
     const { result } = renderProofPackActions(null);
 
+    expect(result.current.proofPackId).toBe("context_ppack");
+
     act(() => {
       result.current.generateProofPack();
     });
@@ -97,6 +100,34 @@ describe("useProofPackActions", () => {
     });
     await waitFor(() => expect(result.current.handoffStatus).toBe("Evidence pack prepared."));
     expect(result.current.model.proofPackId).toBe("ppack_1");
+  });
+
+  it("keeps context proof-pack ids available for intentional manual loading", async () => {
+    vi.mocked(getDpmProofPack).mockResolvedValue(readyProofPack);
+    const { result } = renderProofPackActions(null);
+
+    expect(result.current.model.proofPackId).toBe("N/A");
+    expect(result.current.proofPackId).toBe("context_ppack");
+
+    act(() => result.current.loadProofPack());
+
+    await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("context_ppack"));
+    await waitFor(() => expect(result.current.handoffStatus).toBe("Evidence pack loaded."));
+    expect(result.current.model.proofPackId).toBe("ppack_1");
+  });
+
+  it("reports missing context proof-pack detail as a product-safe unavailable state", async () => {
+    vi.mocked(getDpmProofPack).mockRejectedValue(new WorkbenchApiError("DPM proof pack", 404));
+    const { result } = renderProofPackActions(null);
+
+    act(() => result.current.loadProofPack());
+
+    await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("context_ppack"));
+    await waitFor(() =>
+      expect(result.current.actionError).toBe(
+        "Evidence pack is not available from Gateway. Prepare evidence to generate the current review pack."
+      )
+    );
   });
 
   it("loads proof-pack detail and handoff payload posture through Gateway only", async () => {
