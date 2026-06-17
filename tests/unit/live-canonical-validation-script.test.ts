@@ -1003,11 +1003,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Advisory copilot posture");
     expect(browserWorkflowModule).toContain("Record internal review");
     expect(browserWorkflowModule).toContain(
-      'getByLabel("Status Approved For Internal Use")',
+      'getByText("Approved For Internal Use",',
     );
-    expect(browserWorkflowModule).not.toContain(
-      'getByText("Approved For Internal Use")',
-    );
+    expect(browserWorkflowModule).toContain('reviewState = "approved"');
+    expect(browserWorkflowModule).toContain('reviewState = "reviewable"');
     expect(browserWorkflowModule).toContain(
       "advisory-proposal-builder-live.png",
     );
