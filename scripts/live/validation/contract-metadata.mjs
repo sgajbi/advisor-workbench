@@ -203,9 +203,8 @@ export const DEFAULT_CANONICAL_CONTRACT = {
       expectedClientReadyPublication: "BLOCKED",
       expectedClaimPostures: {
         backend_proof_capture_repeatable: "IMPLEMENTATION_BACKED",
-        advisor_journey_backend_evidence_available:
-          "BACKEND_BACKED_UI_PENDING",
-        advisor_use_document_proof_available: "BACKEND_BACKED_UI_PENDING",
+        advisor_journey_backend_evidence_available: "IMPLEMENTATION_BACKED",
+        advisor_use_document_proof_available: "IMPLEMENTATION_BACKED",
         client_ready_publication_blocked: "UNSUPPORTED",
       },
       unsupportedCapabilityBoundaries: [

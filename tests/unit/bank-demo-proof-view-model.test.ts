@@ -38,7 +38,7 @@ describe("bank demo proof view model", () => {
           {
             claim_id: "advisor_journey_backend_evidence_available",
             title: "Advisor journey backend evidence available",
-            classification: "BACKEND_BACKED_UI_PENDING",
+            classification: "IMPLEMENTATION_BACKED",
             audiences: ["CLIENT_DEMO"],
             allowed_materials: ["DEMO_SCRIPT"],
             claim_text:
@@ -82,8 +82,8 @@ describe("bank demo proof view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           title: "Advisor journey backend evidence available",
-          classification: "Backend Backed UI Pending",
-          classificationTone: "warn",
+          classification: "Implementation Backed",
+          classificationTone: "success",
           proofRequirements: "RFC0028 Backend Advisor Journey Review",
         }),
         expect.objectContaining({
