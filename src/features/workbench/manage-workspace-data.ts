@@ -13,6 +13,7 @@ import {
   getDpmPmOperatingQualitySummaryInvocation,
   getDpmPortfolioMemory,
   getDpmProofPack,
+  getWorkbenchApiErrorStatus,
   listDpmCampaignDefinitions,
   listDpmCampaignDiscovery,
   listDpmCampaignApprovalInbox,
@@ -159,12 +160,12 @@ export async function loadManageWorkspaceData(
 
   let proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null = null;
   let proofPackError: string | null = null;
-  const proofPackId = readDpmProofPackId(outcomeReviews?.data ?? null);
+  const proofPackId = readPreloadableDpmProofPackId(outcomeReviews?.data ?? null);
   if (proofPackId) {
     try {
-      proofPack = await getDpmProofPack(proofPackId);
+      proofPack = await getDpmProofPack(proofPackId, "server");
     } catch (error) {
-      proofPackError = error instanceof Error ? error.message : "Evidence pack endpoint unavailable.";
+      proofPackError = proofPackPreloadErrorMessage(error);
     }
   }
 
@@ -403,6 +404,24 @@ export function readDpmSummaryInvocationId(data: Record<string, unknown> | null)
     }
   }
   return null;
+}
+
+export function readPreloadableDpmProofPackId(data: Record<string, unknown> | null): string | null {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.proof_pack_id === "string" && data.proof_pack_id.trim().length > 0) {
+    return data.proof_pack_id;
+  }
+  return null;
+}
+
+export function proofPackPreloadErrorMessage(error: unknown): string | null {
+  const status = getWorkbenchApiErrorStatus(error);
+  if (status === 404) {
+    return null;
+  }
+  return "Evidence pack preload is temporarily unavailable. Prepare evidence to generate the current review pack.";
 }
 
 export function readDpmReviewActionId(data: Record<string, unknown> | null): string | null {

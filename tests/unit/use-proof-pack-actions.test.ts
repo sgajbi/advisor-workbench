@@ -85,6 +85,8 @@ describe("useProofPackActions", () => {
     vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
     const { result } = renderProofPackActions(null);
 
+    expect(result.current.proofPackId).toBeNull();
+
     act(() => {
       result.current.generateProofPack();
     });

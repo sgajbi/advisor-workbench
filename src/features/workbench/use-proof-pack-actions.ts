@@ -43,7 +43,6 @@ type UseProofPackActionsResult = {
 
 export function useProofPackActions({
   initialProofPack,
-  contextProofPackId,
   contextRebalanceRunId,
   contextMandateId,
   mandateId,
@@ -54,7 +53,7 @@ export function useProofPackActions({
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const model = buildProofPackPanelModel(proofPack);
-  const proofPackId = model.proofPackId !== "N/A" ? model.proofPackId : contextProofPackId;
+  const proofPackId = model.proofPackId !== "N/A" ? model.proofPackId : null;
   const rebalanceRunId =
     contextRebalanceRunId ?? (model.rebalanceRunId !== "N/A" ? model.rebalanceRunId : null);
   const resolvedMandateId =
