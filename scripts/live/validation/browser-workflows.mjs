@@ -551,11 +551,20 @@ export async function validatePortfolioPanels(
   await expect(page.getByText("YTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(
-    page.getByRole("heading", { name: "Review priority attention" }),
-  ).toBeVisible({
-    timeout: timeoutMs,
+  const priorityAttentionHeading = page.getByRole("heading", {
+    name: "Review priority attention",
   });
+  if ((await priorityAttentionHeading.count()) > 0) {
+    await expect(priorityAttentionHeading).toBeVisible({
+      timeout: timeoutMs,
+    });
+  } else {
+    await expect(
+      page.getByText("No priority attention items for the selected view."),
+    ).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
   await expect(
     page.getByRole("heading", { name: "Review Evidence" }),
   ).toBeVisible({
