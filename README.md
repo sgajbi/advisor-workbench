@@ -112,6 +112,9 @@ Current route posture:
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit over Advise-owned action items, supportability, meeting
   preparation, tactical house-view impact review, and acknowledgement posture
+- `/recommendations?mode=copilot`
+  Gateway-backed RFC-0027 advisory copilot over Advise-owned proposal-version source projection,
+  action execution, human review posture, and blocked client-publication boundaries
 - `/proposals`
   direct Gateway-backed proposal queue for advisor follow-up
 - `/proposals/[proposalId]`
@@ -346,7 +349,19 @@ Important current product and route truths:
     house-view cohort seed, preparation packet route, snapshot, supportability, an idempotent
     acknowledgement, replay-safe already-acknowledged source state, and
     `advisory.advisor_cockpit` screenshot evidence.
-16. RFC-0028 bank-demo proof rendering on `/recommendations?mode=proof` is backed by Gateway
+16. RFC-0027 advisory copilot rendering on `/recommendations?mode=copilot` is backed by Gateway
+    advisory copilot endpoints only:
+    `/api/v1/advisory-copilot/evidence-packets/from-proposal-version`,
+    `/api/v1/advisory-copilot/actions`,
+    `/api/v1/advisory-copilot/actions/{run_id}/reviews`, and
+    `/api/v1/advisory-copilot/supportability`. Workbench requests proposal-version-scoped
+    evidence projection from Gateway and does not construct evidence sections, prompts, guardrails,
+    review state, model lineage, policy semantics, client-ready publication, client communication,
+    orders, or execution posture locally. Canonical front-office validation now proves all six
+    first-wave copilot action families, internal review recording, client-ready guardrail rejection,
+    proposal-version run lineage, Gateway-backed rendering, and `advisory.advisory_copilot`
+    screenshot evidence.
+17. RFC-0028 bank-demo proof rendering on `/recommendations?mode=proof` is backed by Gateway
     RFC-0028 proof endpoints only:
     `/api/v1/advisory/bank-demo-proof/scenario-contract` and
     `/api/v1/advisory/bank-demo-proof/supported-claim-register`. Workbench renders the

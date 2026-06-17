@@ -25,6 +25,9 @@ describe("advisory journey navigation", () => {
     expect(buildAdvisoryJourneyHref("PB SG/001", "cockpit")).toBe(
       "/recommendations?portfolioId=PB%20SG%2F001&mode=cockpit",
     );
+    expect(buildAdvisoryJourneyHref("PB SG/001", "copilot")).toBe(
+      "/recommendations?portfolioId=PB%20SG%2F001&mode=copilot",
+    );
     expect(buildAdvisoryJourneyHref("PB SG/001", "proposal-builder")).toBe(
       "/proposals/simulate?portfolioId=PB%20SG%2F001",
     );
@@ -42,6 +45,7 @@ describe("advisory journey navigation", () => {
     expect(items.map((item) => item.key)).toEqual([
       "overview",
       "cockpit",
+      "copilot",
       "opportunities",
       "proposal-builder",
       "suitability",
@@ -64,7 +68,7 @@ describe("advisory journey navigation", () => {
   });
 
   it("keeps each journey definition anchored to advisor decisions and source-owned data", () => {
-    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(12);
+    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(13);
     for (const definition of ADVISORY_JOURNEY_DEFINITIONS) {
       expect(definition.primaryDecision).toMatch(/\?$/);
       expect(definition.nextAction.length).toBeGreaterThan(10);

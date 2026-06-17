@@ -121,14 +121,20 @@ Current repository posture:
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
 16. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
-    model across overview, RFC-0026 advisor cockpit, RFC-0028 bank-demo proof, opportunities,
-    proposal builder, suitability, risk impact, approval queue, client discussion pack, and implementation follow-up
+    model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
+    bank-demo proof, opportunities, proposal builder, suitability, risk impact, approval queue,
+    client discussion pack, and implementation follow-up
     so future screens can evolve like Manage modes instead of page-local route fragments.
     `/recommendations?mode=cockpit` renders Advise-owned cockpit action items, source evidence,
     supportability, meeting-preparation packets, and bounded advisor acknowledgements through
     Gateway advisor-cockpit endpoints only. It must not reconstruct advisory policy semantics,
     clear blockers, infer client-ready release, contact clients, route orders, or call
-    `lotus-advise` directly. The proposal builder sources positions and cash through
+    `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
+    advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,
+    human review posture, unsupported-evidence posture, and blocked client-publication boundaries.
+    It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
+    policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
+    posture locally. The proposal builder sources positions and cash through
     Gateway/Core/Advise, lets advisors model buys, sells, off-book instruments, and cash
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,

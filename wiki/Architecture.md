@@ -23,6 +23,10 @@
   `/recommendations?mode=cockpit` Gateway-backed operating workflow over Advise-owned action items,
   supportability, meeting preparation, tactical house-view impact review, and bounded
   acknowledgements
+- `Advisory Copilot`
+  `/recommendations?mode=copilot` Gateway-backed advisor-use copilot over Advise-owned
+  proposal-version source projection, action runs, internal review posture, unsupported evidence,
+  and blocked client-publication boundaries
 - legacy compatibility surfaces
   recommendations redirects and proposal draft compatibility entry
 

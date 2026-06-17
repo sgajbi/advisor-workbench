@@ -360,6 +360,16 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
+    const advisoryCopilotProof = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validation",
+        "advisory-copilot-proof.mjs",
+      ),
+      "utf8",
+    );
     const contractModule = readFileSync(
       join(
         process.cwd(),
@@ -392,6 +402,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("RFC-0028 bank demo supported-claim register");
     expect(script).toContain('from "./validation/advisory-policy-proof.mjs"');
     expect(script).toContain('from "./validation/advisor-cockpit-proof.mjs"');
+    expect(script).toContain('from "./validation/advisory-copilot-proof.mjs"');
+    expect(script).toContain("validateCanonicalAdvisoryCopilot");
     expect(script).toContain("Create proposal narrative canonical proof");
     expect(advisoryPolicyProof).toContain(
       "Create advisory policy evaluation canonical proof",
@@ -433,7 +445,29 @@ describe("canonical live validation script", () => {
     expect(advisorCockpitProof).toContain("expectedSupportabilityPosture");
     expect(advisorCockpitProof).toContain("expectedWorkbenchPosture");
     expect(advisorCockpitProof).toContain("expectedMinPreparationPackets");
+    expect(advisoryCopilotProof).toContain(
+      "Advisory copilot canonical supportability",
+    );
+    expect(advisoryCopilotProof).toContain(
+      "Advisory copilot ${action.family} source evidence packet",
+    );
+    expect(advisoryCopilotProof).toContain(
+      "Advisory copilot client-ready guardrail rejection",
+    );
+    expect(advisoryCopilotProof).toContain(
+      "ADVISORY_COPILOT_CANONICAL_PROOF_CREATED",
+    );
+    expect(advisoryCopilotProof).toContain(
+      "CLIENT_READY_PUBLICATION_FORBIDDEN",
+    );
+    expect(advisoryCopilotProof).toContain("wb-copilot-run");
+    expect(advisoryCopilotProof).toContain("wb-copilot-review");
+    expect(advisoryCopilotProof).toContain(
+      "/api/v1/advisory-copilot/evidence-packets/from-proposal-version",
+    );
     expect(contractModule).toContain("expectedActionFamilies");
+    expect(contractModule).toContain("advisoryCopilot");
+    expect(contractModule).toContain("RFC27_ADVISORY_COPILOT_CANONICAL");
     expect(advisorCockpitProof).toContain("wb-advisor-cockpit-ack");
     expect(payloadUtils).toContain('import { createHash } from "node:crypto"');
     expect(payloadUtils).toContain("buildPayloadScopedIdempotencyKey");
@@ -444,6 +478,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("proposal.narrative_posture");
     expect(script).toContain("proposal.memo_evidence_pack");
     expect(script).toContain("advisory.advisor_cockpit");
+    expect(script).toContain("advisory.advisory_copilot");
     expect(script).toContain("advisory.bank_demo_proof");
     expect(browserWorkflows).toContain(
       'getByLabel("Status Approved For Advisor Use")',
@@ -958,6 +993,20 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("advisory-opportunities-live.png");
     expect(browserWorkflowModule).toContain(
       "advisory-advisor-cockpit-live.png",
+    );
+    expect(browserWorkflowModule).toContain(
+      "advisory-advisory-copilot-live.png",
+    );
+    expect(browserWorkflowModule).toContain(
+      "advisory-copilot-through-gateway",
+    );
+    expect(browserWorkflowModule).toContain("Advisory copilot posture");
+    expect(browserWorkflowModule).toContain("Record internal review");
+    expect(browserWorkflowModule).toContain(
+      'getByLabel("Status Approved For Internal Use")',
+    );
+    expect(browserWorkflowModule).not.toContain(
+      'getByText("Approved For Internal Use")',
     );
     expect(browserWorkflowModule).toContain(
       "advisory-proposal-builder-live.png",

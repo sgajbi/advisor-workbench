@@ -28,6 +28,10 @@ promote dormant labels into product ownership just because historical route file
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit for Advise-owned action items, supportability, meeting
   preparation, tactical house-view impact review, and bounded acknowledgements
+- `/recommendations?mode=copilot`
+  Gateway-backed RFC-0027 advisory copilot for Advise-owned proposal-version evidence projection,
+  action execution, human review posture, unsupported-evidence posture, and blocked
+  client-publication boundaries
 - `/recommendations?mode=proof`
   Gateway-backed RFC-0028 bank-demo proof surface for Advise-owned scenario and supported-claim
   posture
@@ -238,6 +242,17 @@ promote dormant labels into product ownership just because historical route file
   `lotus-advise` directly. Canonical validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`,
   proves the dedicated preparation-packet route, treats already acknowledged source actions as
   replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
+- RFC-0027 advisory copilot is implemented on `/recommendations?mode=copilot` through Gateway
+  advisory copilot endpoints. Workbench requests proposal-version source projection through
+  `POST /api/v1/advisory-copilot/evidence-packets/from-proposal-version`, runs bounded advisor-use
+  actions through `POST /api/v1/advisory-copilot/actions`, records internal review through
+  `POST /api/v1/advisory-copilot/actions/{run_id}/reviews`, and reads supportability from
+  `GET /api/v1/advisory-copilot/supportability`. Workbench does not construct evidence sections,
+  prompts, guardrails, AI/model lineage, review state, policy semantics, client-ready publication,
+  external client communication, orders, fills, settlement, or OMS posture locally. Canonical
+  validation records `ADVISORY_COPILOT_CANONICAL_PROOF_CREATED`, proves all six first-wave action
+  families, internal review posture, client-ready guardrail rejection, proposal-version run
+  lineage, and captures `advisory-advisory-copilot-live.png`.
 - RFC-0028 bank-demo proof is implemented on `/recommendations?mode=proof` through Gateway
   bank-demo proof endpoints. Workbench reads the scenario contract from
   `GET /api/v1/advisory/bank-demo-proof/scenario-contract` and the supported-claim register from

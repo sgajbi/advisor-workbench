@@ -3,6 +3,7 @@ import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/po
 export type AdvisoryJourneyMode =
   | "overview"
   | "cockpit"
+  | "copilot"
   | "client-context"
   | "opportunities"
   | "proposal-builder"
@@ -51,6 +52,20 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     nextAction:
       "Review the action item and record acknowledgement only when appropriate.",
     dataSources: ["lotus-gateway", "lotus-advise"],
+    shellVisible: true,
+  },
+  {
+    key: "copilot",
+    label: "Copilot",
+    detail: "Advisor review",
+    title: "Advisory Copilot",
+    description:
+      "Gateway-backed advisor-use copilot actions over Advise-owned source evidence.",
+    primaryDecision:
+      "Which source-backed copilot action should support internal advisor review?",
+    nextAction:
+      "Prepare the evidence packet, review the generated output, and keep client publication blocked.",
+    dataSources: ["lotus-gateway", "lotus-advise", "lotus-ai"],
     shellVisible: true,
   },
   {
@@ -210,6 +225,8 @@ export function buildAdvisoryJourneyHref(
       return `/recommendations?portfolioId=${encoded}&mode=opportunities`;
     case "cockpit":
       return `/recommendations?portfolioId=${encoded}&mode=cockpit`;
+    case "copilot":
+      return `/recommendations?portfolioId=${encoded}&mode=copilot`;
     case "proof":
       return `/recommendations?portfolioId=${encoded}&mode=proof`;
     case "proposal-builder":

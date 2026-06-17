@@ -191,6 +191,31 @@ export const DEFAULT_CANONICAL_CONTRACT = {
         "OMS_ORDER_LIFECYCLE",
       ],
     },
+    advisoryCopilot: {
+      scenarioId: "RFC27_ADVISORY_COPILOT_CANONICAL",
+      expectedWorkbenchPanel: "advisory.advisory_copilot",
+      expectedSupportStatus:
+        "ADVISE_COPILOT_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      expectedClientReadyPublication: "BLOCKED",
+      expectedReviewPosture: "REVIEW_REQUIRED",
+      expectedReviewedPosture: "APPROVED_FOR_INTERNAL_USE",
+      expectedGuardrailPosture: "GUARDRAIL_REJECTED",
+      expectedGuardrailReason: "CLIENT_READY_PUBLICATION_FORBIDDEN",
+      actionFamilies: [
+        "PROPOSAL_EXPLANATION",
+        "EVIDENCE_QA",
+        "MEETING_PREPARATION",
+        "COMPLIANCE_REVIEW_SUMMARY",
+        "OPERATIONS_REPORT_HANDOFF",
+        "CLIENT_FOLLOW_UP_DRAFT",
+      ],
+      unsupportedCapabilityBoundaries: [
+        "CLIENT_READY_PUBLICATION",
+        "POLICY_APPROVAL_OR_SIGN_OFF",
+        "OMS_ORDER_LIFECYCLE",
+        "CLIENT_COMMUNICATION_DELIVERY",
+      ],
+    },
     bankDemoProof: {
       scenarioId: "RFC28_BANK_DEMO_CLIENT_READY_PROOF_CANONICAL",
       expectedWorkbenchPanel: "advisory.bank_demo_proof",
@@ -392,6 +417,24 @@ export const DEFAULT_PANEL_REGISTRY = {
         "error",
       ],
       screenshotName: "advisory-advisor-cockpit-live.png",
+      knownLimitations: [],
+      ownerFollowUpRfc: null,
+    },
+    {
+      panelId: "advisory.advisory_copilot",
+      owningService: "lotus-advise",
+      gatewayEndpoint: "/api/v1/advisory-copilot/actions",
+      requiredSupportState: "ready",
+      route: "/recommendations?portfolioId={portfolio_id}&mode=copilot",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "unavailable",
+        "error",
+      ],
+      screenshotName: "advisory-advisory-copilot-live.png",
       knownLimitations: [],
       ownerFollowUpRfc: null,
     },
@@ -810,6 +853,9 @@ function normalizeAdvisoryProposalScenarios(rawScenario) {
     advisorCockpit: normalizeAdvisorCockpitScenario(
       rawScenario.advisor_cockpit,
     ),
+    advisoryCopilot: normalizeAdvisoryCopilotScenario(
+      rawScenario.advisory_copilot,
+    ),
     bankDemoProof: normalizeBankDemoProofScenario(rawScenario.bank_demo_proof),
   };
 }
@@ -849,6 +895,40 @@ function normalizeAdvisorCockpitScenario(rawScenario) {
       rawScenario.seed_house_view_cohort ?? fallback.seedHouseViewCohort,
     houseViewCohort:
       rawScenario.house_view_cohort ?? fallback.houseViewCohort,
+    unsupportedCapabilityBoundaries: Array.isArray(
+      rawScenario.unsupported_capability_boundaries,
+    )
+      ? rawScenario.unsupported_capability_boundaries
+      : fallback.unsupportedCapabilityBoundaries,
+  };
+}
+
+function normalizeAdvisoryCopilotScenario(rawScenario) {
+  const fallback =
+    DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios.advisoryCopilot;
+  if (!rawScenario || typeof rawScenario !== "object") {
+    return fallback;
+  }
+  return {
+    scenarioId: rawScenario.scenario_id ?? fallback.scenarioId,
+    expectedWorkbenchPanel:
+      rawScenario.expected_workbench_panel ?? fallback.expectedWorkbenchPanel,
+    expectedSupportStatus:
+      rawScenario.expected_support_status ?? fallback.expectedSupportStatus,
+    expectedClientReadyPublication:
+      rawScenario.expected_client_ready_publication ??
+      fallback.expectedClientReadyPublication,
+    expectedReviewPosture:
+      rawScenario.expected_review_posture ?? fallback.expectedReviewPosture,
+    expectedReviewedPosture:
+      rawScenario.expected_reviewed_posture ?? fallback.expectedReviewedPosture,
+    expectedGuardrailPosture:
+      rawScenario.expected_guardrail_posture ?? fallback.expectedGuardrailPosture,
+    expectedGuardrailReason:
+      rawScenario.expected_guardrail_reason ?? fallback.expectedGuardrailReason,
+    actionFamilies: Array.isArray(rawScenario.action_families)
+      ? rawScenario.action_families
+      : fallback.actionFamilies,
     unsupportedCapabilityBoundaries: Array.isArray(
       rawScenario.unsupported_capability_boundaries,
     )

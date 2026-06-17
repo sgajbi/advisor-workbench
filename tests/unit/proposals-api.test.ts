@@ -5,6 +5,7 @@ import {
   approveRisk,
   compareAdvisoryWorkspace,
   acknowledgeAdvisorCockpitAction,
+  createAdvisoryCopilotEvidencePacketFromProposalVersion,
   createProposalArtifact,
   createProposalAsync,
   createProposalExecutionHandoff,
@@ -13,6 +14,7 @@ import {
   createProposalReportRequest,
   createProposalMemo,
   getAdvisoryWorkspaceSavedVersionReplayEvidence,
+  getAdvisoryCopilotSupportability,
   getAdvisoryPolicyEvaluation,
   getAdvisoryPolicyReviewQueue,
   getAdvisoryPolicySignOffPackage,
@@ -46,6 +48,8 @@ import {
   recordAdvisoryPolicySignOffDecision,
   recordClientConsent,
   regenerateProposalNarrative,
+  reviewAdvisoryCopilotRun,
+  runAdvisoryCopilotAction,
   requestAdvisoryWorkspaceRationale,
   requestProposalMemoAdvisorCommentary,
   requestProposalMemoAiCommentary,
@@ -506,6 +510,104 @@ describe("proposal api", () => {
       "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
     );
     expect(acknowledgement.replayed).toBe(false);
+  });
+
+  it("calls advisory copilot endpoints through the Gateway BFF without source-section payloads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              correlation_id: "c",
+              contract_version: "v1",
+              data: {
+                evidence_packet: {
+                  evidence_packet_id: "copilot_packet_1",
+                },
+                run: {
+                  run_id: "copilot_run_1",
+                  review_posture: "REVIEW_REQUIRED",
+                },
+                support_status: "SUPPORTED",
+              },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    await createAdvisoryCopilotEvidencePacketFromProposalVersion({
+      proposal_id: "proposal_sg_structured_note_001",
+      proposal_version_no: 1,
+      action_family: "PROPOSAL_EXPLANATION",
+      audience: "ADVISOR",
+      created_by: "advisor_sg_001",
+      reason: { business_reason: "Prepare advisor-use copilot review." },
+    });
+    await runAdvisoryCopilotAction(
+      {
+        evidence_packet_id: "copilot_packet_1",
+        audience: "ADVISOR",
+        requested_outputs: ["advisor_review_summary"],
+        requested_by: "advisor_sg_001",
+        requested_intents: ["explain_policy_posture"],
+      },
+      "idem-copilot-run",
+    );
+    await reviewAdvisoryCopilotRun(
+      "copilot_run_1",
+      {
+        action: "APPROVE_FOR_INTERNAL_USE",
+        actor_id: "desk_head_sg_001",
+        reason: { decision: "Reviewed for internal advisor use." },
+      },
+      "idem-copilot-review",
+    );
+    await getAdvisoryCopilotSupportability();
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-copilot/evidence-packets/from-proposal-version`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          body: {
+            proposal_id: "proposal_sg_structured_note_001",
+            proposal_version_no: 1,
+            action_family: "PROPOSAL_EXPLANATION",
+            audience: "ADVISOR",
+            created_by: "advisor_sg_001",
+            reason: { business_reason: "Prepare advisor-use copilot review." },
+          },
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-copilot/actions`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Idempotency-Key": "idem-copilot-run",
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-copilot/actions/copilot_run_1/reviews`,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Idempotency-Key": "idem-copilot-review",
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/advisory-copilot/supportability`,
+    );
+    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain("source_sections");
   });
 
   it("calls proposal version endpoints", async () => {

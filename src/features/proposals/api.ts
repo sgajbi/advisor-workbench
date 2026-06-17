@@ -6,6 +6,14 @@ import {
   AdvisoryPolicySignOffDecisionRequest,
   AdvisoryPolicySignOffPackageData,
   AdvisoryPolicyWorkflowData,
+  AdvisoryCopilotActionRequest,
+  AdvisoryCopilotEnvelopeResponse,
+  AdvisoryCopilotEvidencePacketData,
+  AdvisoryCopilotEvidencePacketRequest,
+  AdvisoryCopilotReviewData,
+  AdvisoryCopilotReviewRequest,
+  AdvisoryCopilotRunData,
+  AdvisoryCopilotSupportabilityData,
   AdvisorCockpitAcknowledgeData,
   AdvisorCockpitAcknowledgeRequest,
   AdvisorCockpitActionPageData,
@@ -427,6 +435,53 @@ export async function getAdvisorCockpitSupportability(
   return (await getAdvisorCockpitData(
     `/supportability${buildAdvisorCockpitQuery(filters)}`,
   )) as AdvisorCockpitSupportabilityData;
+}
+
+export async function createAdvisoryCopilotEvidencePacketFromProposalVersion(
+  payload: AdvisoryCopilotEvidencePacketRequest,
+): Promise<AdvisoryCopilotEvidencePacketData> {
+  const envelope = await postAdvisoryCopilotJson(
+    "/evidence-packets/from-proposal-version",
+    payload,
+  );
+  return envelope.data as unknown as AdvisoryCopilotEvidencePacketData;
+}
+
+export async function runAdvisoryCopilotAction(
+  payload: AdvisoryCopilotActionRequest,
+  idempotencyKey: string,
+): Promise<AdvisoryCopilotRunData> {
+  const envelope = await postAdvisoryCopilotJson(
+    "/actions",
+    payload,
+    idempotencyKey,
+  );
+  return envelope.data as unknown as AdvisoryCopilotRunData;
+}
+
+export async function reviewAdvisoryCopilotRun(
+  runId: string,
+  payload: AdvisoryCopilotReviewRequest,
+  idempotencyKey: string,
+): Promise<AdvisoryCopilotReviewData> {
+  const envelope = await postAdvisoryCopilotJson(
+    `/actions/${encodeURIComponent(runId)}/reviews`,
+    payload,
+    idempotencyKey,
+  );
+  return envelope.data as unknown as AdvisoryCopilotReviewData;
+}
+
+export async function getAdvisoryCopilotSupportability(): Promise<AdvisoryCopilotSupportabilityData> {
+  const response = await fetch(`${BFF_PROXY_BASE}/advisory-copilot/supportability`);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Advisory copilot supportability failed (${response.status}): ${body}`,
+    );
+  }
+  const envelope = (await response.json()) as AdvisoryCopilotEnvelopeResponse;
+  return envelope.data as unknown as AdvisoryCopilotSupportabilityData;
 }
 
 export async function acknowledgeAdvisorCockpitAction(
@@ -992,6 +1047,31 @@ async function getAdvisorCockpitData(
   }
   const envelope = (await response.json()) as AdvisorCockpitEnvelopeResponse;
   return envelope.data;
+}
+
+async function postAdvisoryCopilotJson(
+  path: string,
+  body: unknown,
+  idempotencyKey?: string,
+): Promise<AdvisoryCopilotEnvelopeResponse> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+  const response = await fetch(`${BFF_PROXY_BASE}/advisory-copilot${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ body }),
+  });
+  if (!response.ok) {
+    const responseBody = await response.text();
+    throw new Error(
+      `Advisory copilot request failed (${response.status}): ${responseBody}`,
+    );
+  }
+  return (await response.json()) as AdvisoryCopilotEnvelopeResponse;
 }
 
 function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
