@@ -38,7 +38,7 @@ const getBankDemoSupportedClaimRegisterMock = vi.fn(async () => ({
     {
       claim_id: "advisor_journey_backend_evidence_available",
       title: "Advisor journey backend evidence available",
-      classification: "BACKEND_BACKED_UI_PENDING",
+      classification: "IMPLEMENTATION_BACKED",
       audiences: ["CLIENT_DEMO", "PRE_SALES"],
       allowed_materials: ["WIKI", "DEMO_SCRIPT"],
       claim_text:
@@ -110,7 +110,7 @@ describe("BankDemoProofWorkspace", () => {
     expect(
       screen.getByText("Advisor journey backend evidence available"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Backend Backed UI Pending")).toBeInTheDocument();
+    expect(screen.getByText("Implementation Backed")).toBeInTheDocument();
     expect(
       screen.getByText("Client-ready publication is blocked"),
     ).toBeInTheDocument();
