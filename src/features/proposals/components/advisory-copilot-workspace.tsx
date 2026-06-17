@@ -21,7 +21,6 @@ import {
   runAdvisoryCopilotAction,
 } from "../api";
 import {
-  ADVISORY_COPILOT_ACTION_OPTIONS,
   buildAdvisoryCopilotWorkspaceModel,
   formatCode,
   type AdvisoryCopilotActionOption,
@@ -78,7 +77,7 @@ export default function AdvisoryCopilotWorkspace({
         proposal_id: proposal.proposal_id,
         proposal_version_no: proposal.current_version_no,
         action_family: option.family,
-        audience: "ADVISOR",
+        audience: option.audience,
         created_by: ADVISOR_ID,
         reason: {
           business_reason: "Prepare advisor-use copilot review.",
@@ -91,7 +90,7 @@ export default function AdvisoryCopilotWorkspace({
       const run = await runAdvisoryCopilotAction(
         {
           evidence_packet_id: evidencePacketId,
-          audience: "ADVISOR",
+          audience: option.audience,
           requested_outputs: [option.outputKey],
           requested_by: ADVISOR_ID,
           requested_intents: [option.intent],
@@ -311,10 +310,20 @@ function AdvisoryCopilotActionGrid({
   pendingFamily?: string;
   onRun: (option: AdvisoryCopilotActionOption) => void;
 }) {
-  const visibleActions = actions.length > 0 ? actions : ADVISORY_COPILOT_ACTION_OPTIONS;
+  if (actions.length === 0) {
+    return (
+      <ScreenStatePanel
+        kind="unavailable"
+        title="No supported copilot actions"
+        body="Gateway supportability has not declared any advisory copilot action families for this scope."
+        surface="default"
+      />
+    );
+  }
+
   return (
     <div className={styles.actionGrid} aria-label="Advisory copilot actions">
-      {visibleActions.map((option) => (
+      {actions.map((option) => (
         <div className={styles.actionCard} key={option.family}>
           <Text variant="microLabel">{formatCode(option.family)}</Text>
           <strong>{option.label}</strong>

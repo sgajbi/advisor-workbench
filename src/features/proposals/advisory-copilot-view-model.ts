@@ -1,6 +1,7 @@
 import type { SemanticBadgeTone } from "@/design-system";
 
 import type {
+  AdvisoryCopilotAudience,
   AdvisoryCopilotActionFamily,
   AdvisoryCopilotEvidencePacketData,
   AdvisoryCopilotRunData,
@@ -10,6 +11,7 @@ import type {
 
 export type AdvisoryCopilotActionOption = {
   family: AdvisoryCopilotActionFamily;
+  audience: AdvisoryCopilotAudience;
   label: string;
   purpose: string;
   outputKey: string;
@@ -19,6 +21,7 @@ export type AdvisoryCopilotActionOption = {
 export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   {
     family: "PROPOSAL_EXPLANATION",
+    audience: "ADVISOR",
     label: "Proposal explanation",
     purpose: "Summarize the advisor-use proposal evidence and blockers.",
     outputKey: "advisor_review_summary",
@@ -26,6 +29,7 @@ export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   },
   {
     family: "EVIDENCE_QA",
+    audience: "ADVISOR",
     label: "Evidence Q&A",
     purpose: "Answer bounded evidence questions from cited source posture.",
     outputKey: "evidence_answer",
@@ -33,6 +37,7 @@ export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   },
   {
     family: "MEETING_PREPARATION",
+    audience: "ADVISOR",
     label: "Meeting preparation",
     purpose: "Prepare an internal meeting note from available source evidence.",
     outputKey: "meeting_preparation_note",
@@ -40,6 +45,7 @@ export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   },
   {
     family: "COMPLIANCE_REVIEW_SUMMARY",
+    audience: "COMPLIANCE_REVIEWER",
     label: "Compliance review summary",
     purpose: "Summarize policy review posture for compliance review.",
     outputKey: "compliance_review_summary",
@@ -47,6 +53,7 @@ export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   },
   {
     family: "OPERATIONS_REPORT_HANDOFF",
+    audience: "OPERATIONS_SUPPORT",
     label: "Operations handoff",
     purpose: "Summarize report and operations handoff evidence.",
     outputKey: "operations_handoff_summary",
@@ -54,6 +61,7 @@ export const ADVISORY_COPILOT_ACTION_OPTIONS: AdvisoryCopilotActionOption[] = [
   },
   {
     family: "CLIENT_FOLLOW_UP_DRAFT",
+    audience: "ADVISOR",
     label: "Follow-up draft",
     purpose: "Draft advisor-reviewed follow-up points without external delivery.",
     outputKey: "advisor_follow_up_draft",
@@ -87,10 +95,14 @@ export function buildAdvisoryCopilotWorkspaceModel({
   run?: AdvisoryCopilotRunData;
 }): AdvisoryCopilotWorkspaceModel {
   const proposal = proposals[0];
-  const supportedFamilies = new Set(supportability?.supported_action_families ?? []);
-  const availableActions = ADVISORY_COPILOT_ACTION_OPTIONS.filter(
-    (option) => supportedFamilies.size === 0 || supportedFamilies.has(option.family),
-  );
+  const supportabilityFamilies = supportability?.supported_action_families;
+  const supportedFamilies = new Set(supportabilityFamilies ?? []);
+  const availableActions =
+    Array.isArray(supportabilityFamilies) && supportabilityFamilies.length > 0
+      ? ADVISORY_COPILOT_ACTION_OPTIONS.filter((option) =>
+          supportedFamilies.has(option.family),
+        )
+      : [];
   const packetBody = packet?.evidence_packet;
   const runBody = run?.run;
   return {

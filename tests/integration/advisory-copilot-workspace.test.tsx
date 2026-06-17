@@ -168,6 +168,56 @@ describe("AdvisoryCopilotWorkspace", () => {
     expect(screen.queryByText("PROPOSAL_EXPLANATION")).not.toBeInTheDocument();
   });
 
+  it("uses the source-declared audience for non-advisor copilot actions", async () => {
+    getAdvisoryCopilotSupportabilityMock.mockResolvedValueOnce({
+      support_status: "ADVISE_COPILOT_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      client_ready_publication: "BLOCKED",
+      supported_action_families: ["COMPLIANCE_REVIEW_SUMMARY"],
+      boundaries: ["CLIENT_READY_PUBLICATION is blocked"],
+    });
+    renderWithQueryClient(
+      <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    await screen.findByText("Compliance review summary");
+    fireEvent.click(screen.getByRole("button", { name: "Prepare review" }));
+
+    await waitFor(() => {
+      expect(createEvidencePacketMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action_family: "COMPLIANCE_REVIEW_SUMMARY",
+          audience: "COMPLIANCE_REVIEWER",
+        }),
+      );
+    });
+    expect(runAdvisoryCopilotActionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audience: "COMPLIANCE_REVIEWER",
+        requested_outputs: ["compliance_review_summary"],
+        requested_intents: ["summarize_compliance_review"],
+      }),
+      "ui-copilot-run-COMPLIANCE_REVIEW_SUMMARY-proposal_sg_structured_note_001-1",
+    );
+  });
+
+  it("does not expose copilot actions when supportability declares none", async () => {
+    getAdvisoryCopilotSupportabilityMock.mockResolvedValueOnce({
+      support_status: "ADVISE_COPILOT_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+      client_ready_publication: "BLOCKED",
+      supported_action_families: [],
+      boundaries: ["CLIENT_READY_PUBLICATION is blocked"],
+    });
+    renderWithQueryClient(
+      <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(await screen.findByText("No supported copilot actions")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Prepare review" }),
+    ).not.toBeInTheDocument();
+    expect(createEvidencePacketMock).not.toHaveBeenCalled();
+  });
+
   it("records internal review without presenting client-ready approval", async () => {
     renderWithQueryClient(
       <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
