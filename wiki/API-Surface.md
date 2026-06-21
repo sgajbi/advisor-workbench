@@ -38,7 +38,7 @@ promote dormant labels into product ownership just because historical route file
 - `/proposals`
   direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`
-  compatibility draft entry
+  Gateway-backed advisory proposal draft entry backed by `lotus-advise` proposal simulation
 - `/proposals/{proposalId}`
   direct Gateway-backed proposal detail with RFC-0023 advisor narrative delivery posture
 
@@ -334,7 +334,7 @@ Proposal route posture:
 ```txt
 /proposals -> Gateway-backed proposal queue
 /proposals/{proposalId} -> Gateway-backed proposal detail and advisor narrative delivery posture
-/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001 -> /performance?portfolioId=PB_SG_GLOBAL_BAL_001
+/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001 -> Gateway-backed advisory proposal simulation
 ```
 
 These examples keep the active-versus-legacy route posture explicit.
