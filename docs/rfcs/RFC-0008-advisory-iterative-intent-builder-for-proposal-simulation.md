@@ -27,7 +27,9 @@ Add an iterative intent builder inside the proposal simulation screen:
 
 - Better alignment with advisory lifecycle behavior (iterate, evaluate, refine).
 - Shared payload builder improves reliability and testability.
-- No API contract changes; uses existing `/proposals/simulate` and `/proposals` contract.
+- No API contract changes; the `/proposals/simulate` screen uses the existing Gateway
+  `/api/v1/advisory-workspaces*` contract for iterative draft evaluation and handoff, while
+  proposal queue/detail continue to use `/api/v1/proposals*`.
 
 ## Risks and Trade-offs
 
@@ -38,5 +40,6 @@ Add an iterative intent builder inside the proposal simulation screen:
 
 1. Extract payload construction into `simulation-payload.ts`.
 2. Implement dynamic intent rows and controls in `proposal-simulate-form.tsx`.
-3. Keep existing simulation and draft-save workflow unchanged from API perspective.
+3. Keep the existing advisory workspace evaluation and draft-save workflow unchanged from API
+   perspective.
 4. Add tests for payload mapping and UI rendering expectations.
