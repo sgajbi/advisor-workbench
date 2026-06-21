@@ -121,7 +121,7 @@ Current route posture:
   direct Gateway-backed proposal detail with RFC-0023 advisor narrative review and delivery
   posture
 - `/proposals/simulate`
-  compatibility draft entry retained for proposal creation workflows
+  Gateway-backed advisory proposal draft entry backed by `lotus-advise` proposal simulation
 
 Key code areas:
 
@@ -268,9 +268,10 @@ Important current product and route truths:
 1. the active front-office surfaces are `Portfolio` and `Performance`
 2. `Risk` is currently served through the `Performance` route via mode-based behavior, not as a
    separate top-level route
-3. `/recommendations` remains a compatibility route. `/proposals` and `/proposals/{proposalId}`
-   are direct Gateway-backed advisory routes, but the `Proposal` shell navigation item remains
-   capability-disabled and should not be documented as a promoted top-level shell app.
+3. `/recommendations` remains a compatibility route. `/proposals`, `/proposals/simulate`, and
+   `/proposals/{proposalId}` are direct Gateway-backed advisory routes, but the `Proposal` shell
+   navigation item remains capability-disabled and should not be documented as a promoted
+   top-level shell app.
 4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
    integration posture
 5. `/data-products` consumes only gateway domain-product discovery and trust-certification
