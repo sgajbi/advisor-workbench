@@ -58,7 +58,7 @@ Verify:
 
 ## Proposal Workflow Walkthrough
 
-1. Open `/proposals/simulate` and click `Save Draft`; Workbench sends the draft through Gateway to the `lotus-advise` advisory proposal simulation contract.
+1. Open `/proposals/simulate` and click `Save Draft`; Workbench creates and evaluates the draft through Gateway advisory workspace APIs backed by `lotus-advise`.
 2. Open `/proposals` and select the created proposal.
 3. On detail page:
    - click `Submit To Risk Review`
