@@ -21,13 +21,14 @@ UI routes:
 
 lotus-gateway contract usage:
 
-- simulate: `POST /api/v1/proposals/simulate`
+- simulate/save draft screen: `/api/v1/advisory-workspaces*`
 - create: `POST /api/v1/proposals`
 - list: `GET /api/v1/proposals`
 - detail: `GET /api/v1/proposals/{proposal_id}`
 - submit: `POST /api/v1/proposals/{proposal_id}/submit`
 
-Gateway routes those proposal calls to the `lotus-advise` `/advisory/proposals*` upstream family.
+Gateway routes proposal queue/detail calls to the `lotus-advise` `/advisory/proposals*` upstream
+family and advisory workspace calls to the `lotus-advise` advisory workspace upstream family.
 Workbench must not couple this advisory proposal surface to `lotus-manage` DPM rebalance execution
 or `/rebalance/simulate`.
 

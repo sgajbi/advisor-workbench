@@ -12,9 +12,9 @@ compatibility is not the product ownership model.
 ## Decision
 
 - Primary route: `/proposals/simulate`.
-- UI sends payload to lotus-gateway endpoint `POST /api/v1/proposals/simulate`.
-- UI renders status and run id from the Gateway advisory proposal response backed by
-  `lotus-advise`.
+- UI creates and evaluates advisory proposal drafts through Gateway
+  `/api/v1/advisory-workspaces*` endpoints backed by `lotus-advise`.
+- UI renders workspace status and saved draft posture from the Gateway advisory workspace response.
 
 ## Out of Scope
 

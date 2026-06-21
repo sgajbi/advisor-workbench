@@ -6,7 +6,7 @@ Use this sequence during demos:
 2. Input:
    - `Created By`: `advisor_demo_1`
    - `Proposal Title`: `Demo Approval Chain`
-3. Click `Save Draft` and capture `proposal_id`.
+3. Click `Save Draft`; Workbench creates/evaluates a Gateway advisory workspace and captures the handed-off `proposal_id`.
 4. Open `/proposals/{proposal_id}`.
 5. Action sequence:
    - `Submit To Risk Review`
