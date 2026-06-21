@@ -9,7 +9,7 @@ Run deterministic UI walkthroughs for:
 
 ## Prerequisites
 
-- lotus-manage running at `http://manage.dev.lotus`
+- lotus-advise running at `http://advise.dev.lotus`
 - lotus-gateway running at `http://gateway.dev.lotus`
 - UI running at `http://workbench.dev.lotus`
 - lotus-core query running at `http://core-query.dev.lotus`
@@ -58,7 +58,7 @@ Verify:
 
 ## Proposal Workflow Walkthrough
 
-1. Open `/proposals/simulate` and click `Save Draft`.
+1. Open `/proposals/simulate` and click `Save Draft`; Workbench sends the draft through Gateway to the `lotus-advise` advisory proposal simulation contract.
 2. Open `/proposals` and select the created proposal.
 3. On detail page:
    - click `Submit To Risk Review`
