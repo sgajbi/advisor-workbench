@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const proposalDocs = [
   "README.md",
+  "docs/demo/README.md",
   "docs/rfcs/README.md",
   "docs/rfcs/RFC-0001-dpm-first-proposal-simulation-screen.md",
   "docs/rfcs/RFC-0002-ui-proposal-workspace-v1.md",
@@ -23,6 +24,7 @@ describe("proposal ownership documentation", () => {
     expect(text).not.toContain("lotus-gateway + lotus-manage");
     expect(text).not.toContain("lotus-manage-compatible");
     expect(text).not.toContain("lotus-manage-First Proposal Simulation Screen");
+    expect(text).not.toContain("lotus-manage running at `http://manage.dev.lotus`");
     expect(text).not.toContain("compatibility draft entry");
     expect(text).not.toContain("integrated through lotus-gateway to lotus-manage only");
   });
