@@ -23,6 +23,7 @@ describe("proposal ownership documentation", () => {
     expect(text).not.toContain("lotus-gateway + lotus-manage");
     expect(text).not.toContain("lotus-manage-compatible");
     expect(text).not.toContain("lotus-manage-First Proposal Simulation Screen");
+    expect(text).not.toContain("compatibility draft entry");
     expect(text).not.toContain("integrated through lotus-gateway to lotus-manage only");
   });
 });
