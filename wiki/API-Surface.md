@@ -7,6 +7,9 @@
 - `/intake`
 - `/performance`
 - `/data-products`
+- `/proposals`
+- `/proposals/simulate`
+- `/proposals/{proposalId}`
 - `/workbench`
 - `/workbench/{portfolioId}`
 - `/api/bff/*`
@@ -35,6 +38,9 @@ promote dormant labels into product ownership just because historical route file
 - `/recommendations?mode=proof`
   Gateway-backed RFC-0028 bank-demo proof surface for Advise-owned scenario and supported-claim
   posture
+
+## Direct advisory proposal routes
+
 - `/proposals`
   direct Gateway-backed advisory proposal queue
 - `/proposals/simulate`

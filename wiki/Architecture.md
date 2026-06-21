@@ -28,8 +28,8 @@
   proposal-version source projection, action runs, internal review posture, unsupported evidence,
   and blocked client-publication boundaries
 - legacy compatibility surfaces
-  recommendations redirects; proposal simulation is a Gateway-backed advisory proposal draft entry
-  backed by `lotus-advise`
+  recommendations redirects only; proposal simulation is a direct Gateway-backed advisory proposal
+  draft entry backed by `lotus-advise`
 
 ## Boundary notes
 
