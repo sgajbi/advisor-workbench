@@ -6,7 +6,10 @@
 
 ## Goal
 
-Deliver a visible end-to-end advisor proposal flow on top of lotus-gateway + lotus-manage: create draft, list proposals, inspect detail, and submit draft for first review.
+Deliver a visible end-to-end advisor proposal flow on top of lotus-gateway and the
+`lotus-advise` advisory proposal contract: create draft, list proposals, inspect detail, and submit
+draft for first review. Discretionary mandate rebalance execution remains a separate
+`lotus-manage` workflow.
 
 ## Decision
 
@@ -23,6 +26,10 @@ lotus-gateway contract usage:
 - list: `GET /api/v1/proposals`
 - detail: `GET /api/v1/proposals/{proposal_id}`
 - submit: `POST /api/v1/proposals/{proposal_id}/submit`
+
+Gateway routes those proposal calls to the `lotus-advise` `/advisory/proposals*` upstream family.
+Workbench must not couple this advisory proposal surface to `lotus-manage` DPM rebalance execution
+or `/rebalance/simulate`.
 
 ## Out of Scope
 
