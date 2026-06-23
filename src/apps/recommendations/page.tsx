@@ -14,7 +14,7 @@ import ProposalWorkspaceShell, {
 export default async function RecommendationsAppPage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string; mode?: string }>;
+  searchParams: Promise<{ portfolioId?: string; mode?: string; candidateId?: string }>;
 }) {
   const resolvedSearch = await searchParams;
   const portfolioId = resolveProposalPortfolioId(resolvedSearch.portfolioId);
@@ -42,7 +42,10 @@ export default async function RecommendationsAppPage({
       ) : activeMode === "proof" ? (
         <BankDemoProofWorkspace portfolioId={portfolioId} />
       ) : activeMode === "opportunities" ? (
-        <AdvisoryOpportunitiesWorkspace portfolioId={portfolioId} />
+        <AdvisoryOpportunitiesWorkspace
+          portfolioId={portfolioId}
+          selectedCandidateId={resolvedSearch.candidateId}
+        />
       ) : (
         <AdvisoryOverviewWorkspace portfolioId={portfolioId} />
       )}

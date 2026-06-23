@@ -282,11 +282,11 @@ export async function validateAdvisoryJourneyScreens(
     route: opportunitiesRoute,
     screenshotName: "advisory-opportunities-live.png",
     panel: "advisory.opportunities",
-    owner: "lotus-advise",
-    sourcePosture: "draft-proposals-through-gateway",
+    owner: "lotus-idea",
+    sourcePosture: "idea-review-queue-through-gateway",
     screenshotAdvisoryJourney,
     validate: async () => {
-      await expect(page.getByLabel("Draft advisory ideas")).toBeVisible({
+      await expect(page.getByLabel("Idea candidates")).toBeVisible({
         timeout: timeoutMs,
       });
       await expect(

@@ -21,6 +21,7 @@ import {
   getAdvisoryPolicyWorkflow,
   getAdvisorCockpitSnapshot,
   getAdvisorCockpitSupportability,
+  getAdvisorIdeaCandidateDetail,
   getAdvisorIdeaReviewQueue,
   getBankDemoScenarioContract,
   getBankDemoSupportedClaimRegister,
@@ -357,6 +358,52 @@ describe("proposal api", () => {
     expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
     expect(result.items?.[0]?.candidate?.candidateId).toBe("idea_high_cash_001");
     expect(result.supportedFeaturePromoted).toBe(false);
+  });
+
+  it("loads Lotus Idea candidate detail through Gateway with portfolio scope headers", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              candidate: { candidateId: "idea_high_cash_001" },
+              evidence: { sourceRefs: [] },
+              lifecycleHistory: [],
+              reviewDecisions: [],
+              feedbackEvents: [],
+              conversionIntents: [],
+              conversionOutcomes: [],
+              reportEvidencePacks: [],
+              auditSummary: { eventCount: 1 },
+              durableStorageBacked: true,
+              supportedFeaturePromoted: false,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    const result = await getAdvisorIdeaCandidateDetail({
+      candidateId: "idea_high_cash_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001`,
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    );
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(headers.get("X-Caller-Roles")).toBe("advisor");
+    expect(headers.get("X-Caller-Capabilities")).toBe("idea.candidate.detail.read");
+    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
   });
 
   it("loads RFC28 bank demo proof contracts through the Gateway BFF", async () => {

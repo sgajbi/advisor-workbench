@@ -60,6 +60,42 @@
   padding: 5px 9px;
 }
 
+.detailPanel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin: 0 0 12px;
+  padding: 14px 16px;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.detailHeader h3 {
+  margin: 4px 0;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.detailGrid span {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-alt);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 9px;
+}
+
 .tableWrap {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -134,6 +170,14 @@
   .ideaCount {
     text-align: left;
     width: 100%;
+  }
+
+  .detailHeader {
+    flex-direction: column;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
   }
 
   .ideaTable {
