@@ -993,6 +993,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("advisory-opportunities-live.png");
     expect(browserWorkflowModule).toContain("idea-review-queue-through-gateway");
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
+    expect(browserWorkflowModule).toContain("Idea candidate review queue");
+    expect(browserWorkflowModule).toContain("Idea candidate source-safe detail");
     expect(browserWorkflowModule).toContain(
       "advisory-advisor-cockpit-live.png",
     );
