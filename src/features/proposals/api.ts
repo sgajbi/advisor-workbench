@@ -355,7 +355,7 @@ export async function getAdvisorIdeaReviewQueue({
     const body = await response.text();
     throw new Error(`Advisor idea queue failed (${response.status}): ${body}`);
   }
-  return (await response.json()) as AdvisorIdeaReviewQueueData;
+  return unwrapGatewayData<AdvisorIdeaReviewQueueData>(await response.json());
 }
 
 export async function getAdvisorIdeaCandidateDetail({
@@ -370,9 +370,11 @@ export async function getAdvisorIdeaCandidateDetail({
   );
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Advisor idea candidate detail failed (${response.status}): ${body}`);
+    throw new Error(
+      `Advisor idea candidate detail failed (${response.status}): ${body}`,
+    );
   }
-  return (await response.json()) as AdvisorIdeaCandidateDetailData;
+  return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(await response.json());
 }
 
 export async function getAdvisoryPolicyEvaluation(
@@ -1152,4 +1154,17 @@ function buildIdeaCallerHeaders(portfolioId: string, capabilities: string): Head
     "X-Caller-Capabilities": capabilities,
     "X-Caller-Portfolio-Ids": portfolioId,
   });
+}
+
+function unwrapGatewayData<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    (payload as { data?: unknown }).data &&
+    typeof (payload as { data?: unknown }).data === "object"
+  ) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
 }
