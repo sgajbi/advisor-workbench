@@ -995,6 +995,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
     expect(browserWorkflowModule).toContain("Idea candidate source-safe detail");
+    expect(browserWorkflowModule).toContain("Lifecycle: (?!Pending)");
+    expect(browserWorkflowModule).toContain("Sources: [1-9]");
+    expect(browserWorkflowModule).toContain("Candidate detail is unavailable through Gateway");
     expect(browserWorkflowModule).toContain(
       "advisory-advisor-cockpit-live.png",
     );
