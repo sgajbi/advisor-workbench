@@ -75,6 +75,11 @@
   It must verify that Workbench renders source-owned policy posture in advisor language without
   claiming local suitability calculation, policy approval, waiver authority, sign-off completion, or
   client-ready publication.
+- Lotus Idea opportunity proof must use Gateway `/api/v1/ideas/review-queues/advisor` and the
+  active portfolio as caller entitlement scope. The panel is not a supported-feature promotion until
+  canonical browser validation proves populated Workbench rendering, source-safe candidate detail
+  access, and no reranking, no auto-proposal creation, no suitability authority, no execution
+  authority, and no client-publication claims.
 - RFC-0028 bank-demo proof validation must read the Gateway-backed scenario contract and
   supported-claim register, verify the governed scenario id, proof marker, and claim postures, and
   render `/recommendations?mode=proof` as `advisory.bank_demo_proof`. The screenshot is accepted
