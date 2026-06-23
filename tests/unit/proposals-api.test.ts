@@ -392,6 +392,37 @@ describe("proposal api", () => {
     );
   });
 
+  it("unwraps the Gateway envelope for the Lotus Idea advisor queue", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              correlationId: "corr-idea-queue",
+              contractVersion: "idea-gateway-v1",
+              data: {
+                items: [{ candidate: { candidateId: "idea_gateway_001" } }],
+                exclusions: [],
+                supportedFeaturePromoted: false,
+              },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    const result = await getAdvisorIdeaReviewQueue({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    expect(result.items?.[0]?.candidate?.candidateId).toBe("idea_gateway_001");
+    expect(result.supportedFeaturePromoted).toBe(false);
+  });
+
   it("loads Lotus Idea candidate detail through Gateway with portfolio scope headers", async () => {
     vi.stubGlobal(
       "fetch",
@@ -436,6 +467,47 @@ describe("proposal api", () => {
     expect(headers.get("X-Caller-Capabilities")).toBe("idea.candidate.detail.read");
     expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
     expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
+  });
+
+  it("unwraps the Gateway envelope for Lotus Idea candidate detail", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              correlationId: "corr-idea-detail",
+              contractVersion: "idea-gateway-v1",
+              data: {
+                candidate: { candidateId: "idea_gateway_001" },
+                evidence: { sourceRefs: [{ sourceProductId: "Core" }] },
+                lifecycleHistory: [],
+                reviewDecisions: [],
+                feedbackEvents: [],
+                conversionIntents: [],
+                conversionOutcomes: [],
+                reportEvidencePacks: [],
+                auditSummary: { eventCount: 1 },
+                durableStorageBacked: true,
+                supportedFeaturePromoted: false,
+              },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    const result = await getAdvisorIdeaCandidateDetail({
+      candidateId: "idea_gateway_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    expect(result.candidate?.candidateId).toBe("idea_gateway_001");
+    expect(result.evidence?.sourceRefs).toHaveLength(1);
+    expect(result.supportedFeaturePromoted).toBe(false);
   });
 
   it("loads RFC28 bank demo proof contracts through the Gateway BFF", async () => {
