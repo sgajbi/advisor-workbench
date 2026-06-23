@@ -8,21 +8,20 @@ import { Alert, CircularProgress, Stack } from "@mui/material";
 import { ScreenStatePanel, SectionBlock, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
-import { listProposals } from "../api";
+import { getAdvisorIdeaReviewQueue } from "../api";
 import { buildAdvisoryOpportunitiesModel } from "../advisory-opportunities-view-model";
 import styles from "./advisory-opportunities-workspace.module.css";
 
 export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfolioId: string }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["advisory-opportunities", portfolioId],
-    queryFn: async () => await listProposals({ portfolioId, state: "DRAFT" }),
+    queryFn: async () => await getAdvisorIdeaReviewQueue({ portfolioId }),
     ...workbenchStrictQueryDefaults,
   });
 
-  const proposals = useMemo(() => data?.items ?? [], [data?.items]);
   const model = useMemo(
-    () => buildAdvisoryOpportunitiesModel({ portfolioId, proposals }),
-    [portfolioId, proposals]
+    () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
+    [portfolioId, data]
   );
 
   if (isLoading) {
@@ -30,7 +29,7 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
       <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
           <CircularProgress size={16} />
-          <Text variant="body">Loading advisory ideas...</Text>
+          <Text variant="body">Loading Idea review queue...</Text>
         </Stack>
       </SectionBlock>
     );
@@ -39,19 +38,19 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
   return (
     <SectionBlock
       title="Opportunities And Ideas"
-      subtitle="Advisor-use idea triage from draft proposal work already recorded in the advisory workflow."
+      subtitle="Advisor-use triage of Lotus Idea candidates through the governed Gateway contract."
       actions={
         <Link
           className="nav-link"
           href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
         >
-          Start New Idea
+          Open Proposal Builder
         </Link>
       }
     >
       {error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Advisory ideas are unavailable. No fallback opportunity list is shown.
+          Idea candidates are unavailable. No fallback opportunity list is shown.
         </Alert>
       ) : null}
 
@@ -63,30 +62,38 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
           </Text>
           <Text variant="secondary">{model.recommendedAction}</Text>
         </div>
-        <div className={styles.ideaCount} aria-label="Draft advisory ideas">
-          <span>{model.draftCount}</span>
-          <strong>Draft ideas</strong>
+        <div className={styles.ideaCount} aria-label="Idea candidates">
+          <span>{model.candidateCount}</span>
+          <strong>Idea candidates</strong>
         </div>
+      </div>
+
+      <div className={styles.proofStrip} aria-label="Idea queue proof posture">
+        <span>Policy: {model.policyVersion}</span>
+        <span>Evaluated: {model.evaluatedAtUtc}</span>
+        <span>Durable storage: {model.durableStorageBacked ? "Backed" : "Not backed"}</span>
+        <span>Supported feature: {model.supportedFeaturePromoted ? "Promoted" : "Not promoted"}</span>
+        <span>Excluded: {model.excludedCount}</span>
       </div>
 
       {error ? (
         <ScreenStatePanel
           kind="error"
           title="Idea queue unavailable"
-          body="The draft proposal queue could not be loaded from the approved advisory workflow."
+          body="The Lotus Idea review queue could not be loaded through Gateway. No local fallback queue is shown."
           surface="default"
         />
       ) : model.rows.length === 0 ? (
         <ScreenStatePanel
           kind="empty"
-          title="No draft ideas in this portfolio"
-          body="Use the proposal builder to model a client objective against the live portfolio book."
+          title="No Idea candidates ready for review"
+          body="Lotus Idea did not return reviewable candidates for this portfolio scope."
           action={
             <Link
               className="nav-link"
               href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
             >
-              Build advisor-use draft
+              Open proposal builder
             </Link>
           }
           surface="default"
@@ -96,23 +103,30 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
           <table className={styles.ideaTable}>
             <thead>
               <tr>
-                <th>Idea</th>
-                <th>Portfolio</th>
-                <th>Advisor</th>
-                <th>Created</th>
+                <th>Candidate</th>
+                <th>Rank</th>
+                <th>Score</th>
+                <th>Priority</th>
+                <th>Review Posture</th>
+                <th>Source Evidence</th>
                 <th>Next Action</th>
               </tr>
             </thead>
             <tbody>
               {model.rows.map((row) => (
-                <tr key={row.proposalId}>
+                <tr key={row.candidateId}>
                   <td>
                     <Link href={row.href}>{row.title}</Link>
-                    <span>ID: {row.proposalId}</span>
+                    <span>ID: {row.candidateId}</span>
                   </td>
-                  <td>{row.portfolio}</td>
-                  <td>{row.advisor}</td>
-                  <td>{row.createdAt}</td>
+                  <td>{row.rank}</td>
+                  <td>{row.score}</td>
+                  <td>{row.priority}</td>
+                  <td>{row.reviewPosture}</td>
+                  <td>
+                    <span>{row.sourceSignals}</span>
+                    <span>{row.reasonCodes}</span>
+                  </td>
                   <td>{row.nextAction}</td>
                 </tr>
               ))}

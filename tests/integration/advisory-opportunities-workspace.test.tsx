@@ -5,21 +5,31 @@ import { describe, expect, it, vi } from "vitest";
 
 import AdvisoryOpportunitiesWorkspace from "../../src/features/proposals/components/advisory-opportunities-workspace";
 
-const listProposalsMock = vi.fn(async (_filters?: unknown) => ({
+const getAdvisorIdeaReviewQueueMock = vi.fn(async (_filters?: unknown) => ({
+  policyVersion: "idea-deterministic-ranking-v1",
+  evaluatedAtUtc: "2026-06-21T10:10:00Z",
+  durableStorageBacked: true,
+  supportedFeaturePromoted: false,
+  exclusions: [],
   items: [
     {
-      proposal_id: "PRP-DRAFT",
-      portfolio_id: "PB_SG_GLOBAL_BAL_001",
-      current_state: "DRAFT",
-      title: "Emerging markets sleeve",
-      created_by: "rm_1",
-      created_at: "2026-05-25T01:00:00Z",
+      rank: 1,
+      score: "82",
+      priorityBucket: "high",
+      reasonCodes: ["high_cash_ratio", "review_required"],
+      candidate: {
+        candidateId: "idea_high_cash_001",
+        family: "high_cash",
+        reviewPosture: "advisor_review_required",
+        score: "82",
+        sourceSignalIds: ["signal_high_cash_001"],
+      },
     },
   ],
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
-  listProposals: (filters: unknown) => listProposalsMock(filters),
+  getAdvisorIdeaReviewQueue: (filters: unknown) => getAdvisorIdeaReviewQueueMock(filters),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -34,37 +44,40 @@ function renderWithQueryClient(ui: React.ReactElement) {
 }
 
 describe("AdvisoryOpportunitiesWorkspace", () => {
-  it("loads draft proposals as advisory ideas", async () => {
+  it("loads Gateway-backed Lotus Idea candidates", async () => {
     renderWithQueryClient(<AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
 
     await waitFor(() => {
-      expect(listProposalsMock).toHaveBeenCalledWith({
+      expect(getAdvisorIdeaReviewQueueMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        state: "DRAFT",
       });
     });
 
     expect(
       await screen.findByRole("heading", { level: 2, name: "Opportunities And Ideas" })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Draft advisory ideas")).toHaveTextContent(/1\s*Draft ideas/);
-    expect(screen.getByText("Emerging markets sleeve")).toBeInTheDocument();
-    expect(screen.getByText("Submit for risk or compliance review")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Start New Idea" })).toHaveAttribute(
+    expect(screen.getByLabelText("Idea candidates")).toHaveTextContent(/1\s*Idea candidates/);
+    expect(screen.getByLabelText("Idea queue proof posture")).toHaveTextContent(
+      "Policy: idea-deterministic-ranking-v1"
+    );
+    expect(screen.getByText("High Cash - idea_high_cash_001")).toBeInTheDocument();
+    expect(screen.getByText("Advisor Review Required")).toBeInTheDocument();
+    expect(screen.getByText("signal_high_cash_001")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Proposal Builder" })).toHaveAttribute(
       "href",
       "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
   });
 
-  it("shows no fallback ideas when the draft queue fails", async () => {
-    listProposalsMock.mockRejectedValueOnce(new Error("gateway unavailable"));
+  it("shows no fallback ideas when the Idea queue fails", async () => {
+    getAdvisorIdeaReviewQueueMock.mockRejectedValueOnce(new Error("gateway unavailable"));
 
     renderWithQueryClient(<AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
 
     expect(
-      await screen.findByText("Advisory ideas are unavailable. No fallback opportunity list is shown.")
+      await screen.findByText("Idea candidates are unavailable. No fallback opportunity list is shown.")
     ).toBeInTheDocument();
     expect(screen.getByText("Idea queue unavailable")).toBeInTheDocument();
-    expect(screen.queryByText("Emerging markets sleeve")).not.toBeInTheDocument();
+    expect(screen.queryByText("High Cash - idea_high_cash_001")).not.toBeInTheDocument();
   });
 });

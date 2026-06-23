@@ -22,6 +22,7 @@ import {
   AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
+  AdvisorIdeaReviewQueueData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
   AdvisoryWorkspaceBodyRequest,
@@ -82,6 +83,11 @@ export type AdvisorCockpitFilters = {
   role?: AdvisorCockpitOwnerRole;
   limit?: number;
   cursor?: string;
+};
+
+export type AdvisorIdeaQueueFilters = {
+  portfolioId: string;
+  evaluatedAtUtc?: string;
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
@@ -322,6 +328,25 @@ export async function getAdvisoryPolicyReviewQueue({
   }
   const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyReviewQueueData;
+}
+
+export async function getAdvisorIdeaReviewQueue({
+  portfolioId,
+  evaluatedAtUtc = "2026-06-21T10:10:00Z",
+}: AdvisorIdeaQueueFilters): Promise<AdvisorIdeaReviewQueueData> {
+  const params = new URLSearchParams();
+  params.set("evaluatedAtUtc", evaluatedAtUtc);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/ideas/review-queues/advisor?${params.toString()}`,
+    {
+      headers: buildIdeaCallerHeaders(portfolioId, "idea.review.queue.read"),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisor idea queue failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as AdvisorIdeaReviewQueueData;
 }
 
 export async function getAdvisoryPolicyEvaluation(
@@ -1092,4 +1117,13 @@ function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
     params.set("cursor", filters.cursor);
   }
   return params.toString() ? `?${params.toString()}` : "";
+}
+
+function buildIdeaCallerHeaders(portfolioId: string, capabilities: string): Headers {
+  return new Headers({
+    "X-Caller-Subject": "workbench-advisor",
+    "X-Caller-Roles": "advisor",
+    "X-Caller-Capabilities": capabilities,
+    "X-Caller-Portfolio-Ids": portfolioId,
+  });
 }
