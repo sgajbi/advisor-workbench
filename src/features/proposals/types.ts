@@ -564,6 +564,39 @@ export type ProposalListData = {
   next_cursor?: string | null;
 };
 
+export type IdeaCandidateSummary = {
+  candidateId: string;
+  family?: string;
+  lifecycleStatus?: string;
+  reviewPosture?: string;
+  evidencePacketId?: string;
+  score?: string | null;
+  scorePolicyVersion?: string | null;
+  sourceSignalIds?: string[];
+  reasonCodes?: string[];
+  [key: string]: unknown;
+};
+
+export type AdvisorIdeaQueueItem = {
+  rank?: number;
+  candidate?: IdeaCandidateSummary;
+  score?: string | null;
+  priorityBucket?: string;
+  policyVersion?: string;
+  reasonCodes?: string[];
+  [key: string]: unknown;
+};
+
+export type AdvisorIdeaReviewQueueData = {
+  policyVersion?: string;
+  evaluatedAtUtc?: string;
+  items?: AdvisorIdeaQueueItem[];
+  exclusions?: Array<Record<string, unknown>>;
+  durableStorageBacked?: boolean;
+  supportedFeaturePromoted?: boolean;
+  [key: string]: unknown;
+};
+
 export type ProposalDetailData = {
   proposal: ProposalSummary;
   current_version?: {

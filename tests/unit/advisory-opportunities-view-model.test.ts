@@ -1,40 +1,51 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAdvisoryOpportunitiesModel } from "../../src/features/proposals/advisory-opportunities-view-model";
-import type { ProposalSummary } from "../../src/features/proposals/types";
+import type { AdvisorIdeaReviewQueueData } from "../../src/features/proposals/types";
 
 describe("buildAdvisoryOpportunitiesModel", () => {
-  it("uses draft proposals as advisor idea candidates", () => {
-    const proposals: ProposalSummary[] = [
-      {
-        proposal_id: "PRP-DRAFT",
-        portfolio_id: "PB_SG_GLOBAL_BAL_001",
-        current_state: "DRAFT",
-        title: "Emerging markets sleeve",
-        created_by: "rm_1",
-        created_at: "2026-05-25T01:00:00Z",
-      },
-      {
-        proposal_id: "PRP-RISK",
-        portfolio_id: "PB_SG_GLOBAL_BAL_001",
-        current_state: "RISK_REVIEW",
-        title: "Risk review item",
-      },
-    ];
+  it("uses Lotus Idea queue candidates as advisor opportunity candidates", () => {
+    const queue: AdvisorIdeaReviewQueueData = {
+      policyVersion: "idea-deterministic-ranking-v1",
+      evaluatedAtUtc: "2026-06-21T10:10:00Z",
+      durableStorageBacked: true,
+      supportedFeaturePromoted: false,
+      exclusions: [{ candidateId: "idea_excluded" }],
+      items: [
+        {
+          rank: 1,
+          score: "82",
+          priorityBucket: "high",
+          reasonCodes: ["high_cash_ratio", "review_required"],
+          candidate: {
+            candidateId: "idea_high_cash_001",
+            family: "high_cash",
+            reviewPosture: "advisor_review_required",
+            score: "82",
+            sourceSignalIds: ["signal_high_cash_001"],
+          },
+        },
+      ],
+    };
 
     const model = buildAdvisoryOpportunitiesModel({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
-      proposals,
+      queue,
     });
 
-    expect(model.draftCount).toBe(1);
-    expect(model.recommendedAction).toMatch(/Open a draft idea/);
+    expect(model.candidateCount).toBe(1);
+    expect(model.excludedCount).toBe(1);
+    expect(model.durableStorageBacked).toBe(true);
+    expect(model.supportedFeaturePromoted).toBe(false);
+    expect(model.recommendedAction).toMatch(/Review source evidence/);
     expect(model.rows).toEqual([
       expect.objectContaining({
-        proposalId: "PRP-DRAFT",
-        title: "Emerging markets sleeve",
-        advisor: "rm_1",
-        nextAction: "Submit for risk or compliance review",
+        candidateId: "idea_high_cash_001",
+        title: "High Cash - idea_high_cash_001",
+        priority: "High",
+        reviewPosture: "Advisor Review Required",
+        sourceSignals: "signal_high_cash_001",
+        reasonCodes: "High Cash Ratio, Review Required",
       }),
     ]);
   });
@@ -42,11 +53,15 @@ describe("buildAdvisoryOpportunitiesModel", () => {
   it("keeps an empty idea queue action-oriented", () => {
     const model = buildAdvisoryOpportunitiesModel({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
-      proposals: [],
+      queue: {
+        items: [],
+        exclusions: [],
+        supportedFeaturePromoted: false,
+      },
     });
 
-    expect(model.draftCount).toBe(0);
+    expect(model.candidateCount).toBe(0);
     expect(model.rows).toEqual([]);
-    expect(model.recommendedAction).toMatch(/Start with the live portfolio book/);
+    expect(model.recommendedAction).toMatch(/No Idea-owned candidates/);
   });
 });

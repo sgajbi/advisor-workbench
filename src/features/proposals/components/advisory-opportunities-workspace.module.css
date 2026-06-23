@@ -43,6 +43,23 @@
   text-transform: uppercase;
 }
 
+.proofStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.proofStrip span {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-alt);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 9px;
+}
+
 .tableWrap {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -80,7 +97,7 @@
 }
 
 .ideaTable td:first-child {
-  min-width: 220px;
+  min-width: 260px;
 }
 
 .ideaTable td:first-child a {
@@ -101,6 +118,14 @@
   margin-top: 3px;
 }
 
+.ideaTable td:nth-child(6) span {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.78rem;
+  max-width: 280px;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
   .decisionPanel {
     flex-direction: column;
@@ -112,6 +137,6 @@
   }
 
   .ideaTable {
-    min-width: 760px;
+    min-width: 980px;
   }
 }

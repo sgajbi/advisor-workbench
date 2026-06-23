@@ -21,6 +21,7 @@ import {
   getAdvisoryPolicyWorkflow,
   getAdvisorCockpitSnapshot,
   getAdvisorCockpitSupportability,
+  getAdvisorIdeaReviewQueue,
   getBankDemoScenarioContract,
   getBankDemoSupportedClaimRegister,
   getProposalExecutionStatus,
@@ -314,6 +315,48 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW&portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
+  });
+
+  it("loads the Lotus Idea advisor queue through Gateway with portfolio scope headers", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              policyVersion: "idea-deterministic-ranking-v1",
+              evaluatedAtUtc: "2026-06-21T10:10:00Z",
+              items: [{ candidate: { candidateId: "idea_high_cash_001" } }],
+              exclusions: [],
+              durableStorageBacked: true,
+              supportedFeaturePromoted: false,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    const result = await getAdvisorIdeaReviewQueue({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      evaluatedAtUtc: "2026-06-21T10:10:00Z",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/ideas/review-queues/advisor?evaluatedAtUtc=2026-06-21T10%3A10%3A00Z`,
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    );
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(headers.get("X-Caller-Roles")).toBe("advisor");
+    expect(headers.get("X-Caller-Capabilities")).toBe("idea.review.queue.read");
+    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(result.items?.[0]?.candidate?.candidateId).toBe("idea_high_cash_001");
+    expect(result.supportedFeaturePromoted).toBe(false);
   });
 
   it("loads RFC28 bank demo proof contracts through the Gateway BFF", async () => {
