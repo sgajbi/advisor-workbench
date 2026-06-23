@@ -8,14 +8,39 @@ import { Alert, CircularProgress, Stack } from "@mui/material";
 import { ScreenStatePanel, SectionBlock, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
-import { getAdvisorIdeaReviewQueue } from "../api";
+import {
+  getAdvisorIdeaCandidateDetail,
+  getAdvisorIdeaReviewQueue,
+} from "../api";
 import { buildAdvisoryOpportunitiesModel } from "../advisory-opportunities-view-model";
+import type { AdvisorIdeaCandidateDetailData } from "../types";
 import styles from "./advisory-opportunities-workspace.module.css";
 
-export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfolioId: string }) {
+export default function AdvisoryOpportunitiesWorkspace({
+  portfolioId,
+  selectedCandidateId,
+}: {
+  portfolioId: string;
+  selectedCandidateId?: string;
+}) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["advisory-opportunities", portfolioId],
     queryFn: async () => await getAdvisorIdeaReviewQueue({ portfolioId }),
+    ...workbenchStrictQueryDefaults,
+  });
+  const selectedCandidate = selectedCandidateId?.trim();
+  const {
+    data: candidateDetail,
+    isLoading: isCandidateDetailLoading,
+    error: candidateDetailError,
+  } = useQuery({
+    queryKey: ["advisory-opportunity-detail", portfolioId, selectedCandidate],
+    queryFn: async () =>
+      await getAdvisorIdeaCandidateDetail({
+        candidateId: selectedCandidate ?? "",
+        portfolioId,
+      }),
+    enabled: Boolean(selectedCandidate),
     ...workbenchStrictQueryDefaults,
   });
 
@@ -75,6 +100,16 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
         <span>Supported feature: {model.supportedFeaturePromoted ? "Promoted" : "Not promoted"}</span>
         <span>Excluded: {model.excludedCount}</span>
       </div>
+
+      {selectedCandidate ? (
+        <IdeaCandidateDetailPanel
+          detail={candidateDetail}
+          error={candidateDetailError}
+          isLoading={isCandidateDetailLoading}
+          portfolioId={portfolioId}
+          selectedCandidateId={selectedCandidate}
+        />
+      ) : null}
 
       {error ? (
         <ScreenStatePanel
@@ -136,4 +171,76 @@ export default function AdvisoryOpportunitiesWorkspace({ portfolioId }: { portfo
       )}
     </SectionBlock>
   );
+}
+
+function IdeaCandidateDetailPanel({
+  detail,
+  error,
+  isLoading,
+  portfolioId,
+  selectedCandidateId,
+}: {
+  detail?: AdvisorIdeaCandidateDetailData;
+  error: Error | null;
+  isLoading: boolean;
+  portfolioId: string;
+  selectedCandidateId: string;
+}) {
+  const candidate = detail?.candidate;
+  const evidence = detail?.evidence;
+  const audit = detail?.auditSummary;
+  const sourceRefs = evidence?.sourceRefs ?? [];
+  return (
+    <div className={styles.detailPanel} aria-label="Idea candidate source-safe detail">
+      <div className={styles.detailHeader}>
+        <div>
+          <Text variant="microLabel">Source-Safe Candidate Detail</Text>
+          <Text variant="subsectionTitle" as="h3">
+            {candidate?.candidateId ?? selectedCandidateId}
+          </Text>
+          <Text variant="secondary">
+            Detail is fetched through Gateway with portfolio-scoped Idea caller headers.
+          </Text>
+        </div>
+        <Link
+          className="nav-link"
+          href={`/recommendations?mode=opportunities&portfolioId=${encodeURIComponent(portfolioId)}`}
+        >
+          Close detail
+        </Link>
+      </div>
+      {isLoading ? (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={16} />
+          <Text variant="body">Loading source-safe candidate detail...</Text>
+        </Stack>
+      ) : error ? (
+        <Alert severity="warning">
+          Candidate detail is unavailable through Gateway. No raw API response is shown.
+        </Alert>
+      ) : (
+        <div className={styles.detailGrid}>
+          <span>Family: {formatDetailCode(candidate?.family)}</span>
+          <span>Lifecycle: {formatDetailCode(candidate?.lifecycleStatus)}</span>
+          <span>Review: {formatDetailCode(candidate?.reviewPosture)}</span>
+          <span>Evidence: {evidence?.supportability ?? "Evidence pending"}</span>
+          <span>Sources: {sourceRefs.length}</span>
+          <span>Audit events: {audit?.eventCount ?? 0}</span>
+          <span>Durable storage: {detail?.durableStorageBacked ? "Backed" : "Not backed"}</span>
+          <span>
+            Supported feature: {detail?.supportedFeaturePromoted ? "Promoted" : "Not promoted"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatDetailCode(value: string | undefined): string {
+  if (!value) {
+    return "Pending";
+  }
+  return value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (match) => match.toUpperCase());
 }

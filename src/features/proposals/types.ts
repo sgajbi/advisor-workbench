@@ -597,6 +597,33 @@ export type AdvisorIdeaReviewQueueData = {
   [key: string]: unknown;
 };
 
+export type AdvisorIdeaCandidateDetailData = {
+  candidate?: IdeaCandidateSummary;
+  evidence?: {
+    evidencePacketId?: string;
+    supportability?: string;
+    lineageId?: string;
+    sourceRefs?: Array<Record<string, unknown>>;
+    [key: string]: unknown;
+  };
+  lifecycleHistory?: Array<Record<string, unknown>>;
+  reviewDecisions?: Array<Record<string, unknown>>;
+  feedbackEvents?: Array<Record<string, unknown>>;
+  conversionIntents?: Array<Record<string, unknown>>;
+  conversionOutcomes?: Array<Record<string, unknown>>;
+  reportEvidencePacks?: Array<Record<string, unknown>>;
+  auditSummary?: {
+    eventCount?: number;
+    latestEventType?: string;
+    latestEventOutcome?: string;
+    latestOccurredAtUtc?: string;
+    [key: string]: unknown;
+  };
+  durableStorageBacked?: boolean;
+  supportedFeaturePromoted?: boolean;
+  [key: string]: unknown;
+};
+
 export type ProposalDetailData = {
   proposal: ProposalSummary;
   current_version?: {

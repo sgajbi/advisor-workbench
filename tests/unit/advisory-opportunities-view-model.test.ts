@@ -46,6 +46,9 @@ describe("buildAdvisoryOpportunitiesModel", () => {
         reviewPosture: "Advisor Review Required",
         sourceSignals: "signal_high_cash_001",
         reasonCodes: "High Cash Ratio, Review Required",
+        href:
+          "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001" +
+          "&candidateId=idea_high_cash_001",
       }),
     ]);
   });

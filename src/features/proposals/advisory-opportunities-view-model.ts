@@ -76,7 +76,9 @@ function buildOpportunityRow(
     sourceSignals: sourceSignals.length > 0 ? sourceSignals.join(", ") : "Source signal pending",
     reasonCodes: reasonCodes.length > 0 ? reasonCodes.map(formatCode).join(", ") : "Reason pending",
     nextAction: "Open source-safe candidate detail through Gateway.",
-    href: `/api/bff/api/v1/ideas/candidates/${encodeURIComponent(candidateId)}`,
+    href:
+      `/recommendations?mode=opportunities&portfolioId=${encodeURIComponent(portfolioId)}` +
+      `&candidateId=${encodeURIComponent(candidateId)}`,
   };
 }
 

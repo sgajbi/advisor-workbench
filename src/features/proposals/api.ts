@@ -22,6 +22,7 @@ import {
   AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
+  AdvisorIdeaCandidateDetailData,
   AdvisorIdeaReviewQueueData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
@@ -88,6 +89,11 @@ export type AdvisorCockpitFilters = {
 export type AdvisorIdeaQueueFilters = {
   portfolioId: string;
   evaluatedAtUtc?: string;
+};
+
+export type AdvisorIdeaCandidateDetailFilters = {
+  candidateId: string;
+  portfolioId: string;
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
@@ -347,6 +353,23 @@ export async function getAdvisorIdeaReviewQueue({
     throw new Error(`Advisor idea queue failed (${response.status}): ${body}`);
   }
   return (await response.json()) as AdvisorIdeaReviewQueueData;
+}
+
+export async function getAdvisorIdeaCandidateDetail({
+  candidateId,
+  portfolioId,
+}: AdvisorIdeaCandidateDetailFilters): Promise<AdvisorIdeaCandidateDetailData> {
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}`,
+    {
+      headers: buildIdeaCallerHeaders(portfolioId, "idea.candidate.detail.read"),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Advisor idea candidate detail failed (${response.status}): ${body}`);
+  }
+  return (await response.json()) as AdvisorIdeaCandidateDetailData;
 }
 
 export async function getAdvisoryPolicyEvaluation(
