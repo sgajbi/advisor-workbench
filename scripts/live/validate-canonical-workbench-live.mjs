@@ -1888,6 +1888,7 @@ async function run() {
       portfolioId,
       timeoutMs,
       screenshotAdvisoryJourney: browserHelpers.screenshotAdvisoryJourney,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
     });
     await validateRiskPanel(page, {
       workbenchBaseUrl,

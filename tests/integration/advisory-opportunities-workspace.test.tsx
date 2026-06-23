@@ -83,6 +83,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       "Policy: idea-deterministic-ranking-v1"
     );
     expect(screen.getByText("High Cash - idea_high_cash_001")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Idea candidate review queue" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "High Cash - idea_high_cash_001" })).toHaveAttribute(
       "href",
       "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001&candidateId=idea_high_cash_001"

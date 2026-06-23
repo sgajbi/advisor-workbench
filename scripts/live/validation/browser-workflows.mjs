@@ -185,6 +185,7 @@ export async function validateAdvisoryJourneyScreens(
     portfolioId,
     timeoutMs,
     screenshotAdvisoryJourney,
+    assertTableHasRows,
   },
 ) {
   const recommendationsRoute = advisoryJourneyRoute({
@@ -289,6 +290,16 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByLabel("Idea candidates")).toBeVisible({
         timeout: timeoutMs,
       });
+      const candidateTable = tableByExactLabel(page, "Idea candidate review queue");
+      await assertTableHasRows(
+        candidateTable,
+        1,
+        "Idea candidate review queue",
+      );
+      await candidateTable.locator("tbody tr a").first().click();
+      await expect(
+        page.getByLabel("Idea candidate source-safe detail"),
+      ).toBeVisible({ timeout: timeoutMs });
       await expect(
         page.getByText("Advisor Decision", { exact: true }),
       ).toBeVisible({ timeout: timeoutMs });

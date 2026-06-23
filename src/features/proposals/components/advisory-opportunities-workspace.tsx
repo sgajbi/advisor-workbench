@@ -135,7 +135,7 @@ export default function AdvisoryOpportunitiesWorkspace({
         />
       ) : (
         <div className={styles.tableWrap}>
-          <table className={styles.ideaTable}>
+          <table className={styles.ideaTable} aria-label="Idea candidate review queue">
             <thead>
               <tr>
                 <th>Candidate</th>
