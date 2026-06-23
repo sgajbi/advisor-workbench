@@ -35,6 +35,9 @@ promote dormant labels into product ownership just because historical route file
   Gateway-backed RFC-0027 advisory copilot for Advise-owned proposal-version evidence projection,
   action execution, human review posture, unsupported-evidence posture, and blocked
   client-publication boundaries
+- `/recommendations?mode=opportunities`
+  Gateway-backed Lotus Idea advisor review queue for Idea-owned candidate ranking, source-signal
+  evidence, review posture, durable-storage posture, and supported-feature promotion posture
 - `/recommendations?mode=proof`
   Gateway-backed RFC-0028 bank-demo proof surface for Advise-owned scenario and supported-claim
   posture
@@ -248,6 +251,15 @@ promote dormant labels into product ownership just because historical route file
   `lotus-advise` directly. Canonical validation records `ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED`,
   proves the dedicated preparation-packet route, treats already acknowledged source actions as
   replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
+- Lotus Idea opportunity triage is implemented on `/recommendations?mode=opportunities` through
+  Gateway Idea endpoints. Workbench reads `GET /api/v1/ideas/review-queues/advisor` with the active
+  portfolio forwarded as caller entitlement scope, renders Idea-owned rank, score, priority,
+  review posture, source-signal ids, reason codes, durable-storage posture, policy version, and
+  `supportedFeaturePromoted=false`, and links only to `GET /api/v1/ideas/candidates/{candidate_id}`
+  for source-safe detail. Workbench does not rerank candidates, clone Idea scoring, infer
+  conversion, create proposals automatically, grant suitability/execution authority, or promote
+  Lotus Idea as a supported feature before canonical browser proof and `lotus-idea` certification
+  evidence exist.
 - RFC-0027 advisory copilot is implemented on `/recommendations?mode=copilot` through Gateway
   advisory copilot endpoints. Workbench requests proposal-version source projection through
   `POST /api/v1/advisory-copilot/evidence-packets/from-proposal-version`, runs bounded advisor-use
