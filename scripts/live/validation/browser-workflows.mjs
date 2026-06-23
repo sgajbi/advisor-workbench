@@ -162,15 +162,16 @@ async function validateAdvisoryJourneyRoute(
     timeout: timeoutMs,
   });
   await validate();
+  const observedRoute = page.url().replace(workbenchBaseUrl, "");
   await screenshotAdvisoryJourney(page, screenshotName, {
-    route: route.replace(workbenchBaseUrl, ""),
+    route: observedRoute,
     panel,
     state: "demo_ready",
   });
   recordAdvisoryJourneyCheck(summary, {
     key,
     title,
-    route: route.replace(workbenchBaseUrl, ""),
+    route: observedRoute,
     panel,
     owner,
     sourcePosture,
