@@ -991,6 +991,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("advisory-overview-live.png");
     expect(browserWorkflowModule).toContain("advisory-client-context-live.png");
     expect(browserWorkflowModule).toContain("advisory-opportunities-live.png");
+    expect(browserWorkflowModule).toContain("const observedRoute = page.url()");
+    expect(browserWorkflowModule).toContain("route: observedRoute");
     expect(browserWorkflowModule).toContain("idea-review-queue-through-gateway");
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
