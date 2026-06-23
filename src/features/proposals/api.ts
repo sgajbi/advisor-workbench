@@ -338,12 +338,15 @@ export async function getAdvisoryPolicyReviewQueue({
 
 export async function getAdvisorIdeaReviewQueue({
   portfolioId,
-  evaluatedAtUtc = "2026-06-21T10:10:00Z",
+  evaluatedAtUtc,
 }: AdvisorIdeaQueueFilters): Promise<AdvisorIdeaReviewQueueData> {
   const params = new URLSearchParams();
-  params.set("evaluatedAtUtc", evaluatedAtUtc);
+  if (evaluatedAtUtc) {
+    params.set("evaluatedAtUtc", evaluatedAtUtc);
+  }
+  const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(
-    `${BFF_PROXY_BASE}/ideas/review-queues/advisor?${params.toString()}`,
+    `${BFF_PROXY_BASE}/ideas/review-queues/advisor${query}`,
     {
       headers: buildIdeaCallerHeaders(portfolioId, "idea.review.queue.read"),
     },

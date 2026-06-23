@@ -300,6 +300,17 @@ export async function validateAdvisoryJourneyScreens(
       await expect(
         page.getByLabel("Idea candidate source-safe detail"),
       ).toBeVisible({ timeout: timeoutMs });
+      await expect(page.getByText(/Lifecycle: (?!Pending).+/)).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(page.getByText(/Sources: [1-9]\d*/)).toBeVisible({
+        timeout: timeoutMs,
+      });
+      await expect(
+        page.getByText(
+          "Candidate detail is unavailable through Gateway. No raw API response is shown.",
+        ),
+      ).toHaveCount(0);
       await expect(
         page.getByText("Advisor Decision", { exact: true }),
       ).toBeVisible({ timeout: timeoutMs });

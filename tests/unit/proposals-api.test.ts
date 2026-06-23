@@ -360,6 +360,38 @@ describe("proposal api", () => {
     expect(result.supportedFeaturePromoted).toBe(false);
   });
 
+  it("loads the active Lotus Idea advisor queue when no evaluation timestamp is supplied", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              items: [],
+              exclusions: [],
+              supportedFeaturePromoted: false,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    await getAdvisorIdeaReviewQueue({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/ideas/review-queues/advisor`,
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    );
+  });
+
   it("loads Lotus Idea candidate detail through Gateway with portfolio scope headers", async () => {
     vi.stubGlobal(
       "fetch",
