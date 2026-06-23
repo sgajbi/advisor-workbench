@@ -37,7 +37,13 @@ jobs:
           fi
           if echo "$output" | grep -qi "required status checks are expected"; then
             echo "$output"
-            exit 0
+            queued=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json autoMergeRequest --jq '.autoMergeRequest != null')
+            if [ "$queued" = "true" ]; then
+              echo "Auto-merge is already queued."
+              exit 0
+            fi
+            echo "Auto-merge was not queued; leaving this check red instead of reporting false readiness."
+            exit "$code"
           fi
           echo "$output"
           exit "$code"

@@ -14,6 +14,9 @@ describe("PR auto-merge workflow", () => {
     expect(workflow).toContain("gh pr merge");
     expect(workflow).toContain("--auto --rebase --delete-branch");
     expect(workflow).toContain("required status checks are expected");
+    expect(workflow).toContain("gh pr view");
+    expect(workflow).toContain(".autoMergeRequest != null");
+    expect(workflow).toContain("Auto-merge was not queued");
     expect(workflow).not.toContain("--auto --merge --delete-branch");
   });
 });
