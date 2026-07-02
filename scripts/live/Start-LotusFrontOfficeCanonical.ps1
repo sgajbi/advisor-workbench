@@ -24,6 +24,7 @@ $manageRepo = Join-Path $ProjectsRoot "lotus-manage"
 $reportRepo = Join-Path $ProjectsRoot "lotus-report"
 $archiveRepo = Join-Path $ProjectsRoot "lotus-archive"
 $renderRepo = Join-Path $ProjectsRoot "lotus-render"
+$ideaRepo = Join-Path $ProjectsRoot "lotus-idea"
 $gatewayRepo = Join-Path $ProjectsRoot "lotus-gateway"
 $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 $platformRepo = Join-Path $ProjectsRoot "lotus-platform"
@@ -305,6 +306,86 @@ function Invoke-DpmCommandCenterSeed {
   Invoke-RepoCommand $platformRepo $dpmSeedCommand
 }
 
+function Invoke-CanonicalIdeaSeed {
+  $ideaBaseUrl = "http://127.0.0.1:8330"
+  $deadline = (Get-Date).AddSeconds(120)
+  while ((Get-Date) -lt $deadline) {
+    if (Test-HttpReady "$ideaBaseUrl/health/ready") {
+      break
+    }
+    Start-Sleep -Seconds 2
+  }
+  if (-not (Test-HttpReady "$ideaBaseUrl/health/ready")) {
+    throw "lotus-idea did not become ready before canonical advisor queue seed."
+  }
+
+  $sourceRef = {
+    param([string]$ProductId)
+    return @{
+      productId = $ProductId
+      sourceSystem = "lotus-core"
+      productVersion = "v1"
+      route = "/source/$ProductId"
+      asOfDate = "2026-06-21"
+      generatedAtUtc = "2026-06-21T10:00:00Z"
+      contentHash = "sha256:$($ProductId):canonical-workbench-seed"
+      dataQualityStatus = "complete"
+      freshness = "current"
+    }
+  }
+
+  $payload = @{
+    asOfDate = "2026-06-21"
+    evaluatedAtUtc = "2026-06-21T10:00:00Z"
+    sourceReportedCashWeight = "0.18"
+    sourceEvidence = @{
+      portfolioStateRef = & $sourceRef "lotus-core:PortfolioStateSnapshot:v1"
+      holdingsRef = & $sourceRef "lotus-core:HoldingsAsOf:v1"
+      cashMovementRef = & $sourceRef "lotus-core:PortfolioCashMovementSummary:v1"
+      cashflowProjectionRef = & $sourceRef "lotus-core:PortfolioCashflowProjection:v1"
+    }
+    accessScope = @{
+      tenantId = "tenant-private-bank-sg"
+      bookId = "book-advisor-001"
+      portfolioId = $PortfolioId
+      clientId = "client-001"
+    }
+    entitlementAllowed = $true
+  }
+  $headers = @{
+    "X-Caller-Subject" = "canonical-front-office-seed"
+    "X-Caller-Capabilities" = "idea.candidate.persist"
+    "X-Correlation-Id" = "corr-canonical-idea-seed"
+    "Idempotency-Key" = "canonical-idea-high-cash:$PortfolioId:2026-06-21T10:00:00Z"
+  }
+
+  Write-Host "Seeding governed Lotus Idea advisor queue candidate for $PortfolioId ..."
+  $response = Invoke-RestMethod `
+    -Method Post `
+    -Uri "$ideaBaseUrl/api/v1/idea-signals/high-cash/evaluate-and-persist" `
+    -Headers $headers `
+    -ContentType "application/json" `
+    -Body ($payload | ConvertTo-Json -Depth 12)
+
+  $decision = $response.persistence.decision
+  if ($decision -notin @("accepted", "replayed", "duplicate_candidate")) {
+    throw "Canonical Lotus Idea seed did not persist an advisor queue candidate. Decision: $decision"
+  }
+
+  $queueHeaders = @{
+    "X-Caller-Subject" = "canonical-front-office-validator"
+    "X-Caller-Roles" = "advisor"
+    "X-Caller-Capabilities" = "idea.review.queue.read"
+    "X-Caller-Portfolio-Ids" = $PortfolioId
+  }
+  $queue = Invoke-RestMethod `
+    -Uri "$ideaBaseUrl/api/v1/review-queues/advisor" `
+    -Headers $queueHeaders
+  if ($queue.page.returnedItemCount -lt 1) {
+    throw "Canonical Lotus Idea advisor queue seed completed but returned no reviewable items."
+  }
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
@@ -320,7 +401,11 @@ if ($localAppSet.Count -gt 0) {
 Write-Host "Starting Docker-backed canonical services..."
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
-Invoke-ComposeUp $coreRepo
+$canonicalCoreEnvironment = @{
+  DEMO_DATA_PACK_ENABLED = "false"
+}
+Write-Host "Starting lotus-core with auxiliary demo data pack disabled for canonical PB seed isolation."
+Invoke-ComposeUp $coreRepo $canonicalCoreEnvironment
 
 if ($CoreManageOnly) {
   Write-Host "Core/manage proof mode enabled; skipping non-essential front-office services."
@@ -345,6 +430,8 @@ Invoke-ComposeUp $adviseRepo
 Start-CanonicalManage
 
 Invoke-ComposeUp $reportRepo
+Invoke-ComposeUp $ideaRepo
+Invoke-CanonicalIdeaSeed
 
 if (Test-LocalApp "archive") {
   Invoke-RepoCommand $archiveRepo "docker compose down --remove-orphans"
@@ -399,6 +486,7 @@ if (-not $RunValidation) {
   Write-Host "  Workbench: http://workbench.dev.lotus"
   Write-Host "  Gateway:   http://gateway.dev.lotus"
   Write-Host "  Manage:    http://manage.dev.lotus"
+  Write-Host "  Idea:      http://idea.dev.lotus"
   Write-Host "  Archive:   http://archive.dev.lotus"
   Write-Host "  Render:    http://render.dev.lotus"
   Write-Host ""

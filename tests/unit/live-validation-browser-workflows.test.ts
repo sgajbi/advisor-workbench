@@ -29,6 +29,17 @@ describe("live validation browser workflow helpers", () => {
     ).toBe(false);
   });
 
+  it("validates the canonical contribution analysis default and segment views", () => {
+    const source = browserWorkflowModule.validatePerformanceAnalysisPanel.toString();
+
+    expect(source).toContain("contributionDimension=asset_class");
+    expect(source).toContain("attributionDimension=asset_class");
+    expect(source).toContain("Positions");
+    expect(source).toContain("Position contribution table");
+    expect(source).toContain("Segment Summary");
+    expect(source).toContain("Asset Class contribution table");
+  });
+
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "lotus-browser-workflow-"));
     const screenshotCalls: Array<{ path: string; fullPage: boolean }> = [];

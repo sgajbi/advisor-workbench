@@ -633,6 +633,7 @@ export async function validatePerformanceSummaryPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
@@ -640,7 +641,7 @@ export async function validatePerformanceSummaryPanel(
   },
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     {
       waitUntil: "networkidle",
       timeout: timeoutMs,
@@ -683,6 +684,7 @@ export async function validatePerformanceAnalysisPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
@@ -690,7 +692,7 @@ export async function validatePerformanceAnalysisPanel(
   },
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
@@ -714,10 +716,17 @@ export async function validatePerformanceAnalysisPanel(
     1,
     "Attribution detail table",
   );
+  await page.getByRole("tab", { name: /^Positions/i }).click();
+  await assertTableHasRows(
+    tableByExactLabel(page, "Position contribution table"),
+    1,
+    "Position contribution detail table",
+  );
+  await page.getByRole("tab", { name: /^Segment Summary/i }).click();
   await assertTableHasRows(
     tableByExactLabel(page, "Asset Class contribution table"),
     1,
-    "Contribution detail table",
+    "Segment contribution detail table",
   );
   await screenshotRegisteredPanel(page, "performance.analysis.contribution");
 }
@@ -729,6 +738,7 @@ export async function validateAdvisorBriefPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     screenshotRegisteredPanel,
@@ -736,7 +746,7 @@ export async function validateAdvisorBriefPanel(
   },
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
@@ -1049,6 +1059,7 @@ export async function validateRiskPanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
@@ -1056,7 +1067,7 @@ export async function validateRiskPanel(
   },
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Risk Review/, timeoutMs);
@@ -1103,13 +1114,14 @@ export async function validateEvidencePanel(
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     screenshotRegisteredPanel,
   },
 ) {
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark=${benchmarkCode}&reportEndDate=${canonicalAsOfDate}`,
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Evidence/, timeoutMs);

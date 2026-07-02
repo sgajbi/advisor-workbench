@@ -1,6 +1,7 @@
 param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
+  [string]$StartDate = "2025-03-31",
   [string]$AsOfDate = "2026-04-10",
   [string]$WorkbenchBaseUrl = "http://workbench.dev.lotus",
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
@@ -72,6 +73,21 @@ function Test-Endpoint {
   throw "$lastError after $Attempts attempts."
 }
 
+function Assert-IdeaQueueSeed {
+  $headers = @{
+    "X-Caller-Subject" = "canonical-front-office-validator"
+    "X-Caller-Roles" = "advisor"
+    "X-Caller-Capabilities" = "idea.review.queue.read,idea.candidate.detail.read"
+    "X-Caller-Portfolio-Ids" = $PortfolioId
+  }
+  $url = "$GatewayBaseUrl/api/v1/ideas/review-queues/advisor"
+  $queue = Invoke-RestMethod -Uri $url -Headers $headers -TimeoutSec 45
+  if ($queue.page.returnedItemCount -lt 1) {
+    throw "Gateway Idea review queue is empty for $PortfolioId. Run canonical stack startup to seed Lotus Idea before validation."
+  }
+  Write-Host "[ok] Gateway Idea review queue contains $($queue.page.returnedItemCount) item(s) -> $url"
+}
+
 Test-CanonicalHost "workbench.dev.lotus"
 Test-CanonicalHost "gateway.dev.lotus"
 Test-CanonicalHost "core-query.dev.lotus"
@@ -84,6 +100,7 @@ Test-CanonicalHost "manage.dev.lotus"
 Test-CanonicalHost "report.dev.lotus"
 Test-CanonicalHost "archive.dev.lotus"
 Test-CanonicalHost "render.dev.lotus"
+Test-CanonicalHost "idea.dev.lotus"
 Test-CanonicalHost "ai.dev.lotus" -Optional
 
 Test-Endpoint "$GatewayBaseUrl/health/ready" "Gateway readiness"
@@ -93,14 +110,16 @@ Test-Endpoint "http://manage.dev.lotus/health/ready" "lotus-manage readiness"
 Test-Endpoint "http://report.dev.lotus/health/ready" "lotus-report readiness"
 Test-Endpoint "http://archive.dev.lotus/health/ready" "lotus-archive readiness"
 Test-Endpoint "http://render.dev.lotus/health/ready" "lotus-render readiness"
+Test-Endpoint "http://idea.dev.lotus/health/ready" "lotus-idea readiness"
 Test-Endpoint "http://manage.dev.lotus/api/v1/rebalance/supportability/summary" "lotus-manage supportability summary"
 Test-Endpoint "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "lotus-report integration capabilities"
 Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/platform/capabilities" "Gateway platform capabilities" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway workbench overview" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=YTD&detail_basis=NET&benchmark_code=$BenchmarkCode&as_of_date=$AsOfDate" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
-Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_end_date=$AsOfDate" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=EXPLICIT&detail_basis=NET&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate&as_of_date=$AsOfDate" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
+Assert-IdeaQueueSeed
 
 Push-Location $repoRoot
 try {
@@ -110,6 +129,8 @@ try {
     $PortfolioId,
     "--benchmark-code",
     $BenchmarkCode,
+    "--start-date",
+    $StartDate,
     "--as-of-date",
     $AsOfDate,
     "--workbench-base-url",

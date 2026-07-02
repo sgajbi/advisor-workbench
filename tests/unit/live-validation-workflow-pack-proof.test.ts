@@ -9,6 +9,7 @@ const {
     gatewayBaseUrl: string;
     portfolioId: string;
     benchmarkCode: string;
+    canonicalStartDate: string;
     canonicalAsOfDate: string;
     timeoutMs: number;
     fetchJson: (
@@ -134,15 +135,9 @@ function createFetchAdvisorBriefPayload() {
         taskFlowId: "taskflow-explicit-gross",
       });
     }
-    if (url.includes("detail_basis=GROSS") && url.includes("period=YTD")) {
-      return createAdvisorBriefPayload({
-        runId: "packrun-ytd-gross",
-        taskFlowId: "taskflow-ytd-gross",
-      });
-    }
     return createAdvisorBriefPayload({
-      runId: "packrun-ytd-net",
-      taskFlowId: "taskflow-ytd-net",
+      runId: "packrun-explicit-net",
+      taskFlowId: "taskflow-explicit-net",
     });
   };
 }
@@ -159,6 +154,7 @@ describe("live validation workflow-pack proof", () => {
       gatewayBaseUrl: "http://gateway.dev.lotus",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalStartDate: "2025-03-31",
       canonicalAsOfDate: "2026-04-10",
       timeoutMs: 1000,
       fetchJson: async (_summary: unknown, url: string) => {
@@ -175,10 +171,10 @@ describe("live validation workflow-pack proof", () => {
         postCalls.push({ url, body });
         if (body.action_type === "ACCEPT") {
           return createAdvisorBriefPayload({
-            runId: "packrun-ytd-net",
+            runId: "packrun-explicit-net",
             reviewState: "ACCEPTED",
             supportabilityStatus: "READY",
-            taskFlowId: "taskflow-ytd-net",
+            taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
@@ -197,12 +193,12 @@ describe("live validation workflow-pack proof", () => {
           });
         }
         return createAdvisorBriefPayload({
-          runId: "packrun-ytd-gross",
+          runId: "packrun-explicit-gross",
           reviewState: "REVISED",
           supportabilityStatus: "HISTORICAL",
           superseded: true,
           replacementRunId: body.replacement_run_id,
-          taskFlowId: "taskflow-ytd-gross",
+          taskFlowId: "taskflow-explicit-gross",
           taskFlowStatus: "SUPERSEDED",
           taskFlowSupportabilityStatus: "HISTORICAL",
         });
@@ -212,7 +208,7 @@ describe("live validation workflow-pack proof", () => {
     expect(getCalls).toHaveLength(5);
     expect(postCalls).toEqual([
       expect.objectContaining({
-        url: expect.stringContaining("/performance/advisor-brief/review-actions?period=YTD"),
+        url: expect.stringContaining("/performance/advisor-brief/review-actions?period=EXPLICIT"),
         body: expect.objectContaining({ action_type: "ACCEPT" }),
       }),
       expect.objectContaining({
@@ -231,8 +227,8 @@ describe("live validation workflow-pack proof", () => {
     expect(summary.workflowPackChecks).toEqual([
       expect.objectContaining({
         actionType: "ACCEPT",
-        sourceRunId: "packrun-ytd-net",
-        taskFlowId: "taskflow-ytd-net",
+        sourceRunId: "packrun-explicit-net",
+        taskFlowId: "taskflow-explicit-net",
         taskFlowStatus: "COMPLETED",
         taskFlowSupportabilityStatus: "READY",
         resultReviewState: "ACCEPTED",
@@ -250,9 +246,9 @@ describe("live validation workflow-pack proof", () => {
       }),
       expect.objectContaining({
         actionType: "REVISE",
-        sourceRunId: "packrun-ytd-gross",
+        sourceRunId: "packrun-explicit-gross",
         replacementRunId: "packrun-revise-replacement",
-        taskFlowId: "taskflow-ytd-gross",
+        taskFlowId: "taskflow-explicit-gross",
         taskFlowStatus: "SUPERSEDED",
         taskFlowSupportabilityStatus: "HISTORICAL",
         resultReviewState: "REVISED",
@@ -270,6 +266,7 @@ describe("live validation workflow-pack proof", () => {
       gatewayBaseUrl: "http://gateway.dev.lotus",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalStartDate: "2025-03-31",
       canonicalAsOfDate: "2026-04-10",
       timeoutMs: 1000,
       fetchJson: async (_summary: unknown, url: string) => {
@@ -284,11 +281,11 @@ describe("live validation workflow-pack proof", () => {
       ) => {
         if (body.action_type === "ACCEPT") {
           return createAdvisorBriefPayload({
-            runId: "packrun-ytd-net",
+            runId: "packrun-explicit-net",
             reviewState: "ACCEPTED",
             supportabilityStatus: "ACTION_REQUIRED",
             superseded: false,
-            taskFlowId: "taskflow-ytd-net",
+            taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
@@ -307,12 +304,12 @@ describe("live validation workflow-pack proof", () => {
           });
         }
         return createAdvisorBriefPayload({
-          runId: "packrun-ytd-gross",
+          runId: "packrun-explicit-gross",
           reviewState: "REVISED",
           supportabilityStatus: "HISTORICAL",
           superseded: true,
           replacementRunId: body.replacement_run_id,
-          taskFlowId: "taskflow-ytd-gross",
+          taskFlowId: "taskflow-explicit-gross",
           taskFlowStatus: "SUPERSEDED",
           taskFlowSupportabilityStatus: "HISTORICAL",
         });
@@ -323,8 +320,8 @@ describe("live validation workflow-pack proof", () => {
       expect.arrayContaining([
         expect.objectContaining({
           actionType: "ACCEPT",
-          sourceRunId: "packrun-ytd-net",
-          taskFlowId: "taskflow-ytd-net",
+          sourceRunId: "packrun-explicit-net",
+          taskFlowId: "taskflow-explicit-net",
           taskFlowStatus: "COMPLETED",
           taskFlowSupportabilityStatus: "READY",
           resultReviewState: "ACCEPTED",
@@ -344,17 +341,18 @@ describe("live validation workflow-pack proof", () => {
       gatewayBaseUrl: "http://gateway.dev.lotus",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalStartDate: "2025-03-31",
       canonicalAsOfDate: "2026-04-10",
       timeoutMs: 1000,
       fetchJson: async (_summary: unknown, url: string) => {
         getCalls.push(url);
         return createAdvisorBriefPayload({
-          runId: "packrun-ytd-net-failed",
+          runId: "packrun-explicit-net-failed",
           runtimeState: "FAILED",
           reviewState: "AWAITING_REVIEW",
           allowedReviewActions: [],
           supportabilityStatus: "ACTION_REQUIRED",
-          taskFlowId: "taskflow-ytd-net-failed",
+          taskFlowId: "taskflow-explicit-net-failed",
           taskFlowStatus: "FAILED",
           taskFlowSupportabilityStatus: "ACTION_REQUIRED",
         });
@@ -376,8 +374,8 @@ describe("live validation workflow-pack proof", () => {
     expect(summary.workflowPackChecks).toEqual([
       expect.objectContaining({
         actionType: "ACCEPT",
-        sourceRunId: "packrun-ytd-net-failed",
-        taskFlowId: "taskflow-ytd-net-failed",
+        sourceRunId: "packrun-explicit-net-failed",
+        taskFlowId: "taskflow-explicit-net-failed",
         taskFlowStatus: "FAILED",
         taskFlowSupportabilityStatus: "ACTION_REQUIRED",
         resultReviewState: "AWAITING_REVIEW",
