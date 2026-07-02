@@ -23,6 +23,10 @@ describe("canonical live validation script", () => {
     expect(script).toContain("if ($LASTEXITCODE -ne 0)");
     expect(script).toContain("Canonical Workbench browser validation failed");
     expect(script).toContain("[string]$ScreenshotDirectory");
+    expect(script).toContain('[string]$StartDate = "2025-03-31"');
+    expect(script).toContain("period=EXPLICIT");
+    expect(script).toContain("report_start_date=$StartDate");
+    expect(script).toContain('"--start-date"');
     expect(script).toContain('"--output-dir"');
     expect(script).toContain("[int]$Attempts = 8");
     expect(script).toContain("retrying ($attempt/$Attempts)");
@@ -173,6 +177,11 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("[switch]$CoreManageOnly");
     expect(script).toContain("Core/manage proof mode enabled");
+    expect(script).toContain("$canonicalCoreEnvironment = @{");
+    expect(script).toContain('DEMO_DATA_PACK_ENABLED = "false"');
+    expect(script).toContain(
+      "Starting lotus-core with auxiliary demo data pack disabled for canonical PB seed isolation.",
+    );
     expect(script).toContain("param([switch]$IngestOnly)");
     expect(script).toContain("--ingest-only");
     expect(script).toContain("$global:LASTEXITCODE = 0");
@@ -279,6 +288,7 @@ describe("canonical live validation script", () => {
     for (const service of [
       "lotus-archive",
       "lotus-render",
+      "lotus-idea",
       "lotus-gateway",
       "lotus-workbench",
     ]) {
@@ -286,7 +296,7 @@ describe("canonical live validation script", () => {
       expect(stopScript).toContain(service);
     }
     expect(stopScript).toContain(
-      "Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310)",
+      "Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310, 8330)",
     );
     expect(stopScript).toContain("Leaving Docker-owned listener");
     expect(validationScript).toContain(
@@ -299,6 +309,14 @@ describe("canonical live validation script", () => {
     expect(validationScript).toContain(
       'Test-Endpoint "http://render.dev.lotus/health/ready"',
     );
+    expect(validationScript).toContain('Test-CanonicalHost "idea.dev.lotus"');
+    expect(validationScript).toContain(
+      'Test-Endpoint "http://idea.dev.lotus/health/ready"',
+    );
+    expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
+    expect(startScript).toContain("canonical-idea-high-cash:$PortfolioId");
+    expect(validationScript).toContain("function Assert-IdeaQueueSeed");
+    expect(validationScript).toContain("Gateway Idea review queue contains");
     expect(browserValidator).toContain(
       'checkDns(summary, "archive.dev.lotus")',
     );
@@ -388,6 +406,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("assertPerformanceCalculationSanity");
     expect(script).toContain("assertRiskCalculationSanity");
     expect(script).toContain("/performance/details?");
+    expect(script).toContain("Performance details contribution readiness");
+    expect(script).toContain("contribution_detail state is");
+    expect(script).toContain('rows=${Array.isArray(rows) ? rows.length : "non-array"}');
     expect(script).toContain("/risk/concentration?");
     expect(script).toContain("/risk/drawdown?");
     expect(script).toContain("/risk/rolling?");
@@ -745,7 +766,10 @@ describe("canonical live validation script", () => {
       "utf8",
     );
 
+    expect(script).toContain("canonicalStartDate");
     expect(script).toContain("canonicalAsOfDate");
+    expect(script).toContain("report_start_date: extra.reportStartDate ?? canonicalStartDate");
+    expect(browserWorkflowModule).toContain("reportStartDate=${canonicalStartDate}");
     expect(script).toContain("createBrowserValidationHelpers");
     expect(script).toContain("validatePortfolioMemoryPanel");
     expect(script).toContain("validateConstructionAlternativesPanel");

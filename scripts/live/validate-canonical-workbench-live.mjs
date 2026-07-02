@@ -69,6 +69,7 @@ const {
   gatewayBaseUrl,
   outputDir,
   timeoutMs,
+  canonicalStartDate,
   canonicalAsOfDate,
 } = resolveValidationConfig(process.argv.slice(2));
 const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
@@ -103,6 +104,35 @@ const summary = createValidationSummary({
   panelRegistry,
 });
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
+
+function canonicalPerformanceQuery(extra = {}) {
+  const query = new URLSearchParams({
+    period: "EXPLICIT",
+    chart_frequency: extra.chartFrequency ?? "monthly",
+    detail_basis: extra.detailBasis ?? "NET",
+    contribution_dimension: extra.contributionDimension ?? "asset_class",
+    attribution_dimension: extra.attributionDimension ?? "asset_class",
+    benchmark_code: benchmarkCode,
+    report_start_date: extra.reportStartDate ?? canonicalStartDate,
+    report_end_date: extra.reportEndDate ?? canonicalAsOfDate,
+  });
+  return query.toString();
+}
+
+function canonicalRiskQuery(extra = {}) {
+  const query = new URLSearchParams({
+    period: "EXPLICIT",
+    detail_basis: extra.detailBasis ?? "NET",
+    benchmark_code: benchmarkCode,
+    report_start_date: extra.reportStartDate ?? canonicalStartDate,
+    report_end_date: extra.reportEndDate ?? canonicalAsOfDate,
+    as_of_date: extra.asOfDate ?? canonicalAsOfDate,
+  });
+  for (const [key, value] of Object.entries(extra.params ?? {})) {
+    query.set(key, value);
+  }
+  return query.toString();
+}
 
 async function fetchOptionalJson(description, url) {
   try {
@@ -681,7 +711,7 @@ async function run() {
     throw new Error(`Foundation workspace did not resolve ${portfolioId}.`);
   }
 
-  const performanceSummaryUrl = `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`;
+  const performanceSummaryUrl = `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?${canonicalPerformanceQuery()}`;
   const performanceSummary = await fetchJsonUntil(
     summary,
     performanceSummaryUrl,
@@ -696,11 +726,25 @@ async function run() {
     throw new Error("Performance summary returned no portfolio payload.");
   }
 
-  const performanceDetails = await fetchJson(
+  const performanceDetailsUrl = `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?${canonicalPerformanceQuery()}`;
+  const performanceDetails = await fetchJsonUntil(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/details?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
-    "Performance details",
+    performanceDetailsUrl,
+    "Performance details contribution readiness",
     timeoutMs,
+    (payload) => {
+      const rows = payload?.contribution?.levels?.[0]?.rows;
+      if (
+        payload?.capabilities?.contribution_detail?.state === "supported" &&
+        Array.isArray(rows) &&
+        rows.length >= 4
+      ) {
+        return true;
+      }
+      return `contribution_detail state is ${
+        payload?.capabilities?.contribution_detail?.state ?? "missing"
+      }; rows=${Array.isArray(rows) ? rows.length : "non-array"}`;
+    },
   );
   if (!performanceDetails?.portfolio_id) {
     throw new Error("Performance details returned no portfolio payload.");
@@ -708,7 +752,7 @@ async function run() {
 
   const riskSummary = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/summary?${canonicalRiskQuery()}`,
     "Risk summary",
     timeoutMs,
   );
@@ -718,25 +762,25 @@ async function run() {
 
   const riskConcentration = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?period=YTD&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/concentration?${canonicalRiskQuery({ detailBasis: "NET" })}`,
     "Risk concentration",
     timeoutMs,
   );
   const riskDrawdown = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_underwater_series=true`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/drawdown?${canonicalRiskQuery({ params: { include_underwater_series: "true" } })}`,
     "Risk drawdown",
     timeoutMs,
   );
   const riskRolling = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&include_time_series=true`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/rolling?${canonicalRiskQuery({ params: { include_time_series: "true" } })}`,
     "Risk rolling",
     timeoutMs,
   );
   const riskAttribution = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?period=YTD&detail_basis=NET&benchmark_code=${benchmarkCode}&as_of_date=${canonicalAsOfDate}&attribution_type=total_risk&grouping_dimension=sector`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/risk/attribution?${canonicalRiskQuery({ params: { attribution_type: "total_risk", grouping_dimension: "sector" } })}`,
     "Risk attribution",
     timeoutMs,
   );
@@ -770,7 +814,7 @@ async function run() {
 
   const advisorBrief = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
+    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief?${canonicalPerformanceQuery()}`,
     "Advisor brief",
     timeoutMs,
   );
@@ -782,7 +826,7 @@ async function run() {
   }
   summary.workflowPackChecks.push({
     actionType: "INITIAL_VISIBLE",
-    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?period=YTD&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=${benchmarkCode}&report_end_date=${canonicalAsOfDate}`,
+    route: `/api/v1/workbench/${portfolioId}/performance/advisor-brief?${canonicalPerformanceQuery()}`,
     sourceRunId: advisorBrief.workflow_pack_run.run_id,
     resultReviewState: advisorBrief.workflow_pack_run.review_state,
     resultSupportabilityStatus:
@@ -794,6 +838,7 @@ async function run() {
     gatewayBaseUrl,
     portfolioId,
     benchmarkCode,
+    canonicalStartDate,
     canonicalAsOfDate,
     timeoutMs,
     fetchJson,
@@ -1836,6 +1881,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalStartDate,
       canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
@@ -1845,6 +1891,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalStartDate,
       canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
@@ -1855,6 +1902,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalStartDate,
       canonicalAsOfDate,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
@@ -1894,6 +1942,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalStartDate,
       canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
@@ -1904,6 +1953,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,
+      canonicalStartDate,
       canonicalAsOfDate,
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,

@@ -119,7 +119,10 @@ Current repository posture:
     prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
     OMS claims.
 15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
-16. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
+16. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
+    broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
+    `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
+17. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
     model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
     bank-demo proof, opportunities, proposal builder, suitability, risk impact, approval queue,

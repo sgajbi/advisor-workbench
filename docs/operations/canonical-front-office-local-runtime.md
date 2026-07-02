@@ -17,6 +17,7 @@ This flow covers the local experience for:
 - `lotus-report`
 - `lotus-archive`
 - `lotus-render`
+- `lotus-idea`
 - `lotus-gateway`
 - `lotus-workbench`
 - direct ingress via `*.dev.lotus`
@@ -40,6 +41,7 @@ Required canonical host mappings on the host:
 127.0.0.1 report.dev.lotus
 127.0.0.1 archive.dev.lotus
 127.0.0.1 render.dev.lotus
+127.0.0.1 idea.dev.lotus
 127.0.0.1 core-query.dev.lotus
 127.0.0.1 core-control.dev.lotus
 127.0.0.1 core-ingestion.dev.lotus
@@ -72,7 +74,7 @@ so the exact required block can still be reviewed and applied manually.
 Direct Administrator fallback:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "Add-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Value \"`n127.0.0.1 workbench.dev.lotus`n127.0.0.1 gateway.dev.lotus`n127.0.0.1 performance.dev.lotus`n127.0.0.1 risk.dev.lotus`n127.0.0.1 advise.dev.lotus`n127.0.0.1 manage.dev.lotus`n127.0.0.1 report.dev.lotus`n127.0.0.1 archive.dev.lotus`n127.0.0.1 render.dev.lotus`n127.0.0.1 core-query.dev.lotus`n127.0.0.1 core-control.dev.lotus`n127.0.0.1 core-ingestion.dev.lotus`n127.0.0.1 ai.dev.lotus\""
+powershell -ExecutionPolicy Bypass -Command "Add-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Value \"`n127.0.0.1 workbench.dev.lotus`n127.0.0.1 gateway.dev.lotus`n127.0.0.1 performance.dev.lotus`n127.0.0.1 risk.dev.lotus`n127.0.0.1 advise.dev.lotus`n127.0.0.1 manage.dev.lotus`n127.0.0.1 report.dev.lotus`n127.0.0.1 archive.dev.lotus`n127.0.0.1 render.dev.lotus`n127.0.0.1 idea.dev.lotus`n127.0.0.1 core-query.dev.lotus`n127.0.0.1 core-control.dev.lotus`n127.0.0.1 core-ingestion.dev.lotus`n127.0.0.1 ai.dev.lotus\""
 ```
 
 Workbench local environment:
@@ -98,16 +100,22 @@ npm run live:stack:up
 That script performs:
 
 1. preview the canonical hosts block from `lotus-platform`
-2. `docker compose up -d` for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, `lotus-archive`, and `lotus-render`
-3. `docker compose up -d` for `lotus-gateway`
-4. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
-5. canonical `lotus-gateway` exposure on port `8100`
-6. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
-7. `docker compose up -d` for `lotus-workbench` on port `3000`
+2. `docker compose up -d` for `lotus-core` with `DEMO_DATA_PACK_ENABLED=false`
+3. `docker compose up -d` for `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-idea`
+4. seed the governed Lotus Idea advisor queue through `lotus-idea` using a deterministic canonical high-cash candidate for `PB_SG_GLOBAL_BAL_001`
+5. start `lotus-archive` and `lotus-render`
+6. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+7. canonical `lotus-gateway` exposure on port `8100`
+8. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
+9. governed DPM command-center seed through `lotus-platform`
+10. `docker compose up -d` for `lotus-workbench` on port `3000`
 
 Docker is the default for every canonical front-office app. The startup flow replaces stale local
 listeners on canonical app ports before Docker startup, while leaving Docker-owned listeners in
 place. This avoids stale local dev servers blocking Docker without terminating Docker port proxies.
+The governed `lotus-core` startup explicitly sets `DEMO_DATA_PACK_ENABLED=false`; the broad
+app-local demo pack remains available for diagnostics, but it is not part of canonical
+`PB_SG_GLOBAL_BAL_001` seeding or evidence collection.
 
 For active RFC or UI development, pass `-LocalApps` with a comma-separated app list. Local apps use
 the same canonical hostnames and public ports as Docker-backed apps, so live evidence remains
@@ -134,7 +142,7 @@ This mode still uses the canonical hosts block, starts Docker-backed `lotus-core
 `lotus-manage` on the canonical coexistence port `8001`, restarts direct ingress, and runs the
 governed `PB_SG_GLOBAL_BAL_001` core seed in ingest-only mode. It intentionally skips `lotus-performance`,
 `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-report`, `lotus-archive`, `lotus-render`,
-`lotus-gateway`, and `lotus-workbench`. Use it only for API-level RFC proof where the evidence
+`lotus-idea`, `lotus-gateway`, and `lotus-workbench`. Use it only for API-level RFC proof where the evidence
 target is core source-data products plus manage APIs, not populated Workbench screenshots or
 gateway-mediated product flows.
 

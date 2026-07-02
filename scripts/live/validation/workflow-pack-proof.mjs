@@ -233,15 +233,18 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
   gatewayBaseUrl,
   portfolioId,
   benchmarkCode,
+  canonicalStartDate,
   canonicalAsOfDate,
   timeoutMs,
   fetchJson,
   postJson,
 }) {
   const acceptQuery = buildAdvisorBriefWorkspaceQuery({
-    period: "YTD",
+    period: "EXPLICIT",
     detailBasis: "NET",
     benchmarkCode,
+    reportStartDate: canonicalStartDate,
+    reportEndDate: canonicalAsOfDate,
   });
   const acceptRoute = `/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${acceptQuery}`;
   const acceptSourceRoute = `/api/v1/workbench/${portfolioId}/performance/advisor-brief?${acceptQuery}`;
@@ -359,9 +362,11 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
   });
 
   const reviseOriginalQuery = buildAdvisorBriefWorkspaceQuery({
-    period: "YTD",
+    period: "EXPLICIT",
     detailBasis: "GROSS",
     benchmarkCode,
+    reportStartDate: canonicalStartDate,
+    reportEndDate: canonicalAsOfDate,
   });
   const reviseReplacementQuery = buildAdvisorBriefWorkspaceQuery({
     period: "EXPLICIT",

@@ -31,6 +31,7 @@ export function resolveValidationConfig(argv, cwd = process.cwd()) {
     gatewayBaseUrl: (args.get("gateway-base-url") ?? "http://gateway.dev.lotus").replace(/\/+$/, ""),
     outputDir: path.resolve(cwd, args.get("output-dir") ?? "output/playwright/live-canonical"),
     timeoutMs: Number(args.get("timeout-ms") ?? "60000"),
+    canonicalStartDate: args.get("start-date") ?? "2025-03-31",
     canonicalAsOfDate: args.get("as-of-date") ?? "2026-04-10",
   };
 }

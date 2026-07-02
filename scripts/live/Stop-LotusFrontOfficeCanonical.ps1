@@ -15,6 +15,7 @@ $manageRepo = Join-Path $ProjectsRoot "lotus-manage"
 $reportRepo = Join-Path $ProjectsRoot "lotus-report"
 $archiveRepo = Join-Path $ProjectsRoot "lotus-archive"
 $renderRepo = Join-Path $ProjectsRoot "lotus-render"
+$ideaRepo = Join-Path $ProjectsRoot "lotus-idea"
 $gatewayRepo = Join-Path $ProjectsRoot "lotus-gateway"
 $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 
@@ -65,7 +66,7 @@ function Remove-ContainerIfPresent {
 }
 
 Write-Host "Stopping canonical host processes..."
-Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310)
+Stop-ListenersOnPorts @(3000, 8001, 8100, 8111, 8150, 8310, 8330)
 
 Write-Host "Stopping direct ingress..."
 Remove-ContainerIfPresent "lotus-direct-dev-ingress"
@@ -87,6 +88,7 @@ Invoke-RepoCommand $manageRepo $downCommand
 Invoke-RepoCommand $reportRepo $downCommand
 Invoke-RepoCommand $archiveRepo $downCommand
 Invoke-RepoCommand $renderRepo $downCommand
+Invoke-RepoCommand $ideaRepo $downCommand
 Invoke-RepoCommand $gatewayRepo $downCommand
 Invoke-RepoCommand $workbenchRepo $downCommand
 
