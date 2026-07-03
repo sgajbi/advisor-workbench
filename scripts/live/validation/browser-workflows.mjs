@@ -716,15 +716,28 @@ export async function validatePerformanceAnalysisPanel(
     1,
     "Attribution detail table",
   );
-  await page.getByRole("tab", { name: /^Positions/i }).click();
+  const performanceDriversPanel = page.locator("#performance-drivers").first();
+  await expect(performanceDriversPanel).toBeVisible({ timeout: timeoutMs });
+  await performanceDriversPanel.scrollIntoViewIfNeeded();
+  const positionsTab = performanceDriversPanel.getByRole("tab", {
+    name: /^Positions/i,
+  });
+  await expect(positionsTab).toBeVisible({ timeout: timeoutMs });
+  await positionsTab.scrollIntoViewIfNeeded();
+  await positionsTab.click({ timeout: timeoutMs });
   await assertTableHasRows(
-    tableByExactLabel(page, "Position contribution table"),
+    performanceDriversPanel.locator('table[aria-label="Position contribution table"]'),
     1,
     "Position contribution detail table",
   );
-  await page.getByRole("tab", { name: /^Segment Summary/i }).click();
+  const segmentSummaryTab = performanceDriversPanel.getByRole("tab", {
+    name: /^Segment Summary/i,
+  });
+  await expect(segmentSummaryTab).toBeVisible({ timeout: timeoutMs });
+  await segmentSummaryTab.scrollIntoViewIfNeeded();
+  await segmentSummaryTab.click({ timeout: timeoutMs });
   await assertTableHasRows(
-    tableByExactLabel(page, "Asset Class contribution table"),
+    performanceDriversPanel.locator('table[aria-label="Asset Class contribution table"]'),
     1,
     "Segment contribution detail table",
   );

@@ -34,10 +34,16 @@ describe("live validation browser workflow helpers", () => {
 
     expect(source).toContain("contributionDimension=asset_class");
     expect(source).toContain("attributionDimension=asset_class");
+    expect(source).toContain('page.locator("#performance-drivers").first()');
+    expect(source).toContain("performanceDriversPanel.scrollIntoViewIfNeeded()");
+    expect(source).toContain("const positionsTab = performanceDriversPanel.getByRole");
+    expect(source).toContain("positionsTab.scrollIntoViewIfNeeded()");
     expect(source).toContain("Positions");
-    expect(source).toContain("Position contribution table");
+    expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Position contribution table"]\')');
     expect(source).toContain("Segment Summary");
-    expect(source).toContain("Asset Class contribution table");
+    expect(source).toContain("const segmentSummaryTab = performanceDriversPanel.getByRole");
+    expect(source).toContain("segmentSummaryTab.scrollIntoViewIfNeeded()");
+    expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Asset Class contribution table"]\')');
   });
 
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
