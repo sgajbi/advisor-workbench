@@ -116,6 +116,10 @@ place. This avoids stale local dev servers blocking Docker without terminating D
 The governed `lotus-core` startup explicitly sets `DEMO_DATA_PACK_ENABLED=false`; the broad
 app-local demo pack remains available for diagnostics, but it is not part of canonical
 `PB_SG_GLOBAL_BAL_001` seeding or evidence collection.
+The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
+`lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` instead of
+duplicating date literals in Workbench automation. If the platform contract is missing the date
+policy, canonical startup fails closed before seeding Idea evidence.
 
 For active RFC or UI development, pass `-LocalApps` with a comma-separated app list. Local apps use
 the same canonical hostnames and public ports as Docker-backed apps, so live evidence remains
