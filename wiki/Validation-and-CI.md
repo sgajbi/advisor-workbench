@@ -80,6 +80,8 @@
   canonical browser validation proves populated Workbench rendering, source-safe candidate detail
   access, and no reranking, no auto-proposal creation, no suitability authority, no execution
   authority, and no client-publication claims.
+  The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
+  duplicating date literals in Workbench startup automation.
 - RFC-0028 bank-demo proof validation must read the Gateway-backed scenario contract and
   supported-claim register, verify the governed scenario id, proof marker, and claim postures, and
   render `/recommendations?mode=proof` as `advisory.bank_demo_proof`. The screenshot is accepted

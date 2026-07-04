@@ -29,6 +29,7 @@ $gatewayRepo = Join-Path $ProjectsRoot "lotus-gateway"
 $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 $platformRepo = Join-Path $ProjectsRoot "lotus-platform"
 $ingressCaddyfile = Join-Path $platformRepo "platform-stack\\dev-ingress\\Caddyfile.direct-host"
+$canonicalContractPath = Join-Path $platformRepo "context\\contracts\\canonical-front-office-demo-data-contract.json"
 $composeUpCommand = "docker compose up -d"
 if ($BuildImages) {
   $composeUpCommand = "$composeUpCommand --build"
@@ -119,6 +120,23 @@ function Test-LocalApp {
   param([string]$AppName)
 
   return $localAppSet.Contains($AppName)
+}
+
+function Get-CanonicalFrontOfficeDatePolicy {
+  if (-not (Test-Path $canonicalContractPath)) {
+    throw "Canonical front-office demo data contract not found: $canonicalContractPath"
+  }
+
+  $contract = Get-Content -Raw $canonicalContractPath | ConvertFrom-Json
+  $asOfDate = [string]$contract.date_policy.canonical_as_of_date
+  if ([string]::IsNullOrWhiteSpace($asOfDate)) {
+    throw "Canonical front-office demo data contract is missing date_policy.canonical_as_of_date."
+  }
+
+  return [ordered]@{
+    AsOfDate = $asOfDate
+    GeneratedAtUtc = "$($asOfDate)T10:00:00Z"
+  }
 }
 
 function Invoke-ComposeUp {
@@ -308,6 +326,9 @@ function Invoke-DpmCommandCenterSeed {
 
 function Invoke-CanonicalIdeaSeed {
   $ideaBaseUrl = "http://127.0.0.1:8330"
+  $datePolicy = Get-CanonicalFrontOfficeDatePolicy
+  $asOfDate = $datePolicy.AsOfDate
+  $generatedAtUtc = $datePolicy.GeneratedAtUtc
   $deadline = (Get-Date).AddSeconds(120)
   while ((Get-Date) -lt $deadline) {
     if (Test-HttpReady "$ideaBaseUrl/health/ready") {
@@ -326,8 +347,8 @@ function Invoke-CanonicalIdeaSeed {
       sourceSystem = "lotus-core"
       productVersion = "v1"
       route = "/source/$ProductId"
-      asOfDate = "2026-06-21"
-      generatedAtUtc = "2026-06-21T10:00:00Z"
+      asOfDate = $asOfDate
+      generatedAtUtc = $generatedAtUtc
       contentHash = "sha256:$($ProductId):canonical-workbench-seed"
       dataQualityStatus = "complete"
       freshness = "current"
@@ -335,8 +356,8 @@ function Invoke-CanonicalIdeaSeed {
   }
 
   $payload = @{
-    asOfDate = "2026-06-21"
-    evaluatedAtUtc = "2026-06-21T10:00:00Z"
+    asOfDate = $asOfDate
+    evaluatedAtUtc = $generatedAtUtc
     sourceReportedCashWeight = "0.18"
     sourceEvidence = @{
       portfolioStateRef = & $sourceRef "lotus-core:PortfolioStateSnapshot:v1"
@@ -356,7 +377,7 @@ function Invoke-CanonicalIdeaSeed {
     "X-Caller-Subject" = "canonical-front-office-seed"
     "X-Caller-Capabilities" = "idea.candidate.persist"
     "X-Correlation-Id" = "corr-canonical-idea-seed"
-    "Idempotency-Key" = "canonical-idea-high-cash:$PortfolioId:2026-06-21T10:00:00Z"
+    "Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$generatedAtUtc"
   }
 
   Write-Host "Seeding governed Lotus Idea advisor queue candidate for $PortfolioId ..."
