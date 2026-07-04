@@ -314,7 +314,10 @@ describe("canonical live validation script", () => {
       'Test-Endpoint "http://idea.dev.lotus/health/ready"',
     );
     expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
-    expect(startScript).toContain("canonical-idea-high-cash:$PortfolioId");
+    expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
+    expect(startScript).toContain(
+      '"Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$generatedAtUtc"',
+    );
     expect(validationScript).toContain("function Assert-IdeaQueueSeed");
     expect(validationScript).toContain("Gateway Idea review queue contains");
     expect(browserValidator).toContain(
