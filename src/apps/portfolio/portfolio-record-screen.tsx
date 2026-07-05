@@ -1,5 +1,3 @@
-import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
-
 import {
   getPortfolioCatalog,
   getPortfolioWorkspaceDetailedDetails,
@@ -8,6 +6,7 @@ import {
   mergePortfolioWorkspace,
 } from "./api";
 import PortfolioRecordScreenClient from "./components/portfolio-record-screen-client";
+import { resolveSelectedPortfolioId } from "./portfolio-selection";
 import {
   type PortfolioRecordScreenKind,
   resolvePortfolioRecordScreenWindow,
@@ -24,9 +23,7 @@ export default async function PortfolioRecordScreen({
 }) {
   const portfolios = await getPortfolioCatalog();
   const resolvedSearch = await searchParams;
-  const selectedPortfolioId =
-    portfolios.find((item) => item.portfolio_id === resolvedSearch.portfolioId)?.portfolio_id ??
-    resolvePreferredPortfolioId(portfolios, (item) => item.portfolio_id);
+  const selectedPortfolioId = resolveSelectedPortfolioId(portfolios, resolvedSearch.portfolioId);
   const shell = selectedPortfolioId ? await getPortfolioWorkspaceShell(selectedPortfolioId) : null;
 
   if (!selectedPortfolioId || !shell) {
