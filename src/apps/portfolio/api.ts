@@ -751,6 +751,7 @@ async function fetchPortfolioJson<T>(
   }
 
   const request = (async () => {
+    let shouldCacheResponse = true;
     const payload = await observeWorkbenchAnalyticsRequest(
       observedPortfolioSurface(path),
       async () => {
@@ -761,13 +762,14 @@ async function fetchPortfolioJson<T>(
             : {}),
         });
         if (!response.ok) {
+          shouldCacheResponse = false;
           return null;
         }
 
         return (await response.json()) as T;
       }
     );
-    if (useCache) {
+    if (useCache && shouldCacheResponse) {
       portfolioApiResponseCache.set(url, payload);
     }
     return payload;

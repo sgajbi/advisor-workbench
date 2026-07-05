@@ -1222,6 +1222,32 @@ describe("portfolio api", () => {
     }
   });
 
+  it("does not cache failed portfolio responses", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("gateway unavailable", { status: 503 }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          items: [
+            {
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              display_name: "PB_SG_GLOBAL_BAL_001",
+              base_currency: "USD",
+              client_id: "CIF_001",
+              booking_center_code: "Singapore",
+            },
+          ],
+        })
+      );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(getPortfolioCatalog()).resolves.toEqual([]);
+    await expect(getPortfolioCatalog()).resolves.toEqual([
+      expect.objectContaining({ portfolio_id: "PB_SG_GLOBAL_BAL_001" }),
+    ]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("preserves gateway portfolio catalog picker metadata", async () => {
     vi.stubGlobal(
       "fetch",
