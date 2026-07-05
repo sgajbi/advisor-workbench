@@ -270,6 +270,7 @@ function Start-CanonicalManage {
     LOTUS_MANAGE_HOST_PORT = "8001"
     DPM_CAP_INPUT_MODE_PORTFOLIO_ID_ENABLED = "true"
     DPM_STATEFUL_CORE_SOURCING_ENABLED = "true"
+    DPM_WORKFLOW_ENABLED = "true"
     DPM_CORE_BASE_URL = "http://core-control.dev.lotus"
     DPM_CORE_QUERY_BASE_URL = "http://core-query.dev.lotus"
   }
