@@ -167,9 +167,23 @@ export function validateIdeaCapacitySeedEvidence(payload) {
   }
 }
 
-export async function loadIdeaCapacitySeedEvidence(evidencePath) {
+export function validateIdeaCapacitySeedEvidenceProvenance(
+  payload,
+  { commitSha, branch, runId },
+) {
+  for (const [field, expected] of Object.entries({ commitSha, branch, runId })) {
+    if (typeof expected !== "string" || expected.length === 0 || payload[field] !== expected) {
+      throw new Error(`Idea capacity seed evidence does not match current ${field}`);
+    }
+  }
+}
+
+export async function loadIdeaCapacitySeedEvidence(evidencePath, expectedProvenance) {
   const payload = JSON.parse(await fs.readFile(evidencePath, "utf8"));
   validateIdeaCapacitySeedEvidence(payload);
+  if (expectedProvenance) {
+    validateIdeaCapacitySeedEvidenceProvenance(payload, expectedProvenance);
+  }
   return payload;
 }
 

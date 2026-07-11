@@ -7,6 +7,7 @@ import {
   loadIdeaCapacitySeedEvidence,
   validateAndWriteIdeaCapacitySeedEvidence,
   validateIdeaCapacitySeedEvidence,
+  validateIdeaCapacitySeedEvidenceProvenance,
   validateIdeaCapacitySeedManifest,
   validateIdeaCapacityWorkload,
 } from "../../scripts/live/validation/idea-capacity-seed-evidence.mjs";
@@ -106,6 +107,22 @@ describe("Idea capacity seed evidence", () => {
         expected,
       ),
     ).toThrow(/exactly one downstream probe/);
+  });
+
+  it("rejects evidence from a different runtime or canonical run", () => {
+    expect(() => validateIdeaCapacitySeedEvidenceProvenance(manifest, expected)).not.toThrow();
+    expect(() =>
+      validateIdeaCapacitySeedEvidenceProvenance(manifest, {
+        ...expected,
+        commitSha: "b".repeat(40),
+      }),
+    ).toThrow(/current commitSha/);
+    expect(() =>
+      validateIdeaCapacitySeedEvidenceProvenance(manifest, {
+        ...expected,
+        runId: "canonical-front-office-2026-04-11",
+      }),
+    ).toThrow(/current runId/);
   });
 
   it.each([

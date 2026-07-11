@@ -68,6 +68,7 @@ const {
   benchmarkCode,
   workbenchBaseUrl,
   gatewayBaseUrl,
+  ideaBaseUrl,
   outputDir,
   timeoutMs,
   canonicalStartDate,
@@ -105,8 +106,19 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
+const ideaVersion = await fetchJson(
+  summary,
+  `${ideaBaseUrl}/version`,
+  "Lotus Idea runtime version",
+  timeoutMs,
+);
 summary.ideaCapacitySeed = await loadIdeaCapacitySeedEvidence(
   ideaCapacitySeedEvidencePath,
+  {
+    commitSha: ideaVersion?.build?.gitCommitSha,
+    branch: ideaVersion?.build?.gitBranch,
+    runId: `canonical-front-office-${canonicalAsOfDate}`,
+  },
 );
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
 
