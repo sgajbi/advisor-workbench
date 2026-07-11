@@ -241,6 +241,17 @@ describe("canonical live validation script", () => {
     );
     expect(script).toContain("[string]$ScreenshotDirectory");
     expect(script).toContain("ScreenshotDirectory = $ScreenshotDirectory");
+    expect(script).toContain("function Invoke-CanonicalIdeaCapacitySeed");
+    expect(script).toContain("Invoke-CanonicalIdeaCapacitySeed");
+    expect(script).toContain("function Wait-HttpReady");
+    expect(script).toContain(
+      'Wait-HttpReady -Url "http://127.0.0.1:8000/health/ready" -Description "lotus-advise"',
+    );
+    expect(script).toContain("output\\\\canonical-front-office");
+    expect(script).toContain("function Get-GitRepositoryIdentity");
+    expect(script).toContain("LOTUS_IDEA_BUILD_GIT_COMMIT_SHA");
+    expect(script).toContain("LOTUS_IDEA_BUILD_GIT_BRANCH");
+    expect(script).toContain("Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment");
   });
 
   it("covers the complete front-office Docker app set in canonical automation", () => {
@@ -313,6 +324,8 @@ describe("canonical live validation script", () => {
     expect(validationScript).toContain(
       'Test-Endpoint "http://idea.dev.lotus/health/ready"',
     );
+    expect(validationScript).toContain("idea-capacity-seed-evidence.json");
+    expect(validationScript).toContain('"--idea-capacity-seed-evidence"');
     expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
     expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
     expect(startScript).toContain(
@@ -329,6 +342,29 @@ describe("canonical live validation script", () => {
     expect(packageJson).toContain(
       '"live:stack:up:validate": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -RunValidation -BuildImages"',
     );
+  });
+
+  it("delegates isolated Idea capacity seeding without exposing credentials or client state", () => {
+    const script = readFileSync(
+      join(process.cwd(), "scripts", "live", "Invoke-IdeaCapacitySeed.ps1"),
+      "utf8",
+    );
+
+    expect(script).toContain('Invoke-RestMethod -Uri "$IdeaBaseUrl/version"');
+    expect(script).toContain("ExpectedCommitSha");
+    expect(script).toContain("ExpectedBranch");
+    expect(script).toContain("runtime provenance does not match");
+    expect(script).toContain("seed_downstream_capacity_resource.py");
+    expect(script).toContain("run_service_capacity_workload.py");
+    expect(script).toContain('"--scenario", "downstream_submission"');
+    expect(script).toContain('"--request-count", "1"');
+    expect(script).toContain('"--allow-mutating-workflows"');
+    expect(script).toContain("SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE");
+    expect(script).toContain("Validate-IdeaCapacitySeedEvidence.mjs");
+    expect(script).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(script).not.toContain("client-001");
+    expect(script).not.toContain("LOTUS_IDEA_CAPACITY_AUTHORIZATION");
+    expect(script).not.toContain("LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT");
   });
 
   it("asserts canonical performance and risk calculation sanity", () => {

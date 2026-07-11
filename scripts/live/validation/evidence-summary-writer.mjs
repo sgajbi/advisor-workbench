@@ -34,6 +34,7 @@ export function createValidationSummary({
     supportabilityMatrix: null,
     supportabilityChecks: [],
     screenshots: [],
+    ideaCapacitySeed: null,
   };
 }
 

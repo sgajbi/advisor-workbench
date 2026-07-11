@@ -4,8 +4,11 @@ import path from "node:path";
 
 import {
   buildIdeaCapacitySeedEvidence,
+  loadIdeaCapacitySeedEvidence,
   validateAndWriteIdeaCapacitySeedEvidence,
+  validateIdeaCapacitySeedEvidence,
   validateIdeaCapacitySeedManifest,
+  validateIdeaCapacityWorkload,
 } from "../../scripts/live/validation/idea-capacity-seed-evidence.mjs";
 
 const manifest = {
@@ -30,6 +33,28 @@ const expected = {
   branch: manifest.branch,
   runId: manifest.runId,
 };
+const workload = {
+  schemaVersion: "lotus-idea.service-capacity-baseline.v1",
+  repository: "lotus-idea",
+  proofScope: "source_safe_service_capacity_baseline",
+  claimPosture: "report_only_baseline",
+  environmentProfile: "test",
+  commitSha: manifest.commitSha,
+  branch: manifest.branch,
+  runId: manifest.runId,
+  scenarios: [
+    {
+      scenario: "downstream_submission",
+      sampleCount: 1,
+      acceptedCount: 1,
+      errorCount: 0,
+      conflictCount: 0,
+    },
+  ],
+  certificationReady: false,
+  certificationBlockers: ["load_soak_attestation_missing"],
+  supportedFeaturePromoted: false,
+};
 
 describe("Idea capacity seed evidence", () => {
   it("retains provenance and hash without copying resource identity", () => {
@@ -38,6 +63,8 @@ describe("Idea capacity seed evidence", () => {
       manifestBytes: Buffer.from(JSON.stringify(manifest)),
       manifestFileName: "idea-capacity-seed-manifest.json",
       payload: manifest,
+      workloadBytes: Buffer.from(JSON.stringify(workload)),
+      workloadFileName: "idea-capacity-seed-workload.json",
     });
 
     expect(evidence).toMatchObject({
@@ -45,13 +72,27 @@ describe("Idea capacity seed evidence", () => {
       commitSha: manifest.commitSha,
       branch: "main",
       syntheticResource: true,
-      capacityWorkloadAccepted: false,
+      capacityWorkloadAccepted: true,
       productionCapacityCertified: false,
       supportedFeaturePromoted: false,
       canonicalPortfolioUnaffected: true,
     });
     expect(JSON.stringify(evidence)).not.toContain("conversionIntentId");
     expect(JSON.stringify(evidence)).not.toContain("downstreamSubmissionPath");
+    expect(() => validateIdeaCapacitySeedEvidence(evidence)).not.toThrow();
+  });
+
+  it("requires one accepted source-safe Idea downstream workload", () => {
+    expect(() => validateIdeaCapacityWorkload(workload, expected)).not.toThrow();
+    expect(() =>
+      validateIdeaCapacityWorkload(
+        {
+          ...workload,
+          scenarios: [{ ...workload.scenarios[0], acceptedCount: 0, errorCount: 1 }],
+        },
+        expected,
+      ),
+    ).toThrow(/exactly one downstream probe/);
   });
 
   it.each([
@@ -70,10 +111,13 @@ describe("Idea capacity seed evidence", () => {
     const directory = await mkdtemp(path.join(tmpdir(), "idea-capacity-seed-"));
     const manifestPath = path.join(directory, "manifest.json");
     const evidencePath = path.join(directory, "evidence.json");
+    const workloadPath = path.join(directory, "workload.json");
     await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`, "utf8");
+    await writeFile(workloadPath, `${JSON.stringify(workload)}\n`, "utf8");
 
     await validateAndWriteIdeaCapacitySeedEvidence({
       manifestPath,
+      workloadPath,
       evidencePath,
       ...expected,
     });
@@ -81,5 +125,28 @@ describe("Idea capacity seed evidence", () => {
     const evidence = JSON.parse(await readFile(evidencePath, "utf8"));
     expect(evidence.manifestSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(evidence.manifestFileName).toBe("manifest.json");
+    await expect(loadIdeaCapacitySeedEvidence(evidencePath)).resolves.toEqual(evidence);
+  });
+
+  it("rejects downgraded or resource-bearing Workbench evidence", () => {
+    const evidence = buildIdeaCapacitySeedEvidence({
+      manifestBytes: Buffer.from(JSON.stringify(manifest)),
+      manifestFileName: "manifest.json",
+      payload: manifest,
+      workloadBytes: Buffer.from(JSON.stringify(workload)),
+      workloadFileName: "workload.json",
+    });
+    expect(() =>
+      validateIdeaCapacitySeedEvidence({
+        ...evidence,
+        capacityWorkloadAccepted: false,
+      }),
+    ).toThrow(/capacityWorkloadAccepted/);
+    expect(() =>
+      validateIdeaCapacitySeedEvidence({
+        ...evidence,
+        conversionIntentId: manifest.conversionIntentId,
+      }),
+    ).toThrow(/forbidden/);
   });
 });

@@ -33,5 +33,10 @@ export function resolveValidationConfig(argv, cwd = process.cwd()) {
     timeoutMs: Number(args.get("timeout-ms") ?? "60000"),
     canonicalStartDate: args.get("start-date") ?? "2025-03-31",
     canonicalAsOfDate: args.get("as-of-date") ?? "2026-04-10",
+    ideaCapacitySeedEvidencePath: path.resolve(
+      cwd,
+      args.get("idea-capacity-seed-evidence") ??
+        "output/canonical-front-office/idea-capacity-seed-evidence.json"
+    ),
   };
 }
