@@ -63,8 +63,14 @@ export function validateIdeaCapacitySeedEvidence(
   payload: unknown,
 ): asserts payload is IdeaCapacitySeedEvidence;
 
+export function validateIdeaCapacitySeedEvidenceProvenance(
+  payload: IdeaCapacitySeedEvidence | IdeaCapacitySeedManifest,
+  expected: IdeaCapacitySeedExpectedProvenance,
+): void;
+
 export function loadIdeaCapacitySeedEvidence(
   evidencePath: string,
+  expectedProvenance?: IdeaCapacitySeedExpectedProvenance,
 ): Promise<IdeaCapacitySeedEvidence>;
 
 export function validateAndWriteIdeaCapacitySeedEvidence(

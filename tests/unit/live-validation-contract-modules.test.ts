@@ -33,6 +33,7 @@ describe("live validation contract modules", () => {
     expect(config.benchmarkCode).toBe("BMK_PB_GLOBAL_BALANCED_60_40");
     expect(config.workbenchBaseUrl).toBe("http://workbench.dev.lotus");
     expect(config.gatewayBaseUrl).toBe("http://gateway.dev.lotus");
+    expect(config.ideaBaseUrl).toBe("http://127.0.0.1:8330");
     expect(config.timeoutMs).toBe(45000);
     expect(config.outputDir).toContain("output");
     expect(config.outputDir).toContain("live-canonical");

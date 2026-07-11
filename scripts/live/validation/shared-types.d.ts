@@ -13,6 +13,7 @@ export interface ValidationConfig {
   benchmarkCode: string;
   workbenchBaseUrl: string;
   gatewayBaseUrl: string;
+  ideaBaseUrl: string;
   outputDir: string;
   timeoutMs: number;
   canonicalAsOfDate: string;
