@@ -5,11 +5,20 @@ param(
   [string]$AsOfDate = "2026-04-10",
   [string]$WorkbenchBaseUrl = "http://workbench.dev.lotus",
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
-  [string]$ScreenshotDirectory = ""
+  [string]$ScreenshotDirectory = "",
+  [string]$CanonicalEvidenceDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$canonicalEvidenceRoot = if ([string]::IsNullOrWhiteSpace($CanonicalEvidenceDirectory)) {
+  Join-Path $repoRoot "output\\canonical-front-office"
+} elseif ([System.IO.Path]::IsPathRooted($CanonicalEvidenceDirectory)) {
+  $CanonicalEvidenceDirectory
+} else {
+  Join-Path $repoRoot $CanonicalEvidenceDirectory
+}
+$ideaCapacitySeedEvidencePath = Join-Path $canonicalEvidenceRoot "idea-capacity-seed-evidence.json"
 $canonicalCallerContextHeaders = @{
   "X-Actor-Id" = "workbench-system"
   "X-Tenant-Id" = "tenant-sg"
@@ -120,6 +129,9 @@ Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=EXPLICIT&detail_basis=NET&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate&as_of_date=$AsOfDate" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
 Assert-IdeaQueueSeed
+if (-not (Test-Path $ideaCapacitySeedEvidencePath)) {
+  throw "Canonical Lotus Idea capacity seed evidence is missing: $ideaCapacitySeedEvidencePath"
+}
 
 Push-Location $repoRoot
 try {
@@ -136,7 +148,9 @@ try {
     "--workbench-base-url",
     $WorkbenchBaseUrl,
     "--gateway-base-url",
-    $GatewayBaseUrl
+    $GatewayBaseUrl,
+    "--idea-capacity-seed-evidence",
+    $ideaCapacitySeedEvidencePath
   )
   if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
     $validatorArguments += @("--output-dir", $ScreenshotDirectory)

@@ -61,6 +61,7 @@ import {
   extractGatewayEnvelopeData,
   readString,
 } from "./validation/payload-utils.mjs";
+import { loadIdeaCapacitySeedEvidence } from "./validation/idea-capacity-seed-evidence.mjs";
 
 const {
   portfolioId,
@@ -71,6 +72,7 @@ const {
   timeoutMs,
   canonicalStartDate,
   canonicalAsOfDate,
+  ideaCapacitySeedEvidencePath,
 } = resolveValidationConfig(process.argv.slice(2));
 const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
 const canonicalContract = await loadCanonicalContractMetadata();
@@ -103,6 +105,9 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
+summary.ideaCapacitySeed = await loadIdeaCapacitySeedEvidence(
+  ideaCapacitySeedEvidencePath,
+);
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
 
 function canonicalPerformanceQuery(extra = {}) {

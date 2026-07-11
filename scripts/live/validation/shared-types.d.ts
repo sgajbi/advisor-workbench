@@ -16,6 +16,7 @@ export interface ValidationConfig {
   outputDir: string;
   timeoutMs: number;
   canonicalAsOfDate: string;
+  ideaCapacitySeedEvidencePath: string;
 }
 
 export interface CanonicalContractMetadata {
@@ -74,6 +75,7 @@ export interface ValidationSummary {
   supportabilityMatrix?: Record<string, unknown> | null;
   supportabilityChecks?: Array<Record<string, unknown>>;
   screenshots?: Array<Record<string, unknown>>;
+  ideaCapacitySeed?: Record<string, unknown> | null;
 }
 
 export interface BrowserValidationPage {

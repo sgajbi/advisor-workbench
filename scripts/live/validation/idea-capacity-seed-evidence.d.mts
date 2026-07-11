@@ -25,6 +25,8 @@ export interface IdeaCapacitySeedEvidence {
   posture: "accepted_non_certifying";
   manifestFileName: string;
   manifestSha256: string;
+  workloadFileName: string;
+  workloadSha256: string;
   repository: "lotus-idea";
   commitSha: string;
   branch: string;
@@ -32,7 +34,7 @@ export interface IdeaCapacitySeedEvidence {
   proofScope: "synthetic_downstream_capacity_resource_seed";
   claimPosture: "seed_only_not_capacity_evidence";
   syntheticResource: true;
-  capacityWorkloadAccepted: false;
+  capacityWorkloadAccepted: true;
   productionCapacityCertified: false;
   supportedFeaturePromoted: false;
   canonicalPortfolioUnaffected: true;
@@ -47,11 +49,27 @@ export function buildIdeaCapacitySeedEvidence(input: {
   manifestBytes: Uint8Array;
   manifestFileName: string;
   payload: IdeaCapacitySeedManifest;
+  workloadBytes: Uint8Array;
+  workloadFileName: string;
 }): IdeaCapacitySeedEvidence;
+
+export function validateIdeaCapacityWorkload(
+  payload: unknown,
+  expected: IdeaCapacitySeedExpectedProvenance,
+): void;
+
+export function validateIdeaCapacitySeedEvidence(
+  payload: unknown,
+): asserts payload is IdeaCapacitySeedEvidence;
+
+export function loadIdeaCapacitySeedEvidence(
+  evidencePath: string,
+): Promise<IdeaCapacitySeedEvidence>;
 
 export function validateAndWriteIdeaCapacitySeedEvidence(
   input: {
     manifestPath: string;
+    workloadPath: string;
     evidencePath: string;
   } & IdeaCapacitySeedExpectedProvenance,
 ): Promise<IdeaCapacitySeedEvidence>;

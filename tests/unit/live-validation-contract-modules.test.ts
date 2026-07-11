@@ -36,6 +36,9 @@ describe("live validation contract modules", () => {
     expect(config.timeoutMs).toBe(45000);
     expect(config.outputDir).toContain("output");
     expect(config.outputDir).toContain("live-canonical");
+    expect(config.ideaCapacitySeedEvidencePath).toContain(
+      "idea-capacity-seed-evidence.json",
+    );
   });
 
   it("builds governed summary evidence with registry metadata and writable artifacts", async () => {
@@ -91,6 +94,7 @@ describe("live validation contract modules", () => {
       expect(shotIndex).toContain(summaryPath);
       expect(shotIndex).toContain("2026-04-10");
       expect(persistedSummary.workflowPackChecks).toEqual([]);
+      expect(persistedSummary.ideaCapacitySeed).toBeNull();
       expect(
         DEFAULT_PANEL_REGISTRY.panels.some(
           (panel) =>

@@ -3,6 +3,7 @@ param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
+  [string]$CanonicalEvidenceDirectory = "",
   [string]$LotusAiEnvFile = ".env.example",
   [int]$SeedWaitSeconds = 900,
   [string[]]$LocalApps = @(),
@@ -30,6 +31,13 @@ $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 $platformRepo = Join-Path $ProjectsRoot "lotus-platform"
 $ingressCaddyfile = Join-Path $platformRepo "platform-stack\\dev-ingress\\Caddyfile.direct-host"
 $canonicalContractPath = Join-Path $platformRepo "context\\contracts\\canonical-front-office-demo-data-contract.json"
+$canonicalEvidenceRoot = if ([string]::IsNullOrWhiteSpace($CanonicalEvidenceDirectory)) {
+  Join-Path $workbenchRepo "output\\canonical-front-office"
+} elseif ([System.IO.Path]::IsPathRooted($CanonicalEvidenceDirectory)) {
+  $CanonicalEvidenceDirectory
+} else {
+  Join-Path $workbenchRepo $CanonicalEvidenceDirectory
+}
 $composeUpCommand = "docker compose up -d"
 if ($BuildImages) {
   $composeUpCommand = "$composeUpCommand --build"
@@ -71,6 +79,37 @@ function Test-HttpReady {
   } catch {
     return $false
   }
+}
+
+function Get-GitRepositoryIdentity {
+  param([string]$RepoPath)
+
+  $commitSha = (& git -C $RepoPath rev-parse HEAD).Trim()
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($commitSha)) {
+    throw "Unable to resolve Git commit for $RepoPath."
+  }
+  $branch = (& git -C $RepoPath branch --show-current).Trim()
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
+    throw "Unable to resolve Git branch for $RepoPath."
+  }
+  return [ordered]@{ CommitSha = $commitSha; Branch = $branch }
+}
+
+function Wait-HttpReady {
+  param(
+    [string]$Url,
+    [string]$Description,
+    [int]$TimeoutSeconds = 120
+  )
+
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $deadline) {
+    if (Test-HttpReady $Url) {
+      return
+    }
+    Start-Sleep -Seconds 2
+  }
+  throw "$Description did not become ready at $Url within $TimeoutSeconds seconds."
 }
 
 function Remove-ContainerIfPresent {
@@ -408,6 +447,27 @@ function Invoke-CanonicalIdeaSeed {
   }
 }
 
+function Invoke-CanonicalIdeaCapacitySeed {
+  $datePolicy = Get-CanonicalFrontOfficeDatePolicy
+  Wait-HttpReady -Url "http://127.0.0.1:8330/health/ready" -Description "lotus-idea"
+  Wait-HttpReady -Url "http://127.0.0.1:8000/health/ready" -Description "lotus-advise"
+  $runId = "canonical-front-office-$($datePolicy.AsOfDate)"
+
+  Write-Host "Seeding isolated Lotus Idea downstream-capacity evidence ..."
+  & (Join-Path $workbenchRepo "scripts\\live\\Invoke-IdeaCapacitySeed.ps1") `
+    -ProjectsRoot $ProjectsRoot `
+    -IdeaBaseUrl "http://127.0.0.1:8330" `
+    -AsOfDate $datePolicy.AsOfDate `
+    -SeededAtUtc $datePolicy.GeneratedAtUtc `
+    -RunId $runId `
+    -ExpectedCommitSha $ideaSourceIdentity.CommitSha `
+    -ExpectedBranch $ideaSourceIdentity.Branch `
+    -EvidenceDirectory $canonicalEvidenceRoot
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical Lotus Idea capacity seed failed with exit code $LASTEXITCODE."
+  }
+}
+
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
 
@@ -421,6 +481,19 @@ if ($localAppSet.Count -gt 0) {
 }
 
 Write-Host "Starting Docker-backed canonical services..."
+$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo
+$ideaDatePolicy = Get-CanonicalFrontOfficeDatePolicy
+$ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)"
+$ideaBuildTimestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$ideaBuildEnvironment = @{
+  LOTUS_IDEA_BUILD_GIT_COMMIT_SHA = $ideaSourceIdentity.CommitSha
+  LOTUS_IDEA_BUILD_GIT_BRANCH = $ideaSourceIdentity.Branch
+  LOTUS_IDEA_BUILD_TIMESTAMP = $ideaBuildTimestamp
+  LOTUS_IDEA_BUILD_REPO_URL = "https://github.com/sgajbi/lotus-idea.git"
+  LOTUS_IDEA_BUILD_RUN_ID = $ideaCanonicalRunId
+  LOTUS_IDEA_BUILD_IMAGE_ID = "$($ideaSourceIdentity.CommitSha).$ideaCanonicalRunId"
+  LOTUS_IDEA_BUILD_SERVICE_VERSION = "0.1.0"
+}
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
 $canonicalCoreEnvironment = @{
@@ -452,7 +525,7 @@ Invoke-ComposeUp $adviseRepo
 Start-CanonicalManage
 
 Invoke-ComposeUp $reportRepo
-Invoke-ComposeUp $ideaRepo
+Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment
 Invoke-CanonicalIdeaSeed
 
 if (Test-LocalApp "archive") {
@@ -489,6 +562,7 @@ if (Test-LocalApp "gateway") {
 
 Invoke-CanonicalCoreSeed
 Invoke-DpmCommandCenterSeed
+Invoke-CanonicalIdeaCapacitySeed
 
 if (Test-LocalApp "workbench") {
   Invoke-RepoCommand $workbenchRepo "docker compose down --remove-orphans"
@@ -520,6 +594,7 @@ Write-Host "Running canonical live validation ..."
 $validationArguments = @{
   PortfolioId = $PortfolioId
   BenchmarkCode = $BenchmarkCode
+  CanonicalEvidenceDirectory = $canonicalEvidenceRoot
 }
 if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
   $validationArguments.ScreenshotDirectory = $ScreenshotDirectory

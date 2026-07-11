@@ -5,6 +5,7 @@ import { validateAndWriteIdeaCapacitySeedEvidence } from "./validation/idea-capa
 const { values } = parseArgs({
   options: {
     manifest: { type: "string" },
+    workload: { type: "string" },
     output: { type: "string" },
     "commit-sha": { type: "string" },
     branch: { type: "string" },
@@ -12,7 +13,7 @@ const { values } = parseArgs({
   },
 });
 
-for (const name of ["manifest", "output", "commit-sha", "branch", "run-id"]) {
+for (const name of ["manifest", "workload", "output", "commit-sha", "branch", "run-id"]) {
   if (!values[name]) {
     throw new Error(`Missing required --${name}`);
   }
@@ -20,6 +21,7 @@ for (const name of ["manifest", "output", "commit-sha", "branch", "run-id"]) {
 
 await validateAndWriteIdeaCapacitySeedEvidence({
   manifestPath: values.manifest,
+  workloadPath: values.workload,
   evidencePath: values.output,
   commitSha: values["commit-sha"],
   branch: values.branch,
