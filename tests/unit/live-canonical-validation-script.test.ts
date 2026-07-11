@@ -252,6 +252,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("LOTUS_IDEA_BUILD_GIT_COMMIT_SHA");
     expect(script).toContain("LOTUS_IDEA_BUILD_GIT_BRANCH");
     expect(script).toContain("Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment");
+    expect(script.indexOf("if ($CoreManageOnly)")).toBeLessThan(
+      script.indexOf("$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo"),
+    );
   });
 
   it("covers the complete front-office Docker app set in canonical automation", () => {

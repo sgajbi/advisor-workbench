@@ -21,12 +21,13 @@ const manifest = {
   branch: "main",
   runId: "canonical-front-office-2026-04-10",
   syntheticResource: true,
+  syntheticNamespace: "CAPACITY_SYNTHETIC_PORTFOLIO_001",
   conversionIntentId: "capacity-conversion-0123456789abcdef",
   downstreamSubmissionPath:
     "/api/v1/conversion-intents/capacity-conversion-0123456789abcdef/downstream-submissions",
   productionCapacityCertified: false,
   supportedFeaturePromoted: false,
-};
+} as const;
 
 const expected = {
   commitSha: manifest.commitSha,
@@ -101,6 +102,7 @@ describe("Idea capacity seed evidence", () => {
     ["feature inflation", { supportedFeaturePromoted: true }],
     ["canonical portfolio leakage", { runId: "PB_SG_GLOBAL_BAL_001" }],
     ["unapproved path", { downstreamSubmissionPath: "/api/v1/clients/1" }],
+    ["unapproved synthetic namespace", { syntheticNamespace: "OTHER_SYNTHETIC_001" }],
   ])("rejects %s", (_name, mutation) => {
     expect(() =>
       validateIdeaCapacitySeedManifest({ ...manifest, ...mutation }, expected),
