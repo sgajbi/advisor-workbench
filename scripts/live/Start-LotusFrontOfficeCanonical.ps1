@@ -451,7 +451,6 @@ function Invoke-CanonicalIdeaCapacitySeed {
   $datePolicy = Get-CanonicalFrontOfficeDatePolicy
   Wait-HttpReady -Url "http://127.0.0.1:8330/health/ready" -Description "lotus-idea"
   Wait-HttpReady -Url "http://127.0.0.1:8000/health/ready" -Description "lotus-advise"
-  $runId = "canonical-front-office-$($datePolicy.AsOfDate)"
 
   Write-Host "Seeding isolated Lotus Idea downstream-capacity evidence ..."
   & (Join-Path $workbenchRepo "scripts\\live\\Invoke-IdeaCapacitySeed.ps1") `
@@ -459,7 +458,7 @@ function Invoke-CanonicalIdeaCapacitySeed {
     -IdeaBaseUrl "http://127.0.0.1:8330" `
     -AsOfDate $datePolicy.AsOfDate `
     -SeededAtUtc $datePolicy.GeneratedAtUtc `
-    -RunId $runId `
+    -RunId $ideaCanonicalRunId `
     -ExpectedCommitSha $ideaSourceIdentity.CommitSha `
     -ExpectedBranch $ideaSourceIdentity.Branch `
     -EvidenceDirectory $canonicalEvidenceRoot
@@ -504,7 +503,7 @@ if ($CoreManageOnly) {
 
 $ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo
 $ideaDatePolicy = Get-CanonicalFrontOfficeDatePolicy
-$ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)"
+$ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)-$([guid]::NewGuid().ToString('N'))"
 $ideaBuildTimestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $ideaBuildEnvironment = @{
   LOTUS_IDEA_BUILD_GIT_COMMIT_SHA = $ideaSourceIdentity.CommitSha

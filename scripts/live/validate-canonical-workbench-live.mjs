@@ -117,7 +117,7 @@ summary.ideaCapacitySeed = await loadIdeaCapacitySeedEvidence(
   {
     commitSha: ideaVersion?.build?.gitCommitSha,
     branch: ideaVersion?.build?.gitBranch,
-    runId: `canonical-front-office-${canonicalAsOfDate}`,
+    runId: ideaVersion?.build?.ciRunId,
   },
 );
 const panelGovernance = createPanelGovernance(summary, panelRegistry);

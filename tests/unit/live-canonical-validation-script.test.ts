@@ -251,6 +251,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Get-GitRepositoryIdentity");
     expect(script).toContain("LOTUS_IDEA_BUILD_GIT_COMMIT_SHA");
     expect(script).toContain("LOTUS_IDEA_BUILD_GIT_BRANCH");
+    expect(script).toContain("[guid]::NewGuid().ToString('N')");
+    expect(script).toContain("-RunId $ideaCanonicalRunId");
     expect(script).toContain("Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment");
     expect(script.indexOf("if ($CoreManageOnly)")).toBeLessThan(
       script.indexOf("$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo"),
@@ -382,6 +384,8 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
+    expect(script).toContain("`${ideaBaseUrl}/version`");
+    expect(script).toContain("runId: ideaVersion?.build?.ciRunId");
     const calculationModule = readFileSync(
       join(
         process.cwd(),
