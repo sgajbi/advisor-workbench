@@ -108,7 +108,8 @@ That script performs:
 7. canonical `lotus-gateway` exposure on port `8100`
 8. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
 9. governed DPM command-center seed through `lotus-platform`
-10. `docker compose up -d` for `lotus-workbench` on port `3000`
+10. create an isolated Lotus Idea downstream-capacity resource and run one report-only downstream-submission probe
+11. `docker compose up -d` for `lotus-workbench` on port `3000`
 
 Docker is the default for every canonical front-office app. The startup flow replaces stale local
 listeners on canonical app ports before Docker startup, while leaving Docker-owned listeners in
@@ -120,6 +121,23 @@ The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` instead of
 duplicating date literals in Workbench automation. If the platform contract is missing the date
 policy, canonical startup fails closed before seeding Idea evidence.
+
+### Lotus Idea capacity evidence
+
+Canonical startup delegates capacity-resource construction and workload execution to
+`lotus-idea`. Workbench only coordinates readiness and verifies the returned evidence. The flow:
+
+1. waits for the exact Idea source revision and the Advise realization dependency,
+2. verifies Idea `/version` commit and branch metadata against the checked-out repository,
+3. invokes the Idea-owned synthetic seed and service-capacity workload runners,
+4. accepts exactly one successful `downstream_submission` probe in the `test` profile, and
+5. records source artifact paths, SHA-256 digests, and provenance in
+   `output/canonical-front-office/idea-capacity-seed-evidence.json`.
+
+Capacity evidence uses the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace. It must not reuse
+`PB_SG_GLOBAL_BAL_001`, expose the generated conversion-intent identifier or downstream path, or
+persist credentials in evidence. This is deterministic seed and integration-readiness proof only;
+it is not load or soak evidence, capacity certification, or supported-feature promotion.
 
 For active RFC or UI development, pass `-LocalApps` with a comma-separated app list. Local apps use
 the same canonical hostnames and public ports as Docker-backed apps, so live evidence remains

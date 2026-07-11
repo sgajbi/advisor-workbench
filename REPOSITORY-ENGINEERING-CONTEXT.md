@@ -122,6 +122,12 @@ Current repository posture:
 16. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
+    It also delegates isolated downstream-capacity resource construction and a single report-only
+    submission probe to Idea-owned automation after Idea and Advise are ready. Workbench validates
+    exact `/version` provenance and stores only source artifact paths, hashes, and non-certifying
+    posture. It must not construct the resource directly, reuse the canonical client portfolio,
+    expose resource identifiers or credentials, or interpret this integration proof as load, soak,
+    capacity-certification, or supported-feature evidence.
 17. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
     model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
