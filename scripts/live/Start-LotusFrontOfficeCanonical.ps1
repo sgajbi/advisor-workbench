@@ -481,21 +481,6 @@ if ($localAppSet.Count -gt 0) {
 }
 
 Write-Host "Starting Docker-backed canonical services..."
-$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo
-$ideaDatePolicy = Get-CanonicalFrontOfficeDatePolicy
-$ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)"
-$ideaBuildTimestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-$ideaBuildEnvironment = @{
-  LOTUS_IDEA_BUILD_GIT_COMMIT_SHA = $ideaSourceIdentity.CommitSha
-  LOTUS_IDEA_BUILD_GIT_BRANCH = $ideaSourceIdentity.Branch
-  LOTUS_IDEA_BUILD_TIMESTAMP = $ideaBuildTimestamp
-  LOTUS_IDEA_BUILD_REPO_URL = "https://github.com/sgajbi/lotus-idea.git"
-  LOTUS_IDEA_BUILD_RUN_ID = $ideaCanonicalRunId
-  LOTUS_IDEA_BUILD_IMAGE_ID = "$($ideaSourceIdentity.CommitSha).$ideaCanonicalRunId"
-  LOTUS_IDEA_BUILD_SERVICE_VERSION = "0.1.0"
-}
-$resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
-Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
 $canonicalCoreEnvironment = @{
   DEMO_DATA_PACK_ENABLED = "false"
 }
@@ -516,6 +501,22 @@ if ($CoreManageOnly) {
   Write-Host "Run the core and manage API validators for RFC-087/RFC-0036 proof."
   return
 }
+
+$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo
+$ideaDatePolicy = Get-CanonicalFrontOfficeDatePolicy
+$ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)"
+$ideaBuildTimestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$ideaBuildEnvironment = @{
+  LOTUS_IDEA_BUILD_GIT_COMMIT_SHA = $ideaSourceIdentity.CommitSha
+  LOTUS_IDEA_BUILD_GIT_BRANCH = $ideaSourceIdentity.Branch
+  LOTUS_IDEA_BUILD_TIMESTAMP = $ideaBuildTimestamp
+  LOTUS_IDEA_BUILD_REPO_URL = "https://github.com/sgajbi/lotus-idea.git"
+  LOTUS_IDEA_BUILD_RUN_ID = $ideaCanonicalRunId
+  LOTUS_IDEA_BUILD_IMAGE_ID = "$($ideaSourceIdentity.CommitSha).$ideaCanonicalRunId"
+  LOTUS_IDEA_BUILD_SERVICE_VERSION = "0.1.0"
+}
+$resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
+Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"
 
 Invoke-ComposeUp $performanceRepo
 Invoke-ComposeUp $riskRepo

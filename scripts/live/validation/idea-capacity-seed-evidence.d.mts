@@ -8,6 +8,7 @@ export interface IdeaCapacitySeedManifest {
   branch: string;
   runId: string;
   syntheticResource: boolean;
+  syntheticNamespace: "CAPACITY_SYNTHETIC_PORTFOLIO_001";
   conversionIntentId: string;
   downstreamSubmissionPath: string;
   productionCapacityCertified: boolean;

@@ -13,6 +13,7 @@ const EXPECTED = Object.freeze({
 });
 
 const DOWNSTREAM_PATH = /^\/api\/v1\/conversion-intents\/capacity-conversion-[a-f0-9]{16}\/downstream-submissions$/;
+const SYNTHETIC_NAMESPACE = "CAPACITY_SYNTHETIC_PORTFOLIO_001";
 
 export function validateIdeaCapacitySeedManifest(
   payload,
@@ -39,6 +40,9 @@ export function validateIdeaCapacitySeedManifest(
     !payload.downstreamSubmissionPath.includes(`/${payload.conversionIntentId}/`)
   ) {
     throw new Error("Idea capacity seed manifest resource identity is inconsistent");
+  }
+  if (payload.syntheticNamespace !== SYNTHETIC_NAMESPACE) {
+    throw new Error("Idea capacity seed manifest does not use the isolated synthetic namespace");
   }
   const serialized = JSON.stringify(payload);
   for (const forbidden of [
