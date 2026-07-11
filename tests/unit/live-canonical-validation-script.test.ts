@@ -358,6 +358,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain('Invoke-RestMethod -Uri "$IdeaBaseUrl/version"');
     expect(script).toContain("ExpectedCommitSha");
     expect(script).toContain("ExpectedBranch");
+    expect(script).toContain("$version.build.ciRunId");
+    expect(script).toContain("$runtimeRunId -ne $RunId");
     expect(script).toContain("runtime provenance does not match");
     expect(script).toContain("seed_downstream_capacity_resource.py");
     expect(script).toContain("run_service_capacity_workload.py");

@@ -33,11 +33,12 @@ if (-not (Test-Path $workloadScript)) {
 $version = Invoke-RestMethod -Uri "$IdeaBaseUrl/version" -TimeoutSec 30
 $commitSha = [string]$version.build.gitCommitSha
 $branch = [string]$version.build.gitBranch
-if ([string]::IsNullOrWhiteSpace($commitSha) -or [string]::IsNullOrWhiteSpace($branch)) {
-  throw "Lotus Idea /version did not expose commit and branch provenance."
+$runtimeRunId = [string]$version.build.ciRunId
+if ([string]::IsNullOrWhiteSpace($commitSha) -or [string]::IsNullOrWhiteSpace($branch) -or [string]::IsNullOrWhiteSpace($runtimeRunId)) {
+  throw "Lotus Idea /version did not expose commit, branch, and run provenance."
 }
-if ($commitSha -ne $ExpectedCommitSha -or $branch -ne $ExpectedBranch) {
-  throw "Lotus Idea runtime provenance does not match the expected source commit and branch. Rebuild the Idea image."
+if ($commitSha -ne $ExpectedCommitSha -or $branch -ne $ExpectedBranch -or $runtimeRunId -ne $RunId) {
+  throw "Lotus Idea runtime provenance does not match the expected source commit, branch, and startup run. Rebuild the Idea image."
 }
 
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
