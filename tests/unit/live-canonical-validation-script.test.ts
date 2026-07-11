@@ -364,6 +364,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain('"--allow-mutating-workflows"');
     expect(script).toContain("SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE");
     expect(script).toContain("Validate-IdeaCapacitySeedEvidence.mjs");
+    expect(script).toContain("[System.IO.Path]::GetTempPath()");
+    expect(script).toContain("Remove-Item -LiteralPath $rawArtifactDirectory");
     expect(script).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(script).not.toContain("client-001");
     expect(script).not.toContain("LOTUS_IDEA_CAPACITY_AUTHORIZATION");

@@ -15,9 +15,10 @@ $workbenchRepo = Join-Path $ProjectsRoot "lotus-workbench"
 $python = Join-Path $ideaRepo ".venv\Scripts\python.exe"
 $seedScript = Join-Path $ideaRepo "scripts\seed_downstream_capacity_resource.py"
 $workloadScript = Join-Path $ideaRepo "scripts\run_service_capacity_workload.py"
-$manifestPath = Join-Path $EvidenceDirectory "idea-capacity-seed-manifest.json"
-$workloadPath = Join-Path $EvidenceDirectory "idea-capacity-seed-workload.json"
 $evidencePath = Join-Path $EvidenceDirectory "idea-capacity-seed-evidence.json"
+$rawArtifactDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("lotus-workbench-idea-capacity-" + [guid]::NewGuid().ToString("N"))
+$manifestPath = Join-Path $rawArtifactDirectory "idea-capacity-seed-manifest.json"
+$workloadPath = Join-Path $rawArtifactDirectory "idea-capacity-seed-workload.json"
 
 if (-not (Test-Path $python)) {
   throw "Lotus Idea repository Python was not found: $python"
@@ -40,6 +41,8 @@ if ($commitSha -ne $ExpectedCommitSha -or $branch -ne $ExpectedBranch) {
 }
 
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
+New-Item -ItemType Directory -Path $rawArtifactDirectory -Force | Out-Null
+try {
 $seedArguments = @(
   $seedScript,
   "--base-url", $IdeaBaseUrl,
@@ -85,6 +88,10 @@ $validator = Join-Path $workbenchRepo "scripts\live\Validate-IdeaCapacitySeedEvi
   --run-id $RunId
 if ($LASTEXITCODE -ne 0) {
   throw "Workbench Idea capacity seed evidence validation failed with exit code $LASTEXITCODE."
+}
+}
+finally {
+  Remove-Item -LiteralPath $rawArtifactDirectory -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "Validated isolated Lotus Idea capacity seed evidence: $evidencePath"

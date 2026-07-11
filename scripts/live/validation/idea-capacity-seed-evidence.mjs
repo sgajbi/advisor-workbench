@@ -107,9 +107,11 @@ export function validateIdeaCapacityWorkload(payload, { commitSha, branch, runId
     }
   }
   const scenarios = Array.isArray(payload.scenarios) ? payload.scenarios : [];
-  const downstream = scenarios.find((item) => item?.scenario === "downstream_submission");
+  const downstream = scenarios[0];
   if (
+    scenarios.length !== 1 ||
     !downstream ||
+    downstream.scenario !== "downstream_submission" ||
     downstream.sampleCount !== 1 ||
     downstream.acceptedCount !== 1 ||
     downstream.errorCount !== 0 ||
