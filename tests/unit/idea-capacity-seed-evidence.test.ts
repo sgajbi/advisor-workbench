@@ -94,6 +94,18 @@ describe("Idea capacity seed evidence", () => {
         expected,
       ),
     ).toThrow(/exactly one downstream probe/);
+    expect(() =>
+      validateIdeaCapacityWorkload(
+        {
+          ...workload,
+          scenarios: [
+            workload.scenarios[0],
+            { ...workload.scenarios[0], acceptedCount: 0, errorCount: 1 },
+          ],
+        },
+        expected,
+      ),
+    ).toThrow(/exactly one downstream probe/);
   });
 
   it.each([
