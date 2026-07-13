@@ -9,8 +9,9 @@
 - if a screen looks populated but canonical validation fails, treat it as diagnostic evidence only
 - if product data looks wrong, inspect gateway responses before adjusting frontend presentation
 - if Workbench BFF calls fail with `ECONNREFUSED` to `127.0.0.1:8111` or `localhost:8111`, ensure
-  local Workbench is running with `BFF_BASE_URL=http://gateway.dev.lotus`; canonical proof must use
-  the governed Gateway hostname, not a stale local port override
+  local Workbench sets `BFF_BASE_URL` to the
+  [canonical Gateway](http://gateway.dev.lotus); canonical proof must use the governed Gateway
+  hostname, not a stale local port override
 - if performance evidence is partial, review Gateway and performance logs for `correlation_id`,
   `request_id`, `trace_id`, lineage lookup status, and `PERFORMANCE_EVIDENCE_PARTIAL` before
   classifying the evidence as a runtime defect

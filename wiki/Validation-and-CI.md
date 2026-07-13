@@ -1,5 +1,18 @@
 # Validation and CI
 
+## Evidence Map
+
+Validation depth must match the claim being made. A narrow unit test can prove a local contract,
+while integrated product support requires canonical runtime evidence and green repository lanes.
+
+| Change or Claim | Minimum Evidence | Promotion Boundary |
+| --- | --- | --- |
+| Local route or serializer | Focused behavioral test plus lint/typecheck | Does not certify an upstream or whole-product contract |
+| Product UI behavior | Unit/integration coverage, build, and relevant browser smoke | Must remain Gateway-backed and capability-truthful |
+| Canonical front-office support | `live:validate` evidence for the governed seed and affected panels | Screenshots alone cannot promote support |
+| Merge readiness | Feature Lane and PR Merge Gate | Mainline is not proven until Main Releasability passes |
+| Demo evidence | Passing canonical validation plus same-run evidence pack | Diagnostic captures stay separate |
+
 ## Lane model
 
 `lotus-workbench` uses:

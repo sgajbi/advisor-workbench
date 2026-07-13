@@ -24,11 +24,11 @@ rest of the canonical app set remains Docker-backed.
 
 Canonical identities:
 
-- workbench: `http://workbench.dev.lotus`
-- gateway: `http://gateway.dev.lotus`
-- manage: `http://manage.dev.lotus`
-- archive: `http://archive.dev.lotus`
-- render: `http://render.dev.lotus`
+- [Workbench](http://workbench.dev.lotus)
+- [Gateway](http://gateway.dev.lotus)
+- [Manage](http://manage.dev.lotus)
+- [Archive](http://archive.dev.lotus)
+- [Render](http://render.dev.lotus)
 
 Required environment posture:
 

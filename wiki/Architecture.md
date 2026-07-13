@@ -1,5 +1,18 @@
 # Architecture
 
+## Current Scope
+
+This page describes the implemented Workbench presentation architecture and its Gateway-first
+runtime boundary. Target-state service capabilities and domain authority remain in their owning
+repositories and must not be inferred from a route or component shown here.
+
+| Concern | Workbench Responsibility | Upstream Authority |
+| --- | --- | --- |
+| Product composition | Navigation, interaction, rendering, and bounded local UI state | Gateway capability and domain-service contracts |
+| Domain decisions | Display source-owned outcomes and limitations | Core, Performance, Risk, Advise, Manage, Idea, Report, Archive, Render, or AI as applicable |
+| Integration | Same-origin BFF mediation and caller-context propagation | Gateway is the product backend boundary |
+| Operational proof | Browser, metrics, logs, and canonical validation evidence | Platform governance plus source-service readiness |
+
 ## Runtime model
 
 - Next.js App Router application
