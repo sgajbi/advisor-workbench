@@ -209,6 +209,19 @@ Boundary rules:
 5. domain-product discovery UI must consume gateway domain-product APIs only and must render
    unavailable, stale, partial, blocked, and error trust states truthfully.
 
+## Local API Contract Evidence
+
+The same-origin `POST /api/metrics/events` route has authored accepted and rejected response
+examples in `docs/operations/metrics-event-response-examples.v1.json`.
+`tests/unit/metrics-route.test.ts` invokes the real route with each documented request and compares
+the HTTP status plus complete JSON response using exact structural equality. This prevents stale,
+missing, additional, renamed, or mistyped response fields from remaining hidden behind a
+parseable documentation example.
+
+This is a bounded TypeScript adoption of the platform endpoint-example parity contract. It does
+not certify every Workbench BFF route, promote a product feature, or make Workbench the authority
+for Gateway or domain-service contracts.
+
 ## Repo-Native Commands
 
 Use these commands as the primary local contract:
