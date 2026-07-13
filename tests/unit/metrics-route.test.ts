@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { POST as POST_METRIC_EVENT } from "@/app/api/metrics/events/route";
@@ -6,6 +9,48 @@ import {
   recordAnalyticsUiPanelState,
   resetAnalyticsUiMetricEvents,
 } from "@/features/analytics-observability/metrics";
+
+type MetricsEventResponseExample = {
+  id: string;
+  request: Record<string, unknown>;
+  expectedStatus: number;
+  response: Record<string, unknown>;
+};
+
+type MetricsEventResponseExamples = {
+  schemaVersion: string;
+  endpoint: { method: string; path: string };
+  cases: MetricsEventResponseExample[];
+};
+
+const metricsEventResponseExamples = JSON.parse(
+  readFileSync(
+    join(
+      process.cwd(),
+      "docs",
+      "operations",
+      "metrics-event-response-examples.v1.json"
+    ),
+    "utf8"
+  )
+) as MetricsEventResponseExamples;
+
+function responseExample(id: string): MetricsEventResponseExample {
+  const example = metricsEventResponseExamples.cases.find((item) => item.id === id);
+  if (!example) {
+    throw new Error(`Missing metrics response example: ${id}`);
+  }
+  return example;
+}
+
+async function invokeResponseExample(example: MetricsEventResponseExample) {
+  return POST_METRIC_EVENT(
+    new Request(`http://workbench.dev.lotus${metricsEventResponseExamples.endpoint.path}`, {
+      method: metricsEventResponseExamples.endpoint.method,
+      body: JSON.stringify(example.request),
+    })
+  );
+}
 
 describe("metrics route", () => {
   it("returns product-safe Prometheus text for implemented analytics UI metrics", async () => {
@@ -37,31 +82,14 @@ describe("metrics route", () => {
 
   it("accepts bounded client-side metric events for Prometheus export", async () => {
     resetAnalyticsUiMetricEvents();
-    const response = await POST_METRIC_EVENT(
-      new Request("http://workbench.dev.lotus/api/metrics/events", {
-        method: "POST",
-        body: JSON.stringify({
-          event_name: "workbench.analytics.panel_state",
-          metric_name: "lotus_workbench_panel_state_total",
-          value: 1,
-          labels: {
-            route: "workbench.performance",
-            panel: "performance-advisor-brief-review-action",
-            operation: "performance.workspace.advisor-brief.review-action",
-            service: "lotus-gateway",
-            state: "ready",
-            freshness_bucket: "unknown",
-            supportability_state: "unknown",
-          },
-          recorded_at: "2026-05-01T00:00:00.000Z",
-        }),
-      })
-    );
+    const example = responseExample("accepted_bounded_event");
+    const response = await invokeResponseExample(example);
 
     const metricsResponse = await GET();
     const body = await metricsResponse.text();
 
-    expect(response.status).toBe(202);
+    expect(response.status).toBe(example.expectedStatus);
+    await expect(response.json()).resolves.toStrictEqual(example.response);
     expect(body).toContain("performance-advisor-brief-review-action");
     expect(body).toContain("performance.workspace.advisor-brief.review-action");
     expect(body).not.toContain("PB_SG_GLOBAL_BAL_001");
@@ -71,28 +99,29 @@ describe("metrics route", () => {
 
   it("rejects client-side metric events with forbidden labels", async () => {
     resetAnalyticsUiMetricEvents();
-    const response = await POST_METRIC_EVENT(
-      new Request("http://workbench.dev.lotus/api/metrics/events", {
-        method: "POST",
-        body: JSON.stringify({
-          event_name: "workbench.analytics.panel_state",
-          metric_name: "lotus_workbench_panel_state_total",
-          value: 1,
-          labels: {
-            route: "workbench.performance",
-            panel: "performance-advisor-brief-review-action",
-            operation: "performance.workspace.advisor-brief.review-action",
-            portfolio_id: "PB_SG_GLOBAL_BAL_001",
-          },
-        }),
-      })
-    );
+    const example = responseExample("rejected_forbidden_label");
+    const response = await invokeResponseExample(example);
 
     const metricsResponse = await GET();
     const body = await metricsResponse.text();
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(example.expectedStatus);
+    await expect(response.json()).resolves.toStrictEqual(example.response);
     expect(body).not.toContain("performance-advisor-brief-review-action");
-    expect(body).not.toContain("PB_SG_GLOBAL_BAL_001");
+    expect(body).not.toContain("must-not-be-recorded");
+  });
+
+  it("keeps the authored response evidence bound to the intended route", () => {
+    expect(metricsEventResponseExamples.schemaVersion).toBe(
+      "lotus-workbench.metrics-event-response-examples.v1"
+    );
+    expect(metricsEventResponseExamples.endpoint).toStrictEqual({
+      method: "POST",
+      path: "/api/metrics/events",
+    });
+    expect(metricsEventResponseExamples.cases.map((example) => example.id)).toStrictEqual([
+      "accepted_bounded_event",
+      "rejected_forbidden_label",
+    ]);
   });
 });

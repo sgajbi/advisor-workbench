@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "lotus-workbench.metrics-event-response-examples.v1",
+  "endpoint": {
+    "method": "POST",
+    "path": "/api/metrics/events"
+  },
+  "cases": [
+    {
+      "id": "accepted_bounded_event",
+      "request": {
+        "event_name": "workbench.analytics.panel_state",
+        "metric_name": "lotus_workbench_panel_state_total",
+        "value": 1,
+        "labels": {
+          "route": "workbench.performance",
+          "panel": "performance-advisor-brief-review-action",
+          "operation": "performance.workspace.advisor-brief.review-action",
+          "service": "lotus-gateway",
+          "state": "ready",
+          "freshness_bucket": "unknown",
+          "supportability_state": "unknown"
+        },
+        "recorded_at": "2026-05-01T00:00:00.000Z"
+      },
+      "expectedStatus": 202,
+      "response": {
+        "status": "accepted"
+      }
+    },
+    {
+      "id": "rejected_forbidden_label",
+      "request": {
+        "event_name": "workbench.analytics.panel_state",
+        "metric_name": "lotus_workbench_panel_state_total",
+        "value": 1,
+        "labels": {
+          "route": "workbench.performance",
+          "panel": "performance-advisor-brief-review-action",
+          "operation": "performance.workspace.advisor-brief.review-action",
+          "portfolio_id": "must-not-be-recorded"
+        }
+      },
+      "expectedStatus": 400,
+      "response": {
+        "status": "rejected"
+      }
+    }
+  ]
+}
