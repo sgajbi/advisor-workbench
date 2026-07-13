@@ -101,6 +101,18 @@ Use the non-functional artifacts to explain how teams operate the stack:
 - bounded log tails show where operators start when investigating Gateway, Workbench, Core,
   Performance, Risk, Manage, Report, Archive, Render, and AI behavior
 
+### Metrics Ingest Response Contract
+
+Workbench authors the accepted and rejected JSON response examples for
+`POST /api/metrics/events` in
+`docs/operations/metrics-event-response-examples.v1.json`. The route test executes the actual
+Next.js handler for every authored case and requires exact status and response-object equality.
+Changing a field name, type, value, or presence in either documentation or runtime therefore fails
+the test instead of leaving a stale but parseable example.
+
+This evidence covers the local metrics-ingest route only. It is not whole-Workbench endpoint
+certification and does not replace live Prometheus, canonical stack, or Gateway contract proof.
+
 ## Evidence Quality Checks
 
 Before using a pack in client or operator material, review it for obvious degradation:
