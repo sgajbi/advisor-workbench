@@ -1,5 +1,18 @@
 # API Surface
 
+## Current Scope
+
+This page inventories Workbench-owned browser routes and local server routes. Route existence is
+not sufficient evidence of supported product capability; shell posture, Gateway backing, tests,
+and canonical validation remain authoritative.
+
+| Surface Class | Authority | Evidence Decision |
+| --- | --- | --- |
+| Active product navigation | Workbench shell plus Gateway capability posture | May be described as active only when capability and canonical route proof agree |
+| Direct workflow route | Workbench presentation over Gateway contracts | Must not imply Workbench owns upstream domain decisions |
+| Compatibility route | Redirect or bounded legacy entry | Must remain visibly separate from the primary topology |
+| `/api/bff/*` | Internal Workbench bridge | Is not a second public or domain-authoritative API |
+
 ## Product routes
 
 - `/portfolio`

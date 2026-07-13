@@ -1,5 +1,17 @@
 # Operations Runbook
 
+## Current Scope
+
+This runbook covers first-response operation of the canonical local Workbench stack. It does not
+replace source-service recovery procedures or turn diagnostic screenshots into release evidence.
+
+| Situation | First Action | Evidence Before Escalation |
+| --- | --- | --- |
+| Product surface unavailable | Run canonical validation and inspect the failed API/panel check | Validation summary, readiness response, and bounded logs |
+| Data appears partial or stale | Inspect Gateway source-supportability and owning-service posture | Correlation-safe API evidence and source freshness state |
+| Metrics or dashboards missing | Check Workbench metrics, Prometheus targets, and Grafana health | Same-run evidence pack with target and query results |
+| Demo preparation | Validate `PB_SG_GLOBAL_BAL_001` before capture | Passing validation and same-run screenshots/manifest |
+
 ## Important operational checks
 
 - use `workbench.dev.lotus` and `gateway.dev.lotus` for canonical product proof
@@ -86,8 +98,8 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
   preserves binary PDF payloads plus checksum/content-disposition headers.
 - Canonical live validation checks `lotus-manage` supportability through
   `GET /api/v1/rebalance/supportability/summary`. The deprecated
-  `http://manage.dev.lotus/integration/capabilities` probe is not valid evidence for the current
-  Manage boundary.
+  [Manage integration-capabilities probe](http://manage.dev.lotus/integration/capabilities) is not
+  valid evidence for the current Manage boundary.
 
 ```mermaid
 sequenceDiagram

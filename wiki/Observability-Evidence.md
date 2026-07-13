@@ -4,6 +4,19 @@ This page defines the repeatable evidence pack for showing functional and non-fu
 runtime capabilities from the live canonical stack. It is intended for offline client-demo preparation,
 operator onboarding, and future incident-investigation walkthroughs.
 
+## Current Scope
+
+This page governs evidence collection and review for the canonical Workbench runtime. It does not
+promote a feature, replace source-service certification, or make screenshots authoritative when
+runtime validation fails.
+
+| Reader | Decision | Required Evidence |
+| --- | --- | --- |
+| Demo and product teams | Is a capture suitable for a supported demonstration? | Passing canonical validation for `PB_SG_GLOBAL_BAL_001` plus a same-run evidence manifest |
+| Operations and support | Where should first-response investigation begin? | Readiness, bounded logs, metrics, target posture, and failed API checks from one evidence pack |
+| Contract reviewers | Does documented local API behavior match runtime? | Exact route-test parity for metrics ingest and source-owned contracts for Gateway-backed behavior |
+| Engineers | Can a change be claimed as implementation-backed? | Repository tests, canonical runtime proof when applicable, and explicit unsupported boundaries |
+
 ## Evidence Rule
 
 Run validation first:

@@ -1,5 +1,17 @@
 # Integrations
 
+## Current Scope
+
+This page records implemented Workbench integration boundaries. It distinguishes product traffic
+from operational probes and does not promote direct domain-service calls as supported UI paths.
+
+| Integration Path | Supported Use | Evidence |
+| --- | --- | --- |
+| Browser to Workbench | Product navigation and interaction | Route, component, and browser tests |
+| Workbench BFF to Gateway | Product data and workflow contracts | BFF tests, Gateway contract evidence, and canonical validation |
+| Runtime readiness probes | Bounded supportability diagnostics only | Canonical validation artifacts |
+| Workbench to domain service | Not a product path | Any exception must remain operational, source-safe, and explicitly governed |
+
 ## Primary backend posture
 
 - `lotus-gateway`
@@ -24,10 +36,8 @@ must travel through Gateway-shaped contracts.
 
 ## Canonical local identities
 
-- workbench:
-  `http://workbench.dev.lotus`
-- gateway:
-  `http://gateway.dev.lotus`
+- [Workbench](http://workbench.dev.lotus)
+- [Gateway](http://gateway.dev.lotus)
 
 ## Contract notes
 
