@@ -70,6 +70,9 @@ promote dormant labels into product ownership just because historical route file
 - data-product discovery is served through `/data-products` and consumes gateway
   `/api/v1/domain-products/*` APIs through the internal BFF only
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
+- `/intake` submits portfolio bundle writes through `/api/bff/api/v1/intake/portfolio-bundle`
+  and forwards a bounded `X-Idempotency-Key` so Gateway/Core own safe duplicate-submit replay
+  semantics
 - canonical product proof should use `workbench.dev.lotus`, not ad hoc localhost URLs
 - shell navigation support is narrower than the historical route set: `Proposal` and `Advisory`
   are currently disabled even though direct proposal routes now exist for bounded advisory

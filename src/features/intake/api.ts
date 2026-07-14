@@ -10,14 +10,20 @@ const INTAKE_BUNDLE_SURFACE = WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.find(
 )!;
 
 export async function ingestPortfolioBundle(
-  payload: PortfolioBundlePayload
+  payload: PortfolioBundlePayload,
+  options: { idempotencyKey?: string } = {}
 ): Promise<IntakeEnvelopeResponse> {
   return await observeWorkbenchAnalyticsRequest(INTAKE_BUNDLE_SURFACE, async () => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (options.idempotencyKey?.trim()) {
+      headers["X-Idempotency-Key"] = options.idempotencyKey.trim();
+    }
+
     const response = await fetch(`${BFF_PROXY_BASE}/intake/portfolio-bundle`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({ body: payload }),
     });
 
