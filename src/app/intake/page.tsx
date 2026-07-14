@@ -51,6 +51,7 @@ import {
   IntakeSubmissionAttempt,
   resolveIntakeSubmissionAttempt,
 } from "@/features/intake/submission-idempotency";
+import { PortfolioBundlePayload } from "@/features/intake/types";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 type IntakeOperation =
@@ -61,6 +62,10 @@ type IntakeOperation =
   | "ADD_MARKET_DATA";
 
 type CatalogState = "manual" | "loading" | "online" | "fallback";
+
+type IntakeBundleSubmissionAttempt = IntakeSubmissionAttempt & {
+  payload: PortfolioBundlePayload;
+};
 
 const OPERATION_ORDER: IntakeOperation[] = [
   "CREATE_PORTFOLIO",
@@ -172,8 +177,8 @@ export default function IntakePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [csvSummary, setCsvSummary] = useState<string | null>(null);
   const csvInputRef = useRef<HTMLInputElement | null>(null);
-  const listSubmissionAttemptRef = useRef<IntakeSubmissionAttempt | null>(null);
-  const csvSubmissionAttemptRef = useRef<IntakeSubmissionAttempt | null>(null);
+  const listSubmissionAttemptRef = useRef<IntakeBundleSubmissionAttempt | null>(null);
+  const csvSubmissionAttemptRef = useRef<IntakeBundleSubmissionAttempt | null>(null);
 
   const [portfolioId, setPortfolioId] = useState("PORT_UI_1001");
   const [baseCurrency, setBaseCurrency] = useState("USD");
@@ -439,6 +444,33 @@ export default function IntakePage() {
     return fingerprintIntakeSubmissionIntent(operation, { marketData });
   }
 
+  function buildCurrentOperationPayload(): PortfolioBundlePayload {
+    if (operation === "CREATE_PORTFOLIO") {
+      return buildCreatePortfolioPayload({
+        portfolioId,
+        baseCurrency,
+        openDate,
+        riskExposure,
+        investmentTimeHorizon: timeHorizon,
+        portfolioType,
+        bookingCenter,
+        cifId,
+        advisorId,
+        status,
+      });
+    }
+    if (operation === "ADD_POSITIONS") {
+      return buildPositionSeedPayloadFromList(portfolioId, baseCurrency, positions);
+    }
+    if (operation === "ADD_TRANSACTIONS") {
+      return buildTransactionsPayloadFromList(portfolioId, baseCurrency, transactions);
+    }
+    if (operation === "ADD_INSTRUMENTS") {
+      return buildInstrumentsPayloadFromList(instruments);
+    }
+    return buildMarketDataPayloadFromList(marketData);
+  }
+
   async function submitCurrentOperation() {
     if (!canSubmit) {
       setErrorMessage("Complete required list fields before submitting.");
@@ -449,36 +481,17 @@ export default function IntakePage() {
     setErrorMessage(null);
     setCsvSummary(null);
     try {
-      const payload =
-        operation === "CREATE_PORTFOLIO"
-          ? buildCreatePortfolioPayload({
-              portfolioId,
-              baseCurrency,
-              openDate,
-              riskExposure,
-              investmentTimeHorizon: timeHorizon,
-              portfolioType,
-              bookingCenter,
-              cifId,
-              advisorId,
-              status,
-            })
-          : operation === "ADD_POSITIONS"
-            ? buildPositionSeedPayloadFromList(portfolioId, baseCurrency, positions)
-            : operation === "ADD_TRANSACTIONS"
-              ? buildTransactionsPayloadFromList(portfolioId, baseCurrency, transactions)
-              : operation === "ADD_INSTRUMENTS"
-                ? buildInstrumentsPayloadFromList(instruments)
-                : buildMarketDataPayloadFromList(marketData);
+      const fingerprint = currentListSubmissionFingerprint();
+      let submissionAttempt = listSubmissionAttemptRef.current;
+      if (submissionAttempt?.fingerprint !== fingerprint) {
+        submissionAttempt = {
+          ...resolveIntakeSubmissionAttempt(null, operation, fingerprint),
+          payload: buildCurrentOperationPayload(),
+        };
+        listSubmissionAttemptRef.current = submissionAttempt;
+      }
 
-      const submissionAttempt = resolveIntakeSubmissionAttempt(
-        listSubmissionAttemptRef.current,
-        operation,
-        currentListSubmissionFingerprint()
-      );
-      listSubmissionAttemptRef.current = submissionAttempt;
-
-      const response = await ingestPortfolioBundle(payload, {
+      const response = await ingestPortfolioBundle(submissionAttempt.payload, {
         idempotencyKey: submissionAttempt.idempotencyKey,
       });
       listSubmissionAttemptRef.current = null;
@@ -504,15 +517,18 @@ export default function IntakePage() {
     setErrorMessage(null);
     setCsvSummary(null);
     try {
-      const payload = parseIntakeCsvToBundle(await file.text());
-      const submissionAttempt = resolveIntakeSubmissionAttempt(
-        csvSubmissionAttemptRef.current,
-        "CSV_BUNDLE",
-        fingerprintIntakeBundlePayload(payload)
-      );
-      csvSubmissionAttemptRef.current = submissionAttempt;
+      const parsedPayload = parseIntakeCsvToBundle(await file.text());
+      const fingerprint = fingerprintIntakeBundlePayload(parsedPayload);
+      let submissionAttempt = csvSubmissionAttemptRef.current;
+      if (submissionAttempt?.fingerprint !== fingerprint) {
+        submissionAttempt = {
+          ...resolveIntakeSubmissionAttempt(null, "CSV_BUNDLE", fingerprint),
+          payload: parsedPayload,
+        };
+        csvSubmissionAttemptRef.current = submissionAttempt;
+      }
 
-      const response = await ingestPortfolioBundle(payload, {
+      const response = await ingestPortfolioBundle(submissionAttempt.payload, {
         idempotencyKey: submissionAttempt.idempotencyKey,
       });
       csvSubmissionAttemptRef.current = null;
@@ -522,7 +538,7 @@ export default function IntakePage() {
           counts.transactions ?? 0
         }.`
       );
-      setCsvSummary(`File: ${file.name}, Transactions: ${payload.transactions.length}`);
+      setCsvSummary(`File: ${file.name}, Transactions: ${submissionAttempt.payload.transactions.length}`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unknown CSV error");
     } finally {
