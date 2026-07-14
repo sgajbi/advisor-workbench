@@ -43,17 +43,23 @@ Current repository posture:
 4. `/data-products` provides self-serve gateway-backed domain-product catalog, dependency, and
    live trust discovery for RFC-0088,
 5. the Performance advisor-brief surface consumes gateway-backed workflow-pack run posture and RFC-0097 task-flow posture without synthesizing review state or lineage client-side,
-6. Workbench reads reporting snapshot data through gateway and exposes the RFC-0104 explicit
+6. `/intake` submits list-built and CSV portfolio bundles through Gateway
+   `/api/v1/intake/portfolio-bundle` via the Workbench BFF. Workbench generates a bounded
+   per-submit `X-Idempotency-Key`, reuses it for same-payload retries after a failed attempt, and
+   clears it after success so Gateway/Core own duplicate-submit replay semantics. Workbench must
+   not bypass Gateway, call `lotus-core` directly, or treat the browser idempotency key as source
+   ingestion truth.
+7. Workbench reads reporting snapshot data through gateway and exposes the RFC-0104 explicit
    single-portfolio report batch materialization/status/run-once panel through the gateway BFF; it
    honors route-level report date and backend benchmark controls for proof while still avoiding
    direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
    Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
-7. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
+8. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
    reviews, proof, and quality. The route file remains orchestration-only; Manage workspace composition,
    mode navigation, and data fan-out live under `src/features/workbench/manage-workspace.tsx`.
-8. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
+9. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
    Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
    `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`.
    Workbench shows manage-owned source readiness, recommended actions, latest monitoring-run
@@ -61,7 +67,7 @@ Current repository posture:
    dimensions without calculating mandate health, reconstructing source readiness, merging
    exceptions, generating exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai`
    directly.
-9. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
+10. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
    blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
@@ -70,12 +76,12 @@ Current repository posture:
    `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
    calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
    maker-checker state, or operate campaign-definition upsert locally.
-10. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
+11. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,
     supportability, objective/constraint traces, and selected-alternative state, and must not build
     stateless source bundles, optimizer logic, prices, or selection truth in the browser.
-11. Manage `mode=memory` renders the RFC40-WTBD-010 portfolio-memory panel through Gateway
+12. Manage `mode=memory` renders the RFC40-WTBD-010 portfolio-memory panel through Gateway
     `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory` and bounded source-family
     posture through Gateway `/api/v1/dpm/command-center/portfolio-memory/search`, preserving
     manage-owned timeline order, event type counts, source systems, source-system/source-type
@@ -83,7 +89,7 @@ Current repository posture:
     support boundary, and content hash without reconstructing timeline nodes locally, querying
     source-owner stores, discovering the global portfolio universe, or running cross-app
     source-event search.
-12. Manage `mode=reviews` renders the RFC-0042 DPM outcome-review panel from Gateway
+13. Manage `mode=reviews` renders the RFC-0042 DPM outcome-review panel from Gateway
     `/api/v1/dpm/command-center/outcome-reviews*`, preserving manage-owned expected-versus-realized
     dimensions, source lineage, source-owner/source-type facets, applied source-lineage filters,
     support boundary, supportability, report-input posture, AI-evidence posture, and
@@ -92,7 +98,7 @@ Current repository posture:
     Manage-owned `client_communication_boundary` posture is rendered as a no-client-communication
     boundary when present; Workbench must not create client messaging, approval, delivery, or
     communication-audit workflows from outcome-review evidence.
-13. Manage `mode=proof` renders the RFC-0040 proof-pack evidence panel from Gateway
+14. Manage `mode=proof` renders the RFC-0040 proof-pack evidence panel from Gateway
     `/api/v1/dpm/command-center/proof-packs*`, preserving manage-owned proof-pack identity,
     section posture, content hash, source hashes, Markdown availability, report-input readiness,
     AI-evidence readiness, and governed PM memo workflow-pack posture without client-side
@@ -100,7 +106,7 @@ Current repository posture:
     prompt construction. Manage surfaces also preserve Gateway-provided action-register
     supportability from the portfolio overview `rebalance_snapshot`; missing supportability is
     shown as unknown/N/A rather than as verified zero activity.
-14. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
+15. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
     `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
     `/score-runs*`, `/fairness-analyses`, `/fairness-analyses/{fairness_analysis_id}`, and
     `/fairness-analyses/preview`, `/review-actions/preview`, `/review-actions`, and
@@ -118,8 +124,8 @@ Current repository posture:
     Manage-owned invocation evidence, and does not display or submit generated summary text,
     prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
     OMS claims.
-15. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
-16. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
+16. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+17. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
     It also delegates isolated downstream-capacity resource construction and a single report-only
@@ -128,7 +134,7 @@ Current repository posture:
     posture. It must not construct the resource directly, reuse the canonical client portfolio,
     expose resource identifiers or credentials, or interpret this integration proof as load, soak,
     capacity-certification, or supported-feature evidence.
-17. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
+18. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
     model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
     bank-demo proof, opportunities, proposal builder, suitability, risk impact, approval queue,

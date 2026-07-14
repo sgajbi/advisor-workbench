@@ -45,6 +45,11 @@ import {
   PositionInput,
   TransactionInput,
 } from "@/features/intake/payload-builder";
+import {
+  fingerprintIntakeBundlePayload,
+  IntakeSubmissionAttempt,
+  resolveIntakeSubmissionAttempt,
+} from "@/features/intake/submission-idempotency";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 type IntakeOperation =
@@ -166,6 +171,8 @@ export default function IntakePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [csvSummary, setCsvSummary] = useState<string | null>(null);
   const csvInputRef = useRef<HTMLInputElement | null>(null);
+  const listSubmissionAttemptRef = useRef<IntakeSubmissionAttempt | null>(null);
+  const csvSubmissionAttemptRef = useRef<IntakeSubmissionAttempt | null>(null);
 
   const [portfolioId, setPortfolioId] = useState("PORT_UI_1001");
   const [baseCurrency, setBaseCurrency] = useState("USD");
@@ -428,7 +435,17 @@ export default function IntakePage() {
                 ? buildInstrumentsPayloadFromList(instruments)
                 : buildMarketDataPayloadFromList(marketData);
 
-      const response = await ingestPortfolioBundle(payload);
+      const submissionAttempt = resolveIntakeSubmissionAttempt(
+        listSubmissionAttemptRef.current,
+        operation,
+        fingerprintIntakeBundlePayload(payload)
+      );
+      listSubmissionAttemptRef.current = submissionAttempt;
+
+      const response = await ingestPortfolioBundle(payload, {
+        idempotencyKey: submissionAttempt.idempotencyKey,
+      });
+      listSubmissionAttemptRef.current = null;
       const counts = response.data.published_counts ?? {};
       setSuccessMessage(
         `${operation.replaceAll("_", " ")} queued. Portfolios: ${counts.portfolios ?? 0}, Instruments: ${
@@ -452,7 +469,17 @@ export default function IntakePage() {
     setCsvSummary(null);
     try {
       const payload = parseIntakeCsvToBundle(await file.text());
-      const response = await ingestPortfolioBundle(payload);
+      const submissionAttempt = resolveIntakeSubmissionAttempt(
+        csvSubmissionAttemptRef.current,
+        "CSV_BUNDLE",
+        fingerprintIntakeBundlePayload(payload)
+      );
+      csvSubmissionAttemptRef.current = submissionAttempt;
+
+      const response = await ingestPortfolioBundle(payload, {
+        idempotencyKey: submissionAttempt.idempotencyKey,
+      });
+      csvSubmissionAttemptRef.current = null;
       const counts = response.data.published_counts ?? {};
       setSuccessMessage(
         `CSV queued. Portfolios: ${counts.portfolios ?? 0}, Instruments: ${counts.instruments ?? 0}, Transactions: ${

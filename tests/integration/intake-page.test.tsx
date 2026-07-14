@@ -88,7 +88,56 @@ describe("IntakePage", () => {
     await waitFor(() => {
       expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1);
     });
+    expect(ingestPortfolioBundleMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "UPSERT",
+        sourceSystem: "ADVISOR_WORKBENCH_UI_CREATE_PORTFOLIO",
+      }),
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(/^workbench-intake-bundle-create-portfolio-/),
+      })
+    );
 
+    expect(
+      await screen.findByText((content) => /CREATE PORTFOLIO queued\./i.test(content))
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the same idempotency key when retrying a failed list submission", async () => {
+    ingestPortfolioBundleMock
+      .mockRejectedValueOnce(new Error("temporary gateway outage"))
+      .mockResolvedValueOnce({
+        correlation_id: "corr-intake",
+        contract_version: "v1",
+        data: {
+          published_counts: {
+            portfolios: 1,
+            instruments: 0,
+            transactions: 0,
+            market_prices: 0,
+          },
+        },
+      });
+
+    render(
+      <Providers>
+        <IntakePage />
+      </Providers>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));
+
+    expect(await screen.findByText("temporary gateway outage")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));
+
+    await waitFor(() => {
+      expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(2);
+    });
+
+    const firstOptions = ingestPortfolioBundleMock.mock.calls[0][1] as { idempotencyKey: string };
+    const retryOptions = ingestPortfolioBundleMock.mock.calls[1][1] as { idempotencyKey: string };
+    expect(retryOptions.idempotencyKey).toBe(firstOptions.idempotencyKey);
     expect(
       await screen.findByText((content) => /CREATE PORTFOLIO queued\./i.test(content))
     ).toBeInTheDocument();
