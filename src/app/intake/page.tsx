@@ -47,6 +47,7 @@ import {
 } from "@/features/intake/payload-builder";
 import {
   fingerprintIntakeBundlePayload,
+  fingerprintIntakeSubmissionIntent,
   IntakeSubmissionAttempt,
   resolveIntakeSubmissionAttempt,
 } from "@/features/intake/submission-idempotency";
@@ -403,6 +404,41 @@ export default function IntakePage() {
       .filter(Boolean);
   }, [advisorId, baseCurrency, cifId, instruments, marketData, openDate, operation, portfolioId, positions, transactions]);
 
+  function currentListSubmissionFingerprint(): string {
+    if (operation === "CREATE_PORTFOLIO") {
+      return fingerprintIntakeSubmissionIntent(operation, {
+        advisorId,
+        baseCurrency,
+        bookingCenter,
+        cifId,
+        openDate,
+        portfolioId,
+        portfolioType,
+        riskExposure,
+        status,
+        timeHorizon,
+      });
+    }
+    if (operation === "ADD_POSITIONS") {
+      return fingerprintIntakeSubmissionIntent(operation, {
+        baseCurrency,
+        portfolioId,
+        positions,
+      });
+    }
+    if (operation === "ADD_TRANSACTIONS") {
+      return fingerprintIntakeSubmissionIntent(operation, {
+        baseCurrency,
+        portfolioId,
+        transactions,
+      });
+    }
+    if (operation === "ADD_INSTRUMENTS") {
+      return fingerprintIntakeSubmissionIntent(operation, { instruments });
+    }
+    return fingerprintIntakeSubmissionIntent(operation, { marketData });
+  }
+
   async function submitCurrentOperation() {
     if (!canSubmit) {
       setErrorMessage("Complete required list fields before submitting.");
@@ -438,7 +474,7 @@ export default function IntakePage() {
       const submissionAttempt = resolveIntakeSubmissionAttempt(
         listSubmissionAttemptRef.current,
         operation,
-        fingerprintIntakeBundlePayload(payload)
+        currentListSubmissionFingerprint()
       );
       listSubmissionAttemptRef.current = submissionAttempt;
 

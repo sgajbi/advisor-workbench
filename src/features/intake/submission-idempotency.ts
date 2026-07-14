@@ -28,6 +28,10 @@ export function createIntakeBundleIdempotencyKey(scope: IntakeSubmissionScope): 
   return `workbench-intake-bundle-${submissionScopeSlug(scope)}-${randomToken()}`;
 }
 
+export function fingerprintIntakeSubmissionIntent(scope: IntakeSubmissionScope, intent: unknown): string {
+  return JSON.stringify({ scope, intent });
+}
+
 export function fingerprintIntakeBundlePayload(payload: PortfolioBundlePayload): string {
   return JSON.stringify(payload);
 }

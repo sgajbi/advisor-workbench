@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Providers from "@/app/providers";
 import IntakePage from "@/app/intake/page";
@@ -21,6 +21,10 @@ vi.mock("@/features/intake/lookups-api", () => ({
 }));
 
 describe("IntakePage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     ingestPortfolioBundleMock.mockReset();
     getPortfolioLookupsMock.mockReset();
@@ -103,7 +107,8 @@ describe("IntakePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps the same idempotency key when retrying a failed list submission", async () => {
+  it("keeps the same idempotency key when retrying a failed transaction submission", async () => {
+    vi.spyOn(Date, "now").mockReturnValueOnce(1_000).mockReturnValueOnce(2_000);
     ingestPortfolioBundleMock
       .mockRejectedValueOnce(new Error("temporary gateway outage"))
       .mockResolvedValueOnce({
@@ -125,6 +130,7 @@ describe("IntakePage", () => {
       </Providers>
     );
 
+    fireEvent.click(screen.getByRole("tab", { name: /^Add Transactions$/i }));
     fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));
 
     expect(await screen.findByText("temporary gateway outage")).toBeInTheDocument();
@@ -137,9 +143,13 @@ describe("IntakePage", () => {
 
     const firstOptions = ingestPortfolioBundleMock.mock.calls[0][1] as { idempotencyKey: string };
     const retryOptions = ingestPortfolioBundleMock.mock.calls[1][1] as { idempotencyKey: string };
+    const firstPayload = ingestPortfolioBundleMock.mock.calls[0][0] as { transactions: Array<{ transaction_id: string }> };
+    const retryPayload = ingestPortfolioBundleMock.mock.calls[1][0] as { transactions: Array<{ transaction_id: string }> };
+
+    expect(retryPayload.transactions[0].transaction_id).not.toBe(firstPayload.transactions[0].transaction_id);
     expect(retryOptions.idempotencyKey).toBe(firstOptions.idempotencyKey);
     expect(
-      await screen.findByText((content) => /CREATE PORTFOLIO queued\./i.test(content))
+      await screen.findByText((content) => /ADD TRANSACTIONS queued\./i.test(content))
     ).toBeInTheDocument();
   });
 });
