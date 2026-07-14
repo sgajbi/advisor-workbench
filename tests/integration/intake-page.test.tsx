@@ -146,7 +146,7 @@ describe("IntakePage", () => {
     const firstPayload = ingestPortfolioBundleMock.mock.calls[0][0] as { transactions: Array<{ transaction_id: string }> };
     const retryPayload = ingestPortfolioBundleMock.mock.calls[1][0] as { transactions: Array<{ transaction_id: string }> };
 
-    expect(retryPayload.transactions[0].transaction_id).not.toBe(firstPayload.transactions[0].transaction_id);
+    expect(retryPayload.transactions[0].transaction_id).toBe(firstPayload.transactions[0].transaction_id);
     expect(retryOptions.idempotencyKey).toBe(firstOptions.idempotencyKey);
     expect(
       await screen.findByText((content) => /ADD TRANSACTIONS queued\./i.test(content))
