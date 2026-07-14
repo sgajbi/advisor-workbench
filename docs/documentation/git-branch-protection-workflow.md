@@ -25,3 +25,14 @@ gh pr merge <PR_NUMBER> --rebase --auto --delete-branch
 git checkout main
 git pull origin main
 ```
+
+## Auto-Merge Actor And Mainline Proof
+
+The repository auto-merge helper queues rebase auto-merge with `LOTUS_AUTOMERGE_TOKEN`, not the
+default `GITHUB_TOKEN`. This keeps the merged main update eligible for downstream workflow
+dispatch. If `LOTUS_AUTOMERGE_TOKEN` is not configured, the helper emits a warning and leaves merge
+ownership to an authorized human or release actor.
+
+After a PR merges to `main`, `.github/workflows/merged-pr-main-releasability.yml` dispatches
+`main-releasability.yml` for exact-main evidence. The main releasability workflow uses the
+repository-wide main-branch concurrency group to avoid ambiguous duplicate push/dispatch evidence.

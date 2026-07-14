@@ -253,6 +253,11 @@ Use these commands as the primary local contract:
 2. `Pull Request Merge Gate`
 3. `Main Releasability Gate`
 
+Auto-merge is queued by rebase through `LOTUS_AUTOMERGE_TOKEN`, not the default `GITHUB_TOKEN`, so
+the resulting main update is not suppressed from downstream releasability automation. Merged PRs
+dispatch `main-releasability.yml` for exact-main evidence, with main-branch concurrency preventing
+ambiguous duplicate push/dispatch runs.
+
 Important validation expectations:
 
 1. unit and integration behavior is validated through Vitest coverage,

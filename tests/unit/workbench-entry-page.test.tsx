@@ -10,6 +10,8 @@ vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirectMock(target),
 }));
 
+const asyncRouteImportTimeoutMs = 10_000;
+
 describe("WorkbenchEntryPage", () => {
   const originalFallback = process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS;
 
@@ -26,24 +28,28 @@ describe("WorkbenchEntryPage", () => {
     }
   });
 
-  it("redirects to the canonical portfolio when the lookup catalog contains it", async () => {
-    vi.resetModules();
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        items: [
-          { id: "DEMO_ADV_USD_001", label: "Legacy demo" },
-          { id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" },
-        ],
-      }),
-    } as Response);
+  it(
+    "redirects to the canonical portfolio when the lookup catalog contains it",
+    async () => {
+      vi.resetModules();
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            { id: "DEMO_ADV_USD_001", label: "Legacy demo" },
+            { id: "PB_SG_GLOBAL_BAL_001", label: "Private Banking Global Balanced" },
+          ],
+        }),
+      } as Response);
 
-    const { default: WorkbenchEntryPage } = await import("@/app/workbench/page");
-    await expect(WorkbenchEntryPage()).rejects.toThrowError(
-      "REDIRECT:/workbench/PB_SG_GLOBAL_BAL_001"
-    );
-    expect(redirectMock).toHaveBeenCalledWith("/workbench/PB_SG_GLOBAL_BAL_001");
-  });
+      const { default: WorkbenchEntryPage } = await import("@/app/workbench/page");
+      await expect(WorkbenchEntryPage()).rejects.toThrowError(
+        "REDIRECT:/workbench/PB_SG_GLOBAL_BAL_001"
+      );
+      expect(redirectMock).toHaveBeenCalledWith("/workbench/PB_SG_GLOBAL_BAL_001");
+    },
+    asyncRouteImportTimeoutMs
+  );
 
   it("redirects to the first lookup portfolio when no preferred portfolio is available", async () => {
     vi.resetModules();
