@@ -253,6 +253,13 @@ http://workbench.dev.lotus/data-products
 2. `Pull Request Merge Gate`
 3. `Main Releasability Gate`
 
+PR auto-merge is queued by rebase through the repository `LOTUS_AUTOMERGE_TOKEN` secret rather
+than the suppressed default `GITHUB_TOKEN`. If the secret is unavailable, the queue helper exits
+without claiming readiness and an authorized human or release actor must merge. Merged PRs also
+dispatch `main-releasability.yml` for exact-main proof; the main releasability workflow uses a
+single main-branch concurrency group so push and dispatcher events cannot leave ambiguous active
+evidence.
+
 Repo-native gate mapping:
 
 - `make check`

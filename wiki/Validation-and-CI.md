@@ -21,6 +21,13 @@ while integrated product support requires canonical runtime evidence and green r
 2. `Pull Request Merge Gate`
 3. `Main Releasability Gate`
 
+PR auto-merge uses the repository `LOTUS_AUTOMERGE_TOKEN` secret for rebase auto-merge so the
+resulting main update is not suppressed as a default `GITHUB_TOKEN` push. When the secret is absent,
+the workflow records a warning and skips queueing auto-merge instead of making a false readiness
+claim. A merged-PR dispatcher triggers `main-releasability.yml` for exact-main evidence, and the
+main releasability workflow deduplicates main-branch push and dispatch events through its
+concurrency group.
+
 ## Local command mapping
 
 - `make check`
