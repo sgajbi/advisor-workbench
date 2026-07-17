@@ -6,6 +6,7 @@
 - Related platform governance:
   - `lotus-platform/rfcs/RFC-0064-lotus-platform-rebrand-and-enterprise-productization-baseline.md`
   - `lotus-platform/rfcs/RFC-0069-lotus-ai-shared-ai-platform-service.md`
+- Screen-level evidence: `docs/product/WORKBENCH-EXPERIENCE-RESEARCH-LEDGER.md`
 
 ## 1. Purpose
 
