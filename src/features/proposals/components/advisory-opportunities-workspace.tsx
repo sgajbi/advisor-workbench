@@ -50,6 +50,11 @@ export default function AdvisoryOpportunitiesWorkspace({
     ...workbenchStrictQueryDefaults,
   });
 
+  const model = useMemo(
+    () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
+    [portfolioId, data],
+  );
+
   if (!isCanonicalIdeaPortfolio) {
     return (
       <ScreenStatePanel
@@ -60,11 +65,6 @@ export default function AdvisoryOpportunitiesWorkspace({
       />
     );
   }
-
-  const model = useMemo(
-    () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
-    [portfolioId, data],
-  );
 
   if (isLoading) {
     return (
