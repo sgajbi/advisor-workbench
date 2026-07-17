@@ -277,7 +277,7 @@ test.describe('Portfolio workbench smoke', () => {
     const headerKpis = page.locator('.portfolio-record-standalone-kpis');
     await expect(headerKpis.getByText('Portfolio Currency', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Latest Booking', { exact: true })).toBeVisible();
-    await expect(headerKpis.getByText('Ledger Entries', { exact: true })).toBeVisible();
+    await expect(headerKpis.getByText('30D Entries', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: /^Booked activity$/i })).toBeVisible();
     await expect(page.getByLabel('Portfolio transactions grid')).toBeVisible();
     await expect(page.getByText('Gross Amount', { exact: true })).toBeVisible();

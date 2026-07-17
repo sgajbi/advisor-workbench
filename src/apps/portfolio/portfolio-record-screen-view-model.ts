@@ -171,7 +171,7 @@ export function buildPortfolioRecordHeaderKpis(
         value: formatDate(workspace.operations?.latest_booked_transaction_date),
       },
       {
-        label: "Ledger Entries",
+        label: "30D Entries",
         value: String(
           workspace.transaction_ledger_page?.total ??
             workspace.recent_transactions.length,

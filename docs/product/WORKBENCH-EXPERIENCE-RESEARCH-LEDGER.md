@@ -380,7 +380,7 @@ navigation; it does not book, amend, cancel, approve, execute, settle, or reconc
 The reading order is:
 
 1. portfolio identity, mandate, portfolio currency, and source as-of date,
-2. latest booking date and complete ledger-entry count for the selected period,
+2. portfolio-wide latest booking date and initial 30-day ledger-entry count,
 3. trade and settlement dates, activity type, instrument, quantity, and price,
 4. gross amount in transaction currency, net cost and realized P&L in portfolio currency,
 5. settlement status and booking-component context,
@@ -411,8 +411,9 @@ visual identity, calculations, or unsupported capabilities.
    base currency. Never add mixed-currency fallback values into one total.
 3. Retain Gateway `total`, `skip`, and `limit` metadata, disclose visible ledger coverage, and
    provide source paging beyond the initial 200 entries.
-4. Lead with portfolio currency, latest booking, and entry count instead of unrelated AUM,
-   positions, or a generic window KPI.
+4. Lead with portfolio currency, portfolio-wide latest booking, and an explicitly labeled 30-day
+   entry count instead of unrelated AUM, positions, or an ambiguous window KPI. Keep current
+   filtered coverage in the grid that owns the active query scope.
 5. Count only visible non-settled entries as a review cue and avoid inventing settlement rules or
    severity outside source status.
 6. Compose the existing dense portfolio grid, record shell, lazy detail-drawer controller, and
@@ -469,7 +470,11 @@ or portfolio-currency net cost.
    attempt stopped on an already occupied Core Compose port; only its newly created failed
    containers were removed, and the screen proof used the existing healthy canonical Core/Gateway
    stack with the branch Workbench server.
-5. PR review, merge-gate, merge, and exact-main releasability evidence remain required before this
+5. Codex PR review identified that the stable header entry count could be mistaken for the grid's
+   mutable filter scope. The header now says `30D Entries`; current coverage remains beside the
+   active grid scope. Focused view-model tests, TypeScript, lint, and the populated canonical
+   Transactions browser flow passed after the correction.
+6. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
    review item is hardened.
 
 ### Publication decision
