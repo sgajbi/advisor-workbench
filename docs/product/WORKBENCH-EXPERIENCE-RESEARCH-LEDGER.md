@@ -478,7 +478,12 @@ or portfolio-currency net cost.
    visible after quick search. The cue now explicitly says `loaded`, preserving truthful scope
    without duplicating AG Grid's hidden-column search semantics. All 19 portfolio-grid tests,
    TypeScript, lint, and the populated canonical Transactions browser flow passed after the fix.
-7. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
+7. The next fresh-head review identified that an open record or related-event filter could survive
+   a portfolio switch. The transaction workspace now follows the Allocation and Positions
+   identity-key pattern so both review states are discarded before the new portfolio renders.
+   Eight focused workspace/screen tests, TypeScript, lint, and the populated canonical
+   Transactions browser flow passed after the correction.
+8. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
    review item is hardened.
 
 ### Publication decision

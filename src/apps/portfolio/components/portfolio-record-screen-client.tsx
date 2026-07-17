@@ -117,6 +117,7 @@ export default function PortfolioRecordScreenClient({
                   ) : null}
                   {screen === "transactions" ? (
                     <PortfolioTransactionsRecordWorkspace
+                      key={workspace.portfolio.portfolio_id}
                       workspace={workspace}
                       asOfDate={context.selectedAsOfDate}
                       defaultStartDate={startDate ?? context.effectivePeriodStartDate}
