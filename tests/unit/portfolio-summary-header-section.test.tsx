@@ -18,7 +18,7 @@ describe("PortfolioSummaryHeaderSection", () => {
       />
     );
 
-    expect(screen.getByText("Portfolio book")).toBeInTheDocument();
+    expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
     expect(screen.queryByText("Portfolio book PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Global Balanced Mandate" })).toBeInTheDocument();
     expect(screen.getByText("CIF_SG_000184")).toBeInTheDocument();

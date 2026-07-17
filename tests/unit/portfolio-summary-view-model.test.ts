@@ -75,13 +75,47 @@ describe("portfolio summary view model", () => {
 
     expect(buildPortfolioSummaryAttentionItems(workspace)).toEqual([
       expect.objectContaining({
-        title: "Cash Review Needed",
+        title: "Reporting coverage needs attention",
         tone: "warn",
       }),
       expect.objectContaining({
-        title: "Reporting Coverage Gap",
+        title: "Mandate Drift",
         tone: "warn",
       }),
+    ]);
+    expect(buildPortfolioSummaryAttentionItems(workspace)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ title: "Cash Review Needed" })])
+    );
+  });
+
+  it("does not repeat a partial failure after a shaped exception is available", () => {
+    const workspace = buildWorkspace({
+      exception_summaries: [
+        {
+          key: "pricing",
+          title: "Pricing coverage incomplete",
+          detail: "Some holdings lack current valuation coverage.",
+          tone: "warn",
+          href: "#portfolio-attention",
+        },
+      ],
+      partial_failures: [
+        { source_service: "lotus-core", error_code: "PRICE_GAP", detail: "Missing price" },
+      ],
+      insights: [
+        {
+          key: "drift",
+          title: "Mandate Drift",
+          detail: "US equity exposure near upper threshold.",
+          severity: "warning",
+          href: "/portfolio",
+        },
+      ],
+    });
+
+    expect(buildPortfolioSummaryAttentionItems(workspace).map((item) => item.title)).toEqual([
+      "Pricing coverage incomplete",
+      "Mandate Drift",
     ]);
   });
 
@@ -99,6 +133,7 @@ describe("portfolio summary view model", () => {
       readyCount: 3,
       totalCount: 4,
       percentLabel: "75%",
+      tone: "warn",
     });
   });
 

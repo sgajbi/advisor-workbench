@@ -24,6 +24,11 @@ export type { WorkbenchSegmentedControlOption } from "./components/workbench-seg
 export { default as WorkbenchChartContextRow } from "./components/workbench-chart-context-row";
 export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-context-row";
 export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";
+export { default as WorkbenchDecisionBrief } from "./components/workbench-decision-brief";
+export type {
+  WorkbenchDecisionBriefAttention,
+  WorkbenchDecisionBriefFact,
+} from "./components/workbench-decision-brief";
 export { default as WorkbenchDataGridFrame } from "./components/workbench-data-grid-frame";
 export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";

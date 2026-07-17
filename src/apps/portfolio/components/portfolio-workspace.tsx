@@ -16,14 +16,13 @@ import {
   getPositionsNeedingPricing,
 } from "../view-model";
 import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
-import PortfolioExecutiveSummary from "./portfolio-executive-summary";
 import PortfolioExceptionsSection from "./portfolio-exceptions-section";
 import {
   buildExceptionDrawer,
   buildMetricDrawer,
   type PortfolioDetailDrawerState,
 } from "./portfolio-detail-drawer-builders";
-import PortfolioPageHeaderStatus from "./portfolio-page-header-status";
+import PortfolioReviewDecisionBrief from "./portfolio-review-decision-brief";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
 import PortfolioWorkspaceSideRail from "./portfolio-workspace-side-rail";
@@ -33,19 +32,10 @@ const DeferredPortfolioDetailDrawer = dynamic(() => import("./portfolio-detail-d
 });
 
 export default function PortfolioWorkspaceView({
-  portfolios,
   workspace,
   context,
   toolbar,
 }: {
-  portfolios: Array<{
-    portfolio_id: string;
-    display_name: string;
-    base_currency: string;
-    client_id: string | null;
-    booking_center_code: string | null;
-  }>;
-  selectedPortfolioId: string | null;
   workspace: PortfolioWorkspace | null;
   context: PortfolioWorkspaceContext;
   toolbar?: ReactNode;
@@ -108,14 +98,8 @@ export default function PortfolioWorkspaceView({
               title="Portfolio Review"
               subtitle={
                 workspace
-                  ? "Front-office review for holdings, liquidity, exceptions, and next action."
-                  : "Front-office portfolio context, readiness, and decision support"
-              }
-              actions={
-                <PortfolioPageHeaderStatus
-                  label={portfolios.length ? "Catalog live" : "Catalog unavailable"}
-                  tone={portfolios.length ? "success" : "warn"}
-                />
+                  ? "Review portfolio value, returns, liquidity, exceptions, and the next business action."
+                  : "Portfolio context, readiness, and decision support"
               }
             >
               <WorkbenchSectionStack className="portfolio-page-sections">
@@ -145,7 +129,7 @@ export default function PortfolioWorkspaceView({
                       toolbar={toolbar}
                       exceptions={<PortfolioExceptionsSection workspace={workspace} />}
                       insights={
-                        <PortfolioExecutiveSummary workspace={workspace} />
+                        <PortfolioReviewDecisionBrief workspace={workspace} />
                       }
                     />
                   </>
