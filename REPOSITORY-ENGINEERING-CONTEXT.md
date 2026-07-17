@@ -270,7 +270,9 @@ Important validation expectations:
 2. browser smoke is validated through Playwright,
 3. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows,
-5. README and wiki updates should keep active product-surface truth explicit, especially when
+5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
+   `-LocalApps` runs are useful branch-local development evidence, not certification evidence,
+6. README and wiki updates should keep active product-surface truth explicit, especially when
    legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
 6. product docs should distinguish active shell navigation from disabled or compatibility-only
    routes when the shell bootstrap contract does not treat every historical route as supported,

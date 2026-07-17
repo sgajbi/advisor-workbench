@@ -39,5 +39,8 @@ export function resolveValidationConfig(argv, cwd = process.cwd()) {
       args.get("idea-capacity-seed-evidence") ??
         "output/canonical-front-office/idea-capacity-seed-evidence.json"
     ),
+    mainlineSourceProvenancePath: args.has("mainline-source-provenance")
+      ? path.resolve(cwd, args.get("mainline-source-provenance"))
+      : null,
   };
 }

@@ -11,6 +11,7 @@ param(
   [switch]$SkipSeedCleanup,
   [switch]$BuildImages,
   [switch]$CoreManageOnly,
+  [switch]$RequireMainlineSources,
   [switch]$RunValidation
 )
 
@@ -52,6 +53,21 @@ foreach ($item in $LocalApps) {
   }
 }
 
+if ($RequireMainlineSources) {
+  if ($CoreManageOnly) {
+    throw "RequireMainlineSources requires the complete canonical front-office service set."
+  }
+  if ($localAppSet.Count -gt 0) {
+    throw "RequireMainlineSources cannot be combined with LocalApps; local-app evidence is branch-local by design."
+  }
+  New-Item -ItemType Directory -Path $canonicalEvidenceRoot -Force | Out-Null
+  $provenanceScript = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
+  & node $provenanceScript --projects-root $ProjectsRoot --output (Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json")
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical mainline source provenance preflight failed. No Docker build, seed, or validation was started."
+  }
+}
+
 function Invoke-RepoCommand {
   param(
     [string]$RepoPath,
@@ -89,8 +105,15 @@ function Get-GitRepositoryIdentity {
     throw "Unable to resolve Git commit for $RepoPath."
   }
   $branch = (& git -C $RepoPath branch --show-current).Trim()
-  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
+  if ($LASTEXITCODE -ne 0) {
     throw "Unable to resolve Git branch for $RepoPath."
+  }
+  if ([string]::IsNullOrWhiteSpace($branch)) {
+    $originMainCommitSha = (& git -C $RepoPath rev-parse refs/remotes/origin/main).Trim()
+    if ($LASTEXITCODE -ne 0 -or $commitSha -ne $originMainCommitSha) {
+      throw "Detached Git checkout for $RepoPath is not exactly at origin/main."
+    }
+    $branch = "main"
   }
   return [ordered]@{ CommitSha = $commitSha; Branch = $branch }
 }
@@ -598,5 +621,8 @@ $validationArguments = @{
 }
 if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
   $validationArguments.ScreenshotDirectory = $ScreenshotDirectory
+}
+if ($RequireMainlineSources) {
+  $validationArguments.MainlineSourceProvenancePath = (Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json")
 }
 & (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") @validationArguments

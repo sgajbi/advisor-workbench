@@ -102,6 +102,10 @@ concurrency group.
   authority, and no client-publication claims.
   The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
   duplicating date literals in Workbench startup automation.
+- RFC or mainline certification runs must invoke the canonical startup script with
+  `-RequireMainlineSources`. The preflight writes a source-safe provenance manifest and fails
+  before Docker, seeding, or screenshots when any canonical participant is dirty or not exactly at
+  `origin/main`. Standard and `-LocalApps` runtime runs remain branch-local development evidence.
 - Lotus Idea capacity integration proof must use Idea-owned seed and workload automation after Idea
   and Advise readiness. The validator matches Idea `/version` to the checked-out commit and branch,
   requires the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace, and accepts exactly one

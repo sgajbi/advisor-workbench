@@ -40,6 +40,7 @@ describe("live validation contract modules", () => {
     expect(config.ideaCapacitySeedEvidencePath).toContain(
       "idea-capacity-seed-evidence.json",
     );
+    expect(config.mainlineSourceProvenancePath).toBeNull();
   });
 
   it("builds governed summary evidence with registry metadata and writable artifacts", async () => {

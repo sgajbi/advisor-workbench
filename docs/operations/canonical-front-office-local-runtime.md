@@ -97,6 +97,12 @@ From `lotus-workbench`:
 npm run live:stack:up
 ```
 
+For RFC/mainline certification, add `-RequireMainlineSources`. It fetches each canonical sibling
+without changing its worktree and fails before Docker, seeding, or screenshots unless every
+participant is clean and exactly at `origin/main`. It writes the source-safe
+`mainline-source-provenance.json` artifact beside canonical evidence. Normal and `-LocalApps`
+runs remain development evidence and must never be presented as mainline certification.
+
 That script performs:
 
 1. preview the canonical hosts block from `lotus-platform`

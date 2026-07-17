@@ -18,6 +18,7 @@ export interface ValidationConfig {
   timeoutMs: number;
   canonicalAsOfDate: string;
   ideaCapacitySeedEvidencePath: string;
+  mainlineSourceProvenancePath: string | null;
 }
 
 export interface CanonicalContractMetadata {
