@@ -56,7 +56,7 @@ export default function IdeaCandidateActionPanel({
 }: {
   candidateId: string;
   portfolioId: string;
-  onRecorded: () => Promise<void>;
+  onRecorded: () => Promise<boolean>;
 }) {
   const idempotencyKeys = useRef<Partial<Record<IdeaActionKind, string>>>({});
   const [reviewAction, setReviewAction] = useState<AdvisorIdeaReviewAction>(
@@ -78,6 +78,7 @@ export default function IdeaCandidateActionPanel({
   const [validationMessage, setValidationMessage] = useState<string>();
   const [latestRecordedKind, setLatestRecordedKind] =
     useState<IdeaActionKind>();
+  const [sourceRefreshFailed, setSourceRefreshFailed] = useState(false);
 
   const actionMutation = useMutation({
     mutationFn: async (submission: IdeaActionSubmission) => {
@@ -107,7 +108,7 @@ export default function IdeaCandidateActionPanel({
     onSuccess: async (_result, submission) => {
       delete idempotencyKeys.current[submission.kind];
       setLatestRecordedKind(submission.kind);
-      await onRecorded();
+      setSourceRefreshFailed(!(await onRecorded()));
     },
   });
 
@@ -358,7 +359,15 @@ export default function IdeaCandidateActionPanel({
           review or conversion state has been created.
         </Alert>
       ) : null}
-      {latestRecordedKind ? (
+      {latestRecordedKind && sourceRefreshFailed ? (
+        <Alert severity="warning" aria-live="polite">
+          {formatActionKind(latestRecordedKind)} was recorded through Gateway,
+          but source-owned detail or queue posture could not be refreshed. The
+          displayed posture may be stale; retry the page refresh before taking
+          a further action.
+        </Alert>
+      ) : null}
+      {latestRecordedKind && !sourceRefreshFailed ? (
         <Alert severity="success" aria-live="polite">
           {formatActionKind(latestRecordedKind)} recorded through Gateway.
           Source-owned detail and queue posture have been refreshed.

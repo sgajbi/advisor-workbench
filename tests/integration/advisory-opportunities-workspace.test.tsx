@@ -216,6 +216,32 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     expect(recordAdvisorIdeaConversionIntentMock).not.toHaveBeenCalled();
   });
 
+  it("warns when a recorded advisor action cannot refresh source-owned posture", async () => {
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        selectedCandidateId="idea_high_cash_001"
+      />,
+    );
+
+    await screen.findByLabelText("Idea candidate advisor actions");
+    getAdvisorIdeaReviewQueueMock.mockRejectedValueOnce(
+      new Error("source refresh unavailable"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    expect(
+      await screen.findByText(
+        /Review was recorded through Gateway, but source-owned detail or queue posture could not be refreshed/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Review recorded through Gateway. Source-owned detail and queue posture have been refreshed/,
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows an explicit failure state when Gateway cannot record an action", async () => {
     recordAdvisorIdeaFeedbackMock.mockRejectedValueOnce(
       new Error("gateway unavailable"),
