@@ -180,16 +180,21 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openIncomePortfolio(page, request);
     test.skip(!session.available, 'Portfolio income upstream unavailable in standalone smoke environment.');
 
-    await expect(page.getByRole('heading', { name: /^Income Summary$/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^Activity & Cash Movements$/i })).toBeVisible();
+    await expect(page.getByText('Booked income', { exact: true })).toBeVisible();
+    await expect(page.getByText('Booked cash movements', { exact: true })).toBeVisible();
     await expect(page.locator('.portfolio-income-activity-workspace')).toBeVisible();
-    await expect(page.getByRole('table', { name: 'Income summary' })).toBeVisible();
-    await expect(page.getByRole('table', { name: 'Activity and cash movements' })).toBeVisible();
-    await expect(page.getByText('Cash Weight')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Booked income by type' })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Booked cash movements by type' })).toBeVisible();
+    await expect(page.getByText('Current cash weight')).toBeVisible();
+    await expect(page.getByText('Booked records only')).toBeVisible();
+    await expect(page.getByText('Net cash movement').first()).toBeVisible();
+    await expect(
+      page.getByRole('table', { name: 'Booked income by type' }).getByText('Ready')
+    ).toHaveCount(0);
 
-    const incomeGridMetrics = await measureGrid(page.locator('.portfolio-income-grid'));
-    expect(incomeGridMetrics.childCount).toBe(2);
-    expect(incomeGridMetrics.width).toBeGreaterThan(900);
+    const incomeMetricStrip = await measureGrid(page.locator('.portfolio-income-activity-metrics').first());
+    expect(incomeMetricStrip.childCount).toBe(4);
+    expect(incomeMetricStrip.width).toBeGreaterThan(900);
   });
 
   test('allocation route connects direct exposures to contributing booked holdings', async ({ page, request }) => {
