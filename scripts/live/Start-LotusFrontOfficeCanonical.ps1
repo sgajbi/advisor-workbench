@@ -41,6 +41,7 @@ $canonicalEvidenceRoot = if ([string]::IsNullOrWhiteSpace($CanonicalEvidenceDire
 }
 $mainlineSourcePreflightPath = $null
 $mainlineSourceRuntimePath = $null
+$ideaCapacityEvidenceRoot = $canonicalEvidenceRoot
 if ($RequireMainlineSources) {
   $composeUpCommand = "docker compose up -d --build --force-recreate"
 } elseif ($BuildImages) {
@@ -70,6 +71,7 @@ if ($RequireMainlineSources) {
     ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::LocalApplicationData)) `
     "Lotus\\canonical-front-office\\mainline-source-provenance\\$mainlineProvenanceRunId"
   New-Item -ItemType Directory -Path $mainlineProvenanceRoot -Force | Out-Null
+  $ideaCapacityEvidenceRoot = $mainlineProvenanceRoot
   $provenanceScript = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
   $mainlineSourcePreflightPath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance.json"
   $mainlineSourceRuntimePath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance-runtime.json"
@@ -495,7 +497,7 @@ function Invoke-CanonicalIdeaCapacitySeed {
     -RunId $ideaCanonicalRunId `
     -ExpectedCommitSha $ideaSourceIdentity.CommitSha `
     -ExpectedBranch $ideaSourceIdentity.Branch `
-    -EvidenceDirectory $canonicalEvidenceRoot
+    -EvidenceDirectory $ideaCapacityEvidenceRoot
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical Lotus Idea capacity seed failed with exit code $LASTEXITCODE."
   }
@@ -647,5 +649,6 @@ if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
 }
 if ($RequireMainlineSources) {
   $validationArguments.MainlineSourceProvenancePath = $mainlineSourceRuntimePath
+  $validationArguments.IdeaCapacitySeedEvidencePath = Join-Path $ideaCapacityEvidenceRoot "idea-capacity-seed-evidence.json"
 }
 & (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") @validationArguments

@@ -354,8 +354,11 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain("mainline-source-provenance-runtime.json");
     expect(startScript).toContain("SpecialFolder]::LocalApplicationData");
     expect(startScript).toContain("mainlineProvenanceRoot");
+    expect(startScript).toContain("$ideaCapacityEvidenceRoot = $mainlineProvenanceRoot");
+    expect(startScript).toContain("IdeaCapacitySeedEvidencePath");
     expect(startScript).toContain("Get-FileHash -Algorithm SHA256");
     expect(startScript).toContain("MainlineSourceProvenancePath");
+    expect(validationScript).toContain("IdeaCapacitySeedEvidencePath");
     expect(validationScript).toContain("--mainline-source-provenance");
     expect(browserValidator).toContain("mainlineSourceProvenance");
     expect(browserValidator).toContain("bindMainlineSourceManifestToRuntime");

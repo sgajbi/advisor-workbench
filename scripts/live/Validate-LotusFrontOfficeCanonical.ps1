@@ -7,6 +7,7 @@ param(
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
   [string]$ScreenshotDirectory = "",
   [string]$CanonicalEvidenceDirectory = "",
+  [string]$IdeaCapacitySeedEvidencePath = "",
   [string]$MainlineSourceProvenancePath = ""
 )
 
@@ -19,7 +20,11 @@ $canonicalEvidenceRoot = if ([string]::IsNullOrWhiteSpace($CanonicalEvidenceDire
 } else {
   Join-Path $repoRoot $CanonicalEvidenceDirectory
 }
-$ideaCapacitySeedEvidencePath = Join-Path $canonicalEvidenceRoot "idea-capacity-seed-evidence.json"
+$ideaCapacitySeedEvidencePath = if ([string]::IsNullOrWhiteSpace($IdeaCapacitySeedEvidencePath)) {
+  Join-Path $canonicalEvidenceRoot "idea-capacity-seed-evidence.json"
+} else {
+  $IdeaCapacitySeedEvidencePath
+}
 $canonicalCallerContextHeaders = @{
   "X-Actor-Id" = "workbench-system"
   "X-Tenant-Id" = "tenant-sg"

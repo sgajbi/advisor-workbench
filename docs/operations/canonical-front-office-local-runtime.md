@@ -103,8 +103,8 @@ participant is clean and exactly at `origin/main`. Certification startup forces 
 and container recreation, then regenerates source provenance after startup and fails if it changed.
 The live validator also binds Lotus Idea's `/version` commit and branch to that manifest before it
 records mainline-source certification posture. It writes source-safe preflight and runtime
-provenance artifacts to a per-run Local AppData directory outside every checked source worktree, so
-the second preflight cannot reject its own generated files. Normal and `-LocalApps` runs remain
+provenance and Idea capacity-seed artifacts to a per-run Local AppData directory outside every
+checked source worktree, so the second preflight cannot reject its own generated files. Normal and `-LocalApps` runs remain
 development evidence and must never be presented as mainline certification.
 
 That script performs:
