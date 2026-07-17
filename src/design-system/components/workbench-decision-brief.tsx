@@ -33,6 +33,7 @@ export default function WorkbenchDecisionBrief({
     label: string;
     value: string;
     tone: SemanticBadgeTone;
+    support?: string;
   };
   attentionItems: WorkbenchDecisionBriefAttention[];
   facts: WorkbenchDecisionBriefFact[];
@@ -52,6 +53,7 @@ export default function WorkbenchDecisionBrief({
           <SemanticBadge tone={score.tone} emphasis="strong">
             {score.value}
           </SemanticBadge>
+          {score.support ? <small>{score.support}</small> : null}
         </div>
       </div>
 

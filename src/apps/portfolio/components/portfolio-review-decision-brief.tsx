@@ -11,6 +11,9 @@ export default function PortfolioReviewDecisionBrief({
   workspace: PortfolioWorkspace;
 }) {
   const brief = buildPortfolioDecisionBrief(workspace);
+  const readinessSupport = brief.rows.some((row) => row.support === brief.readiness.support)
+    ? undefined
+    : brief.readiness.support;
 
   return (
     <WorkbenchDecisionBrief
@@ -22,6 +25,7 @@ export default function PortfolioReviewDecisionBrief({
         label: "Portfolio readiness",
         value: brief.readiness.statusLabel,
         tone: brief.readiness.tone,
+        support: readinessSupport,
       }}
       attentionItems={brief.attentionItems}
       facts={brief.rows}

@@ -12,7 +12,12 @@ describe("WorkbenchDecisionBrief", () => {
         eyebrow="Review focus"
         title="Allocation drift needs attention"
         support="Equity exposure is outside the approved range."
-        score={{ label: "Review coverage", value: "75%", tone: "warn" }}
+        score={{
+          label: "Review coverage",
+          value: "75%",
+          tone: "warn",
+          support: "One source control remains open",
+        }}
         attentionItems={[
           {
             key: "allocation-drift",
@@ -35,6 +40,7 @@ describe("WorkbenchDecisionBrief", () => {
     expect(screen.getByRole("region", { name: "Mandate decision review" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Allocation drift needs attention" })).toBeInTheDocument();
     expect(screen.getByText("75%")).toHaveClass("semantic-badge-warn");
+    expect(screen.getByText("One source control remains open")).toBeInTheDocument();
     expect(screen.getByText("Recommended next step")).toBeInTheDocument();
   });
 
