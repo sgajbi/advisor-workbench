@@ -140,6 +140,17 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     );
   });
 
+  it("limits Lotus Idea triage to the certified canonical portfolio", () => {
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace portfolioId="PB_UNCERTIFIED_001" />,
+    );
+
+    expect(
+      screen.getByText("Lotus Idea review is limited to the canonical portfolio"),
+    ).toBeInTheDocument();
+    expect(getAdvisorIdeaReviewQueueMock).not.toHaveBeenCalled();
+  });
+
   it("loads selected candidate detail through the scoped Gateway helper", async () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace

@@ -17,6 +17,8 @@ import type { AdvisorIdeaCandidateDetailData } from "../types";
 import IdeaCandidateActionPanel from "./idea-candidate-action-panel";
 import styles from "./advisory-opportunities-workspace.module.css";
 
+const CANONICAL_IDEA_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
+
 export default function AdvisoryOpportunitiesWorkspace({
   portfolioId,
   selectedCandidateId,
@@ -25,10 +27,12 @@ export default function AdvisoryOpportunitiesWorkspace({
   selectedCandidateId?: string;
 }) {
   const queryClient = useQueryClient();
+  const isCanonicalIdeaPortfolio = portfolioId === CANONICAL_IDEA_PORTFOLIO_ID;
   const { data, isLoading, error } = useQuery({
     queryKey: ["advisory-opportunities", portfolioId],
     queryFn: async () => await getAdvisorIdeaReviewQueue({ portfolioId }),
     ...workbenchStrictQueryDefaults,
+    enabled: isCanonicalIdeaPortfolio,
   });
   const selectedCandidate = selectedCandidateId?.trim();
   const {
@@ -42,9 +46,20 @@ export default function AdvisoryOpportunitiesWorkspace({
         candidateId: selectedCandidate ?? "",
         portfolioId,
       }),
-    enabled: Boolean(selectedCandidate),
+    enabled: isCanonicalIdeaPortfolio && Boolean(selectedCandidate),
     ...workbenchStrictQueryDefaults,
   });
+
+  if (!isCanonicalIdeaPortfolio) {
+    return (
+      <ScreenStatePanel
+        kind="error"
+        title="Lotus Idea review is limited to the canonical portfolio"
+        body={`Lotus Idea opportunity triage is currently certified only for ${CANONICAL_IDEA_PORTFOLIO_ID}. Select that portfolio before requesting source-owned review data.`}
+        surface="default"
+      />
+    );
+  }
 
   const model = useMemo(
     () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
@@ -293,6 +308,7 @@ function IdeaCandidateDetailPanel({
           </div>
           {candidate?.candidateId ? (
             <IdeaCandidateActionPanel
+              key={candidate.candidateId}
               candidateId={candidate.candidateId}
               portfolioId={portfolioId}
               onRecorded={onActionRecorded}

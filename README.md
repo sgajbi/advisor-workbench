@@ -394,7 +394,8 @@ Important current product and route truths:
     `/api/v1/ideas/review-queues/advisor`, `/api/v1/ideas/candidates/{candidate_id}`, and the
     source-owned candidate mutation routes for review actions, feedback, and conversion intents.
     The Workbench BFF derives route-specific Idea subject, role, capability, and portfolio entitlement
-    server-side; browser headers never grant Idea authority. Workbench renders Idea-owned candidate
+    server-side; browser headers never grant Idea authority. The surface is limited to canonical
+    `PB_SG_GLOBAL_BAL_001` until authenticated portfolio entitlement is available. Workbench renders Idea-owned candidate
     rank, score, review posture, source-signal ids, reason codes, durable-storage posture, policy
     version, and supported-feature promotion posture, and records typed advisor actions with a bounded
     idempotency key that retries the identical submission after a transient failure. Workbench must
