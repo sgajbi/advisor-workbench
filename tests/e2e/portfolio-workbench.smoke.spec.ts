@@ -71,6 +71,29 @@ async function openIncomePortfolio(
   return { portfolioId, available: true };
 }
 
+async function openAllocationPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  if (!portfolioId) {
+    await page.goto('/allocation', { waitUntil: 'domcontentloaded' });
+    return { portfolioId: null, available: false };
+  }
+
+  await page.goto(`/allocation?portfolioId=${portfolioId}`, { waitUntil: 'domcontentloaded' });
+  const unavailableHeading = page.getByRole('heading', { name: /^Portfolio records unavailable$/i });
+  const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+  if (unavailableVisible) {
+    return { portfolioId, available: false };
+  }
+
+  await expect(page.getByRole('heading', { name: /^Allocation$/i })).toBeVisible({
+    timeout: 15000,
+  });
+  return { portfolioId, available: true };
+}
+
 test.describe('Portfolio workbench smoke', () => {
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
@@ -119,5 +142,39 @@ test.describe('Portfolio workbench smoke', () => {
     const incomeGridMetrics = await measureGrid(page.locator('.portfolio-income-grid'));
     expect(incomeGridMetrics.childCount).toBe(2);
     expect(incomeGridMetrics.width).toBeGreaterThan(900);
+  });
+
+  test('allocation route connects direct exposures to contributing booked holdings', async ({ page, request }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openAllocationPortfolio(page, request);
+    test.skip(!session.available, 'Portfolio allocation upstream unavailable in standalone smoke environment.');
+
+    await expect(page.getByText('Portfolio exposure')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByText('Exposure Views')).toBeVisible();
+    await expect(page.getByText('Target allocation', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Allocation drift', { exact: true })).toHaveCount(0);
+
+    const firstDirectExposure = page.locator('.portfolio-allocation-ranked-row').first();
+    await expect(firstDirectExposure).toBeEnabled();
+    await firstDirectExposure.focus();
+    await firstDirectExposure.press('Enter');
+
+    await expect(page.getByRole('heading', { name: /^Contributing holdings$/i })).toBeVisible();
+    await expect(page.locator('.portfolio-grid-toolbar-copy')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Clear filter$/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Clear filter$/i }).click();
+    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+
+    const lookThroughToggle = page.getByRole('button', { name: /^Look-through off$/i });
+    if (await lookThroughToggle.isEnabled().catch(() => false)) {
+      await lookThroughToggle.click();
+      await expect(page.getByText(/Expanded exposure$/i)).toBeVisible();
+      await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
+      await expect(
+        page.getByText(/Expanded exposure contributors require source-backed look-through detail/i)
+      ).toBeVisible();
+    }
   });
 });
