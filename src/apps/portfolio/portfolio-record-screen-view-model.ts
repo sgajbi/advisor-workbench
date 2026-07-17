@@ -20,7 +20,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
 > = {
   allocation: {
     title: "Allocation",
-    subtitle: "Portfolio composition, exposure buckets, and look-through availability.",
+    subtitle: "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
     kicker: "Allocation review",
   },
   positions: {
@@ -88,10 +88,8 @@ export function buildPortfolioRecordHeaderKpis(
         value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
       },
       {
-        label: "Buckets",
-        value: String(
-          (workspace.allocation_views ?? []).reduce((total, view) => total + view.buckets.length, 0)
-        ),
+        label: "Exposure Views",
+        value: String(workspace.allocation_views?.length ?? 0),
       },
       {
         label: "Positions",

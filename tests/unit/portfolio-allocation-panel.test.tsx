@@ -112,7 +112,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
-    expect(screen.getByText("Allocation Lens")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio exposure")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
@@ -123,22 +123,29 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Look-through off" }));
-    await waitFor(() =>
-      expect(
-        screen.getByText("Region • 1 buckets • Expanded exposure")
-      ).toBeInTheDocument()
-    );
     fireEvent.click(screen.getByRole("tab", { name: "Region" }));
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Asia: 300,000 USD, 24.00%, 3 positions. Filter holdings.",
-      })
+        name: "North America: 625,000 USD, 50.00%, 6 positions. Review contributing holdings.",
+      }),
     );
     expect(onSelectionChange).toHaveBeenCalledWith({
       dimension: "region",
-      bucket: "Asia",
+      bucket: "North America",
     });
+
+    fireEvent.click(screen.getByRole("button", { name: "Look-through off" }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("Region • 1 exposures • Expanded exposure")
+      ).toBeInTheDocument()
+    );
+    expect(onSelectionChange).toHaveBeenCalledWith(null);
+    expect(
+      screen.getByRole("button", {
+        name: "Asia: 300,000 USD, 24.00%, 3 positions. Expanded exposure contributor detail is unavailable.",
+      }),
+    ).toBeDisabled();
   });
 
   it("supports keyboard activation on donut chart segments", async () => {
@@ -179,7 +186,7 @@ describe("PortfolioAllocationPanel", () => {
     );
 
     fireEvent.keyDown(
-      screen.getByLabelText("Equities: 58.00%. Select to filter holdings."),
+      screen.getByLabelText("Equities: 58.00%. Review contributing holdings."),
       { key: "Enter" }
     );
 

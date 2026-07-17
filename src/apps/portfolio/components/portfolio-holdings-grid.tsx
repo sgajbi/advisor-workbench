@@ -39,6 +39,9 @@ type HoldingsGridProps = {
   baseCurrency: string;
   asOfDate: string;
   columnMode: "essential" | "expanded";
+  kicker?: string;
+  title?: string;
+  description?: string;
   filterLabel?: string | null;
   onClearFilter?: () => void;
   onRowSelect?: (row: HoldingsRow) => void;
@@ -52,6 +55,9 @@ export default function PortfolioHoldingsGrid({
   baseCurrency,
   asOfDate,
   columnMode,
+  kicker = "Positions",
+  title = "Holdings",
+  description = `As of ${formatDate(asOfDate)} in ${baseCurrency}`,
   filterLabel,
   onClearFilter,
   onRowSelect,
@@ -191,9 +197,9 @@ export default function PortfolioHoldingsGrid({
 
   return (
     <PortfolioRecordGridShell
-      kicker="Positions"
-      title="Holdings"
-      description={`As of ${formatDate(asOfDate)} in ${baseCurrency}`}
+      kicker={kicker}
+      title={title}
+      description={description}
       summaryLabel={formatCount(rowData.length, "position")}
       summaryValue={formatCurrency(sumHoldingsMarketValue(rowData), baseCurrency)}
       searchControl={
@@ -294,6 +300,19 @@ export default function PortfolioHoldingsGrid({
             }}
           />
         </>
+      ) : filterLabel ? (
+        <PortfolioModuleState
+          variant="status"
+          state="empty"
+          title="No contributing holdings found"
+          body={`No booked holdings match ${filterLabel}.`}
+          hint="The exposure may rely on classification detail that is not present on the booked positions."
+          action={
+            <button type="button" onClick={onClearFilter}>
+              Clear exposure
+            </button>
+          }
+        />
       ) : (
         <PortfolioModuleState
           variant="status"

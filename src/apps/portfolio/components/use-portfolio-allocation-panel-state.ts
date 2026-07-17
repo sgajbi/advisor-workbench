@@ -19,6 +19,7 @@ import type {
   PortfolioAllocationSelection,
   PortfolioAllocationView,
 } from "../types";
+import type { AllocationExposureMode } from "../portfolio-allocation-drilldown-view-model";
 
 export type PortfolioAllocationPanelState = ReturnType<
   typeof usePortfolioAllocationPanelState
@@ -31,6 +32,7 @@ export function usePortfolioAllocationPanelState({
   reportingCurrency,
   selectedAllocation,
   onSelectionChange,
+  onExposureModeChange,
 }: {
   portfolioId: string;
   allocationViews: PortfolioAllocationView[];
@@ -38,6 +40,7 @@ export function usePortfolioAllocationPanelState({
   reportingCurrency: string;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
+  onExposureModeChange?: (mode: AllocationExposureMode) => void;
 }) {
   const [resolvedAllocationViews, setResolvedAllocationViews] =
     useState<PortfolioAllocationView[]>(allocationViews);
@@ -157,6 +160,12 @@ export function usePortfolioAllocationPanelState({
     lookThroughEffectiveMode === "prefer_look_through"
       ? "Expanded exposure"
       : "Direct holdings";
+  const exposureMode: AllocationExposureMode =
+    lookThroughLabel === "Expanded exposure" ? "expanded" : "direct";
+
+  useEffect(() => {
+    onExposureModeChange?.(exposureMode);
+  }, [exposureMode, onExposureModeChange]);
 
   function changeDimension(nextDimension: AllocationDimension) {
     setActiveDimension(nextDimension);
@@ -165,6 +174,9 @@ export function usePortfolioAllocationPanelState({
   }
 
   function selectBucket(bucket: string) {
+    if (exposureMode === "expanded") {
+      return;
+    }
     onSelectionChange(
       selectedBucket === bucket
         ? null
@@ -186,6 +198,20 @@ export function usePortfolioAllocationPanelState({
       ),
     );
     setHoveredBucket(null);
+
+    const nextExposureMode: AllocationExposureMode =
+      nextRequestedMode === "prefer_look_through" &&
+      normalizeLookThroughMode(
+        nextLookThrough?.effective_mode,
+        nextRequestedMode,
+      ) === "prefer_look_through"
+        ? "expanded"
+        : "direct";
+
+    if (nextExposureMode === "expanded") {
+      onSelectionChange(null);
+      return;
+    }
 
     if (!selectedAllocation) {
       return;
@@ -250,6 +276,7 @@ export function usePortfolioAllocationPanelState({
     lookThroughSupported,
     lookThroughBusy,
     lookThroughProbeComplete,
+    holdingsDrilldownAvailable: exposureMode === "direct",
     changeDimension,
     selectBucket,
     toggleLookThrough,

@@ -2,7 +2,6 @@ import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
 import { formatDate } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
-  PortfolioHoldingsDrilldownFilter,
   PortfolioIncomeSummaryView,
   PortfolioReadinessIndicator,
   PortfolioReadinessStatus,
@@ -734,57 +733,6 @@ export function filterTransactionsByDrilldown(
   return transactions.filter(
     (transaction) => transaction.far_leg_group_id === filter.far_leg_group_id
   );
-}
-
-export function filterPositionsByDrilldown(
-  positions: PortfolioWorkspace["positions"],
-  filter: PortfolioHoldingsDrilldownFilter | null
-): PortfolioWorkspace["positions"] {
-  if (!filter) {
-    return positions;
-  }
-
-  return positions.filter((position) => {
-    switch (filter.kind) {
-      case "allocation":
-        switch (filter.selection.dimension) {
-          case "asset_class":
-            return (
-              normalizeFilterValue(position.asset_class) ===
-              normalizeFilterValue(filter.selection.bucket)
-            );
-          case "currency":
-            return (
-              normalizeFilterValue(position.currency) ===
-              normalizeFilterValue(filter.selection.bucket)
-            );
-          case "sector":
-            return (
-              normalizeFilterValue(position.sector) ===
-              normalizeFilterValue(filter.selection.bucket)
-            );
-          case "region":
-            return (
-              normalizeFilterValue(position.country_of_risk) ===
-              normalizeFilterValue(filter.selection.bucket)
-            );
-          default:
-            return true;
-        }
-      case "security":
-        return position.security_id === filter.security_id;
-      case "status":
-        return filter.status === "Unpriced"
-          ? position.market_price == null || position.market_value_base == null
-          : true;
-      default:
-        return true;
-    }
-  });
-}
-
-export function buildAllocationDrilldownLabel(dimension: string, bucket: string): string {
-  return `${formatFilterDimension(dimension)}: ${bucket}`;
 }
 
 export function buildSecurityDrilldownLabel(

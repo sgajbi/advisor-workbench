@@ -22,6 +22,10 @@ import PortfolioAllocationPanel from "./portfolio-allocation-panel";
 import type { PortfolioAllocationSelection } from "../types";
 import type { PortfolioRecordScreenKind } from "../portfolio-record-screen-view-model";
 import {
+  buildAllocationHoldingsBreakdown,
+  type AllocationExposureMode,
+} from "../portfolio-allocation-drilldown-view-model";
+import {
   buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
   buildPortfolioRecordHeaderMeta,
@@ -56,6 +60,17 @@ export default function PortfolioRecordScreenClient({
   const headerKpis = workspace ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen) : [];
   const [selectedAllocation, setSelectedAllocation] =
     useState<PortfolioAllocationSelection | null>(null);
+  const [allocationExposureMode, setAllocationExposureMode] =
+    useState<AllocationExposureMode>("direct");
+  const allocationHoldings = useMemo(
+    () =>
+      buildAllocationHoldingsBreakdown({
+        positions: workspace?.positions ?? [],
+        selection: selectedAllocation,
+        exposureMode: allocationExposureMode,
+      }),
+    [allocationExposureMode, selectedAllocation, workspace?.positions],
+  );
 
   return (
     <PortfolioPageLayout>
@@ -98,15 +113,30 @@ export default function PortfolioRecordScreenClient({
                     </div>
                   </section>
                   {screen === "allocation" ? (
-                    <PortfolioAllocationPanel
-                      portfolioId={workspace.portfolio.portfolio_id}
-                      allocationViews={workspace.allocation_views ?? []}
-                      baseCurrency={workspace.portfolio.base_currency}
-                      asOfDate={context.selectedAsOfDate}
-                      reportingCurrency={context.selectedReportingCurrency}
-                      selectedAllocation={selectedAllocation}
-                      onSelectionChange={setSelectedAllocation}
-                    />
+                    <>
+                      <PortfolioAllocationPanel
+                        portfolioId={workspace.portfolio.portfolio_id}
+                        allocationViews={workspace.allocation_views ?? []}
+                        baseCurrency={workspace.portfolio.base_currency}
+                        asOfDate={context.selectedAsOfDate}
+                        reportingCurrency={context.selectedReportingCurrency}
+                        selectedAllocation={selectedAllocation}
+                        onSelectionChange={setSelectedAllocation}
+                        onExposureModeChange={setAllocationExposureMode}
+                      />
+                      <PortfolioHoldingsGrid
+                        portfolioId={workspace.portfolio.portfolio_id}
+                        positions={allocationHoldings.positions}
+                        baseCurrency={workspace.portfolio.base_currency}
+                        asOfDate={context.selectedAsOfDate}
+                        columnMode="expanded"
+                        kicker="Exposure contributors"
+                        title={allocationHoldings.title}
+                        description={allocationHoldings.description}
+                        filterLabel={allocationHoldings.filterLabel}
+                        onClearFilter={() => setSelectedAllocation(null)}
+                      />
+                    </>
                   ) : null}
                   {screen === "positions" ? (
                     <PortfolioHoldingsGrid

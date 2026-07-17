@@ -9,8 +9,8 @@ export const ALLOCATION_DIMENSIONS = [
 ] as const;
 
 export const ALLOCATION_CHART_TYPES = [
-  { key: "donut", label: "Donut" },
-  { key: "bar", label: "Bar" },
+  { key: "donut", label: "Composition" },
+  { key: "bar", label: "Comparison" },
   { key: "table", label: "Table" },
 ] as const;
 

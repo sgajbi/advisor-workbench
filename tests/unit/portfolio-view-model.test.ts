@@ -5,7 +5,6 @@ import {
   buildPortfolioActiveFilterChips,
   buildPortfolioFilterOptions,
   buildPortfolioReadinessIndicators,
-  filterPositionsByDrilldown,
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
   getOrderedWorkflowCues,
@@ -374,7 +373,7 @@ describe("portfolio view model", () => {
     expect(derived?.recent_transactions[0].transaction_id).toBe("TX_BUY");
   });
 
-  it("supports shared holdings and transaction drill-down filters", () => {
+  it("supports transaction drill-down filters and pricing review", () => {
     const workspace = buildOperationalWorkspace();
     workspace.positions = [
       {
@@ -428,20 +427,6 @@ describe("portfolio view model", () => {
       },
     ];
 
-    expect(
-      filterPositionsByDrilldown(workspace.positions, {
-        kind: "allocation",
-        selection: { dimension: "sector", bucket: "Technology" },
-        label: "Filtered by Sector: Technology",
-      })
-    ).toHaveLength(1);
-    expect(
-      filterPositionsByDrilldown(workspace.positions, {
-        kind: "status",
-        status: "Unpriced",
-        label: "Filtered by pricing exception: Unpriced holdings",
-      })[0].instrument_name
-    ).toBe("Gov Bond");
     expect(
       filterTransactionsByDrilldown(workspace.recent_transactions, {
         kind: "activity",
