@@ -222,11 +222,7 @@ export type AdvisorCockpitActionStatus =
   | "SUPERSEDED";
 
 export type AdvisorCockpitActionPriority =
-  | "CRITICAL"
-  | "HIGH"
-  | "MEDIUM"
-  | "LOW"
-  | "INFORMATIONAL";
+  "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFORMATIONAL";
 
 export type AdvisorCockpitSlaAgeBand =
   | "NOT_DUE"
@@ -617,6 +613,62 @@ export type AdvisorIdeaCandidateDetailData = {
     latestEventType?: string;
     latestEventOutcome?: string;
     latestOccurredAtUtc?: string;
+    [key: string]: unknown;
+  };
+  durableStorageBacked?: boolean;
+  supportedFeaturePromoted?: boolean;
+  [key: string]: unknown;
+};
+
+export type AdvisorIdeaReviewAction =
+  | "approve_for_conversion"
+  | "reject"
+  | "no_action"
+  | "suppress"
+  | "snooze"
+  | "escalate_to_pm"
+  | "escalate_to_compliance";
+
+export type AdvisorIdeaReviewActionRequest = {
+  reviewId: string;
+  action: AdvisorIdeaReviewAction;
+  reasonCodes: string[];
+  decidedAtUtc: string;
+  suppressionReason?:
+    | "duplicate"
+    | "recently_rejected"
+    | "below_materiality"
+    | "unsupported_evidence"
+    | "manual_suppression";
+  snoozedUntilUtc?: string;
+};
+
+export type AdvisorIdeaFeedbackRequest = {
+  feedbackId: string;
+  outcome:
+    | "useful"
+    | "not_useful"
+    | "duplicate"
+    | "too_late"
+    | "missing_context"
+    | "unsupported_claim";
+  reasonCodes: string[];
+  recordedAtUtc: string;
+};
+
+export type AdvisorIdeaConversionIntentRequest = {
+  conversionIntentId: string;
+  target: "advise_proposal" | "manage_review" | "report_evidence";
+  reasonCodes: string[];
+  requestedAtUtc: string;
+};
+
+export type AdvisorIdeaCandidateActionData = {
+  persistence?: {
+    decision?: string;
+    lifecycleStatus?: string;
+    reviewPosture?: string;
+    auditEventType?: string;
     [key: string]: unknown;
   };
   durableStorageBacked?: boolean;

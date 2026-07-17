@@ -22,7 +22,11 @@ import {
   AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
+  AdvisorIdeaCandidateActionData,
   AdvisorIdeaCandidateDetailData,
+  AdvisorIdeaConversionIntentRequest,
+  AdvisorIdeaFeedbackRequest,
+  AdvisorIdeaReviewActionRequest,
   AdvisorIdeaReviewQueueData,
   ProposalApprovalActionRequest,
   ProposalApprovalsData,
@@ -65,6 +69,7 @@ import {
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "./types";
+import { observeWorkbenchMutation } from "@/features/workbench/api-client";
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
@@ -94,6 +99,13 @@ export type AdvisorIdeaQueueFilters = {
 export type AdvisorIdeaCandidateDetailFilters = {
   candidateId: string;
   portfolioId: string;
+};
+
+type AdvisorIdeaCandidateActionInput<TRequest> = {
+  candidateId: string;
+  portfolioId: string;
+  idempotencyKey: string;
+  request: TRequest;
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
@@ -365,7 +377,10 @@ export async function getAdvisorIdeaCandidateDetail({
   const response = await fetch(
     `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}`,
     {
-      headers: buildIdeaCallerHeaders(portfolioId, "idea.candidate.detail.read"),
+      headers: buildIdeaCallerHeaders(
+        portfolioId,
+        "idea.candidate.detail.read",
+      ),
     },
   );
   if (!response.ok) {
@@ -374,7 +389,54 @@ export async function getAdvisorIdeaCandidateDetail({
       `Advisor idea candidate detail failed (${response.status}): ${body}`,
     );
   }
-  return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(await response.json());
+  return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(
+    await response.json(),
+  );
+}
+
+export async function recordAdvisorIdeaReviewAction(
+  input: AdvisorIdeaCandidateActionInput<AdvisorIdeaReviewActionRequest>,
+): Promise<AdvisorIdeaCandidateActionData> {
+  return await observeWorkbenchMutation(
+    "idea.candidate.review-action",
+    async () =>
+      await postAdvisorIdeaCandidateAction({
+        ...input,
+        pathSuffix: "review-actions",
+        capability: "idea.review.record",
+        errorLabel: "Advisor idea review action",
+      }),
+  );
+}
+
+export async function recordAdvisorIdeaFeedback(
+  input: AdvisorIdeaCandidateActionInput<AdvisorIdeaFeedbackRequest>,
+): Promise<AdvisorIdeaCandidateActionData> {
+  return await observeWorkbenchMutation(
+    "idea.candidate.feedback",
+    async () =>
+      await postAdvisorIdeaCandidateAction({
+        ...input,
+        pathSuffix: "feedback",
+        capability: "idea.feedback.record",
+        errorLabel: "Advisor idea feedback",
+      }),
+  );
+}
+
+export async function recordAdvisorIdeaConversionIntent(
+  input: AdvisorIdeaCandidateActionInput<AdvisorIdeaConversionIntentRequest>,
+): Promise<AdvisorIdeaCandidateActionData> {
+  return await observeWorkbenchMutation(
+    "idea.candidate.conversion-intent",
+    async () =>
+      await postAdvisorIdeaCandidateAction({
+        ...input,
+        pathSuffix: "conversion-intents",
+        capability: "idea.conversion.intent.record",
+        errorLabel: "Advisor idea conversion intent",
+      }),
+  );
 }
 
 export async function getAdvisoryPolicyEvaluation(
@@ -526,7 +588,9 @@ export async function reviewAdvisoryCopilotRun(
 }
 
 export async function getAdvisoryCopilotSupportability(): Promise<AdvisoryCopilotSupportabilityData> {
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-copilot/supportability`);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/advisory-copilot/supportability`,
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(
@@ -1147,13 +1211,49 @@ function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
   return params.toString() ? `?${params.toString()}` : "";
 }
 
-function buildIdeaCallerHeaders(portfolioId: string, capabilities: string): Headers {
+function buildIdeaCallerHeaders(
+  portfolioId: string,
+  capabilities: string,
+): Headers {
   return new Headers({
     "X-Caller-Subject": "workbench-advisor",
     "X-Caller-Roles": "advisor",
     "X-Caller-Capabilities": capabilities,
     "X-Caller-Portfolio-Ids": portfolioId,
   });
+}
+
+async function postAdvisorIdeaCandidateAction<TRequest>({
+  candidateId,
+  portfolioId,
+  idempotencyKey,
+  request,
+  pathSuffix,
+  capability,
+  errorLabel,
+}: AdvisorIdeaCandidateActionInput<TRequest> & {
+  pathSuffix: "review-actions" | "feedback" | "conversion-intents";
+  capability: string;
+  errorLabel: string;
+}): Promise<AdvisorIdeaCandidateActionData> {
+  const headers = buildIdeaCallerHeaders(portfolioId, capability);
+  headers.set("Content-Type", "application/json");
+  headers.set("Idempotency-Key", idempotencyKey);
+  const response = await fetch(
+    `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}/${pathSuffix}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(request),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`${errorLabel} failed (${response.status}): ${body}`);
+  }
+  return unwrapGatewayData<AdvisorIdeaCandidateActionData>(
+    await response.json(),
+  );
 }
 
 function unwrapGatewayData<T>(payload: unknown): T {

@@ -71,7 +71,9 @@ Boundary rules that matter:
 7. Recommendations remain compatibility paths. `mode=cockpit` is now the Gateway-backed RFC-0026
    advisor operating cockpit for Advise-owned action items, supportability, meeting preparation,
    and bounded acknowledgements. `mode=opportunities` now renders the Lotus Idea advisor review
-   queue through Gateway instead of treating Advise draft proposals as sourced opportunities.
+   queue through Gateway instead of treating Advise draft proposals as sourced opportunities. Candidate
+   detail supports only source-owned review, feedback, and bounded conversion-intent recording through
+   Gateway; it does not create a proposal, grant downstream authority, or promote the feature.
    Proposals are a bounded direct advisory workspace surface for the Gateway-backed proposal queue
    and RFC-0023 advisor narrative delivery posture, while the top-level `Proposal` shell entry
    remains disabled pending broader product promotion.
@@ -119,7 +121,8 @@ Current route posture:
   action execution, human review posture, and blocked client-publication boundaries
 - `/recommendations?mode=opportunities`
   Gateway-backed Lotus Idea review queue over Idea-owned candidate ranking, score, source signals,
-  durable-storage posture, and supported-feature promotion posture
+  durable-storage posture, supported-feature promotion posture, and source-owned candidate action
+  recording through Gateway
 - `/proposals`
   direct Gateway-backed proposal queue for advisor follow-up
 - `/proposals/[proposalId]`
@@ -384,10 +387,12 @@ Important current product and route truths:
     orders, or claiming OMS/fill/settlement truth. Canonical front-office validation verifies the
     Gateway proof contracts and captures governed `advisory.bank_demo_proof` screenshot evidence.
 18. Lotus Idea opportunity rendering on `/recommendations?mode=opportunities` is backed by Gateway
-    `/api/v1/ideas/review-queues/advisor` only. Workbench passes the active portfolio as caller
-    entitlement scope, renders Idea-owned candidate rank, score, review posture, source-signal ids,
-    reason codes, durable-storage posture, policy version, and supported-feature promotion posture,
-    and links only to Gateway candidate detail. Workbench must not rerank candidates, clone Idea
+    `/api/v1/ideas/review-queues/advisor`, `/api/v1/ideas/candidates/{candidate_id}`, and the
+    source-owned candidate mutation routes for review actions, feedback, and conversion intents.
+    Workbench passes the active portfolio as caller entitlement scope, renders Idea-owned candidate
+    rank, score, review posture, source-signal ids, reason codes, durable-storage posture, policy
+    version, and supported-feature promotion posture, and records typed advisor actions with a bounded
+    idempotency key through the Workbench BFF. Workbench must not rerank candidates, clone Idea
     scoring, infer downstream conversion, create proposals automatically, grant suitability or
     execution authority, or promote Lotus Idea as a supported feature before canonical browser proof,
     data-product certification, and `lotus-idea` supported-feature evidence exist.

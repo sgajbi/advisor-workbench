@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,11 +42,35 @@ const getAdvisorIdeaCandidateDetailMock = vi.fn(async (_filters?: unknown) => ({
   durableStorageBacked: true,
   supportedFeaturePromoted: false,
 }));
+const recordAdvisorIdeaReviewActionMock = vi.fn(async (_input?: unknown) => ({
+  persistence: { decision: "recorded" },
+  durableStorageBacked: true,
+  supportedFeaturePromoted: false,
+}));
+const recordAdvisorIdeaFeedbackMock = vi.fn(async (_input?: unknown) => ({
+  persistence: { decision: "recorded" },
+  durableStorageBacked: true,
+  supportedFeaturePromoted: false,
+}));
+const recordAdvisorIdeaConversionIntentMock = vi.fn(
+  async (_input?: unknown) => ({
+    persistence: { decision: "recorded" },
+    durableStorageBacked: true,
+    supportedFeaturePromoted: false,
+  }),
+);
 
 vi.mock("../../src/features/proposals/api", () => ({
   getAdvisorIdeaCandidateDetail: (filters: unknown) =>
     getAdvisorIdeaCandidateDetailMock(filters),
-  getAdvisorIdeaReviewQueue: (filters: unknown) => getAdvisorIdeaReviewQueueMock(filters),
+  getAdvisorIdeaReviewQueue: (filters: unknown) =>
+    getAdvisorIdeaReviewQueueMock(filters),
+  recordAdvisorIdeaReviewAction: (input: unknown) =>
+    recordAdvisorIdeaReviewActionMock(input),
+  recordAdvisorIdeaFeedback: (input: unknown) =>
+    recordAdvisorIdeaFeedbackMock(input),
+  recordAdvisorIdeaConversionIntent: (input: unknown) =>
+    recordAdvisorIdeaConversionIntentMock(input),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -57,17 +81,24 @@ function renderWithQueryClient(ui: React.ReactElement) {
       },
     },
   });
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
 }
 
 describe("AdvisoryOpportunitiesWorkspace", () => {
   beforeEach(() => {
     getAdvisorIdeaCandidateDetailMock.mockClear();
     getAdvisorIdeaReviewQueueMock.mockClear();
+    recordAdvisorIdeaReviewActionMock.mockClear();
+    recordAdvisorIdeaFeedbackMock.mockClear();
+    recordAdvisorIdeaConversionIntentMock.mockClear();
   });
 
   it("loads Gateway-backed Lotus Idea candidates", async () => {
-    renderWithQueryClient(<AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
 
     await waitFor(() => {
       expect(getAdvisorIdeaReviewQueueMock).toHaveBeenCalledWith({
@@ -76,23 +107,36 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Opportunities And Ideas" })
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Opportunities And Ideas",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Idea candidates")).toHaveTextContent(/1\s*Idea candidates/);
-    expect(screen.getByLabelText("Idea queue proof posture")).toHaveTextContent(
-      "Policy: idea-deterministic-ranking-v1"
+    expect(screen.getByLabelText("Idea candidates")).toHaveTextContent(
+      /1\s*Idea candidates/,
     );
-    expect(screen.getByText("High Cash - idea_high_cash_001")).toBeInTheDocument();
-    expect(screen.getByRole("table", { name: "Idea candidate review queue" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "High Cash - idea_high_cash_001" })).toHaveAttribute(
+    expect(screen.getByLabelText("Idea queue proof posture")).toHaveTextContent(
+      "Policy: idea-deterministic-ranking-v1",
+    );
+    expect(
+      screen.getByText("High Cash - idea_high_cash_001"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: "Idea candidate review queue" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "High Cash - idea_high_cash_001" }),
+    ).toHaveAttribute(
       "href",
-      "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001&candidateId=idea_high_cash_001"
+      "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001&candidateId=idea_high_cash_001",
     );
     expect(screen.getByText("Advisor Review Required")).toBeInTheDocument();
     expect(screen.getByText("signal_high_cash_001")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Proposal Builder" })).toHaveAttribute(
+    expect(
+      screen.getByRole("link", { name: "Open Proposal Builder" }),
+    ).toHaveAttribute(
       "href",
-      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001",
     );
   });
 
@@ -101,11 +145,11 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
         selectedCandidateId="idea_high_cash_001"
-      />
+      />,
     );
 
     expect(
-      await screen.findByLabelText("Idea candidate source-safe detail")
+      await screen.findByLabelText("Idea candidate source-safe detail"),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(getAdvisorIdeaCandidateDetailMock).toHaveBeenCalledWith({
@@ -117,19 +161,79 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     expect(screen.getByText("Sources: 1")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Close detail" })).toHaveAttribute(
       "href",
-      "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001"
+      "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001",
     );
   });
 
   it("shows no fallback ideas when the Idea queue fails", async () => {
-    getAdvisorIdeaReviewQueueMock.mockRejectedValueOnce(new Error("gateway unavailable"));
+    getAdvisorIdeaReviewQueueMock.mockRejectedValueOnce(
+      new Error("gateway unavailable"),
+    );
 
-    renderWithQueryClient(<AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
 
     expect(
-      await screen.findByText("Idea candidates are unavailable. No fallback opportunity list is shown.")
+      await screen.findByText(
+        "Idea candidates are unavailable. No fallback opportunity list is shown.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Idea queue unavailable")).toBeInTheDocument();
-    expect(screen.queryByText("High Cash - idea_high_cash_001")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("High Cash - idea_high_cash_001"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("records an advisor review through Gateway and refreshes source-owned detail", async () => {
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        selectedCandidateId="idea_high_cash_001"
+      />,
+    );
+
+    await screen.findByLabelText("Idea candidate advisor actions");
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    await waitFor(() => {
+      expect(recordAdvisorIdeaReviewActionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          candidateId: "idea_high_cash_001",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          request: expect.objectContaining({
+            action: "approve_for_conversion",
+            reasonCodes: ["advisor_review"],
+          }),
+        }),
+      );
+    });
+    expect(
+      await screen.findByText(
+        /Review recorded through Gateway. Source-owned detail and queue posture have been refreshed/,
+      ),
+    ).toBeInTheDocument();
+    expect(recordAdvisorIdeaConversionIntentMock).not.toHaveBeenCalled();
+  });
+
+  it("shows an explicit failure state when Gateway cannot record an action", async () => {
+    recordAdvisorIdeaFeedbackMock.mockRejectedValueOnce(
+      new Error("gateway unavailable"),
+    );
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        selectedCandidateId="idea_high_cash_001"
+      />,
+    );
+
+    await screen.findByLabelText("Idea candidate advisor actions");
+    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+
+    expect(
+      await screen.findByText(
+        "The advisor action could not be recorded through Gateway. No local review or conversion state has been created.",
+      ),
+    ).toBeInTheDocument();
   });
 });

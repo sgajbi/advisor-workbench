@@ -96,6 +96,51 @@
   padding: 8px 9px;
 }
 
+.actionPanel {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.actionForms {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.actionForm {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.actionForm h4 {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.actionForm label {
+  color: var(--text-muted);
+  display: grid;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 4px;
+}
+
+.actionForm input,
+.actionForm select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  min-height: 36px;
+  padding: 6px 8px;
+}
+
 .tableWrap {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -177,6 +222,10 @@
   }
 
   .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionForms {
     grid-template-columns: 1fr;
   }
 

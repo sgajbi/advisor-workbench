@@ -23,6 +23,9 @@ import {
   getAdvisorCockpitSupportability,
   getAdvisorIdeaCandidateDetail,
   getAdvisorIdeaReviewQueue,
+  recordAdvisorIdeaConversionIntent,
+  recordAdvisorIdeaFeedback,
+  recordAdvisorIdeaReviewAction,
   getBankDemoScenarioContract,
   getBankDemoSupportedClaimRegister,
   getProposalExecutionStatus,
@@ -356,7 +359,9 @@ describe("proposal api", () => {
     expect(headers.get("X-Caller-Roles")).toBe("advisor");
     expect(headers.get("X-Caller-Capabilities")).toBe("idea.review.queue.read");
     expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
-    expect(result.items?.[0]?.candidate?.candidateId).toBe("idea_high_cash_001");
+    expect(result.items?.[0]?.candidate?.candidateId).toBe(
+      "idea_high_cash_001",
+    );
     expect(result.supportedFeaturePromoted).toBe(false);
   });
 
@@ -464,7 +469,9 @@ describe("proposal api", () => {
     );
     const headers = fetchMock.mock.calls[0][1]?.headers as Headers;
     expect(headers.get("X-Caller-Roles")).toBe("advisor");
-    expect(headers.get("X-Caller-Capabilities")).toBe("idea.candidate.detail.read");
+    expect(headers.get("X-Caller-Capabilities")).toBe(
+      "idea.candidate.detail.read",
+    );
     expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
     expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
   });
@@ -508,6 +515,144 @@ describe("proposal api", () => {
     expect(result.candidate?.candidateId).toBe("idea_gateway_001");
     expect(result.evidence?.sourceRefs).toHaveLength(1);
     expect(result.supportedFeaturePromoted).toBe(false);
+  });
+
+  it("records an Idea review action through the scoped Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                persistence: { decision: "recorded" },
+                durableStorageBacked: true,
+                supportedFeaturePromoted: false,
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    const result = await recordAdvisorIdeaReviewAction({
+      candidateId: "idea_high_cash_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      idempotencyKey: "ui-idea-review-001",
+      request: {
+        reviewId: "review_001",
+        action: "approve_for_conversion",
+        reasonCodes: ["advisor_review"],
+        decidedAtUtc: "2026-07-17T08:00:00Z",
+      },
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/review-actions`,
+      expect.objectContaining({ method: "POST", headers: expect.any(Headers) }),
+    );
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Headers;
+    expect(headers.get("X-Caller-Capabilities")).toBe("idea.review.record");
+    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(headers.get("Idempotency-Key")).toBe("ui-idea-review-001");
+    expect(init.body).toBe(
+      JSON.stringify({
+        reviewId: "review_001",
+        action: "approve_for_conversion",
+        reasonCodes: ["advisor_review"],
+        decidedAtUtc: "2026-07-17T08:00:00Z",
+      }),
+    );
+    expect(result.supportedFeaturePromoted).toBe(false);
+  });
+
+  it("records Idea feedback through the scoped Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              persistence: { decision: "recorded" },
+              durableStorageBacked: true,
+              supportedFeaturePromoted: false,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    await recordAdvisorIdeaFeedback({
+      candidateId: "idea_high_cash_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      idempotencyKey: "ui-idea-feedback-001",
+      request: {
+        feedbackId: "feedback_001",
+        outcome: "useful",
+        reasonCodes: ["advisor_feedback"],
+        recordedAtUtc: "2026-07-17T08:00:00Z",
+      },
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/feedback`,
+    );
+    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBe(
+      "idea.feedback.record",
+    );
+    expect((init.headers as Headers).get("Idempotency-Key")).toBe(
+      "ui-idea-feedback-001",
+    );
+  });
+
+  it("records an Idea conversion intent without creating a proposal locally", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              persistence: { decision: "recorded" },
+              durableStorageBacked: true,
+              supportedFeaturePromoted: false,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    await recordAdvisorIdeaConversionIntent({
+      candidateId: "idea_high_cash_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      idempotencyKey: "ui-idea-conversion-001",
+      request: {
+        conversionIntentId: "conversion_001",
+        target: "advise_proposal",
+        reasonCodes: ["advisor_conversion_intent"],
+        requestedAtUtc: "2026-07-17T08:00:00Z",
+      },
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/conversion-intents`,
+    );
+    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBe(
+      "idea.conversion.intent.record",
+    );
+    expect(init.body).toBe(
+      JSON.stringify({
+        conversionIntentId: "conversion_001",
+        target: "advise_proposal",
+        reasonCodes: ["advisor_conversion_intent"],
+        requestedAtUtc: "2026-07-17T08:00:00Z",
+      }),
+    );
   });
 
   it("loads RFC28 bank demo proof contracts through the Gateway BFF", async () => {
@@ -668,8 +813,7 @@ describe("proposal api", () => {
             ? { action_item: { action_item_id: "aci_1" }, replayed: false }
             : url.includes("/supportability")
               ? {
-                  posture:
-                    "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+                  posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
                 }
               : url.includes("/snapshot")
                 ? {
@@ -848,7 +992,9 @@ describe("proposal api", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/advisory-copilot/supportability`,
     );
-    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain("source_sections");
+    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain(
+      "source_sections",
+    );
   });
 
   it("calls proposal version endpoints", async () => {

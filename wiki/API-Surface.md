@@ -50,7 +50,8 @@ promote dormant labels into product ownership just because historical route file
   client-publication boundaries
 - `/recommendations?mode=opportunities`
   Gateway-backed Lotus Idea advisor review queue for Idea-owned candidate ranking, source-signal
-  evidence, review posture, durable-storage posture, and supported-feature promotion posture
+  evidence, review posture, durable-storage posture, supported-feature promotion posture, and
+  source-owned review, feedback, and bounded conversion-intent recording
 - `/recommendations?mode=proof`
   Gateway-backed RFC-0028 bank-demo proof surface for Advise-owned scenario and supported-claim
   posture
@@ -271,11 +272,13 @@ promote dormant labels into product ownership just because historical route file
   Gateway Idea endpoints. Workbench reads `GET /api/v1/ideas/review-queues/advisor` with the active
   portfolio forwarded as caller entitlement scope, renders Idea-owned rank, score, priority,
   review posture, source-signal ids, reason codes, durable-storage posture, policy version, and
-  `supportedFeaturePromoted=false`, and links only to `GET /api/v1/ideas/candidates/{candidate_id}`
-  for source-safe detail. Workbench does not rerank candidates, clone Idea scoring, infer
-  conversion, create proposals automatically, grant suitability/execution authority, or promote
-  Lotus Idea as a supported feature before canonical browser proof and `lotus-idea` certification
-  evidence exist.
+  `supportedFeaturePromoted=false`, and links to `GET /api/v1/ideas/candidates/{candidate_id}` for
+  source-safe detail. The detail panel records typed review actions, feedback, and bounded conversion
+  intents through `POST /api/v1/ideas/candidates/{candidate_id}/review-actions`, `/feedback`, and
+  `/conversion-intents`, respectively, with Workbench BFF caller scope and idempotency. These are
+  source-owned audit records: they do not create a proposal, grant downstream authority, or promote
+  Lotus Idea as a supported feature before canonical browser proof, data-product certification, and
+  `lotus-idea` supported-feature evidence exist.
 - RFC-0027 advisory copilot is implemented on `/recommendations?mode=copilot` through Gateway
   advisory copilot endpoints. Workbench requests proposal-version source projection through
   `POST /api/v1/advisory-copilot/evidence-packets/from-proposal-version`, runs bounded advisor-use

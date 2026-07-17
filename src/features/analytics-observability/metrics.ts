@@ -16,11 +16,7 @@ export type AnalyticsUiFreshnessBucket = "fresh" | "stale" | "unknown";
 export type AnalyticsUiStatusClass = "2xx" | "3xx" | "4xx" | "5xx" | "network";
 
 export type AnalyticsUiSupportabilityState =
-  | "ready"
-  | "partial"
-  | "action_required"
-  | "unsupported"
-  | "unknown";
+  "ready" | "partial" | "action_required" | "unsupported" | "unknown";
 
 export interface AnalyticsUiPanelClassificationInput {
   loading?: boolean;
@@ -148,6 +144,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     route: "workbench.reporting",
     panel: "archive-document-metadata",
     operation: "reporting.archive-document.metadata",
+  },
+  {
+    route: "workbench.recommendations",
+    panel: "idea-candidate-detail",
+    operation: "idea.candidate.review-action",
+  },
+  {
+    route: "workbench.recommendations",
+    panel: "idea-candidate-detail",
+    operation: "idea.candidate.feedback",
+  },
+  {
+    route: "workbench.recommendations",
+    panel: "idea-candidate-detail",
+    operation: "idea.candidate.conversion-intent",
   },
   {
     route: "workbench.manage",
@@ -692,18 +703,19 @@ const analyticsUiMetricStore = globalThis as typeof globalThis & {
   __lotusAnalyticsUiPanelFailureCounts?: Map<string, number>;
 };
 
-const metricEvents =
-  analyticsUiMetricStore.__lotusAnalyticsUiMetricEvents ??= [];
+const metricEvents = (analyticsUiMetricStore.__lotusAnalyticsUiMetricEvents ??=
+  []);
 const attentionDedupeKeys =
-  analyticsUiMetricStore.__lotusAnalyticsUiAttentionDedupeKeys ??= new Set<string>();
+  (analyticsUiMetricStore.__lotusAnalyticsUiAttentionDedupeKeys ??=
+    new Set<string>());
 const panelFailureCounts =
-  analyticsUiMetricStore.__lotusAnalyticsUiPanelFailureCounts ??= new Map<
+  (analyticsUiMetricStore.__lotusAnalyticsUiPanelFailureCounts ??= new Map<
     string,
     number
-  >();
+  >());
 
 export function classifyAnalyticsUiPanelState(
-  input: AnalyticsUiPanelClassificationInput
+  input: AnalyticsUiPanelClassificationInput,
 ): AnalyticsUiState {
   const responseState = readStringProperty(input.response, "state");
   if (responseState && isAnalyticsUiState(responseState)) {
@@ -758,13 +770,16 @@ export function classifyAnalyticsUiFreshnessBucket(input: {
   return now.getTime() - asOf.getTime() > staleAfterMs ? "stale" : "fresh";
 }
 
-export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUiFreshnessBucket {
+export function deriveAnalyticsUiFreshnessBucket(
+  response: unknown,
+): AnalyticsUiFreshnessBucket {
   const direct = readStringProperty(response, "freshness_bucket");
   if (direct) {
     return normalizeFreshnessBucket(direct);
   }
 
-  const sourceSupportabilityFreshness = deriveSourceSupportabilityFreshnessBucket(response);
+  const sourceSupportabilityFreshness =
+    deriveSourceSupportabilityFreshnessBucket(response);
   if (sourceSupportabilityFreshness !== "unknown") {
     return sourceSupportabilityFreshness;
   }
@@ -776,7 +791,10 @@ export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUi
   }
 
   const supportability = readObjectProperty(response, "supportability");
-  const supportabilityFreshness = readStringProperty(supportability, "freshness_bucket");
+  const supportabilityFreshness = readStringProperty(
+    supportability,
+    "freshness_bucket",
+  );
   if (supportabilityFreshness) {
     return normalizeFreshnessBucket(supportabilityFreshness);
   }
@@ -787,23 +805,27 @@ export function deriveAnalyticsUiFreshnessBucket(response: unknown): AnalyticsUi
 }
 
 export function deriveAnalyticsUiSupportabilityState(
-  response: unknown
+  response: unknown,
 ): AnalyticsUiSupportabilityState {
   const direct = readStringProperty(response, "supportability_state");
   if (direct) {
     return normalizeSupportabilityState(direct);
   }
-  const supportabilityStatus = readStringProperty(response, "supportability_status");
+  const supportabilityStatus = readStringProperty(
+    response,
+    "supportability_status",
+  );
   if (supportabilityStatus) {
     return normalizeSupportabilityState(supportabilityStatus);
   }
   const sourceSupportabilityState = deriveArraySupportabilityState(
-    readArrayProperty(response, "source_supportability")
+    readArrayProperty(response, "source_supportability"),
   );
   if (sourceSupportabilityState !== "unknown") {
     return sourceSupportabilityState;
   }
-  const nestedSourceSupportabilityState = deriveNestedSourceSupportabilityState(response);
+  const nestedSourceSupportabilityState =
+    deriveNestedSourceSupportabilityState(response);
   if (nestedSourceSupportabilityState !== "unknown") {
     return nestedSourceSupportabilityState;
   }
@@ -816,7 +838,7 @@ export function deriveAnalyticsUiSupportabilityState(
     return normalizeSupportabilityState(nestedSupportabilityState);
   }
   const supportabilityItemsState = deriveArraySupportabilityState(
-    readArrayProperty(response, "supportability")
+    readArrayProperty(response, "supportability"),
   );
   if (supportabilityItemsState !== "unknown") {
     return supportabilityItemsState;
@@ -827,17 +849,25 @@ export function deriveAnalyticsUiSupportabilityState(
   return "unknown";
 }
 
-function deriveSourceSupportabilityFreshnessBucket(response: unknown): AnalyticsUiFreshnessBucket {
-  return deriveSupportabilityFreshnessBucket(readArrayProperty(response, "source_supportability"));
+function deriveSourceSupportabilityFreshnessBucket(
+  response: unknown,
+): AnalyticsUiFreshnessBucket {
+  return deriveSupportabilityFreshnessBucket(
+    readArrayProperty(response, "source_supportability"),
+  );
 }
 
 function deriveNestedSourceSupportabilityFreshnessBucket(
-  response: unknown
+  response: unknown,
 ): AnalyticsUiFreshnessBucket {
-  return deriveSupportabilityFreshnessBucket(readNestedSupportabilityObjects(response));
+  return deriveSupportabilityFreshnessBucket(
+    readNestedSupportabilityObjects(response),
+  );
 }
 
-function deriveSupportabilityFreshnessBucket(items: unknown[]): AnalyticsUiFreshnessBucket {
+function deriveSupportabilityFreshnessBucket(
+  items: unknown[],
+): AnalyticsUiFreshnessBucket {
   let hasFreshSource = false;
   for (const item of items) {
     const freshnessBucket = readStringProperty(item, "freshness_bucket");
@@ -855,26 +885,44 @@ function deriveSupportabilityFreshnessBucket(items: unknown[]): AnalyticsUiFresh
   return hasFreshSource ? "fresh" : "unknown";
 }
 
-function deriveNestedSourceSupportabilityState(response: unknown): AnalyticsUiSupportabilityState {
-  return deriveArraySupportabilityState(readNestedSupportabilityObjects(response));
+function deriveNestedSourceSupportabilityState(
+  response: unknown,
+): AnalyticsUiSupportabilityState {
+  return deriveArraySupportabilityState(
+    readNestedSupportabilityObjects(response),
+  );
 }
 
-function readNestedSupportabilityObjects(response: unknown): Array<Record<string, unknown>> {
+function readNestedSupportabilityObjects(
+  response: unknown,
+): Array<Record<string, unknown>> {
   const items: Array<Record<string, unknown>> = [];
   const rebalance = readObjectProperty(response, "rebalance");
-  const rebalanceSupportability = readObjectProperty(rebalance, "supportability");
+  const rebalanceSupportability = readObjectProperty(
+    rebalance,
+    "supportability",
+  );
   if (rebalanceSupportability) {
     items.push(rebalanceSupportability);
   }
-  const aiSurfaceSupportability = readObjectProperty(response, "ai_surface_supportability");
+  const aiSurfaceSupportability = readObjectProperty(
+    response,
+    "ai_surface_supportability",
+  );
   if (aiSurfaceSupportability) {
     items.push(aiSurfaceSupportability);
   }
-  const advisorySupportability = readObjectProperty(response, "advisory_supportability");
+  const advisorySupportability = readObjectProperty(
+    response,
+    "advisory_supportability",
+  );
   if (advisorySupportability) {
     items.push(advisorySupportability);
   }
-  const renderSupportability = readObjectProperty(response, "render_supportability");
+  const renderSupportability = readObjectProperty(
+    response,
+    "render_supportability",
+  );
   if (renderSupportability) {
     items.push(renderSupportability);
   }
@@ -969,7 +1017,7 @@ export function recordAnalyticsUiAttentionEvent(params: {
 export async function observeWorkbenchAnalyticsRequest<T>(
   context: WorkbenchAnalyticsUiObservationContext,
   request: () => Promise<T>,
-  options: WorkbenchAnalyticsUiObservationOptions = {}
+  options: WorkbenchAnalyticsUiObservationOptions = {},
 ): Promise<T> {
   const startedAt = nowMs();
   const recordPanelHydration = options.recordPanelHydration ?? true;
@@ -1052,7 +1100,7 @@ export function getAnalyticsUiMetricEvents(): readonly WorkbenchAnalyticsUiMetri
 }
 
 export function recordAnalyticsUiExternalMetricEvent(
-  input: unknown
+  input: unknown,
 ): WorkbenchAnalyticsUiMetricEvent {
   const event = parseExternalMetricEvent(input);
   metricEvents.push(event);
@@ -1101,15 +1149,15 @@ export function renderAnalyticsUiPrometheusMetrics(): string {
   ];
   for (const sample of samples) {
     lines.push(
-      `${sample.metric_name}${formatPrometheusLabels(sample.labels)} ${sample.value}`
+      `${sample.metric_name}${formatPrometheusLabels(sample.labels)} ${sample.value}`,
     );
     if (sample.metric_type === "histogram") {
       lines.push(...renderHistogramBucketLines(sample));
       lines.push(
-        `${sample.metric_name}_sum${formatPrometheusLabels(sample.labels)} ${sample.value}`
+        `${sample.metric_name}_sum${formatPrometheusLabels(sample.labels)} ${sample.value}`,
       );
       lines.push(
-        `${sample.metric_name}_count${formatPrometheusLabels(sample.labels)} ${sample.sample_count}`
+        `${sample.metric_name}_count${formatPrometheusLabels(sample.labels)} ${sample.sample_count}`,
       );
     }
   }
@@ -1167,7 +1215,9 @@ function recordAttentionForObservation(params: {
       context: params.context,
       attentionType: "panel_degraded",
       severity:
-        params.supportabilityState === "action_required" ? "action_required" : "warning",
+        params.supportabilityState === "action_required"
+          ? "action_required"
+          : "warning",
       state: params.state,
       reason,
       freshnessBucket: params.freshnessBucket,
@@ -1211,11 +1261,11 @@ function resolveAttentionReason(response: unknown, fallback?: string): string {
   if (warning) {
     return sanitizeAttentionReason(warning);
   }
-  const partialFailureReason = readFirstObjectString(response, "partial_failures", [
-    "error_code",
-    "reason",
-    "source_service",
-  ]);
+  const partialFailureReason = readFirstObjectString(
+    response,
+    "partial_failures",
+    ["error_code", "reason", "source_service"],
+  );
   if (partialFailureReason) {
     return sanitizeAttentionReason(partialFailureReason);
   }
@@ -1258,7 +1308,9 @@ function recordMetricEvent(params: {
   return event;
 }
 
-function publishBrowserMetricEvent(event: WorkbenchAnalyticsUiMetricEvent): void {
+function publishBrowserMetricEvent(
+  event: WorkbenchAnalyticsUiMetricEvent,
+): void {
   if (typeof window === "undefined" || process.env.NODE_ENV === "test") {
     return;
   }
@@ -1271,7 +1323,9 @@ function publishBrowserMetricEvent(event: WorkbenchAnalyticsUiMetricEvent): void
   }).catch(() => undefined);
 }
 
-function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEvent {
+function parseExternalMetricEvent(
+  input: unknown,
+): WorkbenchAnalyticsUiMetricEvent {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new Error("Analytics UI metric event must be an object.");
   }
@@ -1284,7 +1338,7 @@ function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEve
   if (
     typeof eventName !== "string" ||
     !WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS.includes(
-      eventName as WorkbenchAnalyticsUiBrowserEvent
+      eventName as WorkbenchAnalyticsUiBrowserEvent,
     )
   ) {
     throw new Error("Analytics UI metric event has unsupported event_name.");
@@ -1292,7 +1346,7 @@ function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEve
   if (
     typeof metricName !== "string" ||
     !WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES.includes(
-      metricName as WorkbenchAnalyticsUiMetricFamily
+      metricName as WorkbenchAnalyticsUiMetricFamily,
     )
   ) {
     throw new Error("Analytics UI metric event has unsupported metric_name.");
@@ -1307,9 +1361,9 @@ function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEve
     Object.fromEntries(
       Object.entries(labels as Record<string, unknown>).filter(
         (entry): entry is [AnalyticsUiAllowedLabel, string] =>
-          typeof entry[1] === "string"
-      )
-    ) as Partial<Record<AnalyticsUiAllowedLabel, string>>
+          typeof entry[1] === "string",
+      ),
+    ) as Partial<Record<AnalyticsUiAllowedLabel, string>>,
   );
   assertAnalyticsUiLabels(normalizedLabels);
   if (
@@ -1317,31 +1371,46 @@ function parseExternalMetricEvent(input: unknown): WorkbenchAnalyticsUiMetricEve
     typeof normalizedLabels.panel !== "string" ||
     typeof normalizedLabels.operation !== "string"
   ) {
-    throw new Error("Analytics UI metric event must include route, panel, and operation labels.");
+    throw new Error(
+      "Analytics UI metric event must include route, panel, and operation labels.",
+    );
   }
   return {
     event_name: eventName as WorkbenchAnalyticsUiBrowserEvent,
     metric_name: metricName as WorkbenchAnalyticsUiMetricFamily,
     value,
     labels: normalizedLabels,
-    recorded_at: typeof recordedAt === "string" ? recordedAt : new Date().toISOString(),
+    recorded_at:
+      typeof recordedAt === "string" ? recordedAt : new Date().toISOString(),
   };
 }
 
-function readStringProperty(value: unknown, property: string): string | undefined {
+function readStringProperty(
+  value: unknown,
+  property: string,
+): string | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
   }
   const propertyValue = (value as Record<string, unknown>)[property];
-  return typeof propertyValue === "string" && propertyValue ? propertyValue : undefined;
+  return typeof propertyValue === "string" && propertyValue
+    ? propertyValue
+    : undefined;
 }
 
-function readObjectProperty(value: unknown, property: string): Record<string, unknown> | undefined {
+function readObjectProperty(
+  value: unknown,
+  property: string,
+): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
   }
   const propertyValue = (value as Record<string, unknown>)[property];
-  if (!propertyValue || typeof propertyValue !== "object" || Array.isArray(propertyValue)) {
+  if (
+    !propertyValue ||
+    typeof propertyValue !== "object" ||
+    Array.isArray(propertyValue)
+  ) {
     return undefined;
   }
   return propertyValue as Record<string, unknown>;
@@ -1364,7 +1433,7 @@ function readFirstString(value: unknown, property: string): string | undefined {
     return undefined;
   }
   const firstString = propertyValue.find(
-    (item): item is string => typeof item === "string" && item.length > 0
+    (item): item is string => typeof item === "string" && item.length > 0,
   );
   return firstString;
 }
@@ -1372,7 +1441,7 @@ function readFirstString(value: unknown, property: string): string | undefined {
 function readFirstObjectString(
   value: unknown,
   property: string,
-  keys: readonly string[]
+  keys: readonly string[],
 ): string | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -1403,7 +1472,9 @@ function hasNonEmptyArrayProperty(value: unknown, property: string): boolean {
   return Array.isArray(propertyValue) && propertyValue.length > 0;
 }
 
-function normalizeSupportabilityState(value: string): AnalyticsUiSupportabilityState {
+function normalizeSupportabilityState(
+  value: string,
+): AnalyticsUiSupportabilityState {
   const normalized = value.toLowerCase();
   if (normalized === "ready") {
     return "ready";
@@ -1430,13 +1501,19 @@ function normalizeFreshnessBucket(value: string): AnalyticsUiFreshnessBucket {
   if (normalized === "current" || normalized === "ready") {
     return "fresh";
   }
-  if (normalized === "fresh" || normalized === "stale" || normalized === "unknown") {
+  if (
+    normalized === "fresh" ||
+    normalized === "stale" ||
+    normalized === "unknown"
+  ) {
     return normalized;
   }
   return "unknown";
 }
 
-function deriveArraySupportabilityState(items: unknown[]): AnalyticsUiSupportabilityState {
+function deriveArraySupportabilityState(
+  items: unknown[],
+): AnalyticsUiSupportabilityState {
   if (!items.length) {
     return "unknown";
   }
@@ -1469,7 +1546,10 @@ function deriveArraySupportabilityState(items: unknown[]): AnalyticsUiSupportabi
 }
 
 function nowMs(): number {
-  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+  if (
+    typeof performance !== "undefined" &&
+    typeof performance.now === "function"
+  ) {
     return performance.now();
   }
   return Date.now();
@@ -1500,7 +1580,9 @@ function statusClassFromError(error: unknown): AnalyticsUiStatusClass {
   return "2xx";
 }
 
-function errorCategoryFromStatusClass(statusClass: AnalyticsUiStatusClass): string {
+function errorCategoryFromStatusClass(
+  statusClass: AnalyticsUiStatusClass,
+): string {
   if (statusClass === "4xx") {
     return "client";
   }
@@ -1514,25 +1596,30 @@ function errorCategoryFromStatusClass(statusClass: AnalyticsUiStatusClass): stri
 }
 
 function formatPrometheusLabels(
-  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>,
 ): string {
-  const entries = Object.entries(labels).filter(([, value]) => value !== undefined);
+  const entries = Object.entries(labels).filter(
+    ([, value]) => value !== undefined,
+  );
   if (entries.length === 0) {
     return "";
   }
   return `{${entries
-    .map(([key, value]) => `${key}="${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+    .map(
+      ([key, value]) =>
+        `${key}="${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+    )
     .join(",")}}`;
 }
 
 function renderHistogramBucketLines(
-  sample: WorkbenchAnalyticsUiMetricSample
+  sample: WorkbenchAnalyticsUiMetricSample,
 ): string[] {
   const buckets = [0.1, 0.5, 1, 3, 5, 10];
   const sourceEvents = metricEvents.filter(
     (event) =>
       event.metric_name === sample.metric_name &&
-      JSON.stringify(event.labels) === JSON.stringify(sample.labels)
+      JSON.stringify(event.labels) === JSON.stringify(sample.labels),
   );
   const lines = buckets.map((bucket) => {
     const count = sourceEvents.filter((event) => event.value <= bucket).length;
@@ -1547,7 +1634,9 @@ function renderHistogramBucketLines(
     `${sample.metric_name}_bucket${formatPrometheusLabels({
       ...sample.labels,
       le: "+Inf",
-    } as Partial<Record<AnalyticsUiAllowedLabel, string>>)} ${sample.sample_count}`
+    } as Partial<
+      Record<AnalyticsUiAllowedLabel, string>
+    >)} ${sample.sample_count}`,
   );
   return lines;
 }

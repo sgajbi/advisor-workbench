@@ -161,11 +161,14 @@ Current repository posture:
     renders the Gateway-backed Lotus Idea advisor review queue. Workbench requests Idea-owned
     candidate ranking with the active portfolio as caller entitlement scope, renders score, review
     posture, source-signal ids, reason codes, durable-storage posture, policy version, and
-    supported-feature promotion posture, and links only to Gateway candidate detail. It must not
-    treat Advise draft proposals as sourced opportunities, rerank candidates, clone Idea scoring,
-    infer downstream conversion, create proposals automatically, grant suitability or execution
-    authority, or promote Lotus Idea as a supported Workbench feature before canonical browser
-    proof, data-product certification, and `lotus-idea` supported-feature evidence exist.
+    supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
+    can record source-owned review actions, feedback, and bounded conversion intents through the
+    Workbench BFF with caller scope and idempotency; it refreshes source truth and must not synthesize
+    review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
+    opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
+    proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a
+    supported Workbench feature before canonical browser proof, data-product certification, and
+    `lotus-idea` supported-feature evidence exist.
     `/recommendations?mode=proof` renders Advise-owned RFC-0028 scenario and supported-claim
     posture through Gateway bank-demo proof endpoints only. It preserves source-owned
     classifications, blocked client-publication boundaries, and proof-handling rules without
