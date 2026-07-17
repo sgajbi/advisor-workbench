@@ -19,8 +19,8 @@ export default function PortfolioReviewDecisionBrief({
       title={brief.headline}
       support={brief.support}
       score={{
-        label: "Review coverage",
-        value: brief.readiness.percentLabel,
+        label: "Portfolio readiness",
+        value: brief.readiness.statusLabel,
         tone: brief.readiness.tone,
       }}
       attentionItems={brief.attentionItems}

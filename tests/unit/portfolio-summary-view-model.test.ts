@@ -119,7 +119,7 @@ describe("portfolio summary view model", () => {
     ]);
   });
 
-  it("summarizes readiness indicators as a compact health ratio", () => {
+  it("preserves the source-backed portfolio readiness posture", () => {
     const workspace = buildWorkspace({
       readiness_indicators: [
         { key: "holdings", label: "Holdings", status: "Ready", href: "/positions" },
@@ -130,9 +130,8 @@ describe("portfolio summary view model", () => {
     });
 
     expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
-      readyCount: 3,
-      totalCount: 4,
-      percentLabel: "75%",
+      statusLabel: "Partial",
+      support: "Generated 12 May 2026 • 11 report rows",
       tone: "warn",
     });
   });

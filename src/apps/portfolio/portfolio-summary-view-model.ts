@@ -1,9 +1,9 @@
 import { formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 import {
-  buildPortfolioReadinessIndicators,
   getBookReadinessStatus,
   getBookReadinessSupport,
+  getReportingFreshnessSupport,
 } from "./view-model";
 
 export type PortfolioSummaryAllocationRow = {
@@ -29,9 +29,8 @@ export type PortfolioSummaryAttentionItem = {
 };
 
 export type PortfolioSummaryReadiness = {
-  readyCount: number;
-  totalCount: number;
-  percentLabel: string;
+  statusLabel: "Not Ready" | "Partial" | "Ready";
+  support: string;
   tone: "danger" | "warn" | "success";
 };
 
@@ -173,16 +172,11 @@ export function buildPortfolioSummaryAttentionItems(
 export function buildPortfolioSummaryReadiness(
   workspace: PortfolioWorkspace
 ): PortfolioSummaryReadiness {
-  const indicators = workspace.readiness_indicators ?? buildPortfolioReadinessIndicators(workspace);
-  const totalCount = Math.max(1, indicators.length);
-  const readyCount = indicators.filter((indicator) => indicator.status === "Ready").length;
-  const percent = Math.round((readyCount / totalCount) * 100);
   const readinessStatus = getBookReadinessStatus(workspace);
 
   return {
-    readyCount,
-    totalCount,
-    percentLabel: `${percent}%`,
+    statusLabel: readinessStatus,
+    support: getBookReadinessSupport(workspace),
     tone: readinessStatus === "Ready" ? "success" : readinessStatus === "Partial" ? "warn" : "danger",
   };
 }
@@ -193,20 +187,32 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
   const exceptionCount = workspace.exception_summaries?.length || workspace.partial_failures.length;
   const nextAction = workspace.workflow_actions?.find((action) => action.recommended) ?? workspace.workflow_actions?.[0];
   const primaryAttention = attentionItems[0];
+  const readinessHeadline =
+    readiness.statusLabel === "Ready"
+      ? "Portfolio review is ready"
+      : readiness.statusLabel === "Partial"
+        ? "Portfolio review needs completion"
+        : "Portfolio review is not ready";
+  const readinessHeadlineSupport =
+    readiness.statusLabel === "Ready"
+      ? "Valuation, reporting, and portfolio controls support this review."
+      : readiness.statusLabel === "Partial"
+        ? "Complete the outstanding readiness checks before using this review."
+        : "Restore core book coverage before using this review.";
 
   return {
-    headline: primaryAttention?.title ?? nextAction?.title ?? "Portfolio review is ready",
+    headline: primaryAttention?.title ?? nextAction?.title ?? readinessHeadline,
     support:
       primaryAttention?.detail ??
       nextAction?.impact?.split(".")[0] ??
-      "Review valuation, returns, liquidity, and reporting readiness.",
+      readinessHeadlineSupport,
     readiness,
     attentionItems,
     rows: [
       {
-        label: "Portfolio readiness",
-        value: getBookReadinessStatus(workspace),
-        support: getBookReadinessSupport(workspace),
+        label: "Reporting coverage",
+        value: formatStatus(workspace.readiness.reporting.status),
+        support: getReportingFreshnessSupport(workspace),
       },
       {
         label: "Open exceptions",
