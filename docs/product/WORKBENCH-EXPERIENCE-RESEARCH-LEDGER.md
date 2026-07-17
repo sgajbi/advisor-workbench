@@ -587,14 +587,23 @@ posture findings are tracked separately in #426 and #427.
 1. Focused income/activity view-model, workspace, record-header, record-screen, chart-regression,
    and shared metric-strip coverage passed 23 tests; TypeScript, lint, and `git diff --check`
    passed before full-gate execution.
-2. The populated Portfolio Playwright Income flow passed against `PB_SG_GLOBAL_BAL_001`, proving
+2. The full `make check` retry passed on 2026-07-17: 288 test files and 1,243 tests passed at
+   90.79% statement coverage, followed by clean lint, TypeScript validation, and a successful
+   production build. The first run's unrelated Intake timeout passed in isolation and on the full
+   retry but remained within 329 ms of its five-second limit; testing-quality issue #428 preserves
+   that gate fragility rather than hiding it behind a retry.
+3. The populated Portfolio Playwright Income flow passed against `PB_SG_GLOBAL_BAL_001`, proving
    gross-to-net income and signed canonical cash movement, including `-25,356.75 USD` classified
-   net movement.
-3. Governed canonical validation passed Gateway, Portfolio, Performance, and Manage readiness but
+   net movement. It passed both the targeted run and the broader 16-test smoke attempt.
+4. Governed canonical validation passed Gateway, Portfolio, Performance, and Manage readiness but
    stopped at Report readiness with HTTP 502. Fresh evidence confirms the existing lotus-report
    #140 schema-migration defect. Diagnostic captures are therefore not demo-ready evidence.
-4. Full local, PR, merge-gate, and exact-main evidence remains pending before this ledger entry can
-   be hardened.
+5. The full Playwright pack did not certify as a whole: its initial server launch exceeded the
+   120-second budget, and a prestarted retry exposed unrelated mobile-locator and Performance
+   supportability failures. Issues #429, #430, and #431 preserve those harness gaps; the server was
+   stopped explicitly after diagnosis.
+6. PR, merge-gate, merge, exact-main, and branch-reconciliation evidence remains pending before
+   this ledger entry can be hardened.
 
 ### Publication decision
 
