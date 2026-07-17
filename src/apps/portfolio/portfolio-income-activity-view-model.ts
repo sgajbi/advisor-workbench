@@ -48,6 +48,8 @@ export type PortfolioActivityMovementSummary = {
   netMovement: number;
   unclassifiedMovement: number;
   bookingCount: number;
+  classifiedBookingCount: number;
+  unclassifiedBookingCount: number;
 };
 
 export type PortfolioActivityReview = {
@@ -117,10 +119,13 @@ export function buildActivityMovementSummary(
 
       if (direction === "inflow") {
         totals.grossInflows += magnitude;
+        totals.classifiedBookingCount += measure.transaction_count;
       } else if (direction === "outflow") {
         totals.grossOutflows += magnitude;
+        totals.classifiedBookingCount += measure.transaction_count;
       } else {
         totals.unclassifiedMovement += magnitude;
+        totals.unclassifiedBookingCount += measure.transaction_count;
       }
 
       totals.netMovement = totals.grossInflows - totals.grossOutflows;
@@ -133,6 +138,8 @@ export function buildActivityMovementSummary(
       netMovement: 0,
       unclassifiedMovement: 0,
       bookingCount: 0,
+      classifiedBookingCount: 0,
+      unclassifiedBookingCount: 0,
     },
   );
 }
@@ -244,6 +251,8 @@ function emptyActivityMovementSummary(): PortfolioActivityMovementSummary {
     netMovement: 0,
     unclassifiedMovement: 0,
     bookingCount: 0,
+    classifiedBookingCount: 0,
+    unclassifiedBookingCount: 0,
   };
 }
 

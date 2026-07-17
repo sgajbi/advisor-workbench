@@ -1,276 +1,312 @@
-import { SemanticBadge } from "@/design-system";
+import {
+  AnalyticsModule,
+  AnalyticsTable,
+  SemanticBadge,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 
-import { formatCurrency, formatDate, formatPct, formatStatus } from "../formatters";
-import type {
-  PortfolioActivitySummaryView,
-  PortfolioIncomePeriodSummary,
-  PortfolioIncomeSummaryView,
-  PortfolioWorkspace,
-} from "../types";
+import { formatCount, formatCurrency, formatDate, formatPct } from "../formatters";
+import {
+  buildPortfolioIncomeActivityReview,
+  type PortfolioActivityDirection,
+  type PortfolioActivityReview,
+  type PortfolioIncomeReview,
+} from "../portfolio-income-activity-view-model";
+import type { PortfolioWorkspace } from "../types";
 import PortfolioModuleState from "./portfolio-module-state";
 
 type PortfolioIncomeActivityWorkspaceProps = {
   workspace: PortfolioWorkspace;
 };
 
-type ActivityRow = {
-  bucket: string;
-  amount: number;
-  count: number;
-  pct: number;
-};
-
 export default function PortfolioIncomeActivityWorkspace({
   workspace,
 }: PortfolioIncomeActivityWorkspaceProps) {
-  const income = workspace.income_summary;
-  const activity = workspace.activity_summary;
-  const incomeCurrency = income?.reporting_currency ?? workspace.portfolio.base_currency;
-  const activityCurrency = activity?.reporting_currency ?? workspace.portfolio.base_currency;
-  const incomeWindowLabel = income
-    ? `${formatDate(income.window_start_date)} - ${formatDate(income.window_end_date)}`
-    : "Current source window";
-  const activityRows = buildActivityRows(activity);
+  const review = buildPortfolioIncomeActivityReview(workspace);
 
   return (
     <div className="portfolio-income-activity-workspace">
-      <section className="portfolio-income-activity-section" aria-labelledby="income-summary-heading">
-        <div className="portfolio-income-activity-section-title">
-          <h2 id="income-summary-heading">Income Summary</h2>
-          <span>{incomeWindowLabel}</span>
-        </div>
-        {income ? (
-          <div className="portfolio-income-activity-grid portfolio-income-grid">
-            <IncomeSummaryCard income={income} currency={incomeCurrency} />
-            <IncomeTypeTable income={income} currency={incomeCurrency} />
-          </div>
-        ) : (
-          <PortfolioModuleState
-            variant="status"
-            state="empty"
-            title="Income is not classified yet"
-            body="No classified income was returned for the selected reporting window."
-            hint="Publish classified income events to populate the dedicated Income and Activity screen."
-          />
-        )}
-      </section>
+      <div className="portfolio-income-activity-scope-note" role="note">
+        <SemanticBadge tone="default">Booked records only</SemanticBadge>
+        <span>
+          Dividend and interest bookings are shown separately from subscriptions, withdrawals,
+          fees, and taxes. Future income and projected cash are outside this review.
+        </span>
+      </div>
 
-      <section className="portfolio-income-activity-section" aria-labelledby="activity-summary-heading">
-        <div className="portfolio-income-activity-section-title">
-          <h2 id="activity-summary-heading">Activity &amp; Cash Movements</h2>
-          <span>{activity ? `${formatDate(activity.window_start_date)} - ${formatDate(activity.window_end_date)}` : "Current source window"}</span>
-        </div>
-        {activity ? (
-          <div className="portfolio-income-activity-grid portfolio-activity-grid">
-            <ActivityMovementTable rows={activityRows} currency={activityCurrency} />
-            <div className="portfolio-activity-side-stack">
-              <ActivityBucketCard rows={activityRows} />
-              <div className="portfolio-activity-reserve">
-                <div>
-                  <span>Cash Weight</span>
-                  <strong>{formatPct(workspace.summary.cash_weight_pct)}</strong>
-                </div>
-                <span className="portfolio-activity-reserve-mark" aria-hidden="true" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <PortfolioModuleState
-            variant="status"
-            state="empty"
-            title="Activity totals are incomplete"
-            body="No activity buckets were returned for the selected reporting window."
-            hint="Publish source-defined activity buckets to populate cash movement totals."
-          />
-        )}
-      </section>
+      <IncomeReviewModule income={review.income} />
+      <ActivityReviewModule
+        activity={review.activity}
+        cashWeightPct={review.cashWeightPct}
+        asOfDate={review.asOfDate}
+      />
     </div>
   );
 }
 
-function IncomeSummaryCard({
-  income,
-  currency,
-}: {
-  income: PortfolioIncomeSummaryView;
-  currency: string;
-}) {
-  const requestedNet = income.totals_requested_window.net.reporting_currency_amount;
-  const ytdNet = income.totals_year_to_date.net.reporting_currency_amount;
-  const requestedPct = ytdNet > 0 ? Math.min(Math.max((requestedNet / ytdNet) * 100, 0), 100) : 0;
-
-  return (
-    <div className="portfolio-income-card portfolio-income-card-visual">
-      <MetricBar
-        label="Totals Requested Window"
-        value={formatCurrency(requestedNet, currency)}
-        pct={requestedPct}
-      />
-      <MetricBar
-        label="Year-to-Date (YTD)"
-        value={formatCurrency(ytdNet, currency)}
-        pct={100}
-        muted
-      />
-      <div className="portfolio-income-source-note">
-        Classified booked income only. Forward income forecast is not part of this review.
-      </div>
-    </div>
-  );
-}
-
-function MetricBar({
-  label,
-  value,
-  pct,
-  muted = false,
-}: {
-  label: string;
-  value: string;
-  pct: number;
-  muted?: boolean;
-}) {
-  return (
-    <div className="portfolio-income-metric-bar">
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-      </div>
-      <div className="portfolio-income-bar" aria-hidden="true">
-        <div
-          className={muted ? "portfolio-income-bar-fill portfolio-income-bar-fill-muted" : "portfolio-income-bar-fill"}
-          style={{ width: `${pct}%` }}
+function IncomeReviewModule({ income }: { income: PortfolioIncomeReview | null }) {
+  if (!income) {
+    return (
+      <AnalyticsModule
+        title="Booked income"
+        subtitle="Dividend and interest income recorded in the selected reporting window."
+        compact
+      >
+        <PortfolioModuleState
+          variant="status"
+          state="empty"
+          title="No booked income in this window"
+          body="No dividend or interest bookings are available for the selected reporting window."
+          hint="This booked-income view does not indicate future income or accrued entitlements."
         />
-      </div>
-    </div>
-  );
-}
-
-function IncomeTypeTable({
-  income,
-  currency,
-}: {
-  income: PortfolioIncomeSummaryView;
-  currency: string;
-}) {
-  return (
-    <div className="portfolio-income-card portfolio-income-table-card">
-      <table className="portfolio-income-table" aria-label="Income summary">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Current Period</th>
-            <th>YTD Total</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {income.income_types.map((item) => (
-            <tr key={item.income_type}>
-              <td>{formatStatus(item.income_type)}</td>
-              <td>{formatCurrency(item.requested_window.net.reporting_currency_amount, currency)}</td>
-              <td>{formatCurrency(item.year_to_date.net.reporting_currency_amount, currency)}</td>
-              <td>
-                <ReadinessBadge period={item.requested_window} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="portfolio-income-table-footer">
-        Last updated for {formatDate(income.window_end_date)}
-      </div>
-    </div>
-  );
-}
-
-function ReadinessBadge({ period }: { period: PortfolioIncomePeriodSummary }) {
-  const label = period.net.transaction_count > 0 ? "Ready" : "Partial";
-  return <SemanticBadge tone={label === "Ready" ? "success" : "warn"}>{label}</SemanticBadge>;
-}
-
-function ActivityMovementTable({ rows, currency }: { rows: ActivityRow[]; currency: string }) {
-  const total = rows.reduce((sum, row) => sum + row.amount, 0);
-
-  return (
-    <div className="portfolio-income-card portfolio-activity-table-card">
-      <table className="portfolio-activity-table" aria-label="Activity and cash movements">
-        <thead>
-          <tr>
-            <th>Activity Type</th>
-            <th>Inflow</th>
-            <th>Outflow</th>
-            <th>Net Movement</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.bucket}>
-              <td>
-                <span>{formatStatus(row.bucket)}</span>
-                <small>{row.count} events</small>
-              </td>
-              <td className={row.amount > 0 ? "positive" : undefined}>
-                {row.amount > 0 ? formatCurrency(row.amount, currency) : formatCurrency(0, currency)}
-              </td>
-              <td className={row.amount < 0 ? "negative" : undefined}>
-                {row.amount < 0 ? formatCurrency(Math.abs(row.amount), currency) : formatCurrency(0, currency)}
-              </td>
-              <td className={row.amount < 0 ? "negative" : "positive"}>
-                {formatCurrency(row.amount, currency)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td>Total Net Cashflow</td>
-            <td colSpan={3}>{formatCurrency(total, currency)}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  );
-}
-
-function ActivityBucketCard({ rows }: { rows: ActivityRow[] }) {
-  return (
-    <div className="portfolio-income-card portfolio-activity-buckets">
-      <h3>Activity Buckets</h3>
-      <div className="portfolio-activity-bucket-list">
-        {rows.map((row) => (
-          <div key={row.bucket} className="portfolio-activity-bucket-row">
-            <div>
-              <span>{formatStatus(row.bucket)}</span>
-              <strong>{row.pct.toFixed(0)}%</strong>
-            </div>
-            <div className="portfolio-activity-bucket-bar" aria-hidden="true">
-              <div style={{ width: `${row.pct}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function buildActivityRows(activity: PortfolioActivitySummaryView | null | undefined): ActivityRow[] {
-  if (!activity) {
-    return [];
+      </AnalyticsModule>
+    );
   }
 
-  const grossMovement = activity.buckets.reduce(
-    (sum, bucket) => sum + Math.abs(bucket.requested_window.reporting_currency_amount),
-    0
-  );
+  const deductions =
+    income.requestedWindow.withholdingTax + income.requestedWindow.otherDeductions;
+  const windowLabel = formatWindowLabel(income.windowStartDate, income.windowEndDate);
 
-  return activity.buckets.map((bucket) => {
-    const amount = bucket.requested_window.reporting_currency_amount;
-    return {
-      bucket: bucket.bucket,
-      amount,
-      count: bucket.requested_window.transaction_count,
-      pct: grossMovement > 0 ? (Math.abs(amount) / grossMovement) * 100 : 0,
-    };
-  });
+  return (
+    <AnalyticsModule
+      title="Booked income"
+      subtitle={`Gross-to-net dividend and interest income · ${windowLabel} · ${income.reportingCurrency}`}
+      actions={<SemanticBadge tone="default">Reporting currency {income.reportingCurrency}</SemanticBadge>}
+      compact
+    >
+      <WorkbenchSummaryMetricStrip
+        className="portfolio-income-activity-metrics"
+        ariaLabel="Booked income summary"
+        items={[
+          {
+            key: "gross-income",
+            label: "Gross income",
+            value: formatCurrency(income.requestedWindow.gross, income.reportingCurrency),
+            support: formatCount(income.requestedWindow.bookingCount, "booking"),
+            definition: "Dividend and interest income before source-recorded deductions.",
+          },
+          {
+            key: "income-deductions",
+            label: "Tax & deductions",
+            value: formatCurrency(deductions, income.reportingCurrency),
+            support: "Withholding tax and other deductions",
+            definition: "Withholding tax plus other deductions returned by the income summary.",
+          },
+          {
+            key: "net-income",
+            label: "Net income",
+            value: formatCurrency(income.requestedWindow.net, income.reportingCurrency),
+            support: "Selected reporting window",
+            definition: "Net booked income after source-recorded taxes and deductions.",
+          },
+          {
+            key: "ytd-net-income",
+            label: "YTD net income",
+            value: formatCurrency(income.yearToDate.net, income.reportingCurrency),
+            support: `Through ${formatDate(income.windowEndDate)}`,
+            definition: "Calendar-year net booked income through the selected window end date.",
+          },
+        ]}
+      />
+
+      <AnalyticsTable
+        ariaLabel="Booked income by type"
+        className="portfolio-income-activity-table"
+        density="compact"
+        variant="portfolio"
+        columns={[
+          { key: "income-type", label: "Income type" },
+          { key: "gross", label: "Gross", align: "right" },
+          { key: "withholding", label: "Withholding tax", align: "right" },
+          { key: "other-deductions", label: "Other deductions", align: "right" },
+          { key: "net", label: "Net income", align: "right" },
+          { key: "bookings", label: "Bookings", align: "right" },
+          { key: "ytd-net", label: "YTD net", align: "right" },
+        ]}
+        rows={income.rows.map((row) => ({
+          key: row.key,
+          cells: [
+            <strong key={`${row.key}-label`}>{row.label}</strong>,
+            formatCurrency(row.requestedWindow.gross, income.reportingCurrency),
+            formatCurrency(row.requestedWindow.withholdingTax, income.reportingCurrency),
+            formatCurrency(row.requestedWindow.otherDeductions, income.reportingCurrency),
+            <strong key={`${row.key}-net`}>{formatCurrency(row.requestedWindow.net, income.reportingCurrency)}</strong>,
+            row.requestedWindow.bookingCount,
+            formatCurrency(row.yearToDate.net, income.reportingCurrency),
+          ],
+        }))}
+        footer={[
+          "Portfolio total",
+          formatCurrency(income.requestedWindow.gross, income.reportingCurrency),
+          formatCurrency(income.requestedWindow.withholdingTax, income.reportingCurrency),
+          formatCurrency(income.requestedWindow.otherDeductions, income.reportingCurrency),
+          formatCurrency(income.requestedWindow.net, income.reportingCurrency),
+          income.requestedWindow.bookingCount,
+          formatCurrency(income.yearToDate.net, income.reportingCurrency),
+        ]}
+        emptyState={{
+          title: "No income types in this window",
+          body: "The income summary is available but contains no dividend or interest categories.",
+        }}
+      />
+    </AnalyticsModule>
+  );
+}
+
+function ActivityReviewModule({
+  activity,
+  cashWeightPct,
+  asOfDate,
+}: {
+  activity: PortfolioActivityReview | null;
+  cashWeightPct: number;
+  asOfDate: string;
+}) {
+  if (!activity) {
+    return (
+      <AnalyticsModule
+        title="Booked cash movements"
+        subtitle="Subscriptions, withdrawals, fees, and taxes in the selected reporting window."
+        compact
+      >
+        <PortfolioModuleState
+          variant="status"
+          state="empty"
+          title="No booked cash movements in this window"
+          body="No subscription, withdrawal, fee, or tax activity is available for the selected reporting window."
+          hint="Projected settlements and future liquidity are reviewed separately in the Cashflow Workspace."
+        />
+      </AnalyticsModule>
+    );
+  }
+
+  const windowLabel = formatWindowLabel(activity.windowStartDate, activity.windowEndDate);
+
+  return (
+    <AnalyticsModule
+      title="Booked cash movements"
+      subtitle={`Subscriptions, withdrawals, fees, and taxes · ${windowLabel} · ${activity.reportingCurrency}`}
+      actions={<SemanticBadge tone="default">Reporting currency {activity.reportingCurrency}</SemanticBadge>}
+      compact
+    >
+      <WorkbenchSummaryMetricStrip
+        className="portfolio-income-activity-metrics"
+        ariaLabel="Booked cash movement summary"
+        items={[
+          {
+            key: "gross-inflows",
+            label: "Gross inflows",
+            value: formatCurrency(activity.requestedWindow.grossInflows, activity.reportingCurrency),
+            support: "Subscriptions and transfers in",
+            definition: "Positive cash funding returned in the canonical inflows bucket.",
+          },
+          {
+            key: "gross-outflows",
+            label: "Gross outflows",
+            value: formatCurrency(activity.requestedWindow.grossOutflows, activity.reportingCurrency),
+            support: "Withdrawals, fees, and taxes",
+            definition: "Cash uses returned in canonical outflow, fee, and tax buckets.",
+          },
+          {
+            key: "net-cash-movement",
+            label: "Net cash movement",
+            value: formatCurrency(activity.requestedWindow.netMovement, activity.reportingCurrency),
+            support: "Inflows less classified outflows",
+            definition: "Gross inflows less withdrawals, fees, and taxes for the selected window.",
+          },
+          {
+            key: "cash-weight",
+            label: "Current cash weight",
+            value: formatPct(cashWeightPct),
+            support: `Portfolio snapshot as of ${formatDate(asOfDate)}`,
+            definition: "Current portfolio cash allocation; it is not included in the window cash-movement calculation.",
+          },
+        ]}
+      />
+
+      {activity.requestedWindow.unclassifiedMovement > 0 ? (
+        <div className="portfolio-income-activity-classification-note" role="note">
+          <SemanticBadge tone="warn">Classification review</SemanticBadge>
+          <span>
+            {formatCurrency(
+              activity.requestedWindow.unclassifiedMovement,
+              activity.reportingCurrency,
+            )} across {formatCount(
+              activity.requestedWindow.unclassifiedBookingCount,
+              "booking",
+            )} is shown below and excluded from net cash movement because its cash direction is not defined by the Gateway contract.
+          </span>
+        </div>
+      ) : null}
+
+      <AnalyticsTable
+        ariaLabel="Booked cash movements by type"
+        className="portfolio-income-activity-table"
+        density="compact"
+        variant="portfolio"
+        columns={[
+          { key: "activity-type", label: "Activity type" },
+          { key: "direction", label: "Cash direction" },
+          { key: "window-movement", label: "Window movement", align: "right" },
+          { key: "bookings", label: "Bookings", align: "right" },
+          { key: "share", label: "Share of activity", align: "right" },
+          { key: "ytd-movement", label: "YTD movement", align: "right" },
+        ]}
+        rows={activity.rows.map((row) => ({
+          key: row.key,
+          cells: [
+            <strong key={`${row.key}-label`}>{row.label}</strong>,
+            <ActivityDirectionBadge key={`${row.key}-direction`} direction={row.direction} />,
+            <span
+              key={`${row.key}-window`}
+              className={getMovementClassName(row.direction)}
+            >
+              {formatCurrency(row.requestedWindowAmount, activity.reportingCurrency)}
+            </span>,
+            row.requestedWindowBookingCount,
+            formatPct(row.shareOfWindowActivityPct),
+            <span key={`${row.key}-ytd`} className={getMovementClassName(row.direction)}>
+              {formatCurrency(row.yearToDateAmount, activity.reportingCurrency)}
+            </span>,
+          ],
+        }))}
+        footer={[
+          "Classified net movement",
+          "Inflows less outflows",
+          formatCurrency(activity.requestedWindow.netMovement, activity.reportingCurrency),
+          activity.requestedWindow.classifiedBookingCount,
+          "100%",
+          formatCurrency(activity.yearToDate.netMovement, activity.reportingCurrency),
+        ]}
+        emptyState={{
+          title: "No activity categories in this window",
+          body: "The activity summary is available but contains no classified cash-movement categories.",
+        }}
+      />
+    </AnalyticsModule>
+  );
+}
+
+function ActivityDirectionBadge({ direction }: { direction: PortfolioActivityDirection }) {
+  if (direction === "inflow") {
+    return <SemanticBadge tone="success">Inflow</SemanticBadge>;
+  }
+  if (direction === "outflow") {
+    return <SemanticBadge tone="warn">Outflow</SemanticBadge>;
+  }
+  return <SemanticBadge tone="default">Excluded from net</SemanticBadge>;
+}
+
+function getMovementClassName(direction: PortfolioActivityDirection): string | undefined {
+  if (direction === "inflow") {
+    return "portfolio-income-activity-amount-positive";
+  }
+  if (direction === "outflow") {
+    return "portfolio-income-activity-amount-negative";
+  }
+  return undefined;
+}
+
+function formatWindowLabel(startDate: string, endDate: string): string {
+  return `${formatDate(startDate)} – ${formatDate(endDate)}`;
 }

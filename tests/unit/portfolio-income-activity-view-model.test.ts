@@ -21,6 +21,8 @@ describe("portfolio income and activity view model", () => {
       netMovement: 73_500,
       unclassifiedMovement: 2_000,
       bookingCount: 6,
+      classifiedBookingCount: 5,
+      unclassifiedBookingCount: 1,
     });
     expect(getPortfolioActivityDirection("INFLOWS")).toBe("inflow");
     expect(getPortfolioActivityDirection("FEES")).toBe("outflow");

@@ -1,6 +1,5 @@
 import { formatCurrency, formatDate, formatPct, formatQuantity } from "./formatters";
 import type {
-  PortfolioIncomeSummaryView,
   PortfolioTopPosition,
   PortfolioWorkspace,
 } from "./types";
@@ -137,54 +136,6 @@ export function buildTopHoldingTooltip(
         : formatPct(position.weight_pct)
     }`,
   ].join("\n");
-}
-
-export function buildActivityTooltip(
-  bucket: string,
-  requestedAmount: number,
-  ytdAmount: number,
-  currency: string
-): string {
-  return [
-    formatBucketLabel(bucket),
-    `Window: ${formatCurrency(requestedAmount, currency)}`,
-    `YTD: ${formatCurrency(ytdAmount, currency)}`,
-  ].join("\n");
-}
-
-export function buildIncomeTooltip(
-  item: PortfolioIncomeSummaryView["income_types"][number],
-  currency: string
-): string {
-  return [
-    formatBucketLabel(item.income_type),
-    `Window gross: ${formatCurrency(item.requested_window.gross.reporting_currency_amount, currency)}`,
-    `Window net: ${formatCurrency(item.requested_window.net.reporting_currency_amount, currency)}`,
-    `Window transactions: ${item.requested_window.net.transaction_count}`,
-  ].join("\n");
-}
-
-export function formatBucketLabel(value: string): string {
-  return value
-    .toLowerCase()
-    .split("_")
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
-
-export function describeActivityBucket(bucket: string): string {
-  switch (bucket) {
-    case "INFLOWS":
-      return "Window inflow";
-    case "OUTFLOWS":
-      return "Window outflow";
-    case "FEES":
-      return "Window fees";
-    case "TAXES":
-      return "Window taxes";
-    default:
-      return "Window activity";
-  }
 }
 
 export function buildLinePath(points: Array<{ x: number; y: number }>): string {

@@ -1,19 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildActivityTooltip,
   buildAreaPath,
-  buildIncomeTooltip,
   buildLinePath,
   buildProjectedCashflowChartModel,
   buildTopHoldingTooltip,
-  describeActivityBucket,
-  formatBucketLabel,
   formatCashflowNetFlowTitle,
   formatCashflowPointTitle,
   roundSvg,
 } from "../../src/apps/portfolio/portfolio-chart-view-model";
-import type { PortfolioIncomeSummaryView, PortfolioWorkspace } from "../../src/apps/portfolio/types";
+import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 
 describe("portfolio chart view model", () => {
   it("builds projected cashflow geometry and focus state from source points", () => {
@@ -68,19 +64,10 @@ describe("portfolio chart view model", () => {
 
   it("formats chart labels and tooltips consistently", () => {
     const cashflowPoint = buildCashflowOutlook().upcoming_points[0];
-    const incomeType = buildIncomeType();
-
-    expect(formatBucketLabel("FIXED_INCOME_COUPON")).toBe("Fixed Income Coupon");
-    expect(describeActivityBucket("INFLOWS")).toBe("Window inflow");
-    expect(describeActivityBucket("UNKNOWN_BUCKET")).toBe("Window activity");
     expect(formatCashflowNetFlowTitle(cashflowPoint, "USD")).toBe("12 May 2026: net flow -2,500 USD");
     expect(formatCashflowPointTitle(cashflowPoint, "USD")).toBe(
       "12 May 2026: projected cumulative -2,500 USD"
     );
-    expect(buildActivityTooltip("OUTFLOWS", -1200, -2500, "USD")).toBe(
-      ["Outflows", "Window: -1,200 USD", "YTD: -2,500 USD"].join("\n")
-    );
-    expect(buildIncomeTooltip(incomeType, "USD")).toContain("Window net: 900 USD");
     expect(
       buildTopHoldingTooltip(
         {
@@ -135,23 +122,5 @@ function buildCashflowOutlook(): NonNullable<PortfolioWorkspace["cashflow_outloo
         projected_cumulative_cashflow_base: 5000,
       },
     ],
-  };
-}
-
-function buildIncomeType(): PortfolioIncomeSummaryView["income_types"][number] {
-  return {
-    income_type: "DIVIDEND",
-    requested_window: {
-      gross: { reporting_currency_amount: 1000, transaction_count: 1 },
-      withholding_tax: { reporting_currency_amount: 100, transaction_count: 1 },
-      other_deductions: { reporting_currency_amount: 0, transaction_count: 0 },
-      net: { reporting_currency_amount: 900, transaction_count: 1 },
-    },
-    year_to_date: {
-      gross: { reporting_currency_amount: 1000, transaction_count: 1 },
-      withholding_tax: { reporting_currency_amount: 100, transaction_count: 1 },
-      other_deductions: { reporting_currency_amount: 0, transaction_count: 0 },
-      net: { reporting_currency_amount: 900, transaction_count: 1 },
-    },
   };
 }
