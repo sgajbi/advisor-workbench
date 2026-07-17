@@ -9,6 +9,7 @@ import type {
   PortfolioWorkflowCue,
   PortfolioWorkspace,
 } from "./types";
+import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
 
 export const PORTFOLIO_TIME_WINDOW_OPTIONS = ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"] as const;
 export const PORTFOLIO_VIEW_MODE_OPTIONS = ["summary", "detailed"] as const;
@@ -449,12 +450,7 @@ export function getInvestedAssetWeight(workspace: PortfolioWorkspace): number | 
 }
 
 export function getRequestedWindowActivityAmount(workspace: PortfolioWorkspace): number {
-  return (
-    workspace.activity_summary?.buckets.reduce(
-      (total, bucket) => total + bucket.requested_window.reporting_currency_amount,
-      0
-    ) ?? 0
-  );
+  return buildActivityMovementSummary(workspace.activity_summary)?.netMovement ?? 0;
 }
 
 export function getRequestedWindowActivityCount(workspace: PortfolioWorkspace): number {
@@ -468,10 +464,7 @@ export function getRequestedWindowActivityCount(workspace: PortfolioWorkspace): 
 
 export function getYearToDateActivityAmount(workspace: PortfolioWorkspace): number {
   return (
-    workspace.activity_summary?.buckets.reduce(
-      (total, bucket) => total + bucket.year_to_date.reporting_currency_amount,
-      0
-    ) ?? 0
+    buildActivityMovementSummary(workspace.activity_summary, "year_to_date")?.netMovement ?? 0
   );
 }
 
