@@ -483,8 +483,12 @@ or portfolio-currency net cost.
    identity-key pattern so both review states are discarded before the new portfolio renders.
    Eight focused workspace/screen tests, TypeScript, lint, and the populated canonical
    Transactions browser flow passed after the correction.
-8. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
-   review item is hardened.
+8. PR #420 merged by rebase to `main` as `92478ab1`. Final Codex review on `e0ef19a` found no
+   major issues, all feature and protected merge-gate jobs passed, and exact-main Main
+   Releasability run `29566612562` passed workflow lint, lint, typecheck, coverage, production
+   build, Playwright smoke, Docker build, and Dockerized local-CI parity. The canonical clone was
+   synchronized to clean `main`; all eight feature-branch patches were proven equivalent to
+   `origin/main` before the merged local branch was removed.
 
 ### Publication decision
 
