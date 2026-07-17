@@ -99,9 +99,12 @@ npm run live:stack:up
 
 For RFC/mainline certification, add `-RequireMainlineSources`. It fetches each canonical sibling
 without changing its worktree and fails before Docker, seeding, or screenshots unless every
-participant is clean and exactly at `origin/main`. It writes the source-safe
-`mainline-source-provenance.json` artifact beside canonical evidence. Normal and `-LocalApps`
-runs remain development evidence and must never be presented as mainline certification.
+participant is clean and exactly at `origin/main`. Certification startup forces Docker image builds
+and container recreation, then regenerates source provenance after startup and fails if it changed.
+The live validator also binds Lotus Idea's `/version` commit and branch to that manifest before it
+records mainline-source certification posture. It writes source-safe preflight and runtime
+provenance artifacts beside canonical evidence. Normal and `-LocalApps` runs remain development
+evidence and must never be presented as mainline certification.
 
 That script performs:
 

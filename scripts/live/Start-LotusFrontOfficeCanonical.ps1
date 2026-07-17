@@ -39,9 +39,14 @@ $canonicalEvidenceRoot = if ([string]::IsNullOrWhiteSpace($CanonicalEvidenceDire
 } else {
   Join-Path $workbenchRepo $CanonicalEvidenceDirectory
 }
-$composeUpCommand = "docker compose up -d"
-if ($BuildImages) {
-  $composeUpCommand = "$composeUpCommand --build"
+$mainlineSourcePreflightPath = $null
+$mainlineSourceRuntimePath = $null
+if ($RequireMainlineSources) {
+  $composeUpCommand = "docker compose up -d --build --force-recreate"
+} elseif ($BuildImages) {
+  $composeUpCommand = "docker compose up -d --build"
+} else {
+  $composeUpCommand = "docker compose up -d"
 }
 $localAppSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($item in $LocalApps) {
@@ -62,7 +67,9 @@ if ($RequireMainlineSources) {
   }
   New-Item -ItemType Directory -Path $canonicalEvidenceRoot -Force | Out-Null
   $provenanceScript = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
-  & node $provenanceScript --projects-root $ProjectsRoot --output (Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json")
+  $mainlineSourcePreflightPath = Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json"
+  $mainlineSourceRuntimePath = Join-Path $canonicalEvidenceRoot "mainline-source-provenance-runtime.json"
+  & node $provenanceScript --projects-root $ProjectsRoot --output $mainlineSourcePreflightPath
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical mainline source provenance preflight failed. No Docker build, seed, or validation was started."
   }
@@ -613,6 +620,18 @@ if (-not $RunValidation) {
   return
 }
 
+if ($RequireMainlineSources) {
+  & node $provenanceScript --projects-root $ProjectsRoot --output $mainlineSourceRuntimePath
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical mainline source provenance changed during Docker startup. Validation was not started."
+  }
+  $preflightHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $mainlineSourcePreflightPath).Hash
+  $runtimeHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $mainlineSourceRuntimePath).Hash
+  if ($preflightHash -ne $runtimeHash) {
+    throw "Canonical mainline sources changed during Docker startup. Validation was not started."
+  }
+}
+
 Write-Host "Running canonical live validation ..."
 $validationArguments = @{
   PortfolioId = $PortfolioId
@@ -623,6 +642,6 @@ if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
   $validationArguments.ScreenshotDirectory = $ScreenshotDirectory
 }
 if ($RequireMainlineSources) {
-  $validationArguments.MainlineSourceProvenancePath = (Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json")
+  $validationArguments.MainlineSourceProvenancePath = $mainlineSourceRuntimePath
 }
 & (Join-Path $workbenchRepo "scripts\\live\\Validate-LotusFrontOfficeCanonical.ps1") @validationArguments

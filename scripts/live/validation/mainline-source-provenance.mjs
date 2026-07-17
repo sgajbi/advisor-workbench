@@ -74,6 +74,30 @@ export function validateMainlineSourceManifest(manifest) {
   return manifest;
 }
 
+export function bindMainlineSourceManifestToRuntime(manifest, { repository, commitSha, branch }) {
+  const validatedManifest = validateMainlineSourceManifest(manifest);
+  const sourceRepository = validatedManifest.repositories.find(
+    (candidate) => candidate.repository === repository,
+  );
+  if (
+    !sourceRepository ||
+    !commitSha ||
+    sourceRepository.headSha !== commitSha ||
+    sourceRepository.expectedMainSha !== commitSha ||
+    branch !== "main"
+  ) {
+    throw new Error(
+      `Runtime provenance does not match the passing mainline source manifest for ${repository}.`,
+    );
+  }
+  return {
+    repository,
+    commitSha,
+    branch,
+    expectedMainSha: sourceRepository.expectedMainSha,
+  };
+}
+
 export function loadValidatedMainlineSourceManifest(manifestPath) {
   return validateMainlineSourceManifest(JSON.parse(readFileSync(manifestPath, "utf8")));
 }

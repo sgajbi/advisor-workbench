@@ -62,7 +62,10 @@ import {
   readString,
 } from "./validation/payload-utils.mjs";
 import { loadIdeaCapacitySeedEvidence } from "./validation/idea-capacity-seed-evidence.mjs";
-import { loadValidatedMainlineSourceManifest } from "./validation/mainline-source-provenance.mjs";
+import {
+  bindMainlineSourceManifestToRuntime,
+  loadValidatedMainlineSourceManifest,
+} from "./validation/mainline-source-provenance.mjs";
 
 const {
   portfolioId,
@@ -108,9 +111,23 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
-if (mainlineSourceProvenancePath) {
-  const mainlineSourceProvenance = loadValidatedMainlineSourceManifest(
-    mainlineSourceProvenancePath,
+const mainlineSourceProvenance = mainlineSourceProvenancePath
+  ? loadValidatedMainlineSourceManifest(mainlineSourceProvenancePath)
+  : null;
+const ideaVersion = await fetchJson(
+  summary,
+  `${ideaBaseUrl}/version`,
+  "Lotus Idea runtime version",
+  timeoutMs,
+);
+if (mainlineSourceProvenance) {
+  const ideaRuntimeBinding = bindMainlineSourceManifestToRuntime(
+    mainlineSourceProvenance,
+    {
+      repository: "lotus-idea",
+      commitSha: ideaVersion?.build?.gitCommitSha,
+      branch: ideaVersion?.build?.gitBranch,
+    },
   );
   summary.mainlineSourceProvenance = {
     path: mainlineSourceProvenancePath,
@@ -120,14 +137,9 @@ if (mainlineSourceProvenancePath) {
       headSha: repository.headSha,
       expectedMainSha: repository.expectedMainSha,
     })),
+    runtimeBindings: [ideaRuntimeBinding],
   };
 }
-const ideaVersion = await fetchJson(
-  summary,
-  `${ideaBaseUrl}/version`,
-  "Lotus Idea runtime version",
-  timeoutMs,
-);
 summary.ideaCapacitySeed = await loadIdeaCapacitySeedEvidence(
   ideaCapacitySeedEvidencePath,
   {
