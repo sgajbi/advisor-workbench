@@ -10,8 +10,11 @@ export type TransactionRow = {
   securityId: string;
   quantity: number;
   price: number | null;
-  amount: number | null;
-  currency: string;
+  grossAmount: number | null;
+  transactionCurrency: string | null;
+  netCostBase: number | null;
+  realizedGainLossBase: number | null;
+  priceCurrency: string;
   status: string;
   componentType: string | null;
   sourceSystem: string | null;
@@ -31,6 +34,7 @@ export type PortfolioTransactionLedgerQuery = {
   nearLegGroupId?: string;
   farLegGroupId?: string;
   limit?: number;
+  skip?: number;
 };
 
 export function buildTransactionFilterOptions(
@@ -49,6 +53,7 @@ export function shouldReuseInitialTransactions(params: {
   defaultStartDate: string;
   defaultEndDate: string;
   initialTransactionCount: number;
+  skip: number;
 }): boolean {
   return (
     !params.externalFilter &&
@@ -56,6 +61,7 @@ export function shouldReuseInitialTransactions(params: {
     params.componentType === "ALL" &&
     params.startDate === params.defaultStartDate &&
     params.endDate === params.defaultEndDate &&
+    params.skip === 0 &&
     params.initialTransactionCount > 0
   );
 }
@@ -67,6 +73,7 @@ export function buildTransactionLedgerQuery(params: {
   transactionType: string;
   componentType: string;
   externalFilter: PortfolioTransactionDrilldownFilter | null | undefined;
+  skip?: number;
 }): PortfolioTransactionLedgerQuery {
   const query: PortfolioTransactionLedgerQuery = {
     asOfDate: params.asOfDate,
@@ -75,6 +82,7 @@ export function buildTransactionLedgerQuery(params: {
     transactionType: params.transactionType,
     componentType: params.componentType,
     limit: 200,
+    skip: params.skip ?? 0,
   };
 
   switch (params.externalFilter?.kind) {
@@ -118,8 +126,11 @@ export function buildTransactionRows(
     securityId: transaction.security_id,
     quantity: transaction.quantity,
     price: transaction.price ?? null,
-    amount: transaction.net_cost_base ?? transaction.gross_amount ?? null,
-    currency: transaction.currency ?? baseCurrency,
+    grossAmount: transaction.gross_amount ?? null,
+    transactionCurrency: transaction.currency ?? null,
+    netCostBase: transaction.net_cost_base ?? null,
+    realizedGainLossBase: transaction.realized_gain_loss_base ?? null,
+    priceCurrency: transaction.currency ?? baseCurrency,
     status: formatStatus(transaction.settlement_status),
     componentType: transaction.component_type ? formatStatus(transaction.component_type) : null,
     sourceSystem: transaction.source_system ? formatStatus(transaction.source_system) : null,
@@ -127,8 +138,27 @@ export function buildTransactionRows(
   }));
 }
 
-export function sumTransactionAmount(rows: TransactionRow[]) {
-  return rows.reduce((total, row) => total + (row.amount ?? 0), 0);
+export function countTransactionsNeedingSettlementReview(rows: TransactionRow[]): number {
+  return rows.filter((row) => {
+    const status = row.status.trim().toUpperCase();
+    return status !== "SETTLED" && status !== "N/A";
+  }).length;
+}
+
+export function formatTransactionLedgerCoverage(params: {
+  total: number;
+  skip: number;
+  visibleCount: number;
+}): string {
+  if (!params.visibleCount) {
+    return params.total ? `0 of ${params.total} ledger entries` : "No ledger entries";
+  }
+
+  const start = params.skip + 1;
+  const end = Math.min(params.skip + params.visibleCount, params.total);
+  return params.total > params.visibleCount || params.skip
+    ? `${start}–${end} of ${params.total} ledger entries`
+    : `${params.total} ledger ${params.total === 1 ? "entry" : "entries"}`;
 }
 
 export function buildTransactionExportRows(rows: TransactionRow[], baseCurrency: string) {
@@ -139,8 +169,10 @@ export function buildTransactionExportRows(rows: TransactionRow[], baseCurrency:
     Instrument: row.instrument,
     Quantity: row.quantity,
     Price: row.price ?? "",
-    [`Amount (${baseCurrency})`]: row.amount ?? "",
-    Currency: row.currency,
+    "Transaction Currency": row.transactionCurrency ?? "",
+    "Gross Amount": row.grossAmount ?? "",
+    [`Net Cost (${baseCurrency})`]: row.netCostBase ?? "",
+    [`Realized P&L (${baseCurrency})`]: row.realizedGainLossBase ?? "",
     Status: row.status,
     Component: row.componentType ?? "",
     Source: row.sourceSystem ?? "",

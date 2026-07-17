@@ -204,6 +204,12 @@ export type PortfolioTransactionView = {
   far_leg_group_id?: string | null;
 };
 
+export type PortfolioTransactionLedgerPage = {
+  total: number;
+  skip: number;
+  limit: number;
+};
+
 export type PortfolioRecordDataAvailability = {
   positions?: "ready" | "unavailable";
   liquidity?: "ready" | "unavailable";
@@ -299,6 +305,7 @@ export type PortfolioWorkspace = {
   top_positions: PortfolioTopPosition[];
   positions: PortfolioPositionView[];
   recent_transactions: PortfolioTransactionView[];
+  transaction_ledger_page?: PortfolioTransactionLedgerPage;
   record_data_availability?: PortfolioRecordDataAvailability;
   income_summary?: PortfolioIncomeSummaryView | null;
   activity_summary?: PortfolioActivitySummaryView | null;

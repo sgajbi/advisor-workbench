@@ -14,7 +14,11 @@ import { WorkbenchInlineRefreshNote } from "@/design-system";
 
 import { getPortfolioTransactionLedger } from "../api";
 import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
-import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
+import type {
+  PortfolioTransactionDrilldownFilter,
+  PortfolioTransactionLedgerPage,
+  PortfolioTransactionView,
+} from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
 import {
   buildPortfolioDataGridColumn,
@@ -26,8 +30,9 @@ import {
   buildTransactionFilterOptions,
   buildTransactionLedgerQuery,
   buildTransactionRows,
+  countTransactionsNeedingSettlementReview,
+  formatTransactionLedgerCoverage,
   shouldReuseInitialTransactions,
-  sumTransactionAmount,
   type TransactionRow,
 } from "./portfolio-transactions-grid-helpers";
 import PortfolioDataGridFrame from "./portfolio-data-grid-frame";
@@ -44,6 +49,7 @@ type PortfolioTransactionsGridProps = {
   defaultStartDate: string;
   defaultEndDate: string;
   initialTransactions: PortfolioTransactionView[];
+  initialLedgerPage?: PortfolioTransactionLedgerPage;
   suspendInitialFetch?: boolean;
   externalFilter?: PortfolioTransactionDrilldownFilter | null;
   onClearExternalFilter?: () => void;
@@ -57,6 +63,7 @@ export default function PortfolioTransactionsGrid({
   defaultStartDate,
   defaultEndDate,
   initialTransactions,
+  initialLedgerPage,
   suspendInitialFetch = false,
   externalFilter,
   onClearExternalFilter,
@@ -67,6 +74,12 @@ export default function PortfolioTransactionsGrid({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [transactions, setTransactions] = useState<PortfolioTransactionView[]>(initialTransactions);
+  const [ledgerPage, setLedgerPage] = useState<PortfolioTransactionLedgerPage>(() => ({
+    total: initialLedgerPage?.total ?? initialTransactions.length,
+    skip: initialLedgerPage?.skip ?? 0,
+    limit: initialLedgerPage?.limit ?? 200,
+  }));
+  const [pageSkip, setPageSkip] = useState(initialLedgerPage?.skip ?? 0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
@@ -77,7 +90,12 @@ export default function PortfolioTransactionsGrid({
   useEffect(() => {
     setStartDate(defaultStartDate);
     setEndDate(defaultEndDate);
+    setPageSkip(0);
   }, [defaultEndDate, defaultStartDate]);
+
+  useEffect(() => {
+    setPageSkip(0);
+  }, [externalFilter, portfolioId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,10 +116,16 @@ export default function PortfolioTransactionsGrid({
         defaultStartDate,
         defaultEndDate,
         initialTransactionCount: initialTransactions.length,
+        skip: pageSkip,
       });
 
       if (shouldUseInitialTransactions) {
         setTransactions(initialTransactions);
+        setLedgerPage({
+          total: initialLedgerPage?.total ?? initialTransactions.length,
+          skip: initialLedgerPage?.skip ?? 0,
+          limit: initialLedgerPage?.limit ?? 200,
+        });
         setLoading(false);
         setLoadError(false);
         return;
@@ -116,13 +140,20 @@ export default function PortfolioTransactionsGrid({
         transactionType,
         componentType,
         externalFilter,
+        skip: pageSkip,
       }));
 
       if (!cancelled) {
         if (payload) {
           setTransactions(payload.transactions ?? []);
+          setLedgerPage({
+            total: payload.total ?? payload.transactions.length,
+            skip: payload.skip ?? pageSkip,
+            limit: payload.limit ?? 200,
+          });
         } else {
           setTransactions([]);
+          setLedgerPage({ total: 0, skip: pageSkip, limit: 200 });
           setLoadError(true);
         }
         setLoading(false);
@@ -141,6 +172,8 @@ export default function PortfolioTransactionsGrid({
     endDate,
     externalFilter,
     initialTransactions,
+    initialLedgerPage,
+    pageSkip,
     portfolioId,
     startDate,
     suspendInitialFetch,
@@ -208,27 +241,47 @@ export default function PortfolioTransactionsGrid({
         minWidth: 108,
         type: "numericColumn",
         valueFormatter: ({ value, data }) =>
-          value === null || value === undefined ? "—" : formatCurrency(value, data?.currency ?? baseCurrency),
+          value === null || value === undefined
+            ? "—"
+            : formatCurrency(value, data?.priceCurrency ?? baseCurrency),
       }),
       buildTransactionColumn({
-        field: "amount",
-        headerName: "Amount",
+        field: "grossAmount",
+        headerName: "Gross Amount",
         minWidth: 126,
         type: "numericColumn",
-        valueFormatter: ({ value, data }) => formatCurrency(value, data?.currency ?? baseCurrency),
+        valueFormatter: ({ value, data }) =>
+          formatCurrency(value, data?.transactionCurrency ?? baseCurrency),
+      }),
+      buildTransactionColumn({
+        field: "transactionCurrency",
+        headerName: "Transaction Currency",
+        minWidth: 118,
+      }),
+      buildTransactionColumn({
+        field: "netCostBase",
+        headerName: `Net Cost (${baseCurrency})`,
+        minWidth: 132,
+        type: "numericColumn",
+        valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
         cellClass: ({ value }) =>
           `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getPortfolioAmountToneClass(value)}`,
       }),
       buildTransactionColumn({
-        field: "currency",
-        headerName: "Currency",
-        minWidth: 92,
-      }),
-      buildTransactionColumn({
         field: "status",
-        headerName: "Status",
+        headerName: "Settlement Status",
         minWidth: 106,
         cellRenderer: transactionStatusCellRenderer,
+      }),
+      buildTransactionColumn({
+        field: "realizedGainLossBase",
+        headerName: `Realized P&L (${baseCurrency})`,
+        minWidth: 142,
+        type: "numericColumn",
+        valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
+        cellClass: ({ value }) =>
+          `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getPortfolioAmountToneClass(value)}`,
+        hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "componentType",
@@ -248,17 +301,55 @@ export default function PortfolioTransactionsGrid({
         minWidth: 146,
         hide: !showExpandedColumns,
       }),
+      buildTransactionColumn({
+        colId: "review",
+        headerName: "Review",
+        minWidth: 92,
+        maxWidth: 104,
+        sortable: false,
+        filter: false,
+        hide: !onRowSelect,
+        cellRenderer: (params: ICellRendererParams<TransactionRow>) =>
+          params.data ? (
+            <Button
+              size="small"
+              variant="text"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRowSelect?.(params.data!);
+              }}
+              aria-label={`Review transaction ${params.data.transactionId}`}
+            >
+              Review
+            </Button>
+          ) : null,
+      }),
     ],
-    [baseCurrency, gridDensity, showExpandedColumns]
+    [baseCurrency, gridDensity, onRowSelect, showExpandedColumns]
   );
+
+  const settlementReviewCount = countTransactionsNeedingSettlementReview(rowData);
+  const coverageLabel = formatTransactionLedgerCoverage({
+    total: ledgerPage.total,
+    skip: ledgerPage.skip,
+    visibleCount: rowData.length,
+  });
+  const hasPreviousPage = ledgerPage.skip > 0;
+  const hasNextPage = ledgerPage.skip + rowData.length < ledgerPage.total;
 
   return (
     <PortfolioRecordGridShell
-      kicker="Transactions"
-      title="Ledger"
-      description={`Activity from ${formatDate(defaultStartDate)} to ${formatDate(defaultEndDate)}`}
-      summaryLabel={`${rowData.length} events`}
-      summaryValue={formatCurrency(sumTransactionAmount(rowData), baseCurrency)}
+      kicker="Transaction review"
+      title="Booked activity"
+      description={`Source-booked activity from ${formatDate(startDate)} to ${formatDate(endDate)}. Local gross amounts remain distinct from ${baseCurrency} portfolio amounts.`}
+      summaryLabel={coverageLabel}
+      summaryValue={
+        settlementReviewCount
+          ? `${settlementReviewCount} visible ${settlementReviewCount === 1 ? "entry needs" : "entries need"} settlement review`
+          : rowData.length
+            ? "All visible entries settled"
+            : "No settlement state in view"
+      }
       searchControl={
         <TextField
           size="small"
@@ -272,7 +363,7 @@ export default function PortfolioTransactionsGrid({
       actions={
         <>
           <Button size="small" variant={showFilters ? "contained" : "outlined"} onClick={() => setShowFilters((current) => !current)}>
-            Filter
+            Filters
           </Button>
           <Button
             size="small"
@@ -288,7 +379,7 @@ export default function PortfolioTransactionsGrid({
             aria-label={showExpandedColumns ? "Show essential transaction columns" : "Show expanded transaction columns"}
             onClick={() => setShowExpandedColumns((current) => !current)}
           >
-            Expand
+            {showExpandedColumns ? "Show essential columns" : "Show all columns"}
           </Button>
         </>
       }
@@ -297,17 +388,20 @@ export default function PortfolioTransactionsGrid({
       {showFilters ? (
         <div className="portfolio-grid-toolbar portfolio-grid-toolbar-stacked">
           <div className="portfolio-grid-toolbar-copy">
-            <span>Ledger view filtered by transaction type, component type, and trade date window</span>
+            <span>Refine booked activity by activity type, booking component, and trade-date window.</span>
           </div>
           <div className="portfolio-grid-filter-row">
             <FormControl size="small" className="portfolio-grid-filter-control">
-              <InputLabel id="transaction-type-label">Type</InputLabel>
+              <InputLabel id="transaction-type-label">Activity type</InputLabel>
               <Select
                 labelId="transaction-type-label"
-                label="Type"
+                label="Activity type"
                 value={transactionType}
                 inputProps={{ "aria-label": "Transaction type filter" }}
-                onChange={(event) => setTransactionType(event.target.value)}
+                onChange={(event) => {
+                  setTransactionType(event.target.value);
+                  setPageSkip(0);
+                }}
               >
                 {transactionTypeOptions.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -317,13 +411,16 @@ export default function PortfolioTransactionsGrid({
               </Select>
             </FormControl>
             <FormControl size="small" className="portfolio-grid-filter-control">
-              <InputLabel id="transaction-component-type-label">Component</InputLabel>
+              <InputLabel id="transaction-component-type-label">Booking component</InputLabel>
               <Select
                 labelId="transaction-component-type-label"
-                label="Component"
+                label="Booking component"
                 value={componentType}
                 inputProps={{ "aria-label": "Transaction component type filter" }}
-                onChange={(event) => setComponentType(event.target.value)}
+                onChange={(event) => {
+                  setComponentType(event.target.value);
+                  setPageSkip(0);
+                }}
               >
                 {componentTypeOptions.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -334,20 +431,26 @@ export default function PortfolioTransactionsGrid({
             </FormControl>
             <TextField
               size="small"
-              label="From"
+              label="Trade date from"
               type="date"
               value={startDate}
               inputProps={{ "aria-label": "Transaction start date" }}
-              onChange={(event) => setStartDate(event.target.value)}
+              onChange={(event) => {
+                setStartDate(event.target.value);
+                setPageSkip(0);
+              }}
               InputLabelProps={{ shrink: true }}
             />
             <TextField
               size="small"
-              label="To"
+              label="Trade date to"
               type="date"
               value={endDate}
               inputProps={{ "aria-label": "Transaction end date" }}
-              onChange={(event) => setEndDate(event.target.value)}
+              onChange={(event) => {
+                setEndDate(event.target.value);
+                setPageSkip(0);
+              }}
               InputLabelProps={{ shrink: true }}
             />
           </div>
@@ -363,7 +466,7 @@ export default function PortfolioTransactionsGrid({
             <Button size="small" variant="text" onClick={onClearExternalFilter}>
               Clear drill-down
             </Button>
-            <span>{rowData.length} matching transactions in the current view</span>
+            <span>{ledgerPage.total} matching transactions in the selected period</span>
           </div>
         </div>
       ) : null}
@@ -382,6 +485,7 @@ export default function PortfolioTransactionsGrid({
           rowData={rowData}
           columnDefs={columnDefs}
           quickFilterText={quickSearch}
+          getRowId={({ data }) => data.transactionId}
           onRowClicked={({ data }) => {
             if (data) {
               onRowSelect?.(data);
@@ -415,12 +519,35 @@ export default function PortfolioTransactionsGrid({
           state="empty"
           title="No transactions booked"
           body="No funding, trading, or cash activity has been recorded in the selected window."
-          hint="Start with a funding entry or the first trade."
-          action={
-            <a href={`/workbench?portfolioId=${encodeURIComponent(portfolioId)}`}>Book first transaction</a>
-          }
+          hint="Confirm the trade-date window and source-book availability. Transaction booking is completed in the owning booking workflow."
         />
       )}
+
+      {rowData.length && (hasPreviousPage || hasNextPage) ? (
+        <div className="portfolio-grid-toolbar" aria-label="Transaction ledger pages">
+          <div className="portfolio-grid-toolbar-copy">
+            <span>{coverageLabel}</span>
+          </div>
+          <div className="portfolio-grid-toolbar-actions">
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!hasPreviousPage || loading}
+              onClick={() => setPageSkip(Math.max(0, ledgerPage.skip - ledgerPage.limit))}
+            >
+              Previous entries
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!hasNextPage || loading}
+              onClick={() => setPageSkip(ledgerPage.skip + ledgerPage.limit)}
+            >
+              Next entries
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {loading && rowData.length ? (
         <WorkbenchInlineRefreshNote message="Refreshing transactions…" />

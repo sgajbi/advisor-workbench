@@ -58,6 +58,21 @@ describe("portfolio record screen view model", () => {
       { label: "Invested", value: "920,000 USD" },
       { label: "Cash", value: "80,000 USD" },
     ]);
+    expect(
+      buildPortfolioRecordHeaderKpis(
+        {
+          ...workspace,
+          operations: { latest_booked_transaction_date: "2026-05-10" },
+          transaction_ledger_page: { total: 412, skip: 0, limit: 200 },
+        },
+        "30D",
+        "transactions",
+      ),
+    ).toEqual([
+      { label: "Portfolio Currency", value: "USD" },
+      { label: "Latest Booking", value: "10 May 2026" },
+      { label: "Ledger Entries", value: "412" },
+    ]);
 
     expect(
       buildPortfolioRecordHeaderKpis(

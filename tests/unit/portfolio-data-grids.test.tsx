@@ -9,7 +9,7 @@ vi.mock("ag-grid-react", () => ({
       <div data-testid="mock-grid" data-has-row-selection={Boolean(rowSelection)}>
         <div>
           {visibleColumns.map((column: any) => (
-            <React.Fragment key={column.field}>
+            <React.Fragment key={column.field ?? column.colId}>
               <span>{column.headerName}</span>
               <span data-testid={`${column.field}-header-class`}>
                 {column.headerClass ?? ""}
@@ -188,9 +188,13 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Ledger" })).toBeInTheDocument();
-    expect(screen.getByText("Activity from 01 Mar 2026 to 28 Mar 2026")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Filter" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Booked activity" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Source-booked activity from 01 Mar 2026 to 28 Mar 2026. Local gross amounts remain distinct from USD portfolio amounts.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     const createObjectUrl = vi.fn(() => "blob:portfolio-transactions");
     const revokeObjectUrl = vi.fn();
     vi.stubGlobal("URL", {
@@ -218,11 +222,12 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getByText("Trade Date")).toBeInTheDocument();
     });
-    expect(screen.getByText("Amount")).toBeInTheDocument();
+    expect(screen.getByText("Gross Amount")).toBeInTheDocument();
     expect(screen.getByText("Settle Date")).toBeInTheDocument();
-    expect(screen.getByText("Currency")).toBeInTheDocument();
-    expect(screen.getByText("Status")).toBeInTheDocument();
-    expect(screen.getByTestId("amount-header-class")).toHaveTextContent(
+    expect(screen.getByText("Transaction Currency")).toBeInTheDocument();
+    expect(screen.getByText("Net Cost (USD)")).toBeInTheDocument();
+    expect(screen.getByText("Settlement Status")).toBeInTheDocument();
+    expect(screen.getByTestId("grossAmount-header-class")).toHaveTextContent(
       "portfolio-data-grid-header-cell-numeric"
     );
     expect(screen.queryByText("Transaction lifecycle detail is limited")).not.toBeInTheDocument();
@@ -247,6 +252,73 @@ describe("portfolio data grids", () => {
         Note: 'Advisor said "hold"',
       },
     ])).toBe('Trade Date,Instrument,Note\r\n20 Mar 2026,"Global, Balanced Fund","Advisor said ""hold"""');
+  });
+
+  it("uses Gateway ledger metadata to page beyond the initial 200 entries", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          total: 201,
+          skip: 200,
+          limit: 200,
+          transactions: [
+            {
+              transaction_id: "TX_201",
+              transaction_date: "2026-03-01T00:00:00Z",
+              settlement_date: "2026-03-03",
+              transaction_type: "SELL",
+              security_id: "EQ_201",
+              instrument_id: "FINAL POSITION",
+              quantity: 1,
+              gross_amount: 1250,
+              currency: "EUR",
+              net_cost_base: 1400,
+              settlement_status: "PENDING",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialLedgerPage={{ total: 201, skip: 0, limit: 200 }}
+        initialTransactions={Array.from({ length: 200 }, (_, index) => ({
+          transaction_id: `TX_${index + 1}`,
+          transaction_date: "2026-03-20T00:00:00Z",
+          settlement_date: "2026-03-24",
+          transaction_type: "BUY",
+          security_id: `EQ_${index + 1}`,
+          instrument_id: `POSITION ${index + 1}`,
+          quantity: 1,
+          gross_amount: 100,
+          currency: "USD",
+          net_cost_base: 100,
+          settlement_status: "SETTLED",
+        }))}
+      />,
+    );
+
+    expect(screen.getAllByText("1–200 of 201 ledger entries").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Next entries" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(
+      String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? ""),
+    ).toContain("skip=200");
+    await waitFor(() => {
+      expect(screen.getAllByText("201–201 of 201 ledger entries").length).toBeGreaterThan(0);
+    });
+    expect(screen.getByText("1 visible entry needs settlement review")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous entries" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Next entries" })).toBeDisabled();
   });
 
   it("renders the component filter alongside the strategic ledger controls", async () => {
@@ -277,7 +349,7 @@ describe("portfolio data grids", () => {
 
     expect(screen.getByLabelText("Transaction component type filter")).toBeInTheDocument();
     expect(
-      screen.getByText("Ledger view filtered by transaction type, component type, and trade date window")
+      screen.getByText("Refine booked activity by activity type, booking component, and trade-date window.")
     ).toBeInTheDocument();
   });
 
@@ -357,7 +429,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("security_id=EQ_1");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /12 Mar 2026 \| Dividend \| 14 Mar 2026 \| AAPL/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /18 Mar 2026 \| Buy \| MSFT/i })).not.toBeInTheDocument();
 
@@ -432,7 +504,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("linked_transaction_group_id=LTG-FX-2026-0001");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -504,7 +576,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("fx_contract_id=FXC-2026-0001");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -576,7 +648,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("swap_event_id=FXSWAP-2026-0001");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -648,7 +720,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("near_leg_group_id=FXSWAP-2026-0001-NEAR");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -720,7 +792,7 @@ describe("portfolio data grids", () => {
     });
     const requestUrl = String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? "");
     expect(requestUrl).toContain("far_leg_group_id=FXSWAP-2026-0001-FAR");
-    expect(screen.getByText("1 matching transactions in the current view")).toBeInTheDocument();
+    expect(screen.getByText("1 matching transactions in the selected period")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Clear drill-down/i }));
     expect(onClearExternalFilter).toHaveBeenCalled();
   });
@@ -814,7 +886,7 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Ledger" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Booked activity" })).toBeInTheDocument();
     expect(screen.getByText("Loading transactions")).toBeInTheDocument();
     expect(
       screen.getByText("Transaction ledger detail is loading for the selected window.")
