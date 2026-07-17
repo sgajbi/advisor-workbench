@@ -104,10 +104,10 @@ test("records a source-owned Idea review without creating a proposal", async ({
   expect(recordedRequest?.headers["idempotency-key"]).toMatch(
     /^ui-idea-review-/,
   );
-  expect(recordedRequest?.headers["x-caller-portfolio-ids"]).toBe(portfolioId);
-  expect(recordedRequest?.headers["x-caller-capabilities"]).toBe(
-    "idea.review.record",
-  );
+  expect(recordedRequest?.headers["x-caller-subject"]).toBeUndefined();
+  expect(recordedRequest?.headers["x-caller-roles"]).toBeUndefined();
+  expect(recordedRequest?.headers["x-caller-portfolio-ids"]).toBeUndefined();
+  expect(recordedRequest?.headers["x-caller-capabilities"]).toBeUndefined();
   expect(recordedRequest?.body).toMatchObject({
     action: "approve_for_conversion",
     reasonCodes: ["advisor_review"],
