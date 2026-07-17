@@ -43,15 +43,45 @@ describe("PortfolioReviewDecisionBrief", () => {
     expect(screen.getByRole("heading", { name: "Pricing coverage incomplete" })).toBeInTheDocument();
     expect(screen.getByText("Review focus")).toBeInTheDocument();
     expect(screen.getByText("Portfolio readiness")).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(screen.getByText("Reporting coverage")).toBeInTheDocument();
     expect(screen.getByText("Open exceptions")).toBeInTheDocument();
     expect(screen.getByText("Recommended next step")).toBeInTheDocument();
     expect(screen.getByText("Review performance")).toBeInTheDocument();
-    expect(screen.getByText("75%")).toBeInTheDocument();
+    expect(screen.queryByText("75%")).not.toBeInTheDocument();
     expect(screen.queryByText("Cash Review Needed")).not.toBeInTheDocument();
 
     expect(screen.queryByText("Liquidity horizon")).not.toBeInTheDocument();
     expect(screen.queryByText("Mandate workflow")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Asset Allocation" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Top Holdings" })).not.toBeInTheDocument();
+  });
+
+  it("does not declare a partial portfolio ready when no exception or action is present", () => {
+    render(
+      <PortfolioReviewDecisionBrief
+        workspace={buildPortfolioWorkspace({
+          readiness: {
+            has_positions: true,
+            reporting: {
+              status: "PENDING",
+              generated_at_utc: null,
+              row_count: 10,
+            },
+          },
+          exception_summaries: [],
+          partial_failures: [],
+          insights: [],
+          workflow_actions: [],
+        })}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Portfolio review needs completion" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("10 report rows published")).toBeInTheDocument();
+    expect(screen.queryByText("Review coverage")).not.toBeInTheDocument();
+    expect(screen.queryByText("0%")).not.toBeInTheDocument();
   });
 });
