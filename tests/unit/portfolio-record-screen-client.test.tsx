@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
   PortfolioAllocationSelection,
@@ -10,10 +10,30 @@ import type {
 import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioRecordScreenClient from "../../src/apps/portfolio/components/portfolio-record-screen-client";
 
+vi.mock("ag-grid-react", () => ({
+  AgGridReact: ({ rowData = [], onRowClicked }: any) => (
+    <div>
+      {rowData.map((row: any) => (
+        <button
+          type="button"
+          key={row.transactionId}
+          onClick={() => onRowClicked?.({ data: row })}
+        >
+          Review {row.transactionId}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock(
   "../../src/apps/portfolio/components/portfolio-page-layout",
   () => ({ default: ({ children }: { children: ReactNode }) => <>{children}</> }),
 );
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 vi.mock(
   "../../src/apps/portfolio/components/portfolio-screen-rail",
   () => ({ default: () => <nav aria-label="Portfolio screens" /> }),
@@ -365,6 +385,73 @@ describe("PortfolioRecordScreenClient positions flow", () => {
   });
 });
 
+describe("PortfolioRecordScreenClient transactions flow", () => {
+  it("resets record and related-event review when the portfolio identity changes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({ total: 0, skip: 0, limit: 200, transactions: [] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+    const firstWorkspace = buildWorkspaceWithTransaction(
+      "PB_SG_GLOBAL_BAL_001",
+      "TX_FIRST",
+      "FXC-FIRST",
+    );
+    const { rerender } = render(
+      <PortfolioRecordScreenClient
+        screen="transactions"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={firstWorkspace}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_FIRST" }));
+    expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
+
+    const secondWorkspace = buildWorkspaceWithTransaction(
+      "PB_SG_INCOME_002",
+      "TX_SECOND",
+      "FXC-SECOND",
+    );
+    rerender(
+      <PortfolioRecordScreenClient
+        screen="transactions"
+        portfolioId="PB_SG_INCOME_002"
+        workspace={secondWorkspace}
+      />,
+    );
+
+    expect(screen.queryByRole("heading", { name: "Buy" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_SECOND" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open FX Contract Transactions" }),
+    );
+    expect(screen.getByText("FX contract FXC-SECOND")).toBeInTheDocument();
+
+    const thirdWorkspace = buildWorkspaceWithTransaction(
+      "PB_SG_PRESERVATION_003",
+      "TX_THIRD",
+      "FXC-THIRD",
+    );
+    rerender(
+      <PortfolioRecordScreenClient
+        screen="transactions"
+        portfolioId="PB_SG_PRESERVATION_003"
+        workspace={thirdWorkspace}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText("FX contract FXC-SECOND")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Review TX_THIRD" })).toBeInTheDocument();
+  });
+});
+
 function buildWorkspace(): PortfolioWorkspace {
   return {
     as_of_date: "2026-04-10",
@@ -460,4 +547,32 @@ function buildWorkspace(): PortfolioWorkspace {
     warnings: [],
     partial_failures: [],
   };
+}
+
+function buildWorkspaceWithTransaction(
+  portfolioId: string,
+  transactionId: string,
+  fxContractId: string,
+): PortfolioWorkspace {
+  const workspace = buildWorkspace();
+  workspace.portfolio.portfolio_id = portfolioId;
+  workspace.recent_transactions = [
+    {
+      transaction_id: transactionId,
+      transaction_date: "2026-04-10",
+      settlement_date: "2026-04-12",
+      transaction_type: "BUY",
+      component_type: "TRADE",
+      security_id: `SEC_${transactionId}`,
+      instrument_id: `Instrument ${transactionId}`,
+      quantity: 10,
+      gross_amount: 1_000,
+      currency: "USD",
+      net_cost_base: 1_000,
+      settlement_status: "SETTLED",
+      fx_contract_id: fxContractId,
+    },
+  ];
+  workspace.transaction_ledger_page = { total: 1, skip: 0, limit: 200 };
+  return workspace;
 }
