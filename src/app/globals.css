@@ -5300,6 +5300,28 @@ a:hover {
   overflow: hidden;
 }
 
+.portfolio-instrument-review {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.portfolio-instrument-review:focus-visible {
+  border-radius: 4px;
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.portfolio-instrument-review:hover strong {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .portfolio-instrument-cell strong {
   overflow: hidden;
   color: #171a1f;

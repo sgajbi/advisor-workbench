@@ -68,6 +68,7 @@ export default function PortfolioHoldingsGrid({
   const [columnVisibility, setColumnVisibility] = useState<Record<HoldingsColumnKey, boolean>>(() =>
     buildDefaultHoldingsColumnVisibility(columnMode)
   );
+  const hasHiddenColumns = Object.values(columnVisibility).some((isVisible) => !isVisible);
   const pinImportantColumns = shouldPinPortfolioGridLeadColumns(columnMode);
 
   const rowData = useMemo<HoldingsRow[]>(
@@ -87,6 +88,7 @@ export default function PortfolioHoldingsGrid({
         minWidth: 230,
         flex: 2,
         cellRenderer: holdingsInstrumentCellRenderer,
+        cellRendererParams: { onReview: onRowSelect },
       }),
       buildHoldingsColumn({
         key: "assetClass",
@@ -192,7 +194,7 @@ export default function PortfolioHoldingsGrid({
         minWidth: 128,
       }),
     ],
-    [baseCurrency, columnVisibility, pinImportantColumns]
+    [baseCurrency, columnVisibility, onRowSelect, pinImportantColumns]
   );
 
   return (
@@ -200,7 +202,7 @@ export default function PortfolioHoldingsGrid({
       kicker={kicker}
       title={title}
       description={description}
-      summaryLabel={formatCount(rowData.length, "position")}
+      summaryLabel={formatCount(rowData.length, "holding")}
       summaryValue={formatCurrency(sumHoldingsMarketValue(rowData), baseCurrency)}
       searchControl={
         <TextField
@@ -224,15 +226,16 @@ export default function PortfolioHoldingsGrid({
           >
             Columns
           </Button>
-          <Button
-            size="small"
-            variant={filterLabel ? "contained" : "outlined"}
-            aria-label={filterLabel ? `Filter active: ${filterLabel}` : "Filter holdings"}
-            onClick={onClearFilter}
-            disabled={!filterLabel || !onClearFilter}
-          >
-            Filter
-          </Button>
+          {filterLabel && onClearFilter ? (
+            <Button
+              size="small"
+              variant="contained"
+              aria-label={`Filter active: ${filterLabel}`}
+              onClick={onClearFilter}
+            >
+              Filter
+            </Button>
+          ) : null}
           <Button
             size="small"
             variant="outlined"
@@ -241,14 +244,16 @@ export default function PortfolioHoldingsGrid({
           >
             Export
           </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            aria-label="Show expanded holdings columns"
-            onClick={() => setColumnVisibility(buildExpandedHoldingsColumnVisibility())}
-          >
-            Expand
-          </Button>
+          {hasHiddenColumns ? (
+            <Button
+              size="small"
+              variant="outlined"
+              aria-label="Show all holdings columns"
+              onClick={() => setColumnVisibility(buildExpandedHoldingsColumnVisibility())}
+            >
+              Show all columns
+            </Button>
+          ) : null}
         </>
       }
     >
@@ -262,7 +267,7 @@ export default function PortfolioHoldingsGrid({
             <Button size="small" variant="text" onClick={onClearFilter}>
               Clear filter
             </Button>
-            <span>{formatCount(rowData.length, "position")} in the current book view</span>
+            <span>{formatCount(rowData.length, "holding")} in the current book view</span>
           </div>
         </div>
       ) : null}
@@ -284,12 +289,7 @@ export default function PortfolioHoldingsGrid({
             rowData={rowData}
             columnDefs={columnDefs}
             quickFilterText={quickSearch}
-            rowSelection={{
-              mode: "multiRow",
-              checkboxes: true,
-              headerCheckbox: true,
-              enableClickSelection: true,
-            }}
+            getRowId={({ data }) => data.securityId}
             onGridReady={(event: GridReadyEvent<HoldingsRow>) => {
               gridApiRef.current = event.api;
             }}
@@ -356,17 +356,37 @@ function buildHoldingsColumn(
   return buildPortfolioDataGridColumn(columnConfig);
 }
 
-function holdingsInstrumentCellRenderer(params: ICellRendererParams<HoldingsRow, string>) {
+function holdingsInstrumentCellRenderer(
+  params: ICellRendererParams<HoldingsRow, string> & {
+    onReview?: (row: HoldingsRow) => void;
+  },
+) {
   const row = params.data;
   if (!row) {
     return params.value ?? "";
   }
 
-  return (
-    <div className="portfolio-instrument-cell">
+  const content = (
+    <>
       <strong>{row.instrument}</strong>
       <span>{row.securityId}{row.isin ? ` / ${row.isin}` : ""}</span>
-    </div>
+    </>
+  );
+
+  return params.onReview ? (
+    <button
+      type="button"
+      className="portfolio-instrument-cell portfolio-instrument-review"
+      aria-label={`Review ${row.instrument} holding`}
+      onClick={(event) => {
+        event.stopPropagation();
+        params.onReview?.(row);
+      }}
+    >
+      {content}
+    </button>
+  ) : (
+    <div className="portfolio-instrument-cell">{content}</div>
   );
 }
 

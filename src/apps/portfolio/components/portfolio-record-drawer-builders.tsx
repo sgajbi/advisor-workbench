@@ -28,6 +28,7 @@ export function buildHoldingDrawer(
     | { state: "error" }
     | {
         state: "ready";
+        asOfDate?: string;
         transactions: PortfolioWorkspace["recent_transactions"];
       }
 ): PortfolioDetailDrawerState {
@@ -37,7 +38,7 @@ export function buildHoldingDrawer(
   );
 
   return {
-    kicker: "Holding Detail",
+    kicker: "Holding review",
     title: row.instrument,
     subtitle: row.assetClass,
     summaryItems: [
@@ -72,12 +73,12 @@ export function buildHoldingDrawer(
       },
       {
         key: "related-transactions",
-        label: "Related Transactions",
+        label: "Recent Activity",
         content: relatedTransactionsTab,
       },
     ],
-    fullPageHref: `/positions?portfolioId=${encodeURIComponent(portfolioId)}`,
-    fullPageLabel: "Open holdings",
+    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
+    fullPageLabel: "Open transactions",
   };
 }
 
@@ -290,6 +291,7 @@ function buildHoldingRelatedTransactionsTab(
     | { state: "error" }
     | {
         state: "ready";
+        asOfDate?: string;
         transactions: PortfolioWorkspace["recent_transactions"];
       },
   baseCurrency: string
@@ -307,19 +309,28 @@ function buildHoldingRelatedTransactionsTab(
     ]);
   }
 
-  return relatedTransactionsState.transactions.length
-    ? renderDrawerDefinitionList(
-        relatedTransactionsState.transactions.slice(0, 6).map((transaction) => [
-          `${formatDate(transaction.transaction_date)} ${formatStatus(
-            transaction.transaction_type
-          )}`,
-          `${transaction.instrument_id} · ${formatCurrency(
-            transaction.net_cost_base ?? transaction.gross_amount,
-            transaction.currency ?? baseCurrency
-          )}`,
-        ])
-      )
-    : renderDrawerParagraphs([
-        "No related transactions were returned for this holding.",
-      ]);
+  const lineageNote = relatedTransactionsState.asOfDate
+    ? `Recent booked activity supplied with the portfolio review as of ${formatDate(relatedTransactionsState.asOfDate)}. Open Transactions for the full ledger.`
+    : "Recent booked activity supplied with the portfolio review. Open Transactions for the full ledger.";
+
+  return (
+    <>
+      {renderDrawerParagraphs([lineageNote])}
+      {relatedTransactionsState.transactions.length
+        ? renderDrawerDefinitionList(
+            relatedTransactionsState.transactions.slice(0, 6).map((transaction) => [
+              `${formatDate(transaction.transaction_date)} ${formatStatus(
+                transaction.transaction_type
+              )}`,
+              `${transaction.instrument_id} · ${formatCurrency(
+                transaction.net_cost_base ?? transaction.gross_amount,
+                transaction.currency ?? baseCurrency
+              )}`,
+            ])
+          )
+        : renderDrawerParagraphs([
+            "No recent booked activity was returned for this holding.",
+          ])}
+    </>
+  );
 }

@@ -7,6 +7,7 @@ import type {
   PortfolioPositionView,
   PortfolioWorkspace,
 } from "../../src/apps/portfolio/types";
+import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioRecordScreenClient from "../../src/apps/portfolio/components/portfolio-record-screen-client";
 
 vi.mock(
@@ -73,6 +74,7 @@ vi.mock(
       description,
       filterLabel,
       onClearFilter,
+      onRowSelect,
     }: {
       positions: PortfolioPositionView[];
       kicker?: string;
@@ -80,15 +82,44 @@ vi.mock(
       description?: string;
       filterLabel?: string | null;
       onClearFilter?: () => void;
+      onRowSelect?: (row: HoldingsRow) => void;
     }) => (
       <section aria-label="Holdings breakdown">
         <span>{kicker}</span>
         <h2>{title}</h2>
         <p>{description}</p>
         {filterLabel ? <strong>{filterLabel}</strong> : null}
-        {positions.map((position) => (
-          <div key={position.security_id}>{position.instrument_name}</div>
-        ))}
+        {positions.map((position) =>
+          onRowSelect ? (
+            <button
+              type="button"
+              key={position.security_id}
+              onClick={() =>
+                onRowSelect({
+                  securityId: position.security_id,
+                  instrument: position.instrument_name,
+                  assetClass: position.asset_class ?? "N/A",
+                  quantity: position.quantity,
+                  price: position.market_price ?? null,
+                  marketValue: position.market_value_base,
+                  costBasis: position.cost_basis_base ?? null,
+                  weight: position.weight_pct,
+                  upl: position.unrealized_gain_loss_base ?? null,
+                  currency: position.currency ?? "USD",
+                  status: position.reprocessing_status,
+                  sector: position.sector ?? "N/A",
+                  heldSince: position.held_since_date ?? null,
+                  isin: position.isin ?? null,
+                  raw: position,
+                })
+              }
+            >
+              Review {position.instrument_name}
+            </button>
+          ) : (
+            <div key={position.security_id}>{position.instrument_name}</div>
+          ),
+        )}
         {filterLabel ? (
           <button type="button" onClick={onClearFilter}>
             Clear exposure
@@ -96,6 +127,32 @@ vi.mock(
         ) : null}
       </section>
     ),
+  }),
+);
+vi.mock(
+  "../../src/apps/portfolio/components/portfolio-detail-drawer-controller",
+  () => ({
+    default: ({
+      detailDrawer,
+      onClose,
+    }: {
+      detailDrawer: {
+        title: string;
+        tabs: Array<{ key: string; label: string; content: ReactNode }>;
+      } | null;
+      onClose: () => void;
+    }) =>
+      detailDrawer ? (
+        <aside aria-label="Holding review drawer">
+          <h2>{detailDrawer.title}</h2>
+          {detailDrawer.tabs.map((tab) => (
+            <section key={tab.key} aria-label={tab.label}>
+              {tab.content}
+            </section>
+          ))}
+          <button type="button" onClick={onClose}>Close holding review</button>
+        </aside>
+      ) : null,
   }),
 );
 
@@ -207,6 +264,69 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     expect(screen.queryByText("Sector: Technology")).not.toBeInTheDocument();
     expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
     expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
+  });
+});
+
+describe("PortfolioRecordScreenClient positions flow", () => {
+  it("shows point-in-time book composition and opens source-backed holding activity", () => {
+    const workspace = buildWorkspace();
+    workspace.summary = {
+      ...workspace.summary,
+      market_value_base: 1_100,
+      invested_market_value_base: 1_000,
+      total_cash_base: 100,
+      cash_weight_pct: 9.09,
+      cash_balance_count: 1,
+    };
+    workspace.recent_transactions = [
+      {
+        transaction_id: "TX_EQ_1",
+        transaction_date: "2026-04-08",
+        transaction_type: "BUY",
+        security_id: "EQ_US_1",
+        instrument_id: "US_TECH",
+        quantity: 1,
+        gross_amount: 100,
+        currency: "USD",
+      },
+      {
+        transaction_id: "TX_FI_1",
+        transaction_date: "2026-04-09",
+        transaction_type: "BUY",
+        security_id: "FI_SG_1",
+        instrument_id: "SG_BOND",
+        quantity: 1,
+        gross_amount: 200,
+        currency: "SGD",
+      },
+    ];
+
+    render(
+      <PortfolioRecordScreenClient
+        screen="positions"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+      />,
+    );
+
+    expect(screen.getByText("Invested")).toBeInTheDocument();
+    expect(screen.getByText("Cash")).toBeInTheDocument();
+    expect(screen.queryByText("Window")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Review USD Operating Cash" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Review US Technology Equity" }),
+    );
+
+    expect(screen.getByRole("complementary", { name: "Holding review drawer" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "US Technology Equity" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Recent Activity")).toHaveTextContent(
+      "Recent booked activity supplied with the portfolio review as of 10 Apr 2026",
+    );
+    expect(screen.getByText("US_TECH · 100 USD")).toBeInTheDocument();
+    expect(screen.queryByText("SG_BOND · 200 SGD")).not.toBeInTheDocument();
   });
 });
 
