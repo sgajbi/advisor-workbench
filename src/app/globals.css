@@ -6383,6 +6383,10 @@ a:hover {
     transform-origin: 110px 110px;
   }
 
+  .portfolio-allocation-chart-segment[aria-disabled="true"] {
+    cursor: default;
+  }
+
   .portfolio-allocation-chart-segment-hovered {
     opacity: 0.85;
   }
@@ -6410,6 +6414,13 @@ a:hover {
     padding: 0.75rem;
     color: var(--text);
     text-align: left;
+  }
+
+  .portfolio-allocation-bar-row:disabled,
+  .portfolio-allocation-table-row:disabled,
+  .portfolio-allocation-ranked-row:disabled {
+    cursor: default;
+    opacity: 0.72;
   }
 
   .portfolio-allocation-bar-row {

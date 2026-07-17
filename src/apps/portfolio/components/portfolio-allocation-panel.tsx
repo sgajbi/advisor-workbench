@@ -13,6 +13,7 @@ import type {
   PortfolioAllocationSelection,
   PortfolioAllocationView,
 } from "../types";
+import type { AllocationExposureMode } from "../portfolio-allocation-drilldown-view-model";
 import {
   AllocationBarChart,
   AllocationDonutChart,
@@ -31,6 +32,7 @@ export default function PortfolioAllocationPanel({
   compact = false,
   selectedAllocation,
   onSelectionChange,
+  onExposureModeChange,
 }: {
   portfolioId: string;
   allocationViews: PortfolioAllocationView[];
@@ -40,6 +42,7 @@ export default function PortfolioAllocationPanel({
   compact?: boolean;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
+  onExposureModeChange?: (mode: AllocationExposureMode) => void;
 }) {
   const allocationState = usePortfolioAllocationPanelState({
     portfolioId,
@@ -48,6 +51,7 @@ export default function PortfolioAllocationPanel({
     reportingCurrency,
     selectedAllocation,
     onSelectionChange,
+    onExposureModeChange,
   });
   const {
     viewsByDimension,
@@ -65,6 +69,7 @@ export default function PortfolioAllocationPanel({
     lookThroughSupported,
     lookThroughBusy,
     lookThroughProbeComplete,
+    holdingsDrilldownAvailable,
     changeDimension,
     selectBucket,
     toggleLookThrough,
@@ -144,8 +149,8 @@ export default function PortfolioAllocationPanel({
         aria-label={`${activeDimensionLabel} allocation view`}
       >
         <div className="portfolio-analytical-utility-header">
-          <span>Allocation Lens</span>
-          <strong>{`${activeDimensionLabel} • ${buckets.length} buckets • ${lookThroughLabel}`}</strong>
+          <span>Portfolio exposure</span>
+          <strong>{`${activeDimensionLabel} • ${buckets.length} exposures • ${lookThroughLabel}`}</strong>
         </div>
         {buckets.length ? (
           <div className="portfolio-allocation-body">
@@ -156,6 +161,7 @@ export default function PortfolioAllocationPanel({
                   totalWeight={totalWeight}
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
+                  holdingsDrilldownAvailable={holdingsDrilldownAvailable}
                   onHover={setHoveredBucket}
                   onSelect={selectBucket}
                 />
@@ -165,6 +171,7 @@ export default function PortfolioAllocationPanel({
                   buckets={buckets}
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
+                  holdingsDrilldownAvailable={holdingsDrilldownAvailable}
                   onHover={setHoveredBucket}
                   onSelect={selectBucket}
                 />
@@ -174,6 +181,7 @@ export default function PortfolioAllocationPanel({
                   buckets={buckets}
                   hoveredBucket={hoveredBucket}
                   selectedBucket={selectedBucket}
+                  holdingsDrilldownAvailable={holdingsDrilldownAvailable}
                   onHover={setHoveredBucket}
                   onSelect={selectBucket}
                 />
@@ -187,8 +195,9 @@ export default function PortfolioAllocationPanel({
                 baseCurrency={baseCurrency}
                 hoveredBucket={hoveredBucket}
                 selectedBucket={selectedBucket}
+                holdingsDrilldownAvailable={holdingsDrilldownAvailable}
                 onHover={setHoveredBucket}
-                onSelectionChange={onSelectionChange}
+                onSelect={selectBucket}
               />
             ) : null}
           </div>

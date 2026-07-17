@@ -19,6 +19,8 @@ describe("portfolio record screen view model", () => {
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
       title: "Allocation",
       kicker: "Allocation review",
+      subtitle:
+        "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
     });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("Income composition");
@@ -48,7 +50,7 @@ describe("portfolio record screen view model", () => {
     ]);
     expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "allocation")).toEqual([
       { label: "AUM", value: "1,000,000 USD" },
-      { label: "Buckets", value: "2" },
+      { label: "Exposure Views", value: "1" },
       { label: "Positions", value: "11" },
     ]);
 

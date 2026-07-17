@@ -22,11 +22,21 @@ function handleInteractiveKeyPress(
   }
 }
 
+function buildHoldingsActionLabel(
+  exposureSummary: string,
+  holdingsDrilldownAvailable: boolean,
+): string {
+  return holdingsDrilldownAvailable
+    ? `${exposureSummary}. Review contributing holdings.`
+    : `${exposureSummary}. Expanded exposure contributor detail is unavailable.`;
+}
+
 export function AllocationDonutChart({
   buckets,
   totalWeight,
   hoveredBucket,
   selectedBucket,
+  holdingsDrilldownAvailable,
   onHover,
   onSelect,
 }: {
@@ -34,6 +44,7 @@ export function AllocationDonutChart({
   totalWeight: number;
   hoveredBucket: string | null;
   selectedBucket: string | null;
+  holdingsDrilldownAvailable: boolean;
   onHover: (bucket: string | null) => void;
   onSelect: (bucket: string) => void;
 }) {
@@ -75,9 +86,13 @@ export function AllocationDonutChart({
               key={bucket.bucket}
               d={path}
               fill={ALLOCATION_COLORS[index % ALLOCATION_COLORS.length]}
-              role="button"
-              tabIndex={0}
-              aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
+              role={holdingsDrilldownAvailable ? "button" : undefined}
+              tabIndex={holdingsDrilldownAvailable ? 0 : -1}
+              aria-disabled={!holdingsDrilldownAvailable}
+              aria-label={buildHoldingsActionLabel(
+                `${bucket.bucket}: ${formatPct(bucket.weight_pct)}`,
+                holdingsDrilldownAvailable,
+              )}
               className={
                 isSelected
                   ? "portfolio-allocation-chart-segment portfolio-allocation-chart-segment-selected"
@@ -87,9 +102,15 @@ export function AllocationDonutChart({
               }
               onMouseEnter={() => onHover(bucket.bucket)}
               onMouseLeave={() => onHover(null)}
-              onClick={() => onSelect(bucket.bucket)}
+              onClick={() => {
+                if (holdingsDrilldownAvailable) {
+                  onSelect(bucket.bucket);
+                }
+              }}
               onKeyDown={(event) =>
-                handleInteractiveKeyPress(event, () => onSelect(bucket.bucket))
+                holdingsDrilldownAvailable
+                  ? handleInteractiveKeyPress(event, () => onSelect(bucket.bucket))
+                  : undefined
               }
             >
               <title>{`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}</title>
@@ -108,7 +129,7 @@ export function AllocationDonutChart({
           textAnchor="middle"
           className="portfolio-allocation-chart-center-label"
         >
-          Allocation
+          Exposure
         </text>
         <text
           x="110"
@@ -116,7 +137,7 @@ export function AllocationDonutChart({
           textAnchor="middle"
           className="portfolio-allocation-chart-center-value"
         >
-          {buckets.length} buckets
+          {buckets.length} groups
         </text>
       </svg>
     </div>
@@ -127,12 +148,14 @@ export function AllocationBarChart({
   buckets,
   hoveredBucket,
   selectedBucket,
+  holdingsDrilldownAvailable,
   onHover,
   onSelect,
 }: {
   buckets: PortfolioAllocationView["buckets"];
   hoveredBucket: string | null;
   selectedBucket: string | null;
+  holdingsDrilldownAvailable: boolean;
   onHover: (bucket: string | null) => void;
   onSelect: (bucket: string) => void;
 }) {
@@ -157,7 +180,11 @@ export function AllocationBarChart({
           <button
             key={bucket.bucket}
             type="button"
-            aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
+            disabled={!holdingsDrilldownAvailable}
+            aria-label={buildHoldingsActionLabel(
+              `${bucket.bucket}: ${formatPct(bucket.weight_pct)}`,
+              holdingsDrilldownAvailable,
+            )}
             title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
             className={
               isSelected
@@ -197,12 +224,14 @@ export function AllocationTableChart({
   buckets,
   hoveredBucket,
   selectedBucket,
+  holdingsDrilldownAvailable,
   onHover,
   onSelect,
 }: {
   buckets: PortfolioAllocationView["buckets"];
   hoveredBucket: string | null;
   selectedBucket: string | null;
+  holdingsDrilldownAvailable: boolean;
   onHover: (bucket: string | null) => void;
   onSelect: (bucket: string) => void;
 }) {
@@ -218,7 +247,11 @@ export function AllocationTableChart({
           <button
             key={bucket.bucket}
             type="button"
-            aria-label={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}. Select to filter holdings.`}
+            disabled={!holdingsDrilldownAvailable}
+            aria-label={buildHoldingsActionLabel(
+              `${bucket.bucket}: ${formatPct(bucket.weight_pct)}`,
+              holdingsDrilldownAvailable,
+            )}
             title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
             className={
               isSelected
@@ -253,16 +286,18 @@ export function AllocationRankedList({
   baseCurrency,
   hoveredBucket,
   selectedBucket,
+  holdingsDrilldownAvailable,
   onHover,
-  onSelectionChange,
+  onSelect,
 }: {
   activeDimension: PortfolioAllocationSelection["dimension"];
   buckets: PortfolioAllocationView["buckets"];
   baseCurrency: string;
   hoveredBucket: string | null;
   selectedBucket: string | null;
+  holdingsDrilldownAvailable: boolean;
   onHover: (bucket: string | null) => void;
-  onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
+  onSelect: (bucket: string) => void;
 }) {
   return (
     <div className="portfolio-allocation-ranked">
@@ -288,7 +323,11 @@ export function AllocationRankedList({
               <button
                 key={`${activeDimension}-${bucket.bucket}`}
                 type="button"
-                aria-label={`${bucket.bucket}: ${formatCurrency(bucket.market_value_base, baseCurrency)}, ${formatPct(bucket.weight_pct)}, ${bucket.position_count} positions. Filter holdings.`}
+                disabled={!holdingsDrilldownAvailable}
+                aria-label={buildHoldingsActionLabel(
+                  `${bucket.bucket}: ${formatCurrency(bucket.market_value_base, baseCurrency)}, ${formatPct(bucket.weight_pct)}, ${bucket.position_count} positions`,
+                  holdingsDrilldownAvailable,
+                )}
                 title={`${bucket.bucket}: ${formatPct(bucket.weight_pct)}`}
                 className={
                   isSelected
@@ -299,16 +338,7 @@ export function AllocationRankedList({
                 }
                 onMouseEnter={() => onHover(bucket.bucket)}
                 onMouseLeave={() => onHover(null)}
-                onClick={() =>
-                  onSelectionChange(
-                    isSelected
-                      ? null
-                      : {
-                          dimension: activeDimension,
-                          bucket: bucket.bucket,
-                        },
-                  )
-                }
+                onClick={() => onSelect(bucket.bucket)}
               >
                 <span className="portfolio-allocation-ranked-dimension">
                   <i

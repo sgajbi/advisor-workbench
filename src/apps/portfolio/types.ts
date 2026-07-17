@@ -77,23 +77,6 @@ export type PortfolioTransactionDrilldownFilter =
       label: string;
     };
 
-export type PortfolioHoldingsDrilldownFilter =
-  | {
-      kind: "allocation";
-      selection: PortfolioAllocationSelection;
-      label: string;
-    }
-  | {
-      kind: "security";
-      security_id: string;
-      label: string;
-    }
-  | {
-      kind: "status";
-      status: "Unpriced";
-      label: string;
-    };
-
 export type PortfolioTopPosition = {
   security_id: string;
   instrument_name: string;
