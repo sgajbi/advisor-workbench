@@ -16378,6 +16378,14 @@ a:hover {
   font-variant-numeric: var(--type-financial-numeric);
 }
 
+.workbench-decision-brief-score small {
+  max-width: 22ch;
+  color: var(--text-muted);
+  font-size: var(--workbench-analytic-subtitle-size);
+  line-height: var(--type-body-small-line-height);
+  text-align: right;
+}
+
 .workbench-decision-brief-attention {
   display: grid;
   grid-column: 1;
