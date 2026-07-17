@@ -196,4 +196,22 @@ describe("portfolio transactions grid helpers", () => {
       formatTransactionLedgerCoverage({ total: 450, skip: 400, visibleCount: 50 }),
     ).toBe("401–450 of 450 ledger entries");
   });
+
+  it("keeps unavailable settlement state in the visible review count", () => {
+    const [row] = buildTransactionRows(
+      [
+        {
+          transaction_id: "TX_UNKNOWN",
+          transaction_date: "2026-03-20T00:00:00Z",
+          transaction_type: "BUY",
+          security_id: "EQ_1",
+          instrument_id: "AAPL",
+          quantity: 1,
+        },
+      ],
+      "USD",
+    );
+
+    expect(countTransactionsNeedingSettlementReview([row])).toBe(1);
+  });
 });

@@ -3,10 +3,20 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ag-grid-react", () => ({
-  AgGridReact: ({ rowData = [], columnDefs = [], onRowClicked, rowSelection }: any) => {
+  AgGridReact: ({
+    rowData = [],
+    columnDefs = [],
+    onRowClicked,
+    rowSelection,
+    includeHiddenColumnsInQuickFilter,
+  }: any) => {
     const visibleColumns = columnDefs.filter((column: any) => !column.hide);
     return (
-      <div data-testid="mock-grid" data-has-row-selection={Boolean(rowSelection)}>
+      <div
+        data-testid="mock-grid"
+        data-has-row-selection={Boolean(rowSelection)}
+        data-searches-hidden-columns={Boolean(includeHiddenColumnsInQuickFilter)}
+      >
         <div>
           {visibleColumns.map((column: any) => (
             <React.Fragment key={column.field ?? column.colId}>
@@ -224,7 +234,7 @@ describe("portfolio data grids", () => {
     });
     expect(screen.getByText("Gross Amount")).toBeInTheDocument();
     expect(screen.getByText("Settle Date")).toBeInTheDocument();
-    expect(screen.getByText("Transaction Currency")).toBeInTheDocument();
+    expect(screen.queryByText("Transaction Currency")).not.toBeInTheDocument();
     expect(screen.getByText("Net Cost (USD)")).toBeInTheDocument();
     expect(screen.getByText("Settlement Status")).toBeInTheDocument();
     expect(screen.getByTestId("grossAmount-header-class")).toHaveTextContent(
@@ -232,6 +242,18 @@ describe("portfolio data grids", () => {
     );
     expect(screen.queryByText("Transaction lifecycle detail is limited")).not.toBeInTheDocument();
     expect(screen.queryByText(/does not expose settlement dates/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("mock-grid")).toHaveAttribute(
+      "data-searches-hidden-columns",
+      "true",
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Show expanded transaction columns" }),
+    );
+    expect(screen.getByText("Transaction Currency")).toBeInTheDocument();
+    expect(screen.getByText("Quantity")).toBeInTheDocument();
+    expect(screen.getByText("Price")).toBeInTheDocument();
+    expect(screen.getByText("Realized P&L (USD)")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
