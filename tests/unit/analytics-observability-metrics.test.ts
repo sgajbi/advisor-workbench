@@ -300,6 +300,21 @@ describe("analytics UI observability metrics", () => {
         "reporting.archive-document.metadata",
       ],
       [
+        "workbench.recommendations",
+        "idea-candidate-detail",
+        "idea.candidate.review-action",
+      ],
+      [
+        "workbench.recommendations",
+        "idea-candidate-detail",
+        "idea.candidate.feedback",
+      ],
+      [
+        "workbench.recommendations",
+        "idea-candidate-detail",
+        "idea.candidate.conversion-intent",
+      ],
+      [
         "workbench.manage",
         "mandate-command-center",
         "dpm.command-center.summary",

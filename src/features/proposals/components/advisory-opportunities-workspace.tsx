@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
 import { ScreenStatePanel, SectionBlock, Text } from "@/design-system";
@@ -14,6 +14,7 @@ import {
 } from "../api";
 import { buildAdvisoryOpportunitiesModel } from "../advisory-opportunities-view-model";
 import type { AdvisorIdeaCandidateDetailData } from "../types";
+import IdeaCandidateActionPanel from "./idea-candidate-action-panel";
 import styles from "./advisory-opportunities-workspace.module.css";
 
 export default function AdvisoryOpportunitiesWorkspace({
@@ -23,6 +24,7 @@ export default function AdvisoryOpportunitiesWorkspace({
   portfolioId: string;
   selectedCandidateId?: string;
 }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["advisory-opportunities", portfolioId],
     queryFn: async () => await getAdvisorIdeaReviewQueue({ portfolioId }),
@@ -46,7 +48,7 @@ export default function AdvisoryOpportunitiesWorkspace({
 
   const model = useMemo(
     () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
-    [portfolioId, data]
+    [portfolioId, data],
   );
 
   if (isLoading) {
@@ -75,7 +77,8 @@ export default function AdvisoryOpportunitiesWorkspace({
     >
       {error ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Idea candidates are unavailable. No fallback opportunity list is shown.
+          Idea candidates are unavailable. No fallback opportunity list is
+          shown.
         </Alert>
       ) : null}
 
@@ -96,8 +99,14 @@ export default function AdvisoryOpportunitiesWorkspace({
       <div className={styles.proofStrip} aria-label="Idea queue proof posture">
         <span>Policy: {model.policyVersion}</span>
         <span>Evaluated: {model.evaluatedAtUtc}</span>
-        <span>Durable storage: {model.durableStorageBacked ? "Backed" : "Not backed"}</span>
-        <span>Supported feature: {model.supportedFeaturePromoted ? "Promoted" : "Not promoted"}</span>
+        <span>
+          Durable storage:{" "}
+          {model.durableStorageBacked ? "Backed" : "Not backed"}
+        </span>
+        <span>
+          Supported feature:{" "}
+          {model.supportedFeaturePromoted ? "Promoted" : "Not promoted"}
+        </span>
         <span>Excluded: {model.excludedCount}</span>
       </div>
 
@@ -108,6 +117,20 @@ export default function AdvisoryOpportunitiesWorkspace({
           isLoading={isCandidateDetailLoading}
           portfolioId={portfolioId}
           selectedCandidateId={selectedCandidate}
+          onActionRecorded={async () => {
+            await Promise.all([
+              queryClient.invalidateQueries({
+                queryKey: ["advisory-opportunities", portfolioId],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "advisory-opportunity-detail",
+                  portfolioId,
+                  selectedCandidate,
+                ],
+              }),
+            ]);
+          }}
         />
       ) : null}
 
@@ -135,7 +158,10 @@ export default function AdvisoryOpportunitiesWorkspace({
         />
       ) : (
         <div className={styles.tableWrap}>
-          <table className={styles.ideaTable} aria-label="Idea candidate review queue">
+          <table
+            className={styles.ideaTable}
+            aria-label="Idea candidate review queue"
+          >
             <thead>
               <tr>
                 <th>Candidate</th>
@@ -179,19 +205,24 @@ function IdeaCandidateDetailPanel({
   isLoading,
   portfolioId,
   selectedCandidateId,
+  onActionRecorded,
 }: {
   detail?: AdvisorIdeaCandidateDetailData;
   error: Error | null;
   isLoading: boolean;
   portfolioId: string;
   selectedCandidateId: string;
+  onActionRecorded: () => Promise<void>;
 }) {
   const candidate = detail?.candidate;
   const evidence = detail?.evidence;
   const audit = detail?.auditSummary;
   const sourceRefs = evidence?.sourceRefs ?? [];
   return (
-    <div className={styles.detailPanel} aria-label="Idea candidate source-safe detail">
+    <div
+      className={styles.detailPanel}
+      aria-label="Idea candidate source-safe detail"
+    >
       <div className={styles.detailHeader}>
         <div>
           <Text variant="microLabel">Source-Safe Candidate Detail</Text>
@@ -199,7 +230,8 @@ function IdeaCandidateDetailPanel({
             {candidate?.candidateId ?? selectedCandidateId}
           </Text>
           <Text variant="secondary">
-            Detail is fetched through Gateway with portfolio-scoped Idea caller headers.
+            Detail is fetched through Gateway with portfolio-scoped Idea caller
+            headers.
           </Text>
         </div>
         <Link
@@ -216,21 +248,39 @@ function IdeaCandidateDetailPanel({
         </Stack>
       ) : error ? (
         <Alert severity="warning">
-          Candidate detail is unavailable through Gateway. No raw API response is shown.
+          Candidate detail is unavailable through Gateway. No raw API response
+          is shown.
         </Alert>
       ) : (
-        <div className={styles.detailGrid}>
-          <span>Family: {formatDetailCode(candidate?.family)}</span>
-          <span>Lifecycle: {formatDetailCode(candidate?.lifecycleStatus)}</span>
-          <span>Review: {formatDetailCode(candidate?.reviewPosture)}</span>
-          <span>Evidence: {evidence?.supportability ?? "Evidence pending"}</span>
-          <span>Sources: {sourceRefs.length}</span>
-          <span>Audit events: {audit?.eventCount ?? 0}</span>
-          <span>Durable storage: {detail?.durableStorageBacked ? "Backed" : "Not backed"}</span>
-          <span>
-            Supported feature: {detail?.supportedFeaturePromoted ? "Promoted" : "Not promoted"}
-          </span>
-        </div>
+        <>
+          <div className={styles.detailGrid}>
+            <span>Family: {formatDetailCode(candidate?.family)}</span>
+            <span>
+              Lifecycle: {formatDetailCode(candidate?.lifecycleStatus)}
+            </span>
+            <span>Review: {formatDetailCode(candidate?.reviewPosture)}</span>
+            <span>
+              Evidence: {evidence?.supportability ?? "Evidence pending"}
+            </span>
+            <span>Sources: {sourceRefs.length}</span>
+            <span>Audit events: {audit?.eventCount ?? 0}</span>
+            <span>
+              Durable storage:{" "}
+              {detail?.durableStorageBacked ? "Backed" : "Not backed"}
+            </span>
+            <span>
+              Supported feature:{" "}
+              {detail?.supportedFeaturePromoted ? "Promoted" : "Not promoted"}
+            </span>
+          </div>
+          {candidate?.candidateId ? (
+            <IdeaCandidateActionPanel
+              candidateId={candidate.candidateId}
+              portfolioId={portfolioId}
+              onRecorded={onActionRecorded}
+            />
+          ) : null}
+        </>
       )}
     </div>
   );
