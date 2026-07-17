@@ -283,7 +283,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('Gross Amount', { exact: true })).toBeVisible();
     await expect(page.getByText('Net Cost (USD)', { exact: true })).toBeVisible();
     await expect(page.getByText('Settlement Status', { exact: true })).toBeVisible();
-    await expect(page.getByText('4 visible entries need settlement review', { exact: true })).toBeVisible();
+    await expect(page.getByText('4 loaded entries need settlement review', { exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: /^Book first transaction$/i })).toHaveCount(0);
 
     await page.getByLabel('Transaction start date').fill('2025-04-01');

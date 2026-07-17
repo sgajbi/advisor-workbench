@@ -474,7 +474,11 @@ or portfolio-currency net cost.
    mutable filter scope. The header now says `30D Entries`; current coverage remains beside the
    active grid scope. Focused view-model tests, TypeScript, lint, and the populated canonical
    Transactions browser flow passed after the correction.
-6. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
+6. Fresh-head Codex review identified that the settlement cue described loaded-page results as
+   visible after quick search. The cue now explicitly says `loaded`, preserving truthful scope
+   without duplicating AG Grid's hidden-column search semantics. All 19 portfolio-grid tests,
+   TypeScript, lint, and the populated canonical Transactions browser flow passed after the fix.
+7. Merge-gate rerun, merge, and exact-main releasability evidence remain required before this
    review item is hardened.
 
 ### Publication decision

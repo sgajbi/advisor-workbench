@@ -338,7 +338,7 @@ describe("portfolio data grids", () => {
     await waitFor(() => {
       expect(screen.getAllByText("201–201 of 201 ledger entries").length).toBeGreaterThan(0);
     });
-    expect(screen.getByText("1 visible entry needs settlement review")).toBeInTheDocument();
+    expect(screen.getByText("1 loaded entry needs settlement review")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Previous entries" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Next entries" })).toBeDisabled();
   });
