@@ -325,7 +325,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     expect(screen.getByLabelText("Recent Activity")).toHaveTextContent(
       "Recent booked activity supplied with the portfolio review as of 10 Apr 2026",
     );
-    expect(screen.getByText("US_TECH · 100 USD")).toBeInTheDocument();
+    expect(screen.getByText("US_TECH · 100 USD gross")).toBeInTheDocument();
     expect(screen.queryByText("SG_BOND · 200 SGD")).not.toBeInTheDocument();
   });
 
