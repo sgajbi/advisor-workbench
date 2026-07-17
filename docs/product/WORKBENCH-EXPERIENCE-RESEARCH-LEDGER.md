@@ -125,6 +125,8 @@ suitability, compliance, or client-readiness score.
    the browser.
 6. Full canonical platform/demo certification remains pending until the remaining owning issues
    are resolved; no demo-ready screenshot claim is made by this slice.
+7. Workbench PR #411 merged to `main` as `497066e` after every feature and PR merge-gate lane
+   passed. Issue #410 remains the durable implementation and recheck record.
 
 ### Publication decision
 
