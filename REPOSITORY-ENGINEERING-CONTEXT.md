@@ -341,6 +341,11 @@ Important validation expectations:
     but it must not calculate suitability locally, approve or waive policy findings, record
     policy sign-off approval, infer client-ready release, or expose raw policy payload field names
     on advisor-facing screens.
+19. Portfolio transaction monetary fields must retain their source currency semantics through view
+    models, grids, drawers, totals, and exports. Pair `gross_amount` and `price` with transaction
+    `currency`; pair `net_cost_base` and `realized_gain_loss_base` with portfolio base currency.
+    Do not use a gross/base fallback as one labeled amount or aggregate mixed currencies. Preserve
+    Gateway `total`, `skip`, and `limit` when a transaction screen claims ledger coverage.
 
 ### Visual Review Gate
 
@@ -377,6 +382,9 @@ Most relevant current governance:
 4. when a screen changes materially, tests and docs should be updated in the same slice,
 5. repo-local `wiki/` content should summarize supported product surfaces, canonical runtime flow,
    and legacy route posture without duplicating the full `docs/` tree.
+6. transaction review surfaces must distinguish transaction-currency economics from
+   portfolio-currency accounting values and disclose source paging instead of implying a partial
+   result is complete.
 
 ## Context Maintenance Rule
 
