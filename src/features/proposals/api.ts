@@ -352,6 +352,7 @@ export async function getAdvisorIdeaReviewQueue({
   portfolioId,
   evaluatedAtUtc,
 }: AdvisorIdeaQueueFilters): Promise<AdvisorIdeaReviewQueueData> {
+  requireSelectedIdeaPortfolio(portfolioId);
   const params = new URLSearchParams();
   if (evaluatedAtUtc) {
     params.set("evaluatedAtUtc", evaluatedAtUtc);
@@ -359,9 +360,6 @@ export async function getAdvisorIdeaReviewQueue({
   const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(
     `${BFF_PROXY_BASE}/ideas/review-queues/advisor${query}`,
-    {
-      headers: buildIdeaCallerHeaders(portfolioId, "idea.review.queue.read"),
-    },
   );
   if (!response.ok) {
     const body = await response.text();
@@ -374,14 +372,9 @@ export async function getAdvisorIdeaCandidateDetail({
   candidateId,
   portfolioId,
 }: AdvisorIdeaCandidateDetailFilters): Promise<AdvisorIdeaCandidateDetailData> {
+  requireSelectedIdeaPortfolio(portfolioId);
   const response = await fetch(
     `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}`,
-    {
-      headers: buildIdeaCallerHeaders(
-        portfolioId,
-        "idea.candidate.detail.read",
-      ),
-    },
   );
   if (!response.ok) {
     const body = await response.text();
@@ -1211,32 +1204,24 @@ function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
   return params.toString() ? `?${params.toString()}` : "";
 }
 
-function buildIdeaCallerHeaders(
-  portfolioId: string,
-  capabilities: string,
-): Headers {
-  return new Headers({
-    "X-Caller-Subject": "workbench-advisor",
-    "X-Caller-Roles": "advisor",
-    "X-Caller-Capabilities": capabilities,
-    "X-Caller-Portfolio-Ids": portfolioId,
-  });
+function requireSelectedIdeaPortfolio(portfolioId: string) {
+  if (!portfolioId.trim()) {
+    throw new Error("Select a portfolio before requesting Lotus Idea source data.");
+  }
 }
 
 async function postAdvisorIdeaCandidateAction<TRequest>({
   candidateId,
-  portfolioId,
   idempotencyKey,
   request,
   pathSuffix,
-  capability,
   errorLabel,
 }: AdvisorIdeaCandidateActionInput<TRequest> & {
   pathSuffix: "review-actions" | "feedback" | "conversion-intents";
   capability: string;
   errorLabel: string;
 }): Promise<AdvisorIdeaCandidateActionData> {
-  const headers = buildIdeaCallerHeaders(portfolioId, capability);
+  const headers = new Headers();
   headers.set("Content-Type", "application/json");
   headers.set("Idempotency-Key", idempotencyKey);
   const response = await fetch(

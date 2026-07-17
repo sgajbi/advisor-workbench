@@ -351,14 +351,7 @@ describe("proposal api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/ideas/review-queues/advisor?evaluatedAtUtc=2026-06-21T10%3A10%3A00Z`,
-      expect.objectContaining({
-        headers: expect.any(Headers),
-      }),
     );
-    const headers = fetchMock.mock.calls[0][1]?.headers as Headers;
-    expect(headers.get("X-Caller-Roles")).toBe("advisor");
-    expect(headers.get("X-Caller-Capabilities")).toBe("idea.review.queue.read");
-    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
     expect(result.items?.[0]?.candidate?.candidateId).toBe(
       "idea_high_cash_001",
     );
@@ -391,9 +384,6 @@ describe("proposal api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/ideas/review-queues/advisor`,
-      expect.objectContaining({
-        headers: expect.any(Headers),
-      }),
     );
   });
 
@@ -428,7 +418,7 @@ describe("proposal api", () => {
     expect(result.supportedFeaturePromoted).toBe(false);
   });
 
-  it("loads Lotus Idea candidate detail through Gateway with portfolio scope headers", async () => {
+  it("loads Lotus Idea candidate detail through the Gateway BFF", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -463,16 +453,7 @@ describe("proposal api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001`,
-      expect.objectContaining({
-        headers: expect.any(Headers),
-      }),
     );
-    const headers = fetchMock.mock.calls[0][1]?.headers as Headers;
-    expect(headers.get("X-Caller-Roles")).toBe("advisor");
-    expect(headers.get("X-Caller-Capabilities")).toBe(
-      "idea.candidate.detail.read",
-    );
-    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
     expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
   });
 
@@ -517,7 +498,7 @@ describe("proposal api", () => {
     expect(result.supportedFeaturePromoted).toBe(false);
   });
 
-  it("records an Idea review action through the scoped Gateway BFF", async () => {
+  it("records an Idea review action through the Gateway BFF without browser authority headers", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -554,8 +535,10 @@ describe("proposal api", () => {
     );
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     const headers = init.headers as Headers;
-    expect(headers.get("X-Caller-Capabilities")).toBe("idea.review.record");
-    expect(headers.get("X-Caller-Portfolio-Ids")).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(headers.get("X-Caller-Subject")).toBeNull();
+    expect(headers.get("X-Caller-Roles")).toBeNull();
+    expect(headers.get("X-Caller-Capabilities")).toBeNull();
+    expect(headers.get("X-Caller-Portfolio-Ids")).toBeNull();
     expect(headers.get("Idempotency-Key")).toBe("ui-idea-review-001");
     expect(init.body).toBe(
       JSON.stringify({
@@ -601,9 +584,7 @@ describe("proposal api", () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/feedback`,
     );
-    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBe(
-      "idea.feedback.record",
-    );
+    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBeNull();
     expect((init.headers as Headers).get("Idempotency-Key")).toBe(
       "ui-idea-feedback-001",
     );
@@ -642,9 +623,7 @@ describe("proposal api", () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/conversion-intents`,
     );
-    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBe(
-      "idea.conversion.intent.record",
-    );
+    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBeNull();
     expect(init.body).toBe(
       JSON.stringify({
         conversionIntentId: "conversion_001",

@@ -58,7 +58,9 @@ export default function IdeaCandidateActionPanel({
   portfolioId: string;
   onRecorded: () => Promise<boolean>;
 }) {
-  const idempotencyKeys = useRef<Partial<Record<IdeaActionKind, string>>>({});
+  const retryableSubmissions = useRef<
+    Partial<Record<IdeaActionKind, IdeaActionSubmission>>
+  >({});
   const [reviewAction, setReviewAction] = useState<AdvisorIdeaReviewAction>(
     "approve_for_conversion",
   );
@@ -106,24 +108,29 @@ export default function IdeaCandidateActionPanel({
       });
     },
     onSuccess: async (_result, submission) => {
-      delete idempotencyKeys.current[submission.kind];
+      delete retryableSubmissions.current[submission.kind];
       setLatestRecordedKind(submission.kind);
       setSourceRefreshFailed(!(await onRecorded()));
     },
   });
 
-  function idempotencyKeyFor(kind: IdeaActionKind): string {
-    const existing = idempotencyKeys.current[kind];
-    if (existing) {
-      return existing;
+  function recordSubmission(submission: IdeaActionSubmission) {
+    const retryableSubmission = retryableSubmissions.current[submission.kind];
+    if (retryableSubmission) {
+      actionMutation.mutate(retryableSubmission);
+      return;
     }
+
+    retryableSubmissions.current[submission.kind] = submission;
+    actionMutation.mutate(submission);
+  }
+
+  function newIdempotencyKey(kind: IdeaActionKind): string {
     const entropy =
       typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : String(Date.now());
-    const key = `ui-idea-${kind}-${candidateId}-${entropy}`;
-    idempotencyKeys.current[kind] = key;
-    return key;
+    return `ui-idea-${kind}-${candidateId}-${entropy}`;
   }
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
@@ -140,9 +147,9 @@ export default function IdeaCandidateActionPanel({
       return;
     }
     setValidationMessage(undefined);
-    actionMutation.mutate({
+    recordSubmission({
       kind: "review",
-      idempotencyKey: idempotencyKeyFor("review"),
+      idempotencyKey: newIdempotencyKey("review"),
       request: {
         reviewId: `ui-idea-review-${candidateId}-${Date.now()}`,
         action: reviewAction,
@@ -164,9 +171,9 @@ export default function IdeaCandidateActionPanel({
       return;
     }
     setValidationMessage(undefined);
-    actionMutation.mutate({
+    recordSubmission({
       kind: "feedback",
-      idempotencyKey: idempotencyKeyFor("feedback"),
+      idempotencyKey: newIdempotencyKey("feedback"),
       request: {
         feedbackId: `ui-idea-feedback-${candidateId}-${Date.now()}`,
         outcome: feedbackOutcome as AdvisorIdeaFeedbackRequest["outcome"],
@@ -184,9 +191,9 @@ export default function IdeaCandidateActionPanel({
       return;
     }
     setValidationMessage(undefined);
-    actionMutation.mutate({
+    recordSubmission({
       kind: "conversion",
-      idempotencyKey: idempotencyKeyFor("conversion"),
+      idempotencyKey: newIdempotencyKey("conversion"),
       request: {
         conversionIntentId: `ui-idea-conversion-${candidateId}-${Date.now()}`,
         target:
