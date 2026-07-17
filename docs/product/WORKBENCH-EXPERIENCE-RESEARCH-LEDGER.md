@@ -245,3 +245,107 @@ Workbench does not claim an expanded contributor drill-down.
 No repo wiki change is required for this slice. It completes an existing supported Allocation
 screen interaction and documents an unavailable expanded-contributor boundary; it does not change
 an operator command, integration contract, supported-feature claim, or published runtime flow.
+
+## Positions Review
+
+### Business job
+
+A client advisor or portfolio manager opens Positions Review to verify the complete booked
+inventory at the portfolio as-of date, understand valuation and unrealized profit-and-loss posture,
+and move from a holding to its recent booked activity. The screen supports book review and meeting
+preparation; it does not infer tax lots, suitability, recommendations, targets, drift, risk,
+performance, orders, execution, or settlement authority.
+
+The reading order is:
+
+1. portfolio identity, mandate, currency, and source as-of date,
+2. assets under management, invested assets, and cash,
+3. complete booked securities and source cash balances,
+4. valuation, cost basis, weight, unrealized P&L, currency, status, and identifiers,
+5. holding overview, valuation detail, and recent booked activity,
+6. the full Transactions ledger when broader activity review is needed.
+
+### Current-product research
+
+Research was reviewed on 2026-07-17 from official product sources:
+
+1. [Morningstar Direct Portfolio Management](https://www.morningstar.com/business/products/direct/portfolio-management-tool):
+   holdings analysis connects individual investments, grouping, impact, and portfolio context.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth):
+   advisors need a comprehensive whole-portfolio view across holdings and connected workflows.
+3. [BlackRock Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360):
+   holdings-based analysis should support actionable portfolio insight and meeting preparation
+   rather than stop at a static inventory.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Treat Positions as a point-in-time booked-inventory review governed by the source as-of date.
+2. Show AUM, invested assets, and cash as the first-read book composition instead of a generic
+   rolling window.
+3. Combine booked positions with separate source cash-balance records, deduplicated by source
+   security id and typed so valued cash is not misclassified as an unpriced security.
+4. Keep the reusable dense holdings grid, including search, user-selected columns, export,
+   valuation status, partial valuation posture, and empty states.
+5. Make each instrument a named keyboard control and retain whole-row pointer activation for fast
+   review.
+6. Reuse the Portfolio detail drawer for holding overview, valuation, and recent booked activity;
+   explicitly identify the activity as the subset supplied with the current portfolio review and
+   link to the full transaction ledger.
+7. Move complete-inventory shaping into one shared view model used by Allocation and Positions,
+   and extract the drawer controller so record screens do not duplicate lazy-loading behavior.
+
+### Rejected decisions
+
+1. A 30-day Positions KPI: holdings are point-in-time records and the generic period was false
+   context.
+2. Disabled decorative filters and selection checkboxes without a bulk business action: visible
+   controls must produce a supported outcome.
+3. A page-specific holdings table or drawer: both would duplicate existing Workbench patterns and
+   create accessibility, export, and state-handling drift.
+4. Calling the workspace activity subset a complete transaction history: the source contract only
+   supplies recent transactions with the portfolio review.
+5. Browser-authored tax lots, accrued interest, issuer hierarchy, private-asset capital accounts,
+   restrictions, suitability, recommendations, risk, performance, trade, order, execution, or
+   settlement claims.
+
+### Slice 1 — complete inventory and holding review
+
+GitHub issue #416 governs the slice. `portfolio-booked-holdings-view-model.ts` now owns both the
+security-id-deduplicated complete booked inventory and holding-specific recent-activity matching.
+Allocation and Positions consume the same inventory rule. `PortfolioPositionsRecordWorkspace`
+owns screen-level selection and composes the existing holdings grid with the reusable extracted
+detail-drawer controller.
+
+The standalone header now presents source-backed AUM, invested assets, and cash. The grid calls
+the inventory `Booked holdings`, counts holdings rather than positions, omits the filter when no
+filter exists, and no longer exposes checkbox selection without a bulk workflow. `Show all
+columns` replaces the ambiguous `Expand` action and disappears when every column is visible.
+
+Keyboard or pointer activation opens holding overview and valuation detail plus only the recent
+transactions whose source security or instrument identifier matches the holding. The activity tab
+states its limited lineage and offers the complete Transactions ledger instead of implying that the
+workspace subset is exhaustive.
+
+### Validation record
+
+1. Focused booked-inventory, Allocation regression, record-screen, holdings-grid, drawer, and
+   header coverage passed 41 tests on 2026-07-17; lint and TypeScript validation also passed.
+2. The Portfolio Playwright smoke pack passed all four tests against the populated canonical
+   backend stack. Positions proof covered point-in-time KPIs, source cash visibility, identifier
+   deduplication, removal of inert controls, keyboard drawer activation, recent-activity lineage,
+   and the full-ledger link.
+3. Full `make check` passed on 2026-07-17: 286 test files and 1,233 tests passed with 90.83%
+   statement coverage, followed by clean lint, TypeScript validation, and a successful production
+   build.
+4. Implementation commits `0ac59e0` and `b3019d5` are under review on the issue #416 branch.
+   Merge-gate, final review, post-merge releasability, and issue-closure evidence remain required
+   before codebase review item `LWB-R155` becomes hardened.
+
+### Publication decision
+
+No repo wiki change is required for this slice. It completes an existing supported Positions
+screen using already published Portfolio and Transactions contracts; it does not change an
+operator command, integration contract, supported-feature claim, or published runtime flow.
