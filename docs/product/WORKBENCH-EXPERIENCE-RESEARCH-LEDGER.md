@@ -354,9 +354,12 @@ totals, and uses an unavailable recent-activity state instead of a false empty r
 4. The populated Portfolio Playwright smoke pack passed all four tests again after the review fix,
    proving the Portfolio Review, Income, Allocation, and Positions workflows against the same
    production build path.
-5. Implementation commits `0ac59e0`, `b3019d5`, and `8c55628` plus the review-fix commit are under
-   review in PR #417. Merge-gate, final review, post-merge releasability, and issue-closure evidence
-   remain required before codebase review item `LWB-R155` becomes hardened.
+5. PR #417 merged to `main` as `d6e33650` after all feature and protected merge-gate lanes passed.
+   Codex's final review on `bf30a7e` found no major issues, the earlier availability thread was
+   resolved with regression evidence, and issue #416 closed through the merge.
+6. Post-merge Main Releasability run `29560225999` passed workflow lint, lint, typecheck, coverage,
+   production build, Playwright smoke, Docker image validation, and Dockerized local-CI parity on
+   merge SHA `d6e33650`. Codebase review item `LWB-R155` is hardened.
 
 ### Publication decision
 
