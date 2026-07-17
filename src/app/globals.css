@@ -1032,7 +1032,8 @@ a:hover {
   min-width: 0;
 }
 
-.workbench-summary-metric-strip > .workbench-summary-metric-card {
+.workbench-summary-metric-strip > .workbench-summary-metric-card,
+.workbench-summary-metric-strip > .workbench-summary-metric-item > .workbench-summary-metric-card {
   display: grid;
   align-content: start;
   min-height: var(--metric-tile-height-default);
@@ -1041,6 +1042,11 @@ a:hover {
   border: 1px solid rgba(34, 44, 59, 0.07);
   border-radius: var(--radius-tile);
   background: var(--surface-secondary);
+}
+
+.workbench-summary-metric-strip > .workbench-summary-metric-item {
+  display: block;
+  min-width: 0;
 }
 
 .workbench-summary-metric-label {

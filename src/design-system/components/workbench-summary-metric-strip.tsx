@@ -60,7 +60,7 @@ export default function WorkbenchSummaryMetricStrip({
 
         return (
           <Tooltip key={item.key ?? `${String(item.label)}-${index}`} title={item.definition} arrow>
-            <span>{card}</span>
+            <span className="workbench-summary-metric-item">{card}</span>
           </Tooltip>
         );
       })}
