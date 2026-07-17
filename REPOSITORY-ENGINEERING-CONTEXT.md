@@ -176,6 +176,12 @@ Current repository posture:
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
     states for advisor navigation but does not calculate suitability, risk impact, consent, or
     implementation truth locally.
+19. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
+    Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
+    while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be
+    excluded from classified net cash movement until the source contract defines their direction.
+    Do not infer direction from amount sign, gross-sum activity magnitudes as net cashflow, combine
+    income and tax rows into one event count, or infer source readiness from non-zero bookings.
 
 ## Architecture And Module Map
 
