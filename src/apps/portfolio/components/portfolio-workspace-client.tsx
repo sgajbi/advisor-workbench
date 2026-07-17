@@ -211,8 +211,6 @@ export default function PortfolioWorkspaceClient({
         <PortfolioUnavailableWorkspace />
       ) : (
         <PortfolioWorkspaceView
-          portfolios={portfolios}
-          selectedPortfolioId={selectedPortfolioId}
           workspace={workspace}
           context={context}
           toolbar={

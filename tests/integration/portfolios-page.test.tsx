@@ -91,15 +91,10 @@ describe("PortfolioFoundationPage", () => {
       .toHaveClass("workbench-page-header-title");
     expect(
       within(pageHeader as HTMLElement).getByText(
-        "Front-office review for holdings, liquidity, exceptions, and next action."
+        "Review portfolio value, returns, liquidity, exceptions, and the next business action."
       )
     ).toHaveClass("workbench-page-header-subtitle");
-    expect(
-      within(pageHeader as HTMLElement).getByRole("group", { name: "Portfolio page status" })
-    ).toHaveClass("portfolio-page-header-actions");
-    expect(within(pageHeader as HTMLElement).getByText("Catalog live")).toHaveClass(
-      "portfolio-page-header-status"
-    );
+    expect(within(pageHeader as HTMLElement).queryByText("Catalog live")).not.toBeInTheDocument();
     expect(within(pageHeader as HTMLElement).queryByText("2 portfolios")).not.toBeInTheDocument();
     expect(
       document.querySelector(
@@ -124,7 +119,7 @@ describe("PortfolioFoundationPage", () => {
     expect(hero?.classList.contains("portfolio-book-hero")).toBe(true);
     expect(hero?.querySelector(".portfolio-hero-header")).toBeTruthy();
     expect(hero?.querySelector(".portfolio-hero-label")).toBeTruthy();
-    expect(within(hero as HTMLElement).getByText("Portfolio book")).toHaveClass(
+    expect(within(hero as HTMLElement).getByText("Selected portfolio")).toHaveClass(
       "portfolio-hero-label"
     );
     expect(within(hero as HTMLElement).queryByText("Portfolio book PORT_UI_1001")).not.toBeInTheDocument();
@@ -193,7 +188,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /Liquidity and Projected Cash/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Advisor Guidance/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Portfolio Health")).not.toBeInTheDocument();
-    expect(screen.getByText("Review readiness")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio readiness")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Recommended Actions/i })).not.toBeInTheDocument();
 
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
@@ -209,9 +204,9 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-paired-analytics-grid")).toBeFalsy();
     expect(document.querySelector(".portfolio-paired-analytics-grid.workbench-summary-region")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-summary-module").length).toBe(0);
-    expect(screen.getByText("Priority review")).toBeInTheDocument();
-    expect(screen.getByText("Next action")).toBeInTheDocument();
-    expect(document.querySelector(".portfolio-decision-brief")).toBeTruthy();
+    expect(screen.getByText("Review focus")).toBeInTheDocument();
+    expect(screen.getByText("Recommended next step")).toBeInTheDocument();
+    expect(document.querySelector(".workbench-decision-brief")).toBeTruthy();
     expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeFalsy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
@@ -221,7 +216,7 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(3);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Reporting Coverage/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Reporting Coverage" })).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(

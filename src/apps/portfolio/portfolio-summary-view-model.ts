@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
+import { formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 import {
   buildPortfolioReadinessIndicators,
@@ -22,6 +22,7 @@ export type PortfolioSummaryHoldingRow = {
 };
 
 export type PortfolioSummaryAttentionItem = {
+  key: string;
   title: string;
   detail: string;
   tone: "danger" | "warn" | "neutral";
@@ -31,6 +32,7 @@ export type PortfolioSummaryReadiness = {
   readyCount: number;
   totalCount: number;
   percentLabel: string;
+  tone: "danger" | "warn" | "success";
 };
 
 export type PortfolioDecisionBriefRow = {
@@ -139,24 +141,18 @@ export function buildPortfolioSummaryAttentionItems(
 
   for (const exception of workspace.exception_summaries ?? []) {
     items.push({
+      key: `exception-${exception.key}`,
       title: exception.title,
       detail: exception.detail,
       tone: exception.tone === "danger" ? "danger" : exception.tone === "warn" ? "warn" : "neutral",
     });
   }
 
-  if (workspace.summary.cash_weight_pct > 5) {
-    items.push({
-      title: "Cash Review Needed",
-      detail: `${formatPct(workspace.summary.cash_weight_pct)} cash exceeds the 5% review threshold for this portfolio review.`,
-      tone: "warn",
-    });
-  }
-
-  if (workspace.partial_failures.length) {
+  if (!(workspace.exception_summaries?.length) && workspace.partial_failures.length) {
     const firstFailure = workspace.partial_failures[0];
     items.push({
-      title: "Reporting Coverage Gap",
+      key: `failure-${firstFailure.source_service}-${firstFailure.error_code}`,
+      title: "Reporting coverage needs attention",
       detail: firstFailure.detail,
       tone: "warn",
     });
@@ -164,6 +160,7 @@ export function buildPortfolioSummaryAttentionItems(
 
   for (const insight of workspace.insights ?? []) {
     items.push({
+      key: `insight-${insight.key}`,
       title: insight.title,
       detail: insight.detail,
       tone: insight.severity === "critical" ? "danger" : insight.severity === "warning" ? "warn" : "neutral",
@@ -180,44 +177,46 @@ export function buildPortfolioSummaryReadiness(
   const totalCount = Math.max(1, indicators.length);
   const readyCount = indicators.filter((indicator) => indicator.status === "Ready").length;
   const percent = Math.round((readyCount / totalCount) * 100);
+  const readinessStatus = getBookReadinessStatus(workspace);
 
   return {
     readyCount,
     totalCount,
     percentLabel: `${percent}%`,
+    tone: readinessStatus === "Ready" ? "success" : readinessStatus === "Partial" ? "warn" : "danger",
   };
 }
 
 export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): PortfolioDecisionBrief {
   const attentionItems = buildPortfolioSummaryAttentionItems(workspace);
   const readiness = buildPortfolioSummaryReadiness(workspace);
-  const exceptionCount = workspace.partial_failures.length + (workspace.exception_summaries?.length ?? 0);
+  const exceptionCount = workspace.exception_summaries?.length || workspace.partial_failures.length;
   const nextAction = workspace.workflow_actions?.find((action) => action.recommended) ?? workspace.workflow_actions?.[0];
   const primaryAttention = attentionItems[0];
 
   return {
-    headline: primaryAttention ? "Review priority attention" : nextAction?.title ?? "Book ready for portfolio review",
+    headline: primaryAttention?.title ?? nextAction?.title ?? "Portfolio review is ready",
     support:
       primaryAttention?.detail ??
       nextAction?.impact?.split(".")[0] ??
-      "Start with readiness, blockers, and the recommended front-office action.",
+      "Review valuation, returns, liquidity, and reporting readiness.",
     readiness,
     attentionItems,
     rows: [
       {
-        label: "Review readiness",
+        label: "Portfolio readiness",
         value: getBookReadinessStatus(workspace),
         support: getBookReadinessSupport(workspace),
       },
       {
-        label: "Client-use blockers",
+        label: "Open exceptions",
         value: exceptionCount ? `${exceptionCount} open` : "Clear",
-        support: exceptionCount ? "Resolve before client-ready use" : "No open reporting blockers",
+        support: exceptionCount ? "Review source exceptions before the client discussion" : "No source-reported exceptions",
       },
       {
-        label: "Next action",
-        value: nextAction?.title ?? "Review book",
-        support: nextAction?.impact?.split(".")[0] ?? "Open the relevant workflow to resolve the attention item.",
+        label: "Recommended next step",
+        value: nextAction?.title ?? "Complete portfolio review",
+        support: nextAction?.impact?.split(".")[0] ?? "Confirm the review evidence and outstanding items",
       },
     ],
   };
