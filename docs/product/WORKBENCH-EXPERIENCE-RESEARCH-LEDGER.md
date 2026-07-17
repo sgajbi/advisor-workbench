@@ -366,3 +366,105 @@ totals, and uses an unavailable recent-activity state instead of a false empty r
 No repo wiki change is required for this slice. It completes an existing supported Positions
 screen using already published Portfolio and Transactions contracts; it does not change an
 operator command, integration contract, supported-feature claim, or published runtime flow.
+
+## Transactions Review
+
+### Business job
+
+A client advisor, portfolio manager, or operations reviewer opens Transactions Review to inspect
+source-booked activity for a selected period, distinguish transaction-currency economics from
+portfolio-currency accounting values, identify entries that need settlement attention, and trace
+multi-row booking events across their source identifiers. The screen supports review and evidence
+navigation; it does not book, amend, cancel, approve, execute, settle, or reconcile transactions.
+
+The reading order is:
+
+1. portfolio identity, mandate, portfolio currency, and source as-of date,
+2. latest booking date and complete ledger-entry count for the selected period,
+3. trade and settlement dates, activity type, instrument, quantity, and price,
+4. gross amount in transaction currency, net cost and realized P&L in portfolio currency,
+5. settlement status and booking-component context,
+6. source lineage and related booking-group, FX-contract, or swap-leg activity,
+7. previous or next source page when the result exceeds the initial 200 entries.
+
+### Current-product research
+
+Research was reviewed on 2026-07-17 from official product sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth):
+   connected advisor workflows depend on a common data foundation rather than disconnected local
+   interpretations.
+2. [BlackRock Aladdin Operations](https://www.blackrock.com/aladdin/benefits/operations):
+   operations users benefit from shared high-quality data and exception-oriented review across the
+   investment lifecycle.
+3. [Morningstar Direct Advisory Suite integrations](https://www.morningstar.com/business/products/direct-advisory-suite/integrations):
+   consistent, accurate connected data is foundational to an advisor workflow.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Treat the screen as booked-activity review, not as an order ticket or browser-owned ledger.
+2. Preserve Gateway monetary semantics explicitly: `gross_amount` remains paired with transaction
+   `currency`, while `net_cost_base` and `realized_gain_loss_base` remain paired with portfolio
+   base currency. Never add mixed-currency fallback values into one total.
+3. Retain Gateway `total`, `skip`, and `limit` metadata, disclose visible ledger coverage, and
+   provide source paging beyond the initial 200 entries.
+4. Lead with portfolio currency, latest booking, and entry count instead of unrelated AUM,
+   positions, or a generic window KPI.
+5. Count only visible non-settled entries as a review cue and avoid inventing settlement rules or
+   severity outside source status.
+6. Compose the existing dense portfolio grid, record shell, lazy detail-drawer controller, and
+   drawer builder instead of creating page-specific table or overlay patterns.
+7. Make row review explicit and connect supported related-event identifiers to server-backed
+   linked-group, FX-contract, swap-event, near-leg, and far-leg filters.
+8. Reset paging when portfolio, date, type, component, or related-event scope changes.
+9. Export local gross, base net cost, and base realized P&L as separate auditable columns.
+
+### Rejected decisions
+
+1. `net_cost_base ?? gross_amount` under transaction currency: this can label a base-currency value
+   with the wrong currency.
+2. A summed transaction amount KPI: gross, net cost, buys, sells, income, fees, and multiple
+   currencies are not one additive business measure.
+3. Silently presenting only the first 200 records as the complete result.
+4. A no-op `Book first transaction` action: transaction booking belongs to the owning booking
+   workflow and is not supported by this screen.
+5. An ambiguous `Expand` control, implementation-centric filter labels, or row interaction without
+   an accessible, visible review outcome.
+6. Browser-authored booking, amendment, cancellation, approval, execution, settlement,
+   reconciliation, cost-basis, tax-lot, or exception-severity authority.
+
+### Slice 1 — trustworthy booked activity and lineage review
+
+GitHub issue #419 governs the slice. The detailed portfolio loader now retains Gateway ledger
+metadata alongside its initial transaction page. Focused transaction row shaping keeps local and
+portfolio-currency values separate, produces explicit export columns, counts visible settlement
+attention, and formats complete or paged source coverage without monetary aggregation.
+
+`PortfolioTransactionsRecordWorkspace` owns row selection and related-event scope. It composes the
+existing transaction grid with the reusable detail-drawer controller, closes detail before applying
+a new server-backed filter, and passes the initial page metadata through to the grid. The grid
+resets paging on every scope change, requests `skip` explicitly, preserves returned page metadata,
+and exposes previous and next entry controls when source totals require them.
+
+The screen now uses `Booked activity`, `Activity type`, `Booking component`, `Transaction Currency`,
+`Net Cost (<portfolio currency>)`, `Settlement Status`, and `Show all columns`. Empty copy directs
+the reviewer to verify the period and source-book availability without advertising unsupported
+booking. Transaction and holding drawers also describe whether a displayed amount is local gross
+or portfolio-currency net cost.
+
+### Validation record
+
+1. Focused transaction helper, grid, API, drawer, record-header, and record-workspace coverage
+   passed 51 tests on 2026-07-17.
+2. TypeScript and repository lint validation passed after the implementation slice.
+3. Full coverage, production build, populated browser proof, PR review, merge-gate, and exact-main
+   releasability evidence remain required before this review item is hardened.
+
+### Publication decision
+
+No repo wiki change is required for this slice. It improves the composition and correctness of an
+already supported Transactions screen without changing an operator command, Gateway integration
+contract, supported-feature claim, or canonical runtime flow.
