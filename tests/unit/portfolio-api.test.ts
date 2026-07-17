@@ -780,6 +780,91 @@ describe("portfolio api", () => {
     expect(metricsJson).not.toContain("MANUAL_CIF_001");
   });
 
+  it("preserves available transactions when liquidity detail is unavailable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/liquidity")) {
+          return new Response(null, { status: 503 });
+        }
+        if (url.includes("/transactions")) {
+          return jsonResponse({
+            transactions: [
+              {
+                transaction_id: "TX_AVAILABLE",
+                transaction_date: "2026-03-28T00:00:00Z",
+                transaction_type: "BUY",
+                security_id: "EQ_1",
+                instrument_id: "EQ_1",
+                quantity: 1,
+              },
+            ],
+          });
+        }
+        if (url.includes("/readiness")) {
+          return jsonResponse({ indicators: [] });
+        }
+        if (url.includes("/insights")) {
+          return jsonResponse({ insights: [], exception_summaries: [] });
+        }
+        return jsonResponse({ actions: [] });
+      }),
+    );
+
+    const details = await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001");
+
+    expect(details?.cash_balances).toBeUndefined();
+    expect(details?.recent_transactions?.[0].transaction_id).toBe("TX_AVAILABLE");
+    expect(details?.record_data_availability).toEqual({
+      liquidity: "unavailable",
+      transactions: "ready",
+    });
+  });
+
+  it("preserves available cash balances when recent activity is unavailable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/liquidity")) {
+          return jsonResponse({
+            cash_balances: [
+              {
+                security_id: "CASH_USD",
+                instrument_name: "USD Operating Cash",
+                currency: "USD",
+                quantity: 100,
+                market_value_base: 100,
+                weight_pct: 10,
+              },
+            ],
+            cashflow_outlook: null,
+          });
+        }
+        if (url.includes("/transactions")) {
+          throw new Error("Transaction service unavailable");
+        }
+        if (url.includes("/readiness")) {
+          return jsonResponse({ indicators: [] });
+        }
+        if (url.includes("/insights")) {
+          return jsonResponse({ insights: [], exception_summaries: [] });
+        }
+        return jsonResponse({ actions: [] });
+      }),
+    );
+
+    const details = await getPortfolioWorkspaceDetailedDetails("MANUAL_PB_USD_001");
+
+    expect(details?.cash_balances?.[0].security_id).toBe("CASH_USD");
+    expect(details?.recent_transactions).toBeUndefined();
+    expect(details?.record_data_availability).toEqual({
+      liquidity: "ready",
+      transactions: "unavailable",
+    });
+  });
+
   it("requests the transaction ledger with scoped filter parameters", async () => {
     const fetchSpy = vi.fn(async () =>
       jsonResponse({

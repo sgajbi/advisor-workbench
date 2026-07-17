@@ -204,6 +204,12 @@ export type PortfolioTransactionView = {
   far_leg_group_id?: string | null;
 };
 
+export type PortfolioRecordDataAvailability = {
+  positions?: "ready" | "unavailable";
+  liquidity?: "ready" | "unavailable";
+  transactions?: "ready" | "unavailable";
+};
+
 export type PortfolioIncomePeriodSummary = {
   gross: {
     portfolio_currency_amount?: number | null;
@@ -293,6 +299,7 @@ export type PortfolioWorkspace = {
   top_positions: PortfolioTopPosition[];
   positions: PortfolioPositionView[];
   recent_transactions: PortfolioTransactionView[];
+  record_data_availability?: PortfolioRecordDataAvailability;
   income_summary?: PortfolioIncomeSummaryView | null;
   activity_summary?: PortfolioActivitySummaryView | null;
   cashflow_outlook: {

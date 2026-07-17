@@ -304,7 +304,7 @@ function buildHoldingRelatedTransactionsTab(
 
   if (relatedTransactionsState.state === "error") {
     return renderDrawerParagraphs([
-      "We could not load related transactions for this holding.",
+      "We could not load recent booked activity for this holding.",
       "Retry from the holdings grid or open the transactions workspace for broader ledger review.",
     ]);
   }

@@ -1,6 +1,7 @@
 import type {
   PortfolioAllocationLookThrough,
   PortfolioCatalogResponse,
+  PortfolioRecordDataAvailability,
   PortfolioWorkspace,
 } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
@@ -186,17 +187,24 @@ type PortfolioPerformanceSnapshotResponse = {
   partial_failures?: PortfolioWorkspace["partial_failures"];
 };
 
-type PortfolioWorkspaceDetailedDetails = Pick<
-  PortfolioWorkspace,
-  | "cash_balances"
-  | "recent_transactions"
-  | "cashflow_outlook"
-  | "readiness_indicators"
-  | "supportability"
-  | "exception_summaries"
-  | "insights"
-  | "workflow_actions"
->;
+type PortfolioWorkspaceDetailedDetails = Partial<
+  Pick<
+    PortfolioWorkspace,
+    | "cash_balances"
+    | "recent_transactions"
+    | "cashflow_outlook"
+    | "readiness_indicators"
+    | "supportability"
+    | "exception_summaries"
+    | "insights"
+    | "workflow_actions"
+  >
+> & {
+  record_data_availability: Pick<
+    PortfolioRecordDataAvailability,
+    "liquidity" | "transactions"
+  >;
+};
 
 export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["items"]> {
   try {
@@ -410,12 +418,12 @@ export async function getPortfolioWorkspaceDetailedDetails(
       transactionSearchParams.set("end_date", params.endDate);
     }
     const [
-      liquidityPayload,
-      transactionsPayload,
-      readinessPayload,
-      insightsPayload,
-      workflowPayload,
-    ] = await Promise.all([
+      liquidityResult,
+      transactionsResult,
+      readinessResult,
+      insightsResult,
+      workflowResult,
+    ] = await Promise.allSettled([
       fetchPortfolioJson<PortfolioLiquidityResponse>(
         resolvePortfolioRequestTarget(),
         `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/liquidity`,
@@ -443,19 +451,39 @@ export async function getPortfolioWorkspaceDetailedDetails(
       ),
     ]);
 
-    if (!liquidityPayload || !transactionsPayload) {
-      return null;
-    }
+    const liquidityPayload = settledPortfolioPayload(liquidityResult);
+    const transactionsPayload = settledPortfolioPayload(transactionsResult);
+    const readinessPayload = settledPortfolioPayload(readinessResult);
+    const insightsPayload = settledPortfolioPayload(insightsResult);
+    const workflowPayload = settledPortfolioPayload(workflowResult);
 
     return {
-      cash_balances: liquidityPayload.cash_balances,
-      recent_transactions: transactionsPayload.transactions,
-      cashflow_outlook: liquidityPayload.cashflow_outlook,
-      readiness_indicators: readinessPayload?.indicators ?? undefined,
-      supportability: readinessPayload?.supportability ?? undefined,
-      exception_summaries: insightsPayload?.exception_summaries ?? undefined,
-      insights: insightsPayload?.insights ?? undefined,
-      workflow_actions: workflowPayload?.actions ?? undefined,
+      ...(liquidityPayload
+        ? {
+            cash_balances: liquidityPayload.cash_balances,
+            cashflow_outlook: liquidityPayload.cashflow_outlook,
+          }
+        : {}),
+      ...(transactionsPayload
+        ? { recent_transactions: transactionsPayload.transactions }
+        : {}),
+      ...(readinessPayload
+        ? {
+            readiness_indicators: readinessPayload.indicators,
+            supportability: readinessPayload.supportability,
+          }
+        : {}),
+      ...(insightsPayload
+        ? {
+            exception_summaries: insightsPayload.exception_summaries,
+            insights: insightsPayload.insights,
+          }
+        : {}),
+      ...(workflowPayload ? { workflow_actions: workflowPayload.actions } : {}),
+      record_data_availability: {
+        liquidity: liquidityPayload ? "ready" : "unavailable",
+        transactions: transactionsPayload ? "ready" : "unavailable",
+      },
     };
   } catch {
     return null;
@@ -600,11 +628,24 @@ export function mergePortfolioWorkspace(
   workspace: PortfolioWorkspace,
   details: Partial<PortfolioWorkspace>
 ): PortfolioWorkspace {
+  const recordDataAvailability =
+    workspace.record_data_availability || details.record_data_availability
+      ? {
+          ...workspace.record_data_availability,
+          ...details.record_data_availability,
+        }
+      : undefined;
+
   return {
     ...workspace,
     ...details,
     cashflow_outlook: details.cashflow_outlook ?? workspace.cashflow_outlook,
+    record_data_availability: recordDataAvailability,
   };
+}
+
+function settledPortfolioPayload<T>(result: PromiseSettledResult<T | null>): T | null {
+  return result.status === "fulfilled" ? result.value : null;
 }
 
 function buildPortfolioPerformanceSnapshotQuery(params: {

@@ -51,6 +51,13 @@ export default async function PortfolioRecordScreen({
   const workspace = mergePortfolioWorkspace(shell, {
     ...(summaryDetails ?? {}),
     ...(detailedDetails ?? {}),
+    record_data_availability: {
+      positions: summaryDetails ? "ready" : "unavailable",
+      liquidity:
+        detailedDetails?.record_data_availability.liquidity ?? "unavailable",
+      transactions:
+        detailedDetails?.record_data_availability.transactions ?? "unavailable",
+    },
   });
 
   return (

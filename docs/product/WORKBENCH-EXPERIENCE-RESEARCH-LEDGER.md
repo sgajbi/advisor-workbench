@@ -296,6 +296,8 @@ visual identity, calculations, or unsupported capabilities.
    link to the full transaction ledger.
 7. Move complete-inventory shaping into one shared view model used by Allocation and Positions,
    and extract the drawer controller so record screens do not duplicate lazy-loading behavior.
+8. Settle detailed record requests independently and carry securities, liquidity, and activity
+   availability into the screen, so an upstream gap cannot be rendered as zero or complete data.
 
 ### Rejected decisions
 
@@ -329,20 +331,32 @@ transactions whose source security or instrument identifier matches the holding.
 states its limited lineage and offers the complete Transactions ledger instead of implying that the
 workspace subset is exhaustive.
 
+PR review found that the prior detailed-data loader returned no detail object when either liquidity
+or transactions was unavailable. The record screen could therefore retain empty shell arrays and
+describe missing cash as a complete inventory or missing activity as no recent transactions. The
+loader now preserves each independently successful detail slice and publishes explicit securities,
+liquidity, and activity availability to the record composition. Positions labels an incomplete
+book as `Available holdings`, presents a business-facing partial state, retains source summary
+totals, and uses an unavailable recent-activity state instead of a false empty result.
+
 ### Validation record
 
-1. Focused booked-inventory, Allocation regression, record-screen, holdings-grid, drawer, and
-   header coverage passed 41 tests on 2026-07-17; lint and TypeScript validation also passed.
+1. Focused API availability, booked-inventory, Allocation regression, record-screen,
+   holdings-grid, drawer, and header coverage passed 61 tests after review fixes on 2026-07-17;
+   lint and TypeScript validation also passed.
 2. The Portfolio Playwright smoke pack passed all four tests against the populated canonical
    backend stack. Positions proof covered point-in-time KPIs, source cash visibility, identifier
    deduplication, removal of inert controls, keyboard drawer activation, recent-activity lineage,
    and the full-ledger link.
-3. Full `make check` passed on 2026-07-17: 286 test files and 1,233 tests passed with 90.83%
+3. Full `make check` passed after review fixes on 2026-07-17: 286 test files and 1,237 tests passed with 90.82%
    statement coverage, followed by clean lint, TypeScript validation, and a successful production
    build.
-4. Implementation commits `0ac59e0` and `b3019d5` are under review on the issue #416 branch.
-   Merge-gate, final review, post-merge releasability, and issue-closure evidence remain required
-   before codebase review item `LWB-R155` becomes hardened.
+4. The populated Portfolio Playwright smoke pack passed all four tests again after the review fix,
+   proving the Portfolio Review, Income, Allocation, and Positions workflows against the same
+   production build path.
+5. Implementation commits `0ac59e0`, `b3019d5`, and `8c55628` plus the review-fix commit are under
+   review in PR #417. Merge-gate, final review, post-merge releasability, and issue-closure evidence
+   remain required before codebase review item `LWB-R155` becomes hardened.
 
 ### Publication decision
 
