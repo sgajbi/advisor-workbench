@@ -6,7 +6,8 @@ param(
   [string]$WorkbenchBaseUrl = "http://workbench.dev.lotus",
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
   [string]$ScreenshotDirectory = "",
-  [string]$CanonicalEvidenceDirectory = ""
+  [string]$CanonicalEvidenceDirectory = "",
+  [string]$MainlineSourceProvenancePath = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -154,6 +155,9 @@ try {
   )
   if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
     $validatorArguments += @("--output-dir", $ScreenshotDirectory)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($MainlineSourceProvenancePath)) {
+    $validatorArguments += @("--mainline-source-provenance", $MainlineSourceProvenancePath)
   }
 
   & node @validatorArguments

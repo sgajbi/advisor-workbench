@@ -35,6 +35,7 @@ export function createValidationSummary({
     supportabilityChecks: [],
     screenshots: [],
     ideaCapacitySeed: null,
+    mainlineSourceProvenance: null,
   };
 }
 

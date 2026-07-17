@@ -62,6 +62,7 @@ import {
   readString,
 } from "./validation/payload-utils.mjs";
 import { loadIdeaCapacitySeedEvidence } from "./validation/idea-capacity-seed-evidence.mjs";
+import { loadValidatedMainlineSourceManifest } from "./validation/mainline-source-provenance.mjs";
 
 const {
   portfolioId,
@@ -74,6 +75,7 @@ const {
   canonicalStartDate,
   canonicalAsOfDate,
   ideaCapacitySeedEvidencePath,
+  mainlineSourceProvenancePath,
 } = resolveValidationConfig(process.argv.slice(2));
 const { summaryPath, shotIndexPath } = buildSummaryPaths(outputDir);
 const canonicalContract = await loadCanonicalContractMetadata();
@@ -106,6 +108,20 @@ const summary = createValidationSummary({
   gatewayBaseUrl,
   panelRegistry,
 });
+if (mainlineSourceProvenancePath) {
+  const mainlineSourceProvenance = loadValidatedMainlineSourceManifest(
+    mainlineSourceProvenancePath,
+  );
+  summary.mainlineSourceProvenance = {
+    path: mainlineSourceProvenancePath,
+    certificationClassification: mainlineSourceProvenance.certificationClassification,
+    repositories: mainlineSourceProvenance.repositories.map((repository) => ({
+      repository: repository.repository,
+      headSha: repository.headSha,
+      expectedMainSha: repository.expectedMainSha,
+    })),
+  };
+}
 const ideaVersion = await fetchJson(
   summary,
   `${ideaBaseUrl}/version`,
