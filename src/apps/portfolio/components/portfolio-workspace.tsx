@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { type ReactNode, useState } from "react";
 
 import {
@@ -16,6 +15,7 @@ import {
   getPositionsNeedingPricing,
 } from "../view-model";
 import PortfolioAnalyticalMainColumn from "./portfolio-analytical-main-column";
+import PortfolioDetailDrawerController from "./portfolio-detail-drawer-controller";
 import PortfolioExceptionsSection from "./portfolio-exceptions-section";
 import {
   buildExceptionDrawer,
@@ -26,10 +26,6 @@ import PortfolioReviewDecisionBrief from "./portfolio-review-decision-brief";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
 import PortfolioWorkspaceSideRail from "./portfolio-workspace-side-rail";
-
-const DeferredPortfolioDetailDrawer = dynamic(() => import("./portfolio-detail-drawer"), {
-  ssr: false,
-});
 
 export default function PortfolioWorkspaceView({
   workspace,
@@ -157,31 +153,5 @@ export default function PortfolioWorkspaceView({
         }}
       />
     </>
-  );
-}
-
-function PortfolioDetailDrawerController({
-  detailDrawer,
-  onClose,
-}: {
-  detailDrawer: PortfolioDetailDrawerState | null;
-  onClose: () => void;
-}) {
-  if (!detailDrawer) {
-    return null;
-  }
-
-  return (
-    <DeferredPortfolioDetailDrawer
-      open
-      kicker={detailDrawer.kicker}
-      title={detailDrawer.title}
-      subtitle={detailDrawer.subtitle}
-      summaryItems={detailDrawer.summaryItems}
-      tabs={detailDrawer.tabs}
-      fullPageHref={detailDrawer.fullPageHref}
-      fullPageLabel={detailDrawer.fullPageLabel}
-      onClose={onClose}
-    />
   );
 }

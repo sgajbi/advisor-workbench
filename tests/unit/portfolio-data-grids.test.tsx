@@ -3,10 +3,10 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ag-grid-react", () => ({
-  AgGridReact: ({ rowData = [], columnDefs = [], onRowClicked }: any) => {
+  AgGridReact: ({ rowData = [], columnDefs = [], onRowClicked, rowSelection }: any) => {
     const visibleColumns = columnDefs.filter((column: any) => !column.hide);
     return (
-      <div data-testid="mock-grid">
+      <div data-testid="mock-grid" data-has-row-selection={Boolean(rowSelection)}>
         <div>
           {visibleColumns.map((column: any) => (
             <React.Fragment key={column.field}>
@@ -84,7 +84,8 @@ describe("portfolio data grids", () => {
       screen.getByRole("button", { name: "Filter active: Filtered by Asset Class: Equities" })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export holdings" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show expanded holdings columns" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all holdings columns" })).toBeInTheDocument();
+    expect(screen.getByTestId("mock-grid")).toHaveAttribute("data-has-row-selection", "false");
     expect(screen.getByText("Instrument")).toBeInTheDocument();
     expect(screen.getByText("Market Value")).toBeInTheDocument();
     expect(screen.getByText("Weight")).toBeInTheDocument();
@@ -102,6 +103,32 @@ describe("portfolio data grids", () => {
     fireEvent.click(screen.getByRole("button", { name: /Apple Inc/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
     expect(onRowSelect.mock.calls[0][0].securityId).toBe("EQ_1");
+  });
+
+  it("omits inactive holdings controls when no filter or bulk workflow exists", () => {
+    render(
+      <PortfolioHoldingsGrid
+        portfolioId="MANUAL_PB_USD_001"
+        positions={[
+          {
+            security_id: "EQ_1",
+            instrument_name: "Apple Inc.",
+            asset_class: "Equities",
+            quantity: 700,
+            market_price: 210,
+            market_value_base: 147000,
+            weight_pct: 14.67,
+          },
+        ]}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        columnMode="expanded"
+        onRowSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /Filter holdings/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("mock-grid")).toHaveAttribute("data-has-row-selection", "false");
   });
 
   it("renders transactions with filters and raises the row-selection callback", async () => {

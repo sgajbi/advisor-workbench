@@ -14,7 +14,7 @@ describe("portfolio record screen view model", () => {
   it("keeps screen copy centralized for the standalone record pages", () => {
     expect(getPortfolioRecordScreenCopy("positions")).toMatchObject({
       title: "Positions",
-      kicker: "Position inventory",
+      kicker: "Booked holdings",
     });
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
       title: "Allocation",
@@ -31,7 +31,7 @@ describe("portfolio record screen view model", () => {
     const workspace = buildWorkspace();
 
     expect(buildPortfolioRecordScreenSubtitle("positions")).toBe(
-      "Holdings, valuation, cost basis, portfolio weights, and unrealized P&L."
+      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity."
     );
     expect(buildPortfolioRecordDisplayName(workspace)).toBe("Global Balanced Mandate");
     expect(
@@ -52,6 +52,11 @@ describe("portfolio record screen view model", () => {
       { label: "AUM", value: "1,000,000 USD" },
       { label: "Exposure Views", value: "1" },
       { label: "Positions", value: "11" },
+    ]);
+    expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "positions")).toEqual([
+      { label: "AUM", value: "1,000,000 USD" },
+      { label: "Invested", value: "920,000 USD" },
+      { label: "Cash", value: "80,000 USD" },
     ]);
 
     expect(

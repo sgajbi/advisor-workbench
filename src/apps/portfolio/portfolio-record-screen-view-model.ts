@@ -25,8 +25,9 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   },
   positions: {
     title: "Positions",
-    subtitle: "Holdings, valuation, cost basis, portfolio weights, and unrealized P&L.",
-    kicker: "Position inventory",
+    subtitle:
+      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity.",
+    kicker: "Booked holdings",
   },
   transactions: {
     title: "Transactions",
@@ -132,6 +133,29 @@ export function buildPortfolioRecordHeaderKpis(
       {
         label: "Events",
         value: String(eventCount),
+      },
+    ];
+  }
+
+  if (screen === "positions") {
+    return [
+      {
+        label: "AUM",
+        value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
+      },
+      {
+        label: "Invested",
+        value:
+          workspace.summary.invested_market_value_base == null
+            ? "N/A"
+            : formatCurrency(
+                workspace.summary.invested_market_value_base,
+                workspace.portfolio.base_currency,
+              ),
+      },
+      {
+        label: "Cash",
+        value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
       },
     ];
   }

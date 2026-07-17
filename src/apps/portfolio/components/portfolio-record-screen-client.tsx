@@ -12,6 +12,7 @@ import {
 import type { PortfolioWorkspace } from "../types";
 import { buildInitialPortfolioControls, buildPortfolioWorkspaceContext } from "../view-model";
 import PortfolioPageLayout from "./portfolio-page-layout";
+import PortfolioPositionsRecordWorkspace from "./portfolio-positions-record-workspace";
 import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
@@ -108,12 +109,10 @@ export default function PortfolioRecordScreenClient({
                     />
                   ) : null}
                   {screen === "positions" ? (
-                    <PortfolioHoldingsGrid
-                      portfolioId={workspace.portfolio.portfolio_id}
-                      positions={workspace.positions}
-                      baseCurrency={workspace.portfolio.base_currency}
+                    <PortfolioPositionsRecordWorkspace
+                      key={workspace.portfolio.portfolio_id}
+                      workspace={workspace}
                       asOfDate={context.selectedAsOfDate}
-                      columnMode="expanded"
                     />
                   ) : null}
                   {screen === "transactions" ? (
