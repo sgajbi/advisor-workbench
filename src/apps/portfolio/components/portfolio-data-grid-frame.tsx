@@ -44,6 +44,7 @@ export default function PortfolioDataGridFrame<TRow>({
         rowHeight={rowHeight ?? (density === "expanded" ? 34 : 36)}
         ensureDomOrder
         suppressCellFocus={false}
+        includeHiddenColumnsInQuickFilter
       />
     </div>
   );

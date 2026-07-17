@@ -234,6 +234,7 @@ export default function PortfolioTransactionsGrid({
         minWidth: 104,
         type: "numericColumn",
         valueFormatter: ({ value }) => formatQuantity(value),
+        hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "price",
@@ -244,6 +245,7 @@ export default function PortfolioTransactionsGrid({
           value === null || value === undefined
             ? "—"
             : formatCurrency(value, data?.priceCurrency ?? baseCurrency),
+        hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "grossAmount",
@@ -257,6 +259,7 @@ export default function PortfolioTransactionsGrid({
         field: "transactionCurrency",
         headerName: "Transaction Currency",
         minWidth: 118,
+        hide: !showExpandedColumns,
       }),
       buildTransactionColumn({
         field: "netCostBase",
@@ -306,6 +309,7 @@ export default function PortfolioTransactionsGrid({
         headerName: "Review",
         minWidth: 92,
         maxWidth: 104,
+        pinned: "right",
         sortable: false,
         filter: false,
         hide: !onRowSelect,

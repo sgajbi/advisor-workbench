@@ -141,7 +141,7 @@ export function buildTransactionRows(
 export function countTransactionsNeedingSettlementReview(rows: TransactionRow[]): number {
   return rows.filter((row) => {
     const status = row.status.trim().toUpperCase();
-    return status !== "SETTLED" && status !== "N/A";
+    return status !== "SETTLED";
   }).length;
 }
 

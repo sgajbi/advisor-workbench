@@ -117,6 +117,31 @@ async function openPositionsPortfolio(
   return { portfolioId, available: true };
 }
 
+async function openTransactionsPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  if (!portfolioId) {
+    await page.goto('/transactions', { waitUntil: 'domcontentloaded' });
+    return { portfolioId: null, available: false };
+  }
+
+  await page.goto(`/transactions?portfolioId=${portfolioId}`, {
+    waitUntil: 'domcontentloaded',
+  });
+  const unavailableHeading = page.getByRole('heading', { name: /^Portfolio records unavailable$/i });
+  const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+  if (unavailableVisible) {
+    return { portfolioId, available: false };
+  }
+
+  await expect(page.getByRole('heading', { name: /^Transactions$/i })).toBeVisible({
+    timeout: 15000,
+  });
+  return { portfolioId, available: true };
+}
+
 test.describe('Portfolio workbench smoke', () => {
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
@@ -242,5 +267,38 @@ test.describe('Portfolio workbench smoke', () => {
       'href',
       new RegExp(`/transactions\\?portfolioId=${session.portfolioId}`)
     );
+  });
+
+  test('transactions route preserves currency semantics and opens related booked activity', async ({ page, request }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openTransactionsPortfolio(page, request);
+    test.skip(!session.available, 'Portfolio transactions upstream unavailable in standalone smoke environment.');
+
+    const headerKpis = page.locator('.portfolio-record-standalone-kpis');
+    await expect(headerKpis.getByText('Portfolio Currency', { exact: true })).toBeVisible();
+    await expect(headerKpis.getByText('Latest Booking', { exact: true })).toBeVisible();
+    await expect(headerKpis.getByText('Ledger Entries', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Booked activity$/i })).toBeVisible();
+    await expect(page.getByLabel('Portfolio transactions grid')).toBeVisible();
+    await expect(page.getByText('Gross Amount', { exact: true })).toBeVisible();
+    await expect(page.getByText('Net Cost (USD)', { exact: true })).toBeVisible();
+    await expect(page.getByText('Settlement Status', { exact: true })).toBeVisible();
+    await expect(page.getByText('4 visible entries need settlement review', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Book first transaction$/i })).toHaveCount(0);
+
+    await page.getByLabel('Transaction start date').fill('2025-04-01');
+    await page.getByLabel('Search transactions').fill('SIEMENS-2031');
+    await expect(page.getByText('73,912.5 EUR', { exact: true })).toBeVisible();
+    await expect(page.getByText('80,097.93 USD', { exact: true })).toBeVisible();
+
+    await page.getByLabel('Search transactions').fill('TXN-INT-UST-001');
+    await page.getByRole('button', { name: /^Review transaction TXN-INT-UST-001$/i }).click();
+    await expect(page.locator('.portfolio-detail-drawer')).toBeVisible();
+    await page.getByRole('tab', { name: /^Related Activity$/i }).click();
+    await expect(page.getByRole('button', { name: /^Open Related Group Transactions$/i })).toBeVisible();
+    await page.getByRole('button', { name: /^Open Related Group Transactions$/i }).click();
+
+    await expect(page.getByText(/Related booking group LTG-PB_SG_GLOBAL_BAL_001-INT-UST-001/i)).toBeVisible();
+    await expect(page.getByText('2 matching transactions in the selected period', { exact: true })).toBeVisible();
   });
 });
