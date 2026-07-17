@@ -23,7 +23,7 @@ describe("portfolio record screen view model", () => {
         "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
     });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
-    expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("Income composition");
+    expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("booked income");
     expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain("Forward liquidity");
   });
 
@@ -92,7 +92,7 @@ describe("portfolio record screen view model", () => {
             window_end_date: "2026-05-12",
             buckets: [
               {
-                bucket: "external_funding",
+                bucket: "INFLOWS",
                 requested_window: {
                   reporting_currency_amount: 150000,
                   transaction_count: 1,
@@ -103,13 +103,13 @@ describe("portfolio record screen view model", () => {
                 },
               },
               {
-                bucket: "fees",
+                bucket: "FEES",
                 requested_window: {
-                  reporting_currency_amount: -1450,
+                  reporting_currency_amount: 1450,
                   transaction_count: 1,
                 },
                 year_to_date: {
-                  reporting_currency_amount: -1450,
+                  reporting_currency_amount: 1450,
                   transaction_count: 1,
                 },
               },
@@ -121,8 +121,8 @@ describe("portfolio record screen view model", () => {
       )
     ).toEqual([
       { label: "Net Income", value: "42,901.4 USD" },
-      { label: "Net Activity", value: "148,550 USD" },
-      { label: "Events", value: "5" },
+      { label: "Net Cash Movement", value: "148,550 USD" },
+      { label: "Reporting Currency", value: "USD" },
     ]);
 
     expect(

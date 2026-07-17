@@ -325,11 +325,11 @@ export function buildPortfolioFetchStub(overrides: PortfolioFetchOverrides = {})
           {
             bucket: "FEES",
             requested_window: {
-              reporting_currency_amount: -250,
+              reporting_currency_amount: 250,
               transaction_count: 1,
             },
             year_to_date: {
-              reporting_currency_amount: -500,
+              reporting_currency_amount: 500,
               transaction_count: 2,
             },
           },

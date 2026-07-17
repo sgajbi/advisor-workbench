@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate, formatStatus } from "./formatters";
+import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
 import type { PortfolioWorkspace } from "./types";
 
 export type PortfolioRecordScreenKind = "allocation" | "positions" | "transactions" | "income" | "cashflow";
@@ -36,8 +37,8 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   },
   income: {
     title: "Income & Activity",
-    subtitle: "Income composition, booked activity, and cash movement for review.",
-    kicker: "Income and activity",
+    subtitle: "Review booked income, deductions, and portfolio cash movements in reporting currency.",
+    kicker: "Booked income and cash movement",
   },
   cashflow: {
     title: "Cashflow Workspace",
@@ -102,17 +103,11 @@ export function buildPortfolioRecordHeaderKpis(
   if (screen === "income") {
     const income = workspace.income_summary;
     const activity = workspace.activity_summary;
-    const activityAmount =
-      activity?.buckets.reduce(
-        (total, bucket) => total + bucket.requested_window.reporting_currency_amount,
-        0
-      ) ?? null;
-    const eventCount =
-      (income?.totals_requested_window.net.transaction_count ?? 0) +
-      (activity?.buckets.reduce(
-        (total, bucket) => total + bucket.requested_window.transaction_count,
-        0
-      ) ?? 0);
+    const activityMovement = buildActivityMovementSummary(activity);
+    const reportingCurrency =
+      income?.reporting_currency ??
+      activity?.reporting_currency ??
+      workspace.portfolio.base_currency;
 
     return [
       {
@@ -125,14 +120,14 @@ export function buildPortfolioRecordHeaderKpis(
           : "N/A",
       },
       {
-        label: "Net Activity",
-        value: activityAmount == null
+        label: "Net Cash Movement",
+        value: activityMovement == null
           ? "N/A"
-          : formatCurrency(activityAmount, activity?.reporting_currency ?? workspace.portfolio.base_currency),
+          : formatCurrency(activityMovement.netMovement, reportingCurrency),
       },
       {
-        label: "Events",
-        value: String(eventCount),
+        label: "Reporting Currency",
+        value: reportingCurrency,
       },
     ];
   }
