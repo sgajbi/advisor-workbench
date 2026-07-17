@@ -1,6 +1,7 @@
 import { formatAllocationDimensionLabel } from "./portfolio-allocation-view-model";
 import type {
   PortfolioAllocationSelection,
+  PortfolioCashBalance,
   PortfolioPositionView,
 } from "./types";
 
@@ -26,16 +27,20 @@ const ALLOCATION_POSITION_VALUE: Record<
 
 export function buildAllocationHoldingsBreakdown({
   positions,
+  cashBalances = [],
   selection,
   exposureMode,
 }: {
   positions: PortfolioPositionView[];
+  cashBalances?: PortfolioCashBalance[];
   selection: PortfolioAllocationSelection | null;
   exposureMode: AllocationExposureMode;
 }): AllocationHoldingsBreakdown {
+  const bookedHoldings = mergeBookedHoldings(positions, cashBalances);
+
   if (exposureMode === "expanded") {
     return {
-      positions,
+      positions: bookedHoldings,
       filterLabel: null,
       title: "Booked holdings",
       description:
@@ -46,7 +51,7 @@ export function buildAllocationHoldingsBreakdown({
 
   if (!selection) {
     return {
-      positions,
+      positions: bookedHoldings,
       filterLabel: null,
       title: "Booked holdings",
       description:
@@ -59,7 +64,7 @@ export function buildAllocationHoldingsBreakdown({
   const dimensionLabel = formatAllocationDimensionLabel(selection.dimension);
   if (!positionValue) {
     return {
-      positions,
+      positions: bookedHoldings,
       filterLabel: null,
       title: "Booked holdings",
       description: `${dimensionLabel} does not have a supported holdings classification for contributor review.`,
@@ -68,7 +73,7 @@ export function buildAllocationHoldingsBreakdown({
   }
 
   const normalizedBucket = normalizeClassification(selection.bucket);
-  const filteredPositions = positions.filter(
+  const filteredPositions = bookedHoldings.filter(
     (position) =>
       normalizeClassification(positionValue(position)) === normalizedBucket,
   );
@@ -77,9 +82,30 @@ export function buildAllocationHoldingsBreakdown({
     positions: filteredPositions,
     filterLabel: `${dimensionLabel}: ${selection.bucket}`,
     title: "Contributing holdings",
-    description: `${filteredPositions.length} of ${positions.length} booked positions contribute to this direct exposure.`,
+    description: `${filteredPositions.length} of ${bookedHoldings.length} booked holdings contribute to this direct exposure.`,
     state: "filtered",
   };
+}
+
+function mergeBookedHoldings(
+  positions: PortfolioPositionView[],
+  cashBalances: PortfolioCashBalance[],
+): PortfolioPositionView[] {
+  const positionIds = new Set(positions.map((position) => position.security_id));
+  const cashHoldings = cashBalances
+    .filter((balance) => !positionIds.has(balance.security_id))
+    .map<PortfolioPositionView>((balance) => ({
+      source_record_type: "cash_balance",
+      security_id: balance.security_id,
+      instrument_name: balance.instrument_name,
+      asset_class: "Cash",
+      currency: balance.currency,
+      quantity: balance.quantity,
+      market_value_base: balance.market_value_base ?? null,
+      weight_pct: balance.weight_pct ?? null,
+    }));
+
+  return cashHoldings.length ? [...positions, ...cashHoldings] : positions;
 }
 
 function normalizeClassification(value: string | null | undefined): string {

@@ -209,6 +209,13 @@ Allocation drill-down shaping moved from the broad Portfolio view model into the
 its unconsumed security/status branches were removed. The holdings grid now accepts reusable
 business headings and distinguishes an empty filtered result from an empty source book.
 
+Cash balances are source records outside some booked-position payloads, so the contributor view
+adds any missing cash balance as a typed cash holding and deduplicates it against booked positions
+by source security id. Source-valued cash is not misclassified as an unpriced security merely
+because the balance contract has no market-price field. Allocation review state is mounted by
+portfolio identity, preventing a client-side portfolio change from carrying a prior book's
+selection or exposure mode into the next book.
+
 When expanded look-through is applied, contributor actions are disabled and the booked inventory
 is labelled as reference only. Core issue `sgajbi/lotus-core#801` tracks preservation of contributor
 and booked-parent lineage during allocation aggregation. Gateway issue
@@ -219,9 +226,9 @@ Workbench does not claim an expanded contributor drill-down.
 
 1. Focused allocation, record-screen, holdings-grid, and Portfolio view-model coverage: 33 tests
    passed on 2026-07-17.
-2. Full `make check` passed on 2026-07-17: 285 test files and 1,225 tests passed with 90.82%
-   statement coverage, followed by clean lint, TypeScript validation, and a successful production
-   build.
+2. Full `make check` passed after review fixes on 2026-07-17: 285 test files and 1,229 tests passed
+   with 90.83% statement coverage, followed by clean lint, TypeScript validation, and a successful
+   production build.
 3. The populated Playwright smoke pack passed all three Portfolio tests against
    `PB_SG_GLOBAL_BAL_001`. Allocation proof covered keyboard selection of a ranked direct exposure,
    the contributing-holdings result, clear-filter restoration, and the source-backed unavailable
