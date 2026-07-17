@@ -271,7 +271,8 @@ promote dormant labels into product ownership just because historical route file
 - Lotus Idea opportunity triage is implemented on `/recommendations?mode=opportunities` through
   Gateway Idea endpoints. Workbench reads `GET /api/v1/ideas/review-queues/advisor`; its BFF derives
   the Idea subject, role, route capability, and portfolio entitlement server-side and discards any
-  browser-supplied Idea authority headers. It renders Idea-owned rank, score, priority,
+  browser-supplied Idea authority headers. It is limited to canonical `PB_SG_GLOBAL_BAL_001` until
+  authenticated portfolio entitlement is available. It renders Idea-owned rank, score, priority,
   review posture, source-signal ids, reason codes, durable-storage posture, policy version, and
   `supportedFeaturePromoted=false`, and links to `GET /api/v1/ideas/candidates/{candidate_id}` for
   source-safe detail. The detail panel records typed review actions, feedback, and bounded conversion

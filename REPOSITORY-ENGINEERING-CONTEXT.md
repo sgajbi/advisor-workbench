@@ -160,7 +160,8 @@ Current repository posture:
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
     renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF derives the
     Idea subject, role, route capability, and portfolio entitlement server-side rather than trusting
-    browser headers; it renders score, review posture, source-signal ids, reason codes,
+    browser headers. The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
+    portfolio entitlement is available; it renders score, review posture, source-signal ids, reason codes,
     durable-storage posture, policy version, and
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
     can record source-owned review actions, feedback, and bounded conversion intents through the
