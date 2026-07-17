@@ -790,6 +790,9 @@ describe("portfolio api", () => {
         }
         if (url.includes("/transactions")) {
           return jsonResponse({
+            total: 275,
+            skip: 0,
+            limit: 200,
             transactions: [
               {
                 transaction_id: "TX_AVAILABLE",
@@ -816,6 +819,11 @@ describe("portfolio api", () => {
 
     expect(details?.cash_balances).toBeUndefined();
     expect(details?.recent_transactions?.[0].transaction_id).toBe("TX_AVAILABLE");
+    expect(details?.transaction_ledger_page).toEqual({
+      total: 275,
+      skip: 0,
+      limit: 200,
+    });
     expect(details?.record_data_availability).toEqual({
       liquidity: "unavailable",
       transactions: "ready",

@@ -16,7 +16,7 @@ import PortfolioPositionsRecordWorkspace from "./portfolio-positions-record-work
 import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
-import PortfolioTransactionsGrid from "./portfolio-transactions-grid";
+import PortfolioTransactionsRecordWorkspace from "./portfolio-transactions-record-workspace";
 import PortfolioProjectedCashflowModule from "./portfolio-projected-cashflow-module";
 import PortfolioIncomeActivityWorkspace from "./portfolio-income-activity-workspace";
 import PortfolioAllocationPanel from "./portfolio-allocation-panel";
@@ -116,13 +116,11 @@ export default function PortfolioRecordScreenClient({
                     />
                   ) : null}
                   {screen === "transactions" ? (
-                    <PortfolioTransactionsGrid
-                      portfolioId={workspace.portfolio.portfolio_id}
-                      baseCurrency={workspace.portfolio.base_currency}
+                    <PortfolioTransactionsRecordWorkspace
+                      workspace={workspace}
                       asOfDate={context.selectedAsOfDate}
                       defaultStartDate={startDate ?? context.effectivePeriodStartDate}
                       defaultEndDate={endDate ?? context.effectivePeriodEndDate}
-                      initialTransactions={workspace.recent_transactions}
                     />
                   ) : null}
                   {screen === "income" ? (

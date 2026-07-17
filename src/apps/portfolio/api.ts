@@ -192,6 +192,7 @@ type PortfolioWorkspaceDetailedDetails = Partial<
     PortfolioWorkspace,
     | "cash_balances"
     | "recent_transactions"
+    | "transaction_ledger_page"
     | "cashflow_outlook"
     | "readiness_indicators"
     | "supportability"
@@ -465,7 +466,14 @@ export async function getPortfolioWorkspaceDetailedDetails(
           }
         : {}),
       ...(transactionsPayload
-        ? { recent_transactions: transactionsPayload.transactions }
+        ? {
+            recent_transactions: transactionsPayload.transactions,
+            transaction_ledger_page: {
+              total: transactionsPayload.total ?? transactionsPayload.transactions.length,
+              skip: transactionsPayload.skip ?? 0,
+              limit: transactionsPayload.limit ?? transactionsPayload.transactions.length,
+            },
+          }
         : {}),
       ...(readinessPayload
         ? {

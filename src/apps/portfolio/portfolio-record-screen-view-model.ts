@@ -31,8 +31,8 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   },
   transactions: {
     title: "Transactions",
-    subtitle: "Booked activity, settlement state, transaction components, and source lineage.",
-    kicker: "Ledger",
+    subtitle: "Review booked activity, settlement state, booking components, and source lineage.",
+    kicker: "Booked activity review",
   },
   income: {
     title: "Income & Activity",
@@ -156,6 +156,26 @@ export function buildPortfolioRecordHeaderKpis(
       {
         label: "Cash",
         value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
+      },
+    ];
+  }
+
+  if (screen === "transactions") {
+    return [
+      {
+        label: "Portfolio Currency",
+        value: workspace.portfolio.base_currency,
+      },
+      {
+        label: "Latest Booking",
+        value: formatDate(workspace.operations?.latest_booked_transaction_date),
+      },
+      {
+        label: "Ledger Entries",
+        value: String(
+          workspace.transaction_ledger_page?.total ??
+            workspace.recent_transactions.length,
+        ),
       },
     ];
   }

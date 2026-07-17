@@ -66,7 +66,7 @@ describe("portfolio record drawer builders", () => {
     render(<div>{drawer.tabs.find((tab) => tab.key === "related-transactions")?.content}</div>);
 
     expect(screen.getByText("20 Mar 2026 Buy")).toBeInTheDocument();
-    expect(screen.getByText("AAPL · 9,000 USD")).toBeInTheDocument();
+    expect(screen.getByText("AAPL · 9,000 USD gross")).toBeInTheDocument();
   });
 
   it("shows a truthful error state when related holding transactions cannot be loaded", () => {
@@ -101,8 +101,11 @@ describe("portfolio record drawer builders", () => {
       securityId: "EQ_1",
       quantity: 50,
       price: 180,
-      amount: 9000,
-      currency: "USD",
+      grossAmount: 8500,
+      transactionCurrency: "EUR",
+      netCostBase: 9000,
+      realizedGainLossBase: 120,
+      priceCurrency: "EUR",
       status: "Settled",
       componentType: "Trade",
       sourceSystem: "Core",
@@ -115,8 +118,10 @@ describe("portfolio record drawer builders", () => {
         security_id: "EQ_1",
         instrument_id: "AAPL",
         quantity: 50,
-        gross_amount: 9000,
-        currency: "USD",
+        gross_amount: 8500,
+        net_cost_base: 9000,
+        realized_gain_loss_base: 120,
+        currency: "EUR",
         economic_event_id: "ECON-2026-0001",
         linked_transaction_group_id: "LTG-FX-2026-0001",
         fx_contract_id: "FXC-2026-0001",

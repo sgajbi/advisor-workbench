@@ -9,7 +9,11 @@ import {
   formatQuantity,
   formatStatus,
 } from "../formatters";
-import type { PortfolioTransactionDrilldownFilter, PortfolioWorkspace } from "../types";
+import type {
+  PortfolioTransactionDrilldownFilter,
+  PortfolioTransactionView,
+  PortfolioWorkspace,
+} from "../types";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import {
@@ -110,9 +114,9 @@ export function buildTransactionDrilldownDrawer(
                 `${formatDate(transaction.transaction_date)} ${formatStatus(
                   transaction.transaction_type
                 )}`,
-                `${transaction.instrument_id} · ${formatCurrency(
-                  transaction.net_cost_base ?? transaction.gross_amount,
-                  transaction.currency ?? baseCurrency
+                `${transaction.instrument_id} · ${formatBookedTransactionAmount(
+                  transaction,
+                  baseCurrency,
                 )}`,
               ])
             )
@@ -154,9 +158,12 @@ export function buildTransactionDrawer(
     title: row.type,
     subtitle: row.instrument,
     summaryItems: [
-      { label: "Amount", value: formatCurrency(row.amount, row.currency) },
+      {
+        label: "Gross Amount",
+        value: formatCurrency(row.grossAmount, row.transactionCurrency ?? baseCurrency),
+      },
+      { label: "Net Cost", value: formatCurrency(row.netCostBase, baseCurrency) },
       { label: "Status", value: formatStatus(row.status) },
-      { label: "Trade Date", value: formatDate(row.tradeDate) },
     ],
     tabs: [
       {
@@ -169,7 +176,13 @@ export function buildTransactionDrawer(
           ["Economic Event ID", row.raw.economic_event_id ?? "N/A"],
           ["Linked Transaction Group", row.raw.linked_transaction_group_id ?? "N/A"],
           ["Quantity", formatQuantity(row.quantity)],
-          ["Amount", formatCurrency(row.amount, row.currency)],
+          [
+            "Gross Amount",
+            formatCurrency(row.grossAmount, row.transactionCurrency ?? baseCurrency),
+          ],
+          ["Transaction Currency", row.transactionCurrency ?? "N/A"],
+          ["Net Cost", formatCurrency(row.netCostBase, baseCurrency)],
+          ["Realized P&L", formatCurrency(row.realizedGainLossBase, baseCurrency)],
         ]),
       },
       {
@@ -187,7 +200,7 @@ export function buildTransactionDrawer(
           ["Swap Event ID", row.raw.swap_event_id ?? "N/A"],
           ["Near-Leg Group", row.raw.near_leg_group_id ?? "N/A"],
           ["Far-Leg Group", row.raw.far_leg_group_id ?? "N/A"],
-          ["Base Amount", formatCurrency(row.amount, baseCurrency)],
+          ["Portfolio Currency", baseCurrency],
         ]),
       },
       {
@@ -322,9 +335,9 @@ function buildHoldingRelatedTransactionsTab(
               `${formatDate(transaction.transaction_date)} ${formatStatus(
                 transaction.transaction_type
               )}`,
-              `${transaction.instrument_id} · ${formatCurrency(
-                transaction.net_cost_base ?? transaction.gross_amount,
-                transaction.currency ?? baseCurrency
+              `${transaction.instrument_id} · ${formatBookedTransactionAmount(
+                transaction,
+                baseCurrency,
               )}`,
             ])
           )
@@ -333,4 +346,22 @@ function buildHoldingRelatedTransactionsTab(
           ])}
     </>
   );
+}
+
+function formatBookedTransactionAmount(
+  transaction: PortfolioTransactionView,
+  baseCurrency: string,
+): string {
+  if (transaction.net_cost_base != null) {
+    return `${formatCurrency(transaction.net_cost_base, baseCurrency)} net cost`;
+  }
+
+  if (transaction.gross_amount != null) {
+    return `${formatCurrency(
+      transaction.gross_amount,
+      transaction.currency ?? baseCurrency,
+    )} gross`;
+  }
+
+  return "Amount N/A";
 }

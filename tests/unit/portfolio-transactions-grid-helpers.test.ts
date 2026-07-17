@@ -5,8 +5,9 @@ import {
   buildTransactionFilterOptions,
   buildTransactionLedgerQuery,
   buildTransactionRows,
+  countTransactionsNeedingSettlementReview,
+  formatTransactionLedgerCoverage,
   shouldReuseInitialTransactions,
-  sumTransactionAmount,
 } from "../../src/apps/portfolio/components/portfolio-transactions-grid-helpers";
 
 describe("portfolio transactions grid helpers", () => {
@@ -57,6 +58,7 @@ describe("portfolio transactions grid helpers", () => {
         defaultStartDate: "2026-03-01",
         defaultEndDate: "2026-03-28",
         initialTransactionCount: 1,
+        skip: 0,
       })
     ).toBe(false);
   });
@@ -76,6 +78,7 @@ describe("portfolio transactions grid helpers", () => {
         defaultStartDate: "2026-03-01",
         defaultEndDate: "2026-03-28",
         initialTransactionCount: 1,
+        skip: 0,
       })
     ).toBe(false);
   });
@@ -93,6 +96,7 @@ describe("portfolio transactions grid helpers", () => {
           fx_contract_id: "FXC-2026-0001",
           label: "Filtered by FX contract: FXC-2026-0001",
         },
+        skip: 200,
       }),
     ).toEqual({
       asOfDate: "2026-03-28",
@@ -102,10 +106,11 @@ describe("portfolio transactions grid helpers", () => {
       componentType: "FX_CONTRACT_OPEN",
       fxContractId: "FXC-2026-0001",
       limit: 200,
+      skip: 200,
     });
   });
 
-  it("builds transaction rows, totals, and export rows without rendering the grid", () => {
+  it("preserves transaction and portfolio-currency amounts without mixing currencies", () => {
     const rows = buildTransactionRows(
       [
         {
@@ -119,8 +124,10 @@ describe("portfolio transactions grid helpers", () => {
           instrument_id: "AAPL",
           quantity: 50,
           price: 180,
+          gross_amount: 8500,
           net_cost_base: 9000,
-          currency: "USD",
+          realized_gain_loss_base: 120,
+          currency: "EUR",
           settlement_status: "SETTLED",
         },
         {
@@ -143,19 +150,24 @@ describe("portfolio transactions grid helpers", () => {
         type: "Buy",
         componentType: "Trade",
         sourceSystem: "Core Ledger",
-        amount: 9000,
-        currency: "USD",
+        grossAmount: 8500,
+        transactionCurrency: "EUR",
+        netCostBase: 9000,
+        realizedGainLossBase: 120,
+        priceCurrency: "EUR",
         status: "Settled",
       },
       {
         transactionId: "TX_2",
         type: "Dividend",
-        amount: 125,
-        currency: "USD",
+        grossAmount: 125,
+        transactionCurrency: null,
+        netCostBase: null,
+        priceCurrency: "USD",
         status: "Pending",
       },
     ]);
-    expect(sumTransactionAmount(rows)).toBe(9125);
+    expect(countTransactionsNeedingSettlementReview(rows)).toBe(1);
     expect(buildTransactionExportRows(rows, "USD")[0]).toEqual({
       "Trade Date": "20 Mar 2026",
       "Settle Date": "24 Mar 2026",
@@ -163,11 +175,25 @@ describe("portfolio transactions grid helpers", () => {
       Instrument: "AAPL",
       Quantity: 50,
       Price: 180,
-      "Amount (USD)": 9000,
-      Currency: "USD",
+      "Transaction Currency": "EUR",
+      "Gross Amount": 8500,
+      "Net Cost (USD)": 9000,
+      "Realized P&L (USD)": 120,
       Status: "Settled",
       Component: "Trade",
       Source: "Core Ledger",
     });
+  });
+
+  it("describes complete and paged ledger coverage truthfully", () => {
+    expect(
+      formatTransactionLedgerCoverage({ total: 2, skip: 0, visibleCount: 2 }),
+    ).toBe("2 ledger entries");
+    expect(
+      formatTransactionLedgerCoverage({ total: 450, skip: 200, visibleCount: 200 }),
+    ).toBe("201–400 of 450 ledger entries");
+    expect(
+      formatTransactionLedgerCoverage({ total: 450, skip: 400, visibleCount: 50 }),
+    ).toBe("401–450 of 450 ledger entries");
   });
 });
