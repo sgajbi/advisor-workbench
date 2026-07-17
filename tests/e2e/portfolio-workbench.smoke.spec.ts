@@ -94,6 +94,29 @@ async function openAllocationPortfolio(
   return { portfolioId, available: true };
 }
 
+async function openPositionsPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  if (!portfolioId) {
+    await page.goto('/positions', { waitUntil: 'domcontentloaded' });
+    return { portfolioId: null, available: false };
+  }
+
+  await page.goto(`/positions?portfolioId=${portfolioId}`, { waitUntil: 'domcontentloaded' });
+  const unavailableHeading = page.getByRole('heading', { name: /^Portfolio records unavailable$/i });
+  const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+  if (unavailableVisible) {
+    return { portfolioId, available: false };
+  }
+
+  await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible({
+    timeout: 15000,
+  });
+  return { portfolioId, available: true };
+}
+
 test.describe('Portfolio workbench smoke', () => {
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
@@ -183,5 +206,41 @@ test.describe('Portfolio workbench smoke', () => {
         page.getByRole('button', { name: /^Look-through unavailable for current portfolio snapshot$/i })
       ).toBeDisabled();
     }
+  });
+
+  test('positions route exposes complete booked holdings and keyboard review', async ({ page, request }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openPositionsPortfolio(page, request);
+    test.skip(!session.available, 'Portfolio positions upstream unavailable in standalone smoke environment.');
+
+    const headerKpis = page.locator('.portfolio-record-standalone-kpis');
+    await expect(headerKpis.getByText('Invested', { exact: true })).toBeVisible();
+    await expect(headerKpis.getByText('Cash', { exact: true })).toBeVisible();
+    await expect(headerKpis.getByText('Window', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByLabel('Portfolio holdings grid')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Filter holdings/i })).toHaveCount(0);
+    await expect(page.locator('.ag-selection-checkbox, .ag-header-select-all')).toHaveCount(0);
+
+    const reviewActions = page.locator('.portfolio-instrument-review');
+    await expect(reviewActions.first()).toBeVisible();
+    expect(await reviewActions.count()).toBeGreaterThan(1);
+    const holdingIdentifiers = await page.locator('.portfolio-instrument-cell span').allTextContents();
+    expect(new Set(holdingIdentifiers).size).toBe(holdingIdentifiers.length);
+    await expect(
+      page.locator('.portfolio-instrument-review').filter({ hasText: /Cash/i }).first()
+    ).toBeVisible();
+
+    await reviewActions.first().focus();
+    await reviewActions.first().press('Enter');
+    await expect(page.locator('.portfolio-detail-drawer')).toBeVisible();
+    await page.getByRole('tab', { name: /^Recent Activity$/i }).click();
+    await expect(
+      page.getByText(/Recent booked activity supplied with the portfolio review as of/i)
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Open transactions$/i })).toHaveAttribute(
+      'href',
+      new RegExp(`/transactions\\?portfolioId=${session.portfolioId}`)
+    );
   });
 });
