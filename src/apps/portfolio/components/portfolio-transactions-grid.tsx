@@ -349,10 +349,10 @@ export default function PortfolioTransactionsGrid({
       summaryLabel={coverageLabel}
       summaryValue={
         settlementReviewCount
-          ? `${settlementReviewCount} visible ${settlementReviewCount === 1 ? "entry needs" : "entries need"} settlement review`
+          ? `${settlementReviewCount} loaded ${settlementReviewCount === 1 ? "entry needs" : "entries need"} settlement review`
           : rowData.length
-            ? "All visible entries settled"
-            : "No settlement state in view"
+            ? "All loaded entries settled"
+            : "No settlement state on this page"
       }
       searchControl={
         <TextField
