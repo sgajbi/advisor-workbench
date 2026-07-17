@@ -230,7 +230,7 @@ function IdeaCandidateDetailPanel({
   isLoading: boolean;
   portfolioId: string;
   selectedCandidateId: string;
-  onActionRecorded: () => Promise<void>;
+  onActionRecorded: () => Promise<boolean>;
 }) {
   const candidate = detail?.candidate;
   const evidence = detail?.evidence;
