@@ -16,6 +16,7 @@ describe("WorkbenchSummaryMetricStrip", () => {
             label: "Benchmark Return",
             value: "Unavailable",
             support: "Relative returns incomplete",
+            definition: "Benchmark return is not available for the selected period.",
             unavailable: true,
           },
         ]}
@@ -29,5 +30,10 @@ describe("WorkbenchSummaryMetricStrip", () => {
       "workbench-summary-metric-support"
     );
     expect(document.querySelector(".workbench-summary-metric-card-unavailable")).toBeTruthy();
+    const tooltipItem = screen.getByText("Benchmark Return").closest(
+      ".workbench-summary-metric-item",
+    );
+    expect(tooltipItem).toBeTruthy();
+    expect(tooltipItem?.querySelector(".workbench-summary-metric-card")).toBeTruthy();
   });
 });
