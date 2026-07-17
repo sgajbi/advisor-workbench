@@ -133,3 +133,98 @@ suitability, compliance, or client-readiness score.
 No repo wiki change is required for Slice 1. The slice changes composition and removes unsupported
 client-side behavior; it does not add or change a supported feature, integration, operator command,
 or published runtime contract.
+
+## Allocation Review
+
+### Business job
+
+A client advisor or portfolio manager opens Allocation Review to understand how the selected
+portfolio is invested, move across asset-class, currency, sector, and region exposure, and identify
+the booked holdings that contribute to a direct exposure. The screen explains current composition;
+it does not invent a strategic target, benchmark comparison, drift interpretation, suitability
+decision, or rebalance recommendation.
+
+The reading order is:
+
+1. portfolio identity, mandate, currency, and source as-of date,
+2. assets under management, available exposure views, and position count,
+3. the selected exposure dimension and direct or expanded exposure mode,
+4. ranked exposure value, weight, and source-reported position count,
+5. contributing booked holdings for a selected direct exposure,
+6. adjacent Portfolio, Position, Mandate, Risk, or Performance workflows where supported.
+
+### Current-product research
+
+Research was reviewed on 2026-07-17 from official product sources:
+
+1. [Morningstar Portfolio X-Ray](https://www.morningstar.com/help-center/portfolio/xray): asset,
+   sector, and region views pair portfolio breakdowns with a holdings breakdown that explains how
+   each security contributes to an exposure.
+2. [BlackRock Portfolio 360](https://www.blackrock.com/portfolio-centre): allocation is one stage
+   in a defined, repeatable portfolio-review process designed to turn portfolio data into informed
+   action rather than an isolated visualization.
+3. [BlackRock Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360):
+   portfolio analysis emphasizes actionable holdings-based insights and security-level drivers.
+4. [Addepar for institutional allocators](https://addepar.com/institutions/allocators): governed
+   total-portfolio analytics keep true look-through exposure distinct across fund and ownership
+   structures.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Pair exposure views with the contributing-holdings result in the same screen flow.
+2. Keep direct holdings and expanded exposure explicit; never silently substitute one for the
+   other.
+3. Use the existing dense Portfolio holdings grid for contributor review, including its search,
+   columns, export, keyboard, filter, valuation, and empty-state behavior.
+4. Use business-facing visualization choices (`Composition`, `Comparison`, and `Table`) and
+   describe the data as exposure rather than chart implementation.
+5. Keep the source as-of date, reporting currency, position count, market value, weight, and
+   classification visible without recomputing allocation totals in the browser.
+6. Treat an unmatched direct filter as an empty contributor result, not as an empty portfolio.
+
+### Rejected decisions
+
+1. Filtering direct booked positions to explain expanded look-through exposure: the booked parent
+   and decomposed component are not equivalent.
+2. Browser-authored target weights, benchmark weights, drift, concentration thresholds, risk
+   interpretation, or rebalance advice: none is present in the current Gateway allocation contract.
+3. A cross-dimension total of allocation buckets: the same portfolio is classified repeatedly, so
+   the aggregate is a technical count with no stable business interpretation.
+4. A one-off contributor table: it would duplicate the supported Portfolio holdings pattern and
+   diverge in accessibility, export, empty, valuation, and column behavior.
+
+### Slice 1 — exposure-to-contributing-holdings flow
+
+GitHub issue #413 governs the slice. Allocation selection now filters source portfolio positions by
+the selected direct asset class, currency, sector, or region and presents the result through the
+reusable holdings grid. The result names the selected exposure, reports the source-row count, and
+provides keyboard-accessible clear actions. The unselected state keeps the full booked inventory
+visible and explains how to begin contributor review.
+
+Allocation drill-down shaping moved from the broad Portfolio view model into the focused
+`portfolio-allocation-drilldown-view-model.ts`. The unused generic holdings drill-down union and
+its unconsumed security/status branches were removed. The holdings grid now accepts reusable
+business headings and distinguishes an empty filtered result from an empty source book.
+
+When expanded look-through is applied, contributor actions are disabled and the booked inventory
+is labelled as reference only. Core issue `sgajbi/lotus-core#801` tracks preservation of contributor
+and booked-parent lineage during allocation aggregation. Gateway issue
+`sgajbi/lotus-gateway#496` tracks publication of that source detail to Workbench. Until both land,
+Workbench does not claim an expanded contributor drill-down.
+
+### Validation record
+
+1. Focused allocation, record-screen, holdings-grid, and Portfolio view-model coverage: 33 tests
+   passed on 2026-07-17.
+2. Workbench lint and TypeScript validation passed after the implementation slice.
+3. Full repository and populated canonical browser validation remain required before merge; the
+   codebase review ledger retains `In Review` status until that evidence is complete.
+
+### Publication decision
+
+No repo wiki change is required for this slice. It completes an existing supported Allocation
+screen interaction and documents an unavailable expanded-contributor boundary; it does not change
+an operator command, integration contract, supported-feature claim, or published runtime flow.
