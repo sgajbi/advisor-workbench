@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -261,5 +261,48 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
         "The advisor action could not be recorded through Gateway. No local review or conversion state has been created.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("retries a failed advisor action with the original idempotent submission", async () => {
+    recordAdvisorIdeaReviewActionMock.mockRejectedValueOnce(
+      new Error("gateway unavailable"),
+    );
+    renderWithQueryClient(
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        selectedCandidateId="idea_high_cash_001"
+      />,
+    );
+
+    await screen.findByLabelText("Idea candidate advisor actions");
+    const reviewForm = screen
+      .getByRole("heading", { name: "Record review" })
+      .closest("form");
+    expect(reviewForm).not.toBeNull();
+    const reviewControls = within(reviewForm!);
+    fireEvent.click(
+      reviewControls.getByRole("button", { name: "Record review" }),
+    );
+
+    await screen.findByText(
+      "The advisor action could not be recorded through Gateway. No local review or conversion state has been created.",
+    );
+    const firstSubmission = recordAdvisorIdeaReviewActionMock.mock.calls[0][0];
+    fireEvent.change(reviewControls.getByLabelText("Review action"), {
+      target: { value: "reject" },
+    });
+    fireEvent.change(reviewControls.getByLabelText("Reason codes"), {
+      target: { value: "changed_after_failure" },
+    });
+    fireEvent.click(
+      reviewControls.getByRole("button", { name: "Record review" }),
+    );
+
+    await waitFor(() => {
+      expect(recordAdvisorIdeaReviewActionMock).toHaveBeenCalledTimes(2);
+    });
+    expect(recordAdvisorIdeaReviewActionMock.mock.calls[1][0]).toEqual(
+      firstSubmission,
+    );
   });
 });

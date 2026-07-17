@@ -158,12 +158,14 @@ Current repository posture:
     delivery-summary and delivery-event posture, and does not generate narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
-    renders the Gateway-backed Lotus Idea advisor review queue. Workbench requests Idea-owned
-    candidate ranking with the active portfolio as caller entitlement scope, renders score, review
-    posture, source-signal ids, reason codes, durable-storage posture, policy version, and
+    renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF derives the
+    Idea subject, role, route capability, and portfolio entitlement server-side rather than trusting
+    browser headers; it renders score, review posture, source-signal ids, reason codes,
+    durable-storage posture, policy version, and
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
     can record source-owned review actions, feedback, and bounded conversion intents through the
-    Workbench BFF with caller scope and idempotency; it refreshes source truth and must not synthesize
+    Workbench BFF with server-derived authority and idempotency; a retry reuses the exact failed
+    submission; it refreshes source truth and must not synthesize
     review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
     opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
     proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a

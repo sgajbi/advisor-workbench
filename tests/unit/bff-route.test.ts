@@ -12,6 +12,9 @@ describe("BFF proxy route", () => {
     "WORKBENCH_BFF_REGION",
     "WORKBENCH_BFF_BOOKING_CENTER_CODE",
     "WORKBENCH_BFF_ROLE",
+    "WORKBENCH_IDEA_CALLER_SUBJECT",
+    "WORKBENCH_IDEA_CALLER_ROLES",
+    "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
     callerContextEnvKeys.map((key) => [key, process.env[key]])
@@ -122,6 +125,49 @@ describe("BFF proxy route", () => {
       })
     );
     expect(response.status).toBe(202);
+  });
+
+  it("derives Idea mutation authority at the BFF instead of trusting browser headers", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/review-actions",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "X-Caller-Subject": "spoofed-subject",
+          "X-Caller-Roles": "compliance",
+          "X-Caller-Capabilities": "idea.conversion.intent.record",
+          "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+        },
+        body: JSON.stringify({ action: "approve_for_conversion" }),
+      },
+    );
+
+    await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea_high_cash_001",
+          "review-actions",
+        ],
+      }),
+    });
+
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Caller-Subject")).toBe("workbench-advisor");
+    expect(upstreamHeaders.get("X-Caller-Roles")).toBe("advisor");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "idea.review.record",
+    );
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
+      "PB_SG_GLOBAL_BAL_001",
+    );
   });
 
   it("preserves binary upstream responses for archived document downloads", async () => {

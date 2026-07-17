@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
-import { applyDefaultCallerContextHeaders } from "@/features/workbench/caller-context";
+import {
+  applyDefaultCallerContextHeaders,
+  applyIdeaRouteCallerContextHeaders,
+} from "@/features/workbench/caller-context";
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
@@ -13,6 +16,10 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     headers.set(key, value);
   });
   applyDefaultCallerContextHeaders(headers);
+  applyIdeaRouteCallerContextHeaders(headers, {
+    method: request.method,
+    upstreamPath,
+  });
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
   const response = await fetch(url, {

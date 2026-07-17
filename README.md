@@ -190,9 +190,10 @@ Set:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
-The Workbench BFF adds governed caller-context headers before proxying to Gateway when an
-interactive request does not already provide them. Defaults are suitable for the canonical local
-front-office runtime and can be overridden for targeted validation:
+The Workbench BFF adds governed caller-context headers before proxying to Gateway. Lotus Idea
+queue, detail, and action routes additionally replace browser-supplied subject, role, capability,
+and portfolio-entitlement headers with server-derived route authority. Defaults are suitable for
+the canonical local front-office runtime and can be overridden for targeted validation:
 
 ```txt
 WORKBENCH_BFF_ACTOR_ID=workbench-system
@@ -201,6 +202,9 @@ WORKBENCH_BFF_TENANT_ID=tenant-sg
 WORKBENCH_BFF_REGION=APAC
 WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
 WORKBENCH_BFF_ROLE=advisor
+WORKBENCH_IDEA_CALLER_SUBJECT=workbench-advisor
+WORKBENCH_IDEA_CALLER_ROLES=advisor
+WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MANDATE_ID=MANDATE_PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
 WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
@@ -389,11 +393,12 @@ Important current product and route truths:
 18. Lotus Idea opportunity rendering on `/recommendations?mode=opportunities` is backed by Gateway
     `/api/v1/ideas/review-queues/advisor`, `/api/v1/ideas/candidates/{candidate_id}`, and the
     source-owned candidate mutation routes for review actions, feedback, and conversion intents.
-    Workbench passes the active portfolio as caller entitlement scope, renders Idea-owned candidate
+    The Workbench BFF derives route-specific Idea subject, role, capability, and portfolio entitlement
+    server-side; browser headers never grant Idea authority. Workbench renders Idea-owned candidate
     rank, score, review posture, source-signal ids, reason codes, durable-storage posture, policy
     version, and supported-feature promotion posture, and records typed advisor actions with a bounded
-    idempotency key through the Workbench BFF. Workbench must not rerank candidates, clone Idea
-    scoring, infer downstream conversion, create proposals automatically, grant suitability or
+    idempotency key that retries the identical submission after a transient failure. Workbench must
+    not rerank candidates, clone Idea scoring, infer downstream conversion, create proposals automatically, grant suitability or
     execution authority, or promote Lotus Idea as a supported feature before canonical browser proof,
     data-product certification, and `lotus-idea` supported-feature evidence exist.
 

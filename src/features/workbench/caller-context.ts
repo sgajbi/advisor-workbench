@@ -30,6 +30,25 @@ const CALLER_CONTEXT_ENV_OVERRIDES: Record<
   "X-Role": "WORKBENCH_BFF_ROLE",
 };
 
+const IDEA_CALLER_CONTEXT_ENV_OVERRIDES = {
+  subject: "WORKBENCH_IDEA_CALLER_SUBJECT",
+  roles: "WORKBENCH_IDEA_CALLER_ROLES",
+  portfolioIds: "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
+} as const;
+
+const DEFAULT_IDEA_CALLER_CONTEXT = {
+  subject: "workbench-advisor",
+  roles: "advisor",
+  portfolioIds: "PB_SG_GLOBAL_BAL_001",
+} as const;
+
+const IDEA_AUTHORITY_HEADERS = [
+  "X-Caller-Subject",
+  "X-Caller-Roles",
+  "X-Caller-Capabilities",
+  "X-Caller-Portfolio-Ids",
+] as const;
+
 function defaultCallerContextValue(
   headerName: keyof typeof DEFAULT_CALLER_CONTEXT_HEADERS
 ) {
@@ -85,4 +104,73 @@ export function applyDefaultCallerContextHeaders(headers: Headers) {
       headers.set(headerName, defaultCallerContextValue(headerName));
     }
   }
+}
+
+export function applyIdeaRouteCallerContextHeaders(
+  headers: Headers,
+  request: { method: string; upstreamPath: string },
+) {
+  if (!request.upstreamPath.startsWith("api/v1/ideas/")) {
+    return;
+  }
+
+  for (const headerName of IDEA_AUTHORITY_HEADERS) {
+    headers.delete(headerName);
+  }
+
+  const capability = resolveIdeaRouteCapability(request);
+  if (!capability) {
+    return;
+  }
+
+  headers.set(
+    "X-Caller-Subject",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.subject]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.subject,
+  );
+  headers.set(
+    "X-Caller-Roles",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.roles]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.roles,
+  );
+  headers.set("X-Caller-Capabilities", capability);
+  headers.set(
+    "X-Caller-Portfolio-Ids",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.portfolioIds]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.portfolioIds,
+  );
+}
+
+function resolveIdeaRouteCapability({
+  method,
+  upstreamPath,
+}: {
+  method: string;
+  upstreamPath: string;
+}): string | undefined {
+  if (
+    method === "GET" &&
+    upstreamPath === "api/v1/ideas/review-queues/advisor"
+  ) {
+    return "idea.review.queue.read";
+  }
+
+  if (
+    method === "GET" &&
+    /^api\/v1\/ideas\/candidates\/[^/]+$/.test(upstreamPath)
+  ) {
+    return "idea.candidate.detail.read";
+  }
+
+  const actionCapability = {
+    "review-actions": "idea.review.record",
+    feedback: "idea.feedback.record",
+    "conversion-intents": "idea.conversion.intent.record",
+  } as const;
+  const actionMatch = upstreamPath.match(
+    /^api\/v1\/ideas\/candidates\/[^/]+\/(review-actions|feedback|conversion-intents)$/,
+  );
+  return method === "POST" && actionMatch
+    ? actionCapability[actionMatch[1] as keyof typeof actionCapability]
+    : undefined;
 }

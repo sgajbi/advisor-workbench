@@ -269,13 +269,16 @@ promote dormant labels into product ownership just because historical route file
   proves the dedicated preparation-packet route, treats already acknowledged source actions as
   replay evidence on repeated runs, and captures `advisory-advisor-cockpit-live.png`.
 - Lotus Idea opportunity triage is implemented on `/recommendations?mode=opportunities` through
-  Gateway Idea endpoints. Workbench reads `GET /api/v1/ideas/review-queues/advisor` with the active
-  portfolio forwarded as caller entitlement scope, renders Idea-owned rank, score, priority,
+  Gateway Idea endpoints. Workbench reads `GET /api/v1/ideas/review-queues/advisor`; its BFF derives
+  the Idea subject, role, route capability, and portfolio entitlement server-side and discards any
+  browser-supplied Idea authority headers. It renders Idea-owned rank, score, priority,
   review posture, source-signal ids, reason codes, durable-storage posture, policy version, and
   `supportedFeaturePromoted=false`, and links to `GET /api/v1/ideas/candidates/{candidate_id}` for
   source-safe detail. The detail panel records typed review actions, feedback, and bounded conversion
   intents through `POST /api/v1/ideas/candidates/{candidate_id}/review-actions`, `/feedback`, and
-  `/conversion-intents`, respectively, with Workbench BFF caller scope and idempotency. These are
+  `/conversion-intents`, respectively, with server-derived Workbench BFF authority and idempotency.
+  A transient failure can retry only with the exact original action payload and idempotency key.
+  These are
   source-owned audit records: they do not create a proposal, grant downstream authority, or promote
   Lotus Idea as a supported feature before canonical browser proof, data-product certification, and
   `lotus-idea` supported-feature evidence exist.
