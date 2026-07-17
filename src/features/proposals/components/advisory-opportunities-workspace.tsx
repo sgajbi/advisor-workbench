@@ -118,18 +118,36 @@ export default function AdvisoryOpportunitiesWorkspace({
           portfolioId={portfolioId}
           selectedCandidateId={selectedCandidate}
           onActionRecorded={async () => {
-            await Promise.all([
-              queryClient.invalidateQueries({
-                queryKey: ["advisory-opportunities", portfolioId],
-              }),
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "advisory-opportunity-detail",
-                  portfolioId,
-                  selectedCandidate,
-                ],
-              }),
-            ]);
+            const queryKeys = [
+              ["advisory-opportunities", portfolioId],
+              [
+                "advisory-opportunity-detail",
+                portfolioId,
+                selectedCandidate,
+              ],
+            ];
+
+            try {
+              await Promise.all(
+                queryKeys.map((queryKey) =>
+                  queryClient.invalidateQueries({
+                    queryKey,
+                    refetchType: "none",
+                  }),
+                ),
+              );
+              await Promise.all(
+                queryKeys.map((queryKey) =>
+                  queryClient.refetchQueries(
+                    { queryKey, type: "active" },
+                    { throwOnError: true },
+                  ),
+                ),
+              );
+              return true;
+            } catch {
+              return false;
+            }
           }}
         />
       ) : null}
