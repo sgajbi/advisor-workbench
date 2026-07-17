@@ -495,3 +495,110 @@ or portfolio-currency net cost.
 No repo wiki change is required for this slice. It improves the composition and correctness of an
 already supported Transactions screen without changing an operator command, Gateway integration
 contract, supported-feature claim, or canonical runtime flow.
+
+## Income & Activity Review
+
+### Business job
+
+A client advisor or portfolio manager opens Income & Activity Review to understand income that
+was booked in the selected reporting window, reconcile gross income to withholding and other
+deductions, and distinguish subscriptions from withdrawals, fees, and taxes. The screen supports
+book review and meeting preparation; it does not forecast income, project liquidity, provide tax
+advice, or authorize cash movement.
+
+The reading order is:
+
+1. portfolio identity, mandate, reporting currency, and source as-of date,
+2. requested-window net income and net cash movement,
+3. gross income, withholding tax, other deductions, and net income by income type,
+4. gross inflows, gross outflows, and net cash movement by canonical activity class,
+5. current source cash weight as adjacent portfolio context,
+6. the separate Cashflow workspace when forward-looking liquidity review is required.
+
+### Current-product research
+
+Research was reviewed on 2026-07-17 from official product sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth):
+   a connected whole-portfolio experience and common portfolio language help advisors move from
+   data to action without disconnected interpretations.
+2. [Morningstar ByAllAccounts](https://www.morningstar.com/business/products/byallaccounts):
+   transaction-level detail and consolidated cashflow visibility are foundational to reliable
+   portfolio cash review.
+3. [Morningstar Direct Advisory Suite reports](https://www.morningstar.com/business/products/direct-advisory-suite/reports):
+   complex investment information should be presented clearly, interactively, and in a form that
+   supports advisor and client conversations.
+4. [Addepar sample reports](https://addepar.com/sample-reports) and
+   [Addepar investor solutions](https://addepar.com/investors): configurable multi-currency
+   reporting should connect aggregate portfolio posture to granular supporting evidence.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, calculations, forecasts, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Treat Income & Activity as a booked-record review and keep forward-looking cashflow in the
+   separate Cashflow workspace.
+2. Reconcile gross income to withholding, other deductions, and net income rather than showing a
+   single unexplained amount.
+3. Interpret Gateway activity summary amounts as positive magnitudes and derive cash direction
+   from the canonical bucket identity: `INFLOWS` add cash, while `OUTFLOWS`, `FEES`, and `TAXES`
+   reduce cash.
+4. Keep unknown activity buckets visible but unclassified and exclude them from classified net
+   cash movement rather than guessing direction.
+5. Separate gross inflows, gross outflows, and classified net movement; never gross-sum all
+   activity magnitudes into a value labelled net cashflow.
+6. Use one pure screen view model and reusable analytics modules, metric strips, tables, semantic
+   badges, and module states instead of page-specific panels.
+7. Show booking counts by source row without adding income and tax rows into one ambiguous event
+   count.
+8. Use business language and explicit reporting-currency/window context throughout.
+
+### Rejected decisions
+
+1. Sign-based direction inference: the Gateway contract returns magnitude values for canonical
+   activity buckets, including fees, taxes, and outflows.
+2. A generic `Ready` badge inferred from a non-zero event count: booking presence is not source
+   readiness or client-report readiness.
+3. Hiding gross income, withholding, or other deductions behind a net-only summary.
+4. Combining current booked income with forecast distributions or projected liquidity.
+5. Browser-authored tax advice, expected income, cash projections, next-best action, transfer,
+   payment, order, execution, settlement, or reconciliation authority.
+6. Page-specific panels and styling when the shared Workbench analytical patterns already express
+   the screen hierarchy.
+
+### Slice 1 — truthful booked income and cash movement
+
+GitHub issue #425 governs the slice. `portfolio-income-activity-view-model.ts` now owns income
+reconciliation and canonical cash-direction semantics. The record header reports net income, net
+cash movement, and reporting currency without double-counting tax rows as events. The rebuilt
+workspace composes shared analytical patterns for a gross-to-net income table and a signed
+cash-movement table, carries unknown buckets as explicit unclassified evidence, and distinguishes
+booked records from the forward-looking Cashflow workflow.
+
+The slice also removed the unused one-off Income and Activity panels, their test-only exports,
+dead chart helpers, and obsolete CSS. Populated visual review exposed a reusable metric-strip
+nesting defect when metric cards were wrapped by tooltips; the shared component and its regression
+coverage were corrected for every consumer. Cross-screen narrow-navigation and reporting-source
+posture findings are tracked separately in #426 and #427.
+
+### Validation record
+
+1. Focused income/activity view-model, workspace, record-header, record-screen, chart-regression,
+   and shared metric-strip coverage passed 23 tests; TypeScript, lint, and `git diff --check`
+   passed before full-gate execution.
+2. The populated Portfolio Playwright Income flow passed against `PB_SG_GLOBAL_BAL_001`, proving
+   gross-to-net income and signed canonical cash movement, including `-25,356.75 USD` classified
+   net movement.
+3. Governed canonical validation passed Gateway, Portfolio, Performance, and Manage readiness but
+   stopped at Report readiness with HTTP 502. Fresh evidence confirms the existing lotus-report
+   #140 schema-migration defect. Diagnostic captures are therefore not demo-ready evidence.
+4. Full local, PR, merge-gate, and exact-main evidence remains pending before this ledger entry can
+   be hardened.
+
+### Publication decision
+
+No repo wiki change is required for this slice. It corrects and composes an already supported
+Income screen without changing a Gateway contract, supported-feature claim, operator command, or
+canonical runtime flow. The repository engineering context records the reusable activity-direction
+rule; #426 and #427 preserve the cross-screen follow-up work.
