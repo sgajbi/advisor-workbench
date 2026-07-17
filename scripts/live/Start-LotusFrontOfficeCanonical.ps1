@@ -65,10 +65,14 @@ if ($RequireMainlineSources) {
   if ($localAppSet.Count -gt 0) {
     throw "RequireMainlineSources cannot be combined with LocalApps; local-app evidence is branch-local by design."
   }
-  New-Item -ItemType Directory -Path $canonicalEvidenceRoot -Force | Out-Null
+  $mainlineProvenanceRunId = [guid]::NewGuid().ToString("N")
+  $mainlineProvenanceRoot = Join-Path `
+    ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::LocalApplicationData)) `
+    "Lotus\\canonical-front-office\\mainline-source-provenance\\$mainlineProvenanceRunId"
+  New-Item -ItemType Directory -Path $mainlineProvenanceRoot -Force | Out-Null
   $provenanceScript = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
-  $mainlineSourcePreflightPath = Join-Path $canonicalEvidenceRoot "mainline-source-provenance.json"
-  $mainlineSourceRuntimePath = Join-Path $canonicalEvidenceRoot "mainline-source-provenance-runtime.json"
+  $mainlineSourcePreflightPath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance.json"
+  $mainlineSourceRuntimePath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance-runtime.json"
   & node $provenanceScript --projects-root $ProjectsRoot --output $mainlineSourcePreflightPath
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical mainline source provenance preflight failed. No Docker build, seed, or validation was started."
