@@ -71,7 +71,7 @@ describe("portfolio record screen view model", () => {
     ).toEqual([
       { label: "Portfolio Currency", value: "USD" },
       { label: "Latest Booking", value: "10 May 2026" },
-      { label: "Ledger Entries", value: "412" },
+      { label: "30D Entries", value: "412" },
     ]);
 
     expect(
