@@ -149,7 +149,7 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openAllocationPortfolio(page, request);
     test.skip(!session.available, 'Portfolio allocation upstream unavailable in standalone smoke environment.');
 
-    await expect(page.getByText('Portfolio exposure')).toBeVisible();
+    await expect(page.getByText('Portfolio exposure', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
     await expect(page.getByText('Exposure Views')).toBeVisible();
     await expect(page.getByText('Target allocation', { exact: true })).toHaveCount(0);
@@ -168,13 +168,20 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
 
     const lookThroughToggle = page.getByRole('button', { name: /^Look-through off$/i });
-    if (await lookThroughToggle.isEnabled().catch(() => false)) {
+    if ((await lookThroughToggle.count()) > 0) {
+      await expect(lookThroughToggle).toBeEnabled();
       await lookThroughToggle.click();
-      await expect(page.getByText(/Expanded exposure$/i)).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Look-through on$/i })).toContainText(
+        'Expanded exposure'
+      );
       await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
       await expect(
         page.getByText(/Expanded exposure contributors require source-backed look-through detail/i)
       ).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole('button', { name: /^Look-through unavailable for current portfolio snapshot$/i })
+      ).toBeDisabled();
     }
   });
 });

@@ -219,9 +219,16 @@ Workbench does not claim an expanded contributor drill-down.
 
 1. Focused allocation, record-screen, holdings-grid, and Portfolio view-model coverage: 33 tests
    passed on 2026-07-17.
-2. Workbench lint and TypeScript validation passed after the implementation slice.
-3. Full repository and populated canonical browser validation remain required before merge; the
-   codebase review ledger retains `In Review` status until that evidence is complete.
+2. Full `make check` passed on 2026-07-17: 285 test files and 1,225 tests passed with 90.82%
+   statement coverage, followed by clean lint, TypeScript validation, and a successful production
+   build.
+3. The populated Playwright smoke pack passed all three Portfolio tests against
+   `PB_SG_GLOBAL_BAL_001`. Allocation proof covered keyboard selection of a ranked direct exposure,
+   the contributing-holdings result, clear-filter restoration, and the source-backed unavailable
+   look-through state. No demo-ready screenshot was published because this run was implementation
+   validation rather than a full canonical platform certification.
+4. The codebase review ledger retains `In Review` status until the issue-backed pull request is
+   merged and GitHub checks provide closure evidence.
 
 ### Publication decision
 
