@@ -328,6 +328,41 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     expect(screen.getByText("US_TECH · 100 USD")).toBeInTheDocument();
     expect(screen.queryByText("SG_BOND · 200 SGD")).not.toBeInTheDocument();
   });
+
+  it("keeps unavailable cash and activity detail visibly partial", () => {
+    const workspace = buildWorkspace();
+    workspace.cash_balances = [];
+    workspace.recent_transactions = [];
+    workspace.record_data_availability = {
+      positions: "ready",
+      liquidity: "unavailable",
+      transactions: "unavailable",
+    };
+
+    render(
+      <PortfolioRecordScreenClient
+        screen="positions"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+      />,
+    );
+
+    expect(screen.getByText("Holdings review partially available")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Cash-balance detail and recent holding activity are temporarily unavailable. Available source records remain visible.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Available holdings" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review USD Operating Cash" })).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Review US Technology Equity" }),
+    );
+    expect(screen.getByLabelText("Recent Activity")).toHaveTextContent(
+      "We could not load recent booked activity for this holding.",
+    );
+  });
 });
 
 function buildWorkspace(): PortfolioWorkspace {

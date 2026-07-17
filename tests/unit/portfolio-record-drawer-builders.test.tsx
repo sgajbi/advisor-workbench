@@ -77,7 +77,7 @@ describe("portfolio record drawer builders", () => {
     render(<div>{drawer.tabs.find((tab) => tab.key === "related-transactions")?.content}</div>);
 
     expect(
-      screen.getByText("We could not load related transactions for this holding.")
+      screen.getByText("We could not load recent booked activity for this holding.")
     ).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBookedHoldingsInventory,
+  buildPositionsReviewAvailability,
   filterRecentTransactionsForHolding,
 } from "../../src/apps/portfolio/portfolio-booked-holdings-view-model";
 
@@ -92,5 +93,31 @@ describe("portfolio booked holdings view model", () => {
         (transaction) => transaction.transaction_id,
       ),
     ).toEqual(["TX_SECURITY", "TX_INSTRUMENT"]);
+  });
+
+  it("keeps missing detailed slices explicit without hiding available holdings", () => {
+    expect(
+      buildPositionsReviewAvailability({
+        positions: "ready",
+        liquidity: "unavailable",
+        transactions: "unavailable",
+      }),
+    ).toEqual({
+      inventoryComplete: false,
+      activityAvailable: false,
+      partialState: {
+        title: "Holdings review partially available",
+        body:
+          "Cash-balance detail and recent holding activity are temporarily unavailable. Available source records remain visible.",
+        hint:
+          "Portfolio totals above remain available from the source summary; the holdings inventory below is partial.",
+      },
+    });
+
+    expect(buildPositionsReviewAvailability()).toEqual({
+      inventoryComplete: true,
+      activityAvailable: true,
+      partialState: null,
+    });
   });
 });
