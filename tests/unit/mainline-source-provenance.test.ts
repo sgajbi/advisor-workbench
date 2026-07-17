@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CANONICAL_REPOSITORIES, buildMainlineSourceManifest, evaluateRepository, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
+import { CANONICAL_REPOSITORIES, bindMainlineSourceManifestToRuntime, buildMainlineSourceManifest, evaluateRepository, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
 
 function gitFixture(values: Record<string, string>) {
   return (_path: string, args: string[]) => values[args.join(" ")] ?? "";
@@ -33,5 +33,12 @@ describe("canonical mainline source provenance", () => {
     expect(() => validateMainlineSourceManifest({ ...validManifest, repositories: validManifest.repositories.slice(1) })).toThrow("complete canonical participant set");
     expect(() => validateMainlineSourceManifest({ ...validManifest, passed: false })).toThrow("passing canonical certification preflight");
     expect(CANONICAL_REPOSITORIES).toContain("lotus-platform");
+  });
+
+  it("binds the Idea runtime version to the passing source manifest", () => {
+    const manifest = buildMainlineSourceManifest("C:/projects", gitFixture({ "fetch origin --prune": "", "status --porcelain": "", "rev-parse HEAD": "abc", "rev-parse refs/remotes/origin/main": "abc", "branch --show-current": "main" }));
+    expect(bindMainlineSourceManifestToRuntime(manifest, { repository: "lotus-idea", commitSha: "abc", branch: "main" })).toMatchObject({ repository: "lotus-idea", expectedMainSha: "abc" });
+    expect(() => bindMainlineSourceManifestToRuntime(manifest, { repository: "lotus-idea", commitSha: "branch-built", branch: "main" })).toThrow("Runtime provenance does not match");
+    expect(() => bindMainlineSourceManifestToRuntime(manifest, { repository: "lotus-idea", commitSha: "abc", branch: "feature/proof" })).toThrow("Runtime provenance does not match");
   });
 });

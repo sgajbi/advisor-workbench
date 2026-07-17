@@ -105,7 +105,10 @@ concurrency group.
 - RFC or mainline certification runs must invoke the canonical startup script with
   `-RequireMainlineSources`. The preflight writes a source-safe provenance manifest and fails
   before Docker, seeding, or screenshots when any canonical participant is dirty or not exactly at
-  `origin/main`. Standard and `-LocalApps` runtime runs remain branch-local development evidence.
+  `origin/main`. Certification startup forces image builds and container recreation, compares
+  preflight and post-start source manifests, and binds Lotus Idea runtime `/version` provenance
+  before recording the mainline-source posture. Standard and `-LocalApps` runtime runs remain
+  branch-local development evidence.
 - Lotus Idea capacity integration proof must use Idea-owned seed and workload automation after Idea
   and Advise readiness. The validator matches Idea `/version` to the checked-out commit and branch,
   requires the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace, and accepts exactly one

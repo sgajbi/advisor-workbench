@@ -350,9 +350,14 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain("[switch]$RequireMainlineSources");
     expect(startScript).toContain("mainline-source-provenance.mjs");
     expect(startScript).toContain("No Docker build, seed, or validation was started");
+    expect(startScript).toContain("docker compose up -d --build --force-recreate");
+    expect(startScript).toContain("mainline-source-provenance-runtime.json");
+    expect(startScript).toContain("Get-FileHash -Algorithm SHA256");
     expect(startScript).toContain("MainlineSourceProvenancePath");
     expect(validationScript).toContain("--mainline-source-provenance");
     expect(browserValidator).toContain("mainlineSourceProvenance");
+    expect(browserValidator).toContain("bindMainlineSourceManifestToRuntime");
+    expect(browserValidator).toContain("repository: \"lotus-idea\"");
   });
 
   it("delegates isolated Idea capacity seeding without exposing credentials or client state", () => {
