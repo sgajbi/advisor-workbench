@@ -108,7 +108,9 @@ export function buildHoldingsRows(
 
 export function countUnpricedHoldings(positions: PortfolioPositionView[]): number {
   return positions.filter(
-    (position) => position.market_price == null || position.market_value_base == null,
+    (position) =>
+      position.market_value_base == null ||
+      (position.source_record_type !== "cash_balance" && position.market_price == null),
   ).length;
 }
 

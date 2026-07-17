@@ -44,6 +44,14 @@ vi.mock(
         </button>
         <button
           type="button"
+          onClick={() =>
+            onSelectionChange({ dimension: "asset_class", bucket: "Cash" })
+          }
+        >
+          Select Cash
+        </button>
+        <button
+          type="button"
           onClick={() => {
             onSelectionChange(null);
             onExposureModeChange?.("expanded");
@@ -114,7 +122,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     expect(screen.getByText("Sector: Technology")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "1 of 2 booked positions contribute to this direct exposure.",
+        "1 of 3 booked holdings contribute to this direct exposure.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
@@ -123,6 +131,56 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear exposure" }));
 
     expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
+  });
+
+  it("renders source cash balances as direct cash contributors", () => {
+    render(
+      <PortfolioRecordScreenClient
+        screen="allocation"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={buildWorkspace()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Select Cash" }));
+
+    expect(screen.getByText("Asset Class: Cash")).toBeInTheDocument();
+    expect(screen.getByText("USD Operating Cash")).toBeInTheDocument();
+    expect(screen.queryByText("US Technology Equity")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "1 of 3 booked holdings contribute to this direct exposure.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("resets allocation review state when the portfolio identity changes", () => {
+    const { rerender } = render(
+      <PortfolioRecordScreenClient
+        screen="allocation"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={buildWorkspace()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Select Technology" }));
+    expect(screen.getByText("Sector: Technology")).toBeInTheDocument();
+
+    const nextWorkspace = buildWorkspace();
+    nextWorkspace.portfolio.portfolio_id = "PB_SG_INCOME_002";
+    nextWorkspace.portfolio.display_name = "Income Mandate";
+    rerender(
+      <PortfolioRecordScreenClient
+        screen="allocation"
+        portfolioId="PB_SG_INCOME_002"
+        workspace={nextWorkspace}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.queryByText("Sector: Technology")).not.toBeInTheDocument();
+    expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
     expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
   });
 
@@ -192,7 +250,16 @@ function buildWorkspace(): PortfolioWorkspace {
         ],
       },
     ],
-    cash_balances: [],
+    cash_balances: [
+      {
+        security_id: "CASH_USD_1",
+        instrument_name: "USD Operating Cash",
+        currency: "USD",
+        quantity: 100,
+        market_value_base: 100,
+        weight_pct: 10,
+      },
+    ],
     top_positions: [],
     positions: [
       {

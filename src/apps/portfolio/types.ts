@@ -149,6 +149,7 @@ export type PortfolioWorkflowAction = {
 };
 
 export type PortfolioPositionView = {
+  source_record_type?: "position" | "cash_balance";
   security_id: string;
   instrument_name: string;
   asset_class: string | null;

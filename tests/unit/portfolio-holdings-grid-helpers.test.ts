@@ -70,9 +70,20 @@ describe("portfolio holdings grid helpers", () => {
 
   it("keeps valuation totals and incomplete pricing posture in pure helpers", () => {
     const rows = buildHoldingsRows(positions, "USD");
+    const sourceValuedCashBalance: PortfolioPositionView = {
+      source_record_type: "cash_balance",
+      security_id: "CASH_USD_1",
+      instrument_name: "USD Operating Cash",
+      asset_class: "Cash",
+      currency: "USD",
+      quantity: 100,
+      market_value_base: 100,
+      weight_pct: 0.01,
+    };
 
     expect(sumHoldingsMarketValue(rows)).toBe(147000);
     expect(countUnpricedHoldings(positions)).toBe(1);
+    expect(countUnpricedHoldings([...positions, sourceValuedCashBalance])).toBe(1);
   });
 
   it("builds holdings export rows from visible column policy", () => {

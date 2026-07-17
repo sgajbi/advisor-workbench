@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAllocationHoldingsBreakdown } from "../../src/apps/portfolio/portfolio-allocation-drilldown-view-model";
-import type { PortfolioPositionView } from "../../src/apps/portfolio/types";
+import type { PortfolioCashBalance, PortfolioPositionView } from "../../src/apps/portfolio/types";
 
 const positions: PortfolioPositionView[] = [
   {
@@ -28,6 +28,17 @@ const positions: PortfolioPositionView[] = [
   },
 ];
 
+const cashBalances: PortfolioCashBalance[] = [
+  {
+    security_id: "CASH_USD_1",
+    instrument_name: "USD Operating Cash",
+    currency: "USD",
+    quantity: 125,
+    market_value_base: 125,
+    weight_pct: 12.5,
+  },
+];
+
 describe("allocation holdings breakdown", () => {
   it.each([
     ["asset_class", " equities ", "EQ_US_1"],
@@ -49,7 +60,7 @@ describe("allocation holdings breakdown", () => {
       ]);
       expect(result.title).toBe("Contributing holdings");
       expect(result.description).toBe(
-        "1 of 2 booked positions contribute to this direct exposure.",
+        "1 of 2 booked holdings contribute to this direct exposure.",
       );
     },
   );
@@ -67,6 +78,47 @@ describe("allocation holdings breakdown", () => {
       title: "Booked holdings",
       state: "all",
     });
+  });
+
+  it("includes source cash balances in direct cash contributors", () => {
+    const result = buildAllocationHoldingsBreakdown({
+      positions,
+      cashBalances,
+      selection: { dimension: "asset_class", bucket: "Cash" },
+      exposureMode: "direct",
+    });
+
+    expect(result.positions).toEqual([
+      expect.objectContaining({
+        source_record_type: "cash_balance",
+        security_id: "CASH_USD_1",
+        asset_class: "Cash",
+      }),
+    ]);
+    expect(result.description).toBe(
+      "1 of 3 booked holdings contribute to this direct exposure.",
+    );
+  });
+
+  it("does not duplicate cash already present in booked positions", () => {
+    const bookedCash = {
+      source_record_type: "position" as const,
+      security_id: "CASH_USD_1",
+      instrument_name: "USD Operating Cash",
+      asset_class: "Cash",
+      currency: "USD",
+      quantity: 125,
+      market_value_base: 125,
+      weight_pct: 12.5,
+    };
+    const result = buildAllocationHoldingsBreakdown({
+      positions: [...positions, bookedCash],
+      cashBalances,
+      selection: { dimension: "asset_class", bucket: "Cash" },
+      exposureMode: "direct",
+    });
+
+    expect(result.positions).toEqual([bookedCash]);
   });
 
   it("does not reconstruct expanded look-through contributors from booked positions", () => {
