@@ -234,8 +234,11 @@ Workbench does not claim an expanded contributor drill-down.
    the contributing-holdings result, clear-filter restoration, and the source-backed unavailable
    look-through state. No demo-ready screenshot was published because this run was implementation
    validation rather than a full canonical platform certification.
-4. The codebase review ledger retains `In Review` status until the issue-backed pull request is
-   merged and GitHub checks provide closure evidence.
+4. PR #414 merged to `main` as `3fcdefee` after all feature and protected merge-gate lanes passed,
+   both review findings were resolved, and the final Codex review reported no major issues. The
+   post-merge Main Releasability Gate also passed workflow lint, lint, typecheck, coverage, build,
+   Playwright smoke, Docker build, and Dockerized local-CI parity. Issue #413 is closed and codebase
+   review item `LWB-R154` is hardened.
 
 ### Publication decision
 
