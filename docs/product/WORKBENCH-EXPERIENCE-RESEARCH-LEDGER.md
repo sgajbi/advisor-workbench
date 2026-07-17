@@ -457,11 +457,20 @@ or portfolio-currency net cost.
 
 ### Validation record
 
-1. Focused transaction helper, grid, API, drawer, record-header, and record-workspace coverage
-   passed 51 tests on 2026-07-17.
-2. TypeScript and repository lint validation passed after the implementation slice.
-3. Full coverage, production build, populated browser proof, PR review, merge-gate, and exact-main
-   releasability evidence remain required before this review item is hardened.
+1. Focused transaction helper, grid, API, drawer, record-header, record-screen, and record-workspace
+   coverage passed after implementation and browser-discovered refinements on 2026-07-17.
+2. The populated canonical Portfolio Playwright proof passed against `PB_SG_GLOBAL_BAL_001`. It
+   verified 29 entries after widening the period, `73,912.5 EUR` gross versus `80,097.93 USD` net
+   cost, transaction-id search across hidden audit columns, visible review action, detail drawer,
+   and a two-entry related booking-group drill-down.
+3. Full `make check` passed on 2026-07-17: 287 test files and 1,241 tests passed at 90.8% statement
+   coverage, followed by clean lint, TypeScript validation, and a successful production build.
+4. Strict repository-wiki parity reported zero differences. The initial governed local bring-up
+   attempt stopped on an already occupied Core Compose port; only its newly created failed
+   containers were removed, and the screen proof used the existing healthy canonical Core/Gateway
+   stack with the branch Workbench server.
+5. PR review, merge-gate, merge, and exact-main releasability evidence remain required before this
+   review item is hardened.
 
 ### Publication decision
 
