@@ -127,7 +127,7 @@ export function useReportOrderingWorkflow({
     setSubmissionError(null);
     void loadCatalogue(true);
     void loadHistory();
-  }, [loadCatalogue, loadHistory]);
+  }, [loadCatalogue, loadHistory, portfolioId]);
 
   const model = useMemo(
     () =>
