@@ -59,6 +59,32 @@ describe("PortfolioProjectedCashflowModule", () => {
     expect(screen.getByLabelText("Projection scope")).toHaveTextContent("Projection as of");
   });
 
+  it("clears a superseded seed refresh when returning to a cached horizon", async () => {
+    const pendingSeedRefresh = new Promise<PortfolioProjectedCashflowResponse | null>(() => {});
+    getPortfolioProjectedCashflow
+      .mockReturnValueOnce(pendingSeedRefresh)
+      .mockResolvedValueOnce(
+        buildResponse(buildOutlook({ projectionDays: 30, totalNetMovement: 1250 }))
+      )
+      .mockReturnValueOnce(pendingSeedRefresh);
+
+    renderModule({ initialCashflowOutlook: buildOutlook() });
+
+    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+    expect(await screen.findByText("30-day projection · USD")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "10D" }));
+    expect(await screen.findByText("Refreshing projection evidence")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Refreshing projection evidence")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("30-day projection · USD")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeEnabled();
+  });
+
   it("never relabels prior-horizon data after a failed refresh", async () => {
     getPortfolioProjectedCashflow.mockResolvedValue(null);
 
