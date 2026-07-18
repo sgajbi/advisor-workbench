@@ -123,4 +123,47 @@ describe("report ordering view model", () => {
       }),
     );
   });
+
+  it("separates directly orderable reports from evidence created by governed workflows", () => {
+    const payload = buildReportOrderingResponse();
+    const workflowFamily = structuredClone(payload.reportFamilies[0]);
+    const response = parseReportOrderingResponse({
+      ...payload,
+      reportFamilies: [
+        ...payload.reportFamilies,
+        {
+          ...workflowFamily,
+          reportFamilyId: "proof_pack",
+          businessLabel: "Pre-trade decision evidence",
+          orderingModes: [
+            {
+              modeId: "source_workflow",
+              businessLabel: "Advisory workflow",
+              description: "Created as part of an approved advisory decision.",
+              defaultOutputFormat: "json",
+              interactive: false,
+              eligibility: {
+                state: "ready",
+                reasonCode: "source_workflow_ready",
+                message: "Created from its source business workflow.",
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const configuration = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
+    const model = buildReportOrderingViewModel(response, configuration);
+
+    expect(model.eligibleFamilies.map((family) => family.reportFamilyId)).toEqual([
+      "portfolio_review",
+    ]);
+    expect(model.workflowManagedFamilies.map((family) => family.reportFamilyId)).toEqual([
+      "proof_pack",
+    ]);
+    expect(model.canSubmit).toBe(true);
+  });
 });

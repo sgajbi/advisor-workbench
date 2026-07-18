@@ -31,6 +31,7 @@ export type ReportOrderingViewModel = {
   configuration: ReportOrderingConfiguration;
   readiness: ReportOrderingReadiness;
   eligibleFamilies: ReportFamily[];
+  workflowManagedFamilies: ReportFamily[];
   outputChoices: Array<{
     id: "json" | "pdf";
     label: string;
@@ -91,7 +92,10 @@ export function buildReportOrderingViewModel(
   configuration: ReportOrderingConfiguration,
 ): ReportOrderingViewModel {
   const eligibleFamilies = response.reportFamilies.filter(
-    (family) => family.eligibility.state === "ready",
+    (family) => family.eligibility.state === "ready" && firstOrderableMode(family),
+  );
+  const workflowManagedFamilies = response.reportFamilies.filter(
+    (family) => family.eligibility.state === "ready" && !firstOrderableMode(family),
   );
   const family =
     eligibleFamilies.find((candidate) => candidate.reportFamilyId === configuration.familyId) ??
@@ -112,6 +116,7 @@ export function buildReportOrderingViewModel(
     configuration,
     readiness,
     eligibleFamilies,
+    workflowManagedFamilies,
     outputChoices: (family?.outputFormats ?? []).map(toOutputChoice),
     sectionChoices,
     audienceLabel: family ? audienceLabel(family.audienceRoles) : "No eligible audience",
