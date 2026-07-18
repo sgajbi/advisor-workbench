@@ -81,7 +81,16 @@ Workbench local environment:
 
 ```txt
 BFF_BASE_URL=http://gateway.dev.lotus
+LOTUS_ENVIRONMENT=dev
+WORKBENCH_IDEA_AUTH_MODE=development_configured
 ```
+
+The last two values are a local-development fixture posture for Lotus Idea BFF routes, not an
+identity-provider integration. The startup script injects them for both Docker and
+`-LocalApps workbench` runs. They are rejected outside `dev`, `development`, `local`, or `test`;
+an unset environment and all other environments require an authenticated principal and the BFF returns `401` before calling
+Gateway until the session/claims resolver tracked in platform issue #563 and Workbench issue #436
+is delivered.
 
 For `-LocalApps workbench`, this value must win over any stale `.env.local` entry. If Workbench
 BFF routes return `500` and the local dev log shows `ECONNREFUSED` against `127.0.0.1:8111` or

@@ -158,9 +158,11 @@ Current repository posture:
     delivery-summary and delivery-event posture, and does not generate narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
-    renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF derives the
-    Idea subject, role, route capability, and portfolio entitlement server-side rather than trusting
-    browser headers. The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
+    renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF strips browser
+    Idea authority headers and applies configured subject, role, route capability, and portfolio
+    entitlement only in explicitly development-scoped `dev`/`development`/`local`/`test` runtime.
+    It fails closed before Gateway for an unset environment and every other environment until authenticated session principal
+    resolution is available (platform #563, Workbench #436). The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
     portfolio entitlement is available; it renders score, review posture, source-signal ids, reason codes,
     durable-storage posture, policy version, and
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail

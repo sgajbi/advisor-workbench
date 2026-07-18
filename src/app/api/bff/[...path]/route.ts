@@ -16,10 +16,26 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     headers.set(key, value);
   });
   applyDefaultCallerContextHeaders(headers);
-  applyIdeaRouteCallerContextHeaders(headers, {
+  const ideaAuthority = applyIdeaRouteCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
   });
+  if (ideaAuthority.status === "rejected") {
+    return NextResponse.json(
+      {
+        code:
+          ideaAuthority.reason === "authenticated_principal_required"
+            ? "idea_authenticated_principal_required"
+            : "idea_authority_configuration_rejected",
+        status: "rejected",
+      },
+      {
+        status:
+          ideaAuthority.reason === "authenticated_principal_required" ? 401 : 500,
+        headers: { "cache-control": "no-store" },
+      },
+    );
+  }
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
   const response = await fetch(url, {

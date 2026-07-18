@@ -15,6 +15,8 @@ describe("BFF proxy route", () => {
     "WORKBENCH_IDEA_CALLER_SUBJECT",
     "WORKBENCH_IDEA_CALLER_ROLES",
     "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
+    "WORKBENCH_IDEA_AUTH_MODE",
+    "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
     callerContextEnvKeys.map((key) => [key, process.env[key]])
@@ -26,6 +28,7 @@ describe("BFF proxy route", () => {
     for (const key of callerContextEnvKeys) {
       delete process.env[key];
     }
+    process.env.LOTUS_ENVIRONMENT = "dev";
   });
 
   afterEach(() => {
@@ -168,6 +171,77 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
+  });
+
+  it("requires an authenticated Idea principal outside development before proxying", async () => {
+    process.env.LOTUS_ENVIRONMENT = "uat";
+    const fetchMock = vi.mocked(fetch);
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/review-queues/advisor",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "ideas", "review-queues", "advisor"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_authenticated_principal_required",
+      status: "rejected",
+    });
+  });
+
+  it("fails closed when the Idea runtime environment is unconfigured", async () => {
+    delete process.env.LOTUS_ENVIRONMENT;
+    const fetchMock = vi.mocked(fetch);
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/review-queues/advisor",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "ideas", "review-queues", "advisor"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_authenticated_principal_required",
+      status: "rejected",
+    });
+  });
+
+  it("rejects development-configured Idea authority outside development before proxying", async () => {
+    process.env.LOTUS_ENVIRONMENT = "production";
+    process.env.WORKBENCH_IDEA_AUTH_MODE = "development_configured";
+    const fetchMock = vi.mocked(fetch);
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/review-queues/advisor",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "ideas", "review-queues", "advisor"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_authority_configuration_rejected",
+      status: "rejected",
+    });
   });
 
   it("preserves binary upstream responses for archived document downloads", async () => {
