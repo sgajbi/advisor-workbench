@@ -9,6 +9,7 @@ export type PortfolioScreenNavigationKey =
   | "risk"
   | "proposal"
   | "advisory"
+  | "reports"
   | "manage";
 
 export type PortfolioScreenNavigationItem = {
@@ -33,6 +34,12 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
     label: "Advisory",
     detail: "Advisor brief and recommendations",
     href: "/recommendations",
+  },
+  {
+    key: "reports",
+    label: "Reports",
+    detail: "Order, monitor, and retrieve",
+    href: "/reports",
   },
 ];
 
