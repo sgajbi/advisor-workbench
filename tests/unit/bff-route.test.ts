@@ -220,6 +220,28 @@ describe("BFF proxy route", () => {
     });
   });
 
+  it("rejects an unallowlisted Idea route before proxying in development", async () => {
+    const fetchMock = vi.mocked(fetch);
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/unsupported-route",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "ideas", "unsupported-route"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_route_not_supported",
+      status: "rejected",
+    });
+  });
+
   it("rejects development-configured Idea authority outside development before proxying", async () => {
     process.env.LOTUS_ENVIRONMENT = "production";
     process.env.WORKBENCH_IDEA_AUTH_MODE = "development_configured";

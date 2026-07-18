@@ -273,7 +273,9 @@ promote dormant labels into product ownership just because historical route file
   browser-supplied Idea authority headers and applies its configured subject, role, route capability,
   and portfolio entitlement only in the explicit development fixture mode (`dev`, `development`,
   `local`, or `test`). An unset or other environment requires an authenticated session principal and fails
-  closed before Gateway until that resolver is implemented. It is limited to canonical `PB_SG_GLOBAL_BAL_001` until
+  closed before Gateway until that resolver is implemented. Only allowlisted queue, candidate-detail,
+  review-action, feedback, and conversion-intent routes can traverse the BFF; other Idea paths are
+  rejected before Gateway. It is limited to canonical `PB_SG_GLOBAL_BAL_001` until
   authenticated portfolio entitlement is available. It renders Idea-owned rank, score, priority,
   review posture, source-signal ids, reason codes, durable-storage posture, policy version, and
   `supportedFeaturePromoted=false`, and links to `GET /api/v1/ideas/candidates/{candidate_id}` for

@@ -162,7 +162,8 @@ Current repository posture:
     Idea authority headers and applies configured subject, role, route capability, and portfolio
     entitlement only in explicitly development-scoped `dev`/`development`/`local`/`test` runtime.
     It fails closed before Gateway for an unset environment and every other environment until authenticated session principal
-    resolution is available (platform #563, Workbench #436). The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
+    resolution is available (platform #563, Workbench #436), and it rejects unallowlisted
+    `/api/v1/ideas/*` paths before Gateway in every environment. The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
     portfolio entitlement is available; it renders score, review posture, source-signal ids, reason codes,
     durable-storage posture, policy version, and
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
