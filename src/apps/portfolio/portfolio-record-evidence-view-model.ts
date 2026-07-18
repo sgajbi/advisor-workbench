@@ -1,4 +1,4 @@
-import { formatCount, formatDate, formatStatus } from "./formatters";
+import { formatCount, formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
 import type { PortfolioWorkspace } from "./types";
 
@@ -197,16 +197,33 @@ function buildCashflowSourcePosture(
     cashflow?.upcoming_points.filter((point) => point.net_cashflow_base > 0).length ?? 0;
   const negativeCount =
     cashflow?.upcoming_points.filter((point) => point.net_cashflow_base < 0).length ?? 0;
+  const aggregateOnlyMovement = Boolean(
+    cashflow && pointCount === 0 && cashflow.total_net_cashflow_base !== 0
+  );
+  const aggregateDirection =
+    cashflow && cashflow.total_net_cashflow_base < 0 ? "outflow" : "inflow";
+  const aggregateAmount = cashflow
+    ? formatCurrency(
+        Math.abs(cashflow.total_net_cashflow_base),
+        workspace.portfolio.base_currency
+      )
+    : null;
 
   return [
     {
       label: "Projection Coverage",
       source: "Portfolio records",
       detail: cashflow
-        ? `${formatCount(pointCount, "projected point")} through ${formatDate(cashflow.range_end_date)}`
+        ? aggregateOnlyMovement
+          ? `Net projected movement available through ${formatDate(
+              cashflow.range_end_date
+            )}; dated projection points unavailable`
+          : `${formatCount(pointCount, "projected point")} through ${formatDate(
+              cashflow.range_end_date
+            )}`
         : "No projected cashflow outlook returned for this portfolio",
-      tone: cashflow ? "success" : "warn",
-      status: cashflow ? "Available" : "Unavailable",
+      tone: aggregateOnlyMovement ? "warn" : cashflow ? "success" : "warn",
+      status: aggregateOnlyMovement ? "Partial" : cashflow ? "Available" : "Unavailable",
     },
     {
       label: "Projection Basis",
@@ -216,10 +233,19 @@ function buildCashflowSourcePosture(
           : "Booked events only"
         : "Not provided",
       detail: cashflow
-        ? `${formatCount(positiveCount, "inflow")} and ${formatCount(negativeCount, "outflow")} in the returned forecast`
+        ? aggregateOnlyMovement
+          ? `Net projected ${aggregateDirection} of ${aggregateAmount}; dated inflow and outflow counts unavailable`
+          : `${formatCount(positiveCount, "inflow")} and ${formatCount(
+              negativeCount,
+              "outflow"
+            )} in the returned forecast`
         : "Horizon cannot be displayed until the source outlook is available",
-      tone: cashflow ? "success" : "default",
-      status: cashflow ? `${cashflow.projection_days} days` : "N/A",
+      tone: aggregateOnlyMovement ? "warn" : cashflow ? "success" : "default",
+      status: aggregateOnlyMovement
+        ? "Aggregate only"
+        : cashflow
+          ? `${cashflow.projection_days} days`
+          : "N/A",
     },
     buildReportingSourcePosture(workspace, reportingReady),
   ];

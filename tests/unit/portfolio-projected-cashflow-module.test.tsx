@@ -20,14 +20,23 @@ describe("PortfolioProjectedCashflowModule", () => {
   });
 
   it("selects an explicit horizon and binds the rendered result to the returned projection", async () => {
-    getPortfolioProjectedCashflow.mockResolvedValue(
-      buildResponse(buildOutlook({ projectionDays: 30, totalNetMovement: 1250 }))
-    );
+    getPortfolioProjectedCashflow
+      .mockResolvedValueOnce(buildResponse(buildOutlook()))
+      .mockResolvedValueOnce(
+        buildResponse(buildOutlook({ projectionDays: 30, totalNetMovement: 1250 }))
+      );
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
     expect(screen.getByRole("tab", { name: "10D" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("10-day projection · USD")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+        asOfDate: "2026-03-28",
+        horizonDays: 10,
+        includeProjected: true,
+      });
+    });
 
     fireEvent.click(screen.getByRole("tab", { name: "30D" }));
 
@@ -106,6 +115,33 @@ describe("PortfolioProjectedCashflowModule", () => {
     fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
     expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
     expect(screen.queryByText("No projected cash movement")).not.toBeInTheDocument();
+  });
+
+  it("hydrates support evidence for the server-seeded horizon", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue(
+      buildResponse(null, {
+        warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
+        partialFailures: [
+          {
+            source_service: "lotus-core",
+            error_code: "PORTFOLIO_CASHFLOW_UNAVAILABLE",
+            detail: "endpoint projection is unavailable",
+          },
+        ],
+      })
+    );
+
+    renderModule({ initialCashflowOutlook: buildOutlook() });
+
+    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(await screen.findByText("Projection available with limitations")).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
+    expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
+    expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+      includeProjected: true,
+    });
   });
 
   it("forces a fresh request when retrying an unavailable envelope", async () => {
