@@ -46,7 +46,7 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     detail: "Operating actions",
     title: "Advisor Cockpit",
     description:
-      "Gateway-backed advisor action items, supportability, evidence, and review posture.",
+      "Advisor priorities, preparation evidence, operating boundaries, and review posture.",
     primaryDecision:
       "Which source-backed action needs advisor attention first?",
     nextAction:
