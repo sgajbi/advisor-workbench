@@ -151,7 +151,7 @@ describe("AdvisorCockpitWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Advisor cockpit counts")).toHaveTextContent(
-      /Visible actions\s*1/,
+      /Actions in scope\s*1/,
     );
     expect(
       screen.getAllByText("Review policy evidence before client discussion."),
@@ -224,6 +224,33 @@ describe("AdvisorCockpitWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps source actions partial when worklist details are unavailable", async () => {
+    listAdvisorCockpitActionsMock.mockResolvedValueOnce({
+      items: [],
+      total_count: 1,
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findAllByText("Action details unavailable"),
+    ).toHaveLength(2);
+    expect(screen.getByLabelText("Advisor cockpit counts")).toHaveTextContent(
+      /Actions in scope\s*1/,
+    );
+    expect(
+      screen.getByText(
+        "1 advisor action is reported in scope, but its review details are not available.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No open actions")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Acknowledge review" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not render fallback actions when the Gateway cockpit route fails", async () => {
     listAdvisorCockpitActionsMock.mockRejectedValueOnce(
       new Error("gateway unavailable"),
@@ -239,6 +266,8 @@ describe("AdvisorCockpitWorkspace", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Advisor cockpit unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Worklist unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("No open actions")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Policy review required"),
     ).not.toBeInTheDocument();
