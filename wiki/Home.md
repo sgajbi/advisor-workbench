@@ -12,12 +12,17 @@
   [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
 - Business-facing Portfolio screen flow:
   [Portfolio Review Workflow](Portfolio-Review-Workflow)
+- Source-backed relationship-manager book flow:
+  [Advisor Book Workflow](Advisor-Book-Workflow)
 
 ## Current phase
 
 - primary product client for Lotus
 - Portfolio and Performance are the most mature active front-office surfaces
 - `/data-products` provides gateway-backed domain-product discovery and live trust posture
+- `/book` provides Gateway-backed own-book portfolio membership and task-preserving portfolio
+  context switching; richer team, delegate, supervisor, household, AUM, and attention scope is not
+  claimed
 - `/workbench/{portfolioId}` is the Manage workspace, with focused Gateway-backed sub-surfaces for
   mandate command center, rebalance waves, construction alternatives, portfolio memory,
   PM copilot workflow-pack requests, outcome reviews, proof-pack evidence with governed PM memo
@@ -51,6 +56,7 @@
 
 - [Overview](Overview)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
+- [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)
