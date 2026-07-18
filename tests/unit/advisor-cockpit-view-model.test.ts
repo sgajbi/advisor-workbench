@@ -179,6 +179,37 @@ describe("advisor cockpit view model", () => {
     expect(model.primaryDecision).toBe("No advisor actions require review");
   });
 
+  it("keeps an empty worklist partial when the source total is not reported", () => {
+    const model = buildAdvisorCockpitModel({
+      actionPage: { items: [] },
+    });
+
+    expect(model.actionCount).toBeNull();
+    expect(model.actionPosture).toBe("details-unavailable");
+    expect(model.metrics[0]).toMatchObject({
+      label: "Actions in scope",
+      value: "Not reported",
+      tone: "default",
+    });
+    expect(model.recommendedAction).toBe(
+      "The action scope is not reported. Refresh or verify source readiness before client discussion.",
+    );
+  });
+
+  it("keeps loaded actions actionable when the full source total is not reported", () => {
+    const model = buildAdvisorCockpitModel({
+      actionPage: { items: actionPage.items },
+    });
+
+    expect(model.actionCount).toBeNull();
+    expect(model.actionPosture).toBe("actionable");
+    expect(model.metrics[0]).toMatchObject({
+      label: "Actions in scope",
+      value: "At least 1",
+      tone: "warn",
+    });
+  });
+
   it("does not offer local acknowledgement for external-owner actions", () => {
     const externalOwnerPage: AdvisorCockpitActionPageData = {
       items: [
