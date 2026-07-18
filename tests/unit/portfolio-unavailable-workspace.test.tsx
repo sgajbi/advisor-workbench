@@ -10,15 +10,16 @@ describe("PortfolioUnavailableWorkspace", () => {
     render(<PortfolioUnavailableWorkspace />);
 
     const selector = screen.getByRole("navigation", { name: "Portfolio selector" });
-    expect(screen.getByRole("heading", { name: "Portfolios" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selection unavailable" })).toBeInTheDocument();
     expect(selector.closest(".portfolio-selector-rail")).toBeTruthy();
-    expect(screen.getByText("Portfolio catalog unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio context could not be confirmed")).toBeInTheDocument();
     expect(
-      screen.getByText("Client portfolio selection will return when the gateway catalog is available.")
+      screen.getByText(/A global list is not substituted when book scope is unavailable/i)
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open My book" })).toHaveAttribute("href", "/book");
     expect(screen.getByRole("status")).toHaveClass("portfolio-selector-empty");
-    expect(screen.getByText("Portfolio unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Core feed unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio context unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Source unavailable")).toBeInTheDocument();
 
     for (const area of FALLBACK_WORK_AREAS) {
       const card = screen.getByRole("heading", { name: area.title }).closest(".section-block");
@@ -31,7 +32,7 @@ describe("PortfolioUnavailableWorkspace", () => {
     const serviceState = screen.getByRole("heading", { name: "Service State" }).closest(".section-block");
     expect(serviceState).toBeTruthy();
     const stateScope = within(serviceState as HTMLElement);
-    expect(stateScope.getByText("Portfolio catalog")).toBeInTheDocument();
+    expect(stateScope.getByText("Portfolio context")).toBeInTheDocument();
     expect(stateScope.getByText("Unavailable")).toBeInTheDocument();
     expect(stateScope.getByText("Performance area")).toBeInTheDocument();
     expect(stateScope.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
