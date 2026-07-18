@@ -57,7 +57,7 @@ export default function PortfolioProjectedCashflowPanel({
           ) : null}
         </div>
       </div>
-      <div className="portfolio-cashflow-chart">
+      <div className="portfolio-cashflow-chart" hidden={!chartModel.chartPoints.length}>
         <svg
           viewBox="0 0 320 196"
           className="portfolio-timeseries-chart-svg"
@@ -124,7 +124,11 @@ export default function PortfolioProjectedCashflowPanel({
           ) : null}
         </svg>
       </div>
-      <div className="portfolio-cashflow-forecast-mix" aria-label="Projected cashflow mix">
+      <div
+        className="portfolio-cashflow-forecast-mix"
+        aria-label="Projected cashflow mix"
+        hidden={!chartModel.chartPoints.length}
+      >
         <span>{`${chartModel.positiveFlowCount} inflow${chartModel.positiveFlowCount === 1 ? "" : "s"}`}</span>
         <span>{`${chartModel.negativeFlowCount} outflow${chartModel.negativeFlowCount === 1 ? "" : "s"}`}</span>
         <span>{`Through ${formatDate(cashflowOutlook.range_end_date)}`}</span>

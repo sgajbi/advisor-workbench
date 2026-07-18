@@ -123,6 +123,20 @@ describe("PortfolioProjectedCashflowModule", () => {
     expect(screen.queryByText(/liquidity/i)).not.toBeInTheDocument();
   });
 
+  it("keeps an aggregate movement visible when no dated schedule is returned", () => {
+    renderModule({
+      initialCashflowOutlook: buildOutlook({
+        totalNetMovement: 750,
+        pointMovements: [],
+      }),
+    });
+
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("750 USD");
+    expect(screen.getByText("Dated movement schedule unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("No projected cash movement")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+  });
+
   it("renders only movement dates in the table while disclosing full export coverage", () => {
     renderModule({
       initialCashflowOutlook: buildOutlook({

@@ -58,12 +58,13 @@ export default function PortfolioProjectedCashflowModule({
   const snapshot = cashflow.selectedSnapshot;
   const outlook = snapshot?.outlook ?? null;
   const movementRows = outlook ? buildCashflowMovementRows(outlook) : [];
+  const hasDatedSchedule = Boolean(outlook?.upcoming_points.length);
   const subtitle = snapshot
     ? `${buildCashflowResultLabel(snapshot)} · ${baseCurrency}`
     : `${cashflow.selectedHorizonDays}-day projection · ${baseCurrency}`;
 
   const exportCashflow = () => {
-    if (!snapshot || cashflow.loading) {
+    if (!snapshot || cashflow.loading || !hasDatedSchedule) {
       return;
     }
 
@@ -105,7 +106,7 @@ export default function PortfolioProjectedCashflowModule({
               type="button"
               className="portfolio-inline-action"
               onClick={exportCashflow}
-              disabled={!snapshot || cashflow.loading}
+              disabled={!snapshot || cashflow.loading || !hasDatedSchedule}
             >
               Export
             </button>
@@ -176,7 +177,15 @@ export default function PortfolioProjectedCashflowModule({
                 cashflowOutlook={outlook}
                 baseCurrency={baseCurrency}
               />
-              {expanded ? (
+              {!hasDatedSchedule ? (
+                <PortfolioModuleState
+                  variant="status"
+                  state="partial"
+                  title="Dated movement schedule unavailable"
+                  body="The source returned a net projected movement for this horizon without dated movement points."
+                  hint="The aggregate is shown above. Export is unavailable until dated points are returned."
+                />
+              ) : expanded ? (
                 <>
                   <p className="portfolio-cashflow-table-note">
                     Showing {movementRows.length} movement date
