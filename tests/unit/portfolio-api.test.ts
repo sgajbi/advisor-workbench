@@ -1238,6 +1238,50 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("include_projected=true");
   });
 
+  it("bypasses an unavailable projected-cashflow envelope when refresh is requested", async () => {
+    const unavailable = {
+      correlation_id: "corr-unavailable",
+      contract_version: "v1",
+      portfolio_id: "MANUAL_PB_USD_001",
+      as_of_date: "2026-03-28",
+      cashflow_outlook: null,
+      warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
+      partial_failures: [],
+    };
+    const available = {
+      ...unavailable,
+      correlation_id: "corr-available",
+      cashflow_outlook: {
+        as_of_date: "2026-03-28",
+        range_end_date: "2026-04-07",
+        total_net_cashflow_base: 500,
+        projection_days: 10,
+        include_projected: true,
+        upcoming_points: [],
+      },
+      warnings: [],
+    };
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(unavailable))
+      .mockResolvedValueOnce(jsonResponse(available));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const first = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+    });
+    const refreshed = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+      forceRefresh: true,
+    });
+
+    expect(first?.cashflow_outlook).toBeNull();
+    expect(refreshed?.correlation_id).toBe("corr-available");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("passes reporting currency through to detailed liquidity requests", async () => {
     vi.stubGlobal(
       "fetch",
