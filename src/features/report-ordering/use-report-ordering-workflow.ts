@@ -18,6 +18,7 @@ import {
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
+  selectReportOrderingFamily,
   toReportRequestRows,
   type ReportOrderingConfiguration,
 } from "./view-model";
@@ -147,12 +148,20 @@ export function useReportOrderingWorkflow({
 
   const updateConfiguration = useCallback(
     (patch: Partial<ReportOrderingConfiguration>) => {
-      setConfiguration((current) => (current ? { ...current, ...patch } : current));
+      setConfiguration((current) => {
+        if (!current) {
+          return current;
+        }
+        if (catalogue && patch.familyId && patch.familyId !== current.familyId) {
+          return selectReportOrderingFamily(catalogue, current, patch.familyId);
+        }
+        return { ...current, ...patch };
+      });
       setReviewedIntent(null);
       setSubmissionError(null);
       setSubmissionState((current) => (current === "submitting" ? current : "idle"));
     },
-    [],
+    [catalogue],
   );
 
   const toggleSection = useCallback(

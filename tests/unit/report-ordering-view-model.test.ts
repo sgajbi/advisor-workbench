@@ -5,6 +5,7 @@ import {
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
+  selectReportOrderingFamily,
   toReportRequestRows,
 } from "@/features/report-ordering/view-model";
 import {
@@ -165,5 +166,45 @@ describe("report ordering view model", () => {
       "proof_pack",
     ]);
     expect(model.canSubmit).toBe(true);
+  });
+
+  it("rebuilds family-owned defaults when selecting another orderable report", () => {
+    const payload = buildReportOrderingResponse();
+    const alternateFamily = structuredClone(payload.reportFamilies[0]);
+    alternateFamily.reportFamilyId = "portfolio_review_condensed";
+    alternateFamily.businessLabel = "Condensed portfolio review";
+    alternateFamily.sections = [
+      {
+        ...alternateFamily.sections[0],
+        sectionId: "CONDENSED_PROFILE",
+        businessLabel: "Condensed client profile",
+      },
+    ];
+    const response = parseReportOrderingResponse({
+      ...payload,
+      reportFamilies: [...payload.reportFamilies, alternateFamily],
+    });
+    const current = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
+    current.benchmarkCode = "BENCHMARK_OLD";
+    current.allocationDimensions = ["asset_class"];
+
+    const selected = selectReportOrderingFamily(
+      response,
+      current,
+      "portfolio_review_condensed",
+    );
+
+    expect(selected).toEqual(
+      expect.objectContaining({
+        familyId: "portfolio_review_condensed",
+        modeId: "single_portfolio",
+        selectedSections: ["CONDENSED_PROFILE"],
+        benchmarkCode: "",
+        allocationDimensions: [],
+      }),
+    );
   });
 });
