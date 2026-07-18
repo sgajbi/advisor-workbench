@@ -129,7 +129,7 @@ export default function AdvisorCockpitWorkspace({
       preparationQuery.error ||
       supportabilityQuery.error,
   );
-  const actionStatus = hasError
+  const actionStatus = actionQuery.error
     ? { label: "Worklist unavailable", tone: "warn" as const }
     : model.actionPosture === "actionable"
       ? { label: "Action required", tone: "warn" as const }
