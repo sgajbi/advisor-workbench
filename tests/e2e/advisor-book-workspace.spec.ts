@@ -95,6 +95,11 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await expect(page.getByText("Own book only")).toBeVisible();
   await expect(page.getByText("Legacy assignment evidence")).toBeVisible();
   await expect(page.getByText(/team book|household|AUM|attention rank/i)).toHaveCount(0);
+  await expect(page.getByText("Proposal", { exact: true })).toHaveAttribute(
+    "title",
+    "Proposal availability could not be confirmed.",
+  );
+  await expect(page.locator('[title*="disabled_in_fallback"]')).toHaveCount(0);
 
   await page.getByRole("textbox", { name: "Client reference" }).focus();
   await page.keyboard.type("CIF_SG_GLOBAL_BAL_001");
