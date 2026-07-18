@@ -162,8 +162,9 @@ export default function AdvisorCockpitWorkspace({
     >
       {hasError ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Advisor cockpit is unavailable. No fallback operating worklist is
-          shown.
+          {actionWorklistUnavailable
+            ? "Advisor action worklist is unavailable. No fallback operating worklist is shown."
+            : "Some Advisor Cockpit evidence is unavailable. Available source-backed information remains visible."}
         </Alert>
       ) : null}
       <div className={styles.cockpitHeader}>
@@ -190,11 +191,11 @@ export default function AdvisorCockpitWorkspace({
         </div>
       </div>
 
-      {hasError ? (
+      {actionWorklistUnavailable ? (
         <ScreenStatePanel
           kind="error"
-          title="Advisor cockpit unavailable"
-          body="The advisor cockpit could not be loaded from the advisory workflow."
+          title="Advisor action worklist unavailable"
+          body="The action worklist could not be loaded from the advisory workflow."
           surface="default"
         />
       ) : model.actionPosture === "details-unavailable" ? (

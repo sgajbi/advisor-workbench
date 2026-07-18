@@ -262,10 +262,12 @@ describe("AdvisorCockpitWorkspace", () => {
 
     expect(
       await screen.findByText(
-        "Advisor cockpit is unavailable. No fallback operating worklist is shown.",
+        "Advisor action worklist is unavailable. No fallback operating worklist is shown.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Advisor cockpit unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Advisor action worklist unavailable"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Worklist unavailable")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Advisor action review unavailable" }),
@@ -290,6 +292,19 @@ describe("AdvisorCockpitWorkspace", () => {
 
     expect(await screen.findByText("Action required")).toBeInTheDocument();
     expect(screen.queryByText("Worklist unavailable")).not.toBeInTheDocument();
-    expect(screen.getByText("Advisor cockpit unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Some Advisor Cockpit evidence is unavailable. Available source-backed information remains visible.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Policy review required" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Acknowledge review" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Advisor action worklist unavailable"),
+    ).not.toBeInTheDocument();
   });
 });
