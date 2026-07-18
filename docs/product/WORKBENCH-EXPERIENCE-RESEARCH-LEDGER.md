@@ -758,7 +758,8 @@ Research was reviewed on 2026-07-19 from primary design and accessibility source
 
 1. Four focused component tests cover current-view context, `aria-expanded` / `aria-controls`,
    selection closure, Escape focus restoration, and nested mode action behavior.
-2. Shared Performance and Manage integration coverage remained green; lint and TypeScript passed.
+2. Full `make check` passed 294 test files and 1,311 tests at 90.77% statement coverage, followed by
+   clean lint, TypeScript validation, and production build.
 3. Production Playwright proof passed at 519 px, 1024 px, and 1366 px. At 519 px, the closed rail
    kept Income & Activity inside the initial 900 px viewport; the route list was hidden until
    requested; Escape restored focus; desktop restored the persistent list.
