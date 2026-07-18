@@ -1228,3 +1228,47 @@ No wiki source change is required. Published wiki truth does not claim global se
 or banker-profile support, and the supported routes and authority boundaries are unchanged. The
 product-context and false-affordance rule is durable in this research ledger, the codebase review
 ledger, and repository engineering context.
+
+## Deterministic Portfolio Page Identity In Browser Proof
+
+### Validation job
+
+The narrow-layout browser gate must prove that the intended Portfolio page is ready before measuring
+horizontal overflow. Its page identity cannot change when a source-backed decision headline happens
+to repeat part of the page title, or when source unavailability selects a governed degraded state.
+
+### Current-practice research
+
+The official [Playwright locator guidance](https://playwright.dev/docs/locators) recommends
+user-facing role locators with a sufficiently precise accessible name. It documents strict locator
+behavior, exact name matching, heading-level constraints, and warns against positional selectors
+such as `first()` or `nth()` when a unique semantic contract can identify the intended element.
+
+### Adopted decisions
+
+1. Identify the ready Portfolio page by heading role, exact accessible name, and level one.
+2. Keep source-unavailable branches explicit through a bounded set of exact business headings.
+3. Reuse named page-identity helpers across the foundation and responsive journeys.
+4. Prove strict uniqueness in a browser DOM containing both `Portfolio Review` and the adjacent
+   `Portfolio review is ready` decision heading.
+5. Measure responsive overflow only after the relevant ready or unavailable identity is visible.
+
+### Rejected decisions
+
+1. Substring heading matches whose result changes with adjacent business copy.
+2. `.first()`, `.last()`, or `.nth()` as a way to suppress strict-mode ambiguity.
+3. CSS structure, test-only identifiers, retries, or longer timeouts for a semantic identity defect.
+4. Removing the degraded-state branch or requiring a live Gateway merely to validate layout.
+
+### Validation record
+
+Issue #430 governs the slice. Lint, TypeScript, and diff hygiene pass. The focused production-browser
+run proved the two-heading ready state and the three-route 390 px overflow journey in 7.4 seconds.
+The current source-down path rendered the governed `Portfolio context unavailable` identity, all
+responsive assertions passed, and launcher cleanup left no listener on port 3000.
+
+### Publication decision
+
+No wiki source change is required. This slice changes browser-test selection semantics, not a
+supported product route, business capability, operator command, or published source boundary. The
+reusable locator rule is durable in this research ledger and the codebase review ledger.
