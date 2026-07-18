@@ -56,6 +56,7 @@ export function usePortfolioProjectedCashflow({
   useEffect(() => {
     if (selectedSnapshot?.response) {
       setLoading(false);
+      setRefreshingEvidence(false);
       setFailure(
         selectedSnapshot.response.cashflow_outlook
           ? null
