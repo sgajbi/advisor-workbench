@@ -79,8 +79,10 @@ Implemented:
 3. preserves source-owned action identity, version, owner role, priority, SLA band, reason codes,
    source-readiness gaps, dependency readiness, evidence summaries, and unsupported-capability
    boundaries,
-4. renders meeting-preparation packets from the snapshot without synthesizing client-ready
-   material,
+4. renders meeting-preparation packets from the dedicated Gateway preparation-packet route; uses
+   snapshot preparation evidence only as a bounded fallback when no dedicated page is supplied,
+   and does not let a dedicated-route failure appear as current snapshot-backed evidence or
+   synthesize client-ready material,
 5. records a bounded advisor acknowledgement with an idempotency key and action-item version while
    leaving policy blockers and client-publication posture source-owned,
 6. treats already acknowledged source actions as replay evidence during repeated canonical
