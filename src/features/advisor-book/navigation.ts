@@ -11,8 +11,13 @@ export function buildPortfolioContextHref({
   query.delete("portfolioId");
 
   if (pathname === "/book") {
-    query.set("portfolioId", portfolioId);
-    return withQuery("/portfolio", query);
+    const portfolioQuery = new URLSearchParams();
+    const asOfDate = query.get("asOfDate");
+    if (asOfDate) {
+      portfolioQuery.set("asOfDate", asOfDate);
+    }
+    portfolioQuery.set("portfolioId", portfolioId);
+    return withQuery("/portfolio", portfolioQuery);
   }
 
   const workbenchMatch = pathname.match(/^\/workbench\/[^/]+$/);
