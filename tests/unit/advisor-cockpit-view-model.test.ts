@@ -130,17 +130,51 @@ describe("advisor cockpit view model", () => {
       "Client-ready Publication",
     );
     expect(model.supportabilityRows).toContainEqual({
-      label: "Data readiness",
-      value: "Active Advisor Cockpit Products RFC 0026",
+      label: "Preparation data",
+      value: "Available",
+      detail: "Required preparation data is published for internal advisor use.",
+      tone: "success",
+      state: "available",
     });
     expect(model.supportabilityRows).toContainEqual({
       label: "Client publication",
       value: "Blocked",
+      detail: "Client-ready publication remains blocked by the source workflow.",
+      tone: "danger",
+      state: "blocked",
     });
     expect(model.unsupportedClaims).toEqual([
-      "External Client Communication",
-      "OMS Order Lifecycle",
+      "Client communication unavailable",
+      "Order workflow unavailable",
     ]);
+    expect(model.operatingBoundaries).toEqual([
+      {
+        label: "Client communication unavailable",
+        detail: "Client outreach remains outside this workspace.",
+        rawValue: "EXTERNAL_CLIENT_COMMUNICATION",
+      },
+      {
+        label: "Order workflow unavailable",
+        detail: "Order routing and lifecycle actions remain outside this workspace.",
+        rawValue: "OMS_ORDER_LIFECYCLE",
+      },
+    ]);
+    expect(model.supportDetails).toEqual(
+      expect.arrayContaining([
+        {
+          label: "Internal preparation source value",
+          value: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+        },
+        {
+          label: "Preparation data source value",
+          value: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
+        },
+        {
+          label: "Operating boundary source value 2",
+          value: "OMS_ORDER_LIFECYCLE",
+        },
+      ]),
+    );
     expect(model.preparationRows[0]).toMatchObject({
       packetId: "prep_gateway_1",
       context: "Proposal proposal_sg_001",
@@ -250,6 +284,64 @@ describe("advisor cockpit view model", () => {
       value: "At least 1",
       tone: "warn",
     });
+  });
+
+  it("fails unknown readiness values closed while retaining raw support evidence", () => {
+    const model = buildAdvisorCockpitModel({
+      snapshot: {
+        supportability: {
+          gateway_posture: "NEW_GATEWAY_POSTURE",
+          workbench_posture: null,
+          data_product_posture: "READY",
+          client_ready_publication: "PENDING",
+        },
+      },
+      supportability: {
+        posture: "NEW_OVERALL_POSTURE",
+        unsupported_capabilities: ["NEW_CAPABILITY"],
+      },
+    });
+
+    expect(model.supportabilityRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Internal preparation",
+          value: "Not reported",
+          state: "not_reported",
+          tone: "default",
+        }),
+        expect.objectContaining({
+          label: "Client publication",
+          value: "Not reported",
+          state: "not_reported",
+          tone: "default",
+        }),
+      ]),
+    );
+    expect(model.supportDetails).toEqual(
+      expect.arrayContaining([
+        {
+          label: "Internal preparation source value",
+          value: "NEW_OVERALL_POSTURE",
+        },
+        {
+          label: "Client publication source value",
+          value: "PENDING",
+        },
+        {
+          label: "Operating boundary source value 1",
+          value: "NEW_CAPABILITY",
+        },
+      ]),
+    );
+    expect(model.operatingBoundaries).toEqual([
+      {
+        label: "Additional workflow capability unavailable",
+        detail:
+          "The source reports another unsupported capability; see Support details.",
+        rawValue: "NEW_CAPABILITY",
+      },
+    ]);
   });
 
   it("does not offer local acknowledgement for external-owner actions", () => {

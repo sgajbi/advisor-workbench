@@ -10,6 +10,12 @@ import type {
   AdvisorCockpitSourceReadinessGap,
   AdvisorCockpitSupportabilityData,
 } from "./types";
+import {
+  presentAdvisorCockpitOperatingBoundary,
+  presentAdvisorCockpitReadiness,
+  type AdvisorCockpitOperatingBoundaryPresentation,
+  type AdvisorCockpitReadinessState,
+} from "./advisor-cockpit-readiness-presentation";
 
 export type AdvisorCockpitActionRow = {
   actionItemId: string;
@@ -50,6 +56,19 @@ export type AdvisorCockpitPreparationPosture =
   | "details-unavailable"
   | "clear";
 
+export type AdvisorCockpitReadinessRow = {
+  label: string;
+  value: string;
+  detail: string;
+  tone: SemanticBadgeTone;
+  state: AdvisorCockpitReadinessState;
+};
+
+export type AdvisorCockpitSupportDetail = {
+  label: string;
+  value: string;
+};
+
 export type AdvisorCockpitModel = {
   title: string;
   primaryDecision: string;
@@ -62,7 +81,9 @@ export type AdvisorCockpitModel = {
     status: string;
     evidenceSummary: string;
   }>;
-  supportabilityRows: Array<{ label: string; value: string }>;
+  supportabilityRows: AdvisorCockpitReadinessRow[];
+  operatingBoundaries: AdvisorCockpitOperatingBoundaryPresentation[];
+  supportDetails: AdvisorCockpitSupportDetail[];
   unsupportedClaims: string[];
   actionCount: number | null;
   actionPosture: AdvisorCockpitActionPosture;
@@ -113,8 +134,18 @@ export function buildAdvisorCockpitModel({
   const supportabilityPosture =
     supportability?.posture ??
     stringValue(snapshot?.supportability?.cockpit_api) ??
-    stringValue(snapshot?.supportability?.api) ??
-    "Posture not reported";
+    stringValue(snapshot?.supportability?.api);
+  const supportabilityModel = buildSupportabilityModel(
+    snapshot,
+    supportability,
+    supportabilityPosture,
+  );
+  const operatingBoundaries = Array.from(
+    new Set([
+      ...(snapshot?.unsupported_capabilities ?? []),
+      ...(supportability?.unsupported_capabilities ?? []),
+    ]),
+  ).map(presentAdvisorCockpitOperatingBoundary);
   const topAction = actions[0];
 
   return {
@@ -174,15 +205,16 @@ export function buildAdvisorCockpitModel({
     ],
     actionRows: actions.map(toActionRow),
     preparationRows: preparationPackets.map(toPreparationRow),
-    supportabilityRows: buildSupportabilityRows(
-      snapshot,
-      supportability,
-      supportabilityPosture,
-    ),
-    unsupportedClaims: [
-      ...(snapshot?.unsupported_capabilities ?? []),
-      ...(supportability?.unsupported_capabilities ?? []),
-    ].map(formatCode),
+    supportabilityRows: supportabilityModel.rows,
+    operatingBoundaries,
+    supportDetails: [
+      ...supportabilityModel.details,
+      ...operatingBoundaries.map((boundary, index) => ({
+        label: `Operating boundary source value ${index + 1}`,
+        value: boundary.rawValue,
+      })),
+    ],
+    unsupportedClaims: operatingBoundaries.map((boundary) => boundary.label),
     actionCount: reportedActionCount,
     actionPosture,
     preparationCount: reportedPreparationCount,
@@ -241,40 +273,64 @@ function toPreparationRow(packet: AdvisorCockpitPreparationPacket) {
   };
 }
 
-function buildSupportabilityRows(
+function buildSupportabilityModel(
   snapshot: AdvisorCockpitSnapshotData | undefined,
   supportabilityResponse: AdvisorCockpitSupportabilityData | undefined,
-  supportabilityPosture: string,
-) {
+  supportabilityPosture: string | undefined,
+): {
+  rows: AdvisorCockpitReadinessRow[];
+  details: AdvisorCockpitSupportDetail[];
+} {
   const supportability =
     snapshot?.supportability ?? supportabilityResponse?.supportability ?? {};
-  return [
-    { label: "Overall readiness", value: formatCode(supportabilityPosture) },
+  const sources = [
     {
-      label: "Integration readiness",
-      value: formatCode(
-        stringValue(supportability.gateway_posture) ?? "Not reported",
-      ),
+      kind: "overall" as const,
+      label: "Internal preparation",
+      value: supportabilityPosture,
     },
     {
-      label: "Workstation readiness",
-      value: formatCode(
-        stringValue(supportability.workbench_posture) ?? "Not reported",
-      ),
+      kind: "integration" as const,
+      label: "Advisory information",
+      value: stringValue(supportability.gateway_posture),
     },
     {
-      label: "Data readiness",
-      value: formatCode(
-        stringValue(supportability.data_product_posture) ?? "Not reported",
-      ),
+      kind: "workstation" as const,
+      label: "Advisor workspace",
+      value: stringValue(supportability.workbench_posture),
     },
     {
+      kind: "data" as const,
+      label: "Preparation data",
+      value: stringValue(supportability.data_product_posture),
+    },
+    {
+      kind: "client_publication" as const,
       label: "Client publication",
-      value: formatCode(
-        stringValue(supportability.client_ready_publication) ?? "Not reported",
-      ),
+      value: stringValue(supportability.client_ready_publication),
     },
   ];
+
+  const presentations = sources.map((source) => ({
+    source,
+    presentation: presentAdvisorCockpitReadiness(source.kind, source.value),
+  }));
+
+  return {
+    rows: presentations.map(({ source, presentation }) => ({
+      label: source.label,
+      value: presentation.label,
+      detail: presentation.detail,
+      tone: presentation.tone,
+      state: presentation.state,
+    })),
+    details: presentations
+      .filter(({ presentation }) => presentation.rawValue !== null)
+      .map(({ source, presentation }) => ({
+        label: `${source.label} source value`,
+        value: presentation.rawValue!,
+      })),
+  };
 }
 
 function countFromSnapshot(
