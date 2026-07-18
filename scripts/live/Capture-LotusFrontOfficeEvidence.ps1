@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",

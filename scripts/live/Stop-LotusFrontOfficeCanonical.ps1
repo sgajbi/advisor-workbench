@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
   [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
   [switch]$RemoveVolumes,
