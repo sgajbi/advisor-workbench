@@ -198,8 +198,10 @@ BFF_BASE_URL=http://gateway.dev.lotus
 
 The Workbench BFF adds governed caller-context headers before proxying to Gateway. Lotus Idea
 queue, detail, and action routes additionally replace browser-supplied subject, role, capability,
-and portfolio-entitlement headers with BFF-owned authority. Until an authenticated-principal
-resolver is delivered, that authority is enabled only when `LOTUS_ENVIRONMENT` explicitly declares
+and portfolio-entitlement headers with BFF-owned authority. Advisor-book reads likewise discard
+browser-supplied identity, scope, role, and capability headers and apply only BFF-owned authority.
+Until an authenticated-principal resolver is delivered, those authorities are enabled only when
+`LOTUS_ENVIRONMENT` explicitly declares
 `dev`, `development`, `local`, or `test`. The canonical local runtime makes that development posture explicit:
 
 ```txt
@@ -217,6 +219,13 @@ WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
 WORKBENCH_REPORTING_AUTH_MODE=development_configured
 WORKBENCH_REPORTING_CALLER_ROLE=client_advisor
 WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+WORKBENCH_ADVISOR_BOOK_AUTH_MODE=development_configured
+WORKBENCH_ADVISOR_BOOK_ACTOR_ID=PM_SG_001
+WORKBENCH_ADVISOR_BOOK_TENANT_ID=tenant-sg
+WORKBENCH_ADVISOR_BOOK_REGION=APAC
+WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE=Singapore
+WORKBENCH_ADVISOR_BOOK_ROLE=ADVISOR
+NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE=2026-04-10
 WORKBENCH_DPM_MANDATE_ID=MANDATE_PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
 WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
@@ -244,6 +253,7 @@ Quick local browser-facing path:
 
 ```txt
 http://workbench.dev.lotus/portfolio
+http://workbench.dev.lotus/book?asOfDate=2026-04-10
 http://workbench.dev.lotus/performance
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 http://workbench.dev.lotus/reports?portfolioId=PB_SG_GLOBAL_BAL_001
