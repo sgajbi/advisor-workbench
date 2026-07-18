@@ -48,12 +48,16 @@ describe("IntakePage", () => {
     getCurrencyLookupsMock.mockResolvedValue([{ id: "USD", label: "USD" }]);
   });
 
-  it("supports selector catalog loading, workspace switching, and create-portfolio submission", async () => {
+  function renderIntakePage() {
     render(
       <Providers>
         <IntakePage />
       </Providers>
     );
+  }
+
+  it("loads the selector catalog from all governed lookup sources", async () => {
+    renderIntakePage();
 
     expect(
       screen.getByRole("heading", { name: "Portfolio Intake Operations Console" })
@@ -71,6 +75,10 @@ describe("IntakePage", () => {
       expect(getInstrumentLookupsMock).toHaveBeenCalled();
       expect(getCurrencyLookupsMock).toHaveBeenCalled();
     });
+  });
+
+  it("switches between each intake workspace without asynchronous timing dependencies", () => {
+    renderIntakePage();
 
     fireEvent.click(screen.getByRole("tab", { name: /^Add Positions$/i }));
     expect(screen.getByRole("heading", { name: "Add Positions Workspace" })).toBeInTheDocument();
@@ -86,6 +94,10 @@ describe("IntakePage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: /^Create Portfolio$/i }));
     expect(screen.getByRole("heading", { name: "Create Portfolio Workspace" })).toBeInTheDocument();
+  });
+
+  it("submits the create-portfolio operation with a stable authority envelope", async () => {
+    renderIntakePage();
 
     fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));
 
@@ -124,11 +136,7 @@ describe("IntakePage", () => {
         },
       });
 
-    render(
-      <Providers>
-        <IntakePage />
-      </Providers>
-    );
+    renderIntakePage();
 
     fireEvent.click(screen.getByRole("tab", { name: /^Add Transactions$/i }));
     fireEvent.click(screen.getByRole("button", { name: "Submit Operation" }));
