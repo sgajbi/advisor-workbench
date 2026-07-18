@@ -232,9 +232,13 @@ Primary areas:
 7. `src/features/report-ordering/`
    Report Centre contracts, Gateway client, source-safe configuration model, workflow state, and
    business-facing components.
-8. `tests/`
+8. `src/features/advisor-book/`
+   Own-book contracts, fail-closed BFF authority, URL-persisted source filters, reusable loading
+   state, business presentation, dedicated landing workspace, and task-preserving portfolio
+   context switching over Gateway `PortfolioManagerBookMembership:v1` evidence.
+9. `tests/`
    Unit, integration, and Playwright smoke coverage.
-9. `wiki/`
+10. `wiki/`
    canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
 
 ## Runtime And Integration Boundaries
@@ -387,6 +391,15 @@ Important validation expectations:
     `currency`; pair `net_cost_base` and `realized_gain_loss_base` with portfolio base currency.
     Do not use a gross/base fallback as one labeled amount or aggregate mixed currencies. Preserve
     Gateway `total`, `skip`, and `limit` when a transaction screen claims ledger coverage.
+20. Advisor-book UI must consume only Gateway `/api/v1/advisor-book/portfolios`, validate exact
+    `v1` own-book and `PortfolioManagerBookMembership:v1` semantics, and preserve Gateway
+    supportability, tenant-scope, assignment-basis, paging, and provenance evidence. The browser
+    must not infer household, team, delegated, supervisor, AUM, attention, or ownership scope; it
+    must not fall back to the global portfolio catalogue when membership is unavailable. Shared
+    context switching must retain the current business route and supported query state, reset
+    portfolio-specific stale state, and restore keyboard focus. Until #436 delivers an
+    authenticated principal, BFF advisor-book authority is development-configured only and fails
+    closed elsewhere.
 
 ### Visual Review Gate
 

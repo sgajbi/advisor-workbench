@@ -323,10 +323,13 @@ Validation layers:
    - proposal narrative review and reviewed report-package request
    - portfolio report-ordering catalogue, reviewed single-portfolio request, and report-data job
      history through Gateway
+   - advisor own-book membership, scope, assignment basis, tenant posture, and canonical portfolio
+     inclusion through Gateway
    - RFC-0026 advisor cockpit tactical house-view cohort seed, action list, preparation packets,
      snapshot, supportability, and idempotent acknowledgement
    - RFC-0028 bank-demo proof scenario and supported-claim register through Gateway
 5. browser-level validation for populated UI on:
+   - Advisor own-book coverage and portfolio handoff
    - Portfolio summary
    - Portfolio detailed
    - Portfolio Report Centre, including independent structured-data/PDF readiness, explicit review,
@@ -376,6 +379,12 @@ structured report data remains selected while unavailable governed PDF creation 
 advisor review gates submission, one request is accepted, recent report-data history is populated,
 and archive/client delivery remain separate. The governed panel identifier is
 `reporting.report_centre`; central platform registration is tracked in `lotus-platform#582`.
+Advisor-book checks prove the canonical portfolio belongs to the configured manager's Gateway
+own-book response, validate source membership before browser capture, preserve reported tenant and
+legacy-assignment limitations, and render the `/book` portfolio handoff without a global-catalogue
+fallback. The governed panel identifier is `advisor.book_overview`; its central platform registry
+entry must be present before `advisor-book-overview-live.png` can be treated as demo-ready evidence.
+Central registration is tracked in `lotus-platform#583`.
 RFC-0025 policy checks now use the governed
 `advisory_proposal_scenarios.policy_evaluation` block in
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` to activate the
