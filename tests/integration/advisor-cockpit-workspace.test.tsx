@@ -7,6 +7,7 @@ import AdvisorCockpitWorkspace from "../../src/features/proposals/components/adv
 import type {
   AdvisorCockpitActionPageData,
   AdvisorCockpitPreparationPacketPageData,
+  AdvisorCockpitSnapshotData,
 } from "../../src/features/proposals/types";
 
 const listAdvisorCockpitActionsMock = vi.fn(
@@ -38,7 +39,9 @@ const listAdvisorCockpitActionsMock = vi.fn(
     ],
   }),
 );
-const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
+const getAdvisorCockpitSnapshotMock = vi.fn(async (
+  _filters?: unknown,
+): Promise<AdvisorCockpitSnapshotData> => ({
   snapshot_id: "cockpit_snapshot_1",
   action_counts: {
     "status.PENDING_REVIEW": 1,
@@ -381,6 +384,32 @@ describe("AdvisorCockpitWorkspace", () => {
   });
 
   it("keeps the worklist posture when a non-action cockpit source fails", async () => {
+    getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
+      snapshot_id: "cockpit_snapshot_with_preparation_fallback",
+      action_counts: {
+        "status.PENDING_REVIEW": 1,
+        "status.BLOCKED": 0,
+        "priority.HIGH": 1,
+      },
+      supportability: {
+        gateway_posture: "SUPPORTED_BY_LOTUS_GATEWAY_RFC0026",
+        workbench_posture: "CANONICAL_WORKBENCH_PROOF_PASSED_RFC0026",
+        data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
+        client_ready_publication: "BLOCKED",
+      },
+      preparation_packets: [
+        {
+          packet_id: "snapshot_packet_1",
+          context_type: "PORTFOLIO",
+          context_ref: "PB_SG_GLOBAL_BAL_001",
+          status: "READY",
+          evidence_refs: [
+            { summary: "Snapshot preparation evidence must not mask route failure." },
+          ],
+        },
+      ],
+      unsupported_capabilities: ["EXTERNAL_CLIENT_COMMUNICATION"],
+    });
     listAdvisorCockpitPreparationPacketsMock.mockRejectedValueOnce(
       new Error("preparation unavailable"),
     );
@@ -414,5 +443,8 @@ describe("AdvisorCockpitWorkspace", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("No preparation packs in scope")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Snapshot preparation evidence must not mask route failure."),
+    ).not.toBeInTheDocument();
   });
 });
