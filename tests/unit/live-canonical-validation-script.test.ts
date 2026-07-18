@@ -780,6 +780,8 @@ describe("canonical live validation script", () => {
     expect(panelGovernanceModule).toContain("recordPanelClassification");
     expect(panelGovernanceModule).toContain("assertNoUnsupportedBlankPanels");
     expect(script).toContain("portfolio.summary");
+    expect(script).toContain("advisor.book_overview");
+    expect(script).toContain("Gateway advisor own-book membership");
     expect(calculationModule).toContain("performance.analysis.attribution");
     expect(calculationModule).toContain("performance.evidence");
     expect(calculationModule).toContain(
@@ -1021,6 +1023,11 @@ describe("canonical live validation script", () => {
     );
     expect(script).toContain('source_type: "REBALANCE_RUN"');
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
+    expect(browserWorkflowModule).toContain("validateAdvisorBookPanel");
+    expect(browserWorkflowModule).toContain(
+      'screenshotRegisteredPanel(page, "advisor.book_overview")',
+    );
+    expect(contractModule).toContain("advisor-book-overview-live.png");
     expect(browserWorkflowModule).toContain("Evidence pack prepared.");
     expect(browserWorkflowModule).toContain("Open advisor memo");
     expect(browserWorkflowModule).toContain("/^Advisor memo /");

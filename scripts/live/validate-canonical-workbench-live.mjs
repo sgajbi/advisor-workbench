@@ -30,6 +30,7 @@ import {
   createBrowserValidationHelpers,
   validateAdvisoryJourneyScreens,
   validateAdvisorBriefPanel,
+  validateAdvisorBookPanel,
   validateBankDemoProofPanel,
   validateConstructionAlternativesPanel,
   validateDpmCopilotWorkspace,
@@ -150,6 +151,9 @@ summary.ideaCapacitySeed = await loadIdeaCapacitySeedEvidence(
   },
 );
 const panelGovernance = createPanelGovernance(summary, panelRegistry);
+
+const advisorBookAsOfDate =
+  process.env.NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE ?? canonicalAsOfDate;
 
 function canonicalPerformanceQuery(extra = {}) {
   const query = new URLSearchParams({
@@ -1621,6 +1625,34 @@ async function run() {
     "Gateway platform capabilities",
     timeoutMs,
   );
+  const advisorBook = await sendJson(
+    summary,
+    `${gatewayBaseUrl}/api/v1/advisor-book/portfolios?asOfDate=${encodeURIComponent(
+      advisorBookAsOfDate,
+    )}&limit=100`,
+    "Gateway advisor own-book membership",
+    timeoutMs,
+    {
+      headers: {
+        "X-Actor-Id": process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID ?? "PM_SG_001",
+        "X-Caller-Application": "lotus-workbench",
+        "X-Tenant-Id": process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID ?? "tenant-sg",
+        "X-Region": process.env.WORKBENCH_ADVISOR_BOOK_REGION ?? "APAC",
+        "X-Booking-Center-Code":
+          process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE ?? "Singapore",
+        "X-Role": process.env.WORKBENCH_ADVISOR_BOOK_ROLE ?? "ADVISOR",
+        "X-Caller-Capabilities": "advisor.book.read",
+      },
+    },
+  );
+  if (advisorBook?.scope?.kind !== "own_book") {
+    throw new Error("Gateway advisor-book response did not preserve own-book scope.");
+  }
+  if (!advisorBook?.items?.some((item) => item?.portfolio_id === portfolioId)) {
+    throw new Error(
+      `Gateway advisor book did not include canonical portfolio ${portfolioId}.`,
+    );
+  }
   const gatewayModuleHealth =
     gatewayCapabilities?.data?.normalized?.moduleHealth;
   if (
@@ -1643,6 +1675,16 @@ async function run() {
     }
   }
 
+  panelGovernance.recordPanelClassification(
+    "advisor.book_overview",
+    advisorBook.supportability?.state === "ready" ? "ready" : "partial",
+    "lotus-gateway",
+    {
+      portfolioId,
+      scope: advisorBook.scope.kind,
+      membershipSource: advisorBook.items[0]?.membership_source,
+    },
+  );
   panelGovernance.recordPanelClassification(
     "portfolio.summary",
     "ready",
@@ -1916,6 +1958,14 @@ async function run() {
   });
 
   try {
+    await validateAdvisorBookPanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      canonicalAsOfDate: advisorBookAsOfDate,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
     await validatePortfolioPanels(page, {
       workbenchBaseUrl,
       portfolioId,
