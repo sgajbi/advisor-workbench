@@ -444,12 +444,13 @@ Most relevant current governance:
    portfolio and current-view context through the accessible disclosure behavior instead of
    rendering the full route list before the selected business task. Navigation remains semantic
    links, not an ARIA menu or a page-local select control.
-8. Advisor-facing readiness must use a typed, category-specific exact mapping from supported source
-   values to business posture. Open strings, nulls, unknown values, and values supplied under the
-   wrong category fail closed as neutral `Not reported`; never infer positive readiness through
-   generic code formatting or keyword matching. Keep raw service, RFC, contract, and capability
-   evidence available in a secondary support disclosure rather than the primary business scan
-   path.
+8. Advisor-facing readiness and shell-workspace availability must use typed, category-specific
+   exact mappings from supported source values to business posture. Open strings, nulls, unknown
+   values, and values supplied under the wrong category fail closed as neutral `Not reported` or
+   `availability could not be confirmed`; never infer positive readiness or expose source codes
+   through generic code formatting or keyword matching. Keep raw service, RFC, contract,
+   capability, and reason-code evidence in the source contract or a secondary support disclosure
+   rather than the primary business scan path.
 
 ## Context Maintenance Rule
 
