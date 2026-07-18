@@ -53,14 +53,14 @@ export function usePortfolioProjectedCashflow({
   const selectedHorizonDays = resolveCashflowHorizonDays(selectedHorizonKey);
 
   useEffect(() => {
-    if (selectedSnapshot) {
+    if (selectedSnapshot?.response) {
       setLoading(false);
       setFailure(null);
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
+    setLoading(!selectedSnapshot);
     setFailure(null);
 
     async function loadProjectedCashflow() {
@@ -81,6 +81,19 @@ export function usePortfolioProjectedCashflow({
           ...current,
           [selectedHorizonKey]: snapshot,
         }));
+        setFailure(null);
+      } else if (selectedSnapshot) {
+        if (response) {
+          setSnapshots((current) => ({
+            ...current,
+            [selectedHorizonKey]: {
+              ...selectedSnapshot,
+              response,
+              warnings: response.warnings,
+              partialFailures: response.partial_failures,
+            },
+          }));
+        }
         setFailure(null);
       } else {
         setFailure({ requestedHorizonDays: selectedHorizonDays, response });

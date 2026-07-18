@@ -110,4 +110,35 @@ describe("portfolio record evidence view model", () => {
       ])
     );
   });
+
+  it("keeps aggregate-only projected movement distinct from dated flow counts", () => {
+    const workspace = buildPortfolioWorkspace({});
+    workspace.cashflow_outlook = {
+      ...workspace.cashflow_outlook!,
+      total_net_cashflow_base: -750,
+      upcoming_points: [],
+    };
+
+    const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+      screen: "cashflow",
+      workspace,
+    });
+
+    expect(viewModel.sourcePostureItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Projection Coverage",
+          detail: expect.stringContaining("dated projection points unavailable"),
+          status: "Partial",
+          tone: "warn",
+        }),
+        expect.objectContaining({
+          label: "Projection Basis",
+          detail: "Net projected outflow of 750 USD; dated inflow and outflow counts unavailable",
+          status: "Aggregate only",
+          tone: "warn",
+        }),
+      ])
+    );
+  });
 });
