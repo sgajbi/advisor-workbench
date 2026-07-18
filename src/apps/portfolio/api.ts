@@ -596,6 +596,7 @@ export async function getPortfolioProjectedCashflow(
     asOfDate?: string;
     horizonDays?: number;
     includeProjected?: boolean;
+    forceRefresh?: boolean;
   } = {}
 ): Promise<PortfolioProjectedCashflowResponse | null> {
   try {
@@ -613,7 +614,7 @@ export async function getPortfolioProjectedCashflow(
     const payload = await fetchPortfolioJson<PortfolioProjectedCashflowResponse>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow`,
-      { query: searchParams }
+      { query: searchParams, forceRefresh: params.forceRefresh }
     );
     if (!payload) {
       return null;
@@ -779,11 +780,17 @@ async function fetchPortfolioJson<T>(
   path: string,
   options: {
     useCache?: boolean;
+    forceRefresh?: boolean;
     query?: URLSearchParams;
   } = {}
 ): Promise<T | null> {
   const useCache = options.useCache ?? true;
   const url = buildPortfolioApiUrl(target, path, options.query);
+
+  if (useCache && options.forceRefresh) {
+    portfolioApiResponseCache.delete(url);
+    portfolioApiInflightRequests.delete(url);
+  }
 
   if (useCache && portfolioApiResponseCache.has(url)) {
     return portfolioApiResponseCache.get(url) as T;
@@ -828,7 +835,7 @@ async function fetchPortfolioJson<T>(
   try {
     return await request;
   } finally {
-    if (useCache) {
+    if (useCache && portfolioApiInflightRequests.get(url) === request) {
       portfolioApiInflightRequests.delete(url);
     }
   }
