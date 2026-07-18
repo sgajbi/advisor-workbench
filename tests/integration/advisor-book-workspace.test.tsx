@@ -102,6 +102,10 @@ describe("AdvisorBookWorkspace", () => {
       "/portfolio?asOfDate=2026-04-10&portfolioId=PB_SG_GLOBAL_BAL_001",
     );
     expect(screen.getByText("Own book only")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Search and sort using the available client, mandate, and portfolio fields/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/source-backed|membership contract/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/team book|household|AUM|attention rank/i)).not.toBeInTheDocument();
   });
 

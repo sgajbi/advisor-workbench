@@ -105,6 +105,8 @@ describe("advisor-book workspace view model", () => {
         { label: "Availability reference", value: "advisor_book_tenant_scope_not_reported" },
       ]),
     );
-    expect(JSON.stringify(model)).not.toMatch(/tenant scope|status code|membership v1/i);
+    expect(JSON.stringify(model)).not.toMatch(
+      /tenant scope|status code|membership v1|source-backed|source-confirmed|source currency|source limitation/i,
+    );
   });
 });

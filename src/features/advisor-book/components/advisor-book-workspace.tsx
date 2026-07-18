@@ -66,7 +66,7 @@ export default function AdvisorBookWorkspace() {
       <ScreenStatePanel
         kind="loading"
         title="Loading your book"
-        body="Confirming source-backed portfolio membership for the selected business date."
+        body="Confirming portfolio assignments for the selected business date."
         rows={6}
       />
     );
@@ -84,12 +84,12 @@ export default function AdvisorBookWorkspace() {
         body={
           isWorkbenchPermissionBlockedError(error)
             ? "Your authenticated role does not currently provide access to this own-book view."
-            : "The source-backed portfolio membership service is unavailable. No global portfolio list has been substituted."
+            : "Portfolio assignments are temporarily unavailable. No broader portfolio list has been substituted."
         }
         hint={
           getWorkbenchApiErrorStatus(error)
             ? `Reference ${getWorkbenchApiErrorStatus(error)}. Retry, or contact support if access should be available.`
-            : "Retry when source connectivity is restored."
+            : "Retry when portfolio assignments are available."
         }
         action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
       />
@@ -136,7 +136,7 @@ export default function AdvisorBookWorkspace() {
 
       <SectionBlock
         title="Portfolio coverage"
-        subtitle="Search and sort only by fields supported by the source membership contract."
+        subtitle="Search and sort using the available client, mandate, and portfolio fields."
       >
         <form className={styles.filterForm} onSubmit={applyFilters}>
           <div className={styles.field}>
@@ -253,7 +253,7 @@ export default function AdvisorBookWorkspace() {
               ))}
             </ul>
           ) : (
-            <p>No source limitations were reported for this own-book view.</p>
+            <p>No operating limitations were reported for this own-book view.</p>
           )}
         </SectionBlock>
         <SectionBlock title="Operational details" subtitle="Evidence for operational follow-up.">

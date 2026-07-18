@@ -64,7 +64,7 @@ function ReportOrderingUnavailable({ portfolioId }: { portfolioId: string | null
                 ]}
               >
                 Select an available portfolio before preparing a report request. No report choices
-                or submission controls are shown without source-backed portfolio context.
+                or submission controls are shown without confirmed portfolio context.
               </DegradedStatePanel>
             </WorkbenchPageFrame>
           }

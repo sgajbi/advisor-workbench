@@ -77,6 +77,8 @@ describe("reports page", () => {
 
     expect(screen.getByText("Portfolio reporting context is unavailable")).toBeInTheDocument();
     expect(screen.getByText(/No report choices or submission controls/)).toBeInTheDocument();
+    expect(screen.getByText(/confirmed portfolio context/)).toBeInTheDocument();
+    expect(screen.queryByText(/source-backed portfolio context/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
   });
 });
