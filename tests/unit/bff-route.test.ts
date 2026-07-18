@@ -16,6 +16,9 @@ describe("BFF proxy route", () => {
     "WORKBENCH_IDEA_CALLER_ROLES",
     "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_IDEA_AUTH_MODE",
+    "WORKBENCH_REPORTING_CALLER_ROLE",
+    "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
+    "WORKBENCH_REPORTING_AUTH_MODE",
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
@@ -310,6 +313,137 @@ describe("BFF proxy route", () => {
     expect(response.headers.get("content-type")).toBe("application/pdf");
     expect(response.headers.get("x-document-checksum")).toBe("abc123");
     expect(Array.from(body)).toEqual(Array.from(pdfBytes));
+  });
+
+  it("derives report-ordering authority at the BFF instead of trusting browser headers", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-ordering/options?scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001",
+      {
+        method: "GET",
+        headers: {
+          "X-Actor-Id": "spoofed-actor",
+          "X-Tenant-Id": "spoofed-tenant",
+          "X-Region": "spoofed-region",
+          "X-Role": "audit",
+          "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+        },
+      },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
+      "PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
+  it("rejects a report-ordering portfolio outside the server-configured entitlement", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-ordering/options?scopeType=portfolio&scopeId=UNENTITLED_PORTFOLIO",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(403);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "reporting_reporting_scope_not_entitled",
+      status: "rejected",
+    });
+  });
+
+  it("rejects a portfolio-review submission outside the configured entitlement", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/reports/portfolio-reviews",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          portfolio_scope: { portfolio_ids: ["UNENTITLED_PORTFOLIO"] },
+          as_of_date: "2026-04-22",
+          requested_output_formats: ["json"],
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "reports", "portfolio-reviews"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(403);
+  });
+
+  it("forwards an entitled portfolio-review submission with its body intact", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"status":"accepted"}', { status: 202 }));
+    const body = JSON.stringify({
+      portfolio_scope: { portfolio_ids: ["PB_SG_GLOBAL_BAL_001"] },
+      as_of_date: "2026-04-22",
+      requested_output_formats: ["json"],
+    });
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/reports/portfolio-reviews",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "X-Role": "audit",
+          "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+        },
+        body,
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "reports", "portfolio-reviews"] }),
+    });
+
+    expect(response.status).toBe(202);
+    const [, upstreamInit] = fetchMock.mock.calls[0];
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamInit?.body).toBe(body);
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
+      "PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
+  it("requires an authenticated reporting principal outside development", async () => {
+    process.env.LOTUS_ENVIRONMENT = "uat";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-jobs?portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-jobs"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "reporting_authenticated_principal_required",
+      status: "rejected",
+    });
   });
 
   it("uses configured caller context defaults for upstream analytics reads", async () => {

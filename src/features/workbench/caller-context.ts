@@ -49,7 +49,30 @@ const IDEA_AUTHORITY_HEADERS = [
   "X-Caller-Portfolio-Ids",
 ] as const;
 
+const REPORTING_AUTHORITY_HEADERS = [
+  "X-Actor-Id",
+  "X-Caller-Application",
+  "X-Tenant-Id",
+  "X-Region",
+  "X-Booking-Center-Code",
+  "X-Role",
+  "X-Caller-Portfolio-Ids",
+  "X-Caller-Client-Ids",
+  "X-Caller-Book-Ids",
+] as const;
+
+const REPORTING_CALLER_CONTEXT_ENV_OVERRIDES = {
+  role: "WORKBENCH_REPORTING_CALLER_ROLE",
+  portfolioIds: "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
+} as const;
+
+const DEFAULT_REPORTING_CALLER_CONTEXT = {
+  role: "client_advisor",
+  portfolioIds: "PB_SG_GLOBAL_BAL_001",
+} as const;
+
 const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
+const REPORTING_AUTH_MODE_ENV = "WORKBENCH_REPORTING_AUTH_MODE";
 const DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS = new Set([
   "dev",
   "development",
@@ -67,6 +90,20 @@ type IdeaAuthorityResolution =
         | "development_authority_not_allowed"
         | "invalid_authority_mode"
         | "unsupported_idea_route";
+    };
+
+export type ReportingAuthorityResolution =
+  | { status: "not_applicable" }
+  | { status: "applied"; mode: "development_configured" }
+  | {
+      status: "rejected";
+      reason:
+        | "authenticated_principal_required"
+        | "development_authority_not_allowed"
+        | "invalid_authority_mode"
+        | "invalid_reporting_configuration"
+        | "invalid_reporting_request"
+        | "reporting_scope_not_entitled";
     };
 
 function defaultCallerContextValue(
@@ -170,7 +207,70 @@ export function applyIdeaRouteCallerContextHeaders(
   return { status: "applied", mode: authorityMode };
 }
 
+export function applyReportOrderingRouteCallerContextHeaders(
+  headers: Headers,
+  request: {
+    method: string;
+    upstreamPath: string;
+    searchParams: URLSearchParams;
+    bodyText?: string;
+  },
+): ReportingAuthorityResolution {
+  if (!isReportOrderingWorkspaceRoute(request.method, request.upstreamPath)) {
+    return { status: "not_applicable" };
+  }
+
+  for (const headerName of REPORTING_AUTHORITY_HEADERS) {
+    headers.delete(headerName);
+  }
+
+  const authorityMode = resolveConfiguredAuthorityMode(REPORTING_AUTH_MODE_ENV);
+  if (authorityMode !== "development_configured") {
+    return authorityMode === "authenticated_session"
+      ? { status: "rejected", reason: "authenticated_principal_required" }
+      : { status: "rejected", reason: authorityMode };
+  }
+
+  const role =
+    process.env[REPORTING_CALLER_CONTEXT_ENV_OVERRIDES.role]?.trim() ||
+    DEFAULT_REPORTING_CALLER_CONTEXT.role;
+  if (role !== "client_advisor" && role !== "portfolio_manager") {
+    return { status: "rejected", reason: "invalid_reporting_configuration" };
+  }
+
+  const portfolioIds = configuredReportingPortfolioIds();
+  if (portfolioIds.length === 0) {
+    return { status: "rejected", reason: "invalid_reporting_configuration" };
+  }
+
+  const requestPosture = validateReportingWorkspaceRequest(request, new Set(portfolioIds));
+  if (requestPosture !== "ready") {
+    return { status: "rejected", reason: requestPosture };
+  }
+
+  const context = resolveDefaultCallerContext();
+  headers.set("X-Actor-Id", context.actorId);
+  headers.set("X-Caller-Application", context.callerApplication);
+  headers.set("X-Tenant-Id", context.tenantId);
+  headers.set("X-Region", context.region);
+  headers.set("X-Booking-Center-Code", context.bookingCenterCode);
+  headers.set("X-Role", role);
+  headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
+
+  return { status: "applied", mode: authorityMode };
+}
+
 function resolveIdeaAuthorityMode():
+  | "development_configured"
+  | "authenticated_session"
+  | "development_authority_not_allowed"
+  | "invalid_authority_mode" {
+  return resolveConfiguredAuthorityMode(IDEA_AUTH_MODE_ENV);
+}
+
+function resolveConfiguredAuthorityMode(
+  environmentVariable: string,
+):
   | "development_configured"
   | "authenticated_session"
   | "development_authority_not_allowed"
@@ -178,7 +278,7 @@ function resolveIdeaAuthorityMode():
   const environment =
     process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase() || "unconfigured";
   const isDevelopmentEnvironment = DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS.has(environment);
-  const configuredMode = process.env[IDEA_AUTH_MODE_ENV]?.trim().toLowerCase();
+  const configuredMode = process.env[environmentVariable]?.trim().toLowerCase();
 
   if (
     configuredMode &&
@@ -204,6 +304,82 @@ function resolveIdeaAuthorityMode():
   }
 
   return authorityMode;
+}
+
+function isReportOrderingWorkspaceRoute(method: string, upstreamPath: string): boolean {
+  return (
+    (method === "GET" && upstreamPath === "api/v1/report-ordering/options") ||
+    (method === "POST" && upstreamPath === "api/v1/reports/portfolio-reviews") ||
+    (method === "GET" && upstreamPath === "api/v1/report-jobs")
+  );
+}
+
+function configuredReportingPortfolioIds(): string[] {
+  const configured =
+    process.env[REPORTING_CALLER_CONTEXT_ENV_OVERRIDES.portfolioIds]?.trim() ||
+    DEFAULT_REPORTING_CALLER_CONTEXT.portfolioIds;
+  return [...new Set(configured.split(",").map((item) => item.trim()).filter(Boolean))];
+}
+
+function validateReportingWorkspaceRequest(
+  request: {
+    method: string;
+    upstreamPath: string;
+    searchParams: URLSearchParams;
+    bodyText?: string;
+  },
+  entitledPortfolioIds: ReadonlySet<string>,
+): "ready" | "invalid_reporting_request" | "reporting_scope_not_entitled" {
+  if (request.upstreamPath === "api/v1/report-ordering/options") {
+    const scopeType = request.searchParams.get("scopeType");
+    const scopeId = request.searchParams.get("scopeId")?.trim();
+    if (scopeType !== "portfolio" || !scopeId) {
+      return "invalid_reporting_request";
+    }
+    return entitledPortfolioIds.has(scopeId) ? "ready" : "reporting_scope_not_entitled";
+  }
+
+  if (request.upstreamPath === "api/v1/report-jobs") {
+    const portfolioId = request.searchParams.get("portfolioId")?.trim();
+    const reportType = request.searchParams.get("reportType")?.trim();
+    if (!portfolioId || reportType !== "portfolio_review") {
+      return "invalid_reporting_request";
+    }
+    return entitledPortfolioIds.has(portfolioId)
+      ? "ready"
+      : "reporting_scope_not_entitled";
+  }
+
+  const submittedPortfolioIds = readSubmittedPortfolioIds(request.bodyText);
+  if (!submittedPortfolioIds || submittedPortfolioIds.length !== 1) {
+    return "invalid_reporting_request";
+  }
+  return submittedPortfolioIds.every((portfolioId) => entitledPortfolioIds.has(portfolioId))
+    ? "ready"
+    : "reporting_scope_not_entitled";
+}
+
+function readSubmittedPortfolioIds(bodyText: string | undefined): string[] | null {
+  if (!bodyText) {
+    return null;
+  }
+  try {
+    const body = JSON.parse(bodyText) as Record<string, unknown>;
+    const portfolioScope = body.portfolio_scope;
+    if (!portfolioScope || typeof portfolioScope !== "object" || Array.isArray(portfolioScope)) {
+      return null;
+    }
+    const portfolioIds = (portfolioScope as Record<string, unknown>).portfolio_ids;
+    if (
+      !Array.isArray(portfolioIds) ||
+      portfolioIds.some((portfolioId) => typeof portfolioId !== "string" || !portfolioId.trim())
+    ) {
+      return null;
+    }
+    return portfolioIds.map((portfolioId) => String(portfolioId).trim());
+  } catch {
+    return null;
+  }
 }
 
 function resolveIdeaRouteCapability({
