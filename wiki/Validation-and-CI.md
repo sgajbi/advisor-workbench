@@ -33,7 +33,11 @@ concurrency group.
 - `make check`
   lint, typecheck, coverage-backed test gate, build
 - `make test-e2e`
-  Playwright smoke validation
+  Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
+  production build, allows up to four minutes for build and server readiness, and owns the direct
+  server child so cancellation cannot leave a shell-owned listener behind. Set
+  `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1` only immediately after a successful production build in the
+  same worktree; the launcher fails closed when `.next/BUILD_ID` is absent.
 - `make ci-local-docker`
   Docker parity
 - `npm run live:validate`
