@@ -82,6 +82,10 @@ Boundary rules that matter:
    bootstrap contract.
 9. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
+10. `/reports` is the portfolio-scoped Report Centre for firm-approved report selection, reviewed
+    single-portfolio request submission, output readiness, and recent report-data job tracking.
+    It does not expose report-worker controls or claim archive, advisor approval, client delivery,
+    or client communication.
 
 ## Architecture At A Glance
 
@@ -99,6 +103,8 @@ Current main surfaces:
   supportability sub-surfaces when Gateway/manage have materialized the relevant evidence
 - `data-products`
   `/data-products` self-serve catalog, dependency, and live trust discovery through gateway
+- `reports`
+  `/reports` portfolio-scoped, Gateway-backed report ordering and report-data job history
 - `api/bff`
   internal Next.js proxy bridge to `lotus-gateway`
 
@@ -208,6 +214,9 @@ WORKBENCH_IDEA_AUTH_MODE=development_configured
 WORKBENCH_IDEA_CALLER_SUBJECT=workbench-advisor
 WORKBENCH_IDEA_CALLER_ROLES=advisor
 WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+WORKBENCH_REPORTING_AUTH_MODE=development_configured
+WORKBENCH_REPORTING_CALLER_ROLE=client_advisor
+WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MANDATE_ID=MANDATE_PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
 WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
@@ -237,6 +246,7 @@ Quick local browser-facing path:
 http://workbench.dev.lotus/portfolio
 http://workbench.dev.lotus/performance
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
+http://workbench.dev.lotus/reports?portfolioId=PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001&mode=cockpit
 http://workbench.dev.lotus/workbench/PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/data-products
@@ -416,6 +426,14 @@ Important current product and route truths:
     not rerank candidates, clone Idea scoring, infer downstream conversion, create proposals automatically, grant suitability or
     execution authority, or promote Lotus Idea as a supported feature before canonical browser proof,
     data-product certification, and `lotus-idea` supported-feature evidence exist.
+19. Report ordering on `/reports` is backed only by Gateway
+    `/api/v1/report-ordering/options`, `/api/v1/reports/portfolio-reviews`, and
+    `/api/v1/report-jobs`. The BFF removes browser-supplied reporting authority headers and applies
+    only server-configured development scope until authenticated session resolution exists.
+    Workbench may configure, review, submit, and track a portfolio-review data request; it must not
+    run report workers, define capacity policy, infer output readiness, treat completion as archive
+    or client delivery, contact clients, or call `lotus-report`, `lotus-render`, or `lotus-archive`
+    directly.
 
 Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Surface.md).
 

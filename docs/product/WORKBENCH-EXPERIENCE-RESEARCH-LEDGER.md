@@ -720,3 +720,88 @@ No repo wiki change is required for this slice. It corrects the semantics, evide
 state handling, and composition of an existing supported Cashflow screen without changing a
 Gateway route, supported-feature claim, operator command, or canonical runtime flow. The
 repository engineering context records the reusable horizon and movement-semantics boundary.
+
+## Report Ordering
+
+### Business job
+
+A client advisor or portfolio manager needs to prepare an approved portfolio review without
+leaving the selected portfolio, understand which output is genuinely available, verify the
+business date and contents, submit once, and know whether report data is queued, preparing,
+complete, or failed. The advisor must not have to understand report-worker, service, endpoint,
+archive, or render implementation details.
+
+### Current-product research
+
+The slice used current official wealth-platform references as workflow evidence, not as a visual
+template:
+
+1. [Morningstar Advisor Workstation's portfolio-report workflow](https://advisor.morningstar.com/enterprise/ADV_AWE_QSGwithplanning.pdf)
+   starts from a selected client and portfolio before choosing a portfolio report. This supports
+   portfolio context as the primary ordering scope.
+2. [Morningstar Report Portal](https://www.morningstar.com/business/products/direct/report-portal)
+   emphasizes firm-approved templates, business-purpose configuration, benchmark selection,
+   compliance-aware control, on-demand access, and usage tracking. This supports a governed
+   catalogue and request history rather than a free-form document builder.
+3. [Temenos Wealth Front Office](https://www.temenos.com/products/wealth-management/wealth-front-office/)
+   frames advisor efficiency around clear interactive dashboards, prioritized actions, and
+   portfolio workflows. This supports a dense setup-plus-readiness layout instead of a long
+   technical operations panel.
+4. [Morningstar's aggregate-report workflow](https://advisor.morningstar.com/enterprise/onboarding/AdvisorWorkstationOnboarding4.pdf)
+   shows the value of household and multi-portfolio reporting. Lotus should add book, client, and
+   multi-portfolio ordering only when Gateway provides governed eligibility and submission
+   contracts; the first slice remains truthfully portfolio-scoped.
+
+### Adopted decisions
+
+1. Mount a dedicated `Reports` destination in the portfolio rail so reporting remains within the
+   advisor's selected-portfolio workflow.
+2. Treat the Gateway catalogue as the authority for report families, sections, ordering modes,
+   audience, release posture, and per-format readiness.
+3. Use a dense two-column layout: configuration and request history in the main work area, with a
+   sticky review/readiness rail for the decision and lifecycle boundary.
+4. Require an explicit review before submission and preserve one idempotency intent across safe
+   retry after a failed attempt.
+5. Keep structured-data and governed-document readiness independent. Show unavailable PDF output
+   with business-facing explanation instead of hiding it or offering a false action.
+6. Label completed work as `Report data complete`; archive and client delivery remain visibly
+   separate states.
+7. Present evidence created by advisory or portfolio-management workflows as workflow-generated,
+   not as directly orderable report families.
+8. Keep source identifiers inside support disclosures and keep metrics free of portfolio, client,
+   report-job, and idempotency identifiers.
+9. Preserve a single-column tablet/mobile fallback, keyboard focus, and reduced-motion behavior.
+
+### Rejected decisions
+
+1. Do not expose report-batch materialization, report-worker run-once, capacity, runtime-load, or
+   archive-lookup controls to advisors.
+2. Do not call `lotus-report`, `lotus-render`, or `lotus-archive` directly.
+3. Do not imply that report-data completion means PDF creation, archive, approval, client delivery,
+   or client communication.
+4. Do not make technical reason codes, service names, endpoint paths, batch ids, or job ids the
+   primary language of the screen.
+5. Do not add book, client, household, multi-portfolio, scheduled, or bulk ordering controls until
+   Gateway publishes supported eligibility and submission behavior for those scopes.
+6. Do not construct or store client-ready material in the browser.
+
+### Slice 1 — governed portfolio report request
+
+Issues #449 and #458 add the `/reports` route, reusable report-ordering module, strict source
+contracts, Gateway-only client, BFF-owned development authority, business configuration model,
+reviewed idempotent submission, recent request history, lifecycle boundary, responsive layout,
+and intentional loading, permission, error, empty, blocked, partial, ready, submitting, accepted,
+and retry states. The slice also retires the unreachable technical batch panel and obsolete public
+browser worker API.
+
+### Validation record
+
+Focused contract, BFF, view-model, hook, component, route, API, observability, and compatibility
+tests pass. Repository lint and TypeScript gates pass. Production build and canonical integrated
+runtime evidence are required again after the documentation slice before merge-ready status.
+
+### Publication decision
+
+Repo wiki source changes are required because the supported reporting route, integration boundary,
+and unsupported operator controls changed. Publish `wiki/` only after the implementation reaches
+`main`, then run strict parity verification.

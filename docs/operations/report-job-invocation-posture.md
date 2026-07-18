@@ -1,61 +1,101 @@
-# Report Job Invocation Posture
+# Report Ordering And Job Invocation Posture
 
-This note records the RFC-0100 and RFC-0104 Workbench adoption decisions.
+This note records the supported Workbench reporting boundary after issues #449 and #458.
 
-## Current State
+## Supported Business Workflow
 
-`lotus-workbench` does not directly initiate standalone portfolio review report-generation jobs.
-It now exposes a bounded RFC-0104 batch operation for the current portfolio through the governed
-gateway batch API.
+The portfolio-scoped Report Centre is mounted at:
 
-Current reporting usage is:
-
-- `src/features/workbench/api.ts`
-  calls `/reports/{portfolioId}/snapshot` and `/report-batches` through the Workbench BFF/gateway
-  path, and calls `/documents/{documentId}` plus `/documents/{documentId}/download` through the
-  same BFF/gateway boundary for archived report retrieval.
-- `src/app/workbench/[portfolioId]/page.tsx`
-  renders the reporting snapshot panel when the gateway snapshot call succeeds and the report batch
-  operations panel for explicit single-portfolio PDF batch materialization/status/run-once plus
-  archived document metadata/download lookup.
-  The optional route query `?asOfDate=YYYY-MM-DD` selects the report date for snapshot and batch
-  operations; `?benchmark=<backend benchmark code>` is passed into the batch request options.
-
-Code search on the RFC-0104 Workbench branch found no direct Workbench calls to:
-
-- `report.dev.lotus`
-- `/reports/portfolios/{portfolio_id}/review`
-
-## Decision
-
-No direct `lotus-report` Workbench integration is allowed.
-
-Workbench reporting actions must call `lotus-gateway` only:
-
-- `POST /api/v1/report-batches`
-- `GET /api/v1/report-batches/{batch_id}`
-- `POST /api/v1/report-batches/{batch_id}:run-once`
-- `GET /api/v1/documents/{document_id}`
-- `GET /api/v1/documents/{document_id}/download`
-- `POST /api/v1/reports/portfolio-reviews`
-- `GET /api/v1/report-jobs/{job_id}`
-- `POST /api/v1/report-jobs/{job_id}/cancel` when cancellation is exposed
-
-Workbench must not call `lotus-report` directly for report job creation, status, cancellation,
-rendering, or archive retrieval. Workbench must also not call `lotus-archive` directly; archived
-document metadata and binary downloads remain Gateway-owned product routes.
-
-For canonical RFC-0104 proof, use an implemented report date and backend benchmark identity such as
-`/workbench/PB_SG_GLOBAL_BAL_001?asOfDate=2026-04-22&benchmark=BMK_PB_GLOBAL_BALANCED_60_40`.
-The page distinguishes portfolio data date from report date when they differ.
-
-## Validation Evidence
-
-Validation performed for this decision:
-
-```powershell
-rg -n "portfolio.*review|report batch|report-batches|report job|report_job|reports/portfolio|lotus-report|report\\.dev|/reports|portfolio-reviews|report-jobs" src tests docs README.md REPOSITORY-ENGINEERING-CONTEXT.md
+```text
+/reports?portfolioId=PB_SG_GLOBAL_BAL_001
 ```
 
-The search shows reporting snapshot and batch operation consumption through gateway, with no direct
-`lotus-report` service invocation from Workbench.
+It supports an advisor or portfolio manager who needs to:
+
+1. review firm-approved report choices for the selected portfolio,
+2. set the report date and optional reporting currency,
+3. choose supported sections and an output that is currently ready,
+4. review the complete request before submission,
+5. submit one idempotent portfolio-review request,
+6. monitor recent report-data jobs without treating completion as archive or client delivery.
+
+Workbench calls only Gateway-backed routes through its same-origin BFF:
+
+- `GET /api/v1/report-ordering/options`
+- `POST /api/v1/reports/portfolio-reviews`
+- `GET /api/v1/report-jobs`
+
+The BFF removes browser-supplied reporting authority headers, derives the development caller role
+and portfolio entitlement from server configuration, and rejects unentitled scopes before calling
+Gateway. Outside explicit development environments, report ordering fails closed until an
+authenticated-principal resolver is available.
+
+## Output And Lifecycle Truth
+
+Output readiness is source-owned and independent by format:
+
+- structured report data can be available while a governed PDF is unavailable,
+- an unavailable format remains visible with business-facing support copy,
+- `completed` means report data is complete,
+- archive, retention, advisor approval, client delivery, and client communication remain separate
+  downstream states.
+
+Reports created by advisory or portfolio-management source workflows are shown as workflow-managed
+evidence. Workbench does not present them as directly orderable reports.
+
+## Unsupported Browser Controls
+
+Workbench does not expose browser controls for:
+
+- report-batch materialization,
+- report worker `:run-once` execution,
+- browser-defined worker capacity or runtime load,
+- ad hoc archive-document lookup,
+- direct document download,
+- client distribution or communication.
+
+The obsolete technical panel, client helpers, response types, metrics, and self-referential tests
+were retired under #449 and #458.
+
+## Authority Configuration
+
+Canonical local development uses:
+
+```text
+LOTUS_ENVIRONMENT=dev
+WORKBENCH_REPORTING_AUTH_MODE=development_configured
+WORKBENCH_REPORTING_CALLER_ROLE=client_advisor
+WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+```
+
+Allowed configured roles are `client_advisor` and `portfolio_manager`. Browser headers never
+grant reporting authority.
+
+## Service Boundary
+
+No direct `lotus-report`, `lotus-render`, or `lotus-archive` Workbench integration is allowed.
+Report catalogue, request acceptance, job lifecycle, render readiness, archive truth, retention,
+and delivery state remain owned by their source services and are exposed to Workbench only through
+Gateway contracts.
+
+## Validation
+
+Run the focused contract and workflow checks:
+
+```powershell
+npm test -- --run tests/unit/report-ordering-contracts.test.ts tests/unit/report-ordering-api.test.ts tests/unit/report-ordering-view-model.test.ts tests/unit/use-report-ordering-workflow.test.tsx tests/integration/report-ordering-workspace.test.tsx tests/integration/reports-page.test.tsx tests/unit/bff-route.test.ts
+npm run lint
+npm run typecheck
+npm run build
+```
+
+For integrated proof, use the canonical front-office sequence:
+
+```powershell
+npm run live:stack:up
+npm run live:validate
+npm run live:stack:down
+```
+
+Do not capture or publish demo-ready screenshots before canonical API, calculation, and panel
+validation pass.
