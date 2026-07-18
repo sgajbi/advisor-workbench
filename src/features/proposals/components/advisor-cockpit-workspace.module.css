@@ -55,11 +55,18 @@
   padding: 10px 12px;
 }
 
-.supportabilityItem strong,
 .preparationItem strong {
   color: var(--text);
   display: block;
   margin-top: 4px;
+}
+
+.supportabilityHeading {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .actionTableWrap {
@@ -117,12 +124,68 @@
   margin: 0 0 6px;
 }
 
-.unsupportedClaims {
+.operatingBoundaries {
   background: #fff8f2;
   border: 1px solid #f0d7bd;
   border-radius: 8px;
   margin-top: 8px;
   padding: 10px 12px;
+}
+
+.operatingBoundaryGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  margin-top: 8px;
+}
+
+.operatingBoundaryGrid > div {
+  min-width: 0;
+}
+
+.operatingBoundaryGrid strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.supportDetails {
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.supportDetails summary {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.supportDetails dl {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  margin: 10px 0 0;
+}
+
+.supportDetails dl > div {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+}
+
+.supportDetails dt {
+  font-weight: 700;
+}
+
+.supportDetails dd {
+  font-family: var(--font-mono, monospace);
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 900px) {
@@ -132,7 +195,9 @@
 
   .metricGrid,
   .supportabilityGrid,
-  .preparationGrid {
+  .preparationGrid,
+  .operatingBoundaryGrid,
+  .supportDetails dl {
     grid-template-columns: 1fr;
   }
 }

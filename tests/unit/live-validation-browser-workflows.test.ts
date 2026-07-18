@@ -51,7 +51,7 @@ describe("live validation browser workflow helpers", () => {
   it("keeps Advisor Cockpit browser proof aligned to business-facing readiness language", () => {
     const source = validateAdvisoryJourneyScreens.toString();
 
-    expect(source).toContain('getByText("Source Readiness", { exact: true })');
+    expect(source).toContain('getByText("Preparation Readiness", { exact: true })');
     expect(source).not.toContain('getByText("Supportability", { exact: true })');
   });
 
