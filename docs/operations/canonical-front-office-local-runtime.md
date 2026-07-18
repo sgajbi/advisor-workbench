@@ -321,12 +321,16 @@ Validation layers:
    - advisor-brief workflow-pack review actions for `ACCEPT`, `REVISE`, and `SUPERSEDE`
    - proposal creation with advisor-review narrative request
    - proposal narrative review and reviewed report-package request
+   - portfolio report-ordering catalogue, reviewed single-portfolio request, and report-data job
+     history through Gateway
    - RFC-0026 advisor cockpit tactical house-view cohort seed, action list, preparation packets,
      snapshot, supportability, and idempotent acknowledgement
    - RFC-0028 bank-demo proof scenario and supported-claim register through Gateway
 5. browser-level validation for populated UI on:
    - Portfolio summary
    - Portfolio detailed
+   - Portfolio Report Centre, including independent structured-data/PDF readiness, explicit review,
+     accepted request, recent history, and client-release boundary
    - Performance summary
    - Performance analysis
    - Performance advisor brief
@@ -367,6 +371,11 @@ visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal m
 the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
 review, request memo report-package posture, request non-authoritative commentary, preserve replay
 hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.
+Report Centre checks prove the Gateway-owned catalogue renders for the canonical portfolio,
+structured report data remains selected while unavailable governed PDF creation is disabled,
+advisor review gates submission, one request is accepted, recent report-data history is populated,
+and archive/client delivery remain separate. The governed panel identifier is
+`reporting.report_centre`; central platform registration is tracked in `lotus-platform#582`.
 RFC-0025 policy checks now use the governed
 `advisory_proposal_scenarios.policy_evaluation` block in
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` to activate the

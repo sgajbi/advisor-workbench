@@ -100,6 +100,14 @@ describe("live validation contract modules", () => {
       expect(
         DEFAULT_PANEL_REGISTRY.panels.some(
           (panel) =>
+            panel.panelId === "reporting.report_centre" &&
+            panel.screenshotName === "reporting-report-centre-live.png" &&
+            panel.gatewayEndpoint === "/api/v1/report-ordering/options"
+        )
+      ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
             panel.panelId === "dpm.portfolio_memory" &&
             panel.gatewayEndpoint === "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory"
         )

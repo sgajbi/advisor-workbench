@@ -19,6 +19,10 @@ export function validatePortfolioPanels(
   page: BrowserValidationPage,
   options: Record<string, unknown>
 ): Promise<void>;
+export function validateReportCentrePanel(
+  page: BrowserValidationPage,
+  options: Record<string, unknown>
+): Promise<void>;
 export function validatePerformanceSummaryPanel(
   page: BrowserValidationPage,
   options: Record<string, unknown>

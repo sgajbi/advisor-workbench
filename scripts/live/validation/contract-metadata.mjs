@@ -286,6 +286,28 @@ export const DEFAULT_PANEL_REGISTRY = {
       ownerFollowUpRfc: null,
     },
     {
+      panelId: "reporting.report_centre",
+      owningService: "lotus-report",
+      gatewayEndpoint: "/api/v1/report-ordering/options",
+      requiredSupportState: "partial",
+      route: "/reports?portfolioId={portfolioId}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "permission_blocked",
+        "unavailable",
+        "error",
+      ],
+      screenshotName: "reporting-report-centre-live.png",
+      knownLimitations: [
+        "structured report data is available while governed PDF creation remains independently source-owned",
+        "report-data completion does not claim archive, advisor approval, client delivery, or communication",
+      ],
+      ownerFollowUpRfc: null,
+    },
+    {
       panelId: "performance.summary",
       owningService: "lotus-performance",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/summary",

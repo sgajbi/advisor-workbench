@@ -663,6 +663,16 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
+    const browserWorkflowModule = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validation",
+        "browser-workflows.mjs",
+      ),
+      "utf8",
+    );
     const runbook = readFileSync(
       join(
         process.cwd(),
@@ -682,6 +692,9 @@ describe("canonical live validation script", () => {
     expect(contractModule).toContain("owningService");
     expect(panelGovernanceModule).toContain("Panel classification");
     expect(contractModule).toContain("allowedStates");
+    expect(script).toContain("validateReportCentrePanel");
+    expect(browserWorkflowModule).toContain('"reporting.report_centre"');
+    expect(browserWorkflowModule).toContain('name: "Submit Report Request"');
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
     expect(runbook).toContain("panel registry");
