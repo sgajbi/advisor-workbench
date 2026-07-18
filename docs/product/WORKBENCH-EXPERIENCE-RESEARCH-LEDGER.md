@@ -1091,3 +1091,67 @@ portfolio-context disclosure is opened.
 Wiki truth changes because `/book`, its authority boundary, its supported business workflow, and
 its deliberate no-claim scope are new operator-facing product behavior. The repo-authored wiki adds
 an Advisor Book Workflow and updates Supported Features, API Surface, Home, and navigation.
+
+## Shell Workspace Availability Language
+
+### Business job
+
+A private banker needs the main workspace navigation to explain why a destination cannot be used
+without exposing service names, feature flags, lifecycle codes, or fallback implementation state.
+The explanation must remain honest when Workbench does not recognize a future source reason.
+
+### Source-contract inventory
+
+Read-only review on 2026-07-18 found four bounded reason families:
+
+1. Gateway workspace state publishes exact disabled reasons for Portfolio, Performance, Risk,
+   Proposal, and Advisory.
+2. Gateway publishes exact unavailable or unknown reasons for the Core, Performance, Risk, and
+   Advise workspace dependencies.
+3. Advise publishes `advisory_ready`, `dependency_degraded`, or `lifecycle_disabled`; the Gateway
+   contract seam also covers `policy_review_required`.
+4. Workbench fallback descriptors publish exact `disabled_in_fallback` reasons. These are not
+   evidence that a capability is disabled; they mean source availability cannot be confirmed.
+
+### Current-product research
+
+1. [Carbon status-indicator guidance](https://carbondesignsystem.com/patterns/status-indicator-pattern/)
+   treats the descriptive text label as essential, distinguishes disabled from unknown, and warns
+   against relying on color or shape alone.
+2. [W3C keyboard-interface guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
+   permits `aria-disabled` when an unavailable destination must remain discoverable and calls for
+   consistent focus behavior across the navigation pattern.
+
+These sources guide content and accessibility semantics only. Lotus retains its existing visual
+system and Gateway-owned capability authority.
+
+### Adopted decisions
+
+1. Map only the exact governed source inventory into business postures; do not format open strings.
+2. Distinguish a workspace that is not enabled from one whose required information is temporarily
+   unavailable, one awaiting business review, and one whose availability is unconfirmed.
+3. Fail closed to `availability could not be confirmed` for unknown, missing, fallback, or
+   internally inconsistent reason values.
+4. Keep disabled destinations discoverable through the shared navigation primitive and retain
+   source reason codes in the Gateway contract rather than the primary banker-facing title.
+
+### Rejected decisions
+
+1. Replacing underscores, lowercasing arbitrary source codes, or matching reason keywords.
+2. Translating unavailable or unknown information into entitlement, permission, or service-outage
+   claims that the source does not make.
+3. Page-specific title patches or removal of disabled destinations solely to hide weak copy.
+
+### Validation record
+
+Issue #454 governs the slice. Twelve focused presenter and shared-navigation tests pass across
+known configuration, unavailable-information, review-required, fallback, missing, and unknown-code
+states. TypeScript and lint pass. Production browser proof verifies that a fallback-disabled
+Proposal destination exposes neutral business copy and no raw `disabled_in_fallback` title.
+
+### Publication decision
+
+No wiki source change is required. The wiki already states that shell navigation follows the
+Gateway capability contract; this slice corrects primary navigation language without changing a
+route, capability, authority boundary, or operator workflow. The reusable rule is durable in this
+research ledger, the codebase review ledger, and repository engineering context.
