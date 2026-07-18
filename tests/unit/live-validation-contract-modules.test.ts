@@ -100,6 +100,14 @@ describe("live validation contract modules", () => {
       expect(
         DEFAULT_PANEL_REGISTRY.panels.some(
           (panel) =>
+            panel.panelId === "advisor.book_overview" &&
+            panel.screenshotName === "advisor-book-overview-live.png" &&
+            panel.gatewayEndpoint === "/api/v1/advisor-book/portfolios"
+        )
+      ).toBe(true);
+      expect(
+        DEFAULT_PANEL_REGISTRY.panels.some(
+          (panel) =>
             panel.panelId === "reporting.report_centre" &&
             panel.screenshotName === "reporting-report-centre-live.png" &&
             panel.gatewayEndpoint === "/api/v1/report-ordering/options"

@@ -682,6 +682,41 @@ export async function validateReportCentrePanel(
   await screenshotRegisteredPanel(page, "reporting.report_centre");
 }
 
+export async function validateAdvisorBookPanel(
+  page,
+  {
+    workbenchBaseUrl,
+    portfolioId,
+    canonicalAsOfDate,
+    timeoutMs,
+    assertTableHasRows,
+    screenshotRegisteredPanel,
+  },
+) {
+  await page.goto(`${workbenchBaseUrl}/book?asOfDate=${canonicalAsOfDate}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "My book", exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByText("Own book", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  const bookTable = tableByExactLabel(page, "Portfolios in my book");
+  await assertTableHasRows(bookTable, 1, "Portfolios in my book");
+  await expect(bookTable.getByText(portfolioId, { exact: false }).first()).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Operating boundaries" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Support details" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await screenshotRegisteredPanel(page, "advisor.book_overview");
+}
+
 export async function validatePerformanceSummaryPanel(
   page,
   {

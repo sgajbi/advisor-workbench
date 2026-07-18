@@ -250,6 +250,28 @@ export const DEFAULT_PANEL_REGISTRY = {
   sourcePath: "deterministic-fallback",
   panels: [
     {
+      panelId: "advisor.book_overview",
+      owningService: "lotus-gateway",
+      gatewayEndpoint: "/api/v1/advisor-book/portfolios",
+      requiredSupportState: "partial",
+      route: "/book?asOfDate={canonicalAsOfDate}",
+      allowedStates: [
+        "ready",
+        "loading",
+        "empty",
+        "partial",
+        "permission_blocked",
+        "unavailable",
+        "error",
+      ],
+      screenshotName: "advisor-book-overview-live.png",
+      knownLimitations: [
+        "own-book scope only; delegated, team, and supervisor scope are not supported",
+        "tenant scope and legacy assignment limitations remain visible when reported by Gateway",
+      ],
+      ownerFollowUpRfc: null,
+    },
+    {
       panelId: "portfolio.summary",
       owningService: "lotus-gateway",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/overview",
