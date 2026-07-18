@@ -1148,6 +1148,8 @@ Issue #454 governs the slice. Twelve focused presenter and shared-navigation tes
 known configuration, unavailable-information, review-required, fallback, missing, and unknown-code
 states. TypeScript and lint pass. Production browser proof verifies that a fallback-disabled
 Proposal destination exposes neutral business copy and no raw `disabled_in_fallback` title.
+Exact-head `make check` passed on 2026-07-18 with 300 test files, 1,369 tests, 90.87% statement
+coverage, lint, TypeScript, and the optimized 25-route production build.
 
 ### Publication decision
 
