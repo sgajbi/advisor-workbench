@@ -65,7 +65,8 @@ type IdeaAuthorityResolution =
       reason:
         | "authenticated_principal_required"
         | "development_authority_not_allowed"
-        | "invalid_authority_mode";
+        | "invalid_authority_mode"
+        | "unsupported_idea_route";
     };
 
 function defaultCallerContextValue(
@@ -139,7 +140,7 @@ export function applyIdeaRouteCallerContextHeaders(
 
   const capability = resolveIdeaRouteCapability(request);
   if (!capability) {
-    return { status: "not_applicable" };
+    return { status: "rejected", reason: "unsupported_idea_route" };
   }
 
   const authorityMode = resolveIdeaAuthorityMode();

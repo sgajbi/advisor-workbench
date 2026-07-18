@@ -26,12 +26,18 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
         code:
           ideaAuthority.reason === "authenticated_principal_required"
             ? "idea_authenticated_principal_required"
+            : ideaAuthority.reason === "unsupported_idea_route"
+              ? "idea_route_not_supported"
             : "idea_authority_configuration_rejected",
         status: "rejected",
       },
       {
         status:
-          ideaAuthority.reason === "authenticated_principal_required" ? 401 : 500,
+          ideaAuthority.reason === "authenticated_principal_required"
+            ? 401
+            : ideaAuthority.reason === "unsupported_idea_route"
+              ? 404
+              : 500,
         headers: { "cache-control": "no-store" },
       },
     );
