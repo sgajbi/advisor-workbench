@@ -74,7 +74,10 @@ export function hasCashflowDegradation(snapshot: CashflowProjectionSnapshot): bo
 }
 
 export function hasProjectedCashMovements(outlook: PortfolioCashflowOutlook): boolean {
-  return outlook.upcoming_points.some((point) => point.net_cashflow_base !== 0);
+  return (
+    outlook.total_net_cashflow_base !== 0 ||
+    outlook.upcoming_points.some((point) => point.net_cashflow_base !== 0)
+  );
 }
 
 export function buildCashflowMovementRows(outlook: PortfolioCashflowOutlook) {

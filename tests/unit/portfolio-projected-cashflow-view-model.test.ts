@@ -7,6 +7,7 @@ import {
   buildCashflowSnapshot,
   buildCashflowScopeFacts,
   hasCashflowDegradation,
+  hasProjectedCashMovements,
   resolveCashflowHorizonDays,
   resolveCashflowHorizonKey,
   selectCashflowPartialFailures,
@@ -54,6 +55,16 @@ describe("portfolio projected cashflow view model", () => {
     expect(buildCashflowMovementRows(outlook).map((point) => point.projection_date)).toEqual([
       "2026-03-30",
     ]);
+  });
+
+  it("treats a non-zero aggregate as movement when dated points are unavailable", () => {
+    const outlook = buildResponse().cashflow_outlook!;
+    outlook.upcoming_points = [];
+
+    expect(hasProjectedCashMovements(outlook)).toBe(true);
+
+    outlook.total_net_cashflow_base = 0;
+    expect(hasProjectedCashMovements(outlook)).toBe(false);
   });
 
   it("selects only cashflow-owned degradation from a broader workspace response", () => {
