@@ -6,9 +6,15 @@ import { getAdvisorBook, type AdvisorBookQuery } from "./api";
 import type { AdvisorBookResponse } from "./contracts";
 
 export function useAdvisorBook(query: AdvisorBookQuery) {
-  const queryKey = JSON.stringify(query);
-  const queryRef = useRef(query);
-  queryRef.current = query;
+  const {
+    asOfDate,
+    clientId,
+    mandateType,
+    sortBy,
+    sortOrder,
+    offset,
+    limit,
+  } = query;
   const [response, setResponse] = useState<AdvisorBookResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -19,7 +25,15 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
     setLoading(true);
     setError(null);
     try {
-      const nextResponse = await getAdvisorBook(queryRef.current);
+      const nextResponse = await getAdvisorBook({
+        asOfDate,
+        clientId,
+        mandateType,
+        sortBy,
+        sortOrder,
+        offset,
+        limit,
+      });
       if (requestId === requestSequence.current) {
         setResponse(nextResponse);
       }
@@ -33,7 +47,7 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
         setLoading(false);
       }
     }
-  }, [queryKey]);
+  }, [asOfDate, clientId, limit, mandateType, offset, sortBy, sortOrder]);
 
   useEffect(() => {
     void load();
