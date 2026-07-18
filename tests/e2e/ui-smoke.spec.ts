@@ -74,6 +74,43 @@ test.describe('UI smoke checks', () => {
     ).toBeVisible({ timeout: 60000 });
   });
 
+  test('portfolio review navigation prioritizes the selected workspace when stacked', async ({ page }) => {
+    test.setTimeout(120000);
+    await page.setViewportSize({ width: 519, height: 900 });
+    await page.goto('/income?portfolioId=PB_SG_GLOBAL_BAL_001', {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
+    });
+
+    const currentView = page.getByRole('button', { name: /Current view Income/i });
+    const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
+    const workspaceHeading = page.getByRole('heading', { name: /^Income & Activity$/i });
+
+    await expect(currentView).toBeVisible({ timeout: 60000 });
+    await expect(currentView).toHaveAttribute('aria-expanded', 'false');
+    await expect(navigation).toBeHidden();
+    await expect(workspaceHeading).toBeVisible();
+    const headingBox = await workspaceHeading.boundingBox();
+    expect(headingBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(900);
+
+    await currentView.click();
+    await expect(navigation).toBeVisible();
+    const activeIncomeLink = navigation.getByRole('link', { name: /Income Income and activity/i });
+    await expect(activeIncomeLink).toHaveAttribute('aria-current', 'page');
+    await activeIncomeLink.focus();
+    await activeIncomeLink.press('Escape');
+    await expect(navigation).toBeHidden();
+    await expect(currentView).toBeFocused();
+
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(currentView).toBeVisible();
+    await expect(navigation).toBeHidden();
+
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await expect(currentView).toBeHidden();
+    await expect(navigation).toBeVisible();
+  });
+
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 390, height: 844 });
