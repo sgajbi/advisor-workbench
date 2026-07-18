@@ -132,6 +132,21 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.reporting",
+    panel: "report-ordering-catalogue",
+    operation: "reporting.ordering.options",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "portfolio-review-order",
+    operation: "reporting.portfolio-review.submit",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "portfolio-review-history",
+    operation: "reporting.portfolio-review.history",
+  },
+  {
+    route: "workbench.reporting",
     panel: "report-batch-status",
     operation: "reporting.report-batch.status",
   },
