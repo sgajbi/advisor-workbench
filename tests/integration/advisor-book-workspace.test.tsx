@@ -132,6 +132,8 @@ describe("AdvisorBookWorkspace", () => {
 
     expect(await screen.findByText("Book access is not available")).toBeInTheDocument();
     expect(screen.getByText(/does not currently provide access/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reference 403.*contact support/i)).toBeInTheDocument();
+    expect(screen.queryByText(/HTTP/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("table", { name: "Portfolios in my book" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });

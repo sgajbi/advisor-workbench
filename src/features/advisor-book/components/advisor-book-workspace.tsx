@@ -88,7 +88,7 @@ export default function AdvisorBookWorkspace() {
         }
         hint={
           getWorkbenchApiErrorStatus(error)
-            ? `Support reference: HTTP ${getWorkbenchApiErrorStatus(error)}`
+            ? `Reference ${getWorkbenchApiErrorStatus(error)}. Retry, or contact support if access should be available.`
             : "Retry when source connectivity is restored."
         }
         action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
@@ -256,8 +256,8 @@ export default function AdvisorBookWorkspace() {
             <p>No source limitations were reported for this own-book view.</p>
           )}
         </SectionBlock>
-        <SectionBlock title="Support details" subtitle="Evidence for operational follow-up.">
-          <DefinitionList ariaLabel="Advisor book support details" items={model.supportDetails} />
+        <SectionBlock title="Operational details" subtitle="Evidence for operational follow-up.">
+          <DefinitionList ariaLabel="Advisor book operational details" items={model.supportDetails} />
         </SectionBlock>
       </div>
     </div>

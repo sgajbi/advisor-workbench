@@ -73,13 +73,13 @@ export function buildAdvisorBookWorkspaceModel(
     rows: response.items.map(toPortfolioRow),
     limitations: response.supportability.limitations.map(toLimitation),
     supportDetails: [
-      { label: "Membership source", value: "Core portfolio manager book membership v1" },
-      { label: "Tenant scope", value: tenantScopeLabel(response.supportability.tenant_scope) },
-      { label: "Book status code", value: response.supportability.reason_code },
+      { label: "Membership record", value: "Portfolio manager assignments" },
+      { label: "Operating scope", value: tenantScopeLabel(response.supportability.tenant_scope) },
+      { label: "Availability reference", value: response.supportability.reason_code },
       { label: "Request reference", value: response.correlation_id },
-      { label: "Source snapshot", value: response.provenance?.snapshot_id ?? "Not reported" },
+      { label: "Data snapshot reference", value: response.provenance?.snapshot_id ?? "Not reported" },
       {
-        label: "Source evidence",
+        label: "Data currency",
         value: response.provenance?.source_evidence_current ? "Current" : "Not confirmed current",
       },
     ],
@@ -129,8 +129,8 @@ function toLimitation(rawValue: string) {
       detail: "Delegated, team, and supervisor book scopes are not available in this release.",
     },
     tenant_scope_not_reported: {
-      label: "Tenant confirmation pending",
-      detail: "Tenant scope comes from trusted Workbench context and was not confirmed by the source.",
+      label: "Operating scope confirmation pending",
+      detail: "The source did not confirm the operating scope for this request.",
     },
     legacy_advisor_projection: {
       label: "Legacy assignment evidence",
@@ -144,7 +144,7 @@ function toLimitation(rawValue: string) {
   return {
     ...(copy[rawValue] ?? {
       label: "Additional source limitation",
-      detail: "Support details contain an unrecognised source limitation for operational review.",
+      detail: "Operational details contain an unrecognised source limitation for review.",
     }),
     rawValue,
   };
@@ -153,7 +153,7 @@ function toLimitation(rawValue: string) {
 function mandateLabel(value: string): string {
   if (value === "DISCRETIONARY") return "Discretionary mandate";
   if (value === "ADVISORY") return "Advisory mandate";
-  return "Mandate classification available in support details";
+  return "Mandate classification available in operational details";
 }
 
 function lifecycleLabel(value: string): string {
@@ -165,7 +165,7 @@ function lifecycleLabel(value: string): string {
 function tenantScopeLabel(value: AdvisorBookResponse["supportability"]["tenant_scope"]): string {
   return value === "source_confirmed"
     ? "Confirmed by source"
-    : "Trusted Workbench context only";
+    : "Workbench access context only";
 }
 
 function formatBusinessDate(value: string): string {
