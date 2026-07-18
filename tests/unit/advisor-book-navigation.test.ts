@@ -27,7 +27,7 @@ describe("advisor-book context navigation", () => {
     expect(
       buildPortfolioContextHref({
         pathname: "/book",
-        searchParams: new URLSearchParams("asOfDate=2026-04-10"),
+        searchParams: new URLSearchParams("asOfDate=2026-04-10&clientId=CIF_001&offset=25"),
         portfolioId: "PB_001",
       }),
     ).toBe("/portfolio?asOfDate=2026-04-10&portfolioId=PB_001");
