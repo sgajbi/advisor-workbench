@@ -59,7 +59,7 @@ export type AdvisorCockpitModel = {
   }>;
   supportabilityRows: Array<{ label: string; value: string }>;
   unsupportedClaims: string[];
-  actionCount: number;
+  actionCount: number | null;
   actionPosture: AdvisorCockpitActionPosture;
 };
 
@@ -81,16 +81,16 @@ export function buildAdvisorCockpitModel({
   const highPriorityCount =
     countFromSnapshot(actionCounts, "priority.CRITICAL") +
     countFromSnapshot(actionCounts, "priority.HIGH");
-  const totalCount =
+  const reportedActionCount =
     typeof actionPage?.total_count === "number"
       ? actionPage.total_count
-      : actions.length;
+      : null;
   const actionPosture: AdvisorCockpitActionPosture =
     actions.length > 0
       ? "actionable"
-      : totalCount > 0
-        ? "details-unavailable"
-        : "clear";
+      : reportedActionCount === 0
+        ? "clear"
+        : "details-unavailable";
   const supportabilityPosture =
     supportability?.posture ??
     stringValue(snapshot?.supportability?.cockpit_api) ??
@@ -108,14 +108,31 @@ export function buildAdvisorCockpitModel({
     recommendedAction:
       topAction?.next_required_action ??
       (actionPosture === "details-unavailable"
-        ? `${formatActionCount(totalCount)} in scope. Refresh or verify source readiness before client discussion.`
+        ? reportedActionCount === null
+          ? "The action scope is not reported. Refresh or verify source readiness before client discussion."
+          : `${formatActionCount(reportedActionCount)} in scope. Refresh or verify source readiness before client discussion.`
         : "Continue with source-backed preparation and supportability review."),
     metrics: [
       {
         label: "Actions in scope",
-        value: String(totalCount),
-        detail: "Source-reported actions for the selected portfolio.",
-        tone: totalCount > 0 ? "warn" : "success",
+        value:
+          reportedActionCount !== null
+            ? String(reportedActionCount)
+            : actions.length > 0
+              ? `At least ${actions.length}`
+              : "Not reported",
+        detail:
+          reportedActionCount !== null
+            ? "Source-reported actions for the selected portfolio."
+            : actions.length > 0
+              ? "Loaded actions are visible; the full source scope is not reported."
+              : "Source action scope is not reported for the selected portfolio.",
+        tone:
+          reportedActionCount === 0
+            ? "success"
+            : reportedActionCount !== null || actions.length > 0
+              ? "warn"
+              : "default",
       },
       {
         label: "Pending review",
@@ -151,7 +168,7 @@ export function buildAdvisorCockpitModel({
       ...(snapshot?.unsupported_capabilities ?? []),
       ...(supportability?.unsupported_capabilities ?? []),
     ].map(formatCode),
-    actionCount: totalCount,
+    actionCount: reportedActionCount,
     actionPosture,
   };
 }

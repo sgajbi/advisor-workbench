@@ -202,7 +202,11 @@ export default function AdvisorCockpitWorkspace({
         <ScreenStatePanel
           kind="partial"
           title="Action details unavailable"
-          body={`${model.actionCount} ${model.actionCount === 1 ? "advisor action is" : "advisor actions are"} reported in scope, but ${model.actionCount === 1 ? "its" : "their"} review details are not available.`}
+          body={
+            model.actionCount === null
+              ? "The source action total and review details are not available for this portfolio."
+              : `${model.actionCount} ${model.actionCount === 1 ? "advisor action is" : "advisor actions are"} reported in scope, but ${model.actionCount === 1 ? "its" : "their"} review details are not available.`
+          }
           hint="Refresh or verify Advisor Cockpit source readiness before client discussion."
           surface="default"
         />

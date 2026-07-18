@@ -4,34 +4,37 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisorCockpitWorkspace from "../../src/features/proposals/components/advisor-cockpit-workspace";
+import type { AdvisorCockpitActionPageData } from "../../src/features/proposals/types";
 
-const listAdvisorCockpitActionsMock = vi.fn(async (_filters?: unknown) => ({
-  total_count: 1,
-  items: [
-    {
-      action_item_id: "aci_policy_review_001",
-      action_item_version: 1,
-      action_family: "POLICY_REVIEW_REQUIRED",
-      status: "PENDING_REVIEW",
-      priority: "HIGH",
-      owner_role: "ADVISOR",
-      title: "Policy review required",
-      next_required_action: "Review policy evidence before client discussion.",
-      reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
-      evidence_refs: [
-        { summary: "Policy evaluation requires compliance review." },
-      ],
-      source_readiness_gaps: [
-        {
-          message:
-            "Policy review is pending before client-ready posture can change.",
-        },
-      ],
-      unsupported_capabilities: ["CLIENT_READY_PUBLICATION"],
-      acknowledgement_state: { acknowledged: false },
-    },
-  ],
-}));
+const listAdvisorCockpitActionsMock = vi.fn(
+  async (_filters?: unknown): Promise<AdvisorCockpitActionPageData> => ({
+    total_count: 1,
+    items: [
+      {
+        action_item_id: "aci_policy_review_001",
+        action_item_version: 1,
+        action_family: "POLICY_REVIEW_REQUIRED",
+        status: "PENDING_REVIEW",
+        priority: "HIGH",
+        owner_role: "ADVISOR",
+        title: "Policy review required",
+        next_required_action: "Review policy evidence before client discussion.",
+        reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
+        evidence_refs: [
+          { summary: "Policy evaluation requires compliance review." },
+        ],
+        source_readiness_gaps: [
+          {
+            message:
+              "Policy review is pending before client-ready posture can change.",
+          },
+        ],
+        unsupported_capabilities: ["CLIENT_READY_PUBLICATION"],
+        acknowledgement_state: { acknowledged: false },
+      },
+    ],
+  }),
+);
 const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
   snapshot_id: "cockpit_snapshot_1",
   action_counts: {
@@ -248,6 +251,30 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(screen.queryByText("No open actions")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Acknowledge review" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not claim an all-clear when the source action total is not reported", async () => {
+    listAdvisorCockpitActionsMock.mockResolvedValueOnce({ items: [] });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findAllByText("Action details unavailable"),
+    ).toHaveLength(2);
+    expect(screen.getByLabelText("Advisor cockpit counts")).toHaveTextContent(
+      /Actions in scope\s*Not reported/,
+    );
+    expect(
+      screen.getByText(
+        "The source action total and review details are not available for this portfolio.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No open actions")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No advisor actions require review"),
     ).not.toBeInTheDocument();
   });
 
