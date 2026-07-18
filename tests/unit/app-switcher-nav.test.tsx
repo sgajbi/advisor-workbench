@@ -101,7 +101,44 @@ describe("AppSwitcherNav", () => {
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Proposal")).toHaveAttribute(
       "title",
-      "Proposal workspace is unavailable: dependency degraded."
+      "Proposal is temporarily unavailable because required information could not be retrieved."
+    );
+  });
+
+  it("keeps unknown source codes out of primary navigation copy", () => {
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "contract",
+      normalized: {
+        ...fallbackNormalizedCapabilities(),
+        shellBootstrap: {
+          workspaces: [
+            {
+              id: "proposal",
+              label: "Proposal",
+              href: "/proposals",
+              enabled: false,
+              supportability: {
+                state: "unavailable",
+                reasons: ["NEW_SOURCE_REASON_42"],
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    render(<AppSwitcherNav />);
+
+    expect(screen.getByText("Proposal")).toHaveAttribute(
+      "title",
+      "Proposal availability could not be confirmed."
+    );
+    expect(screen.getByText("Proposal")).not.toHaveAttribute(
+      "title",
+      expect.stringContaining("NEW_SOURCE_REASON_42")
     );
   });
 
