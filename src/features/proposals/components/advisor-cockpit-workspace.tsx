@@ -73,13 +73,16 @@ export default function AdvisorCockpitWorkspace({
       buildAdvisorCockpitModel({
         snapshot: snapshotQuery.data,
         actionPage: actionQuery.data,
-        preparationPage: preparationQuery.data,
+        preparationPage: preparationQuery.error
+          ? { items: [], total_count: null }
+          : preparationQuery.data,
         supportability: supportabilityQuery.data,
       }),
     [
       snapshotQuery.data,
       actionQuery.data,
       preparationQuery.data,
+      preparationQuery.error,
       supportabilityQuery.data,
     ],
   );
