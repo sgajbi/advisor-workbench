@@ -276,7 +276,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-gateway",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/overview",
       requiredSupportState: "ready",
-      route: "/portfolio?portfolioId={portfolioId}",
+      route: "/portfolio?portfolioId={portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -294,7 +294,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-gateway",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/overview",
       requiredSupportState: "ready",
-      route: "/portfolio?portfolioId={portfolioId}&tab=detailed",
+      route: "/portfolio?portfolioId={portfolio_id}&tab=detailed",
       allowedStates: [
         "ready",
         "loading",
@@ -312,7 +312,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-report",
       gatewayEndpoint: "/api/v1/report-ordering/options",
       requiredSupportState: "partial",
-      route: "/reports?portfolioId={portfolioId}",
+      route: "/reports?portfolioId={portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -334,7 +334,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-performance",
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/summary",
       requiredSupportState: "ready",
-      route: "/performance?portfolioId={portfolioId}",
+      route: "/performance?portfolioId={portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -353,7 +353,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/details",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -372,7 +372,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/performance/details",
       requiredSupportState: "partial",
       route:
-        "/performance?portfolioId={portfolioId}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=analysis&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -394,7 +394,7 @@ export const DEFAULT_PANEL_REGISTRY = {
         "/api/v1/workbench/{portfolio_id}/performance/advisor-brief",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=advisor&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=advisor&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -507,7 +507,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/summary",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -526,7 +526,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/drawdown",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -545,7 +545,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/concentration",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -564,7 +564,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/rolling",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -583,7 +583,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: "/api/v1/workbench/{portfolio_id}/risk/attribution",
       requiredSupportState: "ready",
       route:
-        "/performance?portfolioId={portfolioId}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=risk&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -602,7 +602,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint: null,
       requiredSupportState: "partial",
       route:
-        "/performance?portfolioId={portfolioId}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
+        "/performance?portfolioId={portfolio_id}&mode=evidence&period=YTD&detailBasis=NET&benchmark={benchmarkCode}",
       allowedStates: [
         "ready",
         "loading",
@@ -622,7 +622,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-manage",
       gatewayEndpoint: "/api/v1/dpm/command-center/outcome-reviews",
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}",
+      route: "/workbench/{portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -633,7 +633,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       screenshotName: "dpm-outcome-review-live.png",
       knownLimitations: [
-        "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/outcomes workspace",
+        "embedded /workbench/{portfolio_id} panel is implemented before the dedicated /dpm/outcomes workspace",
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
@@ -642,7 +642,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-manage",
       gatewayEndpoint: "/api/v1/dpm/command-center/waves",
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}",
+      route: "/workbench/{portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -653,7 +653,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       screenshotName: "dpm-wave-command-center-live.png",
       knownLimitations: [
-        "embedded /workbench/{portfolioId} panel is implemented before the dedicated /dpm/waves workspace",
+        "embedded /workbench/{portfolio_id} panel is implemented before the dedicated /dpm/waves workspace",
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
@@ -663,7 +663,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint:
         "/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory",
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}",
+      route: "/workbench/{portfolio_id}",
       allowedStates: [
         "ready",
         "loading",
@@ -674,7 +674,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       ],
       screenshotName: "dpm-portfolio-memory-live.png",
       knownLimitations: [
-        "embedded /workbench/{portfolioId} timeline is implemented before event filters and detail drawers",
+        "embedded /workbench/{portfolio_id} timeline is implemented before event filters and detail drawers",
       ],
       ownerFollowUpRfc: "RFC-0098",
     },
@@ -684,7 +684,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint:
         "/api/v1/dpm/command-center/construction/alternative-sets/generate",
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}?mode=construction",
+      route: "/workbench/{portfolio_id}?mode=construction",
       allowedStates: [
         "ready",
         "loading",
@@ -705,7 +705,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       gatewayEndpoint:
         "/api/v1/dpm/command-center/pm-operating-quality/score-runs",
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}?mode=quality",
+      route: "/workbench/{portfolio_id}?mode=quality",
       allowedStates: [
         "ready",
         "loading",
@@ -725,7 +725,7 @@ export const DEFAULT_PANEL_REGISTRY = {
       owningService: "lotus-ai",
       gatewayEndpoint: null,
       requiredSupportState: "ready",
-      route: "/workbench/{portfolioId}?mode=copilot",
+      route: "/workbench/{portfolio_id}?mode=copilot",
       allowedStates: [
         "ready",
         "loading",
