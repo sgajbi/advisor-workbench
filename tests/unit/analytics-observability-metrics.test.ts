@@ -243,6 +243,11 @@ describe("analytics UI observability metrics", () => {
       ])
     ).toEqual([
       [
+        "workbench.advisor-book",
+        "advisor-book-portfolios",
+        "advisor-book.portfolios",
+      ],
+      [
         "workbench.performance",
         "performance-summary",
         "performance.workspace.summary",
