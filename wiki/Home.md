@@ -10,6 +10,8 @@
   [docs/documentation/product-architecture-blueprint.md](../docs/documentation/product-architecture-blueprint.md)
 - Canonical local runtime:
   [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
+- Business-facing Portfolio screen flow:
+  [Portfolio Review Workflow](Portfolio-Review-Workflow)
 
 ## Current phase
 
@@ -48,6 +50,7 @@
 ## Navigation
 
 - [Overview](Overview)
+- [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)

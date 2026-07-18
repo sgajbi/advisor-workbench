@@ -24,6 +24,10 @@ This repo does not own:
 
 - gateway-first product client
 - Portfolio and Performance are the active front-office paths
+- Portfolio review is organized as a source-backed summary-to-exception-to-detail flow across
+  Portfolio review, Allocation, Positions, Transactions, Income & Activity, and Cashflow. See
+  [Portfolio Review Workflow](Portfolio-Review-Workflow) for the business question, evidence, and
+  authority boundary owned by each screen.
 - `/workbench/{portfolioId}` is the Manage workspace, with focused Gateway/manage-backed
   sub-surfaces for mandate health, rebalance waves, construction alternatives, portfolio memory,
   proof-pack evidence, and post-trade outcome review without direct Workbench calls to manage,
