@@ -73,7 +73,7 @@ export default function AdvisorCockpitWorkspace({
       buildAdvisorCockpitModel({
         snapshot: snapshotQuery.data,
         actionPage: actionQuery.data,
-        preparationPage: preparationQuery.error
+        preparationPage: preparationQuery.error && !preparationQuery.data
           ? { items: [], total_count: null }
           : preparationQuery.data,
         supportability: supportabilityQuery.data,
@@ -133,6 +133,9 @@ export default function AdvisorCockpitWorkspace({
       supportabilityQuery.error,
   );
   const actionWorklistUnavailable = Boolean(actionQuery.error);
+  const preparationRefreshUnavailable = Boolean(
+    preparationQuery.error && preparationQuery.data,
+  );
   const actionStatus = actionWorklistUnavailable
     ? { label: "Worklist unavailable", tone: "warn" as const }
     : model.actionPosture === "actionable"
@@ -258,7 +261,17 @@ export default function AdvisorCockpitWorkspace({
       >
         {model.preparationPosture === "available" ? (
           <>
-            {model.preparationCount === null ? (
+            {preparationRefreshUnavailable ? (
+              <ScreenStatePanel
+                kind="partial"
+                title="Meeting preparation refresh unavailable"
+                body={`${model.preparationRows.length} previously loaded ${model.preparationRows.length === 1 ? "preparation pack remains" : "preparation packs remain"} visible, but the current source scope cannot be confirmed.`}
+                hint="Treat the visible preparation evidence as last loaded and verify source readiness before a client discussion."
+                surface="default"
+              />
+            ) : null}
+            {!preparationRefreshUnavailable &&
+            model.preparationCount === null ? (
               <Text variant="secondary">
                 At least {model.preparationRows.length}{" "}
                 {model.preparationRows.length === 1
@@ -266,7 +279,9 @@ export default function AdvisorCockpitWorkspace({
                   : "preparation packs are"}{" "}
                 available for review; the full source scope is not reported.
               </Text>
-            ) : model.preparationCount > model.preparationRows.length ? (
+            ) : !preparationRefreshUnavailable &&
+              model.preparationCount !== null &&
+              model.preparationCount > model.preparationRows.length ? (
               <Text variant="secondary">
                 {model.preparationCount}{" "}
                 {model.preparationCount === 1
