@@ -42,6 +42,7 @@ import {
   validatePerformanceAnalysisPanel,
   validatePerformanceSummaryPanel,
   validatePortfolioPanels,
+  validateReportCentrePanel,
   validatePmOperatingQualityPanel,
   validateOutcomeReviewPanel,
   validateProofPackPanel,
@@ -1920,6 +1921,13 @@ async function run() {
       portfolioId,
       timeoutMs,
       assertListHasItems: browserHelpers.assertListHasItems,
+      screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
+    });
+    await validateReportCentrePanel(page, {
+      workbenchBaseUrl,
+      portfolioId,
+      timeoutMs,
+      assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validatePerformanceSummaryPanel(page, {

@@ -627,6 +627,61 @@ export async function validatePortfolioPanels(
   await screenshotRegisteredPanel(page, "portfolio.summary");
 }
 
+export async function validateReportCentrePanel(
+  page,
+  {
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    assertTableHasRows,
+    screenshotRegisteredPanel,
+  },
+) {
+  await page.goto(`${workbenchBaseUrl}/reports?portfolioId=${portfolioId}`, {
+    waitUntil: "networkidle",
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Report Centre" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    page.getByRole("radio", { name: /Structured data package/ }),
+  ).toBeChecked({ timeout: timeoutMs });
+  await expect(
+    page.getByRole("radio", { name: /Governed PDF document/ }),
+  ).toBeDisabled({ timeout: timeoutMs });
+  await expect(
+    page.getByText(/PDF creation is temporarily unavailable/),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByText("Review before any client use")).toBeVisible({
+    timeout: timeoutMs,
+  });
+
+  await page.getByRole("button", { name: "Review Request" }).click({
+    timeout: timeoutMs,
+  });
+  const submitButton = page.getByRole("button", {
+    name: "Submit Report Request",
+  });
+  await expect(submitButton).toBeEnabled({ timeout: timeoutMs });
+  await submitButton.click({ timeout: timeoutMs });
+  await expect(page.getByText("Report request recorded")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    page.getByRole("button", { name: "Request Accepted" }),
+  ).toBeDisabled({ timeout: timeoutMs });
+  await assertTableHasRows(
+    tableByExactLabel(page, "Recent portfolio report requests"),
+    1,
+    "Recent portfolio report requests",
+  );
+  await screenshotRegisteredPanel(page, "reporting.report_centre");
+}
+
 export async function validatePerformanceSummaryPanel(
   page,
   {

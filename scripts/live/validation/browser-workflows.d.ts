@@ -23,3 +23,8 @@ export function createBrowserValidationHelpers(args: {
   screenshotRegisteredPanel: (...args: unknown[]) => Promise<void>;
   resolveRegistryRoute: (routeTemplate: string) => string;
 };
+
+export function validateReportCentrePanel(
+  page: unknown,
+  options: Record<string, unknown>,
+): Promise<void>;
