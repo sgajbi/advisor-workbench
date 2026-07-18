@@ -922,7 +922,8 @@ facts.
 2. A cross-screen regression proves the same source-ready posture on all five Portfolio record
    screens, and a rendered component regression proves that raw `READY` no longer appears on the
    Reporting Snapshot item.
-3. Eighteen focused tests, TypeScript validation, lint, diff checks, and the production build pass.
+3. Eighteen focused tests passed; full `make check` then passed 294 files and 1,323 tests at 90.83%
+   statement coverage, followed by clean lint, TypeScript validation, and production build.
 4. Production browser proof at 1440 x 1000 against a bounded diagnostic Gateway fixture rendered
    `Reportable book ready`, `11 reportable rows available; a reporting snapshot has not been
    generated`, and `Not generated`. The local artifact is
