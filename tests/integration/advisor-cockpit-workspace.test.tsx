@@ -272,4 +272,18 @@ describe("AdvisorCockpitWorkspace", () => {
       screen.queryByText("Policy review required"),
     ).not.toBeInTheDocument();
   });
+
+  it("keeps the worklist posture when a non-action cockpit source fails", async () => {
+    listAdvisorCockpitPreparationPacketsMock.mockRejectedValueOnce(
+      new Error("preparation unavailable"),
+    );
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(await screen.findByText("Action required")).toBeInTheDocument();
+    expect(screen.queryByText("Worklist unavailable")).not.toBeInTheDocument();
+    expect(screen.getByText("Advisor cockpit unavailable")).toBeInTheDocument();
+  });
 });
