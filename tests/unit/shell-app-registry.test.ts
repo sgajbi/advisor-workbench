@@ -9,6 +9,7 @@ describe("resolveShellApp", () => {
     expect(resolveShellApp("/income").id).toBe("portfolio");
     expect(resolveShellApp("/intake").id).toBe("portfolio");
     expect(resolveShellApp("/reports").id).toBe("portfolio");
+    expect(resolveShellApp("/book").id).toBe("portfolio");
   });
 
   it("maps structured workspace routes correctly", () => {
