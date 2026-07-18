@@ -59,6 +59,33 @@ export function ReportConfigurationPanel({
             })}
           </div>
         </fieldset>
+
+        {model.workflowManagedFamilies.length ? (
+          <div className={styles.workflowManagedGroup}>
+            <div className={styles.workflowManagedHeading}>
+              <div>
+                <strong>Created through business workflows</strong>
+                <p>
+                  These evidence packs are created from their originating advisory or
+                  portfolio-management process, rather than ordered here.
+                </p>
+              </div>
+              <SemanticBadge>Workflow generated</SemanticBadge>
+            </div>
+            <div className={styles.workflowManagedGrid}>
+              {model.workflowManagedFamilies.map((family) => (
+                <article key={family.reportFamilyId} className={styles.workflowManagedCard}>
+                  <strong>{family.businessLabel}</strong>
+                  <span>{family.description}</span>
+                  <small>
+                    {family.orderingModes[0]?.description ??
+                      "Open the originating business workflow to create this evidence."}
+                  </small>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </SectionBlock>
 
       <SectionBlock

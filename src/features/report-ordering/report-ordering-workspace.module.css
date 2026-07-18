@@ -188,6 +188,58 @@
   gap: 8px;
 }
 
+.workflowManagedGroup {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e4e8ed;
+}
+
+.workflowManagedHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowManagedHeading strong,
+.workflowManagedCard strong {
+  color: #25323d;
+  font-size: 0.8rem;
+}
+
+.workflowManagedHeading p {
+  max-width: 720px;
+  margin: 3px 0 0;
+  color: #66737f;
+  font-size: 0.76rem;
+  line-height: 1.42;
+}
+
+.workflowManagedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.workflowManagedCard {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e0e5ea;
+  border-radius: 7px;
+  background: #f7f8fa;
+  color: #52616d;
+  font-size: 0.77rem;
+  line-height: 1.4;
+}
+
+.workflowManagedCard small {
+  color: #6b7781;
+}
+
 .readinessPanel,
 .boundaryPanel,
 .submissionState {
@@ -312,6 +364,7 @@
   .fieldGrid,
   .familyGrid,
   .outputGrid,
+  .workflowManagedGrid,
   .sectionChoiceGrid {
     grid-template-columns: 1fr;
   }
@@ -319,6 +372,7 @@
 
 @media (max-width: 760px) {
   .choiceHeading,
+  .workflowManagedHeading,
   .railHeading {
     align-items: flex-start;
     flex-direction: column;
