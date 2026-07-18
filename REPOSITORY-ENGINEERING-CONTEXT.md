@@ -400,6 +400,12 @@ Important validation expectations:
     portfolio-specific stale state, and restore keyboard focus. Until #436 delivers an
     authenticated principal, BFF advisor-book authority is development-configured only and fails
     closed elsewhere.
+21. Performance browser proof must read source module capabilities and source economics before
+    asserting optional metrics or analytical rows. Use `npm run test:e2e:performance:populated`
+    for the complete metric/layout precondition and
+    `npm run test:e2e:performance:unavailable` for truthful degraded behavior. Keep live-only
+    timing checks separate, use default independent Playwright execution rather than serial mode,
+    and do not let one summary failure skip Analysis, Contribution, or Evidence journeys.
 
 ### Visual Review Gate
 

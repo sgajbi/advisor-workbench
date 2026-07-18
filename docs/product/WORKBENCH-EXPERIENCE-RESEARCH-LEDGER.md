@@ -1272,3 +1272,77 @@ responsive assertions passed, and launcher cleanup left no listener on port 3000
 No wiki source change is required. This slice changes browser-test selection semantics, not a
 supported product route, business capability, operator command, or published source boundary. The
 reusable locator rule is durable in this research ledger and the codebase review ledger.
+
+## Supportability-Aware And Independent Performance Browser Proof
+
+### Validation job
+
+A private-banking Performance screen must remain correct when the source contract is complete,
+partial, or unavailable. Browser proof must distinguish UI correctness from source readiness,
+retain strong metric and geometry checks when their governed precondition is satisfied, and keep
+Analysis, Contribution, and Evidence journeys independently diagnosable.
+
+### Source-contract audit
+
+Read-only review on 2026-07-18 confirmed:
+
+1. the split Performance summary contract publishes exact module capability states and source-owned
+   economics before optional detail rows are rendered,
+2. return history, horizon comparison, contributor ranking, and evidence can be unavailable while
+   the overall Performance workspace remains a truthful supported page,
+3. the existing test inferred readiness from page visibility and optional row timing,
+4. file-level serial mode skipped every later journey after the first summary failure, and
+5. existing pure fixture builders already represented populated and source-limited contracts but
+   were not available through a real production-browser/BFF path.
+
+### Current-practice research
+
+1. Official [Playwright isolation guidance](https://playwright.dev/docs/browser-contexts) recommends
+   a clean browser context per test so failures and local state do not carry into later journeys.
+2. Official [Playwright retry and serial-mode guidance](https://playwright.dev/docs/test-retries)
+   states that later tests in a serial group are skipped after a failure and recommends isolated
+   tests where possible.
+3. Official [Playwright fixture guidance](https://playwright.dev/docs/test-fixtures) treats setup
+   and teardown as explicit lifecycle boundaries and keeps each test supplied only with the
+   environment it requires.
+
+### Adopted decisions
+
+1. Read the exact summary capability/economic contract using the same explicit selection as the
+   browser page and fail closed when capabilities are absent.
+2. Assert complete metrics and geometry only when supported modules and required economics satisfy
+   the populated precondition.
+3. Assert exact unavailable metric, return, horizon, contributor, and evidence behavior when the
+   source contract supplies that posture.
+4. Run the file in default independent mode: one governed fixture Gateway lifecycle and a fresh
+   browser context for every scenario, without serial skip propagation.
+5. Reuse the existing Performance contract builders behind an opt-in loopback fixture Gateway;
+   route the production Next server through canonical `gateway.dev.lotus` addressing.
+6. Publish populated and unavailable repo-native commands with direct child-process ownership,
+   bounded ports, signal forwarding, and fail-closed scenario validation.
+
+### Rejected decisions
+
+1. Waiting for optional cash tiles, horizon rows, or contributor rows to infer source readiness.
+2. Weakening populated geometry checks so an unavailable contract happens to pass.
+3. Treating a truthful unavailable source state as a page failure or requiring a live Gateway for
+   deterministic component-layout proof.
+4. Serial mode, shared browser pages, positional selectors, retries, or longer timeouts as a remedy
+   for contract-state ambiguity.
+5. Using fixture responses to certify live upstream Server-Timing propagation.
+6. Adding fixture routes, mock switches, or test-only payloads to production application code.
+
+### Validation record
+
+Issue #431 governs the slice. Six focused classifier/launcher unit tests, lint, TypeScript, launcher
+syntax, invalid-input rejection, and diff hygiene pass. The repo-native populated command passed five
+executed browser journeys with one explicit live-only timing skip in 14.4 seconds. The unavailable
+command passed four executed journeys with live-timing and populated-layout preconditions explicitly
+skipped in 13.3 seconds. Both scenarios exercised the production Workbench/BFF path and left the
+fixture and smoke-server ports clear.
+
+### Publication decision
+
+Wiki source changes are required because two new repository-native operator commands and their
+evidence boundaries are now part of the validation workflow. Publish `wiki/Validation-and-CI.md`
+after merge, then run strict wiki parity verification.
