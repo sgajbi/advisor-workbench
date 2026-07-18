@@ -116,4 +116,44 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByText(/not available for report ordering/)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
   });
+
+  it("presents source-workflow evidence without offering a false ordering control", async () => {
+    const payload = buildReportOrderingResponse();
+    optionsMock.mockResolvedValue(
+      parseReportOrderingResponse({
+        ...payload,
+        reportFamilies: [
+          ...payload.reportFamilies,
+          {
+            ...structuredClone(payload.reportFamilies[0]),
+            reportFamilyId: "proof_pack",
+            businessLabel: "Pre-trade decision evidence",
+            description: "Decision evidence created during suitability review.",
+            orderingModes: [
+              {
+                modeId: "source_workflow",
+                businessLabel: "Advisory workflow",
+                description: "Created as part of an approved advisory decision.",
+                defaultOutputFormat: "json",
+                interactive: false,
+                eligibility: {
+                  state: "ready",
+                  reasonCode: "source_workflow_ready",
+                  message: "Created from its source business workflow.",
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    expect(await screen.findByText("Created through business workflows")).toBeInTheDocument();
+    expect(screen.getByText("Pre-trade decision evidence")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("radio", { name: /Pre-trade decision evidence/ }),
+    ).not.toBeInTheDocument();
+  });
 });
