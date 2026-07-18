@@ -204,6 +204,14 @@ Current repository posture:
     sufficiency, funding capacity, or a recommendation. Source-backed zero movement is an explicit
     no-movement result; Gateway warnings, partial failures, correlation, contract version,
     projection dates, reporting currency, and booked/projected basis remain visible evidence.
+21. Portfolio reporting evidence must distinguish source readiness from generated output. Gateway
+    reporting `READY` can be derived from reportable book coverage and does not prove that a
+    reporting snapshot exists. Workbench may use `generated_at_utc` as generation evidence, but
+    must derive timestamp, row explanation, badge, and tone from one typed posture so generated,
+    source-ready but not generated, pending/partial, empty, stale/degraded, unavailable, failed,
+    and unknown states cannot contradict one another. Do not treat `row_count` as a generation
+    timestamp, leak unknown status codes into business copy, or invent freshness thresholds in the
+    browser.
 
 ## Architecture And Module Map
 
