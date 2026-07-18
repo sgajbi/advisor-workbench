@@ -147,7 +147,7 @@ export function buildMetricDrawer(
             label: "Definition",
             content: renderDrawerParagraphs([
               "Available cash aggregates current cash balances across portfolio cash instruments.",
-              "Use it with projected cashflow to assess short-horizon funding capacity.",
+              "Use it with projected cash movement to review expected near-term inflows and outflows.",
             ]),
           },
           {

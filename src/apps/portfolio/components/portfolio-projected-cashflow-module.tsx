@@ -1,135 +1,75 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   AnalyticsModule,
   AnalyticsTable,
   DisclosureToggleButton,
   SectionHeader,
-  WorkbenchInlineRefreshNote,
+  WorkbenchSegmentedControl,
 } from "@/design-system";
 
-import { getPortfolioProjectedCashflow } from "../api";
 import { formatCurrency, formatDate } from "../formatters";
-import type { PortfolioWorkspace } from "../types";
+import {
+  CASHFLOW_HORIZON_OPTIONS,
+  buildCashflowExportFilename,
+  buildCashflowExportRows,
+  buildCashflowMovementRows,
+  buildCashflowResultLabel,
+  buildCashflowScopeFacts,
+  hasCashflowDegradation,
+  hasProjectedCashMovements,
+} from "../portfolio-projected-cashflow-view-model";
+import type {
+  PortfolioCashflowOutlook,
+  PortfolioPartialFailure,
+  PortfolioProjectedCashflowResponse,
+} from "../types";
 import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
 import PortfolioModuleState from "./portfolio-module-state";
-
-const CASHFLOW_HORIZON_PRESETS = [10, 30, 90] as const;
+import { usePortfolioProjectedCashflow } from "./use-portfolio-projected-cashflow";
 
 export default function PortfolioProjectedCashflowModule({
   portfolioId,
   baseCurrency,
   asOfDate,
   initialCashflowOutlook,
+  initialWarnings,
+  initialPartialFailures,
   defaultExpanded,
-  suspendInitialFetch = false,
 }: {
   portfolioId: string;
   baseCurrency: string;
   asOfDate: string;
-  initialCashflowOutlook: PortfolioWorkspace["cashflow_outlook"];
+  initialCashflowOutlook: PortfolioCashflowOutlook | null;
+  initialWarnings: string[];
+  initialPartialFailures: PortfolioPartialFailure[];
   defaultExpanded: boolean;
-  suspendInitialFetch?: boolean;
 }) {
-  const initialHorizonDays = initialCashflowOutlook?.projection_days ?? CASHFLOW_HORIZON_PRESETS[0];
-  const [selectedHorizonDays, setSelectedHorizonDays] = useState(initialHorizonDays);
-  const [cashflowOutlook, setCashflowOutlook] = useState(initialCashflowOutlook);
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-
-  useEffect(() => {
-    setCashflowOutlook(initialCashflowOutlook);
-    setSelectedHorizonDays(initialCashflowOutlook?.projection_days ?? CASHFLOW_HORIZON_PRESETS[0]);
-  }, [initialCashflowOutlook]);
-
-  useEffect(() => {
-    if (defaultExpanded) {
-      setExpanded(true);
-    }
-  }, [defaultExpanded]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProjectedCashflow() {
-      if (suspendInitialFetch && !initialCashflowOutlook) {
-        setLoading(true);
-        setLoadError(false);
-        return;
-      }
-
-      const shouldUseInitialOutlook =
-        Boolean(initialCashflowOutlook) && selectedHorizonDays === initialHorizonDays;
-      if (shouldUseInitialOutlook) {
-        setLoadError(false);
-        return;
-      }
-
-      setLoading(true);
-      setLoadError(false);
-      const nextOutlook = await getPortfolioProjectedCashflow(portfolioId, {
-        asOfDate,
-        horizonDays: selectedHorizonDays,
-        includeProjected: true,
-      });
-
-      if (cancelled) {
-        return;
-      }
-
-      if (nextOutlook) {
-        setCashflowOutlook(nextOutlook);
-      } else {
-        setLoadError(true);
-      }
-      setLoading(false);
-    }
-
-    void loadProjectedCashflow();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
+  const cashflow = usePortfolioProjectedCashflow({
+    portfolioId,
     asOfDate,
     initialCashflowOutlook,
-    initialHorizonDays,
-    portfolioId,
-    selectedHorizonDays,
-    suspendInitialFetch,
-  ]);
-
-  const subtitle = useMemo(
-    () => `Next ${selectedHorizonDays} days in ${baseCurrency}`,
-    [baseCurrency, selectedHorizonDays]
-  );
-
-  const cyclePeriod = () => {
-    setSelectedHorizonDays((current) => {
-      const currentIndex = CASHFLOW_HORIZON_PRESETS.indexOf(
-        current as (typeof CASHFLOW_HORIZON_PRESETS)[number]
-      );
-      const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % CASHFLOW_HORIZON_PRESETS.length;
-      return CASHFLOW_HORIZON_PRESETS[nextIndex];
-    });
-  };
+    initialWarnings,
+    initialPartialFailures,
+  });
+  const snapshot = cashflow.selectedSnapshot;
+  const outlook = snapshot?.outlook ?? null;
+  const movementRows = outlook ? buildCashflowMovementRows(outlook) : [];
+  const subtitle = snapshot
+    ? `${buildCashflowResultLabel(snapshot)} · ${baseCurrency}`
+    : `${cashflow.selectedHorizonDays}-day projection · ${baseCurrency}`;
 
   const exportCashflow = () => {
-    if (!cashflowOutlook) {
+    if (!snapshot || cashflow.loading) {
       return;
     }
 
-    const rows = cashflowOutlook.upcoming_points.map((point) => [
-      formatDate(point.projection_date),
-      formatCurrency(point.net_cashflow_base, baseCurrency),
-      formatCurrency(point.projected_cumulative_cashflow_base, baseCurrency),
-    ]);
-
+    const rows = buildCashflowExportRows(snapshot, baseCurrency);
     const csv = [
-      ["Date", "Net Cashflow", "Cumulative"].join(","),
+      ["Date", "Net projected movement", "Cumulative projected movement"].join(","),
       ...rows.map((row) => row.map((value) => csvEscape(value)).join(",")),
     ].join("\n");
 
@@ -137,7 +77,7 @@ export default function PortfolioProjectedCashflowModule({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `portfolio-projected-cashflow-${portfolioId}-${selectedHorizonDays}d.csv`;
+    link.download = buildCashflowExportFilename(snapshot, portfolioId);
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -145,18 +85,27 @@ export default function PortfolioProjectedCashflowModule({
   return (
     <AnalyticsModule>
       <SectionHeader
-        title="Cumulative Cashflow Projection"
+        title="Projected cash movement"
         subtitle={subtitle}
         actions={
           <>
-            <button type="button" className="portfolio-inline-action" onClick={cyclePeriod}>
-              Period
-            </button>
+            <WorkbenchSegmentedControl
+              value={cashflow.selectedHorizonKey}
+              onChange={cashflow.selectHorizon}
+              options={CASHFLOW_HORIZON_OPTIONS.map((option) => ({
+                key: option.key,
+                label: option.label,
+                disabled: cashflow.loading,
+                title: `${option.days}-day projected cash movement`,
+              }))}
+              ariaLabel="Projection horizon"
+              className="portfolio-cashflow-horizon-control"
+            />
             <button
               type="button"
               className="portfolio-inline-action"
               onClick={exportCashflow}
-              disabled={!cashflowOutlook}
+              disabled={!snapshot || cashflow.loading}
             >
               Export
             </button>
@@ -168,83 +117,130 @@ export default function PortfolioProjectedCashflowModule({
         }
       />
 
-      {loading && !cashflowOutlook ? (
+      {cashflow.loading ? (
         <PortfolioModuleState
           variant="loading"
-          title="Loading projected cashflow"
-          message="Projected liquidity is loading for the selected horizon."
+          title={`Loading ${cashflow.selectedHorizonDays}-day projection`}
+          message="Expected portfolio cash movements are being refreshed."
           chart
           rows={3}
         />
-      ) : cashflowOutlook ? (
+      ) : cashflow.failure ? (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          title={`${cashflow.failure.requestedHorizonDays}-day projection unavailable`}
+          body="Expected cash movements could not be retrieved for this horizon. No prior-horizon figures are being shown as current."
+          hint="Retry the projection or continue with another available horizon."
+          action={
+            <button type="button" className="portfolio-inline-action" onClick={cashflow.retry}>
+              Retry projection
+            </button>
+          }
+          why={buildFailureEvidence(cashflow.failure.response)}
+        />
+      ) : snapshot && outlook ? (
         <>
-          <PortfolioProjectedCashflowPanel
-            cashflowOutlook={cashflowOutlook}
-            baseCurrency={baseCurrency}
-          />
-          {hasFlatCashflow(cashflowOutlook) ? (
+          <div className="portfolio-cashflow-scope" aria-label="Projection scope">
+            {buildCashflowScopeFacts(snapshot, baseCurrency).map((fact) => (
+              <div key={fact.label}>
+                <span>{fact.label}</span>
+                <strong>{fact.value}</strong>
+              </div>
+            ))}
+          </div>
+
+          {outlook.notes ? (
+            <p className="portfolio-cashflow-source-note">
+              <strong>Source note</strong>
+              <span>{outlook.notes}</span>
+            </p>
+          ) : null}
+
+          {hasCashflowDegradation(snapshot) ? (
             <PortfolioModuleState
               variant="status"
               state="partial"
-              title="Flat projected cashflow"
-              body="Projected cash movements are flat across the current forecast horizon."
-              hint="Current projections show no meaningful net liquidity movement."
+              title="Projection available with limitations"
+              body="Some projection inputs were unavailable. Review the returned movement schedule with the source limitation in mind."
+              hint={`${Math.max(snapshot.partialFailures.length, snapshot.warnings.length)} source limitation${
+                Math.max(snapshot.partialFailures.length, snapshot.warnings.length) === 1 ? "" : "s"
+              } reported.`}
+              why={buildSnapshotEvidence(snapshot.response)}
             />
           ) : null}
-          {expanded ? (
-            <AnalyticsTable
-              density="compact"
-              variant="portfolio"
-              className="portfolio-analytics-table portfolio-cashflow-table"
-              ariaLabel="Cashflow outlook"
-              columns={[
-                { key: "date", label: "Date" },
-                { key: "net", label: "Net Cashflow", align: "right" },
-                { key: "cum", label: "Cumulative", align: "right" },
-              ]}
-              rows={cashflowOutlook.upcoming_points.map((point) => ({
-                key: point.projection_date,
-                cells: [
-                  formatDate(point.projection_date),
-                  formatCurrency(point.net_cashflow_base, baseCurrency),
-                  formatCurrency(point.projected_cumulative_cashflow_base, baseCurrency),
-                ],
-              }))}
+
+          {hasProjectedCashMovements(outlook) ? (
+            <>
+              <PortfolioProjectedCashflowPanel
+                cashflowOutlook={outlook}
+                baseCurrency={baseCurrency}
+              />
+              {expanded ? (
+                <>
+                  <p className="portfolio-cashflow-table-note">
+                    Showing {movementRows.length} movement date
+                    {movementRows.length === 1 ? "" : "s"} from {outlook.upcoming_points.length}{" "}
+                    returned projection points. Export includes every returned point.
+                  </p>
+                  <AnalyticsTable
+                    density="compact"
+                    variant="portfolio"
+                    className="portfolio-analytics-table portfolio-cashflow-table"
+                    ariaLabel="Projected cash movement schedule"
+                    columns={[
+                      { key: "date", label: "Date" },
+                      {
+                        key: "net",
+                        label: "Net projected movement",
+                        align: "right",
+                      },
+                      {
+                        key: "cum",
+                        label: "Cumulative projected movement",
+                        align: "right",
+                      },
+                    ]}
+                    rows={movementRows.map((point) => ({
+                      key: point.projection_date,
+                      cells: [
+                        formatDate(point.projection_date),
+                        formatCurrency(point.net_cashflow_base, baseCurrency),
+                        formatCurrency(point.projected_cumulative_cashflow_base, baseCurrency),
+                      ],
+                    }))}
+                  />
+                </>
+              ) : null}
+            </>
+          ) : (
+            <PortfolioModuleState
+              variant="status"
+              state="empty"
+              title="No projected cash movement"
+              body="The source returned no expected inflows or outflows for this horizon."
+              hint="Choose another horizon to review a different forward period."
             />
-          ) : null}
+          )}
         </>
-      ) : (
-        <PortfolioModuleState
-          variant="status"
-          state={loadError ? "error" : "empty"}
-          title={loadError ? "Projected cashflow unavailable" : "No projected cashflow"}
-          body={
-            loadError
-              ? "We could not load projected cashflow for the selected horizon."
-              : "No projected cash movements are available for the selected horizon."
-          }
-          hint={
-            loadError
-              ? "Retry with another horizon or verify that cashflow projection data is available."
-              : "Book future-dated events or refresh the forecast inputs to generate a liquidity path."
-          }
-        />
-      )}
-      {loading && cashflowOutlook ? (
-        <WorkbenchInlineRefreshNote message="Refreshing projected cashflow…" />
       ) : null}
     </AnalyticsModule>
   );
 }
 
-function hasFlatCashflow(cashflowOutlook: NonNullable<PortfolioWorkspace["cashflow_outlook"]>): boolean {
-  return (
-    cashflowOutlook.total_net_cashflow_base === 0 &&
-    cashflowOutlook.upcoming_points.every(
-      (point) =>
-        point.net_cashflow_base === 0 && point.projected_cumulative_cashflow_base === 0
-    )
-  );
+function buildFailureEvidence(response: PortfolioProjectedCashflowResponse | null) {
+  if (!response?.correlation_id) {
+    return undefined;
+  }
+  return {
+    label: "Support reference",
+    title: "Projection request",
+    body: `${response.correlation_id} · Contract ${response.contract_version}`,
+  };
+}
+
+function buildSnapshotEvidence(response: PortfolioProjectedCashflowResponse | null) {
+  return buildFailureEvidence(response);
 }
 
 function csvEscape(value: string): string {

@@ -12,6 +12,36 @@ export type PortfolioCatalogResponse = {
   items: PortfolioCatalogItem[];
 };
 
+export type PortfolioPartialFailure = {
+  source_service: string;
+  error_code: string;
+  detail: string;
+};
+
+export type PortfolioCashflowOutlook = {
+  as_of_date: string;
+  range_end_date: string;
+  total_net_cashflow_base: number;
+  projection_days: number;
+  include_projected: boolean;
+  notes?: string | null;
+  upcoming_points: Array<{
+    projection_date: string;
+    net_cashflow_base: number;
+    projected_cumulative_cashflow_base: number;
+  }>;
+};
+
+export type PortfolioProjectedCashflowResponse = {
+  correlation_id: string;
+  contract_version: string;
+  portfolio_id: string;
+  as_of_date: string;
+  cashflow_outlook: PortfolioCashflowOutlook | null;
+  warnings: string[];
+  partial_failures: PortfolioPartialFailure[];
+};
+
 export type PortfolioAllocationBucket = {
   asset_class: string;
   position_count: number;
@@ -309,19 +339,7 @@ export type PortfolioWorkspace = {
   record_data_availability?: PortfolioRecordDataAvailability;
   income_summary?: PortfolioIncomeSummaryView | null;
   activity_summary?: PortfolioActivitySummaryView | null;
-  cashflow_outlook: {
-    as_of_date: string;
-    range_end_date: string;
-    total_net_cashflow_base: number;
-    projection_days: number;
-    include_projected: boolean;
-    notes?: string | null;
-    upcoming_points: Array<{
-      projection_date: string;
-      net_cashflow_base: number;
-      projected_cumulative_cashflow_base: number;
-    }>;
-  } | null;
+  cashflow_outlook: PortfolioCashflowOutlook | null;
   performance: {
     period: string;
     report_start_date?: string | null;
@@ -423,9 +441,5 @@ export type PortfolioWorkspace = {
   workflow_cues: PortfolioWorkflowCue[];
   workflow_actions?: PortfolioWorkflowAction[];
   warnings: string[];
-  partial_failures: Array<{
-    source_service: string;
-    error_code: string;
-    detail: string;
-  }>;
+  partial_failures: PortfolioPartialFailure[];
 };

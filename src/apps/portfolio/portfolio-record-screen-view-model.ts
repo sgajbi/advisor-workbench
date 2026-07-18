@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate, formatStatus } from "./formatters";
+import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
 import type { PortfolioWorkspace } from "./types";
 
@@ -41,9 +41,10 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     kicker: "Booked income and cash movement",
   },
   cashflow: {
-    title: "Cashflow Workspace",
-    subtitle: "Forward liquidity path, projected settlements, and cumulative cash movement.",
-    kicker: "Liquidity forecast",
+    title: "Cashflow",
+    subtitle:
+      "Review expected inflows and outflows across the selected horizon. Figures show movement, not projected cash balances.",
+    kicker: "Projected cash movement",
   },
 };
 
@@ -176,28 +177,18 @@ export function buildPortfolioRecordHeaderKpis(
   }
 
   if (screen === "cashflow") {
-    const cashflow = workspace.cashflow_outlook;
-    const finalCumulative =
-      cashflow?.upcoming_points.at(-1)?.projected_cumulative_cashflow_base ??
-      cashflow?.total_net_cashflow_base;
-
     return [
       {
-        label: "Net Flow",
-        value: cashflow
-          ? formatCurrency(cashflow.total_net_cashflow_base, workspace.portfolio.base_currency)
-          : "N/A",
+        label: "Current Cash",
+        value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
       },
       {
-        label: "Horizon",
-        value: cashflow ? `${cashflow.projection_days}D` : windowLabel,
+        label: "Cash Weight",
+        value: formatPct(workspace.summary.cash_weight_pct),
       },
       {
-        label: "Ending Cumulative",
-        value:
-          finalCumulative == null
-            ? "N/A"
-            : formatCurrency(finalCumulative, workspace.portfolio.base_currency),
+        label: "Base Currency",
+        value: workspace.portfolio.base_currency,
       },
     ];
   }

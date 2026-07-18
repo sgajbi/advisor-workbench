@@ -24,7 +24,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   { key: "positions", label: "Positions", detail: "Holdings, valuation, and P&L", href: "/positions" },
   { key: "transactions", label: "Transactions", detail: "Booked activity and settlement", href: "/transactions" },
   { key: "income", label: "Income", detail: "Income and activity", href: "/income" },
-  { key: "cashflow", label: "Cashflow", detail: "Forward liquidity path", href: "/cashflow" },
+  { key: "cashflow", label: "Cashflow", detail: "Expected cash movements", href: "/cashflow" },
   { key: "performance", label: "Performance", detail: "Return and attribution workspace", href: "/performance" },
   { key: "risk", label: "Risk", detail: "Risk review workspace", href: "/performance?mode=risk" },
   { key: "proposal", label: "Proposal", detail: "Proposal lifecycle", href: "/proposals" },

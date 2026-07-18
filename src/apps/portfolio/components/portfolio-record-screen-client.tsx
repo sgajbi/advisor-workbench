@@ -10,6 +10,10 @@ import {
 } from "@/design-system";
 
 import type { PortfolioWorkspace } from "../types";
+import {
+  selectCashflowPartialFailures,
+  selectCashflowWarnings,
+} from "../portfolio-projected-cashflow-view-model";
 import { buildInitialPortfolioControls, buildPortfolioWorkspaceContext } from "../view-model";
 import PortfolioPageLayout from "./portfolio-page-layout";
 import PortfolioPositionsRecordWorkspace from "./portfolio-positions-record-workspace";
@@ -129,10 +133,15 @@ export default function PortfolioRecordScreenClient({
                   ) : null}
                   {screen === "cashflow" ? (
                     <PortfolioProjectedCashflowModule
+                      key={`${workspace.portfolio.portfolio_id}-${context.selectedAsOfDate}`}
                       portfolioId={workspace.portfolio.portfolio_id}
                       baseCurrency={workspace.portfolio.base_currency}
                       asOfDate={context.selectedAsOfDate}
                       initialCashflowOutlook={workspace.cashflow_outlook}
+                      initialWarnings={selectCashflowWarnings(workspace.warnings)}
+                      initialPartialFailures={selectCashflowPartialFailures(
+                        workspace.partial_failures
+                      )}
                       defaultExpanded
                     />
                   ) : null}

@@ -27,11 +27,11 @@ export type PortfolioCashflowFlowBar = {
 
 export type PortfolioProjectedCashflowChartModel = {
   chartPoints: PortfolioCashflowChartPoint[];
+  markerPoints: PortfolioCashflowChartPoint[];
   flowBars: PortfolioCashflowFlowBar[];
   areaPath: string;
   linePath: string;
   zeroLineY: number | null;
-  finalCumulative: number;
   positiveFlowCount: number;
   negativeFlowCount: number;
   largestInflow: CashflowPoint | null;
@@ -55,9 +55,6 @@ export function buildProjectedCashflowChartModel(
   const maxValue = cumulativeMax + visualPadding;
   const range = Math.max(maxValue - minValue, 1);
   const maxFlow = Math.max(...flowValues.map((value) => Math.abs(value)), 1);
-  const finalCumulative =
-    points[points.length - 1]?.projected_cumulative_cashflow_base ??
-    cashflowOutlook.total_net_cashflow_base;
   const positiveFlowCount = flowValues.filter((value) => value > 0).length;
   const negativeFlowCount = flowValues.filter((value) => value < 0).length;
   const largestInflow = points.reduce<CashflowPoint | null>((largest, point) => {
@@ -78,6 +75,10 @@ export function buildProjectedCashflowChartModel(
     const y = 172 - (((point.projected_cumulative_cashflow_base - minValue) / range) * 112 + 24);
     return { x: roundSvg(x), y: roundSvg(y), point };
   });
+  const markerPoints = chartPoints.filter(
+    ({ point }, index) =>
+      point.net_cashflow_base !== 0 || index === 0 || index === chartPoints.length - 1
+  );
   const zeroLineY =
     minValue <= 0 && maxValue >= 0
       ? roundSvg(172 - (((0 - minValue) / range) * 112 + 24))
@@ -88,27 +89,32 @@ export function buildProjectedCashflowChartModel(
 
   return {
     chartPoints,
-    flowBars: points.map((point, index) => {
+    markerPoints,
+    flowBars: points.flatMap((point, index) => {
+      if (point.net_cashflow_base === 0) {
+        return [];
+      }
       const x = points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
-      const width = points.length === 1 ? 28 : Math.max(12, 188 / points.length);
+      const width = points.length === 1 ? 28 : Math.max(2, Math.min(12, 188 / points.length));
       const height = (Math.abs(point.net_cashflow_base) / maxFlow) * 46;
       const flowBaselineY = 156;
       const y = point.net_cashflow_base >= 0 ? flowBaselineY - height : flowBaselineY;
 
-      return {
-        projectionDate: point.projection_date,
-        x: roundSvg(x - width / 2),
-        y: roundSvg(y),
-        width: roundSvg(width),
-        height: roundSvg(Math.max(height, 2)),
-        direction: point.net_cashflow_base >= 0 ? "positive" : "negative",
-        point,
-      };
+      return [
+        {
+          projectionDate: point.projection_date,
+          x: roundSvg(x - width / 2),
+          y: roundSvg(y),
+          width: roundSvg(width),
+          height: roundSvg(Math.max(height, 2)),
+          direction: point.net_cashflow_base >= 0 ? "positive" : "negative",
+          point,
+        },
+      ];
     }),
     areaPath: buildAreaPath(chartPoints),
     linePath: buildLinePath(chartPoints),
     zeroLineY,
-    finalCumulative,
     positiveFlowCount,
     negativeFlowCount,
     largestInflow,
@@ -160,7 +166,7 @@ export function buildAreaPath(points: Array<{ x: number; y: number }>): string {
 }
 
 export function formatCashflowPointTitle(point: CashflowPoint, currency: string): string {
-  return `${formatDate(point.projection_date)}: projected cumulative ${formatCurrency(
+  return `${formatDate(point.projection_date)}: cumulative projected movement ${formatCurrency(
     point.projected_cumulative_cashflow_base,
     currency
   )}`;

@@ -142,6 +142,31 @@ async function openTransactionsPortfolio(
   return { portfolioId, available: true };
 }
 
+async function openCashflowPortfolio(
+  page: import('@playwright/test').Page,
+  request: import('@playwright/test').APIRequestContext
+) {
+  const portfolioId = await resolveSmokePortfolioId(request);
+  if (!portfolioId) {
+    await page.goto('/cashflow', { waitUntil: 'domcontentloaded' });
+    return { portfolioId: null, available: false };
+  }
+
+  await page.goto(`/cashflow?portfolioId=${portfolioId}`, {
+    waitUntil: 'domcontentloaded',
+  });
+  const unavailableHeading = page.getByRole('heading', { name: /^Portfolio records unavailable$/i });
+  const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
+  if (unavailableVisible) {
+    return { portfolioId, available: false };
+  }
+
+  await expect(page.getByRole('heading', { name: /^Cashflow$/i })).toBeVisible({
+    timeout: 15000,
+  });
+  return { portfolioId, available: true };
+}
+
 test.describe('Portfolio workbench smoke', () => {
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
@@ -195,6 +220,31 @@ test.describe('Portfolio workbench smoke', () => {
     const incomeMetricStrip = await measureGrid(page.locator('.portfolio-income-activity-metrics').first());
     expect(incomeMetricStrip.childCount).toBe(4);
     expect(incomeMetricStrip.width).toBeGreaterThan(900);
+  });
+
+  test('cashflow route keeps projection identity and movement semantics explicit', async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const session = await openCashflowPortfolio(page, request);
+    test.skip(!session.available, 'Portfolio cashflow upstream unavailable in standalone smoke environment.');
+
+    await expect(page.getByRole('heading', { name: /^Projected cash movement$/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '10D' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: '30D' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '90D' })).toBeVisible();
+    await expect(page.getByLabel('Projection scope')).toContainText('Projection as of');
+    await expect(page.getByLabel('Projection scope')).toContainText('Projection basis');
+    await expect(page.getByText('Ending Cumulative')).toHaveCount(0);
+    await expect(page.getByText(/liquidity forecast/i)).toHaveCount(0);
+
+    await page.getByRole('tab', { name: '30D' }).click();
+    await expect(
+      page.getByText(/30-day projection(?: returned for a 30-day request)? · /i)
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('tab', { name: '30D' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByText(/10-day projection · /i)).toHaveCount(0);
   });
 
   test('allocation route connects direct exposures to contributing booked holdings', async ({ page, request }) => {

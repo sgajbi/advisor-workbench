@@ -1197,6 +1197,10 @@ describe("portfolio api", () => {
   it("requests projected cashflow with the selected horizon", async () => {
     const fetchSpy = vi.fn(async () =>
       jsonResponse({
+        correlation_id: "corr-cashflow-001",
+        contract_version: "v1",
+        portfolio_id: "MANUAL_PB_USD_001",
+        as_of_date: "2026-03-28",
         cashflow_outlook: {
           as_of_date: "2026-03-28",
           range_end_date: "2026-04-27",
@@ -1205,17 +1209,28 @@ describe("portfolio api", () => {
           include_projected: true,
           upcoming_points: [],
         },
+        warnings: ["PORTFOLIO_CASHFLOW_DELAYED"],
+        partial_failures: [
+          {
+            source_service: "lotus-core",
+            error_code: "PORTFOLIO_CASHFLOW_DELAYED",
+            detail: "one input is delayed",
+          },
+        ],
       })
     );
     vi.stubGlobal("fetch", fetchSpy);
 
-    const outlook = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
+    const response = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 30,
       includeProjected: true,
     });
 
-    expect(outlook?.projection_days).toBe(30);
+    expect(response?.cashflow_outlook?.projection_days).toBe(30);
+    expect(response?.correlation_id).toBe("corr-cashflow-001");
+    expect(response?.warnings).toEqual(["PORTFOLIO_CASHFLOW_DELAYED"]);
+    expect(response?.partial_failures[0].error_code).toBe("PORTFOLIO_CASHFLOW_DELAYED");
     const requestUrl = String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "");
     expect(requestUrl).toContain("/projected-cashflow?");
     expect(requestUrl).toContain("as_of_date=2026-03-28");
