@@ -15,7 +15,8 @@ portfolio coverage.
 5. Open a portfolio to continue into Portfolio Review.
 6. From Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk,
    Proposal, Advisory, Reports, or Manage, use **Portfolio context** to change portfolio while
-   keeping the current business task and supported filters.
+   keeping the current business task and supported filters. Workbench loads own-book choices only
+   when this disclosure is opened.
 
 ## Source and authority
 
