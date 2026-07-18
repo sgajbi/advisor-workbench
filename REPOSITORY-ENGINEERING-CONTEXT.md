@@ -49,11 +49,15 @@ Current repository posture:
    clears it after success so Gateway/Core own duplicate-submit replay semantics. Workbench must
    not bypass Gateway, call `lotus-core` directly, or treat the browser idempotency key as source
    ingestion truth.
-7. Workbench reads reporting snapshot data through gateway and exposes the RFC-0104 explicit
-   single-portfolio report batch materialization/status/run-once panel through the gateway BFF; it
-   honors route-level report date and backend benchmark controls for proof while still avoiding
-   direct `lotus-report` calls, and it now retrieves archived report metadata/downloads through
-   Gateway `/api/v1/documents` via the Workbench BFF rather than calling `lotus-archive` directly,
+7. `/reports` is the portfolio-scoped Report Centre. It consumes the Gateway-owned report-ordering
+   catalogue, submits one reviewed and idempotent portfolio-review request, and shows recent
+   report-data job history. Output readiness is source-owned by format: structured data may be
+   ready while governed PDF creation is unavailable. Report-data completion does not imply archive,
+   advisor approval, client delivery, or communication. The Workbench BFF strips browser reporting
+   authority headers and derives the development role and portfolio entitlement from server
+   configuration; non-development environments fail closed until authenticated-principal
+   resolution exists. Obsolete browser batch materialization, worker run-once, archive lookup, and
+   direct download controls were retired under issues #449 and #458,
 8. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
@@ -215,9 +219,12 @@ Primary areas:
    Shared product primitives and reusable presentation building blocks.
 6. `src/shell/`
    Shared shell composition and application framing.
-7. `tests/`
+7. `src/features/report-ordering/`
+   Report Centre contracts, Gateway client, source-safe configuration model, workflow state, and
+   business-facing components.
+8. `tests/`
    Unit, integration, and Playwright smoke coverage.
-8. `wiki/`
+9. `wiki/`
    canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
 
 ## Runtime And Integration Boundaries
