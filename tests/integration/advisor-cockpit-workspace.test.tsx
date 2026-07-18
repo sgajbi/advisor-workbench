@@ -267,6 +267,12 @@ describe("AdvisorCockpitWorkspace", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Advisor cockpit unavailable")).toBeInTheDocument();
     expect(screen.getByText("Worklist unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Advisor action review unavailable" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No advisor actions require review"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("No open actions")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Policy review required"),
