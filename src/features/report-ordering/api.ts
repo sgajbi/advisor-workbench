@@ -19,7 +19,7 @@ import {
 export type PortfolioReviewOrder = {
   portfolioId: string;
   asOfDate: string;
-  outputFormat: "json";
+  outputFormat: "json" | "pdf";
   reportingCurrency?: string;
   benchmarkCode?: string;
   allocationDimensions: string[];

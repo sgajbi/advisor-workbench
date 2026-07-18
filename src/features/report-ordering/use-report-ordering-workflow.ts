@@ -206,8 +206,7 @@ export function useReportOrderingWorkflow({
       !model?.canSubmit ||
       !reviewedIntent ||
       reviewedIntent.configurationFingerprint !== configurationFingerprint(configuration) ||
-      reviewedIntent.sourceFingerprint !== sourceFingerprintRef.current ||
-      configuration.outputFormat !== "json"
+      reviewedIntent.sourceFingerprint !== sourceFingerprintRef.current
     ) {
       return false;
     }
