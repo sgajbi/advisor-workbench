@@ -129,6 +129,13 @@ export default function AdvisorCockpitWorkspace({
       preparationQuery.error ||
       supportabilityQuery.error,
   );
+  const actionStatus = hasError
+    ? { label: "Worklist unavailable", tone: "warn" as const }
+    : model.actionPosture === "actionable"
+      ? { label: "Action required", tone: "warn" as const }
+      : model.actionPosture === "details-unavailable"
+        ? { label: "Action details unavailable", tone: "warn" as const }
+        : { label: "No open actions", tone: "success" as const };
 
   if (isLoading) {
     return (
@@ -144,7 +151,7 @@ export default function AdvisorCockpitWorkspace({
   return (
     <SectionBlock
       title={model.title}
-      subtitle="Gateway-backed operating priorities, source evidence, supportability, and acknowledgement posture."
+      subtitle="Advisor operating priorities, source evidence, readiness, and review acknowledgement."
     >
       {hasError ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
@@ -161,8 +168,8 @@ export default function AdvisorCockpitWorkspace({
             </Text>
             <Text variant="secondary">{model.recommendedAction}</Text>
           </div>
-          <SemanticBadge tone={model.hasActions ? "warn" : "success"}>
-            {model.hasActions ? "Action required" : "No open actions"}
+          <SemanticBadge tone={actionStatus.tone}>
+            {actionStatus.label}
           </SemanticBadge>
         </div>
         <div className={styles.metricGrid} aria-label="Advisor cockpit counts">
@@ -180,10 +187,18 @@ export default function AdvisorCockpitWorkspace({
         <ScreenStatePanel
           kind="error"
           title="Advisor cockpit unavailable"
-          body="The advisor cockpit could not be loaded from the Gateway-backed advisory workflow."
+          body="The advisor cockpit could not be loaded from the advisory workflow."
           surface="default"
         />
-      ) : !model.hasActions ? (
+      ) : model.actionPosture === "details-unavailable" ? (
+        <ScreenStatePanel
+          kind="partial"
+          title="Action details unavailable"
+          body={`${model.actionCount} ${model.actionCount === 1 ? "advisor action is" : "advisor actions are"} reported in scope, but ${model.actionCount === 1 ? "its" : "their"} review details are not available.`}
+          hint="Refresh or verify Advisor Cockpit source readiness before client discussion."
+          surface="default"
+        />
+      ) : model.actionPosture === "clear" ? (
         <ScreenStatePanel
           kind="empty"
           title="No cockpit actions in scope"
@@ -201,8 +216,8 @@ export default function AdvisorCockpitWorkspace({
       )}
 
       <SectionBlock
-        title="Supportability"
-        subtitle="Source-owned downstream and publication posture."
+        title="Source Readiness"
+        subtitle="Downstream readiness and client-publication boundaries reported by source services."
       >
         <div className={styles.supportabilityGrid}>
           {model.supportabilityRows.map((row) => (
@@ -314,7 +329,7 @@ function AdvisorCockpitActionTable({
                 </ActionButton>
                 <span className={styles.acknowledgementDetail}>
                   {acknowledgementSucceeded && row.canAcknowledge
-                    ? "Acknowledgement recorded through Gateway."
+                    ? "Acknowledgement recorded in the source workflow."
                     : acknowledgementFailed && row.canAcknowledge
                       ? "Acknowledgement could not be recorded."
                       : row.acknowledgementDetail}

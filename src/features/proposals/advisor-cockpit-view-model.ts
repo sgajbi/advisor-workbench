@@ -40,6 +40,11 @@ export type AdvisorCockpitMetric = {
   tone: SemanticBadgeTone;
 };
 
+export type AdvisorCockpitActionPosture =
+  | "actionable"
+  | "details-unavailable"
+  | "clear";
+
 export type AdvisorCockpitModel = {
   title: string;
   primaryDecision: string;
@@ -54,7 +59,8 @@ export type AdvisorCockpitModel = {
   }>;
   supportabilityRows: Array<{ label: string; value: string }>;
   unsupportedClaims: string[];
-  hasActions: boolean;
+  actionCount: number;
+  actionPosture: AdvisorCockpitActionPosture;
 };
 
 export function buildAdvisorCockpitModel({
@@ -79,6 +85,12 @@ export function buildAdvisorCockpitModel({
     typeof actionPage?.total_count === "number"
       ? actionPage.total_count
       : actions.length;
+  const actionPosture: AdvisorCockpitActionPosture =
+    actions.length > 0
+      ? "actionable"
+      : totalCount > 0
+        ? "details-unavailable"
+        : "clear";
   const supportabilityPosture =
     supportability?.posture ??
     stringValue(snapshot?.supportability?.cockpit_api) ??
@@ -88,27 +100,33 @@ export function buildAdvisorCockpitModel({
 
   return {
     title: "Advisor Cockpit",
-    primaryDecision: topAction?.title ?? "Review advisor operating priorities",
+    primaryDecision:
+      topAction?.title ??
+      (actionPosture === "details-unavailable"
+        ? "Action review details unavailable"
+        : "No advisor actions require review"),
     recommendedAction:
       topAction?.next_required_action ??
-      "Use source-owned action items and supportability posture before client discussion.",
+      (actionPosture === "details-unavailable"
+        ? `${formatActionCount(totalCount)} in scope. Refresh or verify source readiness before client discussion.`
+        : "Continue with source-backed preparation and supportability review."),
     metrics: [
       {
-        label: "Visible actions",
+        label: "Actions in scope",
         value: String(totalCount),
-        detail: "Gateway-backed action items in the selected portfolio scope.",
+        detail: "Source-reported actions for the selected portfolio.",
         tone: totalCount > 0 ? "warn" : "success",
       },
       {
         label: "Pending review",
         value: String(pendingCount),
-        detail: "Backend-counted actions awaiting review.",
+        detail: "Source-reported actions awaiting review.",
         tone: pendingCount > 0 ? "warn" : "success",
       },
       {
         label: "Blocked",
         value: String(blockedCount),
-        detail: "Backend-counted actions with blocking posture.",
+        detail: "Source-reported actions with a blocking condition.",
         tone: blockedCount > 0 ? "danger" : "success",
       },
       {
@@ -133,8 +151,13 @@ export function buildAdvisorCockpitModel({
       ...(snapshot?.unsupported_capabilities ?? []),
       ...(supportability?.unsupported_capabilities ?? []),
     ].map(formatCode),
-    hasActions: actions.length > 0,
+    actionCount: totalCount,
+    actionPosture,
   };
+}
+
+function formatActionCount(count: number): string {
+  return `${count} ${count === 1 ? "action is" : "actions are"} reported`;
 }
 
 function toActionRow(
@@ -192,21 +215,21 @@ function buildSupportabilityRows(
   const supportability =
     snapshot?.supportability ?? supportabilityResponse?.supportability ?? {};
   return [
-    { label: "Cockpit posture", value: formatCode(supportabilityPosture) },
+    { label: "Overall readiness", value: formatCode(supportabilityPosture) },
     {
-      label: "Gateway posture",
+      label: "Integration readiness",
       value: formatCode(
         stringValue(supportability.gateway_posture) ?? "Not reported",
       ),
     },
     {
-      label: "Workbench posture",
+      label: "Workstation readiness",
       value: formatCode(
         stringValue(supportability.workbench_posture) ?? "Not reported",
       ),
     },
     {
-      label: "Data product posture",
+      label: "Data readiness",
       value: formatCode(
         stringValue(supportability.data_product_posture) ?? "Not reported",
       ),

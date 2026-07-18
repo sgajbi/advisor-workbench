@@ -103,7 +103,7 @@ describe("advisor cockpit view model", () => {
 
     expect(model.metrics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Visible actions", value: "1" }),
+        expect.objectContaining({ label: "Actions in scope", value: "1" }),
         expect.objectContaining({ label: "Pending review", value: "1" }),
         expect.objectContaining({ label: "Blocked", value: "0" }),
         expect.objectContaining({ label: "High priority", value: "1" }),
@@ -130,7 +130,7 @@ describe("advisor cockpit view model", () => {
       "Client-ready Publication",
     );
     expect(model.supportabilityRows).toContainEqual({
-      label: "Data product posture",
+      label: "Data readiness",
       value: "Active Advisor Cockpit Products RFC 0026",
     });
     expect(model.supportabilityRows).toContainEqual({
@@ -146,6 +146,37 @@ describe("advisor cockpit view model", () => {
       context: "Proposal proposal_sg_001",
       status: "Ready",
     });
+    expect(model.actionPosture).toBe("actionable");
+  });
+
+  it("keeps a non-zero source action count partial when no worklist row is loaded", () => {
+    const model = buildAdvisorCockpitModel({
+      actionPage: { items: [], total_count: 1 },
+    });
+
+    expect(model.metrics[0]).toMatchObject({
+      label: "Actions in scope",
+      value: "1",
+      tone: "warn",
+    });
+    expect(model.actionRows).toEqual([]);
+    expect(model.actionCount).toBe(1);
+    expect(model.actionPosture).toBe("details-unavailable");
+    expect(model.primaryDecision).toBe("Action review details unavailable");
+    expect(model.recommendedAction).toBe(
+      "1 action is reported in scope. Refresh or verify source readiness before client discussion.",
+    );
+  });
+
+  it("reserves the clear posture for a confirmed zero source scope", () => {
+    const model = buildAdvisorCockpitModel({
+      actionPage: { items: [], total_count: 0 },
+    });
+
+    expect(model.actionCount).toBe(0);
+    expect(model.actionRows).toEqual([]);
+    expect(model.actionPosture).toBe("clear");
+    expect(model.primaryDecision).toBe("No advisor actions require review");
   });
 
   it("does not offer local acknowledgement for external-owner actions", () => {
