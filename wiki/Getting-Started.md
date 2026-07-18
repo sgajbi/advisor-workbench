@@ -51,6 +51,21 @@ These values are injected only when a browser request does not provide explicit 
 Use the overrides for scenario-specific validation, entitlement testing, or client-demo evidence
 capture that needs a named actor, tenant, region, booking center, or role.
 
+### Lotus Idea local authority fixture
+
+Canonical local startup sets the following server-side fixture for Lotus Idea queue, detail, and
+candidate-action routes:
+
+```txt
+LOTUS_ENVIRONMENT=dev
+WORKBENCH_IDEA_AUTH_MODE=development_configured
+```
+
+The BFF discards browser-supplied Idea authority headers and may use the configured local subject,
+role, and `PB_SG_GLOBAL_BAL_001` entitlement only in explicitly declared `dev`, `development`, `local`, or `test`.
+The fixture is rejected when the environment is unset or differs. Until the tracked authenticated session and token-claims resolver
+is implemented, non-development Idea requests fail closed with `401` before Gateway is called.
+
 ## First checks
 
 ```txt

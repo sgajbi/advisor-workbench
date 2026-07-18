@@ -196,7 +196,11 @@ describe("canonical live validation script", () => {
       "Leaving Docker-owned $Description listener on :$Port",
     );
     expect(script).toContain("$previousBffBaseUrl = $env:BFF_BASE_URL");
+    expect(script).toContain("$previousLotusEnvironment = $env:LOTUS_ENVIRONMENT");
+    expect(script).toContain("$previousIdeaAuthMode = $env:WORKBENCH_IDEA_AUTH_MODE");
     expect(script).toContain('$env:BFF_BASE_URL = "http://gateway.dev.lotus"');
+    expect(script).toContain('$env:LOTUS_ENVIRONMENT = "dev"');
+    expect(script).toContain('$env:WORKBENCH_IDEA_AUTH_MODE = "development_configured"');
     expect(script).toContain(
       "$previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED",
     );
@@ -226,9 +230,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain(
       "Invoke-ComposeUp $manageRepo $dockerManageEnvironment",
     );
-    expect(script).toContain(
-      'Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }',
-    );
+    expect(script).toContain('BFF_BASE_URL = "http://host.docker.internal:8100"');
+    expect(script).toContain('LOTUS_ENVIRONMENT = "dev"');
+    expect(script).toContain('WORKBENCH_IDEA_AUTH_MODE = "development_configured"');
     expect(script).not.toContain("Workbench already responding on :3000");
     expect(script).toContain("--portfolio-id $PortfolioId");
     expect(script).toContain("--end-date 2026-04-10");

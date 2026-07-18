@@ -49,6 +49,25 @@ const IDEA_AUTHORITY_HEADERS = [
   "X-Caller-Portfolio-Ids",
 ] as const;
 
+const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
+const DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS = new Set([
+  "dev",
+  "development",
+  "local",
+  "test",
+]);
+
+type IdeaAuthorityResolution =
+  | { status: "not_applicable" }
+  | { status: "applied"; mode: "development_configured" }
+  | {
+      status: "rejected";
+      reason:
+        | "authenticated_principal_required"
+        | "development_authority_not_allowed"
+        | "invalid_authority_mode";
+    };
+
 function defaultCallerContextValue(
   headerName: keyof typeof DEFAULT_CALLER_CONTEXT_HEADERS
 ) {
@@ -109,9 +128,9 @@ export function applyDefaultCallerContextHeaders(headers: Headers) {
 export function applyIdeaRouteCallerContextHeaders(
   headers: Headers,
   request: { method: string; upstreamPath: string },
-) {
+): IdeaAuthorityResolution {
   if (!request.upstreamPath.startsWith("api/v1/ideas/")) {
-    return;
+    return { status: "not_applicable" };
   }
 
   for (const headerName of IDEA_AUTHORITY_HEADERS) {
@@ -120,7 +139,14 @@ export function applyIdeaRouteCallerContextHeaders(
 
   const capability = resolveIdeaRouteCapability(request);
   if (!capability) {
-    return;
+    return { status: "not_applicable" };
+  }
+
+  const authorityMode = resolveIdeaAuthorityMode();
+  if (authorityMode !== "development_configured") {
+    return authorityMode === "authenticated_session"
+      ? { status: "rejected", reason: "authenticated_principal_required" }
+      : { status: "rejected", reason: authorityMode };
   }
 
   headers.set(
@@ -139,6 +165,44 @@ export function applyIdeaRouteCallerContextHeaders(
     process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.portfolioIds]?.trim() ||
       DEFAULT_IDEA_CALLER_CONTEXT.portfolioIds,
   );
+
+  return { status: "applied", mode: authorityMode };
+}
+
+function resolveIdeaAuthorityMode():
+  | "development_configured"
+  | "authenticated_session"
+  | "development_authority_not_allowed"
+  | "invalid_authority_mode" {
+  const environment =
+    process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase() || "unconfigured";
+  const isDevelopmentEnvironment = DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS.has(environment);
+  const configuredMode = process.env[IDEA_AUTH_MODE_ENV]?.trim().toLowerCase();
+
+  if (
+    configuredMode &&
+    configuredMode !== "development_configured" &&
+    configuredMode !== "authenticated_session"
+  ) {
+    return "invalid_authority_mode";
+  }
+
+  const authorityMode: "development_configured" | "authenticated_session" =
+    configuredMode === "development_configured" ||
+    configuredMode === "authenticated_session"
+      ? configuredMode
+      : isDevelopmentEnvironment
+        ? "development_configured"
+        : "authenticated_session";
+
+  if (
+    authorityMode === "development_configured" &&
+    !isDevelopmentEnvironment
+  ) {
+    return "development_authority_not_allowed";
+  }
+
+  return authorityMode;
 }
 
 function resolveIdeaRouteCapability({

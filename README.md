@@ -192,8 +192,9 @@ BFF_BASE_URL=http://gateway.dev.lotus
 
 The Workbench BFF adds governed caller-context headers before proxying to Gateway. Lotus Idea
 queue, detail, and action routes additionally replace browser-supplied subject, role, capability,
-and portfolio-entitlement headers with server-derived route authority. Defaults are suitable for
-the canonical local front-office runtime and can be overridden for targeted validation:
+and portfolio-entitlement headers with BFF-owned authority. Until an authenticated-principal
+resolver is delivered, that authority is enabled only when `LOTUS_ENVIRONMENT` explicitly declares
+`dev`, `development`, `local`, or `test`. The canonical local runtime makes that development posture explicit:
 
 ```txt
 WORKBENCH_BFF_ACTOR_ID=workbench-system
@@ -202,6 +203,8 @@ WORKBENCH_BFF_TENANT_ID=tenant-sg
 WORKBENCH_BFF_REGION=APAC
 WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
 WORKBENCH_BFF_ROLE=advisor
+LOTUS_ENVIRONMENT=dev
+WORKBENCH_IDEA_AUTH_MODE=development_configured
 WORKBENCH_IDEA_CALLER_SUBJECT=workbench-advisor
 WORKBENCH_IDEA_CALLER_ROLES=advisor
 WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
@@ -210,6 +213,13 @@ WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
 WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
 WORKBENCH_DPM_SOURCE_AS_OF_DATE=2026-04-10
 ```
+
+`WORKBENCH_IDEA_AUTH_MODE=development_configured` is rejected outside those development
+environments. An unset environment, `uat`, production, or any other environment requires the future
+`authenticated_session` resolver and return a no-store `401` before contacting Gateway until it is
+available. Browser headers never grant Idea authority. The eventual session and token-claims
+contract remains tracked in [lotus-platform#563](https://github.com/sgajbi/lotus-platform/issues/563)
+and Workbench BFF resolution in [lotus-workbench#436](https://github.com/sgajbi/lotus-workbench/issues/436).
 
 Canonical front-office runtime:
 
@@ -394,8 +404,9 @@ Important current product and route truths:
     `/api/v1/ideas/review-queues/advisor`, `/api/v1/ideas/candidates/{candidate_id}`, and the
     source-owned candidate mutation routes for review actions, feedback, and conversion intents.
     The Workbench BFF derives route-specific Idea subject, role, capability, and portfolio entitlement
-    server-side; browser headers never grant Idea authority. The surface is limited to canonical
-    `PB_SG_GLOBAL_BAL_001` until authenticated portfolio entitlement is available. Workbench renders Idea-owned candidate
+    only in the explicit development-configured mode; browser headers never grant Idea authority.
+    All non-development environments fail closed until authenticated session resolution is available.
+    The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated portfolio entitlement is available. Workbench renders Idea-owned candidate
     rank, score, review posture, source-signal ids, reason codes, durable-storage posture, policy
     version, and supported-feature promotion posture, and records typed advisor actions with a bounded
     idempotency key that retries the identical submission after a transient failure. Workbench must

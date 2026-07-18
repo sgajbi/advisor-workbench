@@ -8,6 +8,8 @@ services:
       - "3000:3000"
     environment:
       - BFF_BASE_URL=${BFF_BASE_URL:-http://host.docker.internal:8100}
+      - LOTUS_ENVIRONMENT=${LOTUS_ENVIRONMENT:-dev}
+      - WORKBENCH_IDEA_AUTH_MODE=${WORKBENCH_IDEA_AUTH_MODE:-development_configured}
     healthcheck:
       test:
         [

@@ -293,8 +293,12 @@ function Start-WorkbenchDevServer {
   if (Test-Path $out) { Remove-Item $out -Force }
   if (Test-Path $err) { Remove-Item $err -Force }
   $previousBffBaseUrl = $env:BFF_BASE_URL
+  $previousLotusEnvironment = $env:LOTUS_ENVIRONMENT
+  $previousIdeaAuthMode = $env:WORKBENCH_IDEA_AUTH_MODE
   $previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED
   $env:BFF_BASE_URL = "http://gateway.dev.lotus"
+  $env:LOTUS_ENVIRONMENT = "dev"
+  $env:WORKBENCH_IDEA_AUTH_MODE = "development_configured"
   $env:NEXT_TELEMETRY_DISABLED = "1"
   try {
     Start-Process -FilePath "npm.cmd" `
@@ -305,6 +309,8 @@ function Start-WorkbenchDevServer {
       -WindowStyle Hidden | Out-Null
   } finally {
     $env:BFF_BASE_URL = $previousBffBaseUrl
+    $env:LOTUS_ENVIRONMENT = $previousLotusEnvironment
+    $env:WORKBENCH_IDEA_AUTH_MODE = $previousIdeaAuthMode
     $env:NEXT_TELEMETRY_DISABLED = $previousNextTelemetryDisabled
   }
   Start-Sleep -Seconds 10
@@ -605,7 +611,11 @@ if (Test-LocalApp "workbench") {
   Start-WorkbenchDevServer
 } else {
   Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
-  Invoke-ComposeUp $workbenchRepo @{ BFF_BASE_URL = "http://host.docker.internal:8100" }
+  Invoke-ComposeUp $workbenchRepo @{
+    BFF_BASE_URL = "http://host.docker.internal:8100"
+    LOTUS_ENVIRONMENT = "dev"
+    WORKBENCH_IDEA_AUTH_MODE = "development_configured"
+  }
 }
 
 if (-not $RunValidation) {
