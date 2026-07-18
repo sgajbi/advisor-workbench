@@ -30,6 +30,7 @@ export type PerformanceSummaryPosture = {
     benchmark: PerformanceCapabilityState;
     horizon: PerformanceCapabilityState;
     contributors: PerformanceCapabilityState;
+    evidence: PerformanceCapabilityState;
   };
   metrics: {
     openingMarketValue: boolean;
@@ -95,11 +96,18 @@ export function classifyPerformanceSummaryPosture(
     benchmark: summary.capabilities.benchmark_comparison.state,
     horizon: summary.capabilities.multi_horizon_returns.state,
     contributors: summary.capabilities.contribution_ranking.state,
+    evidence: summary.capabilities.evidence.state,
   };
 
   return {
     populated:
-      Object.values(capabilities).every((state) => state === 'supported') &&
+      [
+        capabilities.summary,
+        capabilities.returnPath,
+        capabilities.benchmark,
+        capabilities.horizon,
+        capabilities.contributors,
+      ].every((state) => state === 'supported') &&
       Object.values(metrics).every(Boolean),
     capabilities,
     metrics,

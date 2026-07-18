@@ -31,6 +31,7 @@ describe('Performance E2E supportability posture', () => {
         benchmark: 'supported',
         horizon: 'supported',
         contributors: 'supported',
+        evidence: 'unavailable',
       },
       metrics: {
         openingMarketValue: true,
@@ -61,6 +62,7 @@ describe('Performance E2E supportability posture', () => {
     expect(posture.capabilities).toMatchObject({
       returnPath: 'unavailable',
       benchmark: 'unavailable',
+      evidence: 'unavailable',
     });
     expect(posture.metrics).toMatchObject({
       openingMarketValue: false,

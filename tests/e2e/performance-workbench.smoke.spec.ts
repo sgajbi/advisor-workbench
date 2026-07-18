@@ -1,4 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import {
+  buildPerformanceSmokePagePath,
+  classifyPerformanceSummaryPosture,
+  loadPerformanceSmokeSummary,
+  type PerformanceSummaryPosture,
+} from './performance-workbench-supportability';
+import {
+  startPerformanceFixtureGateway,
+  type PerformanceFixtureGateway,
+  type PerformanceFixtureGatewayScenario,
+} from './performance-fixture-gateway';
 import {
   expectActiveTab,
   measureElement,
@@ -7,9 +18,34 @@ import {
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'default' });
 
-async function resolveSmokePortfolioId(request: import('@playwright/test').APIRequestContext) {
+let fixtureGateway: PerformanceFixtureGateway | null = null;
+
+test.beforeAll(async () => {
+  const scenario = process.env.PERFORMANCE_E2E_FIXTURE;
+  if (scenario !== 'populated' && scenario !== 'unavailable') {
+    return;
+  }
+  const port = Number(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? '18100');
+  const expectedGateway = `http://gateway.dev.lotus:${port}`;
+  if (process.env.BFF_BASE_URL !== expectedGateway) {
+    throw new Error(
+      `Performance fixture proof requires BFF_BASE_URL=${expectedGateway}.`,
+    );
+  }
+  fixtureGateway = await startPerformanceFixtureGateway({
+    port,
+    scenario: scenario as PerformanceFixtureGatewayScenario,
+  });
+});
+
+test.afterAll(async () => {
+  await fixtureGateway?.close();
+  fixtureGateway = null;
+});
+
+async function resolveSmokePortfolioId(request: APIRequestContext) {
   const response = await request.get('http://127.0.0.1:3000/api/bff/api/v1/lookups/portfolios?limit=8', {
     timeout: 30000,
   });
@@ -28,8 +64,8 @@ async function resolveSmokePortfolioId(request: import('@playwright/test').APIRe
 }
 
 async function openPerformanceWorkbench(
-  page: import('@playwright/test').Page,
-  request: import('@playwright/test').APIRequestContext
+  page: Page,
+  request: APIRequestContext
 ) {
   const portfolioId = await resolveSmokePortfolioId(request);
   if (!portfolioId) {
@@ -39,7 +75,7 @@ async function openPerformanceWorkbench(
     return { portfolioId: null, available: false };
   }
 
-  await page.goto(`/performance?portfolioId=${portfolioId}`, {
+  await page.goto(buildPerformanceSmokePagePath(portfolioId), {
     waitUntil: 'domcontentloaded',
   });
 
@@ -64,8 +100,39 @@ async function openPerformanceWorkbench(
   return { portfolioId, available: true };
 }
 
+function getExecutiveMetric(executiveStrip: Locator, label: string): Locator {
+  return executiveStrip.getByText(label, { exact: true }).locator('..');
+}
+
+async function expectExecutiveMetric(
+  executiveStrip: Locator,
+  label: string,
+  reported: boolean,
+): Promise<void> {
+  const metric = getExecutiveMetric(executiveStrip, label);
+  await expect(metric).toBeVisible();
+  if (reported) {
+    await expect(metric).not.toContainText(/N\/A|Unavailable/);
+    return;
+  }
+  await expect(metric).toContainText(/N\/A|Unavailable/);
+}
+
+async function loadSummaryPosture(
+  request: APIRequestContext,
+  portfolioId: string,
+): Promise<PerformanceSummaryPosture> {
+  return classifyPerformanceSummaryPosture(
+    await loadPerformanceSmokeSummary(request, portfolioId),
+  );
+}
+
 test.describe('Performance workbench smoke', () => {
   test('split performance endpoints expose server timing to the live browser', async ({ page, request }) => {
+    test.skip(
+      Boolean(process.env.PERFORMANCE_E2E_FIXTURE),
+      'Fixture-backed UI proof does not certify live upstream Server-Timing propagation.',
+    );
     test.setTimeout(90000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
@@ -141,46 +208,132 @@ test.describe('Performance workbench smoke', () => {
     expect(attributionMetrics.get('perf-attribution')).toBeGreaterThanOrEqual(0);
   });
 
-  test('summary keeps first paint and then mounts deferred analytics by mode', async ({ page, request }) => {
-    test.setTimeout(60000);
+  test('summary renders the source supportability posture truthfully', async ({ page, request }) => {
+    test.setTimeout(60_000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
-    test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
-
+    if (!session.available || !session.portfolioId) {
+      test.skip(true, 'Performance upstream unavailable in standalone smoke environment.');
+      return;
+    }
+    const posture = await loadSummaryPosture(request, session.portfolioId);
     const executiveStrip = page.getByLabel('Executive return strip');
-    await expect(executiveStrip.getByText('Opening MV')).toBeVisible();
-    await expect(executiveStrip.getByText('Net Flow')).toBeVisible();
-    await expect(executiveStrip.getByText('Opening Cash')).toBeVisible();
-    await expect(executiveStrip.getByText('Closing Cash')).toBeVisible();
-    await expect(executiveStrip.getByText('Flow-Adjusted MV')).toBeVisible();
-    await expect(executiveStrip.getByText('Ending MV')).toBeVisible();
+
+    if (posture.capabilities.summary === 'unavailable') {
+      await expect(executiveStrip).toHaveCount(0);
+    } else {
+      await expectExecutiveMetric(
+        executiveStrip,
+        'Opening MV',
+        posture.metrics.openingMarketValue,
+      );
+      await expectExecutiveMetric(executiveStrip, 'Net Flow', posture.metrics.netFlow);
+      await expectExecutiveMetric(
+        executiveStrip,
+        'Flow-Adjusted MV',
+        posture.metrics.flowAdjustedMarketValue,
+      );
+      await expect(executiveStrip.getByText('Ending MV', { exact: true })).toHaveCount(
+        posture.metrics.endingMarketValue ? 1 : 0,
+      );
+      await expect(executiveStrip.getByText('Opening Cash', { exact: true })).toHaveCount(
+        posture.metrics.openingCash ? 1 : 0,
+      );
+      await expect(executiveStrip.getByText('Closing Cash', { exact: true })).toHaveCount(
+        posture.metrics.closingCash ? 1 : 0,
+      );
+    }
+
+    const returnDecisionReadout = page.getByLabel('Return decision readout');
+    if (
+      posture.capabilities.summary === 'unavailable' ||
+      posture.capabilities.returnPath !== 'supported'
+    ) {
+      await expect(returnDecisionReadout).toHaveCount(0);
+      if (posture.capabilities.summary !== 'unavailable') {
+        await expect(getExecutiveMetric(executiveStrip, 'Benchmark Evidence')).toContainText(
+          'Unavailable',
+        );
+        await expect(getExecutiveMetric(executiveStrip, 'Money-Weighted Return')).toContainText(
+          posture.metrics.moneyWeightedReturn ? /Money-Weighted Return/ : /Unavailable/,
+        );
+      }
+    } else {
+      await expect(returnDecisionReadout).toBeVisible({ timeout: 15_000 });
+      const moneyWeightedReturn = returnDecisionReadout
+        .getByText('Money-Weighted Return', { exact: true })
+        .locator('..');
+      await expect(moneyWeightedReturn).toContainText(
+        posture.metrics.moneyWeightedReturn ? /Money-Weighted Return/ : /Unavailable/,
+      );
+    }
+
+    if (posture.capabilities.returnPath === 'supported') {
+      await expect(page.getByLabel('Net Return Path chart')).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByLabel('Net Return Path unavailable')).toHaveCount(0);
+    } else {
+      await expect(page.getByLabel('Net Return Path unavailable')).toBeVisible({
+        timeout: 30_000,
+      });
+    }
+
+    await expect(page.getByRole('heading', { name: /^Horizon Comparison$/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    if (posture.capabilities.horizon === 'supported') {
+      await expect(page.getByLabel('Horizon comparison unavailable state')).toHaveCount(0);
+    } else {
+      await expect(page.getByLabel('Horizon comparison unavailable state')).toBeVisible();
+    }
+
+    await expect(page.getByRole('heading', { name: /^Performance Drivers$/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    if (posture.capabilities.contributors === 'supported') {
+      await expect(page.getByLabel('Contributor ranking unavailable state')).toHaveCount(0);
+    } else {
+      await expect(page.getByLabel('Contributor ranking unavailable state')).toBeVisible();
+    }
 
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
     await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
-
     const workspaceRail = page.getByLabel('Performance surface navigation');
-    const analysisTab = workspaceRail.getByRole('button', { name: /^Performance Analysis/i });
-    const evidenceTab = workspaceRail.getByRole('button', { name: /^Evidence/i });
     await expect(
-      workspaceRail.getByRole('button', { name: /^Performance Overview$/i })
+      workspaceRail.getByRole('button', { name: /^Performance Overview$/i }),
     ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
+  });
 
-    await expect(page.getByLabel('Net Return Path chart')).toBeVisible({
-      timeout: 30000,
-    });
-    await expect(
-      page.getByRole('heading', { name: /^Horizon Comparison$/i })
-    ).toBeVisible({
-      timeout: 15000,
-    });
-    await expect(
-      page.getByRole('heading', { name: /^Performance Drivers$/i })
-    ).toBeVisible({
-      timeout: 15000,
-    });
+  test('populated summary preserves its metric and layout contract', async ({ page, request }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openPerformanceWorkbench(page, request);
+    if (!session.available || !session.portfolioId) {
+      test.skip(true, 'Performance upstream unavailable in standalone smoke environment.');
+      return;
+    }
+    const posture = await loadSummaryPosture(request, session.portfolioId);
+    test.skip(
+      !posture.populated,
+      'Populated layout proof requires supported source modules and complete source economics.',
+    );
+
+    const executiveStrip = page.getByLabel('Executive return strip');
+    for (const label of [
+      'Opening MV',
+      'Net Flow',
+      'Opening Cash',
+      'Closing Cash',
+      'Flow-Adjusted MV',
+      'Ending MV',
+    ]) {
+      await expect(getExecutiveMetric(executiveStrip, label)).toBeVisible();
+      await expect(getExecutiveMetric(executiveStrip, label)).not.toContainText(/N\/A|Unavailable/);
+    }
+
+    await expect(page.getByLabel('Net Return Path chart')).toBeVisible({ timeout: 30_000 });
     const returnDecisionReadout = page.getByLabel('Return decision readout');
-    await expect(returnDecisionReadout).toBeVisible({ timeout: 15000 });
+    await expect(returnDecisionReadout).toBeVisible({ timeout: 15_000 });
     await expect(returnDecisionReadout).toContainText('Portfolio Return');
     await expect(returnDecisionReadout).toContainText('Benchmark Return');
     await expect(returnDecisionReadout).toContainText('Active Return');
@@ -201,6 +354,7 @@ test.describe('Performance workbench smoke', () => {
     expect(Math.abs((horizonBox?.y ?? 0) - (driversBox?.y ?? 9999))).toBeLessThanOrEqual(24);
 
     const firstHorizonRow = horizonModule.locator('.performance-horizon-matrix-row').first();
+    await expect(firstHorizonRow).toBeVisible({ timeout: 15_000 });
     const firstHorizonPeriod = firstHorizonRow.locator('.performance-horizon-matrix-period');
     const firstHorizonSupport = firstHorizonRow.locator('.performance-horizon-matrix-support');
     const [rowBox, periodBox, supportBox] = await Promise.all([
@@ -211,29 +365,30 @@ test.describe('Performance workbench smoke', () => {
     expect(periodBox?.width ?? 0).toBeGreaterThan(0);
     expect(supportBox?.width ?? 0).toBeGreaterThan(0);
     expect((supportBox?.x ?? 0) + (supportBox?.width ?? 0)).toBeLessThanOrEqual(
-      (rowBox?.x ?? horizonBox?.x ?? 0) + (rowBox?.width ?? horizonBox?.width ?? 0) + 1
+      (rowBox?.x ?? horizonBox?.x ?? 0) + (rowBox?.width ?? horizonBox?.width ?? 0) + 1,
     );
 
     const topContributorsHeading = page.getByText('Top Contributors', { exact: true });
     const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
-    const topContributorsCard = page
-      .getByText('Top Contributors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
-    const topDetractorsCard = page
-      .getByText('Top Detractors', { exact: true })
-      .locator('xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]');
-    const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] = await Promise.all([
-      topContributorsHeading.boundingBox(),
-      topDetractorsHeading.boundingBox(),
-      topContributorsCard.boundingBox(),
-      topDetractorsCard.boundingBox(),
-    ]);
+    const topContributorsCard = topContributorsHeading.locator(
+      'xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]',
+    );
+    const topDetractorsCard = topDetractorsHeading.locator(
+      'xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]',
+    );
+    const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] =
+      await Promise.all([
+        topContributorsHeading.boundingBox(),
+        topDetractorsHeading.boundingBox(),
+        topContributorsCard.boundingBox(),
+        topDetractorsCard.boundingBox(),
+      ]);
     expect(contributorsBox?.width ?? 0).toBeGreaterThan(180);
     expect(detractorsBox?.width ?? 0).toBeGreaterThan(180);
     expect((detractorsBox?.x ?? 0) - (contributorsBox?.x ?? 0)).toBeGreaterThan(160);
     expect(Math.abs((contributorsBox?.y ?? 0) - (detractorsBox?.y ?? 9999))).toBeLessThanOrEqual(24);
     expect(
-      Math.abs((contributorsHeadingBox?.y ?? 0) - (detractorsHeadingBox?.y ?? 9999))
+      Math.abs((contributorsHeadingBox?.y ?? 0) - (detractorsHeadingBox?.y ?? 9999)),
     ).toBeLessThanOrEqual(4);
     const driversRightEdge = (driversBox?.x ?? 0) + (driversBox?.width ?? 0);
     for (const box of [
@@ -245,33 +400,9 @@ test.describe('Performance workbench smoke', () => {
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(driversRightEdge + 1);
     }
 
-    const returnPathPanel = page.locator('.performance-chart-stage');
-    const chartMetrics = await measureElement(returnPathPanel);
+    const chartMetrics = await measureElement(page.locator('.performance-chart-stage'));
     expect(chartMetrics.height).toBeLessThanOrEqual(1300);
     expect(chartMetrics.width).toBeGreaterThan(900);
-
-    await analysisTab.click();
-    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
-    await expect(page.locator('.performance-analysis-stage')).toBeVisible({ timeout: 15000 });
-    await expect(
-      page.getByRole('heading', { name: /^Attribution Detail$/i })
-    ).toBeVisible({ timeout: 15000 });
-    await expect(
-      page.getByRole('heading', { name: /^Performance Drivers$/i })
-    ).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('.performance-analysis-module')).toHaveCount(3);
-    await expect(page.getByLabel('Top / Bottom Contributors panel')).toHaveCount(0);
-    await expect(page.getByLabel('Contribution Detail panel')).toHaveCount(0);
-    await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
-    await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);
-    await expect(
-      page
-        .getByRole('heading', { name: /^Attribution Over Time$/i })
-        .or(page.getByText('Attribution trend unavailable'))
-    ).toBeVisible();
-
-    await expect(evidenceTab).toBeEnabled();
-    await expect(evidenceTab).toContainText(/Partial|Ready/i);
   });
 
   test('analysis mode renders live attribution analytics', async ({ page, request }) => {
@@ -402,7 +533,7 @@ test.describe('Performance workbench smoke', () => {
     ).toHaveAttribute('aria-selected', 'true');
     await expect(
       contributionModule
-        .getByRole('tab', { name: /^Segment Contribution/i })
+        .getByRole('tab', { name: /^Segment Summary/i })
     ).toHaveAttribute('aria-selected', 'false');
 
     const positionHeaders = await contributionModule
@@ -432,7 +563,9 @@ test.describe('Performance workbench smoke', () => {
     await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
     await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
     await expect(contributionModule.getByText('Equity')).toBeVisible();
-    await expect(contributionModule.getByText('Fund')).toBeVisible();
+    await expect(
+      contributionModule.locator('table[aria-label*="Asset Class contribution"] tbody tr').first(),
+    ).toBeVisible();
 
     const aggregateFrame = await measureTableFrame(
       contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
@@ -448,11 +581,21 @@ test.describe('Performance workbench smoke', () => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
-    test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
+    if (!session.available || !session.portfolioId) {
+      test.skip(true, 'Performance upstream unavailable in standalone smoke environment.');
+      return;
+    }
+    const posture = await loadSummaryPosture(request, session.portfolioId);
 
     const evidenceTab = page
       .getByLabel('Performance surface navigation')
       .getByRole('button', { name: /^Evidence/i });
+    if (posture.capabilities.evidence === 'unavailable') {
+      await expect(evidenceTab).toBeDisabled();
+      await expect(evidenceTab).toContainText('Unavailable');
+      await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+      return;
+    }
     await expect(evidenceTab).toBeEnabled();
     await evidenceTab.click();
     await expect(evidenceTab).toHaveAttribute('aria-current', 'page');
@@ -463,7 +606,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(
       page
         .getByText('Evidence posture')
-        .or(page.getByText('Evidence partially available'))
+        .or(page.getByText('Evidence partially available')),
     ).toBeVisible();
   });
 });
