@@ -451,6 +451,11 @@ Most relevant current governance:
    through generic code formatting or keyword matching. Keep raw service, RFC, contract,
    capability, and reason-code evidence in the source contract or a secondary support disclosure
    rather than the primary business scan path.
+9. Global shell utilities are capability surfaces, not decoration. Search requires a governed,
+   entitlement-scoped query and result contract; notifications require source-owned attention and
+   acknowledgement truth; banker identity and account commands require the authenticated
+   server-side principal contract tracked by Workbench #436 and platform #563. Keep these controls
+   absent rather than enabled, hard-coded, or locally simulated until those contracts exist.
 
 ## Context Maintenance Rule
 
