@@ -1055,11 +1055,13 @@ identity, wording, household models, scoring, nudges, or unsupported capabilitie
    supports them.
 4. Reuse a source-backed portfolio context switcher across portfolio workflows and retain the
    current business route and supported query state.
-5. Restore keyboard focus after switching and collapse filter state that does not belong in the
+5. Load own-book choices only when the advisor opens portfolio context, avoiding a hidden book
+   query on every portfolio screen while keeping the native disclosure keyboard-operable.
+6. Restore keyboard focus after switching and collapse filter state that does not belong in the
    destination portfolio workflow.
-6. Keep primary language business-facing while retaining source codes and request references in
+7. Keep primary language business-facing while retaining source codes and request references in
    support details.
-7. Fail closed for permission, contract drift, source unavailability, and unconfirmed current
+8. Fail closed for permission, contract drift, source unavailability, and unconfirmed current
    portfolio membership; never substitute a global list.
 
 ### Rejected decisions
@@ -1078,7 +1080,11 @@ component, route, degraded-state, keyboard-focus, and responsive browser tests a
 production Playwright pack proves desktop and effective 200-percent-zoom widths, keyboard filter
 flow, portfolio handoff, and no global-catalogue fallback. Canonical validation now includes the
 Gateway advisor-book preflight and `advisor.book_overview` screenshot workflow; demo-ready capture
-remains pending governed lotus-platform registry publication.
+remains pending governed lotus-platform registry publication. Exact-head `make check` passed on
+2026-07-18 with 300 test files, 1,361 tests, 90.86% statement coverage, lint, TypeScript, and the
+optimized 25-route production build. The full-gate regression also proves that shared Portfolio and
+Performance screens neither require additional router mocks nor load advisor-book data until the
+portfolio-context disclosure is opened.
 
 ### Publication decision
 
