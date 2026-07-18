@@ -145,6 +145,6 @@ test("fails visibly without falling back to a global portfolio catalogue", async
   await page.goto("/book?asOfDate=2026-04-10", { waitUntil: "domcontentloaded" });
 
   await expect(page.getByText("Your book could not be loaded")).toBeVisible();
-  await expect(page.getByText(/No global portfolio list has been substituted/i)).toBeVisible();
+  await expect(page.getByText(/No broader portfolio list has been substituted/i)).toBeVisible();
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toHaveCount(0);
 });
