@@ -1017,3 +1017,71 @@ contract:
 No wiki source change is required. This slice improves the presentation of an existing supported
 Advisor Cockpit contract without changing route ownership, source capability, operator commands,
 or integration boundaries. Technical capability truth remains correctly documented in the wiki.
+
+## Advisor Own-Book Coverage And Portfolio Context Switching
+
+### Business job
+
+A relationship manager needs to begin from the portfolios actually assigned to their supported
+book scope, narrow the list by a known client or mandate, and move between portfolio workflows
+without losing the task in progress. The surface must distinguish own-book membership from team,
+delegated, supervisor, household, AUM, and attention concepts that the current source does not
+publish.
+
+### Current-product research
+
+Research was reviewed on 2026-07-18 from official product sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   connects whole-portfolio insight, advisor workflow, nudges, and business oversight while keeping
+   their source and use distinct.
+2. [BlackRock householding](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/insights/householding)
+   distinguishes account, grouped-account, and total-household context; Lotus therefore labels only
+   the own-book scope its source contract confirms.
+3. [Morningstar client dashboard](https://www.morningstar.com/business/insights/blog/das-client-dashboard)
+   starts from client/group context and continues into account, portfolio, and reporting work,
+   supporting a scope-to-record-to-task navigation model.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, visual
+identity, wording, household models, scoring, nudges, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Add one dedicated **My book** landing route over Gateway own-book membership rather than
+   relabelling the global portfolio catalogue.
+2. Present source scope, date, booking centre, paging, assignment basis, tenant posture,
+   limitations, and support evidence explicitly.
+3. Use exact client and mandate filters plus deterministic source sorting only where Gateway
+   supports them.
+4. Reuse a source-backed portfolio context switcher across portfolio workflows and retain the
+   current business route and supported query state.
+5. Restore keyboard focus after switching and collapse filter state that does not belong in the
+   destination portfolio workflow.
+6. Keep primary language business-facing while retaining source codes and request references in
+   support details.
+7. Fail closed for permission, contract drift, source unavailability, and unconfirmed current
+   portfolio membership; never substitute a global list.
+
+### Rejected decisions
+
+1. Browser-created advisor ownership, team, delegate, supervisor, or household relationships.
+2. Locally aggregated book/client AUM, attention ranking, favourites, or recent-client claims.
+3. Hard-coded browser authority or acceptance of actor, role, scope, or capability request headers.
+4. A permanently expanded long rail or a cosmetic selector over the flat portfolio catalogue.
+5. Treating legacy advisor projection or trusted-context tenant scope as governed relationship-role
+   or tenant-isolation certification.
+
+### Validation record
+
+Issue #450 governs the slice. Focused contract, API, BFF authority, navigation, view-model, hook,
+component, route, degraded-state, keyboard-focus, and responsive browser tests are green. The
+production Playwright pack proves desktop and effective 200-percent-zoom widths, keyboard filter
+flow, portfolio handoff, and no global-catalogue fallback. Canonical validation now includes the
+Gateway advisor-book preflight and `advisor.book_overview` screenshot workflow; demo-ready capture
+remains pending governed lotus-platform registry publication.
+
+### Publication decision
+
+Wiki truth changes because `/book`, its authority boundary, its supported business workflow, and
+its deliberate no-claim scope are new operator-facing product behavior. The repo-authored wiki adds
+an Advisor Book Workflow and updates Supported Features, API Surface, Home, and navigation.
