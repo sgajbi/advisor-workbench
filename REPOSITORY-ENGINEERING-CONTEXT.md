@@ -418,6 +418,11 @@ Most relevant current governance:
 6. transaction review surfaces must distinguish transaction-currency economics from
    portfolio-currency accounting values and disclose source paging instead of implying a partial
    result is complete.
+7. Portfolio review destinations share `PortfolioScreenRail`. Keep its dense persistent rail on
+   desktop; when the workstation shell stacks at tablet or narrow widths, preserve selected
+   portfolio and current-view context through the accessible disclosure behavior instead of
+   rendering the full route list before the selected business task. Navigation remains semantic
+   links, not an ARIA menu or a page-local select control.
 
 ## Context Maintenance Rule
 

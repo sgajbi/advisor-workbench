@@ -721,6 +721,55 @@ state handling, and composition of an existing supported Cashflow screen without
 Gateway route, supported-feature claim, operator command, or canonical runtime flow. The
 repository engineering context records the reusable horizon and movement-semantics boundary.
 
+## Responsive Portfolio Review Navigation
+
+### Business job
+
+An advisor working in a split-screen laptop or tablet layout needs the selected portfolio and
+current review destination to remain obvious while the chosen workspace starts immediately. The
+complete route catalogue remains important, but it should not precede and displace the task unless
+the advisor explicitly opens it.
+
+### Interaction research
+
+Research was reviewed on 2026-07-19 from primary design and accessibility sources:
+
+1. [W3C ARIA APG disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/)
+   requires a button that communicates expanded state and supports native Enter/Space activation.
+2. [W3C disclosure navigation example](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/)
+   keeps ordinary route navigation as semantic links rather than an ARIA menu and documents Escape
+   closure with focus restoration as a useful navigation behavior.
+3. [Carbon UI shell left-panel guidance](https://carbondesignsystem.com/components/UI-shell-left-panel/usage/)
+   treats persistent secondary navigation as a shared product-shell pattern and collapses it when
+   the shell becomes narrow.
+
+### Adopted decisions
+
+1. Preserve the dense, persistent Portfolio review rail on desktop.
+2. At the existing stacked-shell breakpoint, keep selected portfolio and current business view in
+   a compact disclosure before the workspace.
+3. Keep one navigation source and semantic links; do not add `menu` / `menuitem` roles.
+4. Preserve the active Manage or Performance submode in the compact current-view description.
+5. Close on route selection and Escape; restore focus to the disclosure after Escape.
+6. Keep the selected workspace heading inside the initial narrow viewport while the disclosure is
+   closed.
+
+### Validation record
+
+1. Four focused component tests cover current-view context, `aria-expanded` / `aria-controls`,
+   selection closure, Escape focus restoration, and nested mode action behavior.
+2. Shared Performance and Manage integration coverage remained green; lint and TypeScript passed.
+3. Production Playwright proof passed at 519 px, 1024 px, and 1366 px. At 519 px, the closed rail
+   kept Income & Activity inside the initial 900 px viewport; the route list was hidden until
+   requested; Escape restored focus; desktop restored the persistent list.
+4. Playwright CLI visual review confirmed a compact selected-view panel and an intentional dense
+   on-demand route list. Screenshots remain diagnostic local evidence, not canonical demo proof.
+
+### Publication decision
+
+No wiki source change is required. This is responsive behavior and accessibility hardening of the
+existing shared navigation, without a new route, capability, integration, or operator command.
+
 ## Report Ordering
 
 ### Business job
