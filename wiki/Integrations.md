@@ -53,17 +53,16 @@ must travel through Gateway-shaped contracts.
    `X-Idempotency-Key` for same-payload retry safety. Workbench generates the browser submission
    key, but Gateway/Core remain responsible for ingestion replay semantics, duplicate handling,
    source lineage, and durable job truth.
-7. RFC-0104 report batch operations use `/api/bff/api/v1/report-batches` only; Workbench does not
-   call `lotus-report` directly for batch materialization, status, or bounded run-once execution
-8. report batch materialization, status, and bounded run-once responses consume Gateway-preserved
-   `report.observability.evidence_surface_supportability` metadata and emit only bounded
-   freshness/supportability observability labels
-9. Workbench report batch proof may use `/workbench/<portfolioId>?asOfDate=YYYY-MM-DD&benchmark=<backend benchmark code>`;
-   the route keeps portfolio data date and report batch date visibly distinct when they differ
-10. Archived report metadata and binary downloads use Gateway `/api/v1/documents/{document_id}` and
-   `/api/v1/documents/{document_id}/download` through `/api/bff/api/v1/documents/*`; Workbench
-   does not call `lotus-archive` directly, and the BFF preserves binary responses and integrity
-   headers for PDF downloads
+7. Portfolio report ordering uses `/api/bff/api/v1/report-ordering/options`,
+   `/api/bff/api/v1/reports/portfolio-reviews`, and `/api/bff/api/v1/report-jobs` only. Workbench
+   does not call `lotus-report` directly.
+8. The BFF removes browser-supplied reporting authority headers and derives development role and
+   portfolio entitlement from server configuration. Other environments fail closed until an
+   authenticated-principal resolver is available.
+9. Structured report data and governed PDF readiness are independent source states. Report-data
+   completion does not mean archive, advisor approval, client delivery, or communication.
+10. Workbench does not expose report-batch materialization, report-worker run-once, browser-defined
+    worker capacity, ad hoc archive lookup, direct document download, or client-distribution controls.
 11. Outcome-review report job requests use Gateway `POST /api/v1/reports/outcome-reviews` through
     `/api/bff/api/v1/reports/outcome-reviews` after loading manage-owned `DpmOutcomeReportInput`.
     Workbench does not call `lotus-report`, `lotus-render`, or `lotus-archive` directly for
