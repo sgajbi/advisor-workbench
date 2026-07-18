@@ -4,6 +4,7 @@ import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observabili
 import {
   applyDefaultCallerContextHeaders,
   applyIdeaRouteCallerContextHeaders,
+  applyReportOrderingRouteCallerContextHeaders,
 } from "@/features/workbench/caller-context";
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
@@ -42,15 +43,39 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       },
     );
   }
+  const requestBody =
+    request.method === "GET" || request.method === "HEAD"
+      ? undefined
+      : await request.text();
+  const reportingAuthority = applyReportOrderingRouteCallerContextHeaders(headers, {
+    method: request.method,
+    upstreamPath,
+    searchParams: request.nextUrl.searchParams,
+    bodyText: requestBody,
+  });
+  if (reportingAuthority.status === "rejected") {
+    const status =
+      reportingAuthority.reason === "authenticated_principal_required"
+        ? 401
+        : reportingAuthority.reason === "reporting_scope_not_entitled"
+          ? 403
+          : reportingAuthority.reason === "invalid_reporting_request"
+            ? 422
+            : 500;
+    return NextResponse.json(
+      {
+        code: `reporting_${reportingAuthority.reason}`,
+        status: "rejected",
+      },
+      { status, headers: { "cache-control": "no-store" } },
+    );
+  }
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
   const response = await fetch(url, {
     method: request.method,
     headers: upstreamHeaders,
-    body:
-      request.method === "GET" || request.method === "HEAD"
-        ? undefined
-        : await request.text(),
+    body: requestBody,
     cache: "no-store",
   });
 
