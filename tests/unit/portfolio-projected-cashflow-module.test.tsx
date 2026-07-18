@@ -124,25 +124,41 @@ describe("PortfolioProjectedCashflowModule", () => {
   });
 
   it("hydrates support evidence for the server-seeded horizon", async () => {
-    getPortfolioProjectedCashflow.mockResolvedValue(
-      buildResponse(null, {
-        warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
-        partialFailures: [
-          {
-            source_service: "lotus-core",
-            error_code: "PORTFOLIO_CASHFLOW_UNAVAILABLE",
-            detail: "endpoint projection is unavailable",
-          },
-        ],
-      })
-    );
+    getPortfolioProjectedCashflow
+      .mockResolvedValueOnce(
+        buildResponse(null, {
+          warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
+          partialFailures: [
+            {
+              source_service: "lotus-core",
+              error_code: "PORTFOLIO_CASHFLOW_UNAVAILABLE",
+              detail: "endpoint projection is unavailable",
+            },
+          ],
+        })
+      )
+      .mockResolvedValueOnce(buildResponse(buildOutlook()));
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
     expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
-    expect(await screen.findByText("Projection available with limitations")).toBeInTheDocument();
+    expect(await screen.findByText("Projection evidence refresh unavailable")).toBeInTheDocument();
     fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
     expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry evidence refresh" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Projection evidence refresh unavailable")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Export" })).toBeEnabled();
+    expect(getPortfolioProjectedCashflow).toHaveBeenLastCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+      includeProjected: true,
+      forceRefresh: true,
+    });
     expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 10,

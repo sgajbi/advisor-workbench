@@ -170,7 +170,7 @@ export default function PortfolioProjectedCashflowModule({
             </p>
           ) : null}
 
-          {hasCashflowDegradation(snapshot) ? (
+          {hasCashflowDegradation(snapshot) && !cashflow.failure ? (
             <PortfolioModuleState
               variant="status"
               state="partial"

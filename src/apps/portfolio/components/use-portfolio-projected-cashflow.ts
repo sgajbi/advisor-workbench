@@ -56,7 +56,14 @@ export function usePortfolioProjectedCashflow({
   useEffect(() => {
     if (selectedSnapshot?.response) {
       setLoading(false);
-      setFailure(null);
+      setFailure(
+        selectedSnapshot.response.cashflow_outlook
+          ? null
+          : {
+              requestedHorizonDays: selectedHorizonDays,
+              response: selectedSnapshot.response,
+            }
+      );
       return;
     }
 
@@ -95,7 +102,7 @@ export function usePortfolioProjectedCashflow({
               partialFailures: response.partial_failures,
             },
           }));
-          setFailure(null);
+          setFailure({ requestedHorizonDays: selectedHorizonDays, response });
         } else {
           setFailure({ requestedHorizonDays: selectedHorizonDays, response });
         }
@@ -132,6 +139,21 @@ export function usePortfolioProjectedCashflow({
         setSelectedHorizonKey(nextHorizon);
       }
     },
-    retry: () => setRetrySequence((current) => current + 1),
+    retry: () => {
+      setSnapshots((current) => {
+        const snapshot = current[selectedHorizonKey];
+        if (!snapshot?.response || snapshot.response.cashflow_outlook) {
+          return current;
+        }
+        return {
+          ...current,
+          [selectedHorizonKey]: {
+            ...snapshot,
+            response: null,
+          },
+        };
+      });
+      setRetrySequence((current) => current + 1);
+    },
   };
 }
