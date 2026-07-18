@@ -45,6 +45,11 @@ export type AdvisorCockpitActionPosture =
   | "details-unavailable"
   | "clear";
 
+export type AdvisorCockpitPreparationPosture =
+  | "available"
+  | "details-unavailable"
+  | "clear";
+
 export type AdvisorCockpitModel = {
   title: string;
   primaryDecision: string;
@@ -61,6 +66,8 @@ export type AdvisorCockpitModel = {
   unsupportedClaims: string[];
   actionCount: number | null;
   actionPosture: AdvisorCockpitActionPosture;
+  preparationCount: number | null;
+  preparationPosture: AdvisorCockpitPreparationPosture;
 };
 
 export function buildAdvisorCockpitModel({
@@ -89,6 +96,18 @@ export function buildAdvisorCockpitModel({
     actions.length > 0
       ? "actionable"
       : reportedActionCount === 0
+        ? "clear"
+        : "details-unavailable";
+  const preparationPackets =
+    preparationPage?.items ?? snapshot?.preparation_packets ?? [];
+  const reportedPreparationCount =
+    typeof preparationPage?.total_count === "number"
+      ? preparationPage.total_count
+      : null;
+  const preparationPosture: AdvisorCockpitPreparationPosture =
+    preparationPackets.length > 0
+      ? "available"
+      : reportedPreparationCount === 0
         ? "clear"
         : "details-unavailable";
   const supportabilityPosture =
@@ -154,11 +173,7 @@ export function buildAdvisorCockpitModel({
       },
     ],
     actionRows: actions.map(toActionRow),
-    preparationRows: (
-      preparationPage?.items ??
-      snapshot?.preparation_packets ??
-      []
-    ).map(toPreparationRow),
+    preparationRows: preparationPackets.map(toPreparationRow),
     supportabilityRows: buildSupportabilityRows(
       snapshot,
       supportability,
@@ -170,6 +185,8 @@ export function buildAdvisorCockpitModel({
     ].map(formatCode),
     actionCount: reportedActionCount,
     actionPosture,
+    preparationCount: reportedPreparationCount,
+    preparationPosture,
   };
 }
 

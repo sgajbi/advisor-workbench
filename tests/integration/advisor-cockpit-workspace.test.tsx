@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisorCockpitWorkspace from "../../src/features/proposals/components/advisor-cockpit-workspace";
-import type { AdvisorCockpitActionPageData } from "../../src/features/proposals/types";
+import type {
+  AdvisorCockpitActionPageData,
+  AdvisorCockpitPreparationPacketPageData,
+} from "../../src/features/proposals/types";
 
 const listAdvisorCockpitActionsMock = vi.fn(
   async (_filters?: unknown): Promise<AdvisorCockpitActionPageData> => ({
@@ -51,7 +54,7 @@ const getAdvisorCockpitSnapshotMock = vi.fn(async (_filters?: unknown) => ({
   unsupported_capabilities: ["EXTERNAL_CLIENT_COMMUNICATION"],
 }));
 const listAdvisorCockpitPreparationPacketsMock = vi.fn(
-  async (_filters?: unknown) => ({
+  async (_filters?: unknown): Promise<AdvisorCockpitPreparationPacketPageData> => ({
     total_count: 1,
     items: [
       {
@@ -219,12 +222,81 @@ describe("AdvisorCockpitWorkspace", () => {
         name: "Meeting Preparation",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("No preparation packets")).toBeInTheDocument();
+    expect(screen.getByText("No preparation packs in scope")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "No source-backed meeting preparation packets are currently available for this cockpit scope.",
+        "The source reports no meeting preparation packs for this portfolio.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("keeps a reported preparation scope partial when packet details are unavailable", async () => {
+    listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({
+      items: [],
+      total_count: 1,
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findByText("Meeting preparation details unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "1 preparation pack is reported in scope, but its review evidence is not available.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No preparation packs in scope")).not.toBeInTheDocument();
+  });
+
+  it("does not infer an empty preparation scope when the source total is missing", async () => {
+    listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({ items: [] });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findByText("Meeting preparation details unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The preparation scope and review evidence are not available for this portfolio.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No preparation packs in scope")).not.toBeInTheDocument();
+  });
+
+  it("discloses a minimum review count when preparation evidence has no source total", async () => {
+    listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({
+      items: [
+        {
+          packet_id: "packet_sg_001",
+          context_type: "PROPOSAL",
+          context_ref: "proposal_sg_001",
+          status: "READY",
+          evidence_refs: [
+            { summary: "Suitability and policy evidence assembled." },
+          ],
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findByText(
+        "At least 1 preparation pack is available for review; the full source scope is not reported.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Proposal proposal_sg_001")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Meeting preparation details unavailable"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps source actions partial when worklist details are unavailable", async () => {
@@ -333,5 +405,14 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(
       screen.queryByText("Advisor action worklist unavailable"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Meeting preparation details unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The preparation scope and review evidence are not available for this portfolio.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No preparation packs in scope")).not.toBeInTheDocument();
   });
 });

@@ -146,7 +146,49 @@ describe("advisor cockpit view model", () => {
       context: "Proposal proposal_sg_001",
       status: "Ready",
     });
+    expect(model.preparationCount).toBe(1);
+    expect(model.preparationPosture).toBe("available");
     expect(model.actionPosture).toBe("actionable");
+  });
+
+  it("keeps a non-zero preparation scope partial when no packet detail is loaded", () => {
+    const model = buildAdvisorCockpitModel({
+      preparationPage: { items: [], total_count: 2 },
+    });
+
+    expect(model.preparationRows).toEqual([]);
+    expect(model.preparationCount).toBe(2);
+    expect(model.preparationPosture).toBe("details-unavailable");
+  });
+
+  it("reserves the clear preparation posture for a confirmed zero source scope", () => {
+    const model = buildAdvisorCockpitModel({
+      preparationPage: { items: [], total_count: 0 },
+    });
+
+    expect(model.preparationRows).toEqual([]);
+    expect(model.preparationCount).toBe(0);
+    expect(model.preparationPosture).toBe("clear");
+  });
+
+  it("keeps empty preparation evidence partial when the source total is not reported", () => {
+    const model = buildAdvisorCockpitModel({
+      preparationPage: { items: [], total_count: null },
+    });
+
+    expect(model.preparationRows).toEqual([]);
+    expect(model.preparationCount).toBeNull();
+    expect(model.preparationPosture).toBe("details-unavailable");
+  });
+
+  it("keeps loaded preparation evidence available when the full source total is not reported", () => {
+    const model = buildAdvisorCockpitModel({
+      preparationPage: { items: preparationPage.items },
+    });
+
+    expect(model.preparationRows).toHaveLength(1);
+    expect(model.preparationCount).toBeNull();
+    expect(model.preparationPosture).toBe("available");
   });
 
   it("keeps a non-zero source action count partial when no worklist row is loaded", () => {
