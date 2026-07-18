@@ -23,15 +23,17 @@ export default function PortfolioUnavailableWorkspace() {
         <Panel className="portfolio-rail portfolio-selector-rail">
           <nav aria-label="Portfolio selector">
             <div className="portfolio-rail-header portfolio-selector-header">
-              <SectionLabel>Book</SectionLabel>
-              <h2>Portfolios</h2>
+              <SectionLabel>Portfolio context</SectionLabel>
+              <h2>Selection unavailable</h2>
             </div>
             <div className="portfolio-rail-list portfolio-rail-list-empty portfolio-selector-list">
               <div className="portfolio-rail-empty portfolio-selector-empty" role="status">
-                <strong>Portfolio catalog unavailable</strong>
+                <strong>Portfolio context could not be confirmed</strong>
                 <span>
-                  Client portfolio selection will return when the gateway catalog is available.
+                  Open My book to retry source-backed portfolio membership. A global list is not
+                  substituted when book scope is unavailable.
                 </span>
+                <ActionLink href="/book">Open My book</ActionLink>
               </div>
             </div>
           </nav>
@@ -41,8 +43,8 @@ export default function PortfolioUnavailableWorkspace() {
         <>
           <DegradedStatePanel
             label="Workspace"
-            title="Portfolio unavailable"
-            status="Core feed unavailable"
+            title="Portfolio context unavailable"
+            status="Source unavailable"
           />
 
           <WorkspaceGrid className="portfolio-action-grid">
@@ -64,7 +66,7 @@ export default function PortfolioUnavailableWorkspace() {
       }
       side={
         <SectionBlock className="portfolio-side-card" title="Service State">
-          <MetricRow label="Portfolio catalog" value="Unavailable" />
+          <MetricRow label="Portfolio context" value="Unavailable" />
           <MetricRow label="Performance area" value="Available" />
           <MetricRow label="Operations" value="Available" />
         </SectionBlock>
