@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioProjectedCashflowModule from "../../src/apps/portfolio/components/portfolio-projected-cashflow-module";
 import type {
@@ -15,6 +15,12 @@ vi.mock("../../src/apps/portfolio/api", () => ({
 }));
 
 describe("PortfolioProjectedCashflowModule", () => {
+  beforeEach(() => {
+    getPortfolioProjectedCashflow.mockImplementation(
+      async () => await new Promise<PortfolioProjectedCashflowResponse | null>(() => {})
+    );
+  });
+
   afterEach(() => {
     getPortfolioProjectedCashflow.mockReset();
   });
@@ -141,6 +147,31 @@ describe("PortfolioProjectedCashflowModule", () => {
       asOfDate: "2026-03-28",
       horizonDays: 10,
       includeProjected: true,
+    });
+  });
+
+  it("marks seeded figures unconfirmed and retries when envelope hydration fails", async () => {
+    getPortfolioProjectedCashflow
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(buildResponse(buildOutlook()));
+
+    renderModule({ initialCashflowOutlook: buildOutlook() });
+
+    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(await screen.findByText("Projection evidence refresh unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry evidence refresh" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Projection evidence refresh unavailable")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Export" })).toBeEnabled();
+    expect(getPortfolioProjectedCashflow).toHaveBeenLastCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+      includeProjected: true,
+      forceRefresh: true,
     });
   });
 

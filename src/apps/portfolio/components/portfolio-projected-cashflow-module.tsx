@@ -64,7 +64,13 @@ export default function PortfolioProjectedCashflowModule({
     : `${cashflow.selectedHorizonDays}-day projection · ${baseCurrency}`;
 
   const exportCashflow = () => {
-    if (!snapshot || cashflow.loading || !hasDatedSchedule) {
+    if (
+      !snapshot ||
+      cashflow.loading ||
+      cashflow.refreshingEvidence ||
+      cashflow.failure ||
+      !hasDatedSchedule
+    ) {
       return;
     }
 
@@ -106,7 +112,13 @@ export default function PortfolioProjectedCashflowModule({
               type="button"
               className="portfolio-inline-action"
               onClick={exportCashflow}
-              disabled={!snapshot || cashflow.loading || !hasDatedSchedule}
+              disabled={
+                !snapshot ||
+                cashflow.loading ||
+                cashflow.refreshingEvidence ||
+                Boolean(cashflow.failure) ||
+                !hasDatedSchedule
+              }
             >
               Export
             </button>
@@ -126,7 +138,7 @@ export default function PortfolioProjectedCashflowModule({
           chart
           rows={3}
         />
-      ) : cashflow.failure ? (
+      ) : cashflow.failure && !snapshot ? (
         <PortfolioModuleState
           variant="status"
           state="error"
@@ -168,6 +180,32 @@ export default function PortfolioProjectedCashflowModule({
                 Math.max(snapshot.partialFailures.length, snapshot.warnings.length) === 1 ? "" : "s"
               } reported.`}
               why={buildSnapshotEvidence(snapshot.response)}
+            />
+          ) : null}
+
+          {cashflow.refreshingEvidence ? (
+            <PortfolioModuleState
+              variant="status"
+              state="partial"
+              title="Refreshing projection evidence"
+              body="The server-seeded projection remains visible while its current source evidence is confirmed."
+              hint="Export remains unavailable until the source refresh completes."
+            />
+          ) : null}
+
+          {cashflow.failure ? (
+            <PortfolioModuleState
+              variant="status"
+              state="partial"
+              title="Projection evidence refresh unavailable"
+              body="The server-seeded projection remains visible, but the projected cash movement source could not confirm its current support evidence."
+              hint="Treat the figures as prior workspace evidence until the source refresh succeeds."
+              action={
+                <button type="button" className="portfolio-inline-action" onClick={cashflow.retry}>
+                  Retry evidence refresh
+                </button>
+              }
+              why={buildFailureEvidence(cashflow.failure.response)}
             />
           ) : null}
 
