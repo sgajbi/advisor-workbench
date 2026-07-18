@@ -9,5 +9,6 @@ describe("playwright smoke configuration", () => {
 
     expect(config.webServer.command).toBe("node scripts/testing/start-playwright-smoke-server.mjs");
     expect(config.webServer.url).toBe("http://127.0.0.1:3000");
+    expect(config.webServer.timeout).toBe(240_000);
   });
 });

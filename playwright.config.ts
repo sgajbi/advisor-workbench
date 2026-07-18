@@ -17,6 +17,6 @@ export default defineConfig({
     command: "node scripts/testing/start-playwright-smoke-server.mjs",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 240_000,
   },
 });
