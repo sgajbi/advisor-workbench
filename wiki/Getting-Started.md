@@ -66,10 +66,29 @@ role, and `PB_SG_GLOBAL_BAL_001` entitlement only in explicitly declared `dev`, 
 The fixture is rejected when the environment is unset or differs. Until the tracked authenticated session and token-claims resolver
 is implemented, non-development Idea requests fail closed with `401` before Gateway is called.
 
+### Advisor book local authority fixture
+
+The own-book route uses a separate, BFF-owned development fixture:
+
+```txt
+WORKBENCH_ADVISOR_BOOK_AUTH_MODE=development_configured
+WORKBENCH_ADVISOR_BOOK_ACTOR_ID=PM_SG_001
+WORKBENCH_ADVISOR_BOOK_TENANT_ID=tenant-sg
+WORKBENCH_ADVISOR_BOOK_REGION=APAC
+WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE=Singapore
+WORKBENCH_ADVISOR_BOOK_ROLE=ADVISOR
+NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE=2026-04-10
+```
+
+The BFF discards browser-supplied authority and adds only `advisor.book.read`. This fixture is
+rejected outside `dev`, `development`, `local`, or `test`; UAT and production require the future
+authenticated principal resolver tracked by Workbench #436.
+
 ## First checks
 
 ```txt
 http://workbench.dev.lotus/portfolio
+http://workbench.dev.lotus/book?asOfDate=2026-04-10
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 http://workbench.dev.lotus/data-products

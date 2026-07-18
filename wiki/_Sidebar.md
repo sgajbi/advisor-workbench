@@ -5,6 +5,7 @@
 ### Orientation
 - [Overview](Overview)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
+- [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)
