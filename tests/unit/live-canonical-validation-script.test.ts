@@ -2,6 +2,23 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 describe("canonical live validation script", () => {
+  it("rejects unknown switches before live entry-point side effects", () => {
+    for (const scriptName of [
+      "Start-LotusFrontOfficeCanonical.ps1",
+      "Stop-LotusFrontOfficeCanonical.ps1",
+      "Validate-LotusFrontOfficeCanonical.ps1",
+      "Capture-LotusFrontOfficeEvidence.ps1",
+      "Invoke-IdeaCapacitySeed.ps1",
+    ]) {
+      const script = readFileSync(
+        join(process.cwd(), "scripts", "live", scriptName),
+        "utf8",
+      );
+
+      expect(script).toMatch(/^\[CmdletBinding\(\)\]\r?\nparam\(/);
+    }
+  });
+
   it("propagates browser validation failures to the caller", () => {
     const script = readFileSync(
       join(

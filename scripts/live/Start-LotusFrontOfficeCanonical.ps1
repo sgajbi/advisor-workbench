@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
   [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",

@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
   [string]$ProjectsRoot = "C:\Users\Sandeep\projects",
   [string]$IdeaBaseUrl = "http://127.0.0.1:8330",
