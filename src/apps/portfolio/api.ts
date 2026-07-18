@@ -20,6 +20,7 @@ import {
 
 const portfolioApiResponseCache = new Map<string, unknown>();
 const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
+const portfolioApiRequestTokens = new Map<string, symbol>();
 type PortfolioRequestTarget = ServiceRequestTarget;
 type ObservedPortfolioOperation = Extract<
   (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
@@ -628,6 +629,7 @@ export async function getPortfolioProjectedCashflow(
 export function resetPortfolioApiRequestCache() {
   portfolioApiResponseCache.clear();
   portfolioApiInflightRequests.clear();
+  portfolioApiRequestTokens.clear();
 }
 
 export function mergePortfolioWorkspace(
@@ -790,6 +792,7 @@ async function fetchPortfolioJson<T>(
   if (useCache && options.forceRefresh) {
     portfolioApiResponseCache.delete(url);
     portfolioApiInflightRequests.delete(url);
+    portfolioApiRequestTokens.delete(url);
   }
 
   if (useCache && portfolioApiResponseCache.has(url)) {
@@ -803,6 +806,10 @@ async function fetchPortfolioJson<T>(
     }
   }
 
+  const requestToken = Symbol(url);
+  if (useCache) {
+    portfolioApiRequestTokens.set(url, requestToken);
+  }
   const request = (async () => {
     let shouldCacheResponse = true;
     const payload = await observeWorkbenchAnalyticsRequest(
@@ -822,7 +829,11 @@ async function fetchPortfolioJson<T>(
         return (await response.json()) as T;
       }
     );
-    if (useCache && shouldCacheResponse) {
+    if (
+      useCache &&
+      shouldCacheResponse &&
+      portfolioApiRequestTokens.get(url) === requestToken
+    ) {
       portfolioApiResponseCache.set(url, payload);
     }
     return payload;
@@ -837,6 +848,9 @@ async function fetchPortfolioJson<T>(
   } finally {
     if (useCache && portfolioApiInflightRequests.get(url) === request) {
       portfolioApiInflightRequests.delete(url);
+    }
+    if (useCache && portfolioApiRequestTokens.get(url) === requestToken) {
+      portfolioApiRequestTokens.delete(url);
     }
   }
 }
