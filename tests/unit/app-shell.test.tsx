@@ -47,6 +47,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByRole("link", { name: /Lotus/i })).toHaveAttribute("href", "/");
+    expect(screen.getByText("Private Banking Workbench")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
