@@ -191,6 +191,13 @@ Current repository posture:
     excluded from classified net cash movement until the source contract defines their direction.
     Do not infer direction from amount sign, gross-sum activity magnitudes as net cashflow, combine
     income and tax rows into one event count, or infer source readiness from non-zero bookings.
+20. Portfolio Cashflow preserves the full Gateway projected-cashflow envelope and keys loading,
+    ready, degraded, unavailable, retry, result, and export state by the explicit 10-, 30-, or
+    90-day horizon. Workbench must not relabel one horizon's response as another or describe
+    cumulative projected movement as opening cash, available cash, ending cash, liquidity
+    sufficiency, funding capacity, or a recommendation. Source-backed zero movement is an explicit
+    no-movement result; Gateway warnings, partial failures, correlation, contract version,
+    projection dates, reporting currency, and booked/projected basis remain visible evidence.
 
 ## Architecture And Module Map
 

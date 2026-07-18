@@ -513,7 +513,7 @@ The reading order is:
 3. gross income, withholding tax, other deductions, and net income by income type,
 4. gross inflows, gross outflows, and net cash movement by canonical activity class,
 5. current source cash weight as adjacent portfolio context,
-6. the separate Cashflow workspace when forward-looking liquidity review is required.
+6. the separate Cashflow workspace when projected cash-movement review is required.
 
 ### Current-product research
 
@@ -611,3 +611,112 @@ No repo wiki change is required for this slice. It corrects and composes an alre
 Income screen without changing a Gateway contract, supported-feature claim, operator command, or
 canonical runtime flow. The repository engineering context records the reusable activity-direction
 rule; #426 and #427 preserve the cross-screen follow-up work.
+
+## Cashflow Review
+
+### Business job
+
+A client advisor or portfolio manager opens Cashflow Review to understand the expected inflows and
+outflows already represented by booked and projected settlement events over a selected 10-, 30-,
+or 90-day horizon. The screen supports near-term book review and meeting preparation; it does not
+publish an opening or ending cash balance, judge liquidity sufficiency, recommend funding actions,
+or create cash events.
+
+The reading order is:
+
+1. selected portfolio, mandate, current cash context, reporting currency, and source as-of date,
+2. explicit projection horizon and returned projection period,
+3. net projected movement, largest inflow, and largest outflow,
+4. projection basis, source note, warnings, and partial-failure posture,
+5. cumulative projected movement as a path of expected flows rather than a cash-balance forecast,
+6. movement dates in the review table and every returned point in the export.
+
+### Current-product research
+
+Research was reviewed on 2026-07-18 from official product sources:
+
+1. [Addepar Navigator](https://addepar.com/product-overview/navigator): cashflow planning benefits
+   from explicit time horizons, portfolio context, and an auditable workflow from assumptions to
+   review.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth):
+   advisors need connected whole-portfolio context and common language when moving from data to
+   portfolio decisions.
+3. [BlackRock Aladdin Studio](https://www.blackrock.com/aladdin/platforms/products/aladdin-studio):
+   analytical workflows should preserve source context, governed inputs, and reproducible evidence
+   instead of hiding lineage behind a visualization.
+4. [Morningstar Direct portfolio management](https://www.morningstar.com/business/products/direct/portfolio-management):
+   portfolio monitoring should connect summary evidence to underlying holdings and cashflow detail
+   without conflating analysis with unsupported action.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, forecasts, calculations, scenario features, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Use explicit 10-, 30-, and 90-day controls and bind every visible result, state, and export to
+   the returned horizon.
+2. Replace prior-horizon content with a loading or unavailable state while another horizon is
+   requested; never relabel stale figures as current.
+3. Preserve Gateway correlation, contract version, warnings, partial failures, source as-of date,
+   through-date, currency, and projection basis.
+4. Describe the contract as projected cash movement. Cumulative movement is the sum of expected
+   flows and is not an opening, available, minimum, or ending cash balance.
+5. Show summary-to-exception-to-detail: headline movements, source limitations, chart, then the
+   movement schedule.
+6. Keep zero-only source results explicit as no projected movement; do not fabricate a partial or
+   unavailable liquidity posture.
+7. Render movement dates in the review table while keeping every returned source point in the
+   export and disclosing the difference.
+8. Reuse the Workbench segmented control, analytical module, module-state, dense table, and
+   support-reference patterns instead of introducing Cashflow-only interaction conventions.
+
+### Rejected decisions
+
+1. Treating cumulative projected movement as an ending cash balance or liquidity forecast.
+2. Showing a requested horizon label while another horizon's data remains visible.
+3. Discarding warning, partial-failure, correlation, contract-version, or source-date evidence in
+   the browser adapter.
+4. Browser-authored liquidity sufficiency, funding capacity, shortfall, transfer, trade, or
+   recommendation logic.
+5. Unsupported scenario planning, capital-call or distribution classification, goal sufficiency,
+   and client-authored future-event booking.
+6. A cycle button with an implicit next period, duplicate screen/header KPIs, or an axis/table row
+   for every zero point.
+
+### Slice 1 — horizon-safe projected cash-movement review
+
+GitHub issue #440 governs the slice. A focused projected-cashflow view model owns horizon options,
+response snapshots, movement shaping, degradation evidence, source facts, result labels, and export
+rows. A horizon-keyed hook owns requests and retries without allowing cross-horizon stale display.
+The Portfolio API adapter now preserves the full Gateway response envelope instead of returning only
+the outlook.
+
+The screen uses the shared segmented control and analytical module patterns, shows source scope and
+limitations before the chart, removes the unsupported ending-balance tile, reduces zero-heavy chart
+markers, and keeps movement-only table rows distinct from complete export coverage. Record header,
+navigation, evidence, Income handoff, and supporting metric language now consistently describe
+projected movement rather than liquidity sufficiency.
+
+### Validation record
+
+1. Focused API, view-model, hook-driven module, chart, panel, record-screen, evidence, and adjacent
+   Income regression coverage passed 50 tests on 2026-07-18; TypeScript and lint also passed after
+   the formatter-noise reconciliation.
+2. Full `make check` passed on 2026-07-18: all 290 test files passed at 90.76% statement coverage,
+   followed by clean lint, TypeScript validation, and a successful production Next.js build.
+3. The targeted Cashflow Playwright smoke passed against the available upstream stack. It proved
+   the explicit 10D/30D/90D horizon control, projection-scope evidence, removal of false ending
+   balance and liquidity-forecast claims, and correct 30-day result identity after a horizon switch.
+4. A governed canonical bring-up remains blocked before full platform certification by the existing
+   lotus-core #805 seed-cleanup defect; lotus-core PR #806 owns the fix and is in protected checks.
+   The targeted browser result is screen-level implementation proof, not a demo-ready platform
+   certification or screenshot claim.
+5. Protected Workbench GitHub checks, merge, exact-main releasability, and branch cleanup remain
+   pending before the slice can be marked hardened.
+
+### Publication decision
+
+No repo wiki change is required for this slice. It corrects the semantics, evidence preservation,
+state handling, and composition of an existing supported Cashflow screen without changing a
+Gateway route, supported-feature claim, operator command, or canonical runtime flow. The
+repository engineering context records the reusable horizon and movement-semantics boundary.
