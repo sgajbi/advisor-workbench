@@ -106,6 +106,11 @@ describe("live validation contract modules", () => {
         )
       ).toBe(true);
       expect(
+        DEFAULT_PANEL_REGISTRY.panels.every(
+          (panel) => !panel.route.includes("{portfolioId}"),
+        ),
+      ).toBe(true);
+      expect(
         DEFAULT_PANEL_REGISTRY.panels.some(
           (panel) =>
             panel.panelId === "reporting.report_centre" &&

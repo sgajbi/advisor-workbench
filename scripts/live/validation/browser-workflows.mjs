@@ -67,9 +67,9 @@ export function createBrowserValidationHelpers({
 
   function resolveRegistryRoute(routeTemplate) {
     return routeTemplate
-      .replaceAll("{portfolioId}", portfolioId)
       .replaceAll("{portfolio_id}", portfolioId)
-      .replaceAll("{benchmarkCode}", benchmarkCode);
+      .replaceAll("{benchmarkCode}", benchmarkCode)
+      .replaceAll("{canonicalAsOfDate}", canonicalAsOfDate);
   }
 
   async function screenshotRegisteredPanel(page, panelId, metadata = {}) {

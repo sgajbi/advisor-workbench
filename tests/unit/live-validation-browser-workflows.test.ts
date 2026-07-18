@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import * as browserWorkflowModule from "../../scripts/live/validation/browser-workflows.mjs";
+import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-metadata.mjs";
 
 const {
   createBrowserValidationHelpers,
@@ -69,7 +70,7 @@ describe("live validation browser workflow helpers", () => {
         "performance.risk.snapshot",
         {
           screenshotName: "performance-risk-live.png",
-          route: "/performance?portfolioId={portfolioId}&mode=risk&benchmark={benchmarkCode}",
+          route: "/performance?portfolioId={portfolio_id}&mode=risk&benchmark={benchmarkCode}",
         },
       ],
     ]);
@@ -87,11 +88,27 @@ describe("live validation browser workflow helpers", () => {
 
       expect(
         helpers.resolveRegistryRoute(
-          "/performance?portfolioId={portfolioId}&mode=risk&benchmark={benchmarkCode}"
+          "/performance?portfolioId={portfolio_id}&mode=risk&benchmark={benchmarkCode}"
         )
       ).toBe(
         "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
       );
+      expect(
+        helpers.resolveRegistryRoute("/book?asOfDate={canonicalAsOfDate}"),
+      ).toBe("/book?asOfDate=2026-04-10");
+      for (const panelId of [
+        "portfolio.summary",
+        "reporting.report_centre",
+        "performance.summary",
+        "performance.risk.snapshot",
+        "dpm.outcome_review",
+      ]) {
+        const panel = DEFAULT_PANEL_REGISTRY.panels.find(
+          (candidate) => candidate.panelId === panelId,
+        );
+        expect(panel, `${panelId} must remain registered`).toBeDefined();
+        expect(helpers.resolveRegistryRoute(panel!.route)).not.toMatch(/\{[^}]+\}/);
+      }
 
       await helpers.screenshotRegisteredPanel(
         {
