@@ -868,3 +868,70 @@ browser worker API.
 Repo wiki source changes are required because the supported reporting route, integration boundary,
 and unsupported operator controls changed. Publish `wiki/` only after the implementation reaches
 `main`, then run strict parity verification.
+
+## Portfolio Reporting Source Posture
+
+### Business job
+
+A client advisor or operations user reviewing Portfolio records needs to know whether the current
+book can support reporting and whether an actual reporting snapshot exists. Source preparation and
+generated client-reporting output are related, but they are not the same business fact.
+
+### Source-contract research
+
+Research was reviewed on 2026-07-19 against the authoritative Gateway contract and implementation:
+
+1. `PortfolioReportingReadiness.status` is explicitly a reporting-readiness posture.
+2. Gateway's `build_reporting_readiness` prefers the upstream source-readiness bucket and otherwise
+   derives `READY` from non-empty position coverage or `EMPTY` from no positions.
+3. Gateway currently supplies workspace position coverage as `row_count`.
+4. `generated_at_utc` is optional and explicitly describes the most recent reporting-output
+   generation. The current readiness builder does not synthesize it.
+
+The populated `READY`, 11 rows, and no generation timestamp combination therefore means the
+reportable book is ready while the reporting snapshot has not been generated. Gateway is not
+claiming that a document or snapshot exists; the prior Workbench presentation collapsed those
+facts.
+
+### Adopted decisions
+
+1. Derive the reporting source label, explanation, badge, and tone from one typed posture.
+2. Reserve `Generated` and the success tone for a ready/complete source with a real generation
+   timestamp and non-empty output coverage.
+3. Present ready source data without a timestamp as `Reportable book ready` and `Not generated`.
+4. Preserve a last-generation date for pending, stale, failed, or unavailable current posture
+   without calling the retained output current.
+5. Fail unknown source statuses closed as unavailable business posture rather than displaying a
+   raw technical value.
+6. Apply the same pure builder to Allocation, Positions, Transactions, Income & Activity, and
+   Cashflow evidence rails.
+
+### Rejected decisions
+
+1. Do not rename Gateway `READY`; it is valid source-readiness truth.
+2. Do not treat non-zero `row_count` as proof that reporting output was generated.
+3. Do not place a generated/ready snapshot badge beside a missing generation timestamp.
+4. Do not invent stale-age thresholds because this contract publishes no governed freshness policy.
+5. Do not add a one-off correction to Income & Activity; the evidence rail is a shared Portfolio
+   pattern.
+
+### Validation record
+
+1. A focused matrix covers generated, source-ready, partial, pending with retained generation,
+   empty, stale, failed, unavailable, and unknown fail-closed states.
+2. A cross-screen regression proves the same source-ready posture on all five Portfolio record
+   screens, and a rendered component regression proves that raw `READY` no longer appears on the
+   Reporting Snapshot item.
+3. Eighteen focused tests, TypeScript validation, lint, diff checks, and the production build pass.
+4. Production browser proof at 1440 x 1000 against a bounded diagnostic Gateway fixture rendered
+   `Reportable book ready`, `11 reportable rows available; a reporting snapshot has not been
+   generated`, and `Not generated`. The local artifact is
+   `output/playwright/diagnostic-reporting-posture-427.png`.
+5. The browser artifact is diagnostic, not demo-ready. Populated canonical certification remains
+   blocked by the existing platform #553 Manage seed-authority defect.
+
+### Publication decision
+
+No wiki source change is required. This slice corrects the interpretation of an existing Portfolio
+evidence field without adding a route, integration, supported capability, or operator command. The
+repository context and review ledger carry the reusable source-versus-output rule.
