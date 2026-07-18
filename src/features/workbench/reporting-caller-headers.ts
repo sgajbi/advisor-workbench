@@ -1,4 +1,4 @@
-export function buildReportBatchCallerHeaders(params: {
+export function buildReportingCallerHeaders(params: {
   actorId: string;
   tenantId: string;
   region: string;
