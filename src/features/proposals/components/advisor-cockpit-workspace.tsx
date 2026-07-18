@@ -251,23 +251,56 @@ export default function AdvisorCockpitWorkspace({
 
       <SectionBlock
         title="Meeting Preparation"
-        subtitle="Source-backed preparation packets."
+        subtitle="Source-backed meeting preparation evidence."
       >
-        {model.preparationRows.length > 0 ? (
-          <div className={styles.preparationGrid}>
-            {model.preparationRows.map((packet) => (
-              <div className={styles.preparationItem} key={packet.packetId}>
-                <Text variant="microLabel">{packet.context}</Text>
-                <strong>{packet.status}</strong>
-                <Text variant="secondary">{packet.evidenceSummary}</Text>
-              </div>
-            ))}
-          </div>
+        {model.preparationPosture === "available" ? (
+          <>
+            {model.preparationCount === null ? (
+              <Text variant="secondary">
+                At least {model.preparationRows.length}{" "}
+                {model.preparationRows.length === 1
+                  ? "preparation pack is"
+                  : "preparation packs are"}{" "}
+                available for review; the full source scope is not reported.
+              </Text>
+            ) : model.preparationCount > model.preparationRows.length ? (
+              <Text variant="secondary">
+                {model.preparationCount}{" "}
+                {model.preparationCount === 1
+                  ? "preparation pack is"
+                  : "preparation packs are"}{" "}
+                in scope; {model.preparationRows.length}{" "}
+                {model.preparationRows.length === 1 ? "is" : "are"} available
+                for review.
+              </Text>
+            ) : null}
+            <div className={styles.preparationGrid}>
+              {model.preparationRows.map((packet) => (
+                <div className={styles.preparationItem} key={packet.packetId}>
+                  <Text variant="microLabel">{packet.context}</Text>
+                  <strong>{packet.status}</strong>
+                  <Text variant="secondary">{packet.evidenceSummary}</Text>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : model.preparationPosture === "details-unavailable" ? (
+          <ScreenStatePanel
+            kind="partial"
+            title="Meeting preparation details unavailable"
+            body={
+              model.preparationCount === null
+                ? "The preparation scope and review evidence are not available for this portfolio."
+                : `${model.preparationCount} ${model.preparationCount === 1 ? "preparation pack is" : "preparation packs are"} reported in scope, but ${model.preparationCount === 1 ? "its" : "their"} review evidence is not available.`
+            }
+            hint="Refresh or verify Advisor Cockpit source readiness before relying on meeting preparation evidence in a client discussion."
+            surface="default"
+          />
         ) : (
           <ScreenStatePanel
             kind="empty"
-            title="No preparation packets"
-            body="No source-backed meeting preparation packets are currently available for this cockpit scope."
+            title="No preparation packs in scope"
+            body="The source reports no meeting preparation packs for this portfolio."
             surface="default"
           />
         )}
