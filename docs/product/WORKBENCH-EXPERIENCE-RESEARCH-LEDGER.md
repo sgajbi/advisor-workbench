@@ -936,3 +936,78 @@ facts.
 No wiki source change is required. This slice corrects the interpretation of an existing Portfolio
 evidence field without adding a route, integration, supported capability, or operator command. The
 repository context and review ledger carry the reusable source-versus-output rule.
+
+## Advisor Cockpit Business Readiness
+
+### Business job
+
+Before a client discussion, an advisor needs to know whether the evidence required for internal
+preparation is available and which client-use boundaries remain. Service identity, RFC proof,
+data-product posture, and order-management acronyms are useful support evidence, but they do not
+answer those primary business questions.
+
+### Product and source-contract research
+
+Research was reviewed on 2026-07-18 against official product guidance and the current Gateway
+contract:
+
+1. [IBM Carbon's status-indicator pattern](https://carbondesignsystem.com/patterns/status-indicator-pattern/)
+   requires contextual, descriptive status labels, text in addition to color, an explicit unknown
+   state, and the highest-attention posture when underlying states are consolidated.
+2. [IBM Carbon's progress-indicator content guidance](https://carbondesignsystem.com/components/progress-indicator/usage/)
+   keeps primary labels concise and uses supporting text for additional context.
+3. [Salesforce's financial-advisor meeting-preparation guidance](https://help.salesforce.com/s/articleView?id=ind.fsc_agents_finserv_fin_advisor_asst_topic_meeting_prep.htm&language=en_US&type=5)
+   centers the advisor job on client context, portfolio evidence, goals, life events, and actionable
+   gaps rather than platform implementation identifiers.
+4. [Salesforce's advisor-assistance release guidance](https://help.salesforce.com/s/articleView?id=release-notes.rn_einstein_copilot_standard_actions.htm&language=en_US&release=258&type=5)
+   includes identifying missing or unavailable information so preparation remains complete and
+   honest.
+5. Gateway currently publishes four canonical positive proof strings and the exact
+   `BLOCKED` client-publication posture, but transports readiness and unsupported capabilities as
+   open strings rather than a bounded presentation enum.
+
+### Adopted decisions
+
+1. Answer readiness questions with concise business values: `Available`, `Blocked`, and
+   `Not reported` in this source-backed slice.
+2. Map only exact values proven for the matching readiness category. Do not infer meaning through
+   formatting, substring matching, or a value that belongs to another category.
+3. Treat null, unknown, and cross-field values as neutral `Not reported`; they must never become a
+   positive posture.
+4. Pair every status with category-specific helper text and use color only as a secondary cue.
+5. Translate source-owned unsupported capabilities into business operating boundaries such as
+   `Client communication unavailable` and `Order workflow unavailable`.
+6. Preserve exact source codes in a collapsed `Support details` disclosure for support and audit
+   use.
+7. Keep action status and priority presentation separate because those fields use different,
+   bounded contracts.
+
+### Rejected decisions
+
+1. Do not display `Advise`, `Gateway`, RFC identity, data-product vocabulary, `OMS`, or
+   `supportability` in the primary advisor scan path.
+2. Do not discard raw source values or replace them with unsupported business claims.
+3. Do not show a green summary when any required contributing source is blocked, unavailable, or
+   unknown.
+4. Do not label ordinary readiness evidence as AI-generated. AI provenance is instance-specific
+   and requires an explicit source signal.
+5. Do not expand this slice into meeting agendas, advice generation, policy approval, client
+   communication, order entry, or execution authority.
+
+### Validation record
+
+1. Presenter tests cover every known category/value pair plus null, unknown, and cross-field
+   fail-closed cases.
+2. View-model and component tests prove that business statuses and operating boundaries remain in
+   the primary scan path while raw values stay hidden until `Support details` is opened.
+3. An unknown-source component regression proves five neutral statuses and retains the raw evidence
+   only inside the disclosure.
+4. Forty-two focused tests passed with clean TypeScript validation, lint, and diff hygiene.
+5. Populated canonical browser certification remains blocked by the existing platform #553
+   Manage seed-authority defect; no demo-ready visual claim is made.
+
+### Publication decision
+
+No wiki source change is required. This slice improves the presentation of an existing supported
+Advisor Cockpit contract without changing route ownership, source capability, operator commands,
+or integration boundaries. Technical capability truth remains correctly documented in the wiki.
