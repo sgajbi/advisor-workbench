@@ -78,12 +78,35 @@ export function createReportOrderingConfiguration(
     reportingCurrency: context.reportingCurrency,
     benchmarkCode: "",
     allocationDimensions: [],
-    selectedSections:
-      family?.sections
-        .filter((section) => section.selectionPosture === "required" || section.defaultSelected)
-        .sort(byDisplayOrder)
-        .map((section) => section.sectionId) ?? [],
+    selectedSections: family ? defaultSelectedSectionIds(family) : [],
     outputFormat,
+  };
+}
+
+export function selectReportOrderingFamily(
+  response: ReportOrderingResponse,
+  current: ReportOrderingConfiguration,
+  familyId: string,
+): ReportOrderingConfiguration {
+  const family = response.reportFamilies.find(
+    (candidate) =>
+      candidate.reportFamilyId === familyId &&
+      candidate.eligibility.state === "ready" &&
+      firstOrderableMode(candidate),
+  );
+  const mode = family ? firstOrderableMode(family) : null;
+  if (!family || !mode) {
+    return current;
+  }
+
+  return {
+    ...current,
+    familyId: family.reportFamilyId,
+    modeId: mode.modeId,
+    benchmarkCode: "",
+    allocationDimensions: [],
+    selectedSections: defaultSelectedSectionIds(family),
+    outputFormat: resolveReadyOutputFormat(family, mode),
   };
 }
 
@@ -241,6 +264,13 @@ function firstEligibleFamily(response: ReportOrderingResponse): ReportFamily | n
       (family) => family.eligibility.state === "ready" && firstOrderableMode(family),
     ) ?? null
   );
+}
+
+function defaultSelectedSectionIds(family: ReportFamily): string[] {
+  return family.sections
+    .filter((section) => section.selectionPosture === "required" || section.defaultSelected)
+    .sort(byDisplayOrder)
+    .map((section) => section.sectionId);
 }
 
 function firstOrderableMode(family: ReportFamily): ReportOrderingMode | null {
