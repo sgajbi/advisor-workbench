@@ -341,7 +341,7 @@ export async function validateAdvisoryJourneyScreens(
         timeout: timeoutMs,
       });
       await expect(
-        page.getByText("Source Readiness", { exact: true }).first(),
+        page.getByText("Preparation Readiness", { exact: true }).first(),
       ).toBeVisible({
         timeout: timeoutMs,
       });

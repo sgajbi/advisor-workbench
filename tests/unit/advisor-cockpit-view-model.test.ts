@@ -143,10 +143,6 @@ describe("advisor cockpit view model", () => {
       tone: "danger",
       state: "blocked",
     });
-    expect(model.unsupportedClaims).toEqual([
-      "Client communication unavailable",
-      "Order workflow unavailable",
-    ]);
     expect(model.operatingBoundaries).toEqual([
       {
         label: "Client communication unavailable",

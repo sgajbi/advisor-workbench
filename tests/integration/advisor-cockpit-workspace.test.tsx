@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -168,15 +168,72 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(
       screen.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Client publication")).toBeInTheDocument();
-    expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
+    const readiness = screen
+      .getByRole("heading", { name: "Preparation Readiness" })
+      .closest<HTMLElement>(".section-block")!;
+    expect(within(readiness).getByText("Client publication")).toBeInTheDocument();
+    expect(within(readiness).getAllByText("Available")).toHaveLength(4);
+    expect(within(readiness).getByText("Blocked")).toBeInTheDocument();
     expect(
-      screen.getByText("External Client Communication, OMS Order Lifecycle"),
+      within(readiness).getByText("Client communication unavailable"),
     ).toBeInTheDocument();
+    expect(
+      within(readiness).getByText("Order workflow unavailable"),
+    ).toBeInTheDocument();
+    expect(within(readiness).queryByText(/OMS/i)).not.toBeVisible();
+    expect(within(readiness).queryByText(/RFC 0026/i)).not.toBeInTheDocument();
+    const supportDetails = within(readiness).getByText("Support details").closest("details")!;
+    expect(supportDetails).not.toHaveAttribute("open");
+    fireEvent.click(within(supportDetails).getByText("Support details"));
+    expect(within(supportDetails).getByText("OMS_ORDER_LIFECYCLE")).toBeVisible();
+    expect(
+      within(supportDetails).getByText("SUPPORTED_BY_LOTUS_GATEWAY_RFC0026"),
+    ).toBeVisible();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(
       screen.queryByText("CLIENT_READY_PUBLICATION"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps unknown readiness neutral and discloses raw values only as support detail", async () => {
+    getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
+      snapshot_id: "cockpit_snapshot_unknown",
+      action_counts: {
+        "status.PENDING_REVIEW": 1,
+        "status.BLOCKED": 0,
+        "priority.HIGH": 1,
+      },
+      supportability: {
+        gateway_posture: "NEW_GATEWAY_POSTURE",
+        workbench_posture: null,
+        data_product_posture: "READY",
+        client_ready_publication: "PENDING",
+      },
+      unsupported_capabilities: ["NEW_CAPABILITY"],
+    });
+    getAdvisorCockpitSupportabilityMock.mockResolvedValueOnce({
+      posture: "NEW_OVERALL_POSTURE",
+      unsupported_capabilities: ["NEW_CAPABILITY"],
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    const readiness = (
+      await screen.findByRole("heading", { name: "Preparation Readiness" })
+    ).closest<HTMLElement>(".section-block")!;
+    expect(within(readiness).getAllByText("Not reported")).toHaveLength(5);
+    expect(
+      within(readiness).getByText("Additional workflow capability unavailable"),
+    ).toBeInTheDocument();
+    expect(within(readiness).queryByText("NEW_GATEWAY_POSTURE")).not.toBeVisible();
+    expect(within(readiness).queryByText("NEW_CAPABILITY")).not.toBeVisible();
+
+    const supportDetails = within(readiness).getByText("Support details").closest("details")!;
+    fireEvent.click(within(supportDetails).getByText("Support details"));
+    expect(within(supportDetails).getByText("NEW_GATEWAY_POSTURE")).toBeVisible();
+    expect(within(supportDetails).getByText("NEW_CAPABILITY")).toBeVisible();
   });
 
   it("records acknowledgements through Gateway without clearing source-owned blockers locally", async () => {

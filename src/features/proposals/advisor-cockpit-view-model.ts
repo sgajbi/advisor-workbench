@@ -84,7 +84,6 @@ export type AdvisorCockpitModel = {
   supportabilityRows: AdvisorCockpitReadinessRow[];
   operatingBoundaries: AdvisorCockpitOperatingBoundaryPresentation[];
   supportDetails: AdvisorCockpitSupportDetail[];
-  unsupportedClaims: string[];
   actionCount: number | null;
   actionPosture: AdvisorCockpitActionPosture;
   preparationCount: number | null;
@@ -161,7 +160,7 @@ export function buildAdvisorCockpitModel({
         ? reportedActionCount === null
           ? "The action scope is not reported. Refresh or verify source readiness before client discussion."
           : `${formatActionCount(reportedActionCount)} in scope. Refresh or verify source readiness before client discussion.`
-        : "Continue with source-backed preparation and supportability review."),
+        : "Continue with source-backed meeting preparation and review any reported operating boundaries."),
     metrics: [
       {
         label: "Actions in scope",
@@ -199,7 +198,7 @@ export function buildAdvisorCockpitModel({
       {
         label: "High priority",
         value: String(highPriorityCount),
-        detail: "Critical or high priority actions from Advise.",
+        detail: "Source-reported critical or high priority actions.",
         tone: highPriorityCount > 0 ? "danger" : "default",
       },
     ],
@@ -214,7 +213,6 @@ export function buildAdvisorCockpitModel({
         value: boundary.rawValue,
       })),
     ],
-    unsupportedClaims: operatingBoundaries.map((boundary) => boundary.label),
     actionCount: reportedActionCount,
     actionPosture,
     preparationCount: reportedPreparationCount,

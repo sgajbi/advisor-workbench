@@ -235,24 +235,45 @@ export default function AdvisorCockpitWorkspace({
       )}
 
       <SectionBlock
-        title="Source Readiness"
-        subtitle="Downstream readiness and client-publication boundaries reported by source services."
+        title="Preparation Readiness"
+        subtitle="Current evidence availability and client-use boundaries for this advisor review."
       >
         <div className={styles.supportabilityGrid}>
           {model.supportabilityRows.map((row) => (
             <div className={styles.supportabilityItem} key={row.label}>
-              <Text variant="microLabel">{row.label}</Text>
-              <strong>{row.value}</strong>
+              <div className={styles.supportabilityHeading}>
+                <Text variant="microLabel">{row.label}</Text>
+                <SemanticBadge tone={row.tone}>{row.value}</SemanticBadge>
+              </div>
+              <Text variant="secondary">{row.detail}</Text>
             </div>
           ))}
         </div>
-        {model.unsupportedClaims.length > 0 ? (
-          <div className={styles.unsupportedClaims}>
-            <Text variant="microLabel">Unsupported Claims</Text>
-            <Text variant="secondary">
-              {model.unsupportedClaims.join(", ")}
-            </Text>
+        {model.operatingBoundaries.length > 0 ? (
+          <div className={styles.operatingBoundaries}>
+            <Text variant="microLabel">Operating Boundaries</Text>
+            <div className={styles.operatingBoundaryGrid}>
+              {model.operatingBoundaries.map((boundary) => (
+                <div key={boundary.rawValue}>
+                  <strong>{boundary.label}</strong>
+                  <Text variant="secondary">{boundary.detail}</Text>
+                </div>
+              ))}
+            </div>
           </div>
+        ) : null}
+        {model.supportDetails.length > 0 ? (
+          <details className={styles.supportDetails}>
+            <summary>Support details</summary>
+            <dl>
+              {model.supportDetails.map((detail) => (
+                <div key={`${detail.label}-${detail.value}`}>
+                  <dt>{detail.label}</dt>
+                  <dd>{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         ) : null}
       </SectionBlock>
 
