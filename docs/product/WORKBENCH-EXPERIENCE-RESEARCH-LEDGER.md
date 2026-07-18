@@ -1157,3 +1157,68 @@ No wiki source change is required. The wiki already states that shell navigation
 Gateway capability contract; this slice corrects primary navigation language without changing a
 route, capability, authority boundary, or operator workflow. The reusable rule is durable in this
 research ledger, the codebase review ledger, and repository engineering context.
+
+## Truthful Shell Utilities And Private-Banking Product Context
+
+### Business job
+
+A private banker needs the global shell to provide stable product orientation and only actions that
+can complete a supported task. Search, notifications, and banker identity are trusted capability
+surfaces: presenting them without source truth encourages sensitive input, false unread urgency,
+and mistaken authenticated context.
+
+### Source-contract audit
+
+Read-only review on 2026-07-18 confirmed:
+
+1. Workbench had no search form, query handler, result model, entitlement scope, privacy treatment,
+   keyboard result navigation, or task-preserving handoff behind the global search input.
+2. No source-owned notification list, unread count, acknowledgement contract, or notification action
+   backed the bell and red dot.
+3. Gateway caller headers support bounded upstream authorization but do not publish an authenticated
+   banker-session display contract or account-menu commands.
+4. Workbench #436 and platform #563 already govern the missing authenticated BFF principal/session
+   contract. Local development authority is deliberately not a display identity.
+
+### Current-product research
+
+1. [W3C button guidance](https://www.w3.org/WAI/ARIA/apg/patterns/button/) defines a button as a
+   control that triggers an action or event and requires an unavailable action to expose disabled
+   state rather than behaving as an active no-op.
+2. [W3C menu-button guidance](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/) requires the
+   trigger to open a menu with explicit popup and expanded state plus keyboard focus behavior.
+3. [W3C combobox guidance](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) defines the popup,
+   value, suggestion, selection, and keyboard contract required for an interactive search selector.
+
+### Adopted decisions
+
+1. Remove unbacked enabled controls immediately instead of preserving decorative alignment.
+2. Keep the existing Lotus brand and add concise, non-interactive `Private Banking Workbench`
+   product context in the same lockup.
+3. Remove dead icon helpers, control styles, unread treatment, identity styles, and obsolete
+   responsive overrides in the same reusable shell slice.
+4. Prove absence of search, notifications, unread posture, person name, initials, role, and
+   menu-shaped banker controls at unit and production-browser levels.
+
+### Rejected decisions
+
+1. Hard-coded or deployment-configured banker display identity.
+2. A disabled search field, notification bell, or profile button retained only to make the header
+   look feature-rich.
+3. Browser-local client/account/proposal search, fake unread counts, or an account menu without
+   authenticated source commands.
+4. Treating advisor-book membership as banker identity; `/book` owns portfolio assignment scope.
+
+### Validation record
+
+Issue #451 governs the slice. Thirty-nine focused shell, navigation, and design-system tests pass
+with TypeScript and lint. Production browser coverage verifies the product context at desktop and
+tablet width and proves the search field, notification action, and hard-coded banker identity are
+absent. Full release-train validation remains to be rerun after this slice.
+
+### Publication decision
+
+No wiki source change is required. Published wiki truth does not claim global search, notifications,
+or banker-profile support, and the supported routes and authority boundaries are unchanged. The
+product-context and false-affordance rule is durable in this research ledger, the codebase review
+ledger, and repository engineering context.
