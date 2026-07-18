@@ -93,10 +93,18 @@ describe("advisor-book workspace view model", () => {
           rawValue: "delegated_scope_not_supported",
         }),
         expect.objectContaining({
-          label: "Tenant confirmation pending",
+          label: "Operating scope confirmation pending",
           rawValue: "tenant_scope_not_reported",
         }),
       ]),
     );
+    expect(model.supportDetails).toEqual(
+      expect.arrayContaining([
+        { label: "Membership record", value: "Portfolio manager assignments" },
+        { label: "Operating scope", value: "Workbench access context only" },
+        { label: "Availability reference", value: "advisor_book_tenant_scope_not_reported" },
+      ]),
+    );
+    expect(JSON.stringify(model)).not.toMatch(/tenant scope|status code|membership v1/i);
   });
 });
