@@ -1002,8 +1002,14 @@ contract:
    the primary scan path while raw values stay hidden until `Support details` is opened.
 3. An unknown-source component regression proves five neutral statuses and retains the raw evidence
    only inside the disclosure.
-4. Forty-two focused tests passed with clean TypeScript validation, lint, and diff hygiene.
-5. Populated canonical browser certification remains blocked by the existing platform #553
+4. Forty-six focused presenter, view-model, navigation, component, and live-workflow tests passed.
+5. Exact-head `make check` passed 295 test files and 1,338 tests at 90.84% statement coverage,
+   followed by clean lint, TypeScript validation, and production build.
+6. A dedicated production Playwright regression passed against a bounded diagnostic fixture. The
+   collapsed-primary and expanded-support-detail screenshots prove that technical values are hidden
+   from the primary scan path and retained on demand. Visual review also found and removed the last
+   `Gateway-backed`, `supportability`, and `source evidence` language from the two cockpit headers.
+7. Populated canonical browser certification remains blocked by the existing platform #553
    Manage seed-authority defect; no demo-ready visual claim is made.
 
 ### Publication decision
