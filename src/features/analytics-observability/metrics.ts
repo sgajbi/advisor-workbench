@@ -61,6 +61,11 @@ export interface WorkbenchAnalyticsUiObservationOptions {
 
 export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   {
+    route: "workbench.advisor-book",
+    panel: "advisor-book-portfolios",
+    operation: "advisor-book.portfolios",
+  },
+  {
     route: "workbench.performance",
     panel: "performance-summary",
     operation: "performance.workspace.summary",
