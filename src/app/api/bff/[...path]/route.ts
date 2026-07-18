@@ -54,20 +54,13 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     bodyText: requestBody,
   });
   if (reportingAuthority.status === "rejected") {
-    const status =
-      reportingAuthority.reason === "authenticated_principal_required"
-        ? 401
-        : reportingAuthority.reason === "reporting_scope_not_entitled"
-          ? 403
-          : reportingAuthority.reason === "invalid_reporting_request"
-            ? 422
-            : 500;
+    const rejection = reportingAuthorityRejection(reportingAuthority.reason);
     return NextResponse.json(
       {
-        code: `reporting_${reportingAuthority.reason}`,
+        code: rejection.code,
         status: "rejected",
       },
-      { status, headers: { "cache-control": "no-store" } },
+      { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
@@ -86,6 +79,26 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     status: response.status,
     headers: responseHeaders,
   });
+}
+
+function reportingAuthorityRejection(
+  reason: Exclude<
+    ReturnType<typeof applyReportOrderingRouteCallerContextHeaders>,
+    { status: "not_applicable" } | { status: "applied" }
+  >["reason"],
+): { code: string; status: number } {
+  switch (reason) {
+    case "authenticated_principal_required":
+      return { code: "reporting_authenticated_principal_required", status: 401 };
+    case "reporting_scope_not_entitled":
+      return { code: "reporting_scope_not_entitled", status: 403 };
+    case "invalid_reporting_request":
+      return { code: "reporting_invalid_request", status: 422 };
+    case "development_authority_not_allowed":
+    case "invalid_authority_mode":
+    case "invalid_reporting_configuration":
+      return { code: "reporting_authority_configuration_rejected", status: 500 };
+  }
 }
 
 export async function GET(

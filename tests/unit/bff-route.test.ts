@@ -363,7 +363,7 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(403);
     expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({
-      code: "reporting_reporting_scope_not_entitled",
+      code: "reporting_scope_not_entitled",
       status: "rejected",
     });
   });
