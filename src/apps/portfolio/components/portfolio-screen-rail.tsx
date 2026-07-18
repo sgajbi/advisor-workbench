@@ -66,7 +66,7 @@ export default function PortfolioScreenRail({
       }}
     >
       <div className="portfolio-screen-rail-header">
-        <AdvisorBookContextSwitcher portfolioId={portfolioId} />
+        <AdvisorBookContextSwitcher pathname={pathname} portfolioId={portfolioId} />
         <div className="portfolio-screen-rail-context">
           <Text variant="label">Review Workflow</Text>
           <strong title={portfolioId}>{portfolioId}</strong>

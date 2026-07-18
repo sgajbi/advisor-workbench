@@ -5,13 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import PortfolioScreenRail from "../../src/apps/portfolio/components/portfolio-screen-rail";
 
 const usePathnameMock = vi.fn();
-const routerPushMock = vi.fn();
 const useAdvisorBookMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => usePathnameMock(),
-  useSearchParams: () => new URLSearchParams("period=YTD&portfolioId=PB_SG_GLOBAL_BAL_001"),
-  useRouter: () => ({ push: routerPushMock }),
 }));
 
 vi.mock("@/features/advisor-book/use-advisor-book", () => ({
@@ -36,11 +33,24 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+function openPortfolioContextOptions() {
+  const summary = screen.getByText("Change portfolio");
+  const disclosure = summary.closest("details");
+
+  if (!disclosure) {
+    throw new Error("Portfolio context disclosure is missing");
+  }
+
+  disclosure.open = true;
+  fireEvent(disclosure, new Event("toggle"));
+}
+
 describe("PortfolioScreenRail", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     usePathnameMock.mockReturnValue("/income");
-    routerPushMock.mockReset();
     window.sessionStorage.clear();
+    window.history.replaceState({}, "", "/income?period=YTD&portfolioId=PB_SG_GLOBAL_BAL_001");
     useAdvisorBookMock.mockReturnValue({
       loading: false,
       error: null,
@@ -162,7 +172,7 @@ describe("PortfolioScreenRail", () => {
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("switches source-backed portfolio context without losing the active business task", () => {
+  it("builds source-backed portfolio links without losing the active business task", () => {
     render(
       <PortfolioScreenRail
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -170,14 +180,30 @@ describe("PortfolioScreenRail", () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: "Portfolio context" }), {
-      target: { value: "PB_SG_INCOME_002" },
-    });
+    openPortfolioContextOptions();
+    const option = screen.getByRole("link", { name: /Income Mandate CIF_SG_002/i });
 
-    expect(routerPushMock).toHaveBeenCalledWith(
+    expect(option).toHaveAttribute(
+      "href",
       "/income?period=YTD&portfolioId=PB_SG_INCOME_002",
     );
+    fireEvent.click(option);
     expect(window.sessionStorage.getItem("lotus:advisor-book-context-focus")).toBe("true");
+  });
+
+  it("loads own-book options only when the advisor opens portfolio context", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="income"
+      />,
+    );
+
+    expect(useAdvisorBookMock).not.toHaveBeenCalled();
+
+    openPortfolioContextOptions();
+
+    expect(useAdvisorBookMock).toHaveBeenCalledOnce();
   });
 
   it("does not claim membership when the selected portfolio is outside the returned book page", () => {
@@ -185,7 +211,7 @@ describe("PortfolioScreenRail", () => {
       <PortfolioScreenRail portfolioId="UNCONFIRMED" activeScreen="income" />,
     );
 
-    expect(screen.getByRole("combobox", { name: "Portfolio context" })).toHaveValue("UNCONFIRMED");
+    openPortfolioContextOptions();
     expect(screen.getByText(/not confirmed in the returned own-book page/i)).toBeInTheDocument();
   });
 
@@ -198,7 +224,7 @@ describe("PortfolioScreenRail", () => {
       />,
     );
 
-    expect(screen.getByRole("combobox", { name: "Portfolio context" })).toHaveFocus();
+    expect(screen.getByText("Change portfolio")).toHaveFocus();
     expect(window.sessionStorage.getItem("lotus:advisor-book-context-focus")).toBeNull();
   });
 });

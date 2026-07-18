@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { resolveAdvisorBookAsOfDate } from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
@@ -11,88 +10,127 @@ import styles from "../advisor-book-context-switcher.module.css";
 
 const RESTORE_FOCUS_KEY = "lotus:advisor-book-context-focus";
 
-export default function AdvisorBookContextSwitcher({ portfolioId }: { portfolioId: string }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const selectRef = useRef<HTMLSelectElement>(null);
-  const asOfDate = resolveAdvisorBookAsOfDate(searchParams.get("asOfDate"));
-  const query = useMemo(
-    () => ({ asOfDate, sortBy: "client_id" as const, sortOrder: "asc" as const, limit: 100 }),
-    [asOfDate],
-  );
-  const { response, loading, error } = useAdvisorBook(query);
-  const selectedMembership = response?.items.find((item) => item.portfolio_id === portfolioId);
-  const bookHref = `/book?asOfDate=${encodeURIComponent(asOfDate)}`;
+export default function AdvisorBookContextSwitcher({
+  pathname,
+  portfolioId,
+}: {
+  pathname: string;
+  portfolioId: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const summaryRef = useRef<HTMLElement>(null);
+  const [locationSearch, setLocationSearch] = useState("");
 
   useEffect(() => {
+    setLocationSearch(window.location.search);
     if (window.sessionStorage.getItem(RESTORE_FOCUS_KEY) === "true") {
       window.sessionStorage.removeItem(RESTORE_FOCUS_KEY);
-      selectRef.current?.focus();
+      summaryRef.current?.focus();
     }
   }, [portfolioId]);
 
-  function switchPortfolio(nextPortfolioId: string) {
-    if (!nextPortfolioId || nextPortfolioId === portfolioId) {
-      return;
-    }
-    window.sessionStorage.setItem(RESTORE_FOCUS_KEY, "true");
-    router.push(
-      buildPortfolioContextHref({
-        pathname,
-        searchParams,
-        portfolioId: nextPortfolioId,
-      }),
-    );
-  }
+  const asOfDate = resolveAdvisorBookAsOfDate(
+    new URLSearchParams(locationSearch).get("asOfDate"),
+  );
 
   return (
     <div className={styles.switcher}>
       <div className={styles.header}>
         <span>Portfolio context</span>
-        <Link href={bookHref}>My book</Link>
+        <Link href={`/book?asOfDate=${encodeURIComponent(asOfDate)}`}>My book</Link>
       </div>
-      <select
-        ref={selectRef}
-        className={styles.select}
-        aria-label="Portfolio context"
-        aria-describedby="advisor-book-context-support"
-        value={portfolioId}
-        disabled={loading || Boolean(error) || !response?.items.length}
-        onChange={(event) => switchPortfolio(event.target.value)}
+      <details
+        className={styles.disclosure}
+        onToggle={(event) => setExpanded(event.currentTarget.open)}
       >
-        {loading ? <option value={portfolioId}>Confirming book membership…</option> : null}
-        {error ? <option value={portfolioId}>Own-book context unavailable</option> : null}
-        {!loading && !error && !selectedMembership ? (
-          <option value={portfolioId}>Current portfolio · membership not confirmed</option>
+        <summary ref={summaryRef} className={styles.summary}>
+          Change portfolio
+        </summary>
+        {expanded ? (
+          <AdvisorBookContextOptions
+            pathname={pathname}
+            locationSearch={locationSearch}
+            asOfDate={asOfDate}
+            portfolioId={portfolioId}
+          />
         ) : null}
-        {response?.items.map((item) => (
-          <option key={item.portfolio_id} value={item.portfolio_id}>
-            {item.display_name} · {item.client_id}
-          </option>
-        ))}
-      </select>
-      <p
-        id="advisor-book-context-support"
-        className={`${styles.support} ${!loading && !error && !selectedMembership ? styles.warning : ""}`}
-      >
-        {contextSupportCopy({ loading, error, membershipConfirmed: Boolean(selectedMembership) })}
+      </details>
+      <p className={styles.support}>
+        Open to load source-backed own-book options for the current business task.
       </p>
     </div>
   );
 }
 
-function contextSupportCopy({
-  loading,
-  error,
-  membershipConfirmed,
+function AdvisorBookContextOptions({
+  pathname,
+  locationSearch,
+  asOfDate,
+  portfolioId,
 }: {
-  loading: boolean;
-  error: unknown;
-  membershipConfirmed: boolean;
+  pathname: string;
+  locationSearch: string;
+  asOfDate: string;
+  portfolioId: string;
 }) {
-  if (loading) return "Confirming source-backed own-book scope.";
-  if (error) return "Switching is unavailable until book membership can be confirmed.";
-  if (!membershipConfirmed) return "The selected portfolio is not confirmed in the returned own-book page.";
-  return "Changing portfolio keeps the current business view and supported filters.";
+  const query = useMemo(
+    () => ({ asOfDate, sortBy: "client_id" as const, sortOrder: "asc" as const, limit: 100 }),
+    [asOfDate],
+  );
+  const { response, loading, error } = useAdvisorBook(query);
+  const searchParams = new URLSearchParams(locationSearch);
+  const selectedMembership = response?.items.find((item) => item.portfolio_id === portfolioId);
+
+  if (loading) {
+    return <p className={styles.optionState} role="status">Confirming own-book membership…</p>;
+  }
+  if (error) {
+    return (
+      <p className={`${styles.optionState} ${styles.warning}`}>
+        Switching is unavailable until book membership can be confirmed.
+      </p>
+    );
+  }
+  if (!response?.items.length) {
+    return <p className={styles.optionState}>No portfolio memberships are available to switch.</p>;
+  }
+
+  return (
+    <div>
+      {!selectedMembership ? (
+        <p className={`${styles.optionState} ${styles.warning}`}>
+          The selected portfolio is not confirmed in the returned own-book page.
+        </p>
+      ) : null}
+      <ul className={styles.options} aria-label="Portfolio context options">
+        {response.items.map((item) => {
+          const selected = item.portfolio_id === portfolioId;
+          return (
+            <li key={item.portfolio_id}>
+              {selected ? (
+                <span className={styles.selected} aria-current="true">
+                  <strong>{item.display_name}</strong>
+                  <small>{item.client_id} · Current</small>
+                </span>
+              ) : (
+                <Link
+                  href={buildPortfolioContextHref({
+                    pathname,
+                    searchParams,
+                    portfolioId: item.portfolio_id,
+                  })}
+                  onClick={() =>
+                    window.sessionStorage.setItem(RESTORE_FOCUS_KEY, "true")
+                  }
+                >
+                  <strong>{item.display_name}</strong>
+                  <small>{item.client_id}</small>
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
