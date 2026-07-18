@@ -210,6 +210,57 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(screen.getByText(/Client-ready Blocked/)).toBeInTheDocument();
   });
 
+  it("keeps previously loaded preparation evidence visible when its refresh fails", async () => {
+    listAdvisorCockpitPreparationPacketsMock
+      .mockResolvedValueOnce({
+        total_count: 2,
+        items: [
+          {
+            packet_id: "cached_packet_1",
+            context_type: "PORTFOLIO",
+            context_ref: "PB_SG_GLOBAL_BAL_001",
+            status: "READY",
+            evidence_refs: [
+              { summary: "Previously loaded meeting preparation evidence." },
+            ],
+          },
+        ],
+      })
+      .mockRejectedValueOnce(new Error("preparation refresh unavailable"));
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    expect(
+      await screen.findByText("Previously loaded meeting preparation evidence."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Acknowledge review" }),
+    );
+
+    expect(
+      await screen.findByText("Meeting preparation refresh unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "1 previously loaded preparation pack remains visible, but the current source scope cannot be confirmed.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Previously loaded meeting preparation evidence."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Meeting preparation details unavailable"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "2 preparation packs are in scope; 1 is available for review.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps the meeting preparation section visible when source packets are absent", async () => {
     listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({
       items: [],
