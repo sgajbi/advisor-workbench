@@ -47,6 +47,7 @@ export function usePortfolioProjectedCashflow({
     Partial<Record<CashflowHorizonKey, CashflowProjectionSnapshot>>
   >(initialSnapshot ? { [initialHorizonKey]: initialSnapshot } : {});
   const [loading, setLoading] = useState(!initialSnapshot);
+  const [refreshingEvidence, setRefreshingEvidence] = useState(false);
   const [failure, setFailure] = useState<CashflowRequestFailure | null>(null);
   const [retrySequence, setRetrySequence] = useState(0);
   const selectedSnapshot = snapshots[selectedHorizonKey] ?? null;
@@ -61,6 +62,7 @@ export function usePortfolioProjectedCashflow({
 
     let cancelled = false;
     setLoading(!selectedSnapshot);
+    setRefreshingEvidence(Boolean(selectedSnapshot));
     setFailure(null);
 
     async function loadProjectedCashflow() {
@@ -93,12 +95,15 @@ export function usePortfolioProjectedCashflow({
               partialFailures: response.partial_failures,
             },
           }));
+          setFailure(null);
+        } else {
+          setFailure({ requestedHorizonDays: selectedHorizonDays, response });
         }
-        setFailure(null);
       } else {
         setFailure({ requestedHorizonDays: selectedHorizonDays, response });
       }
       setLoading(false);
+      setRefreshingEvidence(false);
     }
 
     void loadProjectedCashflow();
@@ -120,6 +125,7 @@ export function usePortfolioProjectedCashflow({
     selectedHorizonDays,
     selectedSnapshot,
     loading,
+    refreshingEvidence,
     failure,
     selectHorizon: (nextHorizon: CashflowHorizonKey) => {
       if (!loading) {
