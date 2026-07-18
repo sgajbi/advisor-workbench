@@ -242,7 +242,9 @@ export function useReportOrderingWorkflow({
     submittedHandle,
     preflightReviewed,
     canSubmitReviewedRequest:
-      Boolean(model?.canSubmit && preflightReviewed) && submissionState !== "submitting",
+      Boolean(model?.canSubmit && preflightReviewed) &&
+      submissionState !== "submitting" &&
+      submissionState !== "accepted",
     updateConfiguration,
     toggleSection,
     reviewRequest,

@@ -130,6 +130,7 @@ export function ReportOrderingWorkspace({
                 <ReportReadinessRail
                   model={workflow.model}
                   preflightReviewed={workflow.preflightReviewed}
+                  canSubmitReviewedRequest={workflow.canSubmitReviewedRequest}
                   submissionState={workflow.submissionState}
                   submissionError={workflow.submissionError}
                   submittedHandle={workflow.submittedHandle}
