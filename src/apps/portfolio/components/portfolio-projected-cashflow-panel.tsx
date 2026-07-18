@@ -16,6 +16,8 @@ export default function PortfolioProjectedCashflowPanel({
   baseCurrency: string;
 }) {
   const chartModel = buildProjectedCashflowChartModel(cashflowOutlook);
+  const aggregateOnlyMovement =
+    chartModel.chartPoints.length === 0 && cashflowOutlook.total_net_cashflow_base !== 0;
 
   return (
     <div
@@ -39,7 +41,9 @@ export default function PortfolioProjectedCashflowPanel({
           <strong>
             {chartModel.largestInflow
               ? formatCurrency(chartModel.largestInflow.net_cashflow_base, baseCurrency)
-              : "No inflow"}
+              : aggregateOnlyMovement
+                ? "Dated detail unavailable"
+                : "No inflow"}
           </strong>
           {chartModel.largestInflow ? (
             <em>{formatDate(chartModel.largestInflow.projection_date)}</em>
@@ -50,7 +54,9 @@ export default function PortfolioProjectedCashflowPanel({
           <strong>
             {chartModel.largestOutflow
               ? formatCurrency(chartModel.largestOutflow.net_cashflow_base, baseCurrency)
-              : "No outflow"}
+              : aggregateOnlyMovement
+                ? "Dated detail unavailable"
+                : "No outflow"}
           </strong>
           {chartModel.largestOutflow ? (
             <em>{formatDate(chartModel.largestOutflow.projection_date)}</em>
