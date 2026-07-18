@@ -7,9 +7,11 @@ import * as browserWorkflowModule from "../../scripts/live/validation/browser-wo
 const {
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
+  validateAdvisoryJourneyScreens,
 } = browserWorkflowModule as unknown as {
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+  validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
 };
 
 describe("live validation browser workflow helpers", () => {
@@ -44,6 +46,13 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("const segmentSummaryTab = performanceDriversPanel.getByRole");
     expect(source).toContain("segmentSummaryTab.scrollIntoViewIfNeeded()");
     expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Asset Class contribution table"]\')');
+  });
+
+  it("keeps Advisor Cockpit browser proof aligned to business-facing readiness language", () => {
+    const source = validateAdvisoryJourneyScreens.toString();
+
+    expect(source).toContain('getByText("Source Readiness", { exact: true })');
+    expect(source).not.toContain('getByText("Supportability", { exact: true })');
   });
 
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
