@@ -3,6 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioProjectedCashflowModule from "../../src/apps/portfolio/components/portfolio-projected-cashflow-module";
+import type {
+  PortfolioCashflowOutlook,
+  PortfolioProjectedCashflowResponse,
+} from "../../src/apps/portfolio/types";
 
 const getPortfolioProjectedCashflow = vi.fn();
 
@@ -15,44 +19,19 @@ describe("PortfolioProjectedCashflowModule", () => {
     getPortfolioProjectedCashflow.mockReset();
   });
 
-  it("cycles the cashflow horizon and refreshes the module from gateway", async () => {
-    getPortfolioProjectedCashflow.mockResolvedValue({
-      as_of_date: "2026-03-28",
-      range_end_date: "2026-04-27",
-      total_net_cashflow_base: 1250,
-      projection_days: 30,
-      include_projected: true,
-      upcoming_points: [
-        {
-          projection_date: "2026-03-29",
-          net_cashflow_base: 1250,
-          projected_cumulative_cashflow_base: 1250,
-        },
-      ],
-    });
-
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded={false}
-        initialCashflowOutlook={{
-          as_of_date: "2026-03-28",
-          range_end_date: "2026-04-07",
-          total_net_cashflow_base: 0,
-          projection_days: 10,
-          include_projected: true,
-          upcoming_points: [],
-        }}
-      />
+  it("selects an explicit horizon and binds the rendered result to the returned projection", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue(
+      buildResponse(buildOutlook({ projectionDays: 30, totalNetMovement: 1250 }))
     );
 
-    expect(screen.getByText("Next 10 days in USD")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Expand" })).toBeInTheDocument();
+    renderModule({ initialCashflowOutlook: buildOutlook() });
 
-    fireEvent.click(screen.getByRole("button", { name: "Period" }));
+    expect(screen.getByRole("tab", { name: "10D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("10-day projection · USD")).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+
+    expect(screen.getByText("Loading 30-day projection")).toBeInTheDocument();
     await waitFor(() => {
       expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
         asOfDate: "2026-03-28",
@@ -60,139 +39,169 @@ describe("PortfolioProjectedCashflowModule", () => {
         includeProjected: true,
       });
     });
-    expect(screen.getByText("Next 30 days in USD")).toBeInTheDocument();
+    expect(await screen.findByText("30-day projection · USD")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "30D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByLabelText("Projection scope")).toHaveTextContent("Projection as of");
   });
 
-  it("uses the shared disclosure action for expanded projected cashflow detail", () => {
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded
-        initialCashflowOutlook={{
-          as_of_date: "2026-03-28",
-          range_end_date: "2026-04-07",
-          total_net_cashflow_base: 250,
-          projection_days: 10,
-          include_projected: true,
-          upcoming_points: [
-            {
-              projection_date: "2026-03-29",
-              net_cashflow_base: 250,
-              projected_cumulative_cashflow_base: 250,
-            },
-          ],
-        }}
-      />
-    );
-
-    expect(screen.getByRole("button", { name: "Collapse" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Net Flow");
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Projection Horizon");
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Largest Inflow");
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("Ending Cumulative");
-    expect(screen.getByRole("table", { name: "Cashflow outlook" })).toBeInTheDocument();
-  });
-
-  it("shows an error state when projected cashflow cannot be loaded", async () => {
+  it("never relabels prior-horizon data after a failed refresh", async () => {
     getPortfolioProjectedCashflow.mockResolvedValue(null);
 
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded={false}
-        initialCashflowOutlook={null}
-      />
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Period" }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Projected cashflow unavailable")).toBeInTheDocument();
+    renderModule({
+      initialCashflowOutlook: buildOutlook({ totalNetMovement: 500 }),
     });
-    expect(document.querySelector(".module-state-panel-error")).toBeTruthy();
-  });
 
-  it("renders flat projected cashflow through the shared status-panel contract", () => {
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded={false}
-        initialCashflowOutlook={{
-          as_of_date: "2026-03-28",
-          range_end_date: "2026-04-07",
-          total_net_cashflow_base: 0,
-          projection_days: 10,
-          include_projected: true,
-          upcoming_points: [
-            {
-              projection_date: "2026-03-29",
-              net_cashflow_base: 0,
-              projected_cumulative_cashflow_base: 0,
-            },
-          ],
-        }}
-      />
-    );
+    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("500 USD");
+    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
 
-    expect(screen.getByText("Flat projected cashflow")).toBeInTheDocument();
-    expect(document.querySelector(".module-state-panel-partial")).toBeTruthy();
-  });
-
-  it("does not fetch projected cashflow while parent detailed data is still loading", async () => {
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded={false}
-        initialCashflowOutlook={null}
-        suspendInitialFetch
-      />
-    );
-
-    expect(screen.getByRole("heading", { name: "Cumulative Cashflow Projection" })).toBeInTheDocument();
-    expect(screen.getByText("Loading projected cashflow")).toBeInTheDocument();
+    expect(await screen.findByText("30-day projection unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText("Projected liquidity is loading for the selected horizon.")
+      screen.getByText(
+        "Expected cash movements could not be retrieved for this horizon. No prior-horizon figures are being shown as current."
+      )
     ).toBeInTheDocument();
-    await waitFor(() => expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled());
-    expect(getPortfolioProjectedCashflow).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Projected cashflow summary")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
   });
 
-  it("shows a shared refresh note while horizon data is refreshing over existing cashflow", () => {
-    getPortfolioProjectedCashflow.mockImplementation(() => new Promise(() => {}));
-
-    render(
-      <PortfolioProjectedCashflowModule
-        portfolioId="MANUAL_PB_USD_001"
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        defaultExpanded={false}
-        initialCashflowOutlook={{
-          as_of_date: "2026-03-28",
-          range_end_date: "2026-04-07",
-          total_net_cashflow_base: 500,
-          projection_days: 10,
-          include_projected: true,
-          upcoming_points: [
-            {
-              projection_date: "2026-03-29",
-              net_cashflow_base: 500,
-              projected_cumulative_cashflow_base: 500,
-            },
-          ],
-        }}
-      />
+  it("preserves degraded Gateway evidence with a returned projection", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue(
+      buildResponse(buildOutlook({ projectionDays: 10 }), {
+        warnings: ["PORTFOLIO_CASHFLOW_DELAYED"],
+        partialFailures: [
+          {
+            source_service: "lotus-core",
+            error_code: "PORTFOLIO_CASHFLOW_DELAYED",
+            detail: "one projection input is delayed",
+          },
+        ],
+      })
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Period" }));
-    expect(screen.getByText("Refreshing projected cashflow…")).toBeInTheDocument();
-    expect(document.querySelector(".workbench-inline-refresh-note")).toBeTruthy();
+    renderModule({ initialCashflowOutlook: null });
+
+    expect(await screen.findByText("Projection available with limitations")).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
+    expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+  });
+
+  it("shows an unavailable envelope without rendering a fabricated empty projection", async () => {
+    getPortfolioProjectedCashflow.mockResolvedValue(
+      buildResponse(null, {
+        warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
+        partialFailures: [
+          {
+            source_service: "lotus-core",
+            error_code: "PORTFOLIO_CASHFLOW_UNAVAILABLE",
+            detail: "cashflow unavailable",
+          },
+        ],
+      })
+    );
+
+    renderModule({ initialCashflowOutlook: null });
+
+    expect(await screen.findByText("10-day projection unavailable")).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
+    expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
+    expect(screen.queryByText("No projected cash movement")).not.toBeInTheDocument();
+  });
+
+  it("treats a source-backed flat horizon as no movement rather than partial liquidity", () => {
+    renderModule({
+      initialCashflowOutlook: buildOutlook({
+        totalNetMovement: 0,
+        pointMovements: [0, 0],
+      }),
+    });
+
+    expect(screen.getByText("No projected cash movement")).toBeInTheDocument();
+    expect(
+      screen.getByText("The source returned no expected inflows or outflows for this horizon.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/liquidity/i)).not.toBeInTheDocument();
+  });
+
+  it("renders only movement dates in the table while disclosing full export coverage", () => {
+    renderModule({
+      initialCashflowOutlook: buildOutlook({
+        pointMovements: [0, 500, 0, -250],
+      }),
+    });
+
+    expect(
+      screen.getByRole("table", { name: "Projected cash movement schedule" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Showing 2 movement dates from 4 returned projection points. Export includes every returned point."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(3);
   });
 });
+
+function renderModule({
+  initialCashflowOutlook,
+}: {
+  initialCashflowOutlook: PortfolioCashflowOutlook | null;
+}) {
+  return render(
+    <PortfolioProjectedCashflowModule
+      portfolioId="MANUAL_PB_USD_001"
+      baseCurrency="USD"
+      asOfDate="2026-03-28"
+      defaultExpanded
+      initialCashflowOutlook={initialCashflowOutlook}
+      initialWarnings={[]}
+      initialPartialFailures={[]}
+    />
+  );
+}
+
+function buildResponse(
+  cashflowOutlook: PortfolioCashflowOutlook | null,
+  options: {
+    warnings?: string[];
+    partialFailures?: PortfolioProjectedCashflowResponse["partial_failures"];
+  } = {}
+): PortfolioProjectedCashflowResponse {
+  return {
+    correlation_id: "corr-cashflow-001",
+    contract_version: "v1",
+    portfolio_id: "MANUAL_PB_USD_001",
+    as_of_date: cashflowOutlook?.as_of_date ?? "2026-03-28",
+    cashflow_outlook: cashflowOutlook,
+    warnings: options.warnings ?? [],
+    partial_failures: options.partialFailures ?? [],
+  };
+}
+
+function buildOutlook({
+  projectionDays = 10,
+  totalNetMovement = 250,
+  pointMovements = [250],
+}: {
+  projectionDays?: number;
+  totalNetMovement?: number;
+  pointMovements?: number[];
+} = {}): PortfolioCashflowOutlook {
+  let cumulative = 0;
+  return {
+    as_of_date: "2026-03-28",
+    range_end_date: "2026-04-07",
+    total_net_cashflow_base: totalNetMovement,
+    projection_days: projectionDays,
+    include_projected: true,
+    notes: "Projection includes booked and projected settlement events.",
+    upcoming_points: pointMovements.map((movement, index) => {
+      cumulative += movement;
+      return {
+        projection_date: new Date(Date.UTC(2026, 2, 29 + index)).toISOString().slice(0, 10),
+        net_cashflow_base: movement,
+        projected_cumulative_cashflow_base: cumulative,
+      };
+    }),
+  };
+}

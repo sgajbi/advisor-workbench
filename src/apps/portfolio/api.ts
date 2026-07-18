@@ -1,6 +1,7 @@
 import type {
   PortfolioAllocationLookThrough,
   PortfolioCatalogResponse,
+  PortfolioProjectedCashflowResponse,
   PortfolioRecordDataAvailability,
   PortfolioWorkspace,
 } from "./types";
@@ -141,10 +142,6 @@ type PortfolioWorkflowResponse = {
 type PortfolioInsightsResponse = {
   insights: NonNullable<PortfolioWorkspace["insights"]>;
   exception_summaries: NonNullable<PortfolioWorkspace["exception_summaries"]>;
-};
-
-type PortfolioProjectedCashflowResponse = {
-  cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
 };
 
 type PortfolioWorkspaceSummaryDetails = Pick<
@@ -600,7 +597,7 @@ export async function getPortfolioProjectedCashflow(
     horizonDays?: number;
     includeProjected?: boolean;
   } = {}
-): Promise<PortfolioWorkspace["cashflow_outlook"] | null> {
+): Promise<PortfolioProjectedCashflowResponse | null> {
   try {
     const searchParams = new URLSearchParams();
     if (params.asOfDate) {
@@ -621,7 +618,7 @@ export async function getPortfolioProjectedCashflow(
     if (!payload) {
       return null;
     }
-    return payload.cashflow_outlook ?? null;
+    return payload;
   } catch {
     return null;
   }

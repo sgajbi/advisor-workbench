@@ -18,11 +18,11 @@ describe("portfolio chart view model", () => {
     const model = buildProjectedCashflowChartModel(cashflow);
 
     expect(model.chartPoints).toHaveLength(3);
+    expect(model.markerPoints).toHaveLength(3);
     expect(model.flowBars).toHaveLength(3);
     expect(model.areaPath).toMatch(/^M 28 164 L 28 /);
     expect(model.linePath).toMatch(/^M 28 /);
     expect(model.zeroLineY).toEqual(expect.any(Number));
-    expect(model.finalCumulative).toBe(5000);
     expect(model.positiveFlowCount).toBe(2);
     expect(model.negativeFlowCount).toBe(1);
     expect(model.largestInflow?.projection_date).toBe("2026-05-13");
@@ -45,7 +45,7 @@ describe("portfolio chart view model", () => {
     });
 
     expect(flatModel.flatCashflow).toBe(true);
-    expect(flatModel.flowBars[0]).toMatchObject({ height: 2, direction: "positive" });
+    expect(flatModel.flowBars).toEqual([]);
     expect(flatModel.zeroLineY).toEqual(expect.any(Number));
 
     const emptyModel = buildProjectedCashflowChartModel({
@@ -59,14 +59,13 @@ describe("portfolio chart view model", () => {
     expect(emptyModel.areaPath).toBe("");
     expect(emptyModel.linePath).toBe("");
     expect(emptyModel.focusPoint).toBeNull();
-    expect(emptyModel.finalCumulative).toBe(100);
   });
 
   it("formats chart labels and tooltips consistently", () => {
     const cashflowPoint = buildCashflowOutlook().upcoming_points[0];
     expect(formatCashflowNetFlowTitle(cashflowPoint, "USD")).toBe("12 May 2026: net flow -2,500 USD");
     expect(formatCashflowPointTitle(cashflowPoint, "USD")).toBe(
-      "12 May 2026: projected cumulative -2,500 USD"
+      "12 May 2026: cumulative projected movement -2,500 USD"
     );
     expect(
       buildTopHoldingTooltip(

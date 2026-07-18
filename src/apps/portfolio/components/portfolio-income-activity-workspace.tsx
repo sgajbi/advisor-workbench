@@ -174,7 +174,7 @@ function ActivityReviewModule({
           state="empty"
           title="No booked cash movements in this window"
           body="No subscription, withdrawal, fee, or tax activity is available for the selected reporting window."
-          hint="Projected settlements and future liquidity are reviewed separately in the Cashflow Workspace."
+          hint="Expected settlements and other projected cash movements are reviewed separately in Cashflow."
         />
       </AnalyticsModule>
     );

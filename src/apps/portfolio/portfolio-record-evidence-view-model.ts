@@ -200,8 +200,8 @@ function buildCashflowSourcePosture(
 
   return [
     {
-      label: "Projection Source",
-      source: "Book records",
+      label: "Projection Coverage",
+      source: "Portfolio records",
       detail: cashflow
         ? `${formatCount(pointCount, "projected point")} through ${formatDate(cashflow.range_end_date)}`
         : "No projected cashflow outlook returned for this portfolio",
@@ -209,13 +209,17 @@ function buildCashflowSourcePosture(
       status: cashflow ? "Available" : "Unavailable",
     },
     {
-      label: "Forecast Horizon",
-      source: cashflow ? `${cashflow.projection_days} day projection` : "Not provided",
+      label: "Projection Basis",
+      source: cashflow
+        ? cashflow.include_projected
+          ? "Booked and projected events"
+          : "Booked events only"
+        : "Not provided",
       detail: cashflow
         ? `${formatCount(positiveCount, "inflow")} and ${formatCount(negativeCount, "outflow")} in the returned forecast`
         : "Horizon cannot be displayed until the source outlook is available",
       tone: cashflow ? "success" : "default",
-      status: cashflow ? "Ready" : "N/A",
+      status: cashflow ? `${cashflow.projection_days} days` : "N/A",
     },
     buildReportingSourcePosture(workspace, reportingReady),
   ];

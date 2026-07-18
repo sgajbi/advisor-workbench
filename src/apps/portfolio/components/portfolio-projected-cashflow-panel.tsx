@@ -15,7 +15,6 @@ export default function PortfolioProjectedCashflowPanel({
   cashflowOutlook: NonNullable<PortfolioWorkspace["cashflow_outlook"]>;
   baseCurrency: string;
 }) {
-  const points = cashflowOutlook.upcoming_points;
   const chartModel = buildProjectedCashflowChartModel(cashflowOutlook);
 
   return (
@@ -26,42 +25,36 @@ export default function PortfolioProjectedCashflowPanel({
           : "portfolio-chart-card portfolio-cashflow-card"
       }
     >
-      <div
-        className="portfolio-cashflow-summary-strip"
-        aria-label="Projected cashflow summary"
-      >
+      <div className="portfolio-cashflow-summary-strip" aria-label="Projected cashflow summary">
         <div className="portfolio-cashflow-summary-stat">
-          <span>Net Flow</span>
-          <strong>
-            {formatCurrency(
-              cashflowOutlook.total_net_cashflow_base,
-              baseCurrency,
-            )}
-          </strong>
+          <span>Net Projected Movement</span>
+          <strong>{formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency)}</strong>
         </div>
         <div className="portfolio-cashflow-summary-stat">
-          <span>Projection Horizon</span>
+          <span>Horizon</span>
           <strong>{`${cashflowOutlook.projection_days} days`}</strong>
         </div>
         <div className="portfolio-cashflow-summary-stat">
           <span>Largest Inflow</span>
           <strong>
             {chartModel.largestInflow
-              ? formatCurrency(
-                  chartModel.largestInflow.net_cashflow_base,
-                  baseCurrency,
-                )
+              ? formatCurrency(chartModel.largestInflow.net_cashflow_base, baseCurrency)
               : "No inflow"}
           </strong>
           {chartModel.largestInflow ? (
             <em>{formatDate(chartModel.largestInflow.projection_date)}</em>
           ) : null}
         </div>
-        <div className="portfolio-cashflow-summary-stat portfolio-cashflow-summary-stat-dark">
-          <span>Ending Cumulative</span>
+        <div className="portfolio-cashflow-summary-stat">
+          <span>Largest Outflow</span>
           <strong>
-            {formatCurrency(chartModel.finalCumulative, baseCurrency)}
+            {chartModel.largestOutflow
+              ? formatCurrency(chartModel.largestOutflow.net_cashflow_base, baseCurrency)
+              : "No outflow"}
           </strong>
+          {chartModel.largestOutflow ? (
+            <em>{formatDate(chartModel.largestOutflow.projection_date)}</em>
+          ) : null}
         </div>
       </div>
       <div className="portfolio-cashflow-chart">
@@ -104,79 +97,37 @@ export default function PortfolioProjectedCashflowPanel({
                     : "portfolio-cashflow-flow-bar portfolio-cashflow-flow-bar-negative"
                 }
               >
-                <title>
-                  {formatCashflowNetFlowTitle(bar.point, baseCurrency)}
-                </title>
+                <title>{formatCashflowNetFlowTitle(bar.point, baseCurrency)}</title>
               </rect>
             </g>
           ))}
-          <path
-            d={chartModel.areaPath}
-            className="portfolio-timeseries-chart-area"
-          />
-          <path
-            d={chartModel.linePath}
-            className="portfolio-timeseries-chart-line"
-          />
-          {chartModel.chartPoints.map(({ x, y, point }) => (
+          <path d={chartModel.areaPath} className="portfolio-timeseries-chart-area" />
+          <path d={chartModel.linePath} className="portfolio-timeseries-chart-line" />
+          {chartModel.markerPoints.map(({ x, y, point }) => (
             <g key={point.projection_date}>
-              <circle
-                cx={x}
-                cy={y}
-                r="4"
-                className="portfolio-timeseries-chart-point"
-              >
+              <circle cx={x} cy={y} r="4" className="portfolio-timeseries-chart-point">
                 <title>{formatCashflowPointTitle(point, baseCurrency)}</title>
               </circle>
             </g>
           ))}
           {chartModel.focusPoint ? (
             <g className="portfolio-cashflow-focus-callout" aria-hidden="true">
-              <rect
-                x={chartModel.focusX}
-                y={chartModel.focusY}
-                width="86"
-                height="34"
-                rx="2"
-              />
-              <circle
-                cx={chartModel.focusX + 76}
-                cy={chartModel.focusY + 8}
-                r="2.4"
-              />
+              <rect x={chartModel.focusX} y={chartModel.focusY} width="86" height="34" rx="2" />
+              <circle cx={chartModel.focusX + 76} cy={chartModel.focusY + 8} r="2.4" />
               <text x={chartModel.focusX + 8} y={chartModel.focusY + 12}>
                 {formatDate(chartModel.focusPoint.projection_date)}
               </text>
               <text x={chartModel.focusX + 8} y={chartModel.focusY + 24}>
-                {formatCurrency(
-                  chartModel.focusPoint.net_cashflow_base,
-                  baseCurrency,
-                )}
+                {formatCurrency(chartModel.focusPoint.net_cashflow_base, baseCurrency)}
               </text>
             </g>
           ) : null}
         </svg>
       </div>
-      <div
-        className="portfolio-cashflow-forecast-mix"
-        aria-label="Projected cashflow mix"
-      >
+      <div className="portfolio-cashflow-forecast-mix" aria-label="Projected cashflow mix">
         <span>{`${chartModel.positiveFlowCount} inflow${chartModel.positiveFlowCount === 1 ? "" : "s"}`}</span>
         <span>{`${chartModel.negativeFlowCount} outflow${chartModel.negativeFlowCount === 1 ? "" : "s"}`}</span>
         <span>{`Through ${formatDate(cashflowOutlook.range_end_date)}`}</span>
-      </div>
-      <div className="portfolio-cashflow-axis-grid">
-        {points.map((point) => (
-          <div
-            key={point.projection_date}
-            className="portfolio-cashflow-axis-item"
-          >
-            <span>{formatDate(point.projection_date)}</span>
-            <strong>
-              {formatCurrency(point.net_cashflow_base, baseCurrency)}
-            </strong>
-          </div>
-        ))}
       </div>
     </div>
   );

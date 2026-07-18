@@ -24,7 +24,13 @@ describe("portfolio record screen view model", () => {
     });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("booked income");
-    expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain("Forward liquidity");
+    expect(getPortfolioRecordScreenCopy("cashflow")).toMatchObject({
+      title: "Cashflow",
+      kicker: "Projected cash movement",
+    });
+    expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain(
+      "not projected cash balances"
+    );
   });
 
   it("builds record headers from source-backed workspace fields", () => {
@@ -148,9 +154,9 @@ describe("portfolio record screen view model", () => {
         "cashflow"
       )
     ).toEqual([
-      { label: "Net Flow", value: "45,200 USD" },
-      { label: "Horizon", value: "30D" },
-      { label: "Ending Cumulative", value: "8,457,200 USD" },
+      { label: "Current Cash", value: "80,000 USD" },
+      { label: "Cash Weight", value: "8.00%" },
+      { label: "Base Currency", value: "USD" },
     ]);
   });
 
