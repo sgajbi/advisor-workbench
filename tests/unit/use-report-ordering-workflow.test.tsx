@@ -102,6 +102,42 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.canSubmitReviewedRequest).toBe(false);
   });
 
+  it("submits a PDF when the source catalogue marks document creation ready", async () => {
+    const payload = buildReportOrderingResponse();
+    payload.catalogueAvailability.state = "ready";
+    payload.reportFamilies[0].availability.state = "ready";
+    payload.reportFamilies[0].orderingModes[0].defaultOutputFormat = "pdf";
+    payload.reportFamilies[0].outputFormats[1] = {
+      ...payload.reportFamilies[0].outputFormats[1],
+      state: "ready",
+      reasonCode: "governed_document_ready",
+    };
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+
+    await waitFor(() => expect(result.current.configuration?.outputFormat).toBe("pdf"));
+    expect(result.current.model?.canSubmit).toBe(true);
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outputFormat: "pdf",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      }),
+    );
+  });
+
   it("invalidates reviewed preflight when output-affecting configuration changes", async () => {
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
