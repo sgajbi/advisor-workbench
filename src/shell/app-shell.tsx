@@ -18,6 +18,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </span>
               <span className="shell-brand-text">Lotus</span>
             </Link>
+            <span className="shell-product-context">Private Banking Workbench</span>
           </div>
         </div>
         <div className="shell-workspace-bar">
