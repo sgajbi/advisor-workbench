@@ -127,11 +127,6 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.reporting",
-    panel: "report-batch-create",
-    operation: "reporting.report-batch.create",
-  },
-  {
-    route: "workbench.reporting",
     panel: "report-ordering-catalogue",
     operation: "reporting.ordering.options",
   },
@@ -144,21 +139,6 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     route: "workbench.reporting",
     panel: "portfolio-review-history",
     operation: "reporting.portfolio-review.history",
-  },
-  {
-    route: "workbench.reporting",
-    panel: "report-batch-status",
-    operation: "reporting.report-batch.status",
-  },
-  {
-    route: "workbench.reporting",
-    panel: "report-batch-run-once",
-    operation: "reporting.report-batch.run-once",
-  },
-  {
-    route: "workbench.reporting",
-    panel: "archive-document-metadata",
-    operation: "reporting.archive-document.metadata",
   },
   {
     route: "workbench.recommendations",

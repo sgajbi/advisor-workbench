@@ -287,7 +287,6 @@ describe("analytics UI observability metrics", () => {
       ["workbench.risk", "risk-drawdown", "risk.drawdown"],
       ["workbench.risk", "risk-rolling", "risk.rolling"],
       ["workbench.risk", "risk-attribution", "risk.attribution"],
-      ["workbench.reporting", "report-batch-create", "reporting.report-batch.create"],
       [
         "workbench.reporting",
         "report-ordering-catalogue",
@@ -302,17 +301,6 @@ describe("analytics UI observability metrics", () => {
         "workbench.reporting",
         "portfolio-review-history",
         "reporting.portfolio-review.history",
-      ],
-      ["workbench.reporting", "report-batch-status", "reporting.report-batch.status"],
-      [
-        "workbench.reporting",
-        "report-batch-run-once",
-        "reporting.report-batch.run-once",
-      ],
-      [
-        "workbench.reporting",
-        "archive-document-metadata",
-        "reporting.archive-document.metadata",
       ],
       [
         "workbench.recommendations",

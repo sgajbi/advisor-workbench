@@ -5,7 +5,7 @@ import {
   observeWorkbenchMutation,
   observeWorkbenchResource,
 } from "@/features/workbench/api-client";
-import { buildReportBatchCallerHeaders } from "@/features/workbench/reporting-api-headers";
+import { buildReportingCallerHeaders } from "@/features/workbench/reporting-caller-headers";
 import type {
   DpmOutcomeReviewGatewayResponse,
   DpmOutcomeReviewHandoffResponse,
@@ -144,7 +144,7 @@ export async function submitDpmOutcomeReviewReportJob(params: {
         {
           method: "POST",
           headers: {
-            ...buildReportBatchCallerHeaders({
+            ...buildReportingCallerHeaders({
               actorId,
               tenantId,
               region,
