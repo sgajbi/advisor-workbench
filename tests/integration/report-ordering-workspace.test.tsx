@@ -79,6 +79,7 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(submitButton);
 
     expect(await screen.findByText("Report request recorded")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Request Accepted" })).toBeDisabled();
     expect(screen.getByText(/does not mean a document was archived or sent/)).toBeInTheDocument();
     expect(submitMock).toHaveBeenCalledWith(
       expect.objectContaining({

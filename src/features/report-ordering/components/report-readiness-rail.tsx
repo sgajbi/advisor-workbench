@@ -9,6 +9,7 @@ import styles from "../report-ordering-workspace.module.css";
 export function ReportReadinessRail({
   model,
   preflightReviewed,
+  canSubmitReviewedRequest,
   submissionState,
   submissionError,
   submittedHandle,
@@ -17,6 +18,7 @@ export function ReportReadinessRail({
 }: {
   model: ReportOrderingViewModel | null;
   preflightReviewed: boolean;
+  canSubmitReviewedRequest: boolean;
   submissionState: "idle" | "submitting" | "accepted" | "error";
   submissionError: string | null;
   submittedHandle: ReportJobHandle | null;
@@ -76,9 +78,13 @@ export function ReportReadinessRail({
           <ActionButton
             priority="primary"
             onClick={onSubmit}
-            disabled={!preflightReviewed || submissionState === "submitting"}
+            disabled={!canSubmitReviewedRequest}
           >
-            {submissionState === "submitting" ? "Submitting…" : "Submit Report Request"}
+            {submissionState === "submitting"
+              ? "Submitting…"
+              : submissionState === "accepted"
+                ? "Request Accepted"
+                : "Submit Report Request"}
           </ActionButton>
           {!preflightReviewed && model?.canSubmit ? (
             <small>Review the current setup before submitting.</small>

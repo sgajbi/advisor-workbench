@@ -99,6 +99,7 @@ describe("useReportOrderingWorkflow", () => {
     const secondIntent = submitMock.mock.calls[1][0].idempotencyKey;
     expect(firstIntent).toBe(secondIntent);
     expect(firstIntent).toMatch(/^workbench-report-order-/);
+    expect(result.current.canSubmitReviewedRequest).toBe(false);
   });
 
   it("invalidates reviewed preflight when output-affecting configuration changes", async () => {
