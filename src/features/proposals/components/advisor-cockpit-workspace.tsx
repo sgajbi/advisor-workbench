@@ -129,13 +129,20 @@ export default function AdvisorCockpitWorkspace({
       preparationQuery.error ||
       supportabilityQuery.error,
   );
-  const actionStatus = actionQuery.error
+  const actionWorklistUnavailable = Boolean(actionQuery.error);
+  const actionStatus = actionWorklistUnavailable
     ? { label: "Worklist unavailable", tone: "warn" as const }
     : model.actionPosture === "actionable"
       ? { label: "Action required", tone: "warn" as const }
       : model.actionPosture === "details-unavailable"
         ? { label: "Action details unavailable", tone: "warn" as const }
         : { label: "No open actions", tone: "success" as const };
+  const primaryDecision = actionWorklistUnavailable
+    ? "Advisor action review unavailable"
+    : model.primaryDecision;
+  const recommendedAction = actionWorklistUnavailable
+    ? "Restore Advisor Cockpit worklist access before relying on action posture for client discussion."
+    : model.recommendedAction;
 
   if (isLoading) {
     return (
@@ -164,9 +171,9 @@ export default function AdvisorCockpitWorkspace({
           <div>
             <Text variant="microLabel">Advisor Decision</Text>
             <Text variant="subsectionTitle" as="h2">
-              {model.primaryDecision}
+              {primaryDecision}
             </Text>
-            <Text variant="secondary">{model.recommendedAction}</Text>
+            <Text variant="secondary">{recommendedAction}</Text>
           </div>
           <SemanticBadge tone={actionStatus.tone}>
             {actionStatus.label}
