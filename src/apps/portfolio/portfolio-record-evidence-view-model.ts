@@ -17,6 +17,19 @@ export type PortfolioRecordSourcePosture = {
   tone: PortfolioRecordEvidenceTone;
 };
 
+export type PortfolioReportingSnapshotState =
+  | "generated"
+  | "source_ready"
+  | "pending"
+  | "empty"
+  | "stale"
+  | "unavailable"
+  | "failed";
+
+export type PortfolioReportingSourcePosture = PortfolioRecordSourcePosture & {
+  state: PortfolioReportingSnapshotState;
+};
+
 export type PortfolioRecordAdjacentWorkflow = {
   label: string;
   href: string;
@@ -44,11 +57,9 @@ export function buildPortfolioRecordEvidenceRailViewModel({
   workspace: PortfolioWorkspace;
 }): PortfolioRecordEvidenceRailViewModel {
   const portfolioId = workspace.portfolio.portfolio_id;
-  const reportingReady = workspace.readiness.reporting.status?.toUpperCase() === "READY";
   const sourcePostureItems = buildSourcePostureItems({
     screen,
     workspace,
-    reportingReady,
   });
 
   return {
@@ -69,32 +80,27 @@ export function buildPortfolioRecordEvidenceRailViewModel({
 function buildSourcePostureItems({
   screen,
   workspace,
-  reportingReady,
 }: {
   screen: PortfolioRecordScreenKind;
   workspace: PortfolioWorkspace;
-  reportingReady: boolean;
 }): PortfolioRecordSourcePosture[] {
   if (screen === "transactions") {
-    return buildTransactionSourcePosture(workspace, reportingReady);
+    return buildTransactionSourcePosture(workspace);
   }
 
   if (screen === "income") {
-    return buildIncomeActivitySourcePosture(workspace, reportingReady);
+    return buildIncomeActivitySourcePosture(workspace);
   }
 
   if (screen === "cashflow") {
-    return buildCashflowSourcePosture(workspace, reportingReady);
+    return buildCashflowSourcePosture(workspace);
   }
 
   if (screen === "allocation") {
     return buildAllocationSourcePosture(workspace);
   }
 
-  return buildPositionSourcePosture({
-    workspace,
-    reportingReady,
-  });
+  return buildPositionSourcePosture(workspace);
 }
 
 function buildAdjacentWorkflows(
@@ -139,13 +145,12 @@ function buildAllocationSourcePosture(
       tone: workspace.positions.length ? "success" : "default",
       status: workspace.positions.length ? "Ready" : "Empty",
     },
-    buildReportingSourcePosture(workspace, workspace.readiness.reporting.status?.toUpperCase() === "READY"),
+    buildReportingSourcePosture(workspace),
   ];
 }
 
 function buildIncomeActivitySourcePosture(
-  workspace: PortfolioWorkspace,
-  reportingReady: boolean
+  workspace: PortfolioWorkspace
 ): PortfolioRecordSourcePosture[] {
   const income = workspace.income_summary;
   const activity = workspace.activity_summary;
@@ -183,13 +188,12 @@ function buildIncomeActivitySourcePosture(
       tone: activity ? "success" : "warn",
       status: activity ? "Ready" : "Unavailable",
     },
-    buildReportingSourcePosture(workspace, reportingReady),
+    buildReportingSourcePosture(workspace),
   ];
 }
 
 function buildCashflowSourcePosture(
-  workspace: PortfolioWorkspace,
-  reportingReady: boolean
+  workspace: PortfolioWorkspace
 ): PortfolioRecordSourcePosture[] {
   const cashflow = workspace.cashflow_outlook;
   const pointCount = cashflow?.upcoming_points.length ?? 0;
@@ -247,17 +251,13 @@ function buildCashflowSourcePosture(
           ? `${cashflow.projection_days} days`
           : "N/A",
     },
-    buildReportingSourcePosture(workspace, reportingReady),
+    buildReportingSourcePosture(workspace),
   ];
 }
 
-function buildPositionSourcePosture({
-  workspace,
-  reportingReady,
-}: {
-  workspace: PortfolioWorkspace;
-  reportingReady: boolean;
-}): PortfolioRecordSourcePosture[] {
+function buildPositionSourcePosture(
+  workspace: PortfolioWorkspace
+): PortfolioRecordSourcePosture[] {
   const unpricedCount = workspace.positions.filter(
     (position) => position.market_price == null || position.market_value_base == null
   ).length;
@@ -285,7 +285,7 @@ function buildPositionSourcePosture({
       tone: workspace.readiness.has_positions ? "success" : "default",
       status: workspace.readiness.has_positions ? "Reconciled" : "Empty",
     },
-    buildReportingSourcePosture(workspace, reportingReady),
+    buildReportingSourcePosture(workspace),
     {
       label: "Reprocessing",
       source: "Portfolio operations",
@@ -300,8 +300,7 @@ function buildPositionSourcePosture({
 }
 
 function buildTransactionSourcePosture(
-  workspace: PortfolioWorkspace,
-  reportingReady: boolean
+  workspace: PortfolioWorkspace
 ): PortfolioRecordSourcePosture[] {
   const transactionCount = workspace.recent_transactions.length;
   const settledCount = workspace.recent_transactions.filter(
@@ -339,22 +338,118 @@ function buildTransactionSourcePosture(
       tone: componentCount ? "success" : "default",
       status: componentCount ? "Validated" : "N/A",
     },
-    buildReportingSourcePosture(workspace, reportingReady),
+    buildReportingSourcePosture(workspace),
   ];
 }
 
-function buildReportingSourcePosture(
-  workspace: PortfolioWorkspace,
-  reportingReady: boolean
-): PortfolioRecordSourcePosture {
+export function buildReportingSourcePosture(
+  workspace: PortfolioWorkspace
+): PortfolioReportingSourcePosture {
+  const reporting = workspace.readiness.reporting;
+  const status = reporting.status.trim().toUpperCase();
+  const rowCoverage = formatCount(reporting.row_count, "reportable row");
+  const generatedAt = reporting.generated_at_utc
+    ? formatDate(reporting.generated_at_utc)
+    : null;
+  const label = "Reporting Snapshot";
+
+  if (status === "FAILED" || status === "ERROR") {
+    return {
+      state: "failed",
+      label,
+      source: generatedAt ? `Last generated ${generatedAt}` : "Reporting source failed",
+      detail: generatedAt
+        ? `${rowCoverage} retained; the latest reporting refresh failed`
+        : "No current reporting snapshot is available because the latest refresh failed",
+      status: "Failed",
+      tone: "danger",
+    };
+  }
+
+  if (["UNAVAILABLE", "MISSING", "BLOCKED"].includes(status)) {
+    return {
+      state: "unavailable",
+      label,
+      source: generatedAt ? `Last generated ${generatedAt}` : "Reporting source unavailable",
+      detail: generatedAt
+        ? `${rowCoverage} retained; current output availability is not confirmed`
+        : "No current reporting snapshot is available for client review",
+      status: "Unavailable",
+      tone: "danger",
+    };
+  }
+
+  if (status === "STALE" || status === "DEGRADED") {
+    return {
+      state: "stale",
+      label,
+      source: generatedAt ? `Last generated ${generatedAt}` : "Reporting source needs review",
+      detail: `${rowCoverage} available; confirm the current reporting source before client use`,
+      status: status === "STALE" ? "Stale" : "Degraded",
+      tone: "warn",
+    };
+  }
+
+  if (["PENDING", "PARTIAL", "IN_PROGRESS"].includes(status)) {
+    return {
+      state: "pending",
+      label,
+      source: generatedAt ? `Last generated ${generatedAt}` : "Reporting source pending",
+      detail: generatedAt
+        ? `${rowCoverage} available; the current reporting refresh is not complete`
+        : `${rowCoverage} available; a reporting snapshot has not been generated`,
+      status: status === "PARTIAL" ? "Partial" : "Pending",
+      tone: "warn",
+    };
+  }
+
+  if (
+    status === "EMPTY" ||
+    ((status === "READY" || status === "COMPLETE") && reporting.row_count === 0)
+  ) {
+    return {
+      state: "empty",
+      label,
+      source: generatedAt ? `Generated ${generatedAt}` : "No reporting snapshot",
+      detail: generatedAt
+        ? "The generated snapshot contains no reportable rows"
+        : "No reportable rows are available for snapshot generation",
+      status: "Empty",
+      tone: "warn",
+    };
+  }
+
+  if (status === "READY" || status === "COMPLETE") {
+    if (generatedAt) {
+      return {
+        state: "generated",
+        label,
+        source: `Generated ${generatedAt}`,
+        detail: `${rowCoverage} in the latest generated snapshot`,
+        status: "Generated",
+        tone: "success",
+      };
+    }
+
+    return {
+      state: "source_ready",
+      label,
+      source: "Reportable book ready",
+      detail: `${rowCoverage} available; a reporting snapshot has not been generated`,
+      status: "Not generated",
+      tone: "warn",
+    };
+  }
+
   return {
-    label: "Reporting Snapshot",
-    source: workspace.readiness.reporting.generated_at_utc
-      ? formatDate(workspace.readiness.reporting.generated_at_utc)
-      : "Not generated",
-    detail: `${formatCount(workspace.readiness.reporting.row_count, "row")} in latest reportable book`,
-    tone: reportingReady ? "success" : "warn",
-    status: formatStatus(workspace.readiness.reporting.status),
+    state: "unavailable",
+    label,
+    source: generatedAt ? `Last generated ${generatedAt}` : "Reporting status unavailable",
+    detail: generatedAt
+      ? `${rowCoverage} retained; current output availability is not confirmed`
+      : "Reporting snapshot availability cannot be confirmed from the current source",
+    status: "Unavailable",
+    tone: "danger",
   };
 }
 

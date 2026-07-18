@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPortfolioRecordEvidenceRailViewModel } from "../../src/apps/portfolio/portfolio-record-evidence-view-model";
+import {
+  buildPortfolioRecordEvidenceRailViewModel,
+  buildReportingSourcePosture,
+} from "../../src/apps/portfolio/portfolio-record-evidence-view-model";
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("portfolio record evidence view model", () => {
@@ -140,5 +143,144 @@ describe("portfolio record evidence view model", () => {
         }),
       ])
     );
+  });
+
+  it.each([
+    {
+      input: { status: "READY", generated_at_utc: null, row_count: 11 },
+      expected: {
+        state: "source_ready",
+        source: "Reportable book ready",
+        detail: "11 reportable rows available; a reporting snapshot has not been generated",
+        status: "Not generated",
+        tone: "warn",
+      },
+    },
+    {
+      input: { status: "COMPLETE", generated_at_utc: "2026-05-12T00:00:00Z", row_count: 11 },
+      expected: {
+        state: "generated",
+        source: "Generated 12 May 2026",
+        detail: "11 reportable rows in the latest generated snapshot",
+        status: "Generated",
+        tone: "success",
+      },
+    },
+    {
+      input: { status: "PARTIAL", generated_at_utc: null, row_count: 4 },
+      expected: {
+        state: "pending",
+        source: "Reporting source pending",
+        detail: "4 reportable rows available; a reporting snapshot has not been generated",
+        status: "Partial",
+        tone: "warn",
+      },
+    },
+    {
+      input: { status: "PENDING", generated_at_utc: "2026-05-10T00:00:00Z", row_count: 8 },
+      expected: {
+        state: "pending",
+        source: "Last generated 10 May 2026",
+        detail: "8 reportable rows available; the current reporting refresh is not complete",
+        status: "Pending",
+        tone: "warn",
+      },
+    },
+    {
+      input: { status: "EMPTY", generated_at_utc: null, row_count: 0 },
+      expected: {
+        state: "empty",
+        source: "No reporting snapshot",
+        detail: "No reportable rows are available for snapshot generation",
+        status: "Empty",
+        tone: "warn",
+      },
+    },
+    {
+      input: { status: "STALE", generated_at_utc: "2026-05-01T00:00:00Z", row_count: 7 },
+      expected: {
+        state: "stale",
+        source: "Last generated 01 May 2026",
+        detail: "7 reportable rows available; confirm the current reporting source before client use",
+        status: "Stale",
+        tone: "warn",
+      },
+    },
+    {
+      input: { status: "FAILED", generated_at_utc: null, row_count: 0 },
+      expected: {
+        state: "failed",
+        source: "Reporting source failed",
+        detail: "No current reporting snapshot is available because the latest refresh failed",
+        status: "Failed",
+        tone: "danger",
+      },
+    },
+    {
+      input: { status: "UNAVAILABLE", generated_at_utc: null, row_count: 0 },
+      expected: {
+        state: "unavailable",
+        source: "Reporting source unavailable",
+        detail: "No current reporting snapshot is available for client review",
+        status: "Unavailable",
+        tone: "danger",
+      },
+    },
+    {
+      input: { status: "UNRECOGNIZED", generated_at_utc: null, row_count: 0 },
+      expected: {
+        state: "unavailable",
+        source: "Reporting status unavailable",
+        detail: "Reporting snapshot availability cannot be confirmed from the current source",
+        status: "Unavailable",
+        tone: "danger",
+      },
+    },
+    {
+      input: { status: "UNRECOGNIZED", generated_at_utc: "2026-05-01T00:00:00Z", row_count: 7 },
+      expected: {
+        state: "unavailable",
+        source: "Last generated 01 May 2026",
+        detail: "7 reportable rows retained; current output availability is not confirmed",
+        status: "Unavailable",
+        tone: "danger",
+      },
+    },
+  ])("builds one consistent reporting posture for $input.status", ({ input, expected }) => {
+    const workspace = buildPortfolioWorkspace({});
+    workspace.readiness.reporting = input;
+
+    expect(buildReportingSourcePosture(workspace)).toEqual({
+      label: "Reporting Snapshot",
+      ...expected,
+    });
+  });
+
+  it("uses the same reporting posture on every Portfolio record screen", () => {
+    const workspace = buildPortfolioWorkspace({});
+    workspace.readiness.reporting = {
+      status: "READY",
+      generated_at_utc: null,
+      row_count: 11,
+    };
+
+    for (const screen of [
+      "positions",
+      "allocation",
+      "transactions",
+      "income",
+      "cashflow",
+    ] as const) {
+      const reporting = buildPortfolioRecordEvidenceRailViewModel({ screen, workspace })
+        .sourcePostureItems.find((item) => item.label === "Reporting Snapshot");
+
+      expect(reporting).toEqual(
+        expect.objectContaining({
+          source: "Reportable book ready",
+          status: "Not generated",
+          tone: "warn",
+        })
+      );
+    }
   });
 });

@@ -163,6 +163,31 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText("Activity classification")).toBeInTheDocument();
     expect(screen.queryByText("Gateway portfolio workspace")).not.toBeInTheDocument();
   });
+
+  it("distinguishes a ready reportable book from a generated reporting snapshot", () => {
+    render(
+      <PortfolioRecordEvidenceRail
+        screen="income"
+        workspace={buildPortfolioWorkspace({
+          readiness: {
+            has_positions: true,
+            reporting: {
+              status: "READY",
+              generated_at_utc: null,
+              row_count: 11,
+            },
+          },
+        })}
+      />
+    );
+
+    expect(screen.getByText("Reportable book ready")).toBeInTheDocument();
+    expect(
+      screen.getByText("11 reportable rows available; a reporting snapshot has not been generated")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Not generated")).toBeInTheDocument();
+    expect(screen.queryByText("READY")).not.toBeInTheDocument();
+  });
 });
 
 function buildIncomePeriod(amount: number, transactionCount: number) {
