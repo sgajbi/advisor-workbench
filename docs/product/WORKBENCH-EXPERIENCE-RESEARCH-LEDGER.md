@@ -602,8 +602,13 @@ posture findings are tracked separately in #426 and #427.
    120-second budget, and a prestarted retry exposed unrelated mobile-locator and Performance
    supportability failures. Issues #429, #430, and #431 preserve those harness gaps; the server was
    stopped explicitly after diagnosis.
-6. PR, merge-gate, merge, exact-main, and branch-reconciliation evidence remains pending before
-   this ledger entry can be hardened.
+6. Implementation PR #432 merged to `main` as
+   `178f7c834c1b88aff4e0a241d1457f61430c7e8c`; exact-main Main Releasability run
+   `29578068948` passed on that SHA.
+7. Durable closure PR #439 merged to `main` as
+   `7e49701bb5ed606c42eca4e4b9b454d7601a05b4`; exact-main Main Releasability run
+   `29634061621` passed on that SHA. The two feature branches are absent locally and remotely, the
+   repository has one Workbench worktree, and no stash carries Income truth.
 
 ### Publication decision
 
