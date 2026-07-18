@@ -19,6 +19,12 @@ describe("BFF proxy route", () => {
     "WORKBENCH_REPORTING_CALLER_ROLE",
     "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_REPORTING_AUTH_MODE",
+    "WORKBENCH_ADVISOR_BOOK_AUTH_MODE",
+    "WORKBENCH_ADVISOR_BOOK_ACTOR_ID",
+    "WORKBENCH_ADVISOR_BOOK_TENANT_ID",
+    "WORKBENCH_ADVISOR_BOOK_REGION",
+    "WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE",
+    "WORKBENCH_ADVISOR_BOOK_ROLE",
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
@@ -313,6 +319,103 @@ describe("BFF proxy route", () => {
     expect(response.headers.get("content-type")).toBe("application/pdf");
     expect(response.headers.get("x-document-checksum")).toBe("abc123");
     expect(Array.from(body)).toEqual(Array.from(pdfBytes));
+  });
+
+  it("derives advisor-book authority at the BFF instead of trusting browser headers", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"items":[]}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-book/portfolios?asOfDate=2026-04-10",
+      {
+        method: "GET",
+        headers: {
+          "X-Actor-Id": "spoofed-actor",
+          "X-Tenant-Id": "spoofed-tenant",
+          "X-Region": "spoofed-region",
+          "X-Booking-Center-Code": "spoofed-centre",
+          "X-Role": "AUDIT",
+          "X-Caller-Capabilities": "advisor.book.write",
+        },
+      },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("PM_SG_001");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
+    expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+  });
+
+  it("uses explicitly configured development advisor-book identity", async () => {
+    process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID = "RM_CH_007";
+    process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID = "tenant-ch";
+    process.env.WORKBENCH_ADVISOR_BOOK_REGION = "EMEA";
+    process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
+    process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"items":[]}', { status: 200 }));
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-book/portfolios?asOfDate=2026-04-10",
+      { method: "GET" },
+    );
+    await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+    });
+
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("RM_CH_007");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
+    expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
+    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
+  });
+
+  it("requires an authenticated advisor-book principal outside development", async () => {
+    process.env.LOTUS_ENVIRONMENT = "uat";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-book/portfolios?asOfDate=2026-04-10",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisor_book_authenticated_principal_required",
+      status: "rejected",
+    });
+  });
+
+  it("rejects an invalid advisor-book role before proxying", async () => {
+    process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "AUDIT";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-book/portfolios?asOfDate=2026-04-10",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisor_book_authority_configuration_rejected",
+      status: "rejected",
+    });
   });
 
   it("derives report-ordering authority at the BFF instead of trusting browser headers", async () => {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
+import { applyAdvisorBookCallerContextHeaders } from "@/features/advisor-book/caller-context";
 import {
   applyDefaultCallerContextHeaders,
   applyIdeaRouteCallerContextHeaders,
@@ -17,6 +18,17 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     headers.set(key, value);
   });
   applyDefaultCallerContextHeaders(headers);
+  const advisorBookAuthority = applyAdvisorBookCallerContextHeaders(headers, {
+    method: request.method,
+    upstreamPath,
+  });
+  if (advisorBookAuthority.status === "rejected") {
+    const rejection = advisorBookAuthorityRejection(advisorBookAuthority.reason);
+    return NextResponse.json(
+      { code: rejection.code, status: "rejected" },
+      { status: rejection.status, headers: { "cache-control": "no-store" } },
+    );
+  }
   const ideaAuthority = applyIdeaRouteCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
@@ -79,6 +91,22 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     status: response.status,
     headers: responseHeaders,
   });
+}
+
+function advisorBookAuthorityRejection(
+  reason: Exclude<
+    ReturnType<typeof applyAdvisorBookCallerContextHeaders>,
+    { status: "not_applicable" } | { status: "applied" }
+  >["reason"],
+): { code: string; status: number } {
+  switch (reason) {
+    case "authenticated_principal_required":
+      return { code: "advisor_book_authenticated_principal_required", status: 401 };
+    case "development_authority_not_allowed":
+    case "invalid_authority_mode":
+    case "invalid_advisor_book_configuration":
+      return { code: "advisor_book_authority_configuration_rejected", status: 500 };
+  }
 }
 
 function reportingAuthorityRejection(
