@@ -85,9 +85,9 @@ describe("report ordering API", () => {
         sections: ["CLIENT_PROFILE", "OVERVIEW", "PERFORMANCE"],
         allocation_dimensions: ["asset_class", "currency"],
         benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
-        source_surface: "lotus-workbench",
       },
     });
+    expect(body.options).not.toHaveProperty("source_surface");
   });
 
   it("loads bounded portfolio history without exposing identifiers in metrics", async () => {

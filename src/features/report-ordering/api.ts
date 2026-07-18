@@ -66,7 +66,6 @@ export async function submitPortfolioReviewOrder(
             sections: order.sections,
             allocation_dimensions: order.allocationDimensions,
             ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),
-            source_surface: "lotus-workbench",
           },
         }),
       },
