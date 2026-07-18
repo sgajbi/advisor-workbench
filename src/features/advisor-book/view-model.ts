@@ -38,7 +38,7 @@ export function buildAdvisorBookWorkspaceModel(
   return {
     title: response.scope.label,
     subtitle:
-      "Review source-confirmed portfolio coverage, then continue into the selected client workflow.",
+      "Review confirmed portfolio coverage, then continue into the selected client workflow.",
     scopeLabel: "Own book",
     asOfLabel: formatBusinessDate(response.scope.as_of_date),
     bookingCentreLabel: response.scope.booking_center_code,
@@ -49,12 +49,12 @@ export function buildAdvisorBookWorkspaceModel(
       {
         label: "Portfolios",
         value: String(response.page.total_count),
-        detail: "Source memberships in the current book scope",
+        detail: "Portfolio assignments in the current book scope",
       },
       {
         label: "Clients on this page",
         value: String(clientCount),
-        detail: "Distinct source client records in the returned page",
+        detail: "Distinct clients represented on this page",
       },
       {
         label: "Active portfolios",
@@ -114,12 +114,12 @@ function advisorBookStateDetail(response: AdvisorBookResponse): string {
   if (response.supportability.state === "empty") {
     return response.supportability.reason_code === "advisor_book_filter_empty"
       ? "No portfolio memberships match the selected client or mandate filter."
-      : "The source returned no portfolio memberships for this own-book scope and date.";
+      : "No portfolio assignments were returned for this own-book scope and date.";
   }
   if (response.supportability.state === "degraded") {
-    return "Portfolio membership is available, with source or scope limitations shown below.";
+    return "Portfolio membership is available, with operating limitations shown below.";
   }
-  return "Portfolio membership is source-confirmed for the current own-book scope.";
+  return "Portfolio membership is confirmed for the current own-book scope.";
 }
 
 function toLimitation(rawValue: string) {
@@ -137,13 +137,13 @@ function toLimitation(rawValue: string) {
       detail: "At least one membership uses the bounded legacy advisor projection.",
     },
     source_evidence_not_current: {
-      label: "Source currency not confirmed",
-      detail: "The source did not confirm that membership evidence is current for this request.",
+      label: "Membership data not confirmed current",
+      detail: "The portfolio assignment record was not confirmed current for this request.",
     },
   };
   return {
     ...(copy[rawValue] ?? {
-      label: "Additional source limitation",
+      label: "Additional operating limitation",
       detail: "Operational details contain an unrecognised source limitation for review.",
     }),
     rawValue,

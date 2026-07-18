@@ -57,6 +57,10 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("radio", { name: /Structured data package/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Governed PDF document/ })).toBeDisabled();
     expect(screen.getByText(/PDF creation is temporarily unavailable/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/default allocation view maintained for this portfolio/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/source-owned default/i)).not.toBeInTheDocument();
     expect(screen.queryByText("render_metadata_unavailable")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-report")).not.toBeInTheDocument();
 

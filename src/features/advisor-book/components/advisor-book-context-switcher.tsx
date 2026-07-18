@@ -56,7 +56,7 @@ export default function AdvisorBookContextSwitcher({
         ) : null}
       </details>
       <p className={styles.support}>
-        Open to load source-backed own-book options for the current business task.
+        Open to load portfolios assigned to you for the current business task.
       </p>
     </div>
   );

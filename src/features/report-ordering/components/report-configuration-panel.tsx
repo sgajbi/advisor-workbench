@@ -156,7 +156,7 @@ export function ReportConfigurationPanel({
                 </label>
               ))}
             </div>
-            <small>With no selection, Reporting applies its source-owned default allocation view.</small>
+            <small>With no selection, Reporting applies the default allocation view maintained for this portfolio.</small>
           </fieldset>
         ) : null}
       </SectionBlock>
