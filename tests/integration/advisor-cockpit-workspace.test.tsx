@@ -261,6 +261,47 @@ describe("AdvisorCockpitWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it.each([
+    {
+      totalCount: 0,
+      staleTitle: "No preparation packs in scope",
+    },
+    {
+      totalCount: 1,
+      staleTitle: "Meeting preparation details unavailable",
+    },
+  ])(
+    "does not present a cached $totalCount preparation-pack scope as current after refresh failure",
+    async ({ totalCount, staleTitle }) => {
+      listAdvisorCockpitPreparationPacketsMock
+        .mockResolvedValueOnce({
+          total_count: totalCount,
+          items: [],
+        })
+        .mockRejectedValueOnce(new Error("preparation refresh unavailable"));
+
+      renderWithQueryClient(
+        <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+      );
+
+      expect(await screen.findByText(staleTitle)).toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Acknowledge review" }),
+      );
+
+      expect(
+        await screen.findByText("Meeting preparation refresh unavailable"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "No previously loaded preparation packs remain visible, and the current source scope cannot be confirmed.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(staleTitle)).not.toBeInTheDocument();
+    },
+  );
+
   it("keeps the meeting preparation section visible when source packets are absent", async () => {
     listAdvisorCockpitPreparationPacketsMock.mockResolvedValueOnce({
       items: [],

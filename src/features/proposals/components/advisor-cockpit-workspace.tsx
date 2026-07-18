@@ -23,6 +23,7 @@ import {
 import {
   buildAdvisorCockpitModel,
   type AdvisorCockpitActionRow,
+  type AdvisorCockpitModel,
 } from "../advisor-cockpit-view-model";
 import styles from "./advisor-cockpit-workspace.module.css";
 
@@ -259,19 +260,24 @@ export default function AdvisorCockpitWorkspace({
         title="Meeting Preparation"
         subtitle="Source-backed meeting preparation evidence."
       >
-        {model.preparationPosture === "available" ? (
+        {preparationRefreshUnavailable ? (
           <>
-            {preparationRefreshUnavailable ? (
-              <ScreenStatePanel
-                kind="partial"
-                title="Meeting preparation refresh unavailable"
-                body={`${model.preparationRows.length} previously loaded ${model.preparationRows.length === 1 ? "preparation pack remains" : "preparation packs remain"} visible, but the current source scope cannot be confirmed.`}
-                hint="Treat the visible preparation evidence as last loaded and verify source readiness before a client discussion."
-                surface="default"
-              />
-            ) : null}
-            {!preparationRefreshUnavailable &&
-            model.preparationCount === null ? (
+            <ScreenStatePanel
+              kind="partial"
+              title="Meeting preparation refresh unavailable"
+              body={
+                model.preparationRows.length === 0
+                  ? "No previously loaded preparation packs remain visible, and the current source scope cannot be confirmed."
+                  : `${model.preparationRows.length} previously loaded ${model.preparationRows.length === 1 ? "preparation pack remains" : "preparation packs remain"} visible, but the current source scope cannot be confirmed.`
+              }
+              hint="Treat any visible preparation evidence as last loaded and verify source readiness before a client discussion."
+              surface="default"
+            />
+            <AdvisorCockpitPreparationGrid rows={model.preparationRows} />
+          </>
+        ) : model.preparationPosture === "available" ? (
+          <>
+            {model.preparationCount === null ? (
               <Text variant="secondary">
                 At least {model.preparationRows.length}{" "}
                 {model.preparationRows.length === 1
@@ -279,8 +285,7 @@ export default function AdvisorCockpitWorkspace({
                   : "preparation packs are"}{" "}
                 available for review; the full source scope is not reported.
               </Text>
-            ) : !preparationRefreshUnavailable &&
-              model.preparationCount !== null &&
+            ) : model.preparationCount !== null &&
               model.preparationCount > model.preparationRows.length ? (
               <Text variant="secondary">
                 {model.preparationCount}{" "}
@@ -292,15 +297,7 @@ export default function AdvisorCockpitWorkspace({
                 for review.
               </Text>
             ) : null}
-            <div className={styles.preparationGrid}>
-              {model.preparationRows.map((packet) => (
-                <div className={styles.preparationItem} key={packet.packetId}>
-                  <Text variant="microLabel">{packet.context}</Text>
-                  <strong>{packet.status}</strong>
-                  <Text variant="secondary">{packet.evidenceSummary}</Text>
-                </div>
-              ))}
-            </div>
+            <AdvisorCockpitPreparationGrid rows={model.preparationRows} />
           </>
         ) : model.preparationPosture === "details-unavailable" ? (
           <ScreenStatePanel
@@ -324,6 +321,28 @@ export default function AdvisorCockpitWorkspace({
         )}
       </SectionBlock>
     </SectionBlock>
+  );
+}
+
+function AdvisorCockpitPreparationGrid({
+  rows,
+}: {
+  rows: AdvisorCockpitModel["preparationRows"];
+}) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.preparationGrid}>
+      {rows.map((packet) => (
+        <div className={styles.preparationItem} key={packet.packetId}>
+          <Text variant="microLabel">{packet.context}</Text>
+          <strong>{packet.status}</strong>
+          <Text variant="secondary">{packet.evidenceSummary}</Text>
+        </div>
+      ))}
+    </div>
   );
 }
 
