@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
   ActionButton,
@@ -19,10 +19,10 @@ import {
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api-client";
 
-import { getAdvisorBook, type AdvisorBookQuery } from "../api";
+import type { AdvisorBookQuery } from "../api";
 import { resolveAdvisorBookAsOfDate } from "../configuration";
-import type { AdvisorBookResponse } from "../contracts";
 import { buildPortfolioContextHref } from "../navigation";
+import { useAdvisorBook } from "../use-advisor-book";
 import { buildAdvisorBookWorkspaceModel } from "../view-model";
 import styles from "../advisor-book-workspace.module.css";
 
@@ -33,28 +33,12 @@ export default function AdvisorBookWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = useMemo(() => queryFromSearchParams(searchParams), [searchParams]);
-  const [response, setResponse] = useState<AdvisorBookResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
   const [clientId, setClientId] = useState(query.clientId ?? "");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setResponse(await getAdvisorBook(query));
-    } catch (nextError) {
-      setResponse(null);
-      setError(nextError);
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
+  const { response, loading, error, reload } = useAdvisorBook(query);
 
   useEffect(() => {
     setClientId(query.clientId ?? "");
-    void load();
-  }, [load, query.clientId]);
+  }, [query.clientId]);
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,7 +91,7 @@ export default function AdvisorBookWorkspace() {
             ? `Support reference: HTTP ${getWorkbenchApiErrorStatus(error)}`
             : "Retry when source connectivity is restored."
         }
-        action={<ActionButton onClick={() => void load()}>Retry</ActionButton>}
+        action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
       />
     );
   }
