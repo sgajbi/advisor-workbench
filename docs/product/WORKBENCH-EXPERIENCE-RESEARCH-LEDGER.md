@@ -796,9 +796,22 @@ browser worker API.
 
 ### Validation record
 
-Focused contract, BFF, view-model, hook, component, route, API, observability, and compatibility
-tests pass. Repository lint and TypeScript gates pass. Production build and canonical integrated
-runtime evidence are required again after the documentation slice before merge-ready status.
+1. Focused contract, BFF, view-model, hook, component, route, API, observability, compatibility,
+   and canonical-harness tests pass.
+2. Full `make check` passed on 2026-07-18: 293 test files and 1,307 tests passed at 90.76%
+   statement coverage, followed by clean lint, TypeScript validation, and production build.
+3. Live Gateway catalogue preflight for `PB_SG_GLOBAL_BAL_001` returned eligible portfolio scope,
+   the single-portfolio ordering mode, and ready structured-data output while truthfully retaining
+   unavailable governed PDF output.
+4. The first complete live submission exposed issue #459: Workbench placed unpublished
+   `source_surface` provenance in business `options`, and Report correctly rejected it with
+   `unsupported_report_configuration`. After removing that key, the same governed request returned
+   `202 data_ready`; bounded recent-request history returned `200` and included the accepted job.
+5. Canonical portfolio seeding subsequently reached Core analytics, Report, and Gateway return-path
+   currentness through `2026-04-10`. Full platform validation then stopped when the governed DPM
+   seed hit the existing platform #553 Manage refresh `403`. Platform #582 separately owns central
+   Report Centre panel registration. No demo-ready screenshot claim is made until both dependencies
+   are resolved and canonical validation passes.
 
 ### Publication decision
 

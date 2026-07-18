@@ -56,8 +56,10 @@ Current repository posture:
    advisor approval, client delivery, or communication. The Workbench BFF strips browser reporting
    authority headers and derives the development role and portfolio entitlement from server
    configuration; non-development environments fail closed until authenticated-principal
-   resolution exists. Obsolete browser batch materialization, worker run-once, archive lookup, and
-   direct download controls were retired under issues #449 and #458,
+   resolution exists. Submission adapters must send only configuration fields published by the
+   selected source catalogue; caller application and correlation provenance belong in governed
+   headers, not in business `options`. Obsolete browser batch materialization, worker run-once,
+   archive lookup, and direct download controls were retired under issues #449 and #458,
 8. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
