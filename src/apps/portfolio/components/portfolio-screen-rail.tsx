@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId, useRef, useState } from "react";
 
 import { Panel, Text } from "@/design-system";
 import {
@@ -34,14 +35,67 @@ export default function PortfolioScreenRail({
 }) {
   const pathname = usePathname();
   const screens = buildPortfolioScreenNavigationItems(portfolioId);
+  const [navigationExpanded, setNavigationExpanded] = useState(false);
+  const navigationId = useId();
+  const disclosureButtonRef = useRef<HTMLButtonElement>(null);
+  const activeModeItem = modeItems?.find((item) => item.active);
+  const activeItem = screens.find(
+    (screen) => activeScreen === screen.key || pathname === screen.href,
+  );
+  const activeLabel = activeModeItem?.label ?? activeItem?.label ?? "Portfolio review";
+  const activeDetail = activeModeItem
+    ? `${activeItem?.label ?? "Workspace"} · ${activeModeItem.detail}`
+    : activeItem?.detail ?? "Selected portfolio workflow";
+
+  function closeCompactNavigation({ restoreFocus = false } = {}) {
+    setNavigationExpanded(false);
+    if (restoreFocus) {
+      disclosureButtonRef.current?.focus();
+    }
+  }
 
   return (
-    <Panel className="portfolio-screen-rail">
+    <Panel
+      className="portfolio-screen-rail"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && navigationExpanded) {
+          event.preventDefault();
+          closeCompactNavigation({ restoreFocus: true });
+        }
+      }}
+    >
       <div className="portfolio-screen-rail-header">
-        <Text variant="label">Review Workflow</Text>
-        <strong>Portfolio book</strong>
+        <div className="portfolio-screen-rail-context">
+          <Text variant="label">Review Workflow</Text>
+          <strong title={portfolioId}>{portfolioId}</strong>
+        </div>
+        <button
+          ref={disclosureButtonRef}
+          type="button"
+          className="portfolio-screen-rail-disclosure"
+          aria-expanded={navigationExpanded}
+          aria-controls={navigationId}
+          onClick={() => setNavigationExpanded((expanded) => !expanded)}
+        >
+          <span>
+            <small>Current view</small>
+            <strong>{activeLabel}</strong>
+            <em>{activeDetail}</em>
+          </span>
+          <span className="portfolio-screen-rail-disclosure-action" aria-hidden="true">
+            Change
+          </span>
+        </button>
       </div>
-      <nav className="portfolio-screen-rail-nav" aria-label="Workbench screen navigation">
+      <nav
+        id={navigationId}
+        className={`portfolio-screen-rail-nav ${
+          navigationExpanded
+            ? "portfolio-screen-rail-nav-expanded"
+            : "portfolio-screen-rail-nav-collapsed"
+        }`}
+        aria-label="Workbench screen navigation"
+      >
         {screens.map((screen) => {
           const active = activeScreen === screen.key || pathname === screen.href;
           return (
@@ -50,6 +104,7 @@ export default function PortfolioScreenRail({
               href={screen.href}
               aria-current={active ? "page" : undefined}
               className={`portfolio-screen-rail-link ${active ? "portfolio-screen-rail-link-active" : ""}`}
+              onClick={() => closeCompactNavigation()}
             >
               <span>{screen.label}</span>
               <small>{screen.detail}</small>
@@ -81,6 +136,7 @@ export default function PortfolioScreenRail({
                     aria-current={item.active ? "page" : undefined}
                     className={className}
                     title={item.title}
+                    onClick={() => closeCompactNavigation()}
                   >
                     {content}
                   </Link>
@@ -96,7 +152,10 @@ export default function PortfolioScreenRail({
                   aria-current={item.active ? "page" : undefined}
                   className={className}
                   title={item.title}
-                  onClick={item.onSelect}
+                  onClick={() => {
+                    item.onSelect?.();
+                    closeCompactNavigation();
+                  }}
                 >
                   {content}
                 </button>
