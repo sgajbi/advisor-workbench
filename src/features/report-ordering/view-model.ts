@@ -176,6 +176,12 @@ function evaluateReadiness(
   if (!isBusinessDate(configuration.asOfDate)) {
     issues.push("Select a valid report date.");
   }
+  if (
+    configuration.reportingCurrency &&
+    !/^[A-Z]{3}$/.test(configuration.reportingCurrency)
+  ) {
+    issues.push("Enter a three-letter reporting currency, such as SGD or USD.");
+  }
 
   const output = family?.outputFormats.find(
     (candidate) => candidate.formatId === configuration.outputFormat,

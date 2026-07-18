@@ -55,6 +55,24 @@ describe("report ordering view model", () => {
     );
   });
 
+  it("blocks incomplete reporting currency codes while preserving the optional default", () => {
+    const response = parseReportOrderingResponse(buildReportOrderingResponse());
+    const configuration = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SG",
+    });
+
+    expect(buildReportOrderingViewModel(response, configuration).readiness.issues).toContain(
+      "Enter a three-letter reporting currency, such as SGD or USD.",
+    );
+    expect(
+      buildReportOrderingViewModel(response, {
+        ...configuration,
+        reportingCurrency: "",
+      }).canSubmit,
+    ).toBe(true);
+  });
+
   it("surfaces permission posture without exposing raw reason codes as primary copy", () => {
     const payload = buildReportOrderingResponse();
     payload.scopeEligibility = {
