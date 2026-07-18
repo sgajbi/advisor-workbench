@@ -18,6 +18,7 @@ const SHELL_APP_MATCHERS: Record<ShellAppId, string[]> = {
     "/manage",
     "/workbench",
     "/intake",
+    "/reports",
   ],
   performance: ["/performance"],
   risk: ["/performance"],

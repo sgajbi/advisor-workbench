@@ -20,6 +20,7 @@ describe("portfolio screen navigation", () => {
       "risk",
       "proposal",
       "advisory",
+      "reports",
       "manage",
     ]);
     expect(items.find((item) => item.key === "allocation")?.href).toBe(
@@ -36,6 +37,9 @@ describe("portfolio screen navigation", () => {
     );
     expect(items.find((item) => item.key === "advisory")?.href).toBe(
       "/recommendations?portfolioId=PB%20SG%2F001"
+    );
+    expect(items.find((item) => item.key === "reports")?.href).toBe(
+      "/reports?portfolioId=PB%20SG%2F001"
     );
     expect(items.find((item) => item.key === "manage")?.href).toBe("/workbench/PB%20SG%2F001");
   });
