@@ -1,4 +1,24 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+function getPortfolioReviewPageHeading(page: Page) {
+  return page.getByRole('heading', {
+    level: 1,
+    name: 'Portfolio Review',
+    exact: true,
+  });
+}
+
+function getPortfolioFoundationPageHeading(page: Page) {
+  return page.getByRole('heading', {
+    name: /^Portfolio$|^Portfolio Review$|^Portfolio context unavailable$/i,
+  });
+}
+
+function getPortfolioUnavailableHeading(page: Page) {
+  return page.getByRole('heading', {
+    name: /^Portfolio unavailable$|^Portfolio context unavailable$/i,
+  });
+}
 
 test.describe.configure({ mode: 'serial' });
 
@@ -6,15 +26,13 @@ test.describe('UI smoke checks', () => {
   const mobileOverflowChecks = [
     {
       path: '/portfolios',
-      assertReady: async (page: import('@playwright/test').Page) => {
-        await expect(
-          page.getByRole('heading', { name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i })
-        ).toBeVisible({ timeout: 60000 });
+      assertReady: async (page: Page) => {
+        await expect(getPortfolioFoundationPageHeading(page)).toBeVisible({ timeout: 60000 });
       },
     },
     {
       path: '/intake',
-      assertReady: async (page: import('@playwright/test').Page) => {
+      assertReady: async (page: Page) => {
         await expect(
           page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })
         ).toBeVisible({ timeout: 60000 });
@@ -22,27 +40,39 @@ test.describe('UI smoke checks', () => {
     },
     {
       path: '/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001',
-      assertReady: async (page: import('@playwright/test').Page) => {
-        const unavailableHeading = page.getByRole('heading', { name: /^Portfolio unavailable$/i });
+      assertReady: async (page: Page) => {
+        const unavailableHeading = getPortfolioUnavailableHeading(page);
         const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
         if (unavailableVisible) {
           await expect(unavailableHeading).toBeVisible({ timeout: 60000 });
           return;
         }
 
-        await expect(page.getByRole('heading', { name: /Portfolio Review/i })).toBeVisible({
+        await expect(getPortfolioReviewPageHeading(page)).toBeVisible({
           timeout: 60000,
         });
       },
     },
   ] as const;
 
+  test('portfolio page identity remains unique beside a ready decision heading', async ({ page }) => {
+    await page.setContent(`
+      <main>
+        <h1>Portfolio Review</h1>
+        <section aria-label="Portfolio decision review">
+          <h3>Portfolio review is ready</h3>
+        </section>
+      </main>
+    `);
+
+    await expect(page.getByRole('heading')).toHaveCount(2);
+    await expect(getPortfolioReviewPageHeading(page)).toHaveCount(1);
+    await expect(getPortfolioReviewPageHeading(page)).toBeVisible();
+  });
+
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
-    const portfolioHeading = page.getByRole('heading', {
-      name: /^Portfolio$|^Portfolio Review$|^Portfolio unavailable$/i,
-    });
-    await expect(portfolioHeading).toBeVisible();
+    await expect(getPortfolioFoundationPageHeading(page)).toBeVisible();
   });
 
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
