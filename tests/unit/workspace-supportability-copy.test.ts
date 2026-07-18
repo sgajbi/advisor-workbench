@@ -45,13 +45,53 @@ function workspace(
 }
 
 describe("getWorkspaceDisabledTitle", () => {
-  it("uses Gateway-provided supportability reasons before local fallback copy", () => {
-    expect(getWorkspaceDisabledTitle(workspace({}))).toBe(
-      "Advisory workspace is unavailable: lifecycle disabled."
-    );
+  it.each([
+    [
+      "lifecycle_disabled",
+      "Advisory is not enabled for the current operating configuration.",
+    ],
+    [
+      "advisory_disabled",
+      "Advisory is not enabled for the current operating configuration.",
+    ],
+    [
+      "dependency_degraded",
+      "Advisory is temporarily unavailable because required information could not be retrieved.",
+    ],
+    [
+      "lotus_advise_unavailable",
+      "Advisory is temporarily unavailable because required information could not be retrieved.",
+    ],
+    [
+      "policy_review_required",
+      "Advisory is unavailable until the required business review is complete.",
+    ],
+    ["advisory_disabled_in_fallback", "Advisory availability could not be confirmed."],
+    ["lotus_advise_unknown", "Advisory availability could not be confirmed."],
+  ])("maps the known %s reason to business availability copy", (reason, expected) => {
+    expect(
+      getWorkspaceDisabledTitle(
+        workspace({ supportability: { state: "unavailable", reasons: [reason] } })
+      )
+    ).toBe(expected);
   });
 
-  it("falls back without inventing an advisory supportability reason", () => {
+  it("fails closed without exposing an unknown source reason", () => {
+    const title = getWorkspaceDisabledTitle(
+      workspace({
+        supportability: {
+          state: "unavailable",
+          reasons: ["FUTURE_TECHNICAL_REASON_97"],
+        },
+      })
+    );
+
+    expect(title).toBe("Advisory availability could not be confirmed.");
+    expect(title).not.toContain("FUTURE");
+    expect(title).not.toContain("97");
+  });
+
+  it("uses neutral business copy when the source supplies no reason", () => {
     expect(
       getWorkspaceDisabledTitle(
         workspace({
@@ -61,6 +101,6 @@ describe("getWorkspaceDisabledTitle", () => {
           },
         })
       )
-    ).toBe("Advisory workspace is unavailable.");
+    ).toBe("Advisory availability could not be confirmed.");
   });
 });
