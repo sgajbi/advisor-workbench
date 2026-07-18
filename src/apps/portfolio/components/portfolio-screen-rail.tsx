@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
 import { Panel, Text } from "@/design-system";
+import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
 import {
   buildPortfolioScreenNavigationItems,
   type PortfolioScreenNavigationKey,
@@ -65,6 +66,7 @@ export default function PortfolioScreenRail({
       }}
     >
       <div className="portfolio-screen-rail-header">
+        <AdvisorBookContextSwitcher portfolioId={portfolioId} />
         <div className="portfolio-screen-rail-context">
           <Text variant="label">Review Workflow</Text>
           <strong title={portfolioId}>{portfolioId}</strong>
