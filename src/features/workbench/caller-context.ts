@@ -1,3 +1,5 @@
+import { resolveConfiguredAuthorityMode } from "./authority-mode";
+
 const DEFAULT_CALLER_CONTEXT_HEADERS = {
   "X-Actor-Id": "workbench-system",
   "X-Caller-Application": "lotus-workbench",
@@ -73,13 +75,6 @@ const DEFAULT_REPORTING_CALLER_CONTEXT = {
 
 const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
 const REPORTING_AUTH_MODE_ENV = "WORKBENCH_REPORTING_AUTH_MODE";
-const DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS = new Set([
-  "dev",
-  "development",
-  "local",
-  "test",
-]);
-
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
@@ -266,44 +261,6 @@ function resolveIdeaAuthorityMode():
   | "development_authority_not_allowed"
   | "invalid_authority_mode" {
   return resolveConfiguredAuthorityMode(IDEA_AUTH_MODE_ENV);
-}
-
-function resolveConfiguredAuthorityMode(
-  environmentVariable: string,
-):
-  | "development_configured"
-  | "authenticated_session"
-  | "development_authority_not_allowed"
-  | "invalid_authority_mode" {
-  const environment =
-    process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase() || "unconfigured";
-  const isDevelopmentEnvironment = DEVELOPMENT_IDEA_AUTH_ENVIRONMENTS.has(environment);
-  const configuredMode = process.env[environmentVariable]?.trim().toLowerCase();
-
-  if (
-    configuredMode &&
-    configuredMode !== "development_configured" &&
-    configuredMode !== "authenticated_session"
-  ) {
-    return "invalid_authority_mode";
-  }
-
-  const authorityMode: "development_configured" | "authenticated_session" =
-    configuredMode === "development_configured" ||
-    configuredMode === "authenticated_session"
-      ? configuredMode
-      : isDevelopmentEnvironment
-        ? "development_configured"
-        : "authenticated_session";
-
-  if (
-    authorityMode === "development_configured" &&
-    !isDevelopmentEnvironment
-  ) {
-    return "development_authority_not_allowed";
-  }
-
-  return authorityMode;
 }
 
 function isReportOrderingWorkspaceRoute(method: string, upstreamPath: string): boolean {
