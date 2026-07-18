@@ -165,7 +165,7 @@ export default function AdvisorCockpitWorkspace({
   return (
     <SectionBlock
       title={model.title}
-      subtitle="Advisor operating priorities, source evidence, readiness, and review acknowledgement."
+      subtitle="Advisor operating priorities, preparation evidence, client-use boundaries, and review acknowledgement."
     >
       {hasError ? (
         <Alert severity="warning" sx={{ mb: 1 }}>

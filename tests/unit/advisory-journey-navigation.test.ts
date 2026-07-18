@@ -85,5 +85,10 @@ describe("advisory journey navigation", () => {
     expect(getAdvisoryJourneyDefinition("proof").description).toContain(
       "supported claims",
     );
+    const cockpit = getAdvisoryJourneyDefinition("cockpit");
+    expect(cockpit.description).toBe(
+      "Advisor priorities, preparation evidence, operating boundaries, and review posture.",
+    );
+    expect(cockpit.description).not.toMatch(/gateway|supportability|rfc|api/i);
   });
 });
