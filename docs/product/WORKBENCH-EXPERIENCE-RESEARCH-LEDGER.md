@@ -1214,7 +1214,8 @@ Read-only review on 2026-07-18 confirmed:
 Issue #451 governs the slice. Thirty-nine focused shell, navigation, and design-system tests pass
 with TypeScript and lint. Production browser coverage verifies the product context at desktop and
 tablet width and proves the search field, notification action, and hard-coded banker identity are
-absent. Full release-train validation remains to be rerun after this slice.
+absent. Exact-head `make check` passed on 2026-07-18 with 300 test files, 1,369 tests, 90.85%
+statement coverage, lint, TypeScript, and the optimized 25-route production build.
 
 ### Publication decision
 
