@@ -38,6 +38,14 @@ concurrency group.
   server child so cancellation cannot leave a shell-owned listener behind. Set
   `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1` only immediately after a successful production build in the
   same worktree; the launcher fails closed when `.next/BUILD_ID` is absent.
+- `npm run test:e2e:performance:populated`
+  deterministic production-browser proof for complete Performance economics, supported modules,
+  evidence navigation, contribution detail, and desktop layout. The isolated fixture Gateway uses
+  existing governed contract builders; its live-only Server-Timing check is explicitly skipped.
+- `npm run test:e2e:performance:unavailable`
+  deterministic production-browser proof for source-owned unavailable return, benchmark, horizon,
+  contribution, metric, and evidence postures. Populated-only geometry and live-only timing checks
+  are explicitly skipped instead of weakening their preconditions.
 - `make ci-local-docker`
   Docker parity
 - `npm run live:validate`
