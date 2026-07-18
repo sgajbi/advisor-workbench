@@ -89,6 +89,10 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await mockAdvisorBook(page);
   await page.goto("/book?asOfDate=2026-04-10", { waitUntil: "domcontentloaded" });
 
+  await expect(page.getByText("Private Banking Workbench", { exact: true })).toBeVisible();
+  await expect(page.getByRole("searchbox")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Notifications" })).toHaveCount(0);
+  await expect(page.getByText("Jordan Davis", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "My book", exact: true })).toBeVisible();
   await expect(page.getByText("Available with limitations")).toBeVisible();
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
@@ -121,6 +125,7 @@ test("keeps the book usable at tablet and effective 200 percent zoom width", asy
   await mockAdvisorBook(page);
   await page.goto("/book?asOfDate=2026-04-10", { waitUntil: "domcontentloaded" });
 
+  await expect(page.getByText("Private Banking Workbench", { exact: true })).toBeVisible();
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Client reference" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Mandate" })).toBeVisible();
