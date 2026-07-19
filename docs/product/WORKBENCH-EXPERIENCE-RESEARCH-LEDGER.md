@@ -947,6 +947,87 @@ Research was reviewed on 2026-07-19 against the implemented Gateway catalogue an
    detail state integrity, honest recovery, accessibility, and source-backed controls; the
    deterministic prevention belongs in the repository projection, tests, and local context.
 
+### Slice 3 — bank-buyable portfolio context and Report Centre composition
+
+Issue #490 treats the shared portfolio rail and Report Centre composition as one advisor-workflow
+problem. The objective is a quiet, high-trust workstation: ink-navy navigation, restrained warm-gold
+selection and action emphasis, a white analytical canvas, compact typography, and dividers before
+nested cards. The slice changes presentation and responsive composition only; portfolio identity,
+own-book membership, report eligibility, lifecycle state, and client-use boundaries remain
+source-backed.
+
+#### Interaction and market research
+
+Research was reviewed on 2026-07-19 against the shared shell and populated Report Centre states:
+
+1. [Carbon global-header guidance](https://carbondesignsystem.com/patterns/global-header/) treats
+   global and local navigation as stable shell responsibilities and collapses them deliberately at
+   constrained widths. Lotus therefore keeps one semantic route source and one compact disclosure
+   instead of rendering a second mobile navigation model.
+2. [Carbon 2x grid guidance](https://carbondesignsystem.com/elements/2x-grid/usage/) uses a consistent
+   spacing rhythm and explicit breakpoints to preserve hierarchy. Lotus sets measurable rail-height
+   and overflow budgets at 768 and 519 px rather than relying on subjective screenshots alone.
+3. [Temenos Wealth Front Office](https://www.temenos.com/products/wealth-management/wealth-front-office/)
+   positions wealth work around a unified front-office view and advisor workflow. Lotus keeps
+   portfolio context, workflow identity, current view, request readiness, and client-use boundary
+   together while separating them from unsupported report delivery or operational controls.
+4. [WCAG contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
+   requires at least 4.5:1 for normal text. The production-browser proof computes the inactive rail
+   label contrast against the rendered rail instead of assuming token intent equals rendered output.
+
+#### Adopted decisions
+
+1. Make the application shell—not `.portfolio-page`—the authoritative dark-rail theme scope so every
+   consumer receives the same readable foreground, active state, hover, and focus treatment.
+2. Keep portfolio switching, own-book navigation, workflow identifier, and current view together in
+   one responsive header; use concise visible labels at constrained widths while retaining complete
+   accessible names.
+3. Remove generic panel inset from the rail because the shared component already owns header and
+   navigation spacing. Do not pay two padding budgets for one hierarchy.
+4. Consolidate Report Centre readiness and the client-use boundary into one decision panel, and use
+   dividers for lifecycle controls rather than four miniature cards.
+5. Give terminal Report Centre states a deliberate analytical-canvas treatment with a restrained
+   state accent instead of leaving a visually empty main column.
+6. Prove desktop recovery, compact empty, tablet restricted, and mobile ready states through the
+   optimized production build, including keyboard disclosure closure, focus restoration, horizontal
+   overflow, strict compact-height budgets, and computed contrast.
+
+#### Rejected decisions
+
+1. Do not add gradients, glass effects, oversized marketing typography, decorative dashboards, or
+   novelty interaction patterns to a daily private-banking workstation.
+2. Do not hide portfolio identity, own-book access, readiness, or client-use boundaries merely to
+   meet a compact-height target.
+3. Do not weaken viewport assertions when a screenshot exposes collision, duplicate inset, or
+   hierarchy failure.
+4. Do not paste generated Stitch, Figma, or other design-tool code into the product. External tools
+   may inform composition; repository components, source contracts, tests, and accessibility remain
+   authoritative.
+5. Do not bulk-split the global stylesheet in this visual slice. Issue #492 owns incremental CSS
+   architecture with representative visual-regression proof.
+
+#### Validation record
+
+1. The optimized production build passed the four-state browser matrix at 1440, 1024, 768, and
+   519 px. Recovery, empty, restricted, and ready states remained coherent and action-safe.
+2. The browser gate proves at least 4.5:1 rendered contrast for inactive rail text and the portfolio
+   switch action, no document-level horizontal overflow, a fully stacked 1024 px shell, a rail below
+   100 px at 1024/768, and a mobile rail below 150 px.
+3. The mobile disclosure opens by keyboard, closes on Escape, returns focus, and leaves the
+   portfolio-context control within its allocated width.
+4. Visual review rejected intermediate captures despite partial test success: the 1024 px shell kept
+   desktop width caps after stacking, the desktop switcher looked disabled, and the first 519 px
+   arrangement collided. The final captures correct those failures rather than weakening budgets.
+5. Focused shared-rail, Performance integration, Report Centre state/workflow, addressing, and
+   harness proof passed 108 tests; lint, TypeScript, and the 25-route production build passed.
+
+#### Publication decision
+
+No wiki source change is required. This slice corrects shared visual hierarchy, responsive behavior,
+and accessibility for already documented routes and capabilities; it changes no supported feature,
+integration, source contract, operator command, or runbook. Repository context and both review
+ledgers carry the reusable design and implementation rule.
+
 ## Portfolio Reporting Source Posture
 
 ### Business job

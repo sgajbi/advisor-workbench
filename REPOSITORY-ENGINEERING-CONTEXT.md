@@ -133,7 +133,14 @@ Current repository posture:
     Manage-owned invocation evidence, and does not display or submit generated summary text,
     prompt bodies, model responses, PM rankings, client-contact instructions, order claims, or
     OMS claims.
-16. current UX work emphasizes truthful data-backed modules, stronger density, reduced duplication, and cleaner system-wide visual consistency.
+16. Shared portfolio navigation is a product-shell responsibility, not a page-local styling
+    concern. `PortfolioScreenRail` owns one dark, high-contrast context/navigation surface across
+    Portfolio, Performance, Manage, and Report Centre. At stacked-shell widths it presents
+    portfolio switching, the governed portfolio identifier, and the current business view as a
+    compact header; the route list remains collapsed until requested, closes on Escape, and
+    restores focus. The rail owns its internal spacing and must neutralize generic `Panel` padding
+    rather than accumulating nested insets. Responsive changes require production-browser proof at
+    1440, 1024, 768, and 519 px and must not hide source state or invent mobile-only behavior.
 17. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
