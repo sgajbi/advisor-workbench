@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ActionLink,
@@ -35,20 +35,43 @@ export default function PortfolioWorkspaceSideRail({
   onOpenException: (exception: PortfolioExceptionSummary) => void;
 }) {
   const [copiedContextField, setCopiedContextField] = useState<string | null>(null);
+  const copyResetTimerRef = useRef<number | null>(null);
+  const mountedRef = useRef(true);
+
+  const clearCopyResetTimer = () => {
+    if (copyResetTimerRef.current !== null) {
+      window.clearTimeout(copyResetTimerRef.current);
+      copyResetTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      clearCopyResetTimer();
+    };
+  }, []);
 
   const copyContextValue = async (key: string, value: string | null | undefined) => {
     if (!value) {
       return;
     }
 
+    clearCopyResetTimer();
     try {
       await navigator.clipboard.writeText(value);
+      if (!mountedRef.current) {
+        return;
+      }
       setCopiedContextField(key);
-      window.setTimeout(() => {
+      copyResetTimerRef.current = window.setTimeout(() => {
+        copyResetTimerRef.current = null;
         setCopiedContextField((current) => (current === key ? null : current));
       }, 1600);
     } catch {
-      setCopiedContextField(null);
+      if (mountedRef.current) {
+        setCopiedContextField(null);
+      }
     }
   };
 
