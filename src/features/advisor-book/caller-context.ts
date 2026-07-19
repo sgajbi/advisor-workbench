@@ -1,5 +1,8 @@
 import { resolveConfiguredAuthorityMode } from "@/features/workbench/authority-mode";
-import { resolveDefaultCallerContext } from "@/features/workbench/caller-context";
+import {
+  resolveDefaultCallerContext,
+  SERVER_DERIVED_CALLER_AUTHORITY_HEADERS,
+} from "@/features/workbench/caller-context";
 
 const ADVISOR_BOOK_ROUTE = "api/v1/advisor-book/portfolios";
 const ADVISOR_BOOK_AUTH_MODE_ENV = "WORKBENCH_ADVISOR_BOOK_AUTH_MODE";
@@ -9,16 +12,6 @@ const SUPPORTED_ADVISOR_BOOK_ROLES = new Set([
   "RELATIONSHIP_MANAGER",
   "PORTFOLIO_MANAGER",
 ]);
-
-const ADVISOR_BOOK_AUTHORITY_HEADERS = [
-  "X-Actor-Id",
-  "X-Caller-Application",
-  "X-Tenant-Id",
-  "X-Region",
-  "X-Booking-Center-Code",
-  "X-Role",
-  "X-Caller-Capabilities",
-] as const;
 
 export type AdvisorBookAuthorityResolution =
   | { status: "not_applicable" }
@@ -40,7 +33,7 @@ export function applyAdvisorBookCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of ADVISOR_BOOK_AUTHORITY_HEADERS) {
+  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
     headers.delete(headerName);
   }
 
