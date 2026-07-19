@@ -31,6 +31,7 @@ const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/performance",
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
     replace: replaceMock,
   }),
