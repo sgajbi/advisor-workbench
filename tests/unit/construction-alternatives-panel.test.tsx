@@ -306,7 +306,7 @@ describe("ConstructionAlternativesPanel", () => {
     });
     expect(screen.queryByText("cas_1")).not.toBeInTheDocument();
     expect(screen.queryByText("alt_balanced_transition")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Balanced Transition").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Balanced Transition")).length).toBeGreaterThan(0);
     expect(screen.getByRole("columnheader", { name: "Turnover" })).toBeInTheDocument();
     expect(screen.getAllByText("4.8%").length).toBeGreaterThan(0);
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
@@ -394,6 +394,6 @@ describe("ConstructionAlternativesPanel", () => {
       });
     });
     expect(screen.getAllByText("Balanced Transition").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Selected" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Selected" })).toBeDisabled();
   });
 });

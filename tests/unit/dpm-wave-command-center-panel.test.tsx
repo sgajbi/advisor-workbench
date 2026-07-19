@@ -358,7 +358,9 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
-    const table = screen.getByRole("table", { name: "DPM campaign lifecycle evidence" });
+    const table = await screen.findByRole("table", {
+      name: "DPM campaign lifecycle evidence",
+    });
     expect(within(table).getByText("Launched")).toBeInTheDocument();
     expect(within(table).getByText("2026-05-14T09:30:00Z")).toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
@@ -392,7 +394,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
-    const table = screen.getByRole("table", { name: "DPM campaign launch history" });
+    const table = await screen.findByRole("table", { name: "DPM campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
     expect(within(table).getByText("2026-05-10T00:00:00Z")).toBeInTheDocument();
@@ -475,7 +477,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
-    expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Ready")).length).toBeGreaterThan(0);
     expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
 
@@ -487,7 +489,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
-    expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
+    expect(await screen.findByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
     expect(screen.queryByText("corr-campaign-launch")).not.toBeInTheDocument();
   });
