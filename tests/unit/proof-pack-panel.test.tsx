@@ -171,7 +171,7 @@ describe("ProofPackPanel", () => {
         mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
       });
     });
-    expect(screen.getByText("Evidence pack prepared.")).toBeInTheDocument();
+    expect(await screen.findByText("Evidence pack prepared.")).toBeInTheDocument();
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
   });
 

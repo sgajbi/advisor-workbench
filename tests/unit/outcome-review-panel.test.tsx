@@ -213,7 +213,7 @@ describe("OutcomeReviewPanel", () => {
         outcomeReviewId: "or_1",
       });
     });
-    expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
+    expect(await screen.findByText("Review request Completed.")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
       "Delivery Confirmation"
     );
