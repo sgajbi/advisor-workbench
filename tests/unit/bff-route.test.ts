@@ -157,10 +157,18 @@ describe("BFF proxy route", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
+          "X-Actor-Id": "spoofed-actor",
+          "X-Caller-Application": "spoofed-application",
+          "X-Tenant-Id": "spoofed-tenant",
+          "X-Region": "spoofed-region",
+          "X-Booking-Center-Code": "spoofed-centre",
+          "X-Role": "administrator",
           "X-Caller-Subject": "spoofed-subject",
           "X-Caller-Roles": "compliance",
           "X-Caller-Capabilities": "idea.conversion.intent.record",
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+          "X-Caller-Client-Ids": "UNENTITLED_CLIENT",
+          "X-Principal-Status": "SUSPENDED",
         },
         body: JSON.stringify({ action: "approve_for_conversion" }),
       },
@@ -180,6 +188,14 @@ describe("BFF proxy route", () => {
     });
 
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe(
+      "lotus-workbench",
+    );
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
+    expect(upstreamHeaders.get("X-Role")).toBe("advisor");
     expect(upstreamHeaders.get("X-Caller-Subject")).toBe("workbench-advisor");
     expect(upstreamHeaders.get("X-Caller-Roles")).toBe("advisor");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
@@ -188,7 +204,55 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
+    expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBeNull();
+    expect(upstreamHeaders.get("X-Principal-Status")).toBeNull();
   });
+
+  it.each([
+    ["review-actions", "idea.review.record"],
+    ["feedback", "idea.feedback.record"],
+    ["conversion-intents", "idea.conversion.intent.record"],
+  ])(
+    "derives Idea %s capability from the allowlisted BFF route",
+    async (routeSuffix, expectedCapability) => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+      const request = new NextRequest(
+        `http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/${routeSuffix}`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Idempotency-Key": `idem-${routeSuffix}`,
+            "X-Caller-Capabilities": "idea.admin",
+          },
+          body: JSON.stringify({ reasonCodes: ["advisor_review"] }),
+        },
+      );
+
+      const response = await POST(request, {
+        params: Promise.resolve({
+          path: [
+            "api",
+            "v1",
+            "ideas",
+            "candidates",
+            "idea_high_cash_001",
+            routeSuffix,
+          ],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+      expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+        expectedCapability,
+      );
+      expect(upstreamHeaders.get("Idempotency-Key")).toBe(
+        `idem-${routeSuffix}`,
+      );
+    },
+  );
 
   it("requires an authenticated Idea principal outside development before proxying", async () => {
     process.env.LOTUS_ENVIRONMENT = "uat";
