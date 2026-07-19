@@ -264,7 +264,14 @@ promote dormant labels into product ownership just because historical route file
   `GET /api/v1/advisor-cockpit/preparation-packets`, supportability from
   `GET /api/v1/advisor-cockpit/supportability`, and records bounded advisor acknowledgement
   through `POST /api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements` with the
-  source action-item version and idempotency key. Canonical automation seeds source-backed
+  source action-item version and idempotency key. The browser sends no advisor or role query and
+  no acknowledging actor in the body. The Workbench BFF replaces browser authority, verifies the
+  selected portfolio against server-side entitlement, derives advisor identity from its actor,
+  and projects only `advisory.advisor_cockpit.read` or
+  `advisory.advisor_cockpit.acknowledge` for the exact allowlisted route. Other Cockpit routes and
+  authority escalation fail before Gateway. This configured principal is development-only; UAT
+  and production remain closed until the authenticated-session contract is implemented.
+  Canonical automation seeds source-backed
   tactical house-view evidence through
   `POST /api/v1/advisor-cockpit/house-view-cohorts/evaluate` before requiring the
   `HOUSE_VIEW_IMPACT_REVIEW` action family. Workbench does not reconstruct policy

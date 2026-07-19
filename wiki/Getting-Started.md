@@ -96,6 +96,29 @@ The BFF discards browser-supplied authority and adds only `advisor.book.read`. T
 rejected outside `dev`, `development`, `local`, or `test`; UAT and production require the future
 authenticated principal resolver tracked by Workbench #436.
 
+### Advisor Cockpit local authority fixture
+
+The portfolio-scoped advisor operating workflow uses a dedicated BFF-owned development fixture:
+
+```txt
+WORKBENCH_ADVISOR_COCKPIT_AUTH_MODE=development_configured
+WORKBENCH_ADVISOR_COCKPIT_ACTOR_ID=advisor_sg_001
+WORKBENCH_ADVISOR_COCKPIT_TENANT_ID=tenant-sg
+WORKBENCH_ADVISOR_COCKPIT_REGION=APAC
+WORKBENCH_ADVISOR_COCKPIT_BOOKING_CENTER_CODE=SG
+WORKBENCH_ADVISOR_COCKPIT_LEGAL_ENTITY_CODE=SGPB
+WORKBENCH_ADVISOR_COCKPIT_PRINCIPAL_STATUS=ACTIVE
+WORKBENCH_ADVISOR_COCKPIT_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+```
+
+The browser selects a portfolio but does not select the advisor, role, capability, legal entity,
+principal posture, or entitlement. Workbench derives the advisor from the server-side actor,
+checks the portfolio against the configured entitlement list, and supplies only the read or
+acknowledgement capability needed by the exact allowlisted route. Authority in browser headers,
+query parameters, or the acknowledgement body is rejected. The fixture is rejected outside
+`dev`, `development`, `local`, or `test`; UAT and production require Workbench #436 and the
+platform authenticated-principal contract in #563.
+
 ## First checks
 
 ```txt
