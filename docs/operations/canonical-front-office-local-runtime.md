@@ -118,21 +118,27 @@ development evidence and must never be presented as mainline certification.
 
 That script performs:
 
-1. preview the canonical hosts block from `lotus-platform`
-2. `docker compose up -d` for `lotus-core` with `DEMO_DATA_PACK_ENABLED=false`
-3. `docker compose up -d` for `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-idea`
-4. seed the governed Lotus Idea advisor queue through `lotus-idea` using a deterministic canonical high-cash candidate for `PB_SG_GLOBAL_BAL_001`
-5. start `lotus-archive` and `lotus-render`
-6. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
-7. canonical `lotus-gateway` exposure on port `8100`
-8. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
-9. governed DPM command-center seed through `lotus-platform`
-10. create an isolated Lotus Idea downstream-capacity resource and run one report-only downstream-submission probe
-11. `docker compose up -d` for `lotus-workbench` on port `3000`
+1. preflight every host port required by the selected canonical mode
+2. preview the canonical hosts block from `lotus-platform`
+3. `docker compose up -d` for `lotus-core` with `DEMO_DATA_PACK_ENABLED=false`
+4. `docker compose up -d` for `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-idea`
+5. seed the governed Lotus Idea advisor queue through `lotus-idea` using a deterministic canonical high-cash candidate for `PB_SG_GLOBAL_BAL_001`
+6. start `lotus-archive` and `lotus-render`
+7. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
+8. canonical `lotus-gateway` exposure on port `8100`
+9. governed `lotus-core` seed for `PB_SG_GLOBAL_BAL_001`
+10. governed DPM command-center seed through `lotus-platform`
+11. create an isolated Lotus Idea downstream-capacity resource and run one report-only downstream-submission probe
+12. `docker compose up -d` for `lotus-workbench` on port `3000`
 
 Docker is the default for every canonical front-office app. The startup flow replaces stale local
 listeners on canonical app ports before Docker startup, while leaving Docker-owned listeners in
 place. This avoids stale local dev servers blocking Docker without terminating Docker port proxies.
+Before changing host previews, building images, or starting and stopping processes, the startup
+flow verifies the complete mode-specific port plan. Existing containers from the expected canonical
+Compose projects are reusable. A foreign Docker project or an unsafe host listener fails startup
+with the port, container or process, Compose project, and working-directory provenance needed to
+resolve the conflict. The preflight never stops a foreign owner.
 The governed `lotus-core` startup explicitly sets `DEMO_DATA_PACK_ENABLED=false`; the broad
 app-local demo pack remains available for diagnostics, but it is not part of canonical
 `PB_SG_GLOBAL_BAL_001` seeding or evidence collection.

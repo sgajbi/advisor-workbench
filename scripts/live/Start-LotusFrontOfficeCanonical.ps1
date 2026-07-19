@@ -192,6 +192,174 @@ function Stop-HostProcessOnPort {
   Start-Sleep -Seconds 2
 }
 
+function Get-CanonicalRequiredPortPlan {
+  param([switch]$CoreManageOnlyMode)
+
+  $plan = [System.Collections.Generic.List[object]]::new()
+  foreach ($port in @(2181, 3300, 55432, 8080, 8084, 8085, 8087, 8090, 8200, 8201, 8202, 8209, 8210, 9092, 9093, 9190)) {
+    $plan.Add([pscustomobject]@{
+      Port = $port
+      Description = "lotus-core"
+      AllowedDockerProjects = @("lotus-core-app-local")
+      AllowedDockerWorkingDirectories = @($coreRepo)
+      AllowedContainerNames = @()
+      ReplaceableHostProcess = $false
+    })
+  }
+
+  $plan.Add([pscustomobject]@{
+    Port = 8001
+    Description = "lotus-manage"
+    AllowedDockerProjects = @("lotus-manage")
+    AllowedDockerWorkingDirectories = @($manageRepo)
+    AllowedContainerNames = @()
+    ReplaceableHostProcess = $true
+  })
+  $plan.Add([pscustomobject]@{
+    Port = 80
+    Description = "direct ingress"
+    AllowedDockerProjects = @()
+    AllowedDockerWorkingDirectories = @()
+    AllowedContainerNames = @("lotus-direct-dev-ingress")
+    ReplaceableHostProcess = $false
+  })
+
+  if ($CoreManageOnlyMode) {
+    return $plan.ToArray()
+  }
+
+  $fullServicePorts = @(
+    @{ Port = 5435; Description = "lotus-performance"; Project = "lotus-performance"; Repo = $performanceRepo; Replaceable = $false },
+    @{ Port = 8002; Description = "lotus-performance"; Project = "lotus-performance"; Repo = $performanceRepo; Replaceable = $false },
+    @{ Port = 8130; Description = "lotus-risk"; Project = "lotus-risk"; Repo = $riskRepo; Replaceable = $false },
+    @{ Port = 8140; Description = "lotus-ai"; Project = "lotus-ai"; Repo = $aiRepo; Replaceable = $false },
+    @{ Port = 8000; Description = "lotus-advise"; Project = "lotus-advise"; Repo = $adviseRepo; Replaceable = $false },
+    @{ Port = 5439; Description = "lotus-report"; Project = "lotus-report"; Repo = $reportRepo; Replaceable = $false },
+    @{ Port = 8300; Description = "lotus-report"; Project = "lotus-report"; Repo = $reportRepo; Replaceable = $false },
+    @{ Port = 55433; Description = "lotus-idea"; Project = "lotus-idea"; Repo = $ideaRepo; Replaceable = $false },
+    @{ Port = 8330; Description = "lotus-idea"; Project = "lotus-idea"; Repo = $ideaRepo; Replaceable = $false },
+    @{ Port = 8150; Description = "lotus-archive"; Project = "lotus-archive"; Repo = $archiveRepo; Replaceable = $true },
+    @{ Port = 8310; Description = "lotus-render"; Project = "lotus-render"; Repo = $renderRepo; Replaceable = $true },
+    @{ Port = 8100; Description = "lotus-gateway"; Project = "lotus-gateway"; Repo = $gatewayRepo; Replaceable = $true },
+    @{ Port = 3000; Description = "lotus-workbench"; Project = "lotus-workbench"; Repo = $workbenchRepo; Replaceable = $true }
+  )
+  foreach ($servicePort in $fullServicePorts) {
+    $plan.Add([pscustomobject]@{
+      Port = $servicePort.Port
+      Description = $servicePort.Description
+      AllowedDockerProjects = @($servicePort.Project)
+      AllowedDockerWorkingDirectories = @($servicePort.Repo)
+      AllowedContainerNames = @()
+      ReplaceableHostProcess = $servicePort.Replaceable
+    })
+  }
+
+  return $plan.ToArray()
+}
+
+function Get-DockerPublishedPortOwners {
+  $runningContainerIds = @(& docker ps --quiet 2>&1)
+  if ($LASTEXITCODE -ne 0) {
+    throw "Unable to inspect Docker port ownership before canonical startup. Docker reported: $($runningContainerIds -join ' ')"
+  }
+  if ($runningContainerIds.Count -eq 0) {
+    return
+  }
+
+  $inspectionOutput = @(& docker inspect @runningContainerIds 2>&1)
+  if ($LASTEXITCODE -ne 0) {
+    throw "Unable to inspect running Docker containers before canonical startup."
+  }
+  # Windows PowerShell 5.1 returns a top-level JSON array as one Object[] value.
+  # Do not wrap it in another array or container metadata becomes inaccessible.
+  $inspections = ($inspectionOutput -join [Environment]::NewLine) | ConvertFrom-Json
+  foreach ($inspection in $inspections) {
+    foreach ($bindingProperty in $inspection.HostConfig.PortBindings.PSObject.Properties) {
+      foreach ($binding in @($bindingProperty.Value)) {
+        if ([string]::IsNullOrWhiteSpace([string]$binding.HostPort)) {
+          continue
+        }
+
+        $labels = $inspection.Config.Labels
+        [pscustomobject]@{
+          Port = [int]$binding.HostPort
+          Id = [string]$inspection.Id
+          Name = ([string]$inspection.Name).TrimStart("/")
+          Project = if ($labels) { [string]$labels.'com.docker.compose.project' } else { "" }
+          WorkingDirectory = if ($labels) { [string]$labels.'com.docker.compose.project.working_dir' } else { "" }
+        }
+      }
+    }
+  }
+}
+
+function Test-CanonicalPortOwnership {
+  param([switch]$CoreManageOnlyMode)
+
+  $conflicts = [System.Collections.Generic.List[string]]::new()
+  $requiredPorts = Get-CanonicalRequiredPortPlan -CoreManageOnlyMode:$CoreManageOnlyMode
+  $publishedPortOwners = @(Get-DockerPublishedPortOwners)
+  $hostListeners = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue)
+  Write-Host "Checking ownership of $($requiredPorts.Count) canonical host ports before startup ..."
+
+  foreach ($requiredPort in $requiredPorts) {
+    $dockerOwners = @($publishedPortOwners | Where-Object { $_.Port -eq $requiredPort.Port })
+    if ($dockerOwners.Count -gt 0) {
+      foreach ($owner in $dockerOwners) {
+        $projectAllowed = (
+          -not [string]::IsNullOrWhiteSpace($owner.Project) -and
+          $requiredPort.AllowedDockerProjects -contains $owner.Project -and
+          $requiredPort.AllowedDockerWorkingDirectories -contains $owner.WorkingDirectory
+        )
+        $containerAllowed = $requiredPort.AllowedContainerNames -contains $owner.Name
+        if (-not $projectAllowed -and -not $containerAllowed) {
+          $project = if ([string]::IsNullOrWhiteSpace($owner.Project)) { "<none>" } else { $owner.Project }
+          $workingDirectory = if ([string]::IsNullOrWhiteSpace($owner.WorkingDirectory)) { "<unknown>" } else { $owner.WorkingDirectory }
+          $conflicts.Add(
+            ":$($requiredPort.Port) ($($requiredPort.Description)) is published by foreign container '$($owner.Name)' " +
+            "[project '$project', working directory '$workingDirectory', id '$($owner.Id.Substring(0, 12))']."
+          )
+        }
+      }
+      continue
+    }
+
+    $connections = @($hostListeners | Where-Object { $_.LocalPort -eq $requiredPort.Port })
+    $processIds = @($connections | Select-Object -ExpandProperty OwningProcess -Unique)
+    foreach ($processId in $processIds) {
+      if (-not $processId) {
+        continue
+      }
+      $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+      if (-not $process) {
+        Write-Host "Ignoring stale $($requiredPort.Description) listener record on :$($requiredPort.Port) because PID $processId already exited."
+        continue
+      }
+      $processName = $process.ProcessName
+      $isDockerProcess = $process -and $process.ProcessName -match "^(com\.docker|docker|vpnkit)"
+      if ($requiredPort.ReplaceableHostProcess -and -not $isDockerProcess) {
+        Write-Host "Canonical startup may replace stale $($requiredPort.Description) listener on :$($requiredPort.Port) (PID $processId, process '$processName')."
+        continue
+      }
+      $conflicts.Add(
+        ":$($requiredPort.Port) ($($requiredPort.Description)) is owned by host process '$processName' (PID $processId) " +
+        "and cannot be replaced safely."
+      )
+    }
+  }
+
+  if ($conflicts.Count -gt 0) {
+    $details = ($conflicts | ForEach-Object { " - $_" }) -join [Environment]::NewLine
+    throw (
+      "Canonical port preflight failed before hosts, builds, containers, or processes were changed." +
+      [Environment]::NewLine + $details + [Environment]::NewLine +
+      "Stop or remap the reported owner, then retry. Canonical startup did not stop any foreign container or process."
+    )
+  }
+
+  Write-Host "Canonical port ownership preflight passed."
+}
+
 function Test-LocalApp {
   param([string]$AppName)
 
@@ -509,6 +677,8 @@ function Invoke-CanonicalIdeaCapacitySeed {
     throw "Canonical Lotus Idea capacity seed failed with exit code $LASTEXITCODE."
   }
 }
+
+Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"

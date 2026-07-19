@@ -208,6 +208,31 @@ describe("canonical live validation script", () => {
     );
     expect(script).toContain("docker compose down -v --remove-orphans");
     expect(script).toContain("function Stop-HostProcessOnPort");
+    expect(script).toContain("function Get-CanonicalRequiredPortPlan");
+    expect(script).toContain("function Get-DockerPublishedPortOwners");
+    expect(script).toContain("function Test-CanonicalPortOwnership");
+    expect(script).toContain(
+      "Canonical port preflight failed before hosts, builds, containers, or processes were changed.",
+    );
+    expect(script).toContain(
+      "Canonical startup did not stop any foreign container or process.",
+    );
+    expect(script).toContain('AllowedDockerProjects = @("lotus-core-app-local")');
+    expect(script).toContain("AllowedDockerWorkingDirectories = @($coreRepo)");
+    expect(script).toContain('AllowedContainerNames = @("lotus-direct-dev-ingress")');
+    expect(script).toContain("if ($CoreManageOnlyMode)");
+    expect(script).toContain(
+      "Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly",
+    );
+    expect(
+      script.indexOf(
+        "Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly",
+      ),
+    ).toBeLessThan(
+      script.indexOf(
+        "Previewing managed canonical hosts block from lotus-platform",
+      ),
+    );
     expect(script).toContain("Stopping stale $Description process on :$Port");
     expect(script).toContain(
       "Leaving Docker-owned $Description listener on :$Port",
