@@ -824,6 +824,22 @@ describe("canonical live validation script", () => {
     expect(script).toContain("portfolio.summary");
     expect(script).toContain("advisor.book_overview");
     expect(script).toContain("Gateway advisor own-book membership");
+    const reportWorkflowIndex = script.indexOf(
+      "await validateReportCentrePanel(page",
+    );
+    const reportClassificationIndex = script.indexOf(
+      '"reporting.report_centre"',
+      reportWorkflowIndex,
+    );
+    const finalAlignmentIndex = script.lastIndexOf(
+      "panelGovernance.assertPanelSupportabilityAlignment()",
+    );
+    expect(reportWorkflowIndex).toBeGreaterThan(-1);
+    expect(reportClassificationIndex).toBeGreaterThan(reportWorkflowIndex);
+    expect(finalAlignmentIndex).toBeGreaterThan(reportClassificationIndex);
+    expect(
+      script.slice(reportClassificationIndex, finalAlignmentIndex),
+    ).toContain('"partial",\n      "lotus-report"');
     expect(calculationModule).toContain("performance.analysis.attribution");
     expect(calculationModule).toContain("performance.evidence");
     expect(calculationModule).toContain(

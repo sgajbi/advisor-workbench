@@ -1871,8 +1871,6 @@ async function run() {
       source: "Gateway/lotus-ai DPM workflow-pack workspace",
     },
   );
-  panelGovernance.assertNoUnsupportedBlankPanels();
-  panelGovernance.assertPanelSupportabilityAlignment();
   summary.rfc3643FeatureCoverage = buildRfc3643FeatureCoverage(summary, {
     foundationWorkspace,
     manageSupportabilitySummary,
@@ -1980,6 +1978,19 @@ async function run() {
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
+    panelGovernance.recordPanelClassification(
+      "reporting.report_centre",
+      "partial",
+      "lotus-report",
+      {
+        portfolioId,
+        route: `/reports?portfolioId=${portfolioId}`,
+        source:
+          "Workbench BFF report catalogue, portfolio-review request, and request history proof",
+        reason:
+          "Structured report creation is available while governed PDF creation remains unavailable.",
+      },
+    );
     await validatePerformanceSummaryPanel(page, {
       workbenchBaseUrl,
       portfolioId,
@@ -2117,6 +2128,8 @@ async function run() {
     await browser.close();
   }
 
+  panelGovernance.assertNoUnsupportedBlankPanels();
+  panelGovernance.assertPanelSupportabilityAlignment();
   await writeValidationSummary(summaryPath, summary);
   await writeShotIndex(shotIndexPath, summary, summaryPath);
   console.log(
