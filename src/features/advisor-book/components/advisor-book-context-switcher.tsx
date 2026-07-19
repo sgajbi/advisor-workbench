@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { resolveAdvisorBookAsOfDate } from "../configuration";
@@ -19,10 +20,10 @@ export default function AdvisorBookContextSwitcher({
 }) {
   const [expanded, setExpanded] = useState(false);
   const summaryRef = useRef<HTMLElement>(null);
-  const [locationSearch, setLocationSearch] = useState("");
+  const activeSearchParams = useSearchParams();
+  const locationSearch = activeSearchParams.toString();
 
   useEffect(() => {
-    setLocationSearch(window.location.search);
     if (window.sessionStorage.getItem(RESTORE_FOCUS_KEY) === "true") {
       window.sessionStorage.removeItem(RESTORE_FOCUS_KEY);
       summaryRef.current?.focus();
