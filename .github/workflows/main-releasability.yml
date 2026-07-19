@@ -32,6 +32,8 @@ jobs:
           cache: "npm"
       - name: Install
         run: make install
+      - name: Dependency Security Gate
+        run: make security
       - name: Lint
         run: make lint
       - name: Typecheck

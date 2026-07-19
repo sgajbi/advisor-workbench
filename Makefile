@@ -1,7 +1,10 @@
-.PHONY: install lint typecheck test test-coverage test-e2e build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
+.PHONY: install security lint typecheck test test-coverage test-e2e build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
 
 install:
 	npm install
+
+security:
+	npm run security:audit
 
 lint:
 	npm run lint
@@ -21,7 +24,7 @@ test-e2e:
 build:
 	npm run build
 
-check: lint typecheck test-coverage build
+check: security lint typecheck test-coverage build
 
 ci-local: check
 

@@ -268,6 +268,20 @@ Boundary rules:
 5. domain-product discovery UI must consume gateway domain-product APIs only and must render
    unavailable, stale, partial, blocked, and error trust states truthfully.
 
+Technology-selection rules:
+
+1. prefer mature, widely deployed, well-documented libraries with stable APIs, long-lived community
+   or vendor stewardship, and broad engineering-tool and model familiarity,
+2. do not adopt beta, release-candidate, experimental, or novelty-driven framework versions in the
+   production Workbench,
+3. do not take a major dependency upgrade merely because it is current; require a security,
+   supportability, or product need plus compatibility review, focused regressions, rollback posture,
+   and GitHub issue traceability,
+4. when the only security-fixed version is a newer major, contain changed behavior behind a reusable
+   adapter or compatibility layer and avoid adopting unrelated new features in the same slice, and
+5. prefer boring, explicit, repository-native patterns that are easy for engineers and coding agents
+   to review over clever framework-specific indirection.
+
 ## Local API Contract Evidence
 
 The same-origin `POST /api/metrics/events` route has authored accepted and rejected response
@@ -287,19 +301,21 @@ Use these commands as the primary local contract:
 
 1. install
    `make install`
-2. lint
+2. dependency security
+   `make security`
+3. lint
    `make lint`
-3. typecheck
+4. typecheck
    `make typecheck`
-4. coverage-backed test gate
+5. coverage-backed test gate
    `make test-coverage`
-5. browser smoke
+6. browser smoke
    `make test-e2e`
-6. local feature-lane parity
+7. local feature-lane parity
    `make check`
-7. Docker parity
+8. Docker parity
    `make ci-local-docker`
-8. canonical local runtime and validation
+9. canonical local runtime and validation
    `npm run live:stack:up`
    `npm run live:stack:up:workbench-local`
    `npm run live:validate`
@@ -320,8 +336,10 @@ ambiguous duplicate push/dispatch runs.
 Important validation expectations:
 
 1. unit and integration behavior is validated through Vitest coverage,
-2. browser smoke is validated through Playwright,
-3. Docker and build validation remain part of the merge gate,
+2. dependency security rejects high/critical findings across the complete graph and
+   moderate-or-higher findings in browser-delivered production dependencies,
+3. browser smoke is validated through Playwright,
+4. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
    `-LocalApps` runs are useful branch-local development evidence, not certification evidence,

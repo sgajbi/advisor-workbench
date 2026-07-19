@@ -1346,3 +1346,66 @@ fixture and smoke-server ports clear.
 Wiki source changes are required because two new repository-native operator commands and their
 evidence boundaries are now part of the validation workflow. Publish `wiki/Validation-and-CI.md`
 after merge, then run strict wiki parity verification.
+
+## Secure Chart Runtime And Dependency Gates
+
+### Validation job
+
+Workbench charts carry investment outcomes, benchmark comparisons, and attribution evidence. The
+browser runtime must not retain a known script-injection path, and the engineering toolchain must
+not normalize critical or high advisories. A major chart-library upgrade must also preserve the
+intentionally dense Workbench visual system rather than silently adopting new defaults.
+
+### Current-practice research
+
+1. The [GitHub-reviewed Apache ECharts advisory](https://github.com/advisories/GHSA-fgmj-fm8m-jvvx)
+   identifies a cross-site scripting exposure in ECharts versions before 6.1.0.
+2. The official [Apache ECharts 6 upgrade guide](https://echarts.apache.org/handbook/en/basics/release-note/v6-upgrade-guide/)
+   says most APIs remain compatible, but the default theme, legend placement, component sizing,
+   axis overflow handling, and label inheritance can change. It publishes the `v5` compatibility
+   theme for controlled migration.
+3. The [GitHub-reviewed Vitest advisory](https://github.com/advisories/GHSA-5xrq-8626-4rwp)
+   identifies arbitrary file read and execution before Vitest 3.2.6 when its UI server is exposed.
+4. Registry metadata confirms echarts-for-react 3.0.6 accepts ECharts 6, and Vitest plus its V8
+   coverage provider publish matching 3.2.7 versions for a bounded patch upgrade.
+
+### Adopted decisions
+
+1. Upgrade ECharts to the first advisory-safe 6.1.0 release and echarts-for-react to 3.0.6.
+2. Centralize ECharts rendering in the design system and apply the documented `v5` compatibility
+   theme so the security migration does not become an accidental chart redesign.
+3. Upgrade Vitest and coverage together to 3.2.7 and allow their compatible dependency ranges to
+   resolve patched Vite and esbuild versions.
+4. Resolve the remaining js-yaml advisory within its existing compatible range.
+5. Enforce two thresholds: no high/critical advisory anywhere in the installed graph, and no
+   moderate-or-higher advisory in browser-delivered production dependencies.
+6. Run the same policy through `make check`, Feature Lane, PR Merge Gate, and Main Releasability.
+7. Treat dependency maturity as a bank-readiness control: prefer established, stable, widely
+   understood technology and reject beta, experimental, novelty-driven, or latest-major adoption by
+   default. ECharts 6.1.0 is accepted here only because no ECharts 5 release fixes the advisory; its
+   new visual features remain unused behind the v5 compatibility boundary.
+
+### Rejected decisions
+
+1. `npm audit fix --force`, an unbounded latest-major toolchain migration, or an unexplained lockfile
+   rewrite.
+2. Shipping the known production XSS finding because it was classified as moderate.
+3. Upgrading ECharts while accepting its new default theme without visual review.
+4. A CI-only scanner that developers cannot run through the repository-native command contract.
+5. Silent or permanent advisory exceptions without an owner, expiry, and GitHub issue.
+6. Technology modernization whose primary justification is novelty, ecosystem fashion, or version
+   recency rather than security, supportability, or a proven business requirement.
+
+### Rollback and validation posture
+
+If chart behavior regresses, retain ECharts 6.1.0 and correct the shared compatibility wrapper or
+explicit chart options; do not roll back to the vulnerable ECharts 5 line. A deliberate future move
+to the ECharts 6 visual theme belongs to a separate design-system issue with baseline screenshots.
+Issue #456 owns focused chart contracts, browser proof, accessibility checks, the full repository
+gate, Docker proof, protected CI, and exact-main validation.
+
+### Publication decision
+
+Wiki source changes are required because the repository-native and protected dependency-security
+policy is operator-facing validation truth. Publish `wiki/Validation-and-CI.md` after merge, then
+run strict wiki parity verification.

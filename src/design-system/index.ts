@@ -24,6 +24,7 @@ export type { WorkbenchSegmentedControlOption } from "./components/workbench-seg
 export { default as WorkbenchChartContextRow } from "./components/workbench-chart-context-row";
 export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-context-row";
 export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";
+export { default as WorkbenchECharts } from "./components/workbench-echarts";
 export { default as WorkbenchDecisionBrief } from "./components/workbench-decision-brief";
 export type {
   WorkbenchDecisionBriefAttention,
