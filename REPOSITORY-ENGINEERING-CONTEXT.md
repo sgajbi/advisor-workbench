@@ -51,9 +51,12 @@ Current repository posture:
    ingestion truth.
 7. `/reports` is the portfolio-scoped Report Centre. It consumes the Gateway-owned report-ordering
    catalogue, submits one reviewed and idempotent portfolio-review request, and shows recent
-   report-data job history. Output readiness is source-owned by format: structured data may be
-   ready while governed PDF creation is unavailable. Report-data completion does not imply archive,
-   advisor approval, client delivery, or communication. The Workbench BFF strips browser reporting
+   report-data job history. One exhaustive screen-state projection owns both the setup workspace
+   and readiness rail so loading, restricted, unavailable, empty, reviewed, submitting, accepted,
+   and not-accepted states cannot contradict each other or expose actions that the source state
+   cannot support. Output readiness is source-owned by format: structured data may be ready while
+   governed PDF creation is unavailable. Report-data completion does not imply archive, advisor
+   approval, client delivery, or communication. The Workbench BFF strips browser reporting
    authority headers and derives the development role and portfolio entitlement from server
    configuration; non-development environments fail closed until authenticated-principal
    resolution exists. Submission adapters must send only configuration fields published by the
@@ -236,8 +239,8 @@ Primary areas:
 6. `src/shell/`
    Shared shell composition and application framing.
 7. `src/features/report-ordering/`
-   Report Centre contracts, Gateway client, source-safe configuration model, workflow state, and
-   business-facing components.
+   Report Centre contracts, Gateway client, source-safe configuration model, exhaustive screen-state
+   projection, workflow state, and business-facing components.
 8. `src/features/advisor-book/`
    Own-book contracts, fail-closed BFF authority, URL-persisted source filters, reusable loading
    state, business presentation, dedicated landing workspace, and task-preserving portfolio
