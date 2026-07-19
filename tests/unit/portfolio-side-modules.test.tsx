@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PortfolioContextModule from "../../src/apps/portfolio/modules/portfolio-context/portfolio-context-module";
@@ -160,5 +160,48 @@ describe("portfolio side rail modules", () => {
       "href",
       "/workbench"
     );
+  });
+
+  it("replaces and cancels copy-status timers before unmount", async () => {
+    vi.useFakeTimers();
+    try {
+      const setTimeoutSpy = vi.spyOn(window, "setTimeout");
+      const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, { clipboard: { writeText } });
+      const { unmount } = render(
+        <PortfolioWorkspaceSideRail
+          workspace={buildPortfolioWorkspace()}
+          context={buildPortfolioWorkspaceContext()}
+          exceptions={[]}
+          actions={[]}
+          showDetailFootnote={false}
+          onOpenException={vi.fn()}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
+      await act(async () => Promise.resolve());
+      const firstResetTimerIndex = setTimeoutSpy.mock.calls.findLastIndex(
+        ([, delay]) => delay === 1600,
+      );
+      expect(firstResetTimerIndex).toBeGreaterThanOrEqual(0);
+      const firstResetTimerId = setTimeoutSpy.mock.results[firstResetTimerIndex].value;
+
+      fireEvent.click(screen.getByRole("button", { name: "Copy Client" }));
+      await act(async () => Promise.resolve());
+      const secondResetTimerIndex = setTimeoutSpy.mock.calls.findLastIndex(
+        ([, delay]) => delay === 1600,
+      );
+      expect(secondResetTimerIndex).toBeGreaterThan(firstResetTimerIndex);
+      const secondResetTimerId = setTimeoutSpy.mock.results[secondResetTimerIndex].value;
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(firstResetTimerId);
+
+      unmount();
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(secondResetTimerId);
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
   });
 });
