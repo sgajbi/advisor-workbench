@@ -8,3 +8,8 @@
 !tsconfig.json
 !src/
 !src/**
+!scripts/
+scripts/*
+!scripts/runtime/
+scripts/runtime/*
+!scripts/runtime/workbench-healthcheck.mjs

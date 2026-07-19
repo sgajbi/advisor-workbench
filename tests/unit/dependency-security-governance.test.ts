@@ -66,10 +66,35 @@ describe("dependency security governance", () => {
     expect(dockerignore).toContain("!package.json");
     expect(dockerignore).toContain("!package-lock.json");
     expect(dockerignore).toContain("!src/**");
+    expect(dockerignore).toContain("!scripts/runtime/workbench-healthcheck.mjs");
     expect(dockerignore).not.toContain("!.env");
     expect(dockerignore).not.toContain("!output");
     expect(ciCompose).toContain("target: ci-base");
     expect(ciCompose).not.toContain("node:22-alpine");
+  });
+
+  it("keeps runtime health dependency-free and owned by the production image", () => {
+    const dockerfile = readRepositoryFile("Dockerfile");
+    const compose = readRepositoryFile("docker-compose.yml");
+    const healthcheck = readRepositoryFile(
+      "scripts",
+      "runtime",
+      "workbench-healthcheck.mjs",
+    );
+
+    expect(dockerfile).toContain(
+      "COPY --chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs",
+    );
+    expect(dockerfile).toContain(
+      'HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=5 CMD ["node", "healthcheck.mjs"]',
+    );
+    expect(compose).not.toContain("healthcheck:");
+    expect(compose).not.toContain("wget");
+    expect(compose).not.toContain("curl");
+    expect(healthcheck).toContain('import http from "node:http"');
+    expect(healthcheck).toContain('host: "127.0.0.1"');
+    expect(healthcheck).toContain("statusCode < 200 || statusCode >= 400");
+    expect(healthcheck).not.toContain("fetch(");
   });
 
   it("pins the known-safe image scanner and publishes an SBOM in protected lanes", () => {
