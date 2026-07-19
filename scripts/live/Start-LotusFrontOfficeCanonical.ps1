@@ -67,18 +67,27 @@ if ($RequireMainlineSources) {
   if ($localAppSet.Count -gt 0) {
     throw "RequireMainlineSources cannot be combined with LocalApps; local-app evidence is branch-local by design."
   }
+}
+
+function Invoke-MainlineSourceProvenancePreflight {
   $mainlineProvenanceRunId = [guid]::NewGuid().ToString("N")
   $mainlineProvenanceRoot = Join-Path `
     ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::LocalApplicationData)) `
     "Lotus\\canonical-front-office\\mainline-source-provenance\\$mainlineProvenanceRunId"
   New-Item -ItemType Directory -Path $mainlineProvenanceRoot -Force | Out-Null
-  $ideaCapacityEvidenceRoot = $mainlineProvenanceRoot
-  $provenanceScript = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
-  $mainlineSourcePreflightPath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance.json"
-  $mainlineSourceRuntimePath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance-runtime.json"
-  & node $provenanceScript --projects-root $ProjectsRoot --output $mainlineSourcePreflightPath
+  $scriptPath = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
+  $preflightPath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance.json"
+  $runtimePath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance-runtime.json"
+  & node $scriptPath --projects-root $ProjectsRoot --output $preflightPath
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical mainline source provenance preflight failed. No Docker build, seed, or validation was started."
+  }
+
+  return [ordered]@{
+    EvidenceRoot = $mainlineProvenanceRoot
+    ScriptPath = $scriptPath
+    PreflightPath = $preflightPath
+    RuntimePath = $runtimePath
   }
 }
 
@@ -679,6 +688,13 @@ function Invoke-CanonicalIdeaCapacitySeed {
 }
 
 Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly
+if ($RequireMainlineSources) {
+  $mainlineProvenance = Invoke-MainlineSourceProvenancePreflight
+  $ideaCapacityEvidenceRoot = $mainlineProvenance.EvidenceRoot
+  $provenanceScript = $mainlineProvenance.ScriptPath
+  $mainlineSourcePreflightPath = $mainlineProvenance.PreflightPath
+  $mainlineSourceRuntimePath = $mainlineProvenance.RuntimePath
+}
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
