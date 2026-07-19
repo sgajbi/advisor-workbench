@@ -874,6 +874,79 @@ Repo wiki source changes are required because the supported reporting route, int
 and unsupported operator controls changed. Publish `wiki/` only after the implementation reaches
 `main`, then run strict parity verification.
 
+### Slice 2 — consistent Report Centre readiness
+
+Issue #482 hardens the existing Report Centre so its setup workspace and readiness rail express one
+business state. The slice does not add a report family, ordering scope, delivery channel, or source
+contract.
+
+#### Interaction research
+
+Research was reviewed on 2026-07-19 against the implemented Gateway catalogue and ordering flow:
+
+1. [Carbon loading guidance](https://carbondesignsystem.com/components/loading/usage/) says loading
+   feedback should explain the activity in progress and should not remain after the activity ends.
+   The Report Centre therefore derives both visible regions from the same catalogue state.
+2. [Carbon status-indicator guidance](https://carbondesignsystem.com/patterns/status-indicator-pattern/)
+   recommends consistent, concise labels and restrained semantic color. The readiness rail now uses
+   business statuses such as `Restricted`, `Unavailable`, `Accepted`, and `Not accepted` instead of
+   interpreting component-local booleans.
+3. [Carbon empty-state guidance](https://carbondesignsystem.com/patterns/empty-states-pattern/)
+   separates unavailable resources from first-use or no-result states and recommends a useful next
+   action only when one exists. Source failures and access restrictions retain a real catalogue
+   retry; a genuinely empty approved catalogue does not expose a dead-end ordering action.
+4. [SAP Report Center tools](https://help.sap.com/docs/successfactors-platform/report-center/report-center-tools)
+   and [report scheduling guidance](https://help.sap.com/docs/SAP_SUCCESSFACTORS_PLATFORM/6ca0eee0540248b2b3ba91eaa1f18423/a1e6de81a25e40f183c35e0f5aaa034c.html)
+   distinguish report creation, execution, scheduling, and distribution as separate workflow
+   capabilities. Lotus therefore keeps request acceptance separate from archive and client release,
+   and does not imply unsupported scheduling or distribution.
+5. [WCAG status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important changes to be programmatically determinable without moving focus. Readiness
+   changes use a polite status region, submission rejection uses an alert, and the region excludes
+   interactive controls to avoid verbose or repeated announcements.
+
+#### Adopted decisions
+
+1. Build one pure, typed screen-state projection from catalogue, configuration, review, and
+   submission truth, and make both the workspace and readiness rail consume it.
+2. Make loading, permission restriction, source failure, and an empty approved catalogue terminal
+   across both regions; hide request summaries and review or submit actions in those states.
+3. Retain a real source retry for catalogue failure or restriction and prove that it issues another
+   catalogue request.
+4. Preserve workflow-managed report evidence even when no directly orderable report family exists;
+   only show the empty state when neither kind is available.
+5. Keep a reviewed configuration after submission rejection and offer an explicit
+   `Retry Report Request` action; disable review and submit actions while submission is active.
+6. Treat request acceptance as an end state for the ordering action while continuing to state that
+   report data, archive, client delivery, and communication are separate.
+
+#### Rejected decisions
+
+1. Do not present a progress stepper that implies archive, document creation, approval, or client
+   delivery stages unsupported by the current contract.
+2. Do not use generic labels such as `Review` when the source truth is restricted, unavailable,
+   empty, submitting, or accepted.
+3. Do not remove the dense readiness rail; it remains the decision summary and client-use boundary
+   for a valid configuration.
+4. Do not add recipients, email, download, scheduling, bulk ordering, or client-delivery controls
+   without Gateway-backed eligibility and commands.
+5. Do not display raw source reason codes or technical service states as the primary status.
+
+#### Validation and publication decision
+
+1. Thirty-six focused projection, workspace, workflow, and view-model tests pass, including
+   loading, permission, failure and real retry, empty, workflow-managed-only, reviewed, submitting,
+   accepted, and not-accepted behavior.
+2. Lint and TypeScript validation pass. Full repository, responsive production-browser, protected
+   CI, and exact-main evidence remain required before issue closure.
+3. No wiki source change is required: this slice corrects state consistency and accessibility for
+   the already documented portfolio-scoped reporting capability without changing routes,
+   integrations, supported report families, operator commands, or lifecycle boundaries. Repository
+   context and review-ledger evidence carry the reusable implementation rule.
+4. No Lotus skill change is required. Existing frontend governance already requires aggregate and
+   detail state integrity, honest recovery, accessibility, and source-backed controls; the
+   deterministic prevention belongs in the repository projection, tests, and local context.
+
 ## Portfolio Reporting Source Posture
 
 ### Business job
