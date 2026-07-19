@@ -342,7 +342,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByLabelText("Return series context")).not.toBeInTheDocument();
     expect(lastChartOption?.tooltip).toMatchObject({
       trigger: "axis",
-      triggerOn: "mousemove|click",
+      triggerOn: "mousemove|click|mousewheel",
       appendToBody: true,
       renderMode: "html",
       className: "performance-return-path-tooltip",

@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import ReactECharts from "echarts-for-react";
-import { SectionBlock, Text } from "@/design-system";
+import { SectionBlock, Text, WorkbenchECharts } from "@/design-system";
 
 type Props = {
   period: string;
@@ -44,7 +43,7 @@ export default function PerformanceSnapshot(props: Props) {
       <Text variant="secondary" className="muted">
         Benchmark: {props.benchmarkReturnPct ?? "N/A"}
       </Text>
-      <ReactECharts option={option} style={{ height: 240 }} notMerge lazyUpdate />
+      <WorkbenchECharts option={option} style={{ height: 240 }} notMerge lazyUpdate />
     </SectionBlock>
   );
 }

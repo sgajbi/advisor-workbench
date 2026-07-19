@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
-import ReactECharts from "echarts-for-react";
 
 import {
   AnalyticsTable,
   ScreenStatePanel,
   WorkbenchChartShell,
+  WorkbenchECharts,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
@@ -360,7 +360,7 @@ export default function PerformanceAttributionTrendPanel({
             role="img"
             aria-label="Attribution over time chart"
           >
-            <ReactECharts
+            <WorkbenchECharts
               option={chartOption}
               style={{ width: "100%", height: "344px" }}
               opts={{ renderer: "svg" }}

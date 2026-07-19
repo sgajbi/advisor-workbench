@@ -35,7 +35,13 @@ concurrency group.
 ## Local command mapping
 
 - `make check`
-  lint, typecheck, coverage-backed test gate, build
+  dependency security, lint, typecheck, coverage-backed test gate, build
+- `make security`
+  fails on any high or critical advisory in the complete runtime and engineering toolchain, and on
+  any moderate-or-higher advisory in the browser-delivered production dependency graph. The gate
+  runs in the Feature, PR Merge, and Main Releasability lanes. A future exception must be
+  time-bounded and documented against a GitHub issue; do not weaken the severity thresholds or use
+  `npm audit fix --force` as an unreviewed dependency migration.
 - `make test-e2e`
   Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
   production build, allows up to four minutes for build and server readiness, and owns the direct
@@ -62,8 +68,9 @@ concurrency group.
 - `npm run live:evidence`
   post-validation observability, logging, metrics, API, and dashboard evidence capture
 - `npm audit --json`
-  dependency advisory posture for the Workbench runtime and test toolchain; canonical proof logs
-  should not carry unresolved critical or high dependency findings
+  detailed dependency advisory evidence for the Workbench runtime and test toolchain; the enforced
+  `make security` policy additionally keeps the production graph free of moderate-or-higher
+  findings
 
 ## What the gates protect
 

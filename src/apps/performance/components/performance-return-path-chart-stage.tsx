@@ -1,9 +1,8 @@
 "use client";
 
-import ReactECharts from "echarts-for-react";
 import { Box } from "@mui/material";
 
-import { Text } from "@/design-system";
+import { Text, WorkbenchECharts } from "@/design-system";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { EChartsOption } from "echarts";
 
@@ -46,7 +45,7 @@ export default function PerformanceReturnPathChartStage({
             aria-hidden="true"
             style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
           >
-            <ReactECharts
+            <WorkbenchECharts
               option={option}
               style={{ width: "1px", height: "1px" }}
               opts={{ renderer: "svg" }}
@@ -62,7 +61,7 @@ export default function PerformanceReturnPathChartStage({
           </div>
           <div className="performance-return-path-chart-main">
             <PerformanceReturnPathLegend items={legendItems} />
-            <ReactECharts
+            <WorkbenchECharts
               option={option}
               style={{ width: "100%", height: "448px" }}
               opts={{ renderer: "svg" }}

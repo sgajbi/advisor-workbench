@@ -400,7 +400,7 @@ export function buildReturnPathChartOption({
     },
     tooltip: {
       trigger: "axis",
-      triggerOn: "mousemove|click",
+      triggerOn: "mousemove|click|mousewheel",
       showDelay: 0,
       hideDelay: 40,
       enterable: false,
