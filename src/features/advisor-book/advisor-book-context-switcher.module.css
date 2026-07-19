@@ -2,9 +2,9 @@
   display: grid;
   gap: 6px;
   padding: 10px;
-  border: 1px solid var(--lotus-border-subtle, #dde2e8);
-  border-radius: 8px;
-  background: rgba(247, 249, 251, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .header {
@@ -15,7 +15,7 @@
 }
 
 .header span {
-  color: var(--lotus-text-muted, #66717f);
+  color: #c9d0df;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -23,7 +23,7 @@
 }
 
 .header a {
-  color: var(--lotus-color-action, #285b86);
+  color: #fcdc9a;
   font-size: 0.75rem;
   font-weight: 650;
   text-decoration: none;
@@ -34,21 +34,22 @@
 }
 
 .disclosure {
-  border: 1px solid var(--lotus-border-default, #cbd2da);
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .summary {
   min-height: 36px;
   padding: 8px 10px;
+  color: #f6f7f9;
   cursor: pointer;
   font-size: 0.8125rem;
   font-weight: 650;
 }
 
 .summary:focus-visible {
-  outline: 2px solid rgba(49, 93, 138, 0.7);
+  outline: 2px solid #fcdc9a;
   outline-offset: 2px;
 }
 
@@ -60,6 +61,8 @@
   overflow: auto;
   list-style: none;
   border-top: 1px solid var(--lotus-border-subtle, #dde2e8);
+  background: #ffffff;
+  color: #191c1e;
 }
 
 .options a,
@@ -89,10 +92,12 @@
   margin: 0;
   padding: 10px;
   color: var(--lotus-text-muted, #66717f);
+  background: #ffffff;
   font-size: 0.75rem;
 }
 
 .support {
+  display: none;
   margin: 0;
   color: var(--lotus-text-muted, #66717f);
   font-size: 0.7rem;
@@ -101,4 +106,52 @@
 
 .warning {
   color: #8a5a14;
+}
+
+.compactContextLabel,
+.compactChangeLabel {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .switcher {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    padding: 6px 8px;
+  }
+
+  .header span {
+    font-size: 0.625rem;
+  }
+
+  .fullContextLabel,
+  .fullChangeLabel {
+    display: none;
+  }
+
+  .compactContextLabel,
+  .compactChangeLabel {
+    display: inline;
+  }
+
+  .summary {
+    min-height: 30px;
+    padding: 5px 9px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .switcher {
+    padding: 2px 4px;
+    border: 0;
+    background: transparent;
+  }
+
+  .summary {
+    min-height: 28px;
+    padding: 4px 8px;
+  }
 }

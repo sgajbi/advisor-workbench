@@ -35,7 +35,7 @@ vi.mock("next/link", () => ({
 }));
 
 function openPortfolioContextOptions() {
-  const summary = screen.getByText("Change portfolio");
+  const summary = screen.getByLabelText("Change portfolio");
   const disclosure = summary.closest("details");
 
   if (!disclosure) {
@@ -267,7 +267,7 @@ describe("PortfolioScreenRail", () => {
       />,
     );
 
-    expect(screen.getByText("Change portfolio")).toHaveFocus();
+    expect(screen.getByLabelText("Change portfolio")).toHaveFocus();
     expect(window.sessionStorage.getItem("lotus:advisor-book-context-focus")).toBeNull();
   });
 });

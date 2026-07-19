@@ -2893,9 +2893,10 @@ a:hover {
   align-self: start;
 }
 
-.portfolio-screen-rail {
+.section-card.portfolio-screen-rail {
   display: grid;
   gap: 0;
+  padding: 0;
   overflow: hidden;
   border: 1px solid #cfd6df;
   border-radius: 6px;
@@ -13909,8 +13910,17 @@ a:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .workstation-shell-both.workstation-shell-side-density-comfortable {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .workstation-shell-rail-only {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workstation-shell-rail,
+  .workstation-shell-side.workstation-shell-side-comfortable {
+    max-width: none;
   }
 
   .workstation-shell-side {
@@ -15676,14 +15686,97 @@ a:hover {
   box-shadow: none;
 }
 
+.app-page-shell .portfolio-screen-rail-header {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  background: #131b2e;
+}
+
+.app-page-shell .portfolio-screen-rail-header span,
+.app-page-shell .portfolio-screen-rail-header strong,
+.app-page-shell .portfolio-screen-rail-link span {
+  color: #f6f7f9;
+}
+
+.app-page-shell .portfolio-screen-rail-link small {
+  color: #c9d0df;
+}
+
 .app-page-shell .portfolio-screen-rail-link {
+  min-height: 40px;
+  padding: 7px 9px;
   border-radius: 4px;
 }
 
+.app-page-shell .portfolio-screen-rail-link:hover,
+.app-page-shell .portfolio-screen-rail-link:focus-visible {
+  border-color: rgba(252, 220, 154, 0.34);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .app-page-shell .portfolio-screen-rail-link-active {
+  border-color: rgba(252, 220, 154, 0.48);
   border-left: 2px solid #fcdc9a;
   color: #fcdc9a;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.app-page-shell .portfolio-screen-rail-link-active span {
+  color: #fcdc9a;
+}
+
+@media (max-width: 1200px) {
+  .app-page-shell .portfolio-screen-rail-header {
+    grid-template-columns: minmax(180px, 0.8fr) minmax(130px, 0.45fr) minmax(240px, 1fr);
+    grid-template-areas: "portfolio-context workflow-context current-view";
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+  }
+
+  .app-page-shell .portfolio-screen-rail-header > :first-child {
+    grid-area: portfolio-context;
+  }
+
+  .app-page-shell .portfolio-screen-rail-context {
+    grid-area: workflow-context;
+    padding-inline: 4px;
+  }
+
+  .app-page-shell .portfolio-screen-rail-disclosure {
+    grid-area: current-view;
+    min-height: 50px;
+    padding: 6px 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-page-shell .workbench-page-container {
+    padding: 16px;
+  }
+
+  .app-page-shell .portfolio-screen-rail-header {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "portfolio-context"
+      "workflow-context"
+      "current-view";
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .app-page-shell .portfolio-screen-rail-context {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+    justify-items: start;
+    padding-inline: 4px;
+    text-align: left;
+  }
+
+  .app-page-shell .portfolio-screen-rail-context strong {
+    max-width: 100%;
+    font-size: 11px;
+  }
 }
 
 .portfolio-income-activity-workspace {

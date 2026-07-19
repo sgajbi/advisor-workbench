@@ -138,7 +138,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
       .toBeFalsy();
-    expect(screen.getByText("Review Workflow")).toBeInTheDocument();
+    expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
     const workbenchScreenNav = screen.getByRole("navigation", {
       name: "Workbench screen navigation",
     });
