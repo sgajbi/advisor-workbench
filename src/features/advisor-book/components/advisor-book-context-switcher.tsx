@@ -21,7 +21,7 @@ export default function AdvisorBookContextSwitcher({
   const [expanded, setExpanded] = useState(false);
   const summaryRef = useRef<HTMLElement>(null);
   const activeSearchParams = useSearchParams();
-  const locationSearch = activeSearchParams.toString();
+  const locationSearch = activeSearchParams?.toString() ?? "";
 
   useEffect(() => {
     if (window.sessionStorage.getItem(RESTORE_FOCUS_KEY) === "true") {
