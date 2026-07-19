@@ -44,13 +44,6 @@ const DEFAULT_IDEA_CALLER_CONTEXT = {
   portfolioIds: "PB_SG_GLOBAL_BAL_001",
 } as const;
 
-const IDEA_AUTHORITY_HEADERS = [
-  "X-Caller-Subject",
-  "X-Caller-Roles",
-  "X-Caller-Capabilities",
-  "X-Caller-Portfolio-Ids",
-] as const;
-
 export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Actor-Id",
   "X-Caller-Application",
@@ -173,7 +166,7 @@ export function applyIdeaRouteCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of IDEA_AUTHORITY_HEADERS) {
+  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
     headers.delete(headerName);
   }
 
@@ -189,11 +182,14 @@ export function applyIdeaRouteCallerContextHeaders(
       : { status: "rejected", reason: authorityMode };
   }
 
-  headers.set(
-    "X-Caller-Subject",
-    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.subject]?.trim() ||
-      DEFAULT_IDEA_CALLER_CONTEXT.subject,
-  );
+  const defaultContext = resolveDefaultCallerContext();
+  headers.set("X-Actor-Id", defaultContext.actorId);
+  headers.set("X-Caller-Application", defaultContext.callerApplication);
+  headers.set("X-Tenant-Id", defaultContext.tenantId);
+  headers.set("X-Region", defaultContext.region);
+  headers.set("X-Booking-Center-Code", defaultContext.bookingCenterCode);
+  headers.set("X-Role", defaultContext.role);
+  headers.set("X-Caller-Subject", configuredIdeaCallerSubject());
   headers.set(
     "X-Caller-Roles",
     process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.roles]?.trim() ||
@@ -207,6 +203,13 @@ export function applyIdeaRouteCallerContextHeaders(
   );
 
   return { status: "applied", mode: authorityMode };
+}
+
+function configuredIdeaCallerSubject(): string {
+  return (
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.subject]?.trim() ||
+    DEFAULT_IDEA_CALLER_CONTEXT.subject
+  );
 }
 
 export function applyReportOrderingRouteCallerContextHeaders(
