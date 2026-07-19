@@ -1,5 +1,17 @@
 # Getting Started
 
+Current scope: this page covers the supported Workbench installation, local UI development, and
+governed front-office runtime entry points. Local startup proves that the application can run; it
+does not by itself certify populated source data, integrated panel support, or demo readiness.
+
+## Quick Decision Map
+
+| If you need to | Start with | Evidence boundary |
+| --- | --- | --- |
+| Install dependencies or work on isolated UI code | `make install`, then `make run` | Local development only |
+| Validate Workbench with the governed Lotus services | `npm run live:stack:up`, then `npm run live:validate` | Integrated source and panel checks must pass |
+| Capture support or demo evidence | Complete canonical validation before `npm run live:evidence` | Diagnostic output is not promoted as demo proof |
+
 ## Install
 
 ```bash

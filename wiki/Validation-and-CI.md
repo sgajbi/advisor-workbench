@@ -1,5 +1,9 @@
 # Validation and CI
 
+Current evidence posture: this page maps implemented Workbench checks to the claims they can
+support. PR checks prove merge readiness for the exact branch head; canonical and mainline lanes
+remain separate evidence classes and must not be inferred from a green local test or screenshot.
+
 ## Evidence Map
 
 Validation depth must match the claim being made. A narrow unit test can prove a local contract,
