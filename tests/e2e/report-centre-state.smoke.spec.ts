@@ -5,8 +5,15 @@ import {
   startReportCentreFixtureGateway,
   type ReportCentreFixtureGateway,
 } from "./report-centre-fixture-gateway";
+import { resolveReportCentreFixtureScenario } from "./report-centre-fixture-scenario";
 
 test.describe.configure({ mode: "default" });
+
+const fixtureScenario = resolveReportCentreFixtureScenario(process.env);
+test.skip(
+  !fixtureScenario.enabled,
+  "Report Centre state-matrix proof runs through its owned scenario command.",
+);
 
 let fixtureGateway: ReportCentreFixtureGateway | null = null;
 
@@ -65,15 +72,10 @@ async function computedContrastRatio(
 }
 
 test.beforeAll(async () => {
-  const port = Number(process.env.REPORT_CENTRE_E2E_FIXTURE_PORT ?? "18101");
-  if (
-    process.env.BFF_BASE_URL !== `http://127.0.0.1:${port}` ||
-    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY !== "report-centre" ||
-    process.env.REPORT_CENTRE_E2E_FIXTURE !== "state-matrix"
-  ) {
-    throw new Error(`Report Centre fixture proof requires the owned gateway on port ${port}.`);
+  if (!fixtureScenario.enabled) {
+    return;
   }
-  fixtureGateway = await startReportCentreFixtureGateway({ port });
+  fixtureGateway = await startReportCentreFixtureGateway({ port: fixtureScenario.port });
 });
 
 test.afterAll(async () => {
