@@ -334,6 +334,11 @@ Repo-native gate mapping:
 - `npm run live:validate:construction`
   focused browser proof for RFC-0039 construction alternatives when the construction lab changes
 
+The production image owns its readiness contract. `docker compose up` inherits a dependency-free
+Node probe baked into the immutable runtime image, so health validation remains available after npm,
+Corepack, Yarn, and other development tools are removed. Do not add `wget`, `curl`, or a second
+Compose-only probe to the runtime solely for health checks.
+
 ## Product Contract Notes
 
 Important current product and route truths:

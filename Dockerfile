@@ -21,6 +21,7 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 COPY --chown=node:node --from=builder /app/.next/standalone ./
 COPY --chown=node:node --from=builder /app/.next/static ./.next/static
+COPY --chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs
 RUN rm -rf \
     /usr/local/lib/node_modules/npm \
     /usr/local/lib/node_modules/corepack \
@@ -32,4 +33,5 @@ RUN rm -rf \
     /opt/yarn-v1.22.22
 USER node
 EXPOSE 3000
+HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=5 CMD ["node", "healthcheck.mjs"]
 CMD ["node", "server.js"]

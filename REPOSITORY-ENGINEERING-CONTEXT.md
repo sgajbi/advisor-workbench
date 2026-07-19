@@ -302,6 +302,10 @@ Container runtime rules:
    while the canonical Lotus stack is running, and masks workstation `.env.local` with the tracked
    empty CI fixture. Do not replace these controls with per-test timeout inflation, disabled
    assertions, `passWithNoTests`, global serialization, or developer-local environment values.
+8. runtime health is owned by the production image through the dependency-free Node probe copied
+   from `scripts/runtime/workbench-healthcheck.mjs`. Compose must inherit that image health contract;
+   do not install `wget`, `curl`, a package manager, or another diagnostic tool solely to make a
+   Compose-only probe pass.
 
 ## Local API Contract Evidence
 

@@ -85,6 +85,8 @@ concurrency group.
 - immutable official Node LTS/glibc runtime provenance, unprivileged execution, production-only
   standalone traced runtime dependencies, no runtime package-manager toolchain, fixable
   high/critical image enforcement, and downloadable CycloneDX SBOM evidence
+- image-owned, dependency-free Node readiness that `docker compose` inherits after development
+  tools and package managers are removed; no runtime `wget` or `curl` dependency is required
 - allowlisted production build context that excludes local environment values, generated evidence,
   test assets, documentation, caches, and logs from the image builder
 - full-SHA scanner-action pinning and an explicitly safe Trivy binary version; mutable scanner tags

@@ -1457,6 +1457,9 @@ system, Node runtime, installed production packages, or scanner itself.
 7. Pin the scanner action to the verified full 0.35.0 commit and request known-safe Trivy 0.69.3
    explicitly. Do not trust mutable tags, `master`, `latest`, or the compromised 0.69.4–0.69.6
    artifacts.
+8. Own readiness in the production image with a dependency-free Node probe. Let Compose inherit the
+   same health contract so removing package managers and distribution utilities cannot make a
+   successfully started service appear unhealthy.
 
 ### Rejected decisions
 
@@ -1468,6 +1471,8 @@ system, Node runtime, installed production packages, or scanner itself.
 5. Treating an SBOM as a vulnerability gate, or treating a scanner table as sufficient provenance
    without a machine-readable inventory.
 6. Suppressing fixable high/critical findings without a time-bounded GitHub issue and explicit owner.
+7. Installing `wget`, `curl`, or another runtime utility solely to preserve a Compose-only health
+   command after moving to a minimal Debian standalone image.
 
 ### Rollback and refresh posture
 
