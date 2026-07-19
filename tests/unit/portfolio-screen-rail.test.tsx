@@ -9,6 +9,7 @@ const useAdvisorBookMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => usePathnameMock(),
+  useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 
 vi.mock("@/features/advisor-book/use-advisor-book", () => ({
@@ -189,6 +190,48 @@ describe("PortfolioScreenRail", () => {
     );
     fireEvent.click(option);
     expect(window.sessionStorage.getItem("lotus:advisor-book-context-focus")).toBe("true");
+  });
+
+  it("refreshes portfolio links when the active task query changes", () => {
+    usePathnameMock.mockReturnValue("/performance");
+    window.history.replaceState(
+      {},
+      "",
+      "/performance?mode=summary&period=YTD&portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+    const { rerender } = render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="performance"
+      />,
+    );
+    openPortfolioContextOptions();
+
+    expect(
+      screen.getByRole("link", { name: /Income Mandate CIF_SG_002/i }),
+    ).toHaveAttribute(
+      "href",
+      "/performance?mode=summary&period=YTD&portfolioId=PB_SG_INCOME_002",
+    );
+
+    window.history.replaceState(
+      {},
+      "",
+      "/performance?mode=risk&period=YTD&portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+    rerender(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="performance"
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: /Income Mandate CIF_SG_002/i }),
+    ).toHaveAttribute(
+      "href",
+      "/performance?mode=risk&period=YTD&portfolioId=PB_SG_INCOME_002",
+    );
   });
 
   it("loads own-book options only when the advisor opens portfolio context", () => {
