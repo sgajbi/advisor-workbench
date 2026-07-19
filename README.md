@@ -200,6 +200,9 @@ The Workbench BFF adds governed caller-context headers before proxying to Gatewa
 queue, detail, and action routes additionally replace browser-supplied subject, role, capability,
 and portfolio-entitlement headers with BFF-owned authority. Advisor-book reads likewise discard
 browser-supplied identity, scope, role, and capability headers and apply only BFF-owned authority.
+Advisor Cockpit reads and acknowledgements also discard browser identity and entitlement claims.
+The BFF derives the advisor from its configured actor, checks the selected portfolio against its
+server-side entitlement, and projects one route-specific read or acknowledgement capability.
 Until an authenticated-principal resolver is delivered, those authorities are enabled only when
 `LOTUS_ENVIRONMENT` explicitly declares
 `dev`, `development`, `local`, or `test`. The canonical local runtime makes that development posture explicit:
@@ -226,6 +229,14 @@ WORKBENCH_ADVISOR_BOOK_REGION=APAC
 WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE=Singapore
 WORKBENCH_ADVISOR_BOOK_ROLE=ADVISOR
 NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE=2026-04-10
+WORKBENCH_ADVISOR_COCKPIT_AUTH_MODE=development_configured
+WORKBENCH_ADVISOR_COCKPIT_ACTOR_ID=advisor_sg_001
+WORKBENCH_ADVISOR_COCKPIT_TENANT_ID=tenant-sg
+WORKBENCH_ADVISOR_COCKPIT_REGION=APAC
+WORKBENCH_ADVISOR_COCKPIT_BOOKING_CENTER_CODE=SG
+WORKBENCH_ADVISOR_COCKPIT_LEGAL_ENTITY_CODE=SGPB
+WORKBENCH_ADVISOR_COCKPIT_PRINCIPAL_STATUS=ACTIVE
+WORKBENCH_ADVISOR_COCKPIT_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MANDATE_ID=MANDATE_PB_SG_GLOBAL_BAL_001
 WORKBENCH_DPM_MODEL_PORTFOLIO_ID=MODEL_PB_SG_GLOBAL_BAL_DPM
 WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
@@ -234,13 +245,23 @@ WORKBENCH_DPM_SOURCE_AS_OF_DATE=2026-04-10
 
 `WORKBENCH_IDEA_AUTH_MODE=development_configured` is rejected outside those development
 environments. An unset environment, `uat`, production, or any other environment requires the future
-`authenticated_session` resolver and return a no-store `401` before contacting Gateway until it is
+`authenticated_session` resolver and returns a no-store `401` before contacting Gateway until it is
 available. Browser headers never grant Idea authority. The eventual session and token-claims
 contract remains tracked in [lotus-platform#563](https://github.com/sgajbi/lotus-platform/issues/563)
 and Workbench BFF resolution in [lotus-workbench#436](https://github.com/sgajbi/lotus-workbench/issues/436).
 Only the explicit Idea queue, candidate-detail, review-action, feedback, and conversion-intent
 routes are allowlisted through the BFF; any other `/api/v1/ideas/*` route returns `404` before
 Gateway is contacted.
+
+The Advisor Cockpit fixture follows the same development-only rule. The browser sends only the
+selected `portfolio_id`, paging, action version, acknowledgement note, and idempotency key. It
+cannot select the advisor, role, tenant, legal entity, principal status, capability, or portfolio
+entitlement. The BFF allows action, action-detail, preparation, snapshot, and supportability reads
+with `advisory.advisor_cockpit.read`; acknowledgement alone receives
+`advisory.advisor_cockpit.acknowledge`. Cross-portfolio requests and any authority supplied in the
+query or acknowledgement body fail before Gateway. Production session resolution remains tracked
+by [lotus-workbench#436](https://github.com/sgajbi/lotus-workbench/issues/436) and
+[lotus-platform#563](https://github.com/sgajbi/lotus-platform/issues/563).
 
 Canonical front-office runtime:
 

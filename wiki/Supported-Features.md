@@ -89,7 +89,11 @@ Implemented:
    validation instead of posting a conflicting acknowledgement,
 7. shows explicit unavailable and empty states without fallback worklists,
 8. participates in canonical Workbench proof as `advisory.advisor_cockpit` with API proof and a
-   governed screenshot.
+   governed screenshot,
+9. uses a dedicated BFF authority adapter that derives the development advisor from its server-side
+   actor, authorizes the selected portfolio against configured entitlement, strips browser
+   authority, and supplies only the least-privilege read or acknowledgement capability for
+   allowlisted routes.
 
 Not supported in Workbench:
 
@@ -97,7 +101,10 @@ Not supported in Workbench:
 2. policy approval, waiver, sign-off, or blocker clearing,
 3. client-ready publication,
 4. client communication, OMS, order generation, execution, fills, or settlement,
-5. direct calls to `lotus-advise`.
+5. direct calls to `lotus-advise`,
+6. browser-selected advisor, role, capability, principal posture, legal entity, or portfolio
+   entitlement,
+7. production access before the authenticated-session principal contract is implemented.
 
 ## Bank Demo Proof
 

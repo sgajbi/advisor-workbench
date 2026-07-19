@@ -148,7 +148,13 @@ Current repository posture:
     so future screens can evolve like Manage modes instead of page-local route fragments.
     `/recommendations?mode=cockpit` renders Advise-owned cockpit action items, source evidence,
     supportability, meeting-preparation packets, and bounded advisor acknowledgements through
-    Gateway advisor-cockpit endpoints only. It must not reconstruct advisory policy semantics,
+    Gateway advisor-cockpit endpoints only. Its BFF authority adapter strips browser-supplied
+    identity, role, capability, tenant, legal-entity, principal-status, and entitlement headers;
+    rejects query/body authority; derives the development advisor from the server-side actor;
+    verifies the selected portfolio against configured entitlement; and emits only the exact read
+    or acknowledgement capability required by the allowlisted route. Non-development requests
+    fail closed until the authenticated principal contract in Workbench #436 and platform #563 is
+    implemented. It must not reconstruct advisory policy semantics,
     clear blockers, infer client-ready release, contact clients, route orders, or call
     `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
     advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,
@@ -236,9 +242,13 @@ Primary areas:
    Own-book contracts, fail-closed BFF authority, URL-persisted source filters, reusable loading
    state, business presentation, dedicated landing workspace, and task-preserving portfolio
    context switching over Gateway `PortfolioManagerBookMembership:v1` evidence.
-9. `tests/`
+9. `src/features/advisor-cockpit/`
+   Reusable route/method allowlist, server-derived development principal, least-privilege
+   capability projection, and selected-portfolio entitlement enforcement for Advisor Cockpit BFF
+   traffic. Browser proposal components do not own advisor identity or role.
+10. `tests/`
    Unit, integration, and Playwright smoke coverage.
-10. `wiki/`
+11. `wiki/`
    canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
 
 ## Runtime And Integration Boundaries
