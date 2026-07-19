@@ -77,13 +77,42 @@ jobs:
           if-no-files-found: warn
 
   docker-build:
-    name: PR Merge Gate / Validate Docker Build
+    name: PR Merge Gate / Docker Build And Security
     needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Build image
         run: docker build -t lotus-workbench:ci-test .
+      - name: Reject fixable high and critical image vulnerabilities
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: lotus-workbench:ci-test
+          version: v0.69.3
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+      - name: Generate production image SBOM
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: lotus-workbench:ci-test
+          version: v0.69.3
+          skip-setup-trivy: true
+          format: cyclonedx
+          output: workbench-image.cdx.json
+          exit-code: "0"
+          ignore-unfixed: false
+          scanners: vuln
+          vuln-type: os,library
+      - name: Upload production image SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: workbench-production-image-sbom
+          path: workbench-image.cdx.json
+          if-no-files-found: error
 
   ci-local-docker:
     name: PR Merge Gate / CI Local Docker Parity

@@ -1409,3 +1409,120 @@ gate, Docker proof, protected CI, and exact-main validation.
 Wiki source changes are required because the repository-native and protected dependency-security
 policy is operator-facing validation truth. Publish `wiki/Validation-and-CI.md` after merge, then
 run strict wiki parity verification.
+
+## Immutable Enterprise Container Runtime And Image Evidence
+
+### Validation job
+
+The production Workbench image must be reproducible, supported, minimally privileged, and auditable.
+A green application build does not prove the identity or vulnerability posture of its operating
+system, Node runtime, installed production packages, or scanner itself.
+
+### Current-practice research
+
+1. The official [Node release schedule](https://github.com/nodejs/Release) classifies Node 22 as
+   Maintenance LTS through 2027-04-30. Maintenance LTS receives critical fixes and security updates;
+   Node 26 remains Current and is not selected for this production line.
+2. The official [Node Docker image guidance](https://github.com/nodejs/docker-node) documents Debian
+   slim as the minimal glibc variant. It says Alpine uses musl, classifies amd64 musl builds as
+   experimental, and says other musl architectures are not tested before release.
+3. Official [Next 15 output guidance](https://nextjs.org/docs/15/app/api-reference/config/next-config-js/output)
+   documents stable output-file tracing and `output: 'standalone'` as the way to deploy only required
+   runtime files and selected dependencies through its generated minimal `server.js`.
+4. Registry inspection resolved official `node:22.23.1-bookworm-slim` to multi-platform digest
+   `sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3`.
+5. Aqua Security advisory [GHSA-69fq-xp46-6x23](https://github.com/aquasecurity/trivy/security/advisories/GHSA-69fq-xp46-6x23)
+   records a March 2026 compromise of Trivy releases, images, setup actions, and mutable action tags.
+   It identifies Trivy 0.69.3 and trivy-action 0.35.0 as known-safe and directs consumers to pin full
+   action commit SHAs.
+6. GitHub verification confirms immutable trivy-action 0.35.0 commit
+   `57a97c7e7821a5776cebc9bb87c984fa69cba8f1` carries a valid signed commit.
+
+### Adopted decisions
+
+1. Keep the mature Node 22 line and move from Alpine/musl to official Debian Bookworm slim/glibc.
+2. Pin the exact Node patch and multi-platform image digest once in the Dockerfile; make production
+   stages and Dockerized CI inherit that shared target.
+3. Use an allowlisted Docker build context containing only package manifests, Next/TypeScript build
+   configuration, and application source. Exclude local environment values and all generated or
+   non-runtime material by default.
+4. Generate stable Next standalone output and copy only its traced runtime plus static assets. Remove
+   npm, Corepack, and Yarn after build, then execute the generated minimal server directly as the
+   unprivileged image-provided `node` user. The first local scan found two fixable HIGH findings in
+   bundled npm, while pruned dependencies still retained Playwright through Next's optional peer and
+   occupied 638 MB; both findings justify the traced deployment boundary.
+5. Build and scan the exact production image in PR and Main Releasability Docker lanes.
+6. Reject fixable high/critical operating-system or library findings and publish a CycloneDX SBOM
+   artifact for every protected run.
+7. Pin the scanner action to the verified full 0.35.0 commit and request known-safe Trivy 0.69.3
+   explicitly. Do not trust mutable tags, `master`, `latest`, or the compromised 0.69.4–0.69.6
+   artifacts.
+
+### Rejected decisions
+
+1. Node Current, beta, release-candidate, distroless, custom runtime, or an unrelated framework
+   migration in this security slice.
+2. Floating `node:22`, `node:22-alpine`, Debian, scanner, action, or latest-version references.
+3. Retaining the experimental musl runtime merely because its compressed image is smaller.
+4. Copying the full development toolchain into production or running the application as root.
+5. Treating an SBOM as a vulnerability gate, or treating a scanner table as sufficient provenance
+   without a machine-readable inventory.
+6. Suppressing fixable high/critical findings without a time-bounded GitHub issue and explicit owner.
+
+### Rollback and refresh posture
+
+Do not roll back to floating Alpine images. If the Debian migration exposes a runtime incompatibility,
+fix the Docker boundary or revert to the prior exact Node 22 patch on an official Debian slim digest,
+then preserve the image scan and SBOM gates. Review the Node patch/digest on a bounded cadence and
+complete an issue-backed LTS migration before Node 22 reaches end-of-life.
+
+### Publication decision
+
+Wiki source changes are required because immutable runtime provenance, image vulnerability
+enforcement, and SBOM artifacts are protected-lane truth. Publish `wiki/Validation-and-CI.md` after
+merge, then run strict wiki parity verification.
+
+## Deterministic Docker Parity Under Shared-Stack Load
+
+### Validation job
+
+Dockerized local CI must provide reproducible Linux parity on the same workstation that may be
+running the governed canonical Lotus stack. Container-visible CPU count is not a safe concurrency
+budget when databases, brokers, analytics services, and front-office services share that host.
+The repository bind mount also must not make developer-local environment values an implicit build
+input.
+
+### Current-practice research
+
+Official [Vitest parallelism guidance](https://v3.vitest.dev/guide/parallelism) says test files run
+in parallel by default and `maxWorkers` governs the number of simultaneous workers. The guidance
+also distinguishes this bounded file parallelism from disabling file parallelism entirely.
+
+### Evidence and adopted decision
+
+One unbounded Docker parity run under shared-stack load passed 302 of 305 files and 1,399 of 1,404
+tests but produced one transient tooltip wait miss and four timeouts across three files. The exact
+three files then passed all 15 tests in 21.07 seconds in the same image and named-volume environment
+once the concurrent full suite ended. Host `make check` passed all 305 files and 1,404 tests.
+
+Set `--maxWorkers=2` only for the Dockerized local lane. This retains file isolation and useful
+parallelism while making resource use explicit and conservative. Keep host and protected CI behavior
+unchanged so their available execution capacity remains independently visible.
+
+Mask `/app/.env.local` with the tracked, intentionally empty `scripts/testing/ci-empty.env` fixture.
+This preserves the productive whole-repository bind mount while making local configuration an
+explicit non-input to container lint, typecheck, tests, and build.
+
+### Rejected decisions
+
+1. Increase individual timeouts for tests that are fast in isolation.
+2. Disable assertions, use `passWithNoTests`, or ignore failed files.
+3. Disable file parallelism globally and hide genuine concurrency behavior.
+4. Derive the limit from host core count, which caused the original oversubscription.
+5. Read the workstation's `.env.local`, copy its values into CI configuration, or delete/rename the
+   developer's file during a validation run.
+
+### Publication decision
+
+Wiki source changes are required because the Docker parity operating envelope is validation truth.
+Publish `wiki/Validation-and-CI.md` after merge, then run strict parity verification.

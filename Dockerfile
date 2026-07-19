@@ -1,20 +1,35 @@
-FROM node:22-alpine AS deps
+ARG NODE_BASE_IMAGE=node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3
+
+FROM ${NODE_BASE_IMAGE} AS ci-base
 WORKDIR /app
+
+FROM ci-base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:22-alpine AS builder
+FROM ci-base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json package-lock.json next-env.d.ts next.config.mjs tsconfig.json ./
+COPY src ./src
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM ci-base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json ./package-lock.json
-COPY --from=deps /app/node_modules ./node_modules
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+COPY --chown=node:node --from=builder /app/.next/standalone ./
+COPY --chown=node:node --from=builder /app/.next/static ./.next/static
+RUN rm -rf \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack \
+    /usr/local/bin/yarn \
+    /usr/local/bin/yarnpkg \
+    /opt/yarn-v1.22.22
+USER node
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

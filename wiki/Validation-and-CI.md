@@ -57,7 +57,10 @@ concurrency group.
   contribution, metric, and evidence postures. Populated-only geometry and live-only timing checks
   are explicitly skipped instead of weakening their preconditions.
 - `make ci-local-docker`
-  Docker parity
+  Docker parity built from the same immutable Node 22 Maintenance LTS Debian Bookworm slim base as
+  the production image; Vitest is capped at two workers so the lane remains deterministic while the
+  governed canonical stack shares the developer workstation, and workstation `.env.local` is masked
+  by a tracked empty read-only fixture
 - `npm run live:validate`
   canonical integrated product validation
 - `npm run live:stack:up:validate`
@@ -79,6 +82,13 @@ concurrency group.
 - Docker parity for production-like runtime assumptions
 - canonical seeded-data validation for integrated product proof
 - dependency posture for browser-delivered code and the Node-based build/test toolchain
+- immutable official Node LTS/glibc runtime provenance, unprivileged execution, production-only
+  standalone traced runtime dependencies, no runtime package-manager toolchain, fixable
+  high/critical image enforcement, and downloadable CycloneDX SBOM evidence
+- allowlisted production build context that excludes local environment values, generated evidence,
+  test assets, documentation, caches, and logs from the image builder
+- full-SHA scanner-action pinning and an explicitly safe Trivy binary version; mutable scanner tags
+  are prohibited because the Trivy ecosystem was compromised in March 2026
 - GitHub Actions JavaScript action runtime posture, using Node 24-capable action majors for
   checkout, setup-node, and artifact upload so CI warnings do not hide product-surface failures
 
