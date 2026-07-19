@@ -195,13 +195,23 @@ test("keeps portfolio context and navigation compact and keyboard-complete on mo
 
   const railBox = await page.locator(".portfolio-screen-rail").boundingBox();
   expect(railBox?.height).toBeLessThanOrEqual(150);
-  const portfolioContextFits = await page.getByLabel("Change portfolio").evaluate((element) => {
+  const changePortfolio = page.getByLabel("Change portfolio");
+  const portfolioContextFits = await changePortfolio.evaluate((element) => {
     const contextSwitcher = element.closest("div");
     return Boolean(
       contextSwitcher && contextSwitcher.scrollWidth <= contextSwitcher.clientWidth + 1,
     );
   });
   expect(portfolioContextFits).toBe(true);
+  await changePortfolio.focus();
+  await page.keyboard.press("Enter");
+  const portfolioOptions = page.getByRole("list", { name: "Portfolio context options" });
+  await expect(portfolioOptions).toBeVisible();
+  expect(
+    await computedContrastRatio(page, portfolioOptions.locator("strong").first(), portfolioOptions),
+  ).toBeGreaterThanOrEqual(4.5);
+  await changePortfolio.click();
+  await expect(portfolioOptions).not.toBeVisible();
   const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(pageWidth).toBeLessThanOrEqual(519);
   await captureDiagnosticScreenshot(page, "ready-mobile-519");

@@ -15691,8 +15691,10 @@ a:hover {
   background: #131b2e;
 }
 
-.app-page-shell .portfolio-screen-rail-header span,
-.app-page-shell .portfolio-screen-rail-header strong,
+.app-page-shell .portfolio-screen-rail-context span,
+.app-page-shell .portfolio-screen-rail-context strong,
+.app-page-shell .portfolio-screen-rail-disclosure span,
+.app-page-shell .portfolio-screen-rail-disclosure strong,
 .app-page-shell .portfolio-screen-rail-link span {
   color: #f6f7f9;
 }

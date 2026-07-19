@@ -1,5 +1,6 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 
+import type { AdvisorBookResponse } from "../../src/features/advisor-book/contracts";
 import {
   buildReportJobListResponse,
   buildReportOrderingResponse,
@@ -40,6 +41,11 @@ export async function startReportCentreFixtureGateway({
           status: "ACTIVE",
         })),
       });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/advisor-book/portfolios") {
+      sendJson(response, buildAdvisorBookResponse(requestUrl));
       return;
     }
 
@@ -112,6 +118,62 @@ function resolveWorkspacePortfolioId(pathname: string): string | null {
 function fixturePortfolioLabel(portfolioId: string): string {
   const suffix = portfolioId.replace("PB_REPORT_", "").replace("_001", "").toLowerCase();
   return `Report Centre ${suffix} mandate`;
+}
+
+function buildAdvisorBookResponse(requestUrl: URL): AdvisorBookResponse {
+  const asOfDate = requestUrl.searchParams.get("asOfDate") ?? "2026-04-10";
+  const items = Object.values(REPORT_CENTRE_FIXTURE_PORTFOLIOS).map((portfolioId) => ({
+    portfolio_id: portfolioId,
+    display_name: fixturePortfolioLabel(portfolioId),
+    client_id: `CLIENT_${portfolioId}`,
+    base_currency: "SGD",
+    booking_center_code: "SG",
+    mandate_type: "ADVISORY",
+    status: "ACTIVE",
+    opened_on: "2024-01-01",
+    closed_on: null,
+    membership_source: "PortfolioManagerBookMembership:v1" as const,
+    membership_reference: `MEMBERSHIP_${portfolioId}`,
+    membership_basis: "governed_role_assignment" as const,
+  }));
+
+  return {
+    correlation_id: "corr_report_centre_advisor_book",
+    contract_version: "v1",
+    scope: {
+      kind: "own_book",
+      label: "My book",
+      as_of_date: asOfDate,
+      booking_center_code: "SG",
+    },
+    page: {
+      total_count: items.length,
+      offset: 0,
+      limit: 100,
+      returned_count: items.length,
+      sort_by: "client_id",
+      sort_order: "asc",
+    },
+    items,
+    supportability: {
+      state: "ready",
+      reason_code: "advisor_book_ready",
+      tenant_scope: "source_confirmed",
+      limitations: [],
+    },
+    provenance: {
+      product_name: "PortfolioManagerBookMembership",
+      product_version: "v1",
+      generated_at: `${asOfDate}T12:00:00Z`,
+      latest_evidence_timestamp: `${asOfDate}T11:55:00Z`,
+      freshness_status: "current",
+      data_quality_status: "complete",
+      source_evidence_current: true,
+      snapshot_id: `snapshot_${asOfDate}`,
+      content_hash: `sha256:advisor-book-${asOfDate}`,
+      lineage: { source: "report-centre-state-matrix-fixture" },
+    },
+  };
 }
 
 function buildWorkspaceResponse(portfolioId: string) {
