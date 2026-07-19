@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
 import { applyAdvisorBookCallerContextHeaders } from "@/features/advisor-book/caller-context";
+import { applyAdvisorCockpitCallerContextHeaders } from "@/features/advisor-cockpit/caller-context";
 import {
   applyDefaultCallerContextHeaders,
   applyIdeaRouteCallerContextHeaders,
@@ -18,6 +19,10 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     headers.set(key, value);
   });
   applyDefaultCallerContextHeaders(headers);
+  const requestBody =
+    request.method === "GET" || request.method === "HEAD"
+      ? undefined
+      : await request.text();
   const advisorBookAuthority = applyAdvisorBookCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
@@ -55,10 +60,19 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       },
     );
   }
-  const requestBody =
-    request.method === "GET" || request.method === "HEAD"
-      ? undefined
-      : await request.text();
+  const advisorCockpitAuthority = applyAdvisorCockpitCallerContextHeaders(headers, {
+    method: request.method,
+    upstreamPath,
+    searchParams: request.nextUrl.searchParams,
+    bodyText: requestBody,
+  });
+  if (advisorCockpitAuthority.status === "rejected") {
+    const rejection = advisorCockpitAuthorityRejection(advisorCockpitAuthority.reason);
+    return NextResponse.json(
+      { code: rejection.code, status: "rejected" },
+      { status: rejection.status, headers: { "cache-control": "no-store" } },
+    );
+  }
   const reportingAuthority = applyReportOrderingRouteCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
@@ -91,6 +105,28 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     status: response.status,
     headers: responseHeaders,
   });
+}
+
+function advisorCockpitAuthorityRejection(
+  reason: Exclude<
+    ReturnType<typeof applyAdvisorCockpitCallerContextHeaders>,
+    { status: "not_applicable" } | { status: "applied" }
+  >["reason"],
+): { code: string; status: number } {
+  switch (reason) {
+    case "authenticated_principal_required":
+      return { code: "advisor_cockpit_authenticated_principal_required", status: 401 };
+    case "advisor_cockpit_scope_not_entitled":
+      return { code: "advisor_cockpit_scope_not_entitled", status: 403 };
+    case "invalid_advisor_cockpit_request":
+      return { code: "advisor_cockpit_invalid_request", status: 422 };
+    case "unsupported_advisor_cockpit_route":
+      return { code: "advisor_cockpit_route_not_supported", status: 404 };
+    case "development_authority_not_allowed":
+    case "invalid_authority_mode":
+    case "invalid_advisor_cockpit_configuration":
+      return { code: "advisor_cockpit_authority_configuration_rejected", status: 500 };
+  }
 }
 
 function advisorBookAuthorityRejection(

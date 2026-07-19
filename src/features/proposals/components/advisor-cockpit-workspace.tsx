@@ -27,8 +27,6 @@ import {
 } from "../advisor-cockpit-view-model";
 import styles from "./advisor-cockpit-workspace.module.css";
 
-const ADVISOR_ID = "advisor_sg_001";
-
 export default function AdvisorCockpitWorkspace({
   portfolioId,
 }: {
@@ -38,8 +36,6 @@ export default function AdvisorCockpitWorkspace({
   const filters = useMemo(
     () => ({
       portfolioId,
-      advisorId: ADVISOR_ID,
-      role: "ADVISOR" as const,
       limit: 25,
     }),
     [portfolioId],
@@ -64,8 +60,6 @@ export default function AdvisorCockpitWorkspace({
     queryFn: async () =>
       await getAdvisorCockpitSupportability({
         portfolioId,
-        advisorId: ADVISOR_ID,
-        role: "ADVISOR",
       }),
     ...workbenchStrictQueryDefaults,
   });
@@ -93,14 +87,11 @@ export default function AdvisorCockpitWorkspace({
         row.actionItemId,
         {
           action_item_version: row.actionItemVersion,
-          acknowledged_by: ADVISOR_ID,
           acknowledgement_note: "Reviewed in the advisor cockpit.",
         },
         {
           filters: {
             portfolioId,
-            advisorId: ADVISOR_ID,
-            role: "ADVISOR",
           },
           idempotencyKey: `ui-cockpit-ack-${row.actionItemId}-${row.actionItemVersion}`,
         },

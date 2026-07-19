@@ -130,26 +130,18 @@ describe("AdvisorCockpitWorkspace", () => {
     await waitFor(() => {
       expect(listAdvisorCockpitActionsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        advisorId: "advisor_sg_001",
-        role: "ADVISOR",
         limit: 25,
       });
       expect(getAdvisorCockpitSnapshotMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        advisorId: "advisor_sg_001",
-        role: "ADVISOR",
         limit: 25,
       });
       expect(listAdvisorCockpitPreparationPacketsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        advisorId: "advisor_sg_001",
-        role: "ADVISOR",
         limit: 25,
       });
       expect(getAdvisorCockpitSupportabilityMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        advisorId: "advisor_sg_001",
-        role: "ADVISOR",
       });
     });
 
@@ -250,14 +242,11 @@ describe("AdvisorCockpitWorkspace", () => {
         "aci_policy_review_001",
         {
           action_item_version: 1,
-          acknowledged_by: "advisor_sg_001",
           acknowledgement_note: "Reviewed in the advisor cockpit.",
         },
         {
           filters: {
             portfolioId: "PB_SG_GLOBAL_BAL_001",
-            advisorId: "advisor_sg_001",
-            role: "ADVISOR",
           },
           idempotencyKey: "ui-cockpit-ack-aci_policy_review_001-1",
         },
