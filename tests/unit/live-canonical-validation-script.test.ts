@@ -233,6 +233,13 @@ describe("canonical live validation script", () => {
         "Previewing managed canonical hosts block from lotus-platform",
       ),
     );
+    expect(
+      script.indexOf(
+        "Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly",
+      ),
+    ).toBeLessThan(
+      script.lastIndexOf("Invoke-MainlineSourceProvenancePreflight"),
+    );
     expect(script).toContain("Stopping stale $Description process on :$Port");
     expect(script).toContain(
       "Leaving Docker-owned $Description listener on :$Port",
@@ -400,7 +407,9 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain("mainline-source-provenance-runtime.json");
     expect(startScript).toContain("SpecialFolder]::LocalApplicationData");
     expect(startScript).toContain("mainlineProvenanceRoot");
-    expect(startScript).toContain("$ideaCapacityEvidenceRoot = $mainlineProvenanceRoot");
+    expect(startScript).toContain(
+      "$ideaCapacityEvidenceRoot = $mainlineProvenance.EvidenceRoot",
+    );
     expect(startScript).toContain("IdeaCapacitySeedEvidencePath");
     expect(startScript).toContain("Get-FileHash -Algorithm SHA256");
     expect(startScript).toContain("MainlineSourceProvenancePath");
