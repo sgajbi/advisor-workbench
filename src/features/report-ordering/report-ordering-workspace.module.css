@@ -247,6 +247,11 @@
   gap: 12px;
 }
 
+.readinessStatus {
+  display: grid;
+  gap: 12px;
+}
+
 .readinessPanel p,
 .boundaryPanel p,
 .submissionState p {

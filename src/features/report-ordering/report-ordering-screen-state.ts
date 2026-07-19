@@ -1,0 +1,263 @@
+import type { ReportOrderingViewModel } from "./view-model";
+
+export type ReportOrderingCatalogueState =
+  | "loading"
+  | "ready"
+  | "permission_blocked"
+  | "error";
+
+export type ReportOrderingSubmissionState = "idle" | "submitting" | "accepted" | "error";
+
+export type ReportOrderingWorkspaceState =
+  | {
+      kind: "configuration";
+      model: ReportOrderingViewModel;
+    }
+  | {
+      kind: "loading" | "permission_blocked" | "error" | "empty";
+      title: string;
+      body: string;
+      actionLabel: string | null;
+    };
+
+export type ReportOrderingReadinessState = {
+  kind:
+    | "loading"
+    | "restricted"
+    | "unavailable"
+    | "empty"
+    | "setup_required"
+    | "ready_for_review"
+    | "reviewed"
+    | "submitting"
+    | "accepted"
+    | "not_accepted";
+  badgeLabel: string;
+  tone: "default" | "success" | "warn" | "danger";
+  title: string;
+  detail: string;
+  clientReleaseTitle: string;
+  clientReleaseDetail: string;
+  busy: boolean;
+  showRequestSummary: boolean;
+  showActions: boolean;
+};
+
+export type ReportOrderingScreenState = {
+  workspace: ReportOrderingWorkspaceState;
+  readiness: ReportOrderingReadinessState;
+};
+
+export function buildReportOrderingScreenState({
+  catalogueState,
+  catalogueError,
+  model,
+  preflightReviewed,
+  submissionState,
+  submissionError,
+}: {
+  catalogueState: ReportOrderingCatalogueState;
+  catalogueError: string | null;
+  model: ReportOrderingViewModel | null;
+  preflightReviewed: boolean;
+  submissionState: ReportOrderingSubmissionState;
+  submissionError: string | null;
+}): ReportOrderingScreenState {
+  const workspace = buildWorkspaceState(catalogueState, catalogueError, model);
+  if (workspace.kind !== "configuration") {
+    return {
+      workspace,
+      readiness: terminalReadinessState(workspace),
+    };
+  }
+
+  return {
+    workspace,
+    readiness: configuredReadinessState({
+      model: workspace.model,
+      preflightReviewed,
+      submissionState,
+      submissionError,
+    }),
+  };
+}
+
+function buildWorkspaceState(
+  catalogueState: ReportOrderingCatalogueState,
+  catalogueError: string | null,
+  model: ReportOrderingViewModel | null,
+): ReportOrderingWorkspaceState {
+  if (catalogueState === "loading") {
+    return {
+      kind: "loading",
+      title: "Loading approved reports",
+      body: "Checking portfolio access, available report families, and current output readiness.",
+      actionLabel: null,
+    };
+  }
+  if (catalogueState === "permission_blocked") {
+    return {
+      kind: "permission_blocked",
+      title: "Report ordering is restricted",
+      body:
+        catalogueError ?? "This portfolio is not available for report ordering.",
+      actionLabel: "Check Again",
+    };
+  }
+  if (catalogueState === "error") {
+    return {
+      kind: "error",
+      title: "Approved reports are unavailable",
+      body: catalogueError ?? "Reporting choices could not be loaded.",
+      actionLabel: "Try Again",
+    };
+  }
+  if (
+    !model ||
+    (model.eligibleFamilies.length === 0 && model.workflowManagedFamilies.length === 0)
+  ) {
+    return {
+      kind: "empty",
+      title: "No approved reports available",
+      body: "No report family is currently available for this portfolio and business role.",
+      actionLabel: null,
+    };
+  }
+  return { kind: "configuration", model };
+}
+
+function terminalReadinessState(
+  workspace: Exclude<ReportOrderingWorkspaceState, { kind: "configuration" }>,
+): ReportOrderingReadinessState {
+  const common = {
+    busy: workspace.kind === "loading",
+    showRequestSummary: false,
+    showActions: false,
+  };
+  if (workspace.kind === "loading") {
+    return {
+      ...common,
+      kind: "loading",
+      badgeLabel: "Loading",
+      tone: "default",
+      title: "Checking report availability",
+      detail: "Approved report choices and portfolio access are being checked.",
+      clientReleaseTitle: "Client release not yet assessed",
+      clientReleaseDetail: "Client-use controls will be shown when report availability is known.",
+    };
+  }
+  if (workspace.kind === "permission_blocked") {
+    return {
+      ...common,
+      kind: "restricted",
+      badgeLabel: "Restricted",
+      tone: "warn",
+      title: "Report ordering restricted",
+      detail: "Portfolio access or the current business role does not permit report ordering.",
+      clientReleaseTitle: "Client use is restricted",
+      clientReleaseDetail: "No report can be prepared for client review until access is confirmed.",
+    };
+  }
+  if (workspace.kind === "error") {
+    return {
+      ...common,
+      kind: "unavailable",
+      badgeLabel: "Unavailable",
+      tone: "danger",
+      title: "Report ordering unavailable",
+      detail: "Approved report choices could not be confirmed. Retry before preparing a request.",
+      clientReleaseTitle: "Client release unavailable",
+      clientReleaseDetail: "No report can be prepared for client review while choices are unavailable.",
+    };
+  }
+  return {
+    ...common,
+    kind: "empty",
+    badgeLabel: "No approved reports",
+    tone: "default",
+    title: "No approved reports available",
+    detail: "There is no report available to configure for this portfolio and business role.",
+    clientReleaseTitle: "No report available for client review",
+    clientReleaseDetail: "Client review can begin when Reporting makes an approved report available.",
+  };
+}
+
+function configuredReadinessState({
+  model,
+  preflightReviewed,
+  submissionState,
+  submissionError,
+}: {
+  model: ReportOrderingViewModel;
+  preflightReviewed: boolean;
+  submissionState: ReportOrderingSubmissionState;
+  submissionError: string | null;
+}): ReportOrderingReadinessState {
+  const common = {
+    clientReleaseTitle: "Review before any client use",
+    clientReleaseDetail: model.clientReleaseLabel,
+    busy: submissionState === "submitting",
+    showRequestSummary: true,
+    showActions: submissionState !== "accepted",
+  };
+  if (submissionState === "submitting") {
+    return {
+      ...common,
+      kind: "submitting",
+      badgeLabel: "Submitting",
+      tone: "default",
+      title: "Submitting report request",
+      detail: "The reviewed request is being sent to Reporting.",
+    };
+  }
+  if (submissionState === "accepted") {
+    return {
+      ...common,
+      kind: "accepted",
+      badgeLabel: "Accepted",
+      tone: "success",
+      title: "Report request accepted",
+      detail: "Reporting recorded the request. Report data, archive, and client delivery remain separate.",
+    };
+  }
+  if (submissionState === "error") {
+    return {
+      ...common,
+      kind: "not_accepted",
+      badgeLabel: "Not accepted",
+      tone: "danger",
+      title: "Report request not accepted",
+      detail:
+        submissionError ??
+        "The reviewed request was not accepted. Confirm the current setup before retrying.",
+    };
+  }
+  if (model.readiness.state !== "ready") {
+    return {
+      ...common,
+      kind: "setup_required",
+      badgeLabel: "Setup required",
+      tone: "warn",
+      title: model.readiness.title,
+      detail: model.readiness.detail,
+    };
+  }
+  if (preflightReviewed) {
+    return {
+      ...common,
+      kind: "reviewed",
+      badgeLabel: "Reviewed",
+      tone: "success",
+      title: "Ready to submit",
+      detail: "The current report setup has been reviewed and is ready for submission.",
+    };
+  }
+  return {
+    ...common,
+    kind: "ready_for_review",
+    badgeLabel: "Ready for review",
+    tone: "default",
+    title: model.readiness.title,
+    detail: model.readiness.detail,
+  };
+}
