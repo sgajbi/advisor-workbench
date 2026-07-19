@@ -8,6 +8,10 @@ function readRepositoryFile(...segments: string[]): string {
   return readFileSync(join(repositoryRoot, ...segments), "utf8");
 }
 
+function hasExactLine(source: string, expectedLine: string): boolean {
+  return source.split(/\r?\n/).includes(expectedLine);
+}
+
 describe("dependency security governance", () => {
   it("enforces high-risk toolchain and moderate-risk production audit thresholds", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
@@ -62,7 +66,7 @@ describe("dependency security governance", () => {
     expect(dockerfile).toContain('CMD ["node", "server.js"]');
     expect(dockerfile).toContain("USER node");
     expect(dockerfile).not.toContain("node:22-alpine");
-    expect(dockerignore).toContain("\n*\n");
+    expect(hasExactLine(dockerignore, "*")).toBe(true);
     expect(dockerignore).toContain("!package.json");
     expect(dockerignore).toContain("!package-lock.json");
     expect(dockerignore).toContain("!src/**");
@@ -72,6 +76,15 @@ describe("dependency security governance", () => {
     expect(ciCompose).toContain("target: ci-base");
     expect(ciCompose).not.toContain("node:22-alpine");
   });
+
+  it.each(["\n", "\r\n"])(
+    "recognizes the Docker build-context deny rule with %j newlines",
+    (newline) => {
+      const dockerignore = ["# governed deny rule", "*", "!package.json", ""].join(newline);
+
+      expect(hasExactLine(dockerignore, "*")).toBe(true);
+    },
+  );
 
   it("keeps runtime health dependency-free and owned by the production image", () => {
     const dockerfile = readRepositoryFile("Dockerfile");
