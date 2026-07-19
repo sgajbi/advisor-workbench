@@ -431,6 +431,9 @@ describe("BFF proxy route", () => {
           "X-Tenant-Id": "spoofed-tenant",
           "X-Region": "spoofed-region",
           "X-Role": "audit",
+          "X-Caller-Subject": "spoofed-subject",
+          "X-Caller-Roles": "reporting-admin",
+          "X-Caller-Capabilities": "reporting.approve,reporting.distribute",
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
         },
       },
@@ -446,6 +449,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
