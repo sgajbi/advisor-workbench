@@ -1,5 +1,10 @@
-node_modules
-.next
-.git
-.gitignore
-coverage
+# Keep the production build context explicit. Local environment files, generated
+# evidence, test assets, documentation, caches, and logs must never enter it.
+*
+!package.json
+!package-lock.json
+!next-env.d.ts
+!next.config.mjs
+!tsconfig.json
+!src/
+!src/**

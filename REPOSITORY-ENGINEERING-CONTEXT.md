@@ -282,6 +282,27 @@ Technology-selection rules:
 5. prefer boring, explicit, repository-native patterns that are easy for engineers and coding agents
    to review over clever framework-specific indirection.
 
+Container runtime rules:
+
+1. production and Dockerized CI inherit the single immutable `NODE_BASE_IMAGE` declared in the
+   Dockerfile; do not reintroduce floating Node or operating-system tags,
+2. the governed runtime is official Node 22 Maintenance LTS on Debian Bookworm slim/glibc, not the
+   experimental Alpine/musl distribution path,
+3. production images use Next's stable standalone output, run the minimal server directly as the
+   unprivileged `node` user, and exclude untraced dependencies plus the npm, Corepack, and Yarn
+   package-manager toolchain,
+4. production build context is an explicit application-source allowlist; local environment files,
+   generated evidence, tests, documentation, caches, and logs must not enter the image builder,
+5. PR and exact-main Docker lanes reject fixable high/critical image findings and publish CycloneDX
+   SBOM evidence, and
+6. Trivy execution remains pinned to the vendor-declared safe 0.69.3 binary and the full immutable
+   trivy-action 0.35.0 commit because mutable Trivy ecosystem references were compromised in March
+   2026. Any scanner refresh requires explicit supply-chain review and issue traceability, and
+7. Dockerized local Vitest parity uses an explicit two-worker ceiling so it remains deterministic
+   while the canonical Lotus stack is running, and masks workstation `.env.local` with the tracked
+   empty CI fixture. Do not replace these controls with per-test timeout inflation, disabled
+   assertions, `passWithNoTests`, global serialization, or developer-local environment values.
+
 ## Local API Contract Evidence
 
 The same-origin `POST /api/metrics/events` route has authored accepted and rejected response
