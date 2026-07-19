@@ -185,6 +185,80 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(within(table).getByText("Total Effect")).toBeInTheDocument();
   });
 
+  it("keeps domain-authored effect totals authoritative when detail rows disagree", () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    const level = workspace.attribution?.levels[0];
+    expect(level).toBeDefined();
+
+    level!.rows = [
+      {
+        ...level!.rows[0],
+        allocation_pct: 9.91,
+        selection_pct: 9.92,
+        interaction_pct: 9.93,
+        total_effect_pct: 29.76,
+      },
+    ];
+
+    render(<PerformanceAnalysisAttributionSection {...buildProps({ workspace })} />);
+
+    const table = screen.getByLabelText("Asset Class attribution table");
+    const footer = table.querySelector("tfoot");
+    expect(footer).not.toBeNull();
+    expect(footer).toHaveTextContent("0.18%");
+    expect(footer).toHaveTextContent("0.24%");
+    expect(footer).toHaveTextContent("0.03%");
+    expect(footer).toHaveTextContent("0.45%");
+    expect(footer).not.toHaveTextContent("9.91%");
+    expect(footer).not.toHaveTextContent("9.92%");
+    expect(footer).not.toHaveTextContent("9.93%");
+    expect(footer).not.toHaveTextContent("29.76%");
+  });
+
+  it("labels missing source component totals without reconstructing them from detail rows", () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    const level = workspace.attribution?.levels[0];
+    expect(level).toBeDefined();
+
+    level!.allocation_total_pct = null;
+    level!.selection_total_pct = null;
+    level!.interaction_total_pct = null;
+
+    render(<PerformanceAnalysisAttributionSection {...buildProps({ workspace })} />);
+
+    const table = screen.getByLabelText("Asset Class attribution table");
+    const footer = table.querySelector("tfoot");
+    expect(footer).not.toBeNull();
+    expect(within(footer as HTMLElement).getAllByText("Unavailable")).toHaveLength(3);
+    expect(footer).toHaveTextContent("0.45%");
+    expect(footer).not.toHaveTextContent("0.18%");
+    expect(footer).not.toHaveTextContent("0.24%");
+    expect(footer).not.toHaveTextContent("0.03%");
+  });
+
+  it("keeps summary-only attribution totals source-backed when components are absent", () => {
+    const scenario = buildPartialAttributionPerformanceScenario();
+    const level = scenario.workspace.attribution?.levels[0];
+    expect(level).toBeDefined();
+
+    level!.allocation_total_pct = null;
+    level!.selection_total_pct = null;
+    level!.interaction_total_pct = null;
+
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({
+          workspace: scenario.workspace,
+          capabilities: scenario.capabilities,
+        })}
+      />
+    );
+
+    const table = screen.getByLabelText("Asset Class attribution totals");
+    expect(within(table).getAllByText("Unavailable")).toHaveLength(3);
+    expect(table).toHaveTextContent("0.45%");
+  });
+
   it("disables attribution segment options that are outside the backend capability contract", () => {
     render(
       <PerformanceAnalysisAttributionSection

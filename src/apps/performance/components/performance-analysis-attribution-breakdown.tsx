@@ -6,7 +6,10 @@ import {
   getAttributionSupportabilityLine,
 } from "./performance-attribution-presentations";
 import PerformanceAttributionReconciliationNote from "./performance-attribution-reconciliation-note";
-import { getAttributionTotals, NOT_ADDITIVE_CELL } from "./performance-workspace-view-helpers";
+import {
+  getAttributionWeightTotals,
+  NOT_ADDITIVE_CELL,
+} from "./performance-workspace-view-helpers";
 
 type PerformanceAnalysisAttributionBreakdownProps = {
   attribution: AttributionSummaryView;
@@ -21,13 +24,15 @@ function getDifference(
     : null;
 }
 
+function formatAttributionTotal(value: number | null | undefined): string {
+  return value === null || value === undefined ? "Unavailable" : formatPct(value);
+}
+
 function PerformanceAttributionSummaryFallback({
   level,
 }: {
   level: AttributionSummaryView["levels"][number];
 }) {
-  const totals = getAttributionTotals(level);
-
   return (
     <div
       key={`${level.dimension}-${level.total_effect_pct}`}
@@ -50,10 +55,10 @@ function PerformanceAttributionSummaryFallback({
             key: `${level.dimension}-summary`,
             cells: [
               "Summary Total",
-              formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-              formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-              formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-              formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+              formatAttributionTotal(level.allocation_total_pct),
+              formatAttributionTotal(level.selection_total_pct),
+              formatAttributionTotal(level.interaction_total_pct),
+              formatAttributionTotal(level.total_effect_pct),
             ],
           },
         ]}
@@ -67,10 +72,10 @@ function PerformanceAttributionLevelTable({
 }: {
   level: AttributionSummaryView["levels"][number];
 }) {
-  const totals = getAttributionTotals(level);
+  const weightTotals = getAttributionWeightTotals(level);
   const activeWeightTotal =
-    totals.portfolioWeightAvgPct !== null && totals.benchmarkWeightAvgPct !== null
-      ? totals.portfolioWeightAvgPct - totals.benchmarkWeightAvgPct
+    weightTotals.portfolioWeightAvgPct !== null && weightTotals.benchmarkWeightAvgPct !== null
+      ? weightTotals.portfolioWeightAvgPct - weightTotals.benchmarkWeightAvgPct
       : null;
 
   return (
@@ -114,16 +119,16 @@ function PerformanceAttributionLevelTable({
         }))}
         footer={[
           "Total",
-          formatPct(totals.portfolioWeightAvgPct),
-          formatPct(totals.benchmarkWeightAvgPct),
+          formatPct(weightTotals.portfolioWeightAvgPct),
+          formatPct(weightTotals.benchmarkWeightAvgPct),
           formatPct(activeWeightTotal),
           NOT_ADDITIVE_CELL,
           NOT_ADDITIVE_CELL,
           NOT_ADDITIVE_CELL,
-          formatPct(level.allocation_total_pct ?? totals.allocationPct ?? null),
-          formatPct(level.selection_total_pct ?? totals.selectionPct ?? null),
-          formatPct(level.interaction_total_pct ?? totals.interactionPct ?? null),
-          formatPct(totals.totalEffectPct ?? level.total_effect_pct),
+          formatAttributionTotal(level.allocation_total_pct),
+          formatAttributionTotal(level.selection_total_pct),
+          formatAttributionTotal(level.interaction_total_pct),
+          formatAttributionTotal(level.total_effect_pct),
         ]}
       />
     </div>

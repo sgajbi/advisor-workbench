@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAttributionWeightTotals,
   getPerformanceTrustStripPresentation,
 } from "../../src/apps/performance/components/performance-workspace-view-helpers";
 import {
@@ -11,6 +12,22 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 describe("performance first-paint helper contracts", () => {
+  it("keeps attribution table helpers limited to additive exposure weights", () => {
+    const level = buildPerformancePresentationScenario().workspace.attribution?.levels[0];
+    expect(level).toBeDefined();
+
+    const totals = getAttributionWeightTotals(level!);
+
+    expect(totals).toEqual({
+      portfolioWeightAvgPct: 61,
+      benchmarkWeightAvgPct: 58,
+    });
+    expect(totals).not.toHaveProperty("allocationPct");
+    expect(totals).not.toHaveProperty("selectionPct");
+    expect(totals).not.toHaveProperty("interactionPct");
+    expect(totals).not.toHaveProperty("totalEffectPct");
+  });
+
   it("maps compact trust-strip statuses from backend-backed capabilities", () => {
     const scenario = buildPerformancePresentationScenario({
       capabilityOverrides: {
