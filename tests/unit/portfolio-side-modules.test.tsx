@@ -182,7 +182,7 @@ describe("portfolio side rail modules", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
       await act(async () => Promise.resolve());
-      const firstResetTimerIndex = setTimeoutSpy.mock.calls.findLastIndex(
+      const firstResetTimerIndex = setTimeoutSpy.mock.calls.findIndex(
         ([, delay]) => delay === 1600,
       );
       expect(firstResetTimerIndex).toBeGreaterThanOrEqual(0);
@@ -190,8 +190,8 @@ describe("portfolio side rail modules", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Copy Client" }));
       await act(async () => Promise.resolve());
-      const secondResetTimerIndex = setTimeoutSpy.mock.calls.findLastIndex(
-        ([, delay]) => delay === 1600,
+      const secondResetTimerIndex = setTimeoutSpy.mock.calls.findIndex(
+        ([, delay], index) => index > firstResetTimerIndex && delay === 1600,
       );
       expect(secondResetTimerIndex).toBeGreaterThan(firstResetTimerIndex);
       const secondResetTimerId = setTimeoutSpy.mock.results[secondResetTimerIndex].value;
