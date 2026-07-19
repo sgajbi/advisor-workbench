@@ -2,9 +2,7 @@ import { redirect } from "next/navigation";
 import { DegradedStatePanel, WorkbenchPageFrame } from "@/design-system";
 import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
-const WORKBENCH_FALLBACK_PORTFOLIO_IDS =
-  process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS ??
-  "PB_SG_GLOBAL_BAL_001,DEMO_DPM_EUR_001,DEMO_INCOME_CHF_001,DEMO_BALANCED_SGD_001,DEMO_REBAL_USD_001,DEMO_ADV_USD_001";
+import { resolveWorkbenchFallbackPortfolioIds } from "@/features/workbench-entry-selection";
 
 type LookupItem = {
   id: string;
@@ -30,15 +28,11 @@ async function getDefaultPortfolioId(): Promise<string | null> {
   }
 }
 
-function getFallbackPortfolioIds(): string[] {
-  return WORKBENCH_FALLBACK_PORTFOLIO_IDS.split(",")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-}
-
 export default async function WorkbenchEntryPage() {
   const portfolioId = await getDefaultPortfolioId();
-  const fallbackPortfolioIds = getFallbackPortfolioIds();
+  const fallbackPortfolioIds = resolveWorkbenchFallbackPortfolioIds(
+    process.env.WORKBENCH_FALLBACK_PORTFOLIO_IDS,
+  );
 
   if (portfolioId) {
     redirect(`/workbench/${portfolioId}`);
