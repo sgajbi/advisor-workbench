@@ -94,6 +94,42 @@ describe("report ordering API", () => {
     },
   );
 
+  it("omits optional configuration that the report family does not publish", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              report_request_id: "rrq_1",
+              report_job_id: "rjob_1",
+              status: "accepted",
+              status_url: "/api/v1/report-jobs/rjob_1",
+              idempotency_key: "intent_1",
+            }),
+            { status: 202 },
+          ),
+      ),
+    );
+
+    await submitPortfolioReviewOrder({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      asOfDate: "2026-04-22",
+      outputFormat: "json",
+      sections: ["CLIENT_PROFILE", "OVERVIEW"],
+      idempotencyKey: "intent_1",
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0];
+    const body = JSON.parse(String(init?.body));
+    expect(body).toEqual({
+      portfolio_scope: { portfolio_ids: ["PB_SG_GLOBAL_BAL_001"] },
+      as_of_date: "2026-04-22",
+      requested_output_formats: ["json"],
+      options: { sections: ["CLIENT_PROFILE", "OVERVIEW"] },
+    });
+  });
+
   it("loads bounded portfolio history without exposing identifiers in metrics", async () => {
     vi.stubGlobal(
       "fetch",

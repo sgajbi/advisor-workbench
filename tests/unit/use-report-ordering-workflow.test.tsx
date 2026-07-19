@@ -138,6 +138,34 @@ describe("useReportOrderingWorkflow", () => {
     );
   });
 
+  it("submits only optional configuration published by the selected report family", async () => {
+    const payload = buildReportOrderingResponse();
+    payload.reportFamilies[0].configurationFields = payload.reportFamilies[0].configurationFields.filter(
+      (field) => field.fieldId === "as_of_date",
+    );
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+
+    const submittedOrder = submitMock.mock.calls[0][0];
+    expect(submittedOrder).not.toHaveProperty("reportingCurrency");
+    expect(submittedOrder).not.toHaveProperty("benchmarkCode");
+    expect(submittedOrder).not.toHaveProperty("allocationDimensions");
+  });
+
   it("invalidates reviewed preflight when output-affecting configuration changes", async () => {
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
