@@ -389,6 +389,16 @@ Important validation expectations:
    must identify only governed route, panel, operation, freshness, supportability, and status
    classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
    response payloads, hashes, and lineage references must stay out of metric labels.
+10. Repository-source governance assertions must be platform-newline portable. Assert semantic
+    lines, fields, and ordered contracts with `\r?\n` handling or explicit LF/CRLF cases; do not
+    make a green Windows gate depend on LF-only byte substrings.
+11. Async UI tests must synchronize on the advisor-visible settled outcome as well as asserting the
+    Gateway request. A mock being called proves request start, not that React has committed success,
+    failure, or refreshed evidence. Do not replace a missing outcome boundary with sleeps, timeout
+    inflation, retries, or suite serialization.
+12. Route tests must not repeatedly reset and reload the full Next module graph merely to vary
+    runtime configuration. Extract a small deterministic input parser or selection seam, read
+    runtime configuration at invocation time, and retain one bounded route-composition proof.
 10. DPM mandate command-center reads and monitoring actions use bounded observability labels for
     command-center summary, exceptions, mandate lookup, mandate health, and monitoring run-once
     operations. Metric labels must not include portfolio ids, mandate ids, PM ids, book ids,
