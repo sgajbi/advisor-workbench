@@ -111,6 +111,23 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Review Request" })).toBeEnabled();
   });
 
+  it("renders only setup controls published by the selected report family", async () => {
+    const payload = buildReportOrderingResponse();
+    payload.reportFamilies[0].configurationFields =
+      payload.reportFamilies[0].configurationFields.filter(
+        (field) => field.fieldId === "as_of_date",
+      );
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    expect(await screen.findByLabelText("Report date")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Reporting currency")).not.toBeInTheDocument();
+    expect(screen.queryByText("Comparison benchmark")).not.toBeInTheDocument();
+    expect(screen.queryByText("Allocation views")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Request" })).toBeEnabled();
+  });
+
   it("renders an intentional permission state without exposing configuration controls", async () => {
     optionsMock.mockRejectedValue(new WorkbenchApiError("report ordering options", 403));
 

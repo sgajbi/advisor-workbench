@@ -205,6 +205,9 @@ function evaluateReadiness(
     issues.push("Select a valid report date.");
   }
   if (
+    family?.configurationFields.some(
+      (field) => field.fieldId === "reporting_currency",
+    ) &&
     configuration.reportingCurrency &&
     !/^[A-Z]{3}$/.test(configuration.reportingCurrency)
   ) {

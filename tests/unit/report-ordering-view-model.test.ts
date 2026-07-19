@@ -74,6 +74,26 @@ describe("report ordering view model", () => {
     ).toBe(true);
   });
 
+  it("does not validate reporting currency when the selected family does not publish it", () => {
+    const payload = buildReportOrderingResponse();
+    payload.reportFamilies[0].configurationFields =
+      payload.reportFamilies[0].configurationFields.filter(
+        (field) => field.fieldId !== "reporting_currency",
+      );
+    const response = parseReportOrderingResponse(payload);
+    const configuration = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SG",
+    });
+
+    const model = buildReportOrderingViewModel(response, configuration);
+
+    expect(model.canSubmit).toBe(true);
+    expect(model.readiness.issues).not.toContain(
+      "Enter a three-letter reporting currency, such as SGD or USD.",
+    );
+  });
+
   it("surfaces permission posture without exposing raw reason codes as primary copy", () => {
     const payload = buildReportOrderingResponse();
     payload.scopeEligibility = {

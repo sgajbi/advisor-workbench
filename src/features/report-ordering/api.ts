@@ -66,7 +66,7 @@ export async function submitPortfolioReviewOrder(
             : {}),
           options: {
             sections: order.sections,
-            ...(order.allocationDimensions
+            ...(order.allocationDimensions?.length
               ? { allocation_dimensions: order.allocationDimensions }
               : {}),
             ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),

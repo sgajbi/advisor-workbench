@@ -231,7 +231,8 @@ export function useReportOrderingWorkflow({
         configuration.benchmarkCode
           ? { benchmarkCode: configuration.benchmarkCode }
           : {}),
-        ...(publishedConfigurationFieldIds.has("allocation_dimensions")
+        ...(publishedConfigurationFieldIds.has("allocation_dimensions") &&
+        configuration.allocationDimensions.length
           ? { allocationDimensions: configuration.allocationDimensions }
           : {}),
         sections: configuration.selectedSections,

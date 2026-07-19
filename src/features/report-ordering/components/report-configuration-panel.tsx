@@ -16,9 +16,12 @@ export function ReportConfigurationPanel({
   updateConfiguration: (patch: Partial<ReportOrderingConfiguration>) => void;
   toggleSection: (sectionId: string) => void;
 }) {
-  const allocationField = model.family?.configurationFields.find(
-    (field) => field.fieldId === "allocation_dimensions",
+  const configurationFields = new Map(
+    model.family?.configurationFields.map((field) => [field.fieldId, field]) ?? [],
   );
+  const currencyField = configurationFields.get("reporting_currency");
+  const benchmarkField = configurationFields.get("benchmark_code");
+  const allocationField = configurationFields.get("allocation_dimensions");
 
   return (
     <div className={styles.configurationStack}>
@@ -108,30 +111,40 @@ export function ReportConfigurationPanel({
               Holdings, activity, performance, and risk evidence are evaluated for this date.
             </small>
           </div>
-          <div className={styles.fieldGroup}>
-            <FieldLabel htmlFor="report-ordering-currency">Reporting currency</FieldLabel>
-            <input
-              id="report-ordering-currency"
-              className="workbench-input"
-              inputMode="text"
-              maxLength={3}
-              value={configuration.reportingCurrency}
-              onChange={(event) =>
-                updateConfiguration({
-                  reportingCurrency: event.target.value.toUpperCase().replace(/[^A-Z]/g, ""),
-                })
-              }
-              aria-describedby="report-ordering-currency-help"
-            />
-            <small id="report-ordering-currency-help">
-              Leave blank to use the portfolio currency maintained by the source record.
-            </small>
-          </div>
-          <div className={styles.fieldGroup}>
-            <span className="workbench-field-label">Comparison benchmark</span>
-            <div className={styles.sourceDefault}>Portfolio benchmark</div>
-            <small>Reporting applies the eligible benchmark from portfolio context.</small>
-          </div>
+          {currencyField ? (
+            <div className={styles.fieldGroup}>
+              <FieldLabel htmlFor="report-ordering-currency">
+                {currencyField.businessLabel}
+              </FieldLabel>
+              <input
+                id="report-ordering-currency"
+                className="workbench-input"
+                inputMode="text"
+                maxLength={3}
+                value={configuration.reportingCurrency}
+                onChange={(event) =>
+                  updateConfiguration({
+                    reportingCurrency: event.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z]/g, ""),
+                  })
+                }
+                aria-describedby="report-ordering-currency-help"
+              />
+              <small id="report-ordering-currency-help">
+                Leave blank to use the portfolio currency maintained by the source record.
+              </small>
+            </div>
+          ) : null}
+          {benchmarkField ? (
+            <div className={styles.fieldGroup}>
+              <span className="workbench-field-label">
+                {benchmarkField.businessLabel}
+              </span>
+              <div className={styles.sourceDefault}>Portfolio benchmark</div>
+              <small>Reporting applies the eligible benchmark from portfolio context.</small>
+            </div>
+          ) : null}
         </div>
 
         {allocationField?.options.length ? (
