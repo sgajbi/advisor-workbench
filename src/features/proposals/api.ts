@@ -18,7 +18,6 @@ import {
   AdvisorCockpitAcknowledgeRequest,
   AdvisorCockpitActionPageData,
   AdvisorCockpitEnvelopeResponse,
-  AdvisorCockpitOwnerRole,
   AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
   AdvisorCockpitSupportabilityData,
@@ -85,8 +84,6 @@ export type ProposalListFilters = {
 
 export type AdvisorCockpitFilters = {
   portfolioId?: string;
-  advisorId?: string;
-  role?: AdvisorCockpitOwnerRole;
   limit?: number;
   cursor?: string;
 };
@@ -1188,12 +1185,6 @@ function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
   const params = new URLSearchParams();
   if (filters.portfolioId) {
     params.set("portfolio_id", filters.portfolioId);
-  }
-  if (filters.advisorId) {
-    params.set("advisor_id", filters.advisorId);
-  }
-  if (filters.role) {
-    params.set("role", filters.role);
   }
   if (filters.limit) {
     params.set("limit", String(filters.limit));

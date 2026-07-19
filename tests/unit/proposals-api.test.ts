@@ -816,8 +816,6 @@ describe("proposal api", () => {
 
     const filters = {
       portfolioId: "PB_SG_GLOBAL_BAL_001",
-      advisorId: "advisor_sg_001",
-      role: "ADVISOR" as const,
     };
 
     const actions = await listAdvisorCockpitActions({ ...filters, limit: 25 });
@@ -831,7 +829,6 @@ describe("proposal api", () => {
       "aci_1",
       {
         action_item_version: 1,
-        acknowledged_by: "advisor_sg_001",
         acknowledgement_note: "Reviewed in Workbench.",
       },
       {
@@ -842,19 +839,19 @@ describe("proposal api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR&limit=25`,
+      `${expectedBaseUrl}/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisor-cockpit/preparation-packets?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR&limit=25`,
+      `${expectedBaseUrl}/advisor-cockpit/preparation-packets?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisor-cockpit/snapshot?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR`,
+      `${expectedBaseUrl}/advisor-cockpit/snapshot?portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisor-cockpit/supportability?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR`,
+      `${expectedBaseUrl}/advisor-cockpit/supportability?portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/advisor-cockpit/actions/aci_1/acknowledgements?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=advisor_sg_001&role=ADVISOR`,
+      `${expectedBaseUrl}/advisor-cockpit/actions/aci_1/acknowledgements?portfolio_id=PB_SG_GLOBAL_BAL_001`,
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
@@ -862,7 +859,6 @@ describe("proposal api", () => {
         }),
         body: JSON.stringify({
           action_item_version: 1,
-          acknowledged_by: "advisor_sg_001",
           acknowledgement_note: "Reviewed in Workbench.",
         }),
       }),

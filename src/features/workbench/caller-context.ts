@@ -57,6 +57,7 @@ export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Tenant-Id",
   "X-Region",
   "X-Booking-Center-Code",
+  "X-Legal-Entity-Code",
   "X-Role",
   "X-Caller-Subject",
   "X-Caller-Roles",
@@ -64,6 +65,9 @@ export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Caller-Portfolio-Ids",
   "X-Caller-Client-Ids",
   "X-Caller-Book-Ids",
+  "X-Principal-Status",
+  "X-Authorized-Advisor-Id",
+  "X-Authorized-Portfolio-Id",
 ] as const;
 
 const REPORTING_CALLER_CONTEXT_ENV_OVERRIDES = {

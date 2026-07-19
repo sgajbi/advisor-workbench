@@ -353,7 +353,6 @@ export type AdvisorCockpitEnvelopeResponse = {
 
 export type AdvisorCockpitAcknowledgeRequest = {
   action_item_version: number;
-  acknowledged_by: string;
   acknowledgement_note?: string;
 };
 

@@ -25,6 +25,14 @@ describe("BFF proxy route", () => {
     "WORKBENCH_ADVISOR_BOOK_REGION",
     "WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE",
     "WORKBENCH_ADVISOR_BOOK_ROLE",
+    "WORKBENCH_ADVISOR_COCKPIT_AUTH_MODE",
+    "WORKBENCH_ADVISOR_COCKPIT_ACTOR_ID",
+    "WORKBENCH_ADVISOR_COCKPIT_TENANT_ID",
+    "WORKBENCH_ADVISOR_COCKPIT_REGION",
+    "WORKBENCH_ADVISOR_COCKPIT_BOOKING_CENTER_CODE",
+    "WORKBENCH_ADVISOR_COCKPIT_LEGAL_ENTITY_CODE",
+    "WORKBENCH_ADVISOR_COCKPIT_PRINCIPAL_STATUS",
+    "WORKBENCH_ADVISOR_COCKPIT_PORTFOLIO_IDS",
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
@@ -424,6 +432,226 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
       code: "advisor_book_authority_configuration_rejected",
+      status: "rejected",
+    });
+  });
+
+  it("derives least-privilege Advisor Cockpit read authority from the configured principal", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"items":[]}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25",
+      {
+        method: "GET",
+        headers: {
+          "X-Actor-Id": "spoofed-actor",
+          "X-Caller-Application": "spoofed-application",
+          "X-Tenant-Id": "spoofed-tenant",
+          "X-Region": "spoofed-region",
+          "X-Booking-Center-Code": "spoofed-centre",
+          "X-Legal-Entity-Code": "spoofed-entity",
+          "X-Role": "DESK_HEAD",
+          "X-Caller-Capabilities": "advisory.advisor_cockpit.acknowledge",
+          "X-Principal-Status": "SUSPENDED",
+          "X-Authorized-Advisor-Id": "another-advisor",
+          "X-Authorized-Portfolio-Id": "UNENTITLED_PORTFOLIO",
+        },
+      },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "actions"] }),
+    });
+
+    expect(response.status).toBe(200);
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
+    expect(String(upstreamUrl)).toBe(
+      "http://gateway.dev.lotus/api/v1/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25",
+    );
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("advisor_sg_001");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
+    expect(upstreamHeaders.get("X-Legal-Entity-Code")).toBe("SGPB");
+    expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisory.advisor_cockpit.read",
+    );
+    expect(upstreamHeaders.get("X-Principal-Status")).toBe("ACTIVE");
+    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe("advisor_sg_001");
+    expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBe(
+      "PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
+  it("applies the read capability to Advisor Cockpit object lookup", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"data":{}}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions/action_1?portfolio_id=PB_SG_GLOBAL_BAL_001",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "actions", "action_1"],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisory.advisor_cockpit.read",
+    );
+  });
+
+  it("uses acknowledgement-only authority and derives the acknowledging advisor", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"data":{}}', { status: 200 }));
+    const body = JSON.stringify({
+      action_item_version: 3,
+      acknowledgement_note: "Reviewed before the client meeting.",
+    });
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions/action_1/acknowledgements?portfolio_id=PB_SG_GLOBAL_BAL_001",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": "idem-action-1-v3",
+          "X-Caller-Capabilities": "advisory.advisor_cockpit.read",
+          "X-Authorized-Advisor-Id": "spoofed-advisor",
+        },
+        body,
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisor-cockpit",
+          "actions",
+          "action_1",
+          "acknowledgements",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamInit = fetchMock.mock.calls[0][1];
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamInit?.body).toBe(body);
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisory.advisor_cockpit.acknowledge",
+    );
+    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe("advisor_sg_001");
+  });
+
+  it("rejects browser-selected Advisor Cockpit authority in query and body", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const queryRequest = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&advisor_id=another-advisor&role=DESK_HEAD",
+      { method: "GET" },
+    );
+    const queryResponse = await GET(queryRequest, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "actions"] }),
+    });
+    const bodyRequest = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions/action_1/acknowledgements?portfolio_id=PB_SG_GLOBAL_BAL_001",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action_item_version: 1, acknowledged_by: "another-advisor" }),
+      },
+    );
+    const bodyResponse = await POST(bodyRequest, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisor-cockpit",
+          "actions",
+          "action_1",
+          "acknowledgements",
+        ],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(queryResponse.status).toBe(422);
+    expect(bodyResponse.status).toBe(422);
+    await expect(queryResponse.json()).resolves.toEqual({
+      code: "advisor_cockpit_invalid_request",
+      status: "rejected",
+    });
+  });
+
+  it("rejects cross-portfolio Advisor Cockpit access before proxying", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/snapshot?portfolio_id=PB_NOT_ENTITLED",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "snapshot"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisor_cockpit_scope_not_entitled",
+      status: "rejected",
+    });
+  });
+
+  it("rejects unsupported Advisor Cockpit routes at the Workbench boundary", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/house-view-cohorts/evaluate?portfolio_id=PB_SG_GLOBAL_BAL_001",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ body: {} }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "house-view-cohorts", "evaluate"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisor_cockpit_route_not_supported",
+      status: "rejected",
+    });
+  });
+
+  it("requires an authenticated Advisor Cockpit principal outside development", async () => {
+    process.env.LOTUS_ENVIRONMENT = "uat";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisor-cockpit/supportability?portfolio_id=PB_SG_GLOBAL_BAL_001",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "supportability"],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisor_cockpit_authenticated_principal_required",
       status: "rejected",
     });
   });
