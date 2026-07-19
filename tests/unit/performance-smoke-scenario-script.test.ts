@@ -19,9 +19,11 @@ describe("Performance smoke scenario launcher", () => {
     );
   });
 
-  it("uses canonical Gateway addressing and a directly owned Playwright child", () => {
+  it("binds the BFF to the owned loopback fixture and directly owns Playwright", () => {
     expect(source).toContain('new Set(["populated", "unavailable"])');
-    expect(source).toContain("BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`");
+    expect(source).toContain("BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`");
+    expect(source).not.toContain("BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`");
+    expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "performance"');
     expect(source).toContain("spawn(");
     expect(source).toContain('shell: false');
     expect(source).toContain('child.kill(signal)');
