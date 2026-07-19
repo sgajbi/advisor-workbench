@@ -97,6 +97,7 @@ describe("useReportOrderingWorkflow", () => {
 
     const firstIntent = submitMock.mock.calls[0][0].idempotencyKey;
     const secondIntent = submitMock.mock.calls[1][0].idempotencyKey;
+    expect(submitMock.mock.calls[0][0]).not.toHaveProperty("allocationDimensions");
     expect(firstIntent).toBe(secondIntent);
     expect(firstIntent).toMatch(/^workbench-report-order-/);
     expect(result.current.canSubmitReviewedRequest).toBe(false);

@@ -116,6 +116,7 @@ describe("report ordering API", () => {
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       asOfDate: "2026-04-22",
       outputFormat: "json",
+      allocationDimensions: [],
       sections: ["CLIENT_PROFILE", "OVERVIEW"],
       idempotencyKey: "intent_1",
     });
