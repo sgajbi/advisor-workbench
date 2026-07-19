@@ -1,7 +1,23 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+const REPORT_CENTRE_CLASSIFICATION_PATTERN =
+  /"reporting\.report_centre",\r?\n\s+"partial",\r?\n\s+"lotus-report",/;
+
 describe("canonical live validation script", () => {
+  it.each(["\n", "\r\n"])(
+    "recognizes the report-panel classification with %j newlines",
+    (newline) => {
+      const classification = [
+        '"reporting.report_centre",',
+        '      "partial",',
+        '      "lotus-report",',
+      ].join(newline);
+
+      expect(classification).toMatch(REPORT_CENTRE_CLASSIFICATION_PATTERN);
+    },
+  );
+
   it("rejects unknown switches before live entry-point side effects", () => {
     for (const scriptName of [
       "Start-LotusFrontOfficeCanonical.ps1",
@@ -848,7 +864,7 @@ describe("canonical live validation script", () => {
     expect(finalAlignmentIndex).toBeGreaterThan(reportClassificationIndex);
     expect(
       script.slice(reportClassificationIndex, finalAlignmentIndex),
-    ).toContain('"partial",\n      "lotus-report"');
+    ).toMatch(REPORT_CENTRE_CLASSIFICATION_PATTERN);
     expect(calculationModule).toContain("performance.analysis.attribution");
     expect(calculationModule).toContain("performance.evidence");
     expect(calculationModule).toContain(
