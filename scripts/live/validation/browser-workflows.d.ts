@@ -28,3 +28,8 @@ export function validateReportCentrePanel(
   page: unknown,
   options: Record<string, unknown>,
 ): Promise<void>;
+
+export function validateAdvisorBookPanel(
+  page: unknown,
+  options: Record<string, unknown>,
+): Promise<void>;

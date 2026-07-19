@@ -705,13 +705,14 @@ export async function validateAdvisorBookPanel(
   });
   const bookTable = tableByExactLabel(page, "Portfolios in my book");
   await assertTableHasRows(bookTable, 1, "Portfolios in my book");
-  await expect(bookTable.getByText(portfolioId, { exact: false }).first()).toBeVisible({
-    timeout: timeoutMs,
-  });
+  const canonicalPortfolioLink = bookTable
+    .locator(`a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]`)
+    .first();
+  await expect(canonicalPortfolioLink).toBeVisible({ timeout: timeoutMs });
   await expect(page.getByRole("heading", { name: "Operating boundaries" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Support details" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Operational details" })).toBeVisible({
     timeout: timeoutMs,
   });
   await screenshotRegisteredPanel(page, "advisor.book_overview");
