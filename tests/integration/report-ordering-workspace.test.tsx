@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ReportOrderingWorkspace } from "@/features/report-ordering/components/report-ordering-workspace";
@@ -51,6 +51,11 @@ describe("ReportOrderingWorkspace", () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
 
     expect(screen.getByText("Loading approved reports")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Checking report availability",
+      }),
+    ).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Approved report" })).toBeInTheDocument();
     expect(screen.getByDisplayValue("2026-04-22")).toHaveAccessibleName("Report date");
     expect(screen.getByDisplayValue("SGD")).toHaveAccessibleName("Reporting currency");
@@ -83,7 +88,12 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(submitButton);
 
     expect(await screen.findByText("Report request recorded")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Request Accepted" })).toBeDisabled();
+    expect(
+      within(screen.getByRole("status")).getByRole("heading", {
+        name: "Report request accepted",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit Report Request" })).not.toBeInTheDocument();
     expect(screen.getByText(/does not mean a document was archived or sent/)).toBeInTheDocument();
     expect(submitMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -135,7 +145,110 @@ describe("ReportOrderingWorkspace", () => {
 
     expect(await screen.findByText("Report ordering is restricted")).toBeInTheDocument();
     expect(screen.getByText(/not available for report ordering/)).toBeInTheDocument();
+    const status = screen.getByRole("status");
+    expect(within(status).getByRole("heading", { name: "Report ordering restricted" })).toBeInTheDocument();
+    expect(within(status).getByLabelText("Status Restricted")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review Request" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit Report Request" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
+  });
+
+  it("keeps source failure terminal in both workspace regions", async () => {
+    optionsMock.mockRejectedValue(new Error("reporting unavailable"));
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    expect(await screen.findByText("Approved reports are unavailable")).toBeInTheDocument();
+    const status = screen.getByRole("status");
+    expect(within(status).getByRole("heading", { name: "Report ordering unavailable" })).toBeInTheDocument();
+    expect(within(status).getByLabelText("Status Unavailable")).toBeInTheDocument();
+    const retryButton = screen.getByRole("button", { name: "Try Again" });
+    expect(retryButton).toBeEnabled();
+    expect(screen.queryByText("Loading report readiness")).not.toBeInTheDocument();
+    expect(optionsMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(retryButton);
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledTimes(2));
+  });
+
+  it("renders an empty approved catalogue without configuration or request actions", async () => {
+    const payload = buildReportOrderingResponse();
+    payload.reportFamilies = [];
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    const emptyPanels = await screen.findAllByText("No approved reports available");
+    expect(emptyPanels).toHaveLength(2);
+    const status = screen.getByRole("status");
+    expect(within(status).getByLabelText("Status No approved reports")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review Request" })).not.toBeInTheDocument();
+  });
+
+  it("distinguishes incomplete setup from source availability", async () => {
+    render(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, asOfDate: "not-a-business-date" }}
+      />,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+    const status = screen.getByRole("status");
+    expect(within(status).getByLabelText("Status Setup required")).toBeInTheDocument();
+    expect(screen.getByText("Select a valid report date.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Request" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
+  });
+
+  it("disables review actions while the reviewed request is submitting", async () => {
+    let resolveSubmission:
+      | ((value: Awaited<ReturnType<typeof submitPortfolioReviewOrder>>) => void)
+      | null = null;
+    submitMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmission = resolve;
+      }),
+    );
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submitButton = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submitButton).toBeEnabled());
+    fireEvent.click(submitButton);
+
+    expect(
+      await within(screen.getByRole("status")).findByRole("heading", {
+        name: "Submitting report request",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reviewed" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submitting…" })).toBeDisabled();
+
+    await act(async () => {
+      resolveSubmission?.({
+        report_request_id: "rrq_2",
+        report_job_id: "rjob_2",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_2",
+        idempotency_key: "intent_2",
+      });
+    });
+    expect(await screen.findByText("Report request recorded")).toBeInTheDocument();
+  });
+
+  it("preserves reviewed setup and offers an explicit retry after rejection", async () => {
+    submitMock.mockRejectedValue(new Error("temporary unavailable"));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submitButton = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submitButton).toBeEnabled());
+    fireEvent.click(submitButton);
+
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByRole("heading", { name: "Report request not accepted" })).toBeInTheDocument();
+    expect(within(alert).getByLabelText("Status Not accepted")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry Report Request" })).toBeEnabled();
   });
 
   it("presents source-workflow evidence without offering a false ordering control", async () => {

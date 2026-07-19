@@ -36,6 +36,7 @@ export function ReportOrderingWorkspace({
     reportingCurrency: portfolio.baseCurrency,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
+  const workspaceState = workflow.screenState.workspace;
 
   function focusReadiness() {
     requestAnimationFrame(() => readinessRef.current?.focus());
@@ -74,34 +75,25 @@ export function ReportOrderingWorkspace({
               }
             >
               <WorkbenchSectionStack className={styles.contentStack}>
-                {workflow.catalogueState === "loading" ? (
+                {workspaceState.kind !== "configuration" ? (
                   <ScreenStatePanel
-                    kind="loading"
+                    kind={workspaceState.kind}
                     surface="portfolio"
-                    title="Loading approved reports"
-                    body="Checking portfolio access, available report families, and current output readiness."
-                    rows={5}
+                    title={workspaceState.title}
+                    body={workspaceState.body}
+                    rows={workspaceState.kind === "loading" ? 5 : undefined}
+                    action={
+                      workspaceState.actionLabel ? (
+                        <ActionButton onClick={() => void workflow.refreshCatalogue()}>
+                          {workspaceState.actionLabel}
+                        </ActionButton>
+                      ) : undefined
+                    }
                   />
-                ) : workflow.catalogueState === "permission_blocked" ? (
-                  <ScreenStatePanel
-                    kind="permission_blocked"
-                    surface="portfolio"
-                    title="Report ordering is restricted"
-                    body={workflow.catalogueError ?? "This portfolio is not available for report ordering."}
-                    action={<ActionButton onClick={() => void workflow.refreshCatalogue()}>Check Again</ActionButton>}
-                  />
-                ) : workflow.catalogueState === "error" ? (
-                  <ScreenStatePanel
-                    kind="error"
-                    surface="portfolio"
-                    title="Approved reports are unavailable"
-                    body={workflow.catalogueError ?? "Reporting choices could not be loaded."}
-                    action={<ActionButton onClick={() => void workflow.refreshCatalogue()}>Try Again</ActionButton>}
-                  />
-                ) : workflow.model && workflow.configuration ? (
+                ) : workflow.configuration ? (
                   <>
                     <ReportConfigurationPanel
-                      model={workflow.model}
+                      model={workspaceState.model}
                       configuration={workflow.configuration}
                       updateConfiguration={workflow.updateConfiguration}
                       toggleSection={workflow.toggleSection}
@@ -113,14 +105,7 @@ export function ReportOrderingWorkspace({
                       onRefresh={() => void workflow.refreshHistory()}
                     />
                   </>
-                ) : (
-                  <ScreenStatePanel
-                    kind="empty"
-                    surface="portfolio"
-                    title="No approved reports available"
-                    body="No report family is currently available for this portfolio and business role."
-                  />
-                )}
+                ) : null}
               </WorkbenchSectionStack>
             </WorkbenchPageFrame>
           }
@@ -129,10 +114,10 @@ export function ReportOrderingWorkspace({
               <div ref={readinessRef} tabIndex={-1} className={styles.focusTarget}>
                 <ReportReadinessRail
                   model={workflow.model}
+                  screenState={workflow.screenState.readiness}
                   preflightReviewed={workflow.preflightReviewed}
                   canSubmitReviewedRequest={workflow.canSubmitReviewedRequest}
                   submissionState={workflow.submissionState}
-                  submissionError={workflow.submissionError}
                   submittedHandle={workflow.submittedHandle}
                   onReview={() => {
                     workflow.reviewRequest();

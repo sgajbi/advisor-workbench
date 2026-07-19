@@ -3,29 +3,29 @@
 import { ActionButton, DefinitionList, Panel, SemanticBadge } from "@/design-system";
 
 import type { ReportJobHandle } from "../contracts";
+import type { ReportOrderingReadinessState } from "../report-ordering-screen-state";
 import type { ReportOrderingViewModel } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 
 export function ReportReadinessRail({
   model,
+  screenState,
   preflightReviewed,
   canSubmitReviewedRequest,
   submissionState,
-  submissionError,
   submittedHandle,
   onReview,
   onSubmit,
 }: {
   model: ReportOrderingViewModel | null;
+  screenState: ReportOrderingReadinessState;
   preflightReviewed: boolean;
   canSubmitReviewedRequest: boolean;
   submissionState: "idle" | "submitting" | "accepted" | "error";
-  submissionError: string | null;
   submittedHandle: ReportJobHandle | null;
   onReview: () => void;
   onSubmit: () => void;
 }) {
-  const tone = !model || model.readiness.state === "blocked" ? "warn" : "success";
   const selectedSections = model?.sectionChoices.filter((section) => section.selected) ?? [];
   const selectedOutput = model?.outputChoices.find(
     (output) => output.id === model.configuration.outputFormat,
@@ -33,17 +33,28 @@ export function ReportReadinessRail({
 
   return (
     <div className={styles.readinessStack}>
-      <Panel className={styles.readinessPanel} density="compact">
-        <div className={styles.railHeading}>
-          <div>
-            <span className={styles.eyebrow}>Request readiness</span>
-            <h2>{model?.readiness.title ?? "Loading report readiness"}</h2>
+      <Panel
+        className={styles.readinessPanel}
+        density="compact"
+        aria-busy={screenState.busy}
+      >
+        <div
+          className={styles.readinessStatus}
+          role={screenState.kind === "not_accepted" ? "alert" : "status"}
+          aria-live={screenState.kind === "not_accepted" ? "assertive" : "polite"}
+          aria-atomic="true"
+        >
+          <div className={styles.railHeading}>
+            <div>
+              <span className={styles.eyebrow}>Request readiness</span>
+              <h2>{screenState.title}</h2>
+            </div>
+            <SemanticBadge tone={screenState.tone} emphasis="strong">
+              {screenState.badgeLabel}
+            </SemanticBadge>
           </div>
-          <SemanticBadge tone={tone} emphasis="strong">
-            {model?.readiness.state === "ready" ? "Ready" : "Review"}
-          </SemanticBadge>
+          <p>{screenState.detail}</p>
         </div>
-        <p>{model?.readiness.detail ?? "Checking approved report choices and portfolio access."}</p>
 
         {model?.readiness.issues.length ? (
           <div className={styles.validationSummary} role="alert">
@@ -56,7 +67,7 @@ export function ReportReadinessRail({
           </div>
         ) : null}
 
-        {model ? (
+        {model && screenState.showRequestSummary ? (
           <DefinitionList
             ariaLabel="Report request summary"
             className={styles.readinessFacts}
@@ -71,31 +82,37 @@ export function ReportReadinessRail({
           />
         ) : null}
 
-        <div className={styles.actionStack}>
-          <ActionButton priority="secondary" onClick={onReview} disabled={!model?.canSubmit}>
-            {preflightReviewed ? "Reviewed" : "Review Request"}
-          </ActionButton>
-          <ActionButton
-            priority="primary"
-            onClick={onSubmit}
-            disabled={!canSubmitReviewedRequest}
-          >
-            {submissionState === "submitting"
-              ? "Submitting…"
-              : submissionState === "accepted"
-                ? "Request Accepted"
-                : "Submit Report Request"}
-          </ActionButton>
-          {!preflightReviewed && model?.canSubmit ? (
-            <small>Review the current setup before submitting.</small>
-          ) : null}
-        </div>
+        {screenState.showActions ? (
+          <div className={styles.actionStack}>
+            <ActionButton
+              priority="secondary"
+              onClick={onReview}
+              disabled={!model?.canSubmit || submissionState === "submitting"}
+            >
+              {preflightReviewed ? "Reviewed" : "Review Request"}
+            </ActionButton>
+            <ActionButton
+              priority="primary"
+              onClick={onSubmit}
+              disabled={!canSubmitReviewedRequest}
+            >
+              {submissionState === "submitting"
+                ? "Submitting…"
+                : submissionState === "error"
+                  ? "Retry Report Request"
+                  : "Submit Report Request"}
+            </ActionButton>
+            {!preflightReviewed && model?.canSubmit ? (
+              <small>Review the current setup before submitting.</small>
+            ) : null}
+          </div>
+        ) : null}
       </Panel>
 
       <Panel className={styles.boundaryPanel} density="compact" surface="secondary">
         <span className={styles.eyebrow}>Client release</span>
-        <h3>Review before any client use</h3>
-        <p>{model?.clientReleaseLabel ?? "Client release posture is loading."}</p>
+        <h3>{screenState.clientReleaseTitle}</h3>
+        <p>{screenState.clientReleaseDetail}</p>
         <div className={styles.boundarySteps} aria-label="Report lifecycle boundaries">
           <span>Request</span>
           <span>Report data</span>
@@ -103,14 +120,6 @@ export function ReportReadinessRail({
           <span>Client delivery</span>
         </div>
       </Panel>
-
-      {submissionError ? (
-        <Panel className={styles.submissionState} density="compact" role="alert">
-          <SemanticBadge tone="danger">Not accepted</SemanticBadge>
-          <strong>Report request needs attention</strong>
-          <p>{submissionError}</p>
-        </Panel>
-      ) : null}
 
       {submittedHandle ? (
         <Panel className={styles.submissionState} density="compact" aria-live="polite">

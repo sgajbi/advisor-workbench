@@ -15,6 +15,11 @@ import type {
   ReportOrderingResponse,
 } from "./contracts";
 import {
+  buildReportOrderingScreenState,
+  type ReportOrderingCatalogueState,
+  type ReportOrderingSubmissionState,
+} from "./report-ordering-screen-state";
+import {
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
@@ -23,14 +28,13 @@ import {
   type ReportOrderingConfiguration,
 } from "./view-model";
 
-type LoadState = "loading" | "ready" | "permission_blocked" | "error";
-type SubmissionState = "idle" | "submitting" | "accepted" | "error";
-
 type ReviewedIntent = {
   configurationFingerprint: string;
   sourceFingerprint: string;
   idempotencyKey: string;
 };
+
+type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
 
 export function useReportOrderingWorkflow({
   portfolioId,
@@ -42,15 +46,17 @@ export function useReportOrderingWorkflow({
   reportingCurrency: string;
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
-  const [catalogueState, setCatalogueState] = useState<LoadState>("loading");
+  const [catalogueState, setCatalogueState] =
+    useState<ReportOrderingCatalogueState>("loading");
   const [catalogueError, setCatalogueError] = useState<string | null>(null);
   const [configuration, setConfiguration] =
     useState<ReportOrderingConfiguration | null>(null);
   const [history, setHistory] = useState<ReportJobListResponse | null>(null);
-  const [historyState, setHistoryState] = useState<LoadState>("loading");
+  const [historyState, setHistoryState] = useState<HistoryLoadState>("loading");
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [reviewedIntent, setReviewedIntent] = useState<ReviewedIntent | null>(null);
-  const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
+  const [submissionState, setSubmissionState] =
+    useState<ReportOrderingSubmissionState>("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submittedHandle, setSubmittedHandle] = useState<ReportJobHandle | null>(null);
   const sourceFingerprintRef = useRef<string>("");
@@ -149,6 +155,25 @@ export function useReportOrderingWorkflow({
     reviewedIntent &&
       reviewedIntent.configurationFingerprint === currentConfigurationFingerprint &&
       reviewedIntent.sourceFingerprint === sourceFingerprintRef.current,
+  );
+  const screenState = useMemo(
+    () =>
+      buildReportOrderingScreenState({
+        catalogueState,
+        catalogueError,
+        model,
+        preflightReviewed,
+        submissionState,
+        submissionError,
+      }),
+    [
+      catalogueError,
+      catalogueState,
+      model,
+      preflightReviewed,
+      submissionError,
+      submissionState,
+    ],
   );
 
   const updateConfiguration = useCallback(
@@ -269,6 +294,7 @@ export function useReportOrderingWorkflow({
     submissionState,
     submissionError,
     submittedHandle,
+    screenState,
     preflightReviewed,
     canSubmitReviewedRequest:
       Boolean(model?.canSubmit && preflightReviewed) &&
