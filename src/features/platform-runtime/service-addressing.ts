@@ -2,8 +2,20 @@ const BFF_PROXY_BASE_URL = "/api/bff";
 const API_VERSION_PREFIX = "/api/v1";
 const DEFAULT_LOTUS_ENVIRONMENT = "dev";
 const DISALLOWED_LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
-const PERFORMANCE_FIXTURE_GATEWAY_MODE = "performance";
-const PERFORMANCE_FIXTURE_SCENARIOS = new Set(["populated", "unavailable"]);
+const OWNED_E2E_FIXTURE_GATEWAYS = [
+  {
+    mode: "performance",
+    portEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE_PORT",
+    scenarioEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE",
+    scenarios: new Set(["populated", "unavailable"]),
+  },
+  {
+    mode: "report-centre",
+    portEnvironmentVariable: "REPORT_CENTRE_E2E_FIXTURE_PORT",
+    scenarioEnvironmentVariable: "REPORT_CENTRE_E2E_FIXTURE",
+    scenarios: new Set(["state-matrix"]),
+  },
+] as const;
 
 export type ServiceRequestTarget = "server" | "client";
 
@@ -11,12 +23,19 @@ function normalizeBaseUrl(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
-function isOwnedPerformanceFixtureGateway(parsed: URL): boolean {
-  const fixturePort = process.env.PERFORMANCE_E2E_FIXTURE_PORT?.trim();
+function isOwnedE2eFixtureGateway(parsed: URL): boolean {
+  const configuredMode = process.env.WORKBENCH_E2E_FIXTURE_GATEWAY?.trim();
+  const fixture = OWNED_E2E_FIXTURE_GATEWAYS.find(
+    (candidate) => candidate.mode === configuredMode,
+  );
+  if (!fixture) {
+    return false;
+  }
+
+  const fixturePort = process.env[fixture.portEnvironmentVariable]?.trim();
+  const fixtureScenario = process.env[fixture.scenarioEnvironmentVariable]?.trim() ?? "";
   return (
-    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY?.trim() ===
-      PERFORMANCE_FIXTURE_GATEWAY_MODE &&
-    PERFORMANCE_FIXTURE_SCENARIOS.has(process.env.PERFORMANCE_E2E_FIXTURE?.trim() ?? "") &&
+    fixture.scenarios.has(fixtureScenario) &&
     parsed.protocol === "http:" &&
     parsed.hostname === "127.0.0.1" &&
     Boolean(fixturePort) &&
@@ -29,7 +48,7 @@ function assertCanonicalGatewayBaseUrl(value: string): string {
   const parsed = new URL(normalized);
   const hostname = parsed.hostname.trim().toLowerCase();
 
-  if (DISALLOWED_LOCAL_HOSTS.has(hostname) && !isOwnedPerformanceFixtureGateway(parsed)) {
+  if (DISALLOWED_LOCAL_HOSTS.has(hostname) && !isOwnedE2eFixtureGateway(parsed)) {
     throw new Error(
       `BFF_BASE_URL must use a canonical Lotus hostname, not local loopback (${hostname}).`
     );

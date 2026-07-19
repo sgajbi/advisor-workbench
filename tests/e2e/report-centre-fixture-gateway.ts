@@ -1,0 +1,173 @@
+import { createServer, type Server, type ServerResponse } from "node:http";
+
+import {
+  buildReportJobListResponse,
+  buildReportOrderingResponse,
+} from "../fixtures/report-ordering-fixtures";
+
+const RECOVERY_PORTFOLIO_ID = "PB_REPORT_RECOVERY_001";
+
+export const REPORT_CENTRE_FIXTURE_PORTFOLIOS = {
+  ready: "PB_REPORT_READY_001",
+  recovery: RECOVERY_PORTFOLIO_ID,
+  restricted: "PB_REPORT_RESTRICTED_001",
+  empty: "PB_REPORT_EMPTY_001",
+} as const;
+
+export type ReportCentreFixtureGateway = {
+  close: () => Promise<void>;
+  port: number;
+};
+
+export async function startReportCentreFixtureGateway({
+  port,
+}: {
+  port: number;
+}): Promise<ReportCentreFixtureGateway> {
+  let recoveryAttempts = 0;
+  const server = createServer((request, response) => {
+    const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
+
+    if (requestUrl.pathname === "/api/v1/portfolio/portfolios") {
+      sendJson(response, {
+        items: Object.values(REPORT_CENTRE_FIXTURE_PORTFOLIOS).map((portfolioId) => ({
+          portfolio_id: portfolioId,
+          display_name: fixturePortfolioLabel(portfolioId),
+          base_currency: "SGD",
+          client_id: `CLIENT_${portfolioId}`,
+          booking_center_code: "SG",
+          portfolio_type: "ADVISORY",
+          status: "ACTIVE",
+        })),
+      });
+      return;
+    }
+
+    const workspacePortfolioId = resolveWorkspacePortfolioId(requestUrl.pathname);
+    if (workspacePortfolioId) {
+      sendJson(response, buildWorkspaceResponse(workspacePortfolioId));
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/report-ordering/options") {
+      const portfolioId = requestUrl.searchParams.get("scopeId") ?? "";
+      if (portfolioId === REPORT_CENTRE_FIXTURE_PORTFOLIOS.restricted) {
+        sendJson(response, { code: "reporting_scope_not_entitled" }, 403);
+        return;
+      }
+      if (portfolioId === RECOVERY_PORTFOLIO_ID && recoveryAttempts++ === 0) {
+        sendJson(response, { code: "report_catalogue_temporarily_unavailable" }, 503);
+        return;
+      }
+
+      const catalogue = buildReportOrderingResponse();
+      sendJson(response, {
+        ...catalogue,
+        scopeSelection: { scopeType: "portfolio", scopeId: portfolioId },
+        reportFamilies:
+          portfolioId === REPORT_CENTRE_FIXTURE_PORTFOLIOS.empty
+            ? []
+            : catalogue.reportFamilies,
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/report-jobs") {
+      sendJson(response, buildReportJobListResponse());
+      return;
+    }
+
+    if (
+      requestUrl.pathname === "/api/v1/reports/portfolio-reviews" &&
+      request.method === "POST"
+    ) {
+      sendJson(
+        response,
+        {
+          report_request_id: "rrq_e2e",
+          report_job_id: "rjob_e2e",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_e2e",
+        },
+        202,
+      );
+      return;
+    }
+
+    sendJson(response, { code: "fixture_route_not_found" }, 404);
+  });
+
+  await listen(server, port);
+  return {
+    port,
+    close: () => close(server),
+  };
+}
+
+function resolveWorkspacePortfolioId(pathname: string): string | null {
+  const match = pathname.match(/^\/api\/v1\/portfolio\/portfolios\/([^/]+)\/workspace$/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function fixturePortfolioLabel(portfolioId: string): string {
+  const suffix = portfolioId.replace("PB_REPORT_", "").replace("_001", "").toLowerCase();
+  return `Report Centre ${suffix} mandate`;
+}
+
+function buildWorkspaceResponse(portfolioId: string) {
+  return {
+    as_of_date: "2026-04-22",
+    portfolio: {
+      portfolio_id: portfolioId,
+      display_name: fixturePortfolioLabel(portfolioId),
+      client_id: `CLIENT_${portfolioId}`,
+      base_currency: "SGD",
+      booking_center_code: "SG",
+    },
+    profile: {
+      status: "ACTIVE",
+      portfolio_type: "ADVISORY",
+      risk_exposure: "MODERATE",
+      investment_time_horizon: "LONG_TERM",
+      objective: "GROWTH",
+      is_leverage_allowed: false,
+      open_date: "2024-01-01",
+    },
+    summary: {
+      assets_under_management_base: 12_500_000,
+      invested_market_value_base: 11_500_000,
+      cash_market_value_base: 1_000_000,
+      cash_weight_pct: 8,
+      position_count: 18,
+      cash_balance_count: 2,
+    },
+    reporting: { status: "READY", generated_at_utc: null, row_count: 18 },
+    cashflow_outlook: null,
+    performance: null,
+    rebalance: null,
+    workflow_cues: [],
+    warnings: [],
+    partial_failures: [],
+  };
+}
+
+function sendJson(response: ServerResponse, body: unknown, status = 200) {
+  response.writeHead(status, {
+    "content-type": "application/json",
+    "cache-control": "no-store",
+  });
+  response.end(JSON.stringify(body));
+}
+
+function listen(server: Server, port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", () => resolve());
+  });
+}
+
+function close(server: Server): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+}
