@@ -21,7 +21,22 @@
 .configurationStack,
 .readinessStack {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+}
+
+.terminalState :global(.module-state-panel),
+.terminalState :global(.portfolio-empty-state) {
+  min-height: 156px;
+  align-content: center;
+  padding: 24px;
+  border-color: #c6c6cd;
+  border-left: 3px solid #a84b3f;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.terminalState :global(.module-state-panel-error) {
+  background: #fffafa;
 }
 
 .section {
@@ -241,7 +256,6 @@
 }
 
 .readinessPanel,
-.boundaryPanel,
 .submissionState {
   display: grid;
   gap: 12px;
@@ -253,7 +267,7 @@
 }
 
 .readinessPanel p,
-.boundaryPanel p,
+.boundarySection p,
 .submissionState p {
   margin: 0;
   color: #596875;
@@ -269,11 +283,18 @@
 }
 
 .railHeading h2,
-.boundaryPanel h3 {
+.boundarySection h3 {
   margin: 3px 0 0;
   color: #1f2d38;
   font-size: 0.98rem;
   line-height: 1.25;
+}
+
+.boundarySection {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #dfe3e7;
 }
 
 .eyebrow {
@@ -314,12 +335,12 @@
 }
 
 .boundarySteps span {
-  padding: 6px 8px;
-  border: 1px solid #dfe4e9;
-  border-radius: 6px;
-  background: #fff;
+  padding: 6px 0 0;
+  border-top: 2px solid #d8dde3;
+  background: transparent;
   color: #4d5b66;
   font-size: 0.7rem;
+  font-weight: 650;
 }
 
 .supportDisclosure {
@@ -372,6 +393,14 @@
   .workflowManagedGrid,
   .sectionChoiceGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .terminalState :global(.module-state-panel),
+  .terminalState :global(.portfolio-empty-state) {
+    min-height: 0;
+    padding: 18px;
   }
 }
 

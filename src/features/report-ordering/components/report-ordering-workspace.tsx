@@ -77,6 +77,7 @@ export function ReportOrderingWorkspace({
               <WorkbenchSectionStack className={styles.contentStack}>
                 {workspaceState.kind !== "configuration" ? (
                   <ScreenStatePanel
+                    className={styles.terminalState}
                     kind={workspaceState.kind}
                     surface="portfolio"
                     title={workspaceState.title}

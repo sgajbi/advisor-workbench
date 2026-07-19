@@ -107,18 +107,17 @@ export function ReportReadinessRail({
             ) : null}
           </div>
         ) : null}
-      </Panel>
-
-      <Panel className={styles.boundaryPanel} density="compact" surface="secondary">
-        <span className={styles.eyebrow}>Client release</span>
-        <h3>{screenState.clientReleaseTitle}</h3>
-        <p>{screenState.clientReleaseDetail}</p>
-        <div className={styles.boundarySteps} aria-label="Report lifecycle boundaries">
-          <span>Request</span>
-          <span>Report data</span>
-          <span>Archive</span>
-          <span>Client delivery</span>
-        </div>
+        <section className={styles.boundarySection} aria-labelledby="report-client-release-title">
+          <span className={styles.eyebrow}>Client-use boundary</span>
+          <h3 id="report-client-release-title">{screenState.clientReleaseTitle}</h3>
+          <p>{screenState.clientReleaseDetail}</p>
+          <div className={styles.boundarySteps} aria-label="Separate report lifecycle controls">
+            <span>Request</span>
+            <span>Report data</span>
+            <span>Archive</span>
+            <span>Client delivery</span>
+          </div>
+        </section>
       </Panel>
 
       {submittedHandle ? (

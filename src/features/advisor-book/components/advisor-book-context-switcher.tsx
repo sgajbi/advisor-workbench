@@ -37,15 +37,23 @@ export default function AdvisorBookContextSwitcher({
   return (
     <div className={styles.switcher}>
       <div className={styles.header}>
-        <span>Portfolio context</span>
+        <span>
+          <span className={styles.fullContextLabel}>Portfolio context</span>
+          <span className={styles.compactContextLabel}>Portfolio</span>
+        </span>
         <Link href={`/book?asOfDate=${encodeURIComponent(asOfDate)}`}>My book</Link>
       </div>
       <details
         className={styles.disclosure}
         onToggle={(event) => setExpanded(event.currentTarget.open)}
       >
-        <summary ref={summaryRef} className={styles.summary}>
-          Change portfolio
+        <summary
+          ref={summaryRef}
+          className={styles.summary}
+          aria-label="Change portfolio"
+        >
+          <span className={styles.fullChangeLabel}>Change portfolio</span>
+          <span className={styles.compactChangeLabel}>Change</span>
         </summary>
         {expanded ? (
           <AdvisorBookContextOptions
