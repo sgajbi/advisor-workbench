@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "test:e2e:performance:populated": "node scripts/testing/run-performance-smoke-scenario.mjs populated",
     "test:e2e:performance:unavailable": "node scripts/testing/run-performance-smoke-scenario.mjs unavailable",
+    "test:e2e:reports:states": "node scripts/testing/run-report-centre-smoke-scenario.mjs",
     "live:stack:down": "powershell -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1",
     "live:stack:up": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1",
     "live:stack:up:core-manage": "powershell -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -CoreManageOnly",

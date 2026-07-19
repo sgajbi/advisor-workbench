@@ -12,6 +12,8 @@ describe("service addressing", () => {
   const originalFixtureGateway = process.env.WORKBENCH_E2E_FIXTURE_GATEWAY;
   const originalFixtureScenario = process.env.PERFORMANCE_E2E_FIXTURE;
   const originalFixturePort = process.env.PERFORMANCE_E2E_FIXTURE_PORT;
+  const originalReportCentreFixtureScenario = process.env.REPORT_CENTRE_E2E_FIXTURE;
+  const originalReportCentreFixturePort = process.env.REPORT_CENTRE_E2E_FIXTURE_PORT;
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
@@ -19,6 +21,8 @@ describe("service addressing", () => {
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = originalFixtureGateway;
     process.env.PERFORMANCE_E2E_FIXTURE = originalFixtureScenario;
     process.env.PERFORMANCE_E2E_FIXTURE_PORT = originalFixturePort;
+    process.env.REPORT_CENTRE_E2E_FIXTURE = originalReportCentreFixtureScenario;
+    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = originalReportCentreFixturePort;
   });
 
   it("uses the explicit BFF base URL when configured", () => {
@@ -59,6 +63,26 @@ describe("service addressing", () => {
     process.env.PERFORMANCE_E2E_FIXTURE_PORT = "18100";
 
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18100");
+  });
+
+  it("allows only the exact process-owned Report Centre fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18101/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "report-centre";
+    process.env.REPORT_CENTRE_E2E_FIXTURE = "state-matrix";
+    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = "18101";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18101");
+  });
+
+  it("rejects a Report Centre fixture URL whose port is not owned by the scenario", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18102/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "report-centre";
+    process.env.REPORT_CENTRE_E2E_FIXTURE = "state-matrix";
+    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = "18101";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+    );
   });
 
   it("rejects a loopback fixture URL whose port is not owned by the scenario", () => {
