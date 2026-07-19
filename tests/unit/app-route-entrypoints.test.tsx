@@ -20,6 +20,7 @@ vi.mock("echarts-for-react", () => ({
 vi.mock("next/navigation", () => ({
   redirect: (target: string) => redirectMock(target),
   usePathname: () => "/performance",
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
     replace: vi.fn(),
   }),
