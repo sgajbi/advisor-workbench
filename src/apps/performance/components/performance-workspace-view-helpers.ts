@@ -62,29 +62,16 @@ export function getContributionTotals(
   };
 }
 
-export function getAttributionTotals(
+export function getAttributionWeightTotals(
   level: NonNullable<WorkbenchPerformanceWorkspace["attribution"]>["levels"][number]
 ): {
   portfolioWeightAvgPct: number | null;
   benchmarkWeightAvgPct: number | null;
-  portfolioReturnPct: number | null;
-  benchmarkReturnPct: number | null;
-  allocationPct: number;
-  selectionPct: number;
-  interactionPct: number;
-  totalEffectPct: number | null;
 } {
   const rows = level.rows;
   return {
     portfolioWeightAvgPct: sumOptional(rows.map((row) => row.portfolio_weight_avg_pct)),
     benchmarkWeightAvgPct: sumOptional(rows.map((row) => row.benchmark_weight_avg_pct)),
-    portfolioReturnPct: null,
-    benchmarkReturnPct: null,
-    allocationPct: rows.reduce((sum, row) => sum + row.allocation_pct, 0),
-    selectionPct: rows.reduce((sum, row) => sum + row.selection_pct, 0),
-    interactionPct: rows.reduce((sum, row) => sum + row.interaction_pct, 0),
-    totalEffectPct:
-      level.total_effect_pct ?? rows.reduce((sum, row) => sum + row.total_effect_pct, 0),
   };
 }
 
