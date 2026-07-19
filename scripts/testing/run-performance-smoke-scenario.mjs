@@ -35,9 +35,10 @@ const child = spawn(
     shell: false,
     env: {
       ...process.env,
-      BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`,
+      BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`,
       PERFORMANCE_E2E_FIXTURE: scenario,
       PERFORMANCE_E2E_FIXTURE_PORT: String(fixturePort),
+      WORKBENCH_E2E_FIXTURE_GATEWAY: "performance",
     },
   },
 );

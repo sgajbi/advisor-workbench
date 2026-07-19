@@ -28,10 +28,13 @@ test.beforeAll(async () => {
     return;
   }
   const port = Number(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? '18100');
-  const expectedGateway = `http://gateway.dev.lotus:${port}`;
-  if (process.env.BFF_BASE_URL !== expectedGateway) {
+  const expectedGateway = `http://127.0.0.1:${port}`;
+  if (
+    process.env.BFF_BASE_URL !== expectedGateway ||
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY !== 'performance'
+  ) {
     throw new Error(
-      `Performance fixture proof requires BFF_BASE_URL=${expectedGateway}.`,
+      `Performance fixture proof requires the owned gateway at ${expectedGateway}.`,
     );
   }
   fixtureGateway = await startPerformanceFixtureGateway({
