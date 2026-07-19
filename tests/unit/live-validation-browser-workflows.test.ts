@@ -56,6 +56,17 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain('getByText("Supportability", { exact: true })');
   });
 
+  it("binds Advisor Book proof to portfolio context rather than its display label", () => {
+    const source = browserWorkflowModule.validateAdvisorBookPanel.toString();
+
+    expect(source).toContain(
+      'a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]',
+    );
+    expect(source).not.toContain("getByText(portfolioId");
+    expect(source).toContain('{ name: "Operational details" }');
+    expect(source).not.toContain('{ name: "Support details" }');
+  });
+
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "lotus-browser-workflow-"));
     const screenshotCalls: Array<{ path: string; fullPage: boolean }> = [];
