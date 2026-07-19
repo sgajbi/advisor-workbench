@@ -459,6 +459,13 @@ Important validation expectations:
     `npm run test:e2e:performance:unavailable` for truthful degraded behavior. Keep live-only
     timing checks separate, use default independent Playwright execution rather than serial mode,
     and do not let one summary failure skip Analysis, Contribution, or Evidence journeys.
+22. Performance attribution level totals are source-owned analytics. Workbench may aggregate
+    portfolio and benchmark exposure weights for presentation, but it must bind allocation,
+    selection, interaction, and total attribution effect directly to the Gateway contract rather
+    than reconstructing them from detail rows. Render missing optional component totals as
+    `Unavailable`; reserve `—` for intentionally non-additive return columns. A missing required
+    total effect is malformed upstream evidence owned by Gateway issue #506, not a reason to make
+    the Workbench contract nullable or substitute zero.
 
 ### Visual Review Gate
 

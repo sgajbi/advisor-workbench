@@ -1531,3 +1531,57 @@ explicit non-input to container lint, typecheck, tests, and build.
 
 Wiki source changes are required because the Docker parity operating envelope is validation truth.
 Publish `wiki/Validation-and-CI.md` after merge, then run strict parity verification.
+
+## Source-Authoritative Performance Attribution Totals
+
+### Validation job
+
+The Performance Analysis attribution table must explain the portfolio result using producer-owned
+analytical totals. Detail rows are evidence within a selected classification level; they are not a
+safe browser-side calculation base because the response can be partial, filtered, rounded, or
+shaped differently from the producer's official aggregate.
+
+### Current-practice research
+
+1. The CFA Institute's
+   [Portfolio Performance Evaluation curriculum](https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/portfolio-performance-evaluation)
+   treats attribution as a governed analytical process for explaining active return, including
+   allocation, selection, and interaction effects.
+2. The CFA Institute Research and Policy Center's
+   [Performance Attribution: History and Progress](https://rpc.cfainstitute.org/research/foundation/2019/performance-attribution)
+   reinforces that attribution methods and their interpretation depend on the chosen model and
+   calculation framework rather than presentation-layer arithmetic.
+3. W3C's [table concepts](https://www.w3.org/WAI/tutorials/tables/) and
+   [table design tips](https://www.w3.org/WAI/tutorials/tables/tips/) require data tables to expose
+   clear row and column relationships. Distinct language is therefore needed for unavailable
+   source evidence and for cells that are intentionally non-additive.
+
+### Adopted decisions
+
+1. Preserve `allocation_total_pct`, `selection_total_pct`, `interaction_total_pct`, and
+   `total_effect_pct` from the selected source attribution level as the only effect-total authority.
+2. Keep local aggregation only for portfolio and benchmark exposure weights, which are presentation
+   summaries rather than attribution calculations.
+3. Display `Unavailable` when an optional source component total is absent. Keep the em dash for
+   portfolio and benchmark return columns whose footer values are intentionally non-additive.
+4. Keep the required total-effect contract strict. Gateway issue #506 owns controlled handling of
+   malformed producer evidence rather than allowing Workbench to turn a missing value into zero or
+   a row-derived substitute.
+5. Protect the boundary with adversarial tests whose detail-row sums disagree with source totals,
+   plus a structural regression that rejects browser-side effect aggregation.
+
+### Rejected decisions
+
+1. Summing visible detail rows to reconstruct any official attribution effect.
+2. Treating missing totals as zero, blank content, or an em dash that is indistinguishable from an
+   intentionally non-additive field.
+3. Removing the total row and forcing advisors to estimate the portfolio-level explanation.
+4. Expanding this correctness slice into a wider visual redesign before the analytical authority is
+   trustworthy.
+
+### Publication decision
+
+No wiki source change is required. This slice corrects an existing supported Performance contract
+and records its engineering authority in repository context and review ledgers; it does not change
+the operator runbook, route catalogue, supported feature set, or validation commands. The PR must
+still pass strict wiki parity before merge.
