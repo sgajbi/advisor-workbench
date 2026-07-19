@@ -137,6 +137,11 @@ export function useReportOrderingWorkflow({
         : null,
     [catalogue, configuration],
   );
+  const publishedConfigurationFieldIds = useMemo(
+    () =>
+      new Set(model?.family?.configurationFields.map((field) => field.fieldId) ?? []),
+    [model?.family?.configurationFields],
+  );
   const currentConfigurationFingerprint = configuration
     ? configurationFingerprint(configuration)
     : "";
@@ -218,9 +223,17 @@ export function useReportOrderingWorkflow({
         portfolioId,
         asOfDate: configuration.asOfDate,
         outputFormat: configuration.outputFormat,
-        reportingCurrency: configuration.reportingCurrency || undefined,
-        benchmarkCode: configuration.benchmarkCode || undefined,
-        allocationDimensions: configuration.allocationDimensions,
+        ...(publishedConfigurationFieldIds.has("reporting_currency") &&
+        configuration.reportingCurrency
+          ? { reportingCurrency: configuration.reportingCurrency }
+          : {}),
+        ...(publishedConfigurationFieldIds.has("benchmark_code") &&
+        configuration.benchmarkCode
+          ? { benchmarkCode: configuration.benchmarkCode }
+          : {}),
+        ...(publishedConfigurationFieldIds.has("allocation_dimensions")
+          ? { allocationDimensions: configuration.allocationDimensions }
+          : {}),
         sections: configuration.selectedSections,
         idempotencyKey: reviewedIntent.idempotencyKey,
       });
@@ -233,7 +246,14 @@ export function useReportOrderingWorkflow({
       setSubmissionError(submissionErrorCopy(error));
       return false;
     }
-  }, [configuration, loadHistory, model?.canSubmit, portfolioId, reviewedIntent]);
+  }, [
+    configuration,
+    loadHistory,
+    model?.canSubmit,
+    portfolioId,
+    publishedConfigurationFieldIds,
+    reviewedIntent,
+  ]);
 
   return {
     catalogue,

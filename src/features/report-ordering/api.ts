@@ -22,7 +22,7 @@ export type PortfolioReviewOrder = {
   outputFormat: "json" | "pdf";
   reportingCurrency?: string;
   benchmarkCode?: string;
-  allocationDimensions: string[];
+  allocationDimensions?: string[];
   sections: string[];
   idempotencyKey: string;
 };
@@ -61,10 +61,14 @@ export async function submitPortfolioReviewOrder(
           portfolio_scope: { portfolio_ids: [order.portfolioId] },
           as_of_date: order.asOfDate,
           requested_output_formats: [order.outputFormat],
-          reporting_currency: order.reportingCurrency || null,
+          ...(order.reportingCurrency
+            ? { reporting_currency: order.reportingCurrency }
+            : {}),
           options: {
             sections: order.sections,
-            allocation_dimensions: order.allocationDimensions,
+            ...(order.allocationDimensions
+              ? { allocation_dimensions: order.allocationDimensions }
+              : {}),
             ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),
           },
         }),
