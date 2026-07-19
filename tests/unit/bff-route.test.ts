@@ -334,7 +334,12 @@ describe("BFF proxy route", () => {
           "X-Region": "spoofed-region",
           "X-Booking-Center-Code": "spoofed-centre",
           "X-Role": "AUDIT",
+          "X-Caller-Subject": "spoofed-subject",
+          "X-Caller-Roles": "book-administrator",
           "X-Caller-Capabilities": "advisor.book.write",
+          "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+          "X-Caller-Client-Ids": "UNENTITLED_CLIENT",
+          "X-Caller-Book-Ids": "UNENTITLED_BOOK",
         },
       },
     );
@@ -351,6 +356,11 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
     expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Book-Ids")).toBeNull();
   });
 
   it("uses explicitly configured development advisor-book identity", async () => {

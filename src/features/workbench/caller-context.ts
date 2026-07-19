@@ -51,7 +51,7 @@ const IDEA_AUTHORITY_HEADERS = [
   "X-Caller-Portfolio-Ids",
 ] as const;
 
-const REPORTING_AUTHORITY_HEADERS = [
+export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Actor-Id",
   "X-Caller-Application",
   "X-Tenant-Id",
@@ -218,7 +218,7 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of REPORTING_AUTHORITY_HEADERS) {
+  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
     headers.delete(headerName);
   }
 
