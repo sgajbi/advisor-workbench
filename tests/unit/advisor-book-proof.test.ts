@@ -170,6 +170,20 @@ describe("authoritative advisor-book live proof", () => {
         PORTFOLIO_ID,
       ),
     ).toThrow(/not limited to the governed tenant-source-confirmation gap/);
+
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(
+        advisorBook({
+          supportability: {
+            state: "degraded",
+            reason_code: "advisor_book_tenant_scope_not_reported",
+            tenant_scope: "trusted_context_only",
+            limitations: ["tenant_scope_not_reported", "calculation_evidence_missing"],
+          },
+        }),
+        PORTFOLIO_ID,
+      ),
+    ).toThrow(/not limited to the governed tenant-source-confirmation gap/);
   });
 
   it("rejects malformed or contradictory supportability limitations", () => {
@@ -191,6 +205,15 @@ describe("authoritative advisor-book live proof", () => {
     malformed.supportability.limitations = ["delegated_scope_not_supported", ""];
     expect(() => validateCanonicalAdvisorBookEvidence(malformed, PORTFOLIO_ID)).toThrow(
       /malformed supportability limitations/,
+    );
+
+    const duplicate = advisorBook();
+    duplicate.supportability.limitations = [
+      "delegated_scope_not_supported",
+      "delegated_scope_not_supported",
+    ];
+    expect(() => validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID)).toThrow(
+      /duplicate supportability limitations/,
     );
   });
 
