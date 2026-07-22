@@ -476,7 +476,9 @@ Important validation expectations:
     canonical validation must keep `advisor.book_overview` aligned with the governed panel registry
     and must not promote the whole panel to ready from membership posture alone. Apply the same
     boundary to composite Performance attribution and evidence panels: a supported component
-    capability does not supersede their governed partial posture.
+    capability does not supersede their governed partial posture. Any canonical proof asserting
+    exact membership uniqueness must cover the complete own-book result set: validate paging
+    metadata against returned items and fail closed on a non-zero offset or incomplete page.
 21. Performance browser proof must read source module capabilities and source economics before
     asserting optional metrics or analytical rows. Use `npm run test:e2e:performance:populated`
     for the complete metric/layout precondition and

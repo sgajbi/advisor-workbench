@@ -24,6 +24,12 @@ type Membership = {
 
 type AdvisorBookPayload = {
   scope: { kind: string; as_of_date: string };
+  page: {
+    total_count: number;
+    offset: number;
+    limit: number;
+    returned_count: number;
+  };
   items: Membership[];
   supportability: {
     state: string;
@@ -54,6 +60,7 @@ let classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookP
 function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPayload {
   return {
     scope: { kind: "own_book", as_of_date: AS_OF_DATE },
+    page: { total_count: 2, offset: 0, limit: 100, returned_count: 2 },
     items: [
       {
         portfolio_id: "PB_OTHER",
@@ -114,6 +121,8 @@ describe("authoritative advisor-book live proof", () => {
         asOfDate: AS_OF_DATE,
         membershipBasis: "governed_role_assignment",
         membershipSource: "PortfolioManagerBookMembership:v1",
+        totalCount: 2,
+        returnedCount: 2,
         supportabilityState: "ready",
         tenantScope: "source_confirmed",
         tenantIdentityFollowUp: null,
@@ -286,9 +295,12 @@ describe("authoritative advisor-book live proof", () => {
   });
 
   it("rejects missing and duplicate canonical memberships", () => {
+    const missing = advisorBook({ items: [] });
+    missing.page.total_count = 0;
+    missing.page.returned_count = 0;
     expect(() =>
       validateCanonicalAdvisorBookEvidence(
-        advisorBook({ items: [] }),
+        missing,
         PORTFOLIO_ID,
         AS_OF_DATE,
       ),
@@ -296,8 +308,36 @@ describe("authoritative advisor-book live proof", () => {
 
     const duplicate = advisorBook();
     duplicate.items.push({ ...duplicate.items[1] });
+    duplicate.page.total_count = 3;
+    duplicate.page.returned_count = 3;
     expect(() =>
       validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID, AS_OF_DATE),
     ).toThrow(/returned 2 memberships/);
+  });
+
+  it("fails closed unless paging proves complete own-book coverage", () => {
+    const incomplete = advisorBook();
+    incomplete.page.total_count = 101;
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(incomplete, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/did not cover the complete own-book result set/);
+
+    const laterPage = advisorBook();
+    laterPage.page.offset = 100;
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(laterPage, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/did not cover the complete own-book result set/);
+
+    const inconsistent = advisorBook();
+    inconsistent.page.returned_count = 1;
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(inconsistent, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/returned_count did not match/);
+
+    const missingPage = advisorBook();
+    delete (missingPage as { page?: AdvisorBookPayload["page"] }).page;
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(missingPage, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/malformed paging metadata/);
   });
 });

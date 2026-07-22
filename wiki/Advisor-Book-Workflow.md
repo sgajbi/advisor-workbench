@@ -49,6 +49,8 @@ scope. It proves `PortfolioManagerBookMembership:v1`, a governed role-assignment
 accepted snapshot/content evidence, the exact requested business-date scope, and
 `portfolio_party_role_assignments` / `role_type` lineage;
 legacy projection, duplicate membership, stale evidence, or unrelated degradation fails closed.
+Certification also requires internally consistent paging metadata and complete own-book coverage;
+a partial or later page cannot establish canonical membership uniqueness.
 Trusted-context-only tenant scope is accepted only as the explicit, separately owned Core #798
 limitation and is recorded in the machine-readable summary. The validator then classifies
 `advisor.book_overview` as `partial` even when its membership input is source-ready, because
