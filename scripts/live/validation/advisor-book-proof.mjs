@@ -15,6 +15,8 @@ const NON_DEGRADING_PRODUCT_SCOPE_LIMITATIONS = new Set([
   "assets_under_management_not_reported",
   "attention_indicators_not_reported",
 ]);
+const AUTHORITATIVE_MEMBERSHIP_PROOF =
+  "AUTHORITATIVE_ADVISOR_BOOK_MEMBERSHIP_CONFIRMED";
 
 function requireString(value, field) {
   const normalized = readString(value);
@@ -199,7 +201,7 @@ export function validateCanonicalAdvisorBookEvidence(
   const supportability = assertSupportability(advisorBook.supportability);
   const provenance = assertProvenance(advisorBook.provenance);
   return {
-    proof: "AUTHORITATIVE_ADVISOR_BOOK_MEMBERSHIP_CONFIRMED",
+    proof: AUTHORITATIVE_MEMBERSHIP_PROOF,
     portfolioId,
     asOfDate: responseAsOfDate,
     scope: "own_book",
@@ -214,4 +216,17 @@ export function validateCanonicalAdvisorBookEvidence(
       supportability.tenantScope === "source_confirmed" ? null : "lotus-core#798",
     ...provenance,
   };
+}
+
+export function classifyCanonicalAdvisorBookPanelSupportState(evidence) {
+  if (evidence?.proof !== AUTHORITATIVE_MEMBERSHIP_PROOF) {
+    throw new Error(
+      "Advisor-book panel classification requires authoritative membership evidence.",
+    );
+  }
+
+  // Authoritative membership is one input to panel supportability, not a certification of the
+  // whole panel. The governed panel registry remains partial until the separately owned tenant
+  // identity and wider advisor-book scope gaps are closed through their platform contracts.
+  return "partial";
 }

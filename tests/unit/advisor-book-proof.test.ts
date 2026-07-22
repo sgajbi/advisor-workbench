@@ -11,6 +11,10 @@ type ValidateCanonicalAdvisorBookEvidence = (
   expectedAsOfDate: string,
 ) => Record<string, unknown>;
 
+type ClassifyCanonicalAdvisorBookPanelSupportState = (
+  evidence: Record<string, unknown>,
+) => "partial";
+
 type Membership = {
   portfolio_id: string;
   membership_source: string;
@@ -45,6 +49,7 @@ type AdvisorBookPayload = {
 };
 
 let validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
+let classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
 
 function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPayload {
   return {
@@ -92,8 +97,11 @@ describe("authoritative advisor-book live proof", () => {
   beforeAll(async () => {
     const proofModule = (await import(PROOF_MODULE_PATH)) as {
       validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
+      classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
     };
     validateCanonicalAdvisorBookEvidence = proofModule.validateCanonicalAdvisorBookEvidence;
+    classifyCanonicalAdvisorBookPanelSupportState =
+      proofModule.classifyCanonicalAdvisorBookPanelSupportState;
   });
 
   it("selects the canonical item and records authoritative machine-readable evidence", () => {
@@ -112,6 +120,19 @@ describe("authoritative advisor-book live proof", () => {
         sourceTable: "portfolio_party_role_assignments",
         sourceField: "role_type",
       }),
+    );
+  });
+
+  it("keeps the panel partial when source-confirmed membership is ready", () => {
+    const evidence = validateCanonicalAdvisorBookEvidence(
+      advisorBook(),
+      PORTFOLIO_ID,
+      AS_OF_DATE,
+    );
+
+    expect(classifyCanonicalAdvisorBookPanelSupportState(evidence)).toBe("partial");
+    expect(() => classifyCanonicalAdvisorBookPanelSupportState({})).toThrow(
+      /requires authoritative membership evidence/,
     );
   });
 

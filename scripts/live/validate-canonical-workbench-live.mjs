@@ -56,7 +56,10 @@ import {
 } from "./validation/rfc36-43-feature-coverage.mjs";
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
 import { validateCanonicalAdvisorCockpit } from "./validation/advisor-cockpit-proof.mjs";
-import { validateCanonicalAdvisorBookEvidence } from "./validation/advisor-book-proof.mjs";
+import {
+  classifyCanonicalAdvisorBookPanelSupportState,
+  validateCanonicalAdvisorBookEvidence,
+} from "./validation/advisor-book-proof.mjs";
 import { createCanonicalPolicyEvaluation } from "./validation/advisory-policy-proof.mjs";
 import { validateCanonicalAdvisoryCopilot } from "./validation/advisory-copilot-proof.mjs";
 import {
@@ -1676,7 +1679,7 @@ async function run() {
 
   panelGovernance.recordPanelClassification(
     "advisor.book_overview",
-    advisorBookEvidence.supportabilityState === "ready" ? "ready" : "partial",
+    classifyCanonicalAdvisorBookPanelSupportState(advisorBookEvidence),
     "lotus-gateway",
     {
       portfolioId,
