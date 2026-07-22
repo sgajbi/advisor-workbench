@@ -120,7 +120,7 @@ describe("live validation calculation sanity helpers", () => {
     ]);
   });
 
-  it("maps supported performance evidence capability into the panel-ready vocabulary", () => {
+  it("keeps composite performance panels partial when component capabilities are supported", () => {
     const summary = createSummary();
 
     assertPerformanceCalculationSanity({
@@ -173,8 +173,13 @@ describe("live validation calculation sanity helpers", () => {
     expect(summary.panelClassifications).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          panel: "performance.analysis.attribution",
+          state: "partial",
+          attributionState: "supported",
+        }),
+        expect.objectContaining({
           panel: "performance.evidence",
-          state: "ready",
+          state: "partial",
           capabilityState: "supported",
         }),
       ])

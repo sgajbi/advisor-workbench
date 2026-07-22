@@ -240,7 +240,7 @@ export function assertPerformanceCalculationSanity({
   });
   recordPanelClassification(
     "performance.analysis.attribution",
-    attributionFallback ? "partial" : "ready",
+    "partial",
     "lotus-performance",
     {
       attributionState: attributionCapability.state,
@@ -249,8 +249,7 @@ export function assertPerformanceCalculationSanity({
     }
   );
   const evidenceCapabilityState = performanceSummary?.capabilities?.evidence?.state ?? "unavailable";
-  const evidenceState = evidenceCapabilityState === "supported" ? "ready" : evidenceCapabilityState;
-  recordPanelClassification("performance.evidence", evidenceState, "lotus-gateway", {
+  recordPanelClassification("performance.evidence", "partial", "lotus-gateway", {
     capabilityState: evidenceCapabilityState,
     reason: performanceSummary?.capabilities?.evidence?.reason ?? null,
   });
