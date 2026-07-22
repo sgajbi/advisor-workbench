@@ -7,6 +7,8 @@ const LEGACY_LIMITATIONS = new Set([
   "legacy_advisor_projection",
   "legacy_advisor_projection_present",
 ]);
+const TENANT_SCOPE_LIMITATION = "tenant_scope_not_reported";
+const INCOMPLETE_SOURCE_LIMITATION = "source_membership_incomplete";
 
 function requireString(value, field) {
   const normalized = readString(value);
@@ -20,9 +22,15 @@ function assertSupportability(supportability) {
   const state = readString(supportability?.state);
   const reason = readString(supportability?.reason_code);
   const tenantScope = readString(supportability?.tenant_scope);
-  const limitations = Array.isArray(supportability?.limitations)
-    ? supportability.limitations.map((value) => readString(value)).filter(Boolean)
-    : [];
+  if (
+    !Array.isArray(supportability?.limitations) ||
+    supportability.limitations.some((value) => !readString(value))
+  ) {
+    throw new Error(
+      "Gateway advisor-book evidence returned malformed supportability limitations.",
+    );
+  }
+  const limitations = supportability.limitations.map((value) => readString(value));
 
   if (limitations.some((limitation) => LEGACY_LIMITATIONS.has(limitation))) {
     throw new Error(
@@ -30,7 +38,12 @@ function assertSupportability(supportability) {
     );
   }
   if (state === "ready") {
-    if (reason !== "advisor_book_ready" || tenantScope !== "source_confirmed") {
+    if (
+      reason !== "advisor_book_ready" ||
+      tenantScope !== "source_confirmed" ||
+      limitations.includes(TENANT_SCOPE_LIMITATION) ||
+      limitations.includes(INCOMPLETE_SOURCE_LIMITATION)
+    ) {
       throw new Error(
         "Gateway advisor-book ready evidence did not preserve ready reason and source-confirmed tenant scope.",
       );
@@ -39,7 +52,8 @@ function assertSupportability(supportability) {
     const tenantOnly =
       reason === "advisor_book_tenant_scope_not_reported" &&
       tenantScope === "trusted_context_only" &&
-      limitations.includes("tenant_scope_not_reported");
+      limitations.includes(TENANT_SCOPE_LIMITATION) &&
+      !limitations.includes(INCOMPLETE_SOURCE_LIMITATION);
     if (!tenantOnly) {
       throw new Error(
         "Gateway advisor-book degraded evidence was not limited to the governed tenant-source-confirmation gap.",
