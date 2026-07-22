@@ -44,7 +44,12 @@ portfolio catalogue.
 
 ## Canonical proof
 
-The governed browser validator requires the canonical portfolio in the returned own-book scope,
-classifies `advisor.book_overview`, and captures `advisor-book-overview-live.png` only after the
-API and panel checks pass. The governed platform panel registry must contain that panel before the
-screenshot can be treated as demo-ready evidence; publication is tracked by lotus-platform #583.
+The governed browser validator requires exactly one canonical portfolio in the returned own-book
+scope. It proves `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current
+accepted snapshot/content evidence, and `portfolio_party_role_assignments` / `role_type` lineage;
+legacy projection, duplicate membership, stale evidence, or unrelated degradation fails closed.
+Trusted-context-only tenant scope is accepted only as the explicit, separately owned Core #798
+limitation and is recorded in the machine-readable summary. The validator then classifies
+`advisor.book_overview` and captures `advisor-book-overview-live.png` only after the API and panel
+checks pass. The governed platform panel registry must contain that panel before the screenshot can
+be treated as demo-ready evidence; publication is tracked by lotus-platform #583.
