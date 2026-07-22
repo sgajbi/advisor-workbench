@@ -1,12 +1,14 @@
 import { beforeAll } from "vitest";
 
 const PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
+const AS_OF_DATE = "2026-04-10";
 const PROOF_MODULE_PATH: string =
   "../../scripts/live/validation/advisor-book-proof.mjs";
 
 type ValidateCanonicalAdvisorBookEvidence = (
   advisorBook: unknown,
   portfolioId: string,
+  expectedAsOfDate: string,
 ) => Record<string, unknown>;
 
 type Membership = {
@@ -17,7 +19,7 @@ type Membership = {
 };
 
 type AdvisorBookPayload = {
-  scope: { kind: string };
+  scope: { kind: string; as_of_date: string };
   items: Membership[];
   supportability: {
     state: string;
@@ -46,7 +48,7 @@ let validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
 
 function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPayload {
   return {
-    scope: { kind: "own_book" },
+    scope: { kind: "own_book", as_of_date: AS_OF_DATE },
     items: [
       {
         portfolio_id: "PB_OTHER",
@@ -95,10 +97,13 @@ describe("authoritative advisor-book live proof", () => {
   });
 
   it("selects the canonical item and records authoritative machine-readable evidence", () => {
-    expect(validateCanonicalAdvisorBookEvidence(advisorBook(), PORTFOLIO_ID)).toEqual(
+    expect(
+      validateCanonicalAdvisorBookEvidence(advisorBook(), PORTFOLIO_ID, AS_OF_DATE),
+    ).toEqual(
       expect.objectContaining({
         proof: "AUTHORITATIVE_ADVISOR_BOOK_MEMBERSHIP_CONFIRMED",
         portfolioId: PORTFOLIO_ID,
+        asOfDate: AS_OF_DATE,
         membershipBasis: "governed_role_assignment",
         membershipSource: "PortfolioManagerBookMembership:v1",
         supportabilityState: "ready",
@@ -108,6 +113,20 @@ describe("authoritative advisor-book live proof", () => {
         sourceField: "role_type",
       }),
     );
+  });
+
+  it("rejects missing or mismatched canonical as-of scope", () => {
+    const missing = advisorBook();
+    missing.scope.as_of_date = "";
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(missing, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/no scope as-of date/);
+
+    const mismatched = advisorBook();
+    mismatched.scope.as_of_date = "2026-04-09";
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(mismatched, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/did not match requested canonical date/);
   });
 
   it("keeps the separate tenant-identity limitation explicit without masking assignment proof", () => {
@@ -121,6 +140,7 @@ describe("authoritative advisor-book live proof", () => {
         },
       }),
       PORTFOLIO_ID,
+      AS_OF_DATE,
     );
 
     expect(evidence).toEqual(
@@ -137,9 +157,9 @@ describe("authoritative advisor-book live proof", () => {
     const payload = advisorBook();
     payload.items[1].membership_basis = "legacy_advisor_projection";
 
-    expect(() => validateCanonicalAdvisorBookEvidence(payload, PORTFOLIO_ID)).toThrow(
-      /did not prove a governed role assignment/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(payload, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/did not prove a governed role assignment/);
   });
 
   it("rejects legacy limitations and non-tenant-only degraded postures", () => {
@@ -154,6 +174,7 @@ describe("authoritative advisor-book live proof", () => {
           },
         }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/legacy advisor projection limitation/);
 
@@ -168,6 +189,7 @@ describe("authoritative advisor-book live proof", () => {
           },
         }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/not limited to the governed tenant-source-confirmation gap/);
 
@@ -182,6 +204,7 @@ describe("authoritative advisor-book live proof", () => {
           },
         }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/not limited to the governed tenant-source-confirmation gap/);
   });
@@ -198,23 +221,24 @@ describe("authoritative advisor-book live proof", () => {
           },
         }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/did not preserve ready reason/);
 
     const malformed = advisorBook();
     malformed.supportability.limitations = ["delegated_scope_not_supported", ""];
-    expect(() => validateCanonicalAdvisorBookEvidence(malformed, PORTFOLIO_ID)).toThrow(
-      /malformed supportability limitations/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(malformed, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/malformed supportability limitations/);
 
     const duplicate = advisorBook();
     duplicate.supportability.limitations = [
       "delegated_scope_not_supported",
       "delegated_scope_not_supported",
     ];
-    expect(() => validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID)).toThrow(
-      /duplicate supportability limitations/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/duplicate supportability limitations/);
   });
 
   it("rejects missing, stale, or legacy-table provenance", () => {
@@ -222,21 +246,22 @@ describe("authoritative advisor-book live proof", () => {
       validateCanonicalAdvisorBookEvidence(
         advisorBook({ provenance: null }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/no source provenance/);
 
     const stale = advisorBook();
     stale.provenance!.source_evidence_current = false;
-    expect(() => validateCanonicalAdvisorBookEvidence(stale, PORTFOLIO_ID)).toThrow(
-      /source evidence was not current/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(stale, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/source evidence was not current/);
 
     const legacyLineage = advisorBook();
     legacyLineage.provenance!.lineage.source_table = "portfolios";
     legacyLineage.provenance!.lineage.source_field = "advisor_id";
-    expect(() => validateCanonicalAdvisorBookEvidence(legacyLineage, PORTFOLIO_ID)).toThrow(
-      /did not prove authoritative portfolio role assignment ownership/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(legacyLineage, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/did not prove authoritative portfolio role assignment ownership/);
   });
 
   it("rejects missing and duplicate canonical memberships", () => {
@@ -244,13 +269,14 @@ describe("authoritative advisor-book live proof", () => {
       validateCanonicalAdvisorBookEvidence(
         advisorBook({ items: [] }),
         PORTFOLIO_ID,
+        AS_OF_DATE,
       ),
     ).toThrow(/returned 0 memberships/);
 
     const duplicate = advisorBook();
     duplicate.items.push({ ...duplicate.items[1] });
-    expect(() => validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID)).toThrow(
-      /returned 2 memberships/,
-    );
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(duplicate, PORTFOLIO_ID, AS_OF_DATE),
+    ).toThrow(/returned 2 memberships/);
   });
 });
