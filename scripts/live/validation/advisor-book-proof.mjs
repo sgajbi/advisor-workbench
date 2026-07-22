@@ -150,9 +150,23 @@ function assertProvenance(provenance) {
   };
 }
 
-export function validateCanonicalAdvisorBookEvidence(advisorBook, portfolioId) {
+export function validateCanonicalAdvisorBookEvidence(
+  advisorBook,
+  portfolioId,
+  expectedAsOfDate,
+) {
   if (readString(advisorBook?.scope?.kind) !== "own_book") {
     throw new Error("Gateway advisor-book response did not preserve own-book scope.");
+  }
+  const requestedAsOfDate = requireString(expectedAsOfDate, "requested as-of date");
+  const responseAsOfDate = requireString(
+    advisorBook?.scope?.as_of_date,
+    "scope as-of date",
+  );
+  if (responseAsOfDate !== requestedAsOfDate) {
+    throw new Error(
+      `Gateway advisor-book scope as-of date ${responseAsOfDate} did not match requested canonical date ${requestedAsOfDate}.`,
+    );
   }
   const items = Array.isArray(advisorBook?.items) ? advisorBook.items : [];
   const canonicalItems = items.filter(
@@ -187,6 +201,7 @@ export function validateCanonicalAdvisorBookEvidence(advisorBook, portfolioId) {
   return {
     proof: "AUTHORITATIVE_ADVISOR_BOOK_MEMBERSHIP_CONFIRMED",
     portfolioId,
+    asOfDate: responseAsOfDate,
     scope: "own_book",
     membershipSource,
     membershipBasis,

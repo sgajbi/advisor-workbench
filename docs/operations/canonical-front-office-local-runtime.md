@@ -389,7 +389,8 @@ Advisor-book checks prove exactly one canonical portfolio belongs to the configu
 Gateway own-book response through Core `PortfolioManagerBookMembership:v1` with
 `membership_basis=governed_role_assignment`. Before browser capture, the validator requires current
 accepted provenance, snapshot/content identity, and `portfolio_party_role_assignments` / `role_type`
-lineage and rejects legacy projection evidence. It accepts a degraded aggregate only when the sole
+lineage, requires the returned scope date to match the requested canonical business date, and
+rejects legacy projection evidence. It accepts a degraded aggregate only when the sole
 degradation is the tenant-source-confirmation gap owned by `lotus-core#798`, and records that
 boundary in machine-readable evidence. The `/book` handoff never falls back to the global portfolio
 catalogue. The governed panel identifier is `advisor.book_overview`; its central platform registry

@@ -1649,6 +1649,7 @@ async function run() {
   const advisorBookEvidence = validateCanonicalAdvisorBookEvidence(
     advisorBook,
     portfolioId,
+    advisorBookAsOfDate,
   );
   summary.advisorBookChecks.push(advisorBookEvidence);
   const gatewayModuleHealth =
@@ -1679,6 +1680,7 @@ async function run() {
     "lotus-gateway",
     {
       portfolioId,
+      asOfDate: advisorBookEvidence.asOfDate,
       scope: advisorBookEvidence.scope,
       membershipSource: advisorBookEvidence.membershipSource,
       membershipBasis: advisorBookEvidence.membershipBasis,
