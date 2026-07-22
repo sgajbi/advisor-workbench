@@ -472,7 +472,9 @@ Important validation expectations:
     context switching must retain the current business route and supported query state, reset
     portfolio-specific stale state, and restore keyboard focus. Until #436 delivers an
     authenticated principal, BFF advisor-book authority is development-configured only and fails
-    closed elsewhere.
+    closed elsewhere. Authoritative membership evidence is only one input to panel supportability;
+    canonical validation must keep `advisor.book_overview` aligned with the governed panel registry
+    and must not promote the whole panel to ready from membership posture alone.
 21. Performance browser proof must read source module capabilities and source economics before
     asserting optional metrics or analytical rows. Use `npm run test:e2e:performance:populated`
     for the complete metric/layout precondition and

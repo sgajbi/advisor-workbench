@@ -51,6 +51,8 @@ accepted snapshot/content evidence, the exact requested business-date scope, and
 legacy projection, duplicate membership, stale evidence, or unrelated degradation fails closed.
 Trusted-context-only tenant scope is accepted only as the explicit, separately owned Core #798
 limitation and is recorded in the machine-readable summary. The validator then classifies
-`advisor.book_overview` and captures `advisor-book-overview-live.png` only after the API and panel
-checks pass. The governed platform panel registry must contain that panel before the screenshot can
-be treated as demo-ready evidence; publication is tracked by lotus-platform #583.
+`advisor.book_overview` as `partial` even when its membership input is source-ready, because
+authoritative assignment proof does not independently certify the panel's wider tenant and scope
+boundaries. It captures `advisor-book-overview-live.png` only after the API and panel checks pass.
+The governed platform panel registry must contain that panel before the screenshot can be treated
+as demo-ready evidence; publication is tracked by lotus-platform #583.
