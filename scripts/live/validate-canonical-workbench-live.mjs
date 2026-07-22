@@ -1,5 +1,5 @@
 import process from "node:process";
-import { chromium, expect } from "@playwright/test";
+import { chromium } from "@playwright/test";
 import { resolveValidationConfig } from "./validation/args.mjs";
 import {
   DEFAULT_CANONICAL_CONTRACT,
@@ -56,6 +56,7 @@ import {
 } from "./validation/rfc36-43-feature-coverage.mjs";
 import { validateAdvisorBriefWorkflowPackReviewChain } from "./validation/workflow-pack-proof.mjs";
 import { validateCanonicalAdvisorCockpit } from "./validation/advisor-cockpit-proof.mjs";
+import { validateCanonicalAdvisorBookEvidence } from "./validation/advisor-book-proof.mjs";
 import { createCanonicalPolicyEvaluation } from "./validation/advisory-policy-proof.mjs";
 import { validateCanonicalAdvisoryCopilot } from "./validation/advisory-copilot-proof.mjs";
 import {
@@ -1645,14 +1646,11 @@ async function run() {
       },
     },
   );
-  if (advisorBook?.scope?.kind !== "own_book") {
-    throw new Error("Gateway advisor-book response did not preserve own-book scope.");
-  }
-  if (!advisorBook?.items?.some((item) => item?.portfolio_id === portfolioId)) {
-    throw new Error(
-      `Gateway advisor book did not include canonical portfolio ${portfolioId}.`,
-    );
-  }
+  const advisorBookEvidence = validateCanonicalAdvisorBookEvidence(
+    advisorBook,
+    portfolioId,
+  );
+  summary.advisorBookChecks.push(advisorBookEvidence);
   const gatewayModuleHealth =
     gatewayCapabilities?.data?.normalized?.moduleHealth;
   if (
@@ -1677,12 +1675,14 @@ async function run() {
 
   panelGovernance.recordPanelClassification(
     "advisor.book_overview",
-    advisorBook.supportability?.state === "ready" ? "ready" : "partial",
+    advisorBookEvidence.supportabilityState === "ready" ? "ready" : "partial",
     "lotus-gateway",
     {
       portfolioId,
-      scope: advisorBook.scope.kind,
-      membershipSource: advisorBook.items[0]?.membership_source,
+      scope: advisorBookEvidence.scope,
+      membershipSource: advisorBookEvidence.membershipSource,
+      membershipBasis: advisorBookEvidence.membershipBasis,
+      tenantScope: advisorBookEvidence.tenantScope,
     },
   );
   panelGovernance.recordPanelClassification(

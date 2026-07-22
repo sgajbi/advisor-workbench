@@ -385,10 +385,14 @@ structured report data remains selected while unavailable governed PDF creation 
 advisor review gates submission, one request is accepted, recent report-data history is populated,
 and archive/client delivery remain separate. The governed panel identifier is
 `reporting.report_centre`; central platform registration is tracked in `lotus-platform#582`.
-Advisor-book checks prove the canonical portfolio belongs to the configured manager's Gateway
-own-book response, validate source membership before browser capture, preserve reported tenant and
-legacy-assignment limitations, and render the `/book` portfolio handoff without a global-catalogue
-fallback. The governed panel identifier is `advisor.book_overview`; its central platform registry
+Advisor-book checks prove exactly one canonical portfolio belongs to the configured manager's
+Gateway own-book response through Core `PortfolioManagerBookMembership:v1` with
+`membership_basis=governed_role_assignment`. Before browser capture, the validator requires current
+accepted provenance, snapshot/content identity, and `portfolio_party_role_assignments` / `role_type`
+lineage and rejects legacy projection evidence. It accepts a degraded aggregate only when the sole
+degradation is the tenant-source-confirmation gap owned by `lotus-core#798`, and records that
+boundary in machine-readable evidence. The `/book` handoff never falls back to the global portfolio
+catalogue. The governed panel identifier is `advisor.book_overview`; its central platform registry
 entry must be present before `advisor-book-overview-live.png` can be treated as demo-ready evidence.
 Central registration is tracked in `lotus-platform#583`.
 RFC-0025 policy checks now use the governed

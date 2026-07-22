@@ -486,6 +486,14 @@ Important validation expectations:
     `Unavailable`; reserve `—` for intentionally non-additive return columns. A missing required
     total effect is malformed upstream evidence owned by Gateway issue #506, not a reason to make
     the Workbench contract nullable or substitute zero.
+23. Canonical live validation must prove the source authority required by the acceptance claim,
+    not only endpoint availability, row presence, or a rendered panel. Select the governed entity
+    explicitly; require its exact versioned source, assignment or calculation basis, current
+    accepted provenance, snapshot/content identity, and authoritative lineage; and persist those
+    fields in machine-readable evidence. A degraded aggregate may pass only when the validator
+    names the single accepted limitation and its separately owned GitHub issue. Any legacy basis,
+    stale or incomplete evidence, duplicate governed entity, unrelated degradation, or missing
+    provenance fails closed.
 
 ### Visual Review Gate
 

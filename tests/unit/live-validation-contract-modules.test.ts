@@ -96,6 +96,7 @@ describe("live validation contract modules", () => {
       expect(shotIndex).toContain(summaryPath);
       expect(shotIndex).toContain("2026-04-10");
       expect(persistedSummary.workflowPackChecks).toEqual([]);
+      expect(persistedSummary.advisorBookChecks).toEqual([]);
       expect(persistedSummary.ideaCapacitySeed).toBeNull();
       expect(
         DEFAULT_PANEL_REGISTRY.panels.some(

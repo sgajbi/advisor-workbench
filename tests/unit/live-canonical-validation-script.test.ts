@@ -560,6 +560,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("RFC-0028 bank demo supported-claim register");
     expect(script).toContain('from "./validation/advisory-policy-proof.mjs"');
     expect(script).toContain('from "./validation/advisor-cockpit-proof.mjs"');
+    expect(script).toContain('from "./validation/advisor-book-proof.mjs"');
+    expect(script).toContain("validateCanonicalAdvisorBookEvidence");
+    expect(script).toContain("summary.advisorBookChecks.push");
     expect(script).toContain('from "./validation/advisory-copilot-proof.mjs"');
     expect(script).toContain("validateCanonicalAdvisoryCopilot");
     expect(script).toContain("Create proposal narrative canonical proof");
