@@ -156,6 +156,42 @@ describe("authoritative advisor-book live proof", () => {
         PORTFOLIO_ID,
       ),
     ).toThrow(/legacy advisor projection limitation/);
+
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(
+        advisorBook({
+          supportability: {
+            state: "degraded",
+            reason_code: "advisor_book_tenant_scope_not_reported",
+            tenant_scope: "trusted_context_only",
+            limitations: ["tenant_scope_not_reported", "source_membership_incomplete"],
+          },
+        }),
+        PORTFOLIO_ID,
+      ),
+    ).toThrow(/not limited to the governed tenant-source-confirmation gap/);
+  });
+
+  it("rejects malformed or contradictory supportability limitations", () => {
+    expect(() =>
+      validateCanonicalAdvisorBookEvidence(
+        advisorBook({
+          supportability: {
+            state: "ready",
+            reason_code: "advisor_book_ready",
+            tenant_scope: "source_confirmed",
+            limitations: ["tenant_scope_not_reported"],
+          },
+        }),
+        PORTFOLIO_ID,
+      ),
+    ).toThrow(/did not preserve ready reason/);
+
+    const malformed = advisorBook();
+    malformed.supportability.limitations = ["delegated_scope_not_supported", ""];
+    expect(() => validateCanonicalAdvisorBookEvidence(malformed, PORTFOLIO_ID)).toThrow(
+      /malformed supportability limitations/,
+    );
   });
 
   it("rejects missing, stale, or legacy-table provenance", () => {
