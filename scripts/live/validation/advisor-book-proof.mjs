@@ -26,6 +26,40 @@ function requireString(value, field) {
   return normalized;
 }
 
+function assertCompletePage(page, items) {
+  const integerFields = ["total_count", "offset", "limit", "returned_count"];
+  if (
+    !page ||
+    typeof page !== "object" ||
+    integerFields.some(
+      (field) => !Number.isInteger(page[field]) || page[field] < 0,
+    ) ||
+    page.limit < 1
+  ) {
+    throw new Error("Gateway advisor-book evidence returned malformed paging metadata.");
+  }
+  if (page.returned_count !== items.length) {
+    throw new Error(
+      "Gateway advisor-book paging returned_count did not match the returned memberships.",
+    );
+  }
+  if (page.offset !== 0 || page.total_count !== items.length) {
+    throw new Error(
+      "Gateway advisor-book evidence did not cover the complete own-book result set.",
+    );
+  }
+  if (items.length > page.limit) {
+    throw new Error(
+      "Gateway advisor-book evidence exceeded its declared page limit.",
+    );
+  }
+
+  return {
+    totalCount: page.total_count,
+    returnedCount: page.returned_count,
+  };
+}
+
 function assertSupportability(supportability) {
   const state = readString(supportability?.state);
   const reason = readString(supportability?.reason_code);
@@ -171,6 +205,7 @@ export function validateCanonicalAdvisorBookEvidence(
     );
   }
   const items = Array.isArray(advisorBook?.items) ? advisorBook.items : [];
+  const pageCoverage = assertCompletePage(advisorBook?.page, items);
   const canonicalItems = items.filter(
     (item) => readString(item?.portfolio_id) === portfolioId,
   );
@@ -208,6 +243,7 @@ export function validateCanonicalAdvisorBookEvidence(
     membershipSource,
     membershipBasis,
     membershipReferencePresent: true,
+    ...pageCoverage,
     supportabilityState: supportability.state,
     supportabilityReason: supportability.reason,
     tenantScope: supportability.tenantScope,
