@@ -6,10 +6,6 @@ import PerformanceAttributionTrendPanel from "../../src/apps/performance/compone
 
 const getTrendMock = vi.fn();
 
-function compactPattern(text: string) {
-  return new RegExp(text.replaceAll(" ", "\\s*"));
-}
-
 vi.mock("echarts-for-react", () => ({
   default: ({
     option,

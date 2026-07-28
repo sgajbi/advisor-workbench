@@ -144,7 +144,6 @@ async function validateAdvisoryJourneyRoute(
   {
     summary,
     workbenchBaseUrl,
-    portfolioId,
     timeoutMs,
     key,
     title,
@@ -666,7 +665,6 @@ export async function validatePortfolioPanels(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
-    assertListHasItems,
     screenshotRegisteredPanel,
   },
 ) {
@@ -731,7 +729,6 @@ export async function validateReportCentrePanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
-    assertTableHasRows,
     screenshotRegisteredPanel,
   },
 ) {
@@ -1365,7 +1362,6 @@ export async function validateOutcomeReviewPanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
-    assertTableHasRows,
     screenshotRegisteredPanel,
   },
 ) {
@@ -1427,7 +1423,6 @@ export async function validateDpmCommandCenterPanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
-    assertTableHasRows,
     screenshotRegisteredPanel,
   },
 ) {

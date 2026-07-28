@@ -36,7 +36,22 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   await panel.getByRole("button", { name: "Generate alternatives" }).click();
   const response = await responsePromise;
   const responseText = await response.text().catch(() => "");
-  let responseBody: Record<string, any> | null = null;
+  let responseBody: {
+    correlation_id?: string;
+    source_service?: string;
+    supportability?: {
+      state?: string;
+      reason_codes?: string[];
+      source_service?: string;
+      authority?: string;
+      selected_alternative_id?: string;
+    };
+    data?: {
+      alternative_set_id?: string;
+      alternatives?: unknown[];
+      selected_alternative_id?: string;
+    };
+  } | null = null;
   try {
     responseBody = responseText ? JSON.parse(responseText) : null;
   } catch {

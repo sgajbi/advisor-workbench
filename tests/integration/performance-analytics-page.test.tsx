@@ -39,11 +39,9 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
-    const React = require("react");
     return function MockDynamicComponent(props: Record<string, unknown>) {
-      const [Component, setComponent] = React.useState(
-        null as React.ComponentType<Record<string, unknown>> | null
-      );
+      const [Component, setComponent] =
+        React.useState<React.ComponentType<Record<string, unknown>> | null>(null);
       React.useEffect(() => {
         loader().then((mod: unknown) => {
           const resolved =
@@ -1446,7 +1444,6 @@ describe("PerformanceAnalyticsPage", () => {
       executiveExpectations = [],
       readoutExpectations = [],
       deferredExpectations = [],
-      horizonExpectations = [],
       absentTexts = [],
     }) => {
       installPerformancePageFetchScenario(scenario);

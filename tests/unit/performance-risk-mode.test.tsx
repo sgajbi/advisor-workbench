@@ -375,7 +375,7 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
-    const { container } = renderRiskMode(scenario);
+    renderRiskMode(scenario);
 
     await waitFor(() => {
       expect(
@@ -515,7 +515,7 @@ describe("PerformanceRiskMode", () => {
       buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
     );
 
-    const { container } = renderRiskMode(scenario);
+    renderRiskMode(scenario);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Risk mode status")).toHaveTextContent(

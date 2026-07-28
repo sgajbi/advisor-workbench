@@ -2,15 +2,27 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+type MockPositionRow = Record<string, string | number>;
+type MockPositionColumn = {
+  field?: string;
+  headerName?: string;
+};
+
 vi.mock("ag-grid-react", () => ({
-  AgGridReact: ({ rowData = [], columnDefs = [] }: any) => (
+  AgGridReact: ({
+    rowData = [],
+    columnDefs = [],
+  }: {
+    rowData?: MockPositionRow[];
+    columnDefs?: MockPositionColumn[];
+  }) => (
     <div data-testid="positions-grid">
       <div>
-        {columnDefs.map((column: any) => (
+        {columnDefs.map((column) => (
           <span key={column.field}>{column.headerName}</span>
         ))}
       </div>
-      {rowData.map((row: any) => (
+      {rowData.map((row) => (
         <div key={row.instrument_id}>
           {row.instrument_id} | {row.asset_class} | {row.weight_pct}
         </div>

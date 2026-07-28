@@ -8,10 +8,6 @@ import { buildPerformanceHorizonComparison } from "../fixtures/performance-works
 
 const getHorizonComparisonClientMock = vi.fn();
 
-function compactPattern(text: string) {
-  return new RegExp(text.replaceAll(" ", "\\s*"));
-}
-
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchPerformanceHorizonComparisonClient: (...args: unknown[]) =>
     getHorizonComparisonClientMock(...args),

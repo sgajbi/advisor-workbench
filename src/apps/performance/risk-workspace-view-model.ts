@@ -688,7 +688,7 @@ export function buildFixtureRiskDrawdown(
     metadata: {
       generated_at: workspace.as_of_date,
       input_mode: "stateful",
-      methodology_version: "drawdown.fixture.v1",
+      methodology_version: `drawdown.fixture.${detailBasis.toLowerCase()}.v1`,
       cache_status: "bypass",
     },
   };

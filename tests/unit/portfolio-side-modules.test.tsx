@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import PortfolioContextModule from "../../src/apps/portfolio/modules/portfolio-context/portfolio-context-module";
 import PortfolioReadinessModule from "../../src/apps/portfolio/modules/portfolio-readiness/portfolio-readiness-module";
 import PortfolioWorkspaceSideRail from "../../src/apps/portfolio/components/portfolio-workspace-side-rail";
+import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import {
   buildPortfolioWorkspace,
   buildPortfolioWorkspaceContext,
@@ -37,7 +38,7 @@ describe("portfolio side rail modules", () => {
 
     render(
       <PortfolioContextModule
-        workspace={workspace as any}
+        workspace={workspace as PortfolioWorkspace}
         copiedField={null}
         onCopy={onCopy}
       />
@@ -59,7 +60,7 @@ describe("portfolio side rail modules", () => {
 
     render(
       <PortfolioReadinessModule
-        workspace={workspace as any}
+        workspace={workspace as PortfolioWorkspace}
         showDetailFootnote
         onOpenException={onOpenException}
         exceptions={[

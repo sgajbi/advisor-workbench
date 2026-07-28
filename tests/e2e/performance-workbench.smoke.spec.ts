@@ -11,7 +11,6 @@ import {
   type PerformanceFixtureGatewayScenario,
 } from './performance-fixture-gateway';
 import {
-  expectActiveTab,
   measureElement,
   measureTableFrame,
   parseServerTimingDuration,

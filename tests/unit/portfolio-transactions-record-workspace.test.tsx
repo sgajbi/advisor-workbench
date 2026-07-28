@@ -2,10 +2,22 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+type MockTransactionRow = { transactionId: string };
+type MockDetailDrawer = {
+  title: string;
+  tabs: Array<{ key: string; content: React.ReactNode }>;
+};
+
 vi.mock("ag-grid-react", () => ({
-  AgGridReact: ({ rowData = [], onRowClicked }: any) => (
+  AgGridReact: ({
+    rowData = [],
+    onRowClicked,
+  }: {
+    rowData?: MockTransactionRow[];
+    onRowClicked?: (event: { data: MockTransactionRow }) => void;
+  }) => (
     <div>
-      {rowData.map((row: any) => (
+      {rowData.map((row) => (
         <button
           key={row.transactionId}
           onClick={() => onRowClicked?.({ data: row })}
@@ -20,11 +32,11 @@ vi.mock("ag-grid-react", () => ({
 vi.mock(
   "../../src/apps/portfolio/components/portfolio-detail-drawer-controller",
   () => ({
-    default: ({ detailDrawer }: any) =>
+    default: ({ detailDrawer }: { detailDrawer?: MockDetailDrawer | null }) =>
       detailDrawer ? (
         <aside>
           <h2>{detailDrawer.title}</h2>
-          {detailDrawer.tabs.map((tab: any) => (
+          {detailDrawer.tabs.map((tab) => (
             <React.Fragment key={tab.key}>{tab.content}</React.Fragment>
           ))}
         </aside>
