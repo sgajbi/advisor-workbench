@@ -53,6 +53,16 @@ describe("dependency security governance", () => {
     expect(eslintConfig).not.toContain('"*.config.*"');
   });
 
+  it("treats undefined JavaScript identifiers as root lint failures", () => {
+    const eslintConfig = readRepositoryFile("eslint.config.mjs");
+
+    expect(eslintConfig).toContain('files: ["**/*.{js,jsx,mjs,cjs}"]');
+    expect(eslintConfig).toContain('"no-undef": "error"');
+    expect(eslintConfig).toContain("sharedJavaScriptRuntimeGlobals");
+    expect(eslintConfig).toContain('process: "readonly"');
+    expect(eslintConfig).toContain('URLSearchParams: "readonly"');
+  });
+
   it("enforces high-risk toolchain and moderate-risk production audit thresholds", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
       scripts?: Record<string, string>;

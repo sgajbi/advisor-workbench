@@ -729,6 +729,7 @@ export async function validateReportCentrePanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
+    assertTableHasRows,
     screenshotRegisteredPanel,
   },
 ) {
@@ -1362,6 +1363,7 @@ export async function validateOutcomeReviewPanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
+    assertTableHasRows,
     screenshotRegisteredPanel,
   },
 ) {

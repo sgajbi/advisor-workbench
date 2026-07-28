@@ -11,6 +11,30 @@ const stableReactHooksRules = {
 
 const intentionalUnusedValuePattern = "^_";
 
+const sharedJavaScriptRuntimeGlobals = {
+  AbortController: "readonly",
+  Blob: "readonly",
+  Buffer: "readonly",
+  clearInterval: "readonly",
+  clearTimeout: "readonly",
+  console: "readonly",
+  crypto: "readonly",
+  fetch: "readonly",
+  FormData: "readonly",
+  Headers: "readonly",
+  performance: "readonly",
+  process: "readonly",
+  queueMicrotask: "readonly",
+  Request: "readonly",
+  Response: "readonly",
+  setInterval: "readonly",
+  setTimeout: "readonly",
+  TextDecoder: "readonly",
+  TextEncoder: "readonly",
+  URL: "readonly",
+  URLSearchParams: "readonly",
+};
+
 export default [
   {
     ignores: [
@@ -38,6 +62,15 @@ export default [
           varsIgnorePattern: intentionalUnusedValuePattern,
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.{js,jsx,mjs,cjs}"],
+    languageOptions: {
+      globals: sharedJavaScriptRuntimeGlobals,
+    },
+    rules: {
+      "no-undef": "error",
     },
   },
   {
