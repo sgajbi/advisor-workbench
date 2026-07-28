@@ -303,7 +303,9 @@ Dependency-security and lint-governance rules:
    continue to execute their own supported dependency contracts.
 3. The maintained lint gate is the ESLint CLI over the production `src` tree. Do not reintroduce
    deprecated `next lint` or `eslint-config-next`; use the direct Next ESLint plugin and
-   `typescript-eslint` compatibility path instead.
+   `typescript-eslint` compatibility path instead. Preserve the stable React Hooks correctness
+   rules (`rules-of-hooks` and `exhaustive-deps`) in the flat configuration; broader React
+   Compiler lint-rule adoption is tracked separately and must not be smuggled into unrelated PRs.
 4. If test, script, or configuration lint scope is expanded beyond `src`, first clean the
    pre-existing findings in a dedicated issue-backed slice instead of blocking product/RFC
    delivery with unrelated historical diagnostics.
@@ -520,7 +522,9 @@ Important validation expectations:
     aggregate may pass only when the validator
     names the single accepted limitation and its separately owned GitHub issue. Any legacy basis,
     stale or incomplete evidence, duplicate governed entity, unrelated degradation, or missing
-    provenance fails closed.
+    provenance fails closed. When Idea candidate detail does not expose a source hash, Workbench
+    proof must verify the available candidate id, policy, queue evaluation timestamp, source
+    signal, and detail source-ref evidence and record the hash as an explicit non-claim.
 
 ### Visual Review Gate
 

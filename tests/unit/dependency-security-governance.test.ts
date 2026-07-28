@@ -13,6 +13,26 @@ function hasExactLine(source: string, expectedLine: string): boolean {
 }
 
 describe("dependency security governance", () => {
+  it("preserves React Hooks linting under the flat ESLint CLI gate", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+    const eslintConfig = readRepositoryFile("eslint.config.mjs");
+
+    expect(packageJson.scripts?.lint).toBe("eslint src --max-warnings=0");
+    expect(packageJson.devDependencies?.["eslint-plugin-react-hooks"]).toBe(
+      "7.1.1",
+    );
+    expect(eslintConfig).toContain(
+      'import reactHooks from "eslint-plugin-react-hooks";',
+    );
+    expect(eslintConfig).toContain('"react-hooks": reactHooks');
+    expect(eslintConfig).toContain('"react-hooks/rules-of-hooks"');
+    expect(eslintConfig).toContain('"react-hooks/exhaustive-deps"');
+    expect(eslintConfig).toContain("...stableReactHooksRules");
+  });
+
   it("enforces high-risk toolchain and moderate-risk production audit thresholds", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
       scripts?: Record<string, string>;

@@ -13,7 +13,10 @@ import {
   getAdvisorIdeaReviewQueue,
 } from "../api";
 import { buildAdvisoryOpportunitiesModel } from "../advisory-opportunities-view-model";
-import type { AdvisorIdeaCandidateDetailData } from "../types";
+import type {
+  AdvisorIdeaCandidateDetailData,
+  AdvisorIdeaQueueItem,
+} from "../types";
 import IdeaCandidateActionPanel from "./idea-candidate-action-panel";
 import styles from "./advisory-opportunities-workspace.module.css";
 
@@ -53,6 +56,10 @@ export default function AdvisoryOpportunitiesWorkspace({
   const model = useMemo(
     () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
     [portfolioId, data],
+  );
+  const selectedQueueItem = useMemo(
+    () => findQueueItemByCandidateId(data?.items, selectedCandidate),
+    [data?.items, selectedCandidate],
   );
 
   if (!isCanonicalIdeaPortfolio) {
@@ -131,7 +138,10 @@ export default function AdvisoryOpportunitiesWorkspace({
           error={candidateDetailError}
           isLoading={isCandidateDetailLoading}
           portfolioId={portfolioId}
+          queueEvaluatedAtUtc={data?.evaluatedAtUtc}
+          queuePolicyVersion={data?.policyVersion}
           selectedCandidateId={selectedCandidate}
+          sourceSignalIds={selectedQueueItem?.candidate?.sourceSignalIds ?? []}
           onActionRecorded={async () => {
             const queryKeys = [
               ["advisory-opportunities", portfolioId],
@@ -237,20 +247,27 @@ function IdeaCandidateDetailPanel({
   error,
   isLoading,
   portfolioId,
+  queueEvaluatedAtUtc,
+  queuePolicyVersion,
   selectedCandidateId,
+  sourceSignalIds,
   onActionRecorded,
 }: {
   detail?: AdvisorIdeaCandidateDetailData;
   error: Error | null;
   isLoading: boolean;
   portfolioId: string;
+  queueEvaluatedAtUtc?: string;
+  queuePolicyVersion?: string;
   selectedCandidateId: string;
+  sourceSignalIds: string[];
   onActionRecorded: () => Promise<boolean>;
 }) {
   const candidate = detail?.candidate;
   const evidence = detail?.evidence;
   const audit = detail?.auditSummary;
   const sourceRefs = evidence?.sourceRefs ?? [];
+  const evidenceHash = firstEvidenceHash(evidence, sourceRefs);
   return (
     <div
       className={styles.detailPanel}
@@ -296,6 +313,26 @@ function IdeaCandidateDetailPanel({
               Evidence: {evidence?.supportability ?? "Evidence pending"}
             </span>
             <span>Sources: {sourceRefs.length}</span>
+            <span>
+              Source refs:{" "}
+              {sourceRefs.length > 0
+                ? sourceRefs.map(formatSourceRef).join(", ")
+                : "None"}
+            </span>
+            <span>
+              Source signals:{" "}
+              {sourceSignalIds.length > 0 ? sourceSignalIds.join(", ") : "None"}
+            </span>
+            <span>
+              Queue policy: {queuePolicyVersion ?? "Policy pending"}
+            </span>
+            <span>
+              Queue evaluated: {queueEvaluatedAtUtc ?? "Evaluation pending"}
+            </span>
+            <span>
+              Evidence hash:{" "}
+              {evidenceHash ?? "Not provided by Idea detail contract"}
+            </span>
             <span>Audit events: {audit?.eventCount ?? 0}</span>
             <span>
               Durable storage:{" "}
@@ -318,6 +355,76 @@ function IdeaCandidateDetailPanel({
       )}
     </div>
   );
+}
+
+function findQueueItemByCandidateId(
+  items: AdvisorIdeaQueueItem[] | undefined,
+  candidateId: string | undefined,
+): AdvisorIdeaQueueItem | undefined {
+  if (!candidateId) {
+    return undefined;
+  }
+  return items?.find((item) => item.candidate?.candidateId === candidateId);
+}
+
+function formatSourceRef(sourceRef: Record<string, unknown>): string {
+  return (
+    firstString(sourceRef, [
+      "productId",
+      "sourceProductId",
+      "source_product_id",
+      "sourceRef",
+      "source_ref",
+      "ref",
+      "id",
+    ]) ?? "Unidentified source ref"
+  );
+}
+
+function firstEvidenceHash(
+  evidence: AdvisorIdeaCandidateDetailData["evidence"] | undefined,
+  sourceRefs: Array<Record<string, unknown>>,
+): string | undefined {
+  return (
+    firstString(evidence, [
+      "evidenceHash",
+      "evidence_hash",
+      "contentHash",
+      "content_hash",
+      "sourceHash",
+      "source_hash",
+      "hash",
+    ]) ??
+    sourceRefs
+      .map((sourceRef) =>
+        firstString(sourceRef, [
+          "evidenceHash",
+          "evidence_hash",
+          "contentHash",
+          "content_hash",
+          "sourceHash",
+          "source_hash",
+          "hash",
+        ]),
+      )
+      .find(Boolean)
+  );
+}
+
+function firstString(
+  source: Record<string, unknown> | undefined,
+  keys: string[],
+): string | undefined {
+  if (!source) {
+    return undefined;
+  }
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function formatDetailCode(value: string | undefined): string {

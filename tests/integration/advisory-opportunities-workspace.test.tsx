@@ -170,6 +170,23 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     });
     expect(screen.getByText("Lifecycle: Generated")).toBeInTheDocument();
     expect(screen.getByText("Sources: 1")).toBeInTheDocument();
+    expect(
+      screen.getByText("Source refs: lotus-core:PortfolioStateSnapshot:v1"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Source signals: signal_high_cash_001"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Queue policy: idea-deterministic-ranking-v1"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Queue evaluated: 2026-06-21T10:10:00Z"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Evidence hash: Not provided by Idea detail contract",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Close detail" })).toHaveAttribute(
       "href",
       "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001",
