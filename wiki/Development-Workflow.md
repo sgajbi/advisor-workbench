@@ -9,6 +9,9 @@
 ## Repo-native commands
 
 - `make lint`
+  Runs `eslint . --max-warnings=0` through the repository flat ESLint configuration. The gate scans
+  application source, tests, live validators, scripts, and configuration files while keeping
+  Next/Core Web Vitals and stable React Hooks correctness rules scoped to production app source.
 - `make typecheck`
 - `make test-coverage`
 - `make test-e2e`

@@ -43,10 +43,15 @@ concurrency group.
   time-bounded and documented against a GitHub issue; do not weaken the severity thresholds or use
   `npm audit fix --force` as an unreviewed dependency migration.
 - `make lint`
-  runs the maintained ESLint CLI over the production `src` tree with the flat configuration and
-  Next, TypeScript, and stable React Hooks correctness rules. Deprecated `next lint` and
-  `eslint-config-next` are not part of the governed gate; broader test/script lint expansion or
-  React Compiler lint-rule adoption requires a focused issue-backed cleanup first.
+  runs the maintained ESLint CLI over the repository root with the flat configuration. Production
+  app source keeps the direct Next, Core Web Vitals, TypeScript, and stable React Hooks correctness
+  rules; tests, live validators, scripts, and configuration files are scanned by the shared
+  TypeScript/JavaScript policy. Deprecated `next lint` and `eslint-config-next` are not part of the
+  governed gate. React Compiler lint-rule adoption remains separate under the dedicated follow-up
+  issue.
+- `make build`
+  runs `next build` after the repository-owned lint and typecheck gates in `make check`. Workbench
+  does not rely on Next's duplicate build-time ESLint integration as the lint authority.
 - `make test-e2e`
   Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
   production build, allows up to four minutes for build and server readiness, and owns the direct
