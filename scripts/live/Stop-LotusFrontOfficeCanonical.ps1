@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
+  [string]$ProjectsRoot = "C:\Users\Sandeep\projects",
   [switch]$RemoveVolumes,
   [switch]$RemoveImages
 )

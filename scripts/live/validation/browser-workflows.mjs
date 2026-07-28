@@ -315,6 +315,48 @@ export async function validateAdvisoryJourneyScreens(
       await expect(
         page.getByText("Advisor Decision", { exact: true }),
       ).toBeVisible({ timeout: timeoutMs });
+      const actionPanel = page.getByLabel("Idea candidate advisor actions");
+      await expect(actionPanel).toBeVisible({ timeout: timeoutMs });
+
+      await actionPanel.getByRole("button", { name: "Record feedback" }).click();
+      await expect(
+        page.getByText(
+          "Feedback recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
+        ),
+      ).toBeVisible({ timeout: timeoutMs });
+
+      await actionPanel.getByRole("button", { name: "Record review" }).click();
+      await expect(
+        page.getByText(
+          "Review recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
+        ),
+      ).toBeVisible({ timeout: timeoutMs });
+
+      await actionPanel.getByRole("button", { name: "Record intent" }).click();
+      await expect(
+        page.getByText(
+          "Conversion intent recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
+        ),
+      ).toBeVisible({ timeout: timeoutMs });
+
+      summary.uiChecks.push({
+        description:
+          "Lotus Idea review-action, feedback, and conversion-intent browser controls",
+        kind: "idea-action-control-browser-proof",
+        route: "/recommendations?mode=opportunities",
+        owner: "lotus-idea",
+        gatewayBacked: true,
+        sourceRefresh: "verified_after_each_mutation",
+        actions: ["feedback", "review_action", "conversion_intent"],
+        nonClaims: [
+          "production_identity",
+          "supported_feature_promotion",
+          "client_publication",
+          "suitability_approval",
+          "proposal_creation",
+          "execution_authority",
+        ],
+      });
     },
   });
 

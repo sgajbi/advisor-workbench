@@ -66,6 +66,9 @@ concurrency group.
 - `npm run live:stack:up:validate`
   one-command canonical stack bring-up and validation; this rebuilds Docker-backed service images
   so Gateway, Advise, Manage, and Workbench proof reflects the current checked-out sources
+  The startup preflight accepts only expected canonical Docker owners after normalizing host paths,
+  and the core seed runs with the shared `portfolio_common` library on `PYTHONPATH` instead of
+  depending on workstation-global Python packages.
 - `npm run live:validate:construction`
   focused RFC-0039 construction alternatives proof against the running canonical stack
 - `npm run live:evidence`
@@ -133,8 +136,9 @@ concurrency group.
 - Lotus Idea opportunity proof must use Gateway `/api/v1/ideas/review-queues/advisor` and the
   active portfolio as caller entitlement scope. The panel is not a supported-feature promotion until
   canonical browser validation proves populated Workbench rendering, source-safe candidate detail
-  access, and no reranking, no auto-proposal creation, no suitability authority, no execution
-  authority, and no client-publication claims.
+  access, review-action, feedback, and bounded conversion-intent controls through Gateway, source
+  refresh after each mutation, and no reranking, no auto-proposal creation, no suitability
+  authority, no execution authority, and no client-publication claims.
   The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
   duplicating date literals in Workbench startup automation.
 - RFC or mainline certification runs must invoke the canonical startup script with

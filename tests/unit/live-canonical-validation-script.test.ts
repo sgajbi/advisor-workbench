@@ -205,6 +205,10 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Start-CanonicalManage");
     expect(script).toContain("function Start-DirectIngress");
     expect(script).toContain("function Invoke-CanonicalCoreSeed");
+    expect(script).toContain('Join-Path $coreRepo "src\\libs\\portfolio-common"');
+    expect(script).toContain(
+      "PYTHONPATH = ($corePythonPathEntries -join [System.IO.Path]::PathSeparator)",
+    );
     expect(script).toContain("function Invoke-DpmCommandCenterSeed");
     expect(script).toContain("Using lotus-ai env file for canonical proof");
     expect(script).toContain("[switch]$CleanCoreState");
@@ -227,6 +231,15 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Get-CanonicalRequiredPortPlan");
     expect(script).toContain("function Get-DockerPublishedPortOwners");
     expect(script).toContain("function Test-CanonicalPortOwnership");
+    expect(script).toContain('C:\\Users\\Sandeep\\projects",');
+    expect(script).not.toContain('C:\\\\Users\\\\Sandeep\\\\projects",');
+    expect(script).toContain("function Normalize-HostPathForComparison");
+    expect(script).toContain(
+      "$allowedWorkingDirectories = @(",
+    );
+    expect(script).toContain(
+      "$allowedWorkingDirectories -contains $ownerWorkingDirectory",
+    );
     expect(script).toContain(
       "Canonical port preflight failed before hosts, builds, containers, or processes were changed.",
     );
@@ -1201,6 +1214,17 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Sources: [1-9]");
     expect(browserWorkflowModule).toContain("Candidate detail is unavailable through Gateway");
     expect(browserWorkflowModule).toContain(
+      "Lotus Idea review-action, feedback, and conversion-intent browser controls",
+    );
+    expect(browserWorkflowModule).toContain('name: "Record feedback"');
+    expect(browserWorkflowModule).toContain('name: "Record review"');
+    expect(browserWorkflowModule).toContain('name: "Record intent"');
+    expect(browserWorkflowModule).toContain(
+      "sourceRefresh: \"verified_after_each_mutation\"",
+    );
+    expect(browserWorkflowModule).toContain("\"supported_feature_promotion\"");
+    expect(browserWorkflowModule).toContain("\"execution_authority\"");
+    expect(browserWorkflowModule).toContain(
       "advisory-advisor-cockpit-live.png",
     );
     expect(browserWorkflowModule).toContain(
@@ -1246,6 +1270,8 @@ describe("canonical live validation script", () => {
       "Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas",
     );
     expect(runbook).toContain("they do not promote new backend capability");
+    expect(runbook).toContain("records review-action, feedback, and bounded");
+    expect(runbook).toContain("does not expose conversion-intent identifiers");
     expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
     expect(browserWorkflowModule).toContain("Request Reviewed Report");
     expect(browserWorkflowModule).toContain("Prepare Or Refresh Memo");

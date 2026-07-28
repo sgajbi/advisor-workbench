@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [string]$ProjectsRoot = "C:\\Users\\Sandeep\\projects",
+  [string]$ProjectsRoot = "C:\Users\Sandeep\projects",
   [string]$PortfolioId = "PB_SG_GLOBAL_BAL_001",
   [string]$BenchmarkCode = "BMK_PB_GLOBAL_BALANCED_60_40",
   [string]$ScreenshotDirectory = "",
@@ -117,6 +117,20 @@ function Test-HttpReady {
     return $response.StatusCode -ge 200 -and $response.StatusCode -lt 300
   } catch {
     return $false
+  }
+}
+
+function Normalize-HostPathForComparison {
+  param([string]$Path)
+
+  if ([string]::IsNullOrWhiteSpace($Path)) {
+    return ""
+  }
+
+  try {
+    return ([System.IO.Path]::GetFullPath($Path)).TrimEnd("\", "/")
+  } catch {
+    return $Path.Trim().TrimEnd("\", "/")
   }
 }
 
@@ -315,10 +329,15 @@ function Test-CanonicalPortOwnership {
     $dockerOwners = @($publishedPortOwners | Where-Object { $_.Port -eq $requiredPort.Port })
     if ($dockerOwners.Count -gt 0) {
       foreach ($owner in $dockerOwners) {
+        $allowedWorkingDirectories = @(
+          $requiredPort.AllowedDockerWorkingDirectories |
+            ForEach-Object { Normalize-HostPathForComparison ([string]$_) }
+        )
+        $ownerWorkingDirectory = Normalize-HostPathForComparison $owner.WorkingDirectory
         $projectAllowed = (
           -not [string]::IsNullOrWhiteSpace($owner.Project) -and
-          $requiredPort.AllowedDockerProjects -contains $owner.Project -and
-          $requiredPort.AllowedDockerWorkingDirectories -contains $owner.WorkingDirectory
+          ($requiredPort.AllowedDockerProjects -contains $owner.Project) -and
+          ($allowedWorkingDirectories -contains $ownerWorkingDirectory)
         )
         $containerAllowed = $requiredPort.AllowedContainerNames -contains $owner.Name
         if (-not $projectAllowed -and -not $containerAllowed) {
@@ -571,7 +590,18 @@ function Invoke-CanonicalCoreSeed {
   }
 
   Write-Host "Seeding governed front-office portfolio data for $PortfolioId ..."
-  Invoke-RepoCommand $coreRepo $seedCommand
+  $corePythonPathEntries = @(
+    $coreRepo,
+    (Join-Path $coreRepo "src\libs\portfolio-common")
+  )
+  if (-not [string]::IsNullOrWhiteSpace($env:PYTHONPATH)) {
+    $corePythonPathEntries += $env:PYTHONPATH
+  }
+  Invoke-WithProcessEnvironment -Environment @{
+    PYTHONPATH = ($corePythonPathEntries -join [System.IO.Path]::PathSeparator)
+  } -ScriptBlock {
+    Invoke-RepoCommand $coreRepo $seedCommand
+  }
 }
 
 function Invoke-DpmCommandCenterSeed {
