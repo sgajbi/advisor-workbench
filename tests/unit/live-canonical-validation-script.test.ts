@@ -1207,9 +1207,25 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("const observedRoute = page.url()");
     expect(browserWorkflowModule).toContain("route: observedRoute");
     expect(browserWorkflowModule).toContain("idea-review-queue-through-gateway");
+    expect(browserWorkflowModule).toContain(
+      'const CANONICAL_IDEA_CANDIDATE_ID = "idea_high_cash_001"',
+    );
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
+    expect(browserWorkflowModule).toContain("canonicalCandidateLink");
+    expect(browserWorkflowModule).toContain(
+      "candidateId=${encodeURIComponent(CANONICAL_IDEA_CANDIDATE_ID)}",
+    );
+    expect(browserWorkflowModule).not.toContain(
+      'candidateTable.locator("tbody tr a").first().click()',
+    );
     expect(browserWorkflowModule).toContain("Idea candidate source-safe detail");
+    expect(browserWorkflowModule).toContain(
+      "selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID",
+    );
+    expect(browserWorkflowModule).toContain(
+      "deterministicSeededCandidate: true",
+    );
     expect(browserWorkflowModule).toContain("Lifecycle: (?!Pending)");
     expect(browserWorkflowModule).toContain("Sources: [1-9]");
     expect(browserWorkflowModule).toContain("Candidate detail is unavailable through Gateway");
