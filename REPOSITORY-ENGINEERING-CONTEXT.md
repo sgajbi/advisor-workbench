@@ -301,14 +301,19 @@ Dependency-security and lint-governance rules:
 2. Prefer upstream package upgrades or narrow owner-consumer overrides. Do not apply broad
    transitive overrides that change unrelated tool semantics; coverage, build, and lint tools must
    continue to execute their own supported dependency contracts.
-3. The maintained lint gate is the ESLint CLI over the production `src` tree. Do not reintroduce
+3. The maintained lint gate is the ESLint CLI over the repository root. Do not reintroduce
    deprecated `next lint` or `eslint-config-next`; use the direct Next ESLint plugin and
-   `typescript-eslint` compatibility path instead. Preserve the stable React Hooks correctness
-   rules (`rules-of-hooks` and `exhaustive-deps`) in the flat configuration; broader React
-   Compiler lint-rule adoption is tracked separately and must not be smuggled into unrelated PRs.
-4. If test, script, or configuration lint scope is expanded beyond `src`, first clean the
-   pre-existing findings in a dedicated issue-backed slice instead of blocking product/RFC
-   delivery with unrelated historical diagnostics.
+   `typescript-eslint` compatibility path instead.
+4. Production application lint rules are scoped to `src/**/*.{js,jsx,mjs,cjs,ts,tsx}` so Next,
+   Core Web Vitals, and stable React Hooks correctness rules (`rules-of-hooks` and
+   `exhaustive-deps`) remain enforced on browser-delivered code. Tests, live validators, scripts,
+   and configuration files are also scanned by the root ESLint gate under the shared TypeScript/JS
+   rules; do not exclude those trees to make lint pass. Broader React Compiler lint-rule adoption
+   is tracked separately and must not be smuggled into unrelated PRs.
+5. `next build` is not the lint authority. Keep `make check` and protected CI ordered as
+   `security -> lint -> typecheck -> coverage -> build`; the production build may skip Next's
+   duplicate build-time ESLint integration because the repository-owned root ESLint gate has already
+   run.
 
 Container runtime rules:
 
@@ -358,7 +363,7 @@ Use these commands as the primary local contract:
    `make security`
 3. lint
    `make lint`
-   (`eslint src --max-warnings=0`, using the flat ESLint CLI configuration)
+   (`eslint . --max-warnings=0`, using the flat ESLint CLI configuration)
 4. typecheck
    `make typecheck`
 5. coverage-backed test gate
