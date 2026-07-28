@@ -1,6 +1,8 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
+const CANONICAL_IDEA_CANDIDATE_ID = "idea_high_cash_001";
+
 export function hasAcceptedAdvisorBriefReviewPosture(text) {
   return (
     text.includes("AI Review") &&
@@ -297,9 +299,25 @@ export async function validateAdvisoryJourneyScreens(
         1,
         "Idea candidate review queue",
       );
-      await candidateTable.locator("tbody tr a").first().click();
+      const canonicalCandidateLink = candidateTable.getByRole("link", {
+        name: new RegExp(`\\b${CANONICAL_IDEA_CANDIDATE_ID}\\b`),
+      });
+      await expect(canonicalCandidateLink).toBeVisible({ timeout: timeoutMs });
+      await canonicalCandidateLink.click();
+      await expect(page).toHaveURL(
+        new RegExp(
+          `candidateId=${encodeURIComponent(CANONICAL_IDEA_CANDIDATE_ID)}`,
+        ),
+        { timeout: timeoutMs },
+      );
+      const candidateDetailPanel = page.getByLabel(
+        "Idea candidate source-safe detail",
+      );
+      await expect(candidateDetailPanel).toBeVisible({ timeout: timeoutMs });
       await expect(
-        page.getByLabel("Idea candidate source-safe detail"),
+        candidateDetailPanel.getByText(CANONICAL_IDEA_CANDIDATE_ID, {
+          exact: true,
+        }),
       ).toBeVisible({ timeout: timeoutMs });
       await expect(page.getByText(/Lifecycle: (?!Pending).+/)).toBeVisible({
         timeout: timeoutMs,
@@ -346,6 +364,8 @@ export async function validateAdvisoryJourneyScreens(
         route: "/recommendations?mode=opportunities",
         owner: "lotus-idea",
         gatewayBacked: true,
+        selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID,
+        deterministicSeededCandidate: true,
         sourceRefresh: "verified_after_each_mutation",
         actions: ["feedback", "review_action", "conversion_intent"],
         nonClaims: [
