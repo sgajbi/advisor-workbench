@@ -139,6 +139,11 @@ flow verifies the complete mode-specific port plan. Existing containers from the
 Compose projects are reusable. A foreign Docker project or an unsafe host listener fails startup
 with the port, container or process, Compose project, and working-directory provenance needed to
 resolve the conflict. The preflight never stops a foreign owner.
+Port-owner comparisons normalize host paths before comparing Docker Compose working-directory
+labels, so an existing canonical container is not misclassified because one path uses redundant
+separators. Core portfolio seeding is also invoked with the repository root and
+`src/libs/portfolio-common` on `PYTHONPATH`; missing shared-library imports are startup defects, not
+grounds to bypass canonical source readiness.
 The governed `lotus-core` startup explicitly sets `DEMO_DATA_PACK_ENABLED=false`; the broad
 app-local demo pack remains available for diagnostics, but it is not part of canonical
 `PB_SG_GLOBAL_BAL_001` seeding or evidence collection.
@@ -420,6 +425,13 @@ Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discus
 and Implementation Status. These journey checks are route-level evidence over existing
 Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
 client communication, or execution truth.
+For Opportunities and Ideas, the browser proof now goes beyond read-path rendering: it opens
+source-safe Idea candidate detail and records review-action, feedback, and bounded
+conversion-intent controls through the Workbench BFF/Gateway path, verifying source-owned queue and
+detail refresh after each mutation. The machine-readable summary records only action-control
+posture and non-claim boundaries; it does not expose conversion-intent identifiers, create
+proposals, grant suitability or execution authority, certify production identity, or promote Lotus
+Idea as a supported feature.
 RFC-0028 bank-demo proof checks read Gateway-backed scenario and supported-claim contracts,
 validate the governed scenario id, proof marker, and claim postures, then render
 `/recommendations?mode=proof` as `advisory.bank_demo_proof`. The proof captures

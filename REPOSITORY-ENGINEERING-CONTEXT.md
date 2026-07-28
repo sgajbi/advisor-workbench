@@ -191,7 +191,9 @@ Current repository posture:
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
     can record source-owned review actions, feedback, and bounded conversion intents through the
     Workbench BFF with server-derived authority and idempotency; a retry reuses the exact failed
-    submission; it refreshes source truth and must not synthesize
+    submission; the canonical browser validator exercises review-action, feedback, and
+    conversion-intent controls and requires source-owned detail and queue refresh after each
+    mutation. Workbench must not synthesize
     review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
     opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
     proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a
@@ -378,6 +380,9 @@ Important validation expectations:
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
    `-LocalApps` runs are useful branch-local development evidence, not certification evidence,
+6. canonical startup must normalize host-path comparisons for Docker port owners and must invoke
+   core portfolio seeding with the repo-local `portfolio_common` library on `PYTHONPATH`; do not
+   bypass source-readiness blockers with Workbench-local state,
 6. README and wiki updates should keep active product-surface truth explicit, especially when
    legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
 6. product docs should distinguish active shell navigation from disabled or compatibility-only
