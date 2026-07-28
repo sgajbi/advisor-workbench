@@ -9,6 +9,8 @@ const stableReactHooksRules = {
     reactHooks.configs.recommended.rules["react-hooks/exhaustive-deps"],
 };
 
+const intentionalUnusedValuePattern = "^_";
+
 export default [
   {
     ignores: [
@@ -24,6 +26,22 @@ export default [
   ...tseslint.configs.recommended,
   {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "all",
+          argsIgnorePattern: intentionalUnusedValuePattern,
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: intentionalUnusedValuePattern,
+          destructuredArrayIgnorePattern: intentionalUnusedValuePattern,
+          varsIgnorePattern: intentionalUnusedValuePattern,
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.{js,jsx,mjs,cjs,ts,tsx}"],
     plugins: {
       "@next/next": nextPlugin,
       "react-hooks": reactHooks,

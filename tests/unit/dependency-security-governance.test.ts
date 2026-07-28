@@ -20,7 +20,7 @@ describe("dependency security governance", () => {
     };
     const eslintConfig = readRepositoryFile("eslint.config.mjs");
 
-    expect(packageJson.scripts?.lint).toBe("eslint src --max-warnings=0");
+    expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
     expect(packageJson.devDependencies?.["eslint-plugin-react-hooks"]).toBe(
       "7.1.1",
     );
@@ -31,6 +31,26 @@ describe("dependency security governance", () => {
     expect(eslintConfig).toContain('"react-hooks/rules-of-hooks"');
     expect(eslintConfig).toContain('"react-hooks/exhaustive-deps"');
     expect(eslintConfig).toContain("...stableReactHooksRules");
+    expect(eslintConfig).toContain('files: ["src/**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
+    expect(eslintConfig).toContain("intentionalUnusedValuePattern");
+  });
+
+  it("keeps lint scope broad enough for source, tests, scripts, and configuration", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const eslintConfig = readRepositoryFile("eslint.config.mjs");
+    const nextConfig = readRepositoryFile("next.config.mjs");
+    const makefile = readRepositoryFile("Makefile");
+
+    expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
+    expect(packageJson.scripts?.lint).not.toContain("eslint src");
+    expect(makefile).toMatch(/check: security lint typecheck test-coverage build/);
+    expect(nextConfig).toContain("ignoreDuringBuilds: true");
+    expect(eslintConfig).toContain('files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
+    expect(eslintConfig).not.toContain('"tests/**"');
+    expect(eslintConfig).not.toContain('"scripts/**"');
+    expect(eslintConfig).not.toContain('"*.config.*"');
   });
 
   it("enforces high-risk toolchain and moderate-risk production audit thresholds", () => {
