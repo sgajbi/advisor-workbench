@@ -44,8 +44,9 @@ concurrency group.
   `npm audit fix --force` as an unreviewed dependency migration.
 - `make lint`
   runs the maintained ESLint CLI over the production `src` tree with the flat configuration and
-  Next plugin rules. Deprecated `next lint` and `eslint-config-next` are not part of the governed
-  gate; broader test/script lint expansion requires a focused issue-backed cleanup first.
+  Next, TypeScript, and stable React Hooks correctness rules. Deprecated `next lint` and
+  `eslint-config-next` are not part of the governed gate; broader test/script lint expansion or
+  React Compiler lint-rule adoption requires a focused issue-backed cleanup first.
 - `make test-e2e`
   Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
   production build, allows up to four minutes for build and server readiness, and owns the direct

@@ -293,6 +293,19 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByLabel("Idea candidates")).toBeVisible({
         timeout: timeoutMs,
       });
+      const queueProofPosture = page.getByLabel("Idea queue proof posture");
+      await expect(queueProofPosture).toContainText(
+        "Policy: idea-deterministic-ranking-v1",
+        { timeout: timeoutMs },
+      );
+      await expect(queueProofPosture).toContainText(
+        /Evaluated: \d{4}-\d{2}-\d{2}T/,
+        { timeout: timeoutMs },
+      );
+      await expect(queueProofPosture).toContainText(
+        "Durable storage: Backed",
+        { timeout: timeoutMs },
+      );
       const candidateTable = tableByExactLabel(page, "Idea candidate review queue");
       await assertTableHasRows(
         candidateTable,
@@ -325,6 +338,24 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByText(/Sources: [1-9]\d*/)).toBeVisible({
         timeout: timeoutMs,
       });
+      await expect(
+        candidateDetailPanel.getByText(/Source refs: (?!None).+/),
+      ).toBeVisible({ timeout: timeoutMs });
+      await expect(
+        candidateDetailPanel.getByText(/Source signals: (?!None).+/),
+      ).toBeVisible({ timeout: timeoutMs });
+      await expect(
+        candidateDetailPanel.getByText(
+          /Queue policy: idea-deterministic-ranking-v1/,
+        ),
+      ).toBeVisible({ timeout: timeoutMs });
+      await expect(
+        candidateDetailPanel.getByText(/Queue evaluated: \d{4}-\d{2}-\d{2}T/),
+      ).toBeVisible({ timeout: timeoutMs });
+      const ideaDetailHash = candidateDetailPanel
+        .getByText(/Evidence hash: sha256:/)
+        .first();
+      const ideaDetailHashAvailable = (await ideaDetailHash.count()) > 0;
       await expect(
         page.getByText(
           "Candidate detail is unavailable through Gateway. No raw API response is shown.",
@@ -365,7 +396,12 @@ export async function validateAdvisoryJourneyScreens(
         owner: "lotus-idea",
         gatewayBacked: true,
         selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID,
-        deterministicSeededCandidate: true,
+        canonicalCandidateProof:
+          "candidate_id_policy_evaluation_source_signal_and_source_ref_verified",
+        sourceHashVerified: ideaDetailHashAvailable,
+        sourceHashBoundary: ideaDetailHashAvailable
+          ? "Idea detail exposed source hash and browser proof observed it."
+          : "Idea detail contract did not expose a source hash; no hash-backed deterministic seed claim is made.",
         sourceRefresh: "verified_after_each_mutation",
         actions: ["feedback", "review_action", "conversion_intent"],
         nonClaims: [

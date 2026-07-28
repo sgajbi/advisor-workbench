@@ -1224,10 +1224,22 @@ describe("canonical live validation script", () => {
       "selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID",
     );
     expect(browserWorkflowModule).toContain(
-      "deterministicSeededCandidate: true",
+      "canonicalCandidateProof:",
     );
+    expect(browserWorkflowModule).toContain(
+      "candidate_id_policy_evaluation_source_signal_and_source_ref_verified",
+    );
+    expect(browserWorkflowModule).toContain("sourceHashVerified");
+    expect(browserWorkflowModule).toContain("sourceHashBoundary");
+    expect(browserWorkflowModule).not.toContain("deterministicSeededCandidate");
     expect(browserWorkflowModule).toContain("Lifecycle: (?!Pending)");
     expect(browserWorkflowModule).toContain("Sources: [1-9]");
+    expect(browserWorkflowModule).toContain("Source refs: (?!None)");
+    expect(browserWorkflowModule).toContain("Source signals: (?!None)");
+    expect(browserWorkflowModule).toContain(
+      "Queue policy: idea-deterministic-ranking-v1",
+    );
+    expect(browserWorkflowModule).toContain("Queue evaluated:");
     expect(browserWorkflowModule).toContain("Candidate detail is unavailable through Gateway");
     expect(browserWorkflowModule).toContain(
       "Lotus Idea review-action, feedback, and conversion-intent browser controls",
