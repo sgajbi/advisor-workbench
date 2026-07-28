@@ -53,7 +53,6 @@ import {
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
   WorkbenchSummaryToolbar,
-  WorkbenchToolbarGroup,
   WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
   WorkbenchSummaryVisualHeading,

@@ -10,10 +10,18 @@ import type {
 import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-holdings-grid";
 import PortfolioRecordScreenClient from "../../src/apps/portfolio/components/portfolio-record-screen-client";
 
+type MockGridRow = { transactionId: string };
+
 vi.mock("ag-grid-react", () => ({
-  AgGridReact: ({ rowData = [], onRowClicked }: any) => (
+  AgGridReact: ({
+    rowData = [],
+    onRowClicked,
+  }: {
+    rowData?: MockGridRow[];
+    onRowClicked?: (event: { data: MockGridRow }) => void;
+  }) => (
     <div>
-      {rowData.map((row: any) => (
+      {rowData.map((row) => (
         <button
           type="button"
           key={row.transactionId}

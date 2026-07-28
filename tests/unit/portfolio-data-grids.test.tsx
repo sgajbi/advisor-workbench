@@ -1,6 +1,20 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+type MockGridRow = Record<string, unknown> & {
+  securityId?: string;
+  transactionId?: string;
+};
+
+type MockGridColumn = {
+  field?: string;
+  colId?: string;
+  headerName?: string;
+  headerClass?: string;
+  hide?: boolean;
+  valueFormatter?: (params: { value: unknown; data: MockGridRow }) => unknown;
+};
 
 vi.mock("ag-grid-react", () => ({
   AgGridReact: ({
@@ -9,8 +23,14 @@ vi.mock("ag-grid-react", () => ({
     onRowClicked,
     rowSelection,
     includeHiddenColumnsInQuickFilter,
-  }: any) => {
-    const visibleColumns = columnDefs.filter((column: any) => !column.hide);
+  }: {
+    rowData?: MockGridRow[];
+    columnDefs?: MockGridColumn[];
+    onRowClicked?: (event: { data: MockGridRow }) => void;
+    rowSelection?: unknown;
+    includeHiddenColumnsInQuickFilter?: boolean;
+  }) => {
+    const visibleColumns = columnDefs.filter((column) => !column.hide);
     return (
       <div
         data-testid="mock-grid"
@@ -18,7 +38,7 @@ vi.mock("ag-grid-react", () => ({
         data-searches-hidden-columns={Boolean(includeHiddenColumnsInQuickFilter)}
       >
         <div>
-          {visibleColumns.map((column: any) => (
+          {visibleColumns.map((column) => (
             <React.Fragment key={column.field ?? column.colId}>
               <span>{column.headerName}</span>
               <span data-testid={`${column.field}-header-class`}>
@@ -27,11 +47,11 @@ vi.mock("ag-grid-react", () => ({
             </React.Fragment>
           ))}
         </div>
-        {rowData.map((row: any) => (
+        {rowData.map((row) => (
           <button key={row.securityId ?? row.transactionId} onClick={() => onRowClicked?.({ data: row })}>
             {visibleColumns
-              .map((column: any) => {
-                const value = row[column.field];
+              .map((column) => {
+                const value = column.field ? row[column.field] : undefined;
                 if (typeof column.valueFormatter === "function") {
                   return column.valueFormatter({ value, data: row });
                 }

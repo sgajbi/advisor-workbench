@@ -728,8 +728,7 @@ describe("proposal api", () => {
   it("loads advisory policy workflow and records review requests through Gateway", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input);
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
         const data =
           init?.method === "POST"
             ? { workflow: { sign_off_status: "PENDING_REVIEW" } }

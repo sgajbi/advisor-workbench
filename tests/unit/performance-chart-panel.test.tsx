@@ -113,7 +113,7 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).getByText("Cum. Benchmark")).toBeInTheDocument();
     expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
 
-    let activeCumulativeSeries = series.find((entry) => entry?.name === "Active");
+    const activeCumulativeSeries = series.find((entry) => entry?.name === "Active");
     expect(activeCumulativeSeries?.type).toBe("line");
     expect(activeCumulativeSeries?.data).toEqual([0.3]);
     expect(activeCumulativeSeries?.lineStyle).toMatchObject({
