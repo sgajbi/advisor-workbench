@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 import { GET, POST } from "@/app/api/bff/[...path]/route";
+import {
+  BFF_PRINCIPAL_SESSION_CONTRACT_POSTURE,
+  FORBIDDEN_BROWSER_AUTHORITY_HEADERS,
+} from "@/features/workbench/caller-context";
 
 describe("BFF proxy route", () => {
   const originalBffBaseUrl = process.env.BFF_BASE_URL;
@@ -58,6 +62,33 @@ describe("BFF proxy route", () => {
         process.env[key] = original;
       }
     }
+  });
+
+  it("records the platform BFF principal-session contract posture consumed by Workbench", () => {
+    expect(BFF_PRINCIPAL_SESSION_CONTRACT_POSTURE).toEqual({
+      schemaVersion: "lotus-platform.bff-principal-session.v1",
+      certificationSchemaVersion:
+        "lotus-platform.bff-principal-session-certification.v1",
+      contractId: "lotus-platform-authenticated-bff-principal-session",
+      contractVersion: "1.0.0",
+      consumer: "lotus-workbench",
+      upstreamService: "lotus-gateway",
+      productSafeDenialCode: "AUTHENTICATED_PRINCIPAL_REQUIRED",
+      certificationStatus: "not_certified",
+      productionIdentityCertified: false,
+      supportedFeaturePromoted: false,
+      localDevFixtureNonCertifying: true,
+    });
+    expect(FORBIDDEN_BROWSER_AUTHORITY_HEADERS).toEqual(
+      expect.arrayContaining([
+        "X-Actor-Id",
+        "X-Caller-Capabilities",
+        "Authorization",
+        "Cookie",
+        "Proxy-Authorization",
+        "X-Session-Id",
+      ]),
+    );
   });
 
   it("forwards GET requests to the configured upstream without the host header", async () => {
@@ -169,6 +200,10 @@ describe("BFF proxy route", () => {
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
           "X-Caller-Client-Ids": "UNENTITLED_CLIENT",
           "X-Principal-Status": "SUSPENDED",
+          Authorization: "Bearer browser-asserted-authority",
+          Cookie: "lotus_session=browser-asserted-cookie",
+          "Proxy-Authorization": "Basic browser-proxy-authority",
+          "X-Session-Id": "browser-session-id",
         },
         body: JSON.stringify({ action: "approve_for_conversion" }),
       },
@@ -206,6 +241,10 @@ describe("BFF proxy route", () => {
     );
     expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBeNull();
     expect(upstreamHeaders.get("X-Principal-Status")).toBeNull();
+    expect(upstreamHeaders.get("Authorization")).toBeNull();
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
+    expect(upstreamHeaders.get("Proxy-Authorization")).toBeNull();
+    expect(upstreamHeaders.get("X-Session-Id")).toBeNull();
   });
 
   it.each([
@@ -412,6 +451,8 @@ describe("BFF proxy route", () => {
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
           "X-Caller-Client-Ids": "UNENTITLED_CLIENT",
           "X-Caller-Book-Ids": "UNENTITLED_BOOK",
+          Authorization: "Bearer browser-asserted-authority",
+          Cookie: "lotus_session=browser-asserted-cookie",
         },
       },
     );
@@ -433,6 +474,8 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Book-Ids")).toBeNull();
+    expect(upstreamHeaders.get("Authorization")).toBeNull();
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
   it("uses explicitly configured development advisor-book identity", async () => {
@@ -519,6 +562,8 @@ describe("BFF proxy route", () => {
           "X-Principal-Status": "SUSPENDED",
           "X-Authorized-Advisor-Id": "another-advisor",
           "X-Authorized-Portfolio-Id": "UNENTITLED_PORTFOLIO",
+          Authorization: "Bearer browser-asserted-authority",
+          Cookie: "lotus_session=browser-asserted-cookie",
         },
       },
     );
@@ -548,6 +593,8 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
+    expect(upstreamHeaders.get("Authorization")).toBeNull();
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
   it("applies the read capability to Advisor Cockpit object lookup", async () => {
@@ -737,6 +784,8 @@ describe("BFF proxy route", () => {
           "X-Caller-Roles": "reporting-admin",
           "X-Caller-Capabilities": "reporting.approve,reporting.distribute",
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+          Authorization: "Bearer browser-asserted-authority",
+          Cookie: "lotus_session=browser-asserted-cookie",
         },
       },
     );
@@ -757,6 +806,8 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
+    expect(upstreamHeaders.get("Authorization")).toBeNull();
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
   it("rejects a report-ordering portfolio outside the server-configured entitlement", async () => {

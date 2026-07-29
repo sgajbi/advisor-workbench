@@ -74,8 +74,9 @@ promote dormant labels into product ownership just because historical route file
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
 - `/book` consumes `GET /api/v1/advisor-book/portfolios` through the Workbench BFF. The BFF
   replaces browser-supplied actor, tenant, region, booking-centre, role, and capability headers;
-  only development-configured authority is currently supported, while non-development runtime
-  fails closed pending authenticated principal resolution in Workbench #436.
+  strips browser `Authorization`, browser `Cookie`, proxy authorization, session id, and upstream
+  auth identity aliases; and supports only development-configured authority. Non-development
+  runtime fails closed pending authenticated principal resolution in Workbench #436.
 - `/intake` submits portfolio bundle writes through `/api/bff/api/v1/intake/portfolio-bundle`
   and forwards a bounded `X-Idempotency-Key` so Gateway/Core own safe duplicate-submit replay
   semantics
