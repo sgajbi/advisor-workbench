@@ -63,6 +63,41 @@ export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Authorized-Portfolio-Id",
 ] as const;
 
+export const BFF_PRINCIPAL_SESSION_CONTRACT_POSTURE = {
+  schemaVersion: "lotus-platform.bff-principal-session.v1",
+  certificationSchemaVersion:
+    "lotus-platform.bff-principal-session-certification.v1",
+  contractId: "lotus-platform-authenticated-bff-principal-session",
+  contractVersion: "1.0.0",
+  consumer: "lotus-workbench",
+  upstreamService: "lotus-gateway",
+  productSafeDenialCode: "AUTHENTICATED_PRINCIPAL_REQUIRED",
+  certificationStatus: "not_certified",
+  productionIdentityCertified: false,
+  supportedFeaturePromoted: false,
+  localDevFixtureNonCertifying: true,
+} as const;
+
+export const FORBIDDEN_BROWSER_AUTHORITY_HEADERS = [
+  ...SERVER_DERIVED_CALLER_AUTHORITY_HEADERS,
+  "Authorization",
+  "Cookie",
+  "Proxy-Authorization",
+  "X-Forwarded-User",
+  "X-Forwarded-Email",
+  "X-Auth-Request-User",
+  "X-Auth-Request-Email",
+  "X-Authenticated-User",
+  "X-Authenticated-Email",
+  "X-Session-Id",
+] as const;
+
+export function stripBrowserSuppliedAuthorityHeaders(headers: Headers) {
+  for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
+    headers.delete(headerName);
+  }
+}
+
 const REPORTING_CALLER_CONTEXT_ENV_OVERRIDES = {
   role: "WORKBENCH_REPORTING_CALLER_ROLE",
   portfolioIds: "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
@@ -166,9 +201,7 @@ export function applyIdeaRouteCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
-    headers.delete(headerName);
-  }
+  stripBrowserSuppliedAuthorityHeaders(headers);
 
   const capability = resolveIdeaRouteCapability(request);
   if (!capability) {
@@ -225,9 +258,7 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
-    headers.delete(headerName);
-  }
+  stripBrowserSuppliedAuthorityHeaders(headers);
 
   const authorityMode = resolveConfiguredAuthorityMode(REPORTING_AUTH_MODE_ENV);
   if (authorityMode !== "development_configured") {

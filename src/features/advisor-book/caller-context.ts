@@ -1,7 +1,7 @@
 import { resolveConfiguredAuthorityMode } from "@/features/workbench/authority-mode";
 import {
   resolveDefaultCallerContext,
-  SERVER_DERIVED_CALLER_AUTHORITY_HEADERS,
+  stripBrowserSuppliedAuthorityHeaders,
 } from "@/features/workbench/caller-context";
 
 const ADVISOR_BOOK_ROUTE = "api/v1/advisor-book/portfolios";
@@ -33,9 +33,7 @@ export function applyAdvisorBookCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
-    headers.delete(headerName);
-  }
+  stripBrowserSuppliedAuthorityHeaders(headers);
 
   const authorityMode = resolveConfiguredAuthorityMode(ADVISOR_BOOK_AUTH_MODE_ENV);
   if (authorityMode !== "development_configured") {

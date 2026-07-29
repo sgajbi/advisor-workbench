@@ -1,7 +1,7 @@
 import { resolveConfiguredAuthorityMode } from "@/features/workbench/authority-mode";
 import {
   resolveDefaultCallerContext,
-  SERVER_DERIVED_CALLER_AUTHORITY_HEADERS,
+  stripBrowserSuppliedAuthorityHeaders,
 } from "@/features/workbench/caller-context";
 
 const ADVISOR_COCKPIT_ROUTE_PREFIX = "api/v1/advisor-cockpit";
@@ -62,9 +62,7 @@ export function applyAdvisorCockpitCallerContextHeaders(
     return { status: "not_applicable" };
   }
 
-  for (const headerName of SERVER_DERIVED_CALLER_AUTHORITY_HEADERS) {
-    headers.delete(headerName);
-  }
+  stripBrowserSuppliedAuthorityHeaders(headers);
 
   const capability = resolveAdvisorCockpitCapability(request);
   if (!capability) {

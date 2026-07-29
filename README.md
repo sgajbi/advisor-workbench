@@ -249,6 +249,12 @@ environments. An unset environment, `uat`, production, or any other environment 
 available. Browser headers never grant Idea authority. The eventual session and token-claims
 contract remains tracked in [lotus-platform#563](https://github.com/sgajbi/lotus-platform/issues/563)
 and Workbench BFF resolution in [lotus-workbench#436](https://github.com/sgajbi/lotus-workbench/issues/436).
+Workbench consumes the platform contract identifiers from
+`lotus-platform.bff-principal-session.v1` and currently records the contract posture as
+`not_certified`, `productionIdentityCertified=false`, and `supportedFeaturePromoted=false`.
+For governed authority routes, the BFF strips browser-supplied Lotus authority headers plus
+`Authorization`, `Cookie`, proxy authorization, and common upstream-auth identity aliases before
+projecting server-derived Gateway headers. General non-authority BFF proxy routes are unchanged.
 Only the explicit Idea queue, candidate-detail, review-action, feedback, and conversion-intent
 routes are allowlisted through the BFF; any other `/api/v1/ideas/*` route returns `404` before
 Gateway is contacted.

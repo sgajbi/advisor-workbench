@@ -159,7 +159,8 @@ Current repository posture:
     `/recommendations?mode=cockpit` renders Advise-owned cockpit action items, source evidence,
     supportability, meeting-preparation packets, and bounded advisor acknowledgements through
     Gateway advisor-cockpit endpoints only. Its BFF authority adapter strips browser-supplied
-    identity, role, capability, tenant, legal-entity, principal-status, and entitlement headers;
+    identity, role, capability, tenant, legal-entity, principal-status, entitlement, browser
+    authorization, browser cookie, proxy authorization, session id, and upstream-auth identity headers;
     rejects query/body authority; derives the development advisor from the server-side actor;
     verifies the selected portfolio against configured entitlement; and emits only the exact read
     or acknowledgement capability required by the allowlisted route. Non-development requests
@@ -181,10 +182,13 @@ Current repository posture:
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
     renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF strips browser
-    Idea authority headers and applies configured subject, role, route capability, and portfolio
-    entitlement only in explicitly development-scoped `dev`/`development`/`local`/`test` runtime.
+    Idea authority, authorization, cookie, proxy-authorization, session, and upstream-auth identity
+    headers and applies configured subject, role, route capability, and portfolio entitlement only
+    in explicitly development-scoped `dev`/`development`/`local`/`test` runtime.
     It fails closed before Gateway for an unset environment and every other environment until authenticated session principal
-    resolution is available (platform #563, Workbench #436), and it rejects unallowlisted
+    resolution is available (platform #563, Workbench #436), consumes the
+    `lotus-platform.bff-principal-session.v1` contract posture as non-certifying source-contract
+    evidence, and rejects unallowlisted
     `/api/v1/ideas/*` paths before Gateway in every environment. The surface is limited to canonical `PB_SG_GLOBAL_BAL_001` until authenticated
     portfolio entitlement is available; it renders score, review posture, source-signal ids, reason codes,
     durable-storage posture, policy version, and
