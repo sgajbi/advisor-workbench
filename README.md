@@ -294,8 +294,11 @@ http://workbench.dev.lotus/data-products
 - `make install`
   install dependencies
 - `make lint`
-  run the CSS global governance ratchet and the flat ESLint gate across the repository, including
-  Next/Core Web Vitals and stable React Hooks correctness rules for production app source
+  run `npm run lint`, which composes the CSS global governance ratchet and the flat ESLint gate
+  across the repository, including Next/Core Web Vitals and stable React Hooks correctness rules for
+  production app source
+- `npm run lint`
+  run the CSS global governance ratchet and then `npm run lint:eslint`
 - `npm run lint:css-global`
   verify `src/app/globals.css` remains a governed composition entrypoint and global CSS layer
   budgets do not grow without an intentional baseline update

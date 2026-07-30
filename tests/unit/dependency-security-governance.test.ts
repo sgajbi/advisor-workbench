@@ -20,7 +20,8 @@ describe("dependency security governance", () => {
     };
     const eslintConfig = readRepositoryFile("eslint.config.mjs");
 
-    expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
+    expect(packageJson.scripts?.lint).toBe("npm run lint:css-global && npm run lint:eslint");
+    expect(packageJson.scripts?.["lint:eslint"]).toBe("eslint . --max-warnings=0");
     expect(packageJson.devDependencies?.["eslint-plugin-react-hooks"]).toBe(
       "7.1.1",
     );
@@ -61,9 +62,10 @@ describe("dependency security governance", () => {
     const nextConfig = readRepositoryFile("next.config.mjs");
     const makefile = readRepositoryFile("Makefile");
 
-    expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
+    expect(packageJson.scripts?.lint).toBe("npm run lint:css-global && npm run lint:eslint");
+    expect(packageJson.scripts?.["lint:eslint"]).toBe("eslint . --max-warnings=0");
     expect(packageJson.scripts?.lint).not.toContain("eslint src");
-    expect(makefile).toMatch(/lint:\r?\n\tnpm run lint:css-global\r?\n\tnpm run lint/);
+    expect(makefile).toMatch(/lint:\r?\n\tnpm run lint/);
     expect(makefile).toMatch(/check: security lint typecheck test-coverage build/);
     expect(nextConfig).toContain("ignoreDuringBuilds: true");
     expect(eslintConfig).toContain('files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"]');

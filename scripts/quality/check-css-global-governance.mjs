@@ -34,12 +34,14 @@ function repoRelativePath(repoRoot, absolutePath) {
 }
 
 function parseLocalImportPath(repoRoot, entrypointPath, statement) {
-  const match = statement.match(/^@import\s+"([^"]+)";$/);
+  const match = statement.match(
+    /^@import\s+(?:(?:url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\))|(?:"([^"]+)"|'([^']+)'))(?:\s+[^;]+)?;$/
+  );
   if (!match) {
     return null;
   }
 
-  const importRef = match[1];
+  const importRef = match.slice(1).find(Boolean);
   if (!importRef.startsWith(".")) {
     return null;
   }
