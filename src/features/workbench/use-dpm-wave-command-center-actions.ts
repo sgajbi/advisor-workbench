@@ -228,6 +228,11 @@ export function useDpmWaveCommandCenterActions({
     useState<DpmCampaignWorkflowCommandEvidence | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const autoLoadedWaveIdRef = useRef<string | null>(null);
+  const autoLoadFailureCountsRef = useRef<Record<string, number>>({});
+  const [autoLoadRetryToken, setAutoLoadRetryToken] = useState<{
+    waveId: string;
+    attempt: number;
+  } | null>(null);
   const [selectedCampaignState, setSelectedCampaignState] =
     useState<SelectedCampaignState>({
       campaignRowKey: "",
@@ -280,11 +285,29 @@ export function useDpmWaveCommandCenterActions({
     }
     autoLoadedWaveIdRef.current = selectedWaveId;
     getDpmWaveItems(selectedWaveId)
-      .then(setItemsResponse)
+      .then((response) => {
+        setItemsResponse(response);
+        autoLoadFailureCountsRef.current = {
+          ...autoLoadFailureCountsRef.current,
+          [selectedWaveId]: 0,
+        };
+      })
       .catch(() => {
         autoLoadedWaveIdRef.current = null;
+        const nextFailureCount =
+          (autoLoadFailureCountsRef.current[selectedWaveId] ?? 0) + 1;
+        autoLoadFailureCountsRef.current = {
+          ...autoLoadFailureCountsRef.current,
+          [selectedWaveId]: nextFailureCount,
+        };
+        if (nextFailureCount === 1) {
+          setAutoLoadRetryToken({
+            waveId: selectedWaveId,
+            attempt: nextFailureCount,
+          });
+        }
       });
-  }, [itemsResponse, pendingAction, selectedWaveId]);
+  }, [autoLoadRetryToken, itemsResponse, pendingAction, selectedWaveId]);
 
   async function runAction(label: string, action: () => Promise<DpmWaveGatewayResponse>) {
     if (pendingAction) {

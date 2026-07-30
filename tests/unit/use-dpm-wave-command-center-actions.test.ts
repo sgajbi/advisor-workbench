@@ -372,6 +372,19 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
   });
 
+  it("retries the selected wave proposed-change auto-load after a transient Gateway failure", async () => {
+    vi.mocked(getDpmWaveItems)
+      .mockRejectedValueOnce(new Error("Gateway timeout"))
+      .mockResolvedValueOnce(itemResponse);
+
+    const { result } = renderActions();
+
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledTimes(2));
+    expect(getDpmWaveItems).toHaveBeenNthCalledWith(1, "dwv_001");
+    expect(getDpmWaveItems).toHaveBeenNthCalledWith(2, "dwv_001");
+    await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+  });
+
   it("routes bounded rebalance actions through Gateway helpers", async () => {
     vi.mocked(previewDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(createDpmWave).mockResolvedValue(waveResponse);

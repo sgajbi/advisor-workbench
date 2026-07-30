@@ -396,6 +396,41 @@ describe("PerformanceChartPanel", () => {
     ).toContain("Observation");
   });
 
+  it("clears explicit date drafts when the source report-date context changes", () => {
+    const props = buildChartProps({
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-02-28",
+    });
+    const { rerender } = render(<PerformanceChartPanel {...props} />);
+
+    fireEvent.change(screen.getByLabelText("From"), {
+      target: { value: "2026-01-15" },
+    });
+    expect(screen.getByLabelText("From")).toHaveValue("2026-01-15");
+
+    rerender(
+      <PerformanceChartPanel
+        {...props}
+        reportStartDate="2026-03-01"
+        reportEndDate="2026-03-31"
+      />,
+    );
+
+    expect(screen.getByLabelText("From")).toHaveValue("2026-03-01");
+    expect(screen.getByLabelText("To")).toHaveValue("2026-03-31");
+
+    rerender(
+      <PerformanceChartPanel
+        {...props}
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-02-28"
+      />,
+    );
+
+    expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
+    expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
+  });
+
   it("uses benchmark options from the workspace contract for selector labels", () => {
     render(
       <PerformanceChartPanel

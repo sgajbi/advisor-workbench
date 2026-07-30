@@ -50,28 +50,7 @@ type ExplicitDateDraft = {
   toDate: string;
 };
 
-export default function PerformanceChartPanel({
-  title,
-  points,
-  summary,
-  portfolioId,
-  period,
-  detailBasis,
-  contributionDimension,
-  attributionDimension,
-  chartFrequency,
-  benchmark,
-  benchmarkOptions = [],
-  moneyWeightedReturn,
-  reportingCurrency,
-  reportStartDate,
-  reportEndDate,
-  capabilities,
-  onRequestChange,
-  isUpdating = false,
-  isDetailsPending = false,
-  id,
-}: {
+type PerformanceChartPanelProps = {
   title: string;
   points: PerformanceChartPoint[];
   summary: ComparativeSummary;
@@ -92,11 +71,48 @@ export default function PerformanceChartPanel({
   isUpdating?: boolean;
   isDetailsPending?: boolean;
   id?: string;
-}) {
+};
+
+type ResolvedReportDates = ReturnType<typeof resolveReportDates>;
+
+export default function PerformanceChartPanel(props: PerformanceChartPanelProps) {
   const resolvedReportDates = useMemo(
-    () => resolveReportDates(points, reportStartDate, reportEndDate),
-    [points, reportEndDate, reportStartDate]
+    () => resolveReportDates(props.points, props.reportStartDate, props.reportEndDate),
+    [props.points, props.reportEndDate, props.reportStartDate]
   );
+
+  return (
+    <PerformanceChartPanelBody
+      key={`${resolvedReportDates.startDate}|${resolvedReportDates.endDate}`}
+      {...props}
+      resolvedReportDates={resolvedReportDates}
+    />
+  );
+}
+
+function PerformanceChartPanelBody({
+  title,
+  points,
+  summary,
+  portfolioId,
+  period,
+  detailBasis,
+  contributionDimension,
+  attributionDimension,
+  chartFrequency,
+  benchmark,
+  benchmarkOptions = [],
+  moneyWeightedReturn,
+  reportingCurrency,
+  reportStartDate,
+  reportEndDate,
+  capabilities,
+  onRequestChange,
+  isUpdating = false,
+  isDetailsPending = false,
+  id,
+  resolvedReportDates,
+}: PerformanceChartPanelProps & { resolvedReportDates: ResolvedReportDates }) {
   const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
     sourceStartDate: resolvedReportDates.startDate,
     sourceEndDate: resolvedReportDates.endDate,
