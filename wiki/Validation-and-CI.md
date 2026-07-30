@@ -47,8 +47,12 @@ concurrency group.
   app source keeps the direct Next, Core Web Vitals, TypeScript, and stable React Hooks correctness
   rules; tests, live validators, scripts, and configuration files are scanned by the shared
   TypeScript/JavaScript policy. Deprecated `next lint` and `eslint-config-next` are not part of the
-  governed gate. React Compiler lint-rule adoption remains separate under the dedicated follow-up
-  issue.
+  governed gate.
+- `npm run lint:react-compiler`
+  runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
+  report-only React Compiler compatibility evaluator. It is not part of `make check`, Feature Lane,
+  PR Merge Gate, or Main Releasability until its finding families are refactored and promoted by a
+  focused governance change. Running the evaluator does not enable the React Compiler runtime.
 - `make build`
   runs `next build` after the repository-owned lint and typecheck gates in `make check`. Workbench
   does not rely on Next's duplicate build-time ESLint integration as the lint authority.

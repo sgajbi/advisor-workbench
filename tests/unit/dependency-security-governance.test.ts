@@ -13,7 +13,7 @@ function hasExactLine(source: string, expectedLine: string): boolean {
 }
 
 describe("dependency security governance", () => {
-  it("preserves React Hooks linting under the flat ESLint CLI gate", () => {
+  it("preserves stable React Hooks linting under the flat ESLint CLI gate", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
       devDependencies?: Record<string, string>;
       scripts?: Record<string, string>;
@@ -33,6 +33,24 @@ describe("dependency security governance", () => {
     expect(eslintConfig).toContain("...stableReactHooksRules");
     expect(eslintConfig).toContain('files: ["src/**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
     expect(eslintConfig).toContain("intentionalUnusedValuePattern");
+  });
+
+  it("keeps React Compiler linting as an explicit report-only evaluator", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const eslintConfig = readRepositoryFile("eslint.config.mjs");
+    const compilerConfig = readRepositoryFile("eslint.react-compiler.config.mjs");
+
+    expect(packageJson.scripts?.["lint:react-compiler"]).toBe(
+      "eslint src --config eslint.react-compiler.config.mjs --max-warnings=0",
+    );
+    expect(packageJson.scripts?.lint).not.toContain("react-compiler");
+    expect(eslintConfig).not.toContain("reactHooks.configs.recommended.rules,");
+    expect(compilerConfig).toContain('import baseConfig from "./eslint.config.mjs";');
+    expect(compilerConfig).toContain('import reactHooks from "eslint-plugin-react-hooks";');
+    expect(compilerConfig).toContain("...reactHooks.configs.recommended.rules");
+    expect(compilerConfig).toContain('files: ["src/**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
   });
 
   it("keeps lint scope broad enough for source, tests, scripts, and configuration", () => {

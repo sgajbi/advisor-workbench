@@ -401,7 +401,12 @@ Important validation expectations:
 1. unit and integration behavior is validated through Vitest coverage,
 2. dependency security rejects high/critical findings across the complete graph and
    moderate-or-higher findings in browser-delivered production dependencies,
-3. browser smoke is validated through Playwright,
+3. `npm run lint` uses the flat ESLint CLI gate with stable React Hooks correctness rules
+   (`rules-of-hooks` and `exhaustive-deps`) for source files. `npm run lint:react-compiler` is a
+   separate report-only evaluator for the broader `eslint-plugin-react-hooks` recommended rule set,
+   including React Compiler compatibility rules; do not promote it to blocking until the current
+   finding families are refactored and the governance test/context are updated,
+4. browser smoke is validated through Playwright,
 4. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
