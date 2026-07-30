@@ -401,6 +401,40 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses local URL imports with comma-separated media queries before checking module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url("../styles/global/tokens.css") screen, print;\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithMediaQueryList: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url("../styles/global/tokens.css") screen, print;',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+        modules: baseline.modules.filter(
+          (moduleBudget) => !moduleBudget.path.endsWith("tokens.css"),
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithMediaQueryList,
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("parses local URL imports with layer, supports, and media conditions before checking module budgets", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
