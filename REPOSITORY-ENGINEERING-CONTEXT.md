@@ -373,7 +373,8 @@ Use these commands as the primary local contract:
    `make security`
 3. lint
    `make lint`
-   (`eslint . --max-warnings=0`, using the flat ESLint CLI configuration)
+   (`npm run lint`, which runs CSS global governance before `npm run lint:eslint` / the flat ESLint
+   CLI configuration)
 4. typecheck
    `make typecheck`
 5. coverage-backed test gate
