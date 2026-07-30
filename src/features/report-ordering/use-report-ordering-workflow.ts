@@ -35,11 +35,6 @@ type ReviewedIntent = {
   idempotencyKey: string;
 };
 
-type SubmittedHandleState = {
-  portfolioId: string;
-  handle: ReportJobHandle;
-};
-
 type SubmissionProgressState = {
   portfolioId: string;
   state: ReportOrderingSubmissionState;
@@ -73,8 +68,9 @@ export function useReportOrderingWorkflow({
       state: "idle",
       error: null,
     });
-  const [submittedHandleState, setSubmittedHandleState] =
-    useState<SubmittedHandleState | null>(null);
+  const [submittedHandlesByPortfolio, setSubmittedHandlesByPortfolio] = useState<
+    Record<string, ReportJobHandle>
+  >({});
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
 
@@ -173,10 +169,7 @@ export function useReportOrderingWorkflow({
       activeReviewedIntent.configurationFingerprint === currentConfigurationFingerprint &&
       activeReviewedIntent.sourceFingerprint === currentSourceFingerprint,
   );
-  const submittedHandle =
-    submittedHandleState?.portfolioId === portfolioId
-      ? submittedHandleState.handle
-      : null;
+  const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
   const activeSubmissionProgress =
     submissionProgress.portfolioId === portfolioId
       ? submissionProgress
@@ -300,7 +293,10 @@ export function useReportOrderingWorkflow({
       if (activePortfolioIdRef.current !== portfolioId) {
         return false;
       }
-      setSubmittedHandleState({ portfolioId, handle });
+      setSubmittedHandlesByPortfolio((current) => ({
+        ...current,
+        [portfolioId]: handle,
+      }));
       setSubmissionProgress({ portfolioId, state: "accepted", error: null });
       await loadHistory();
       return true;

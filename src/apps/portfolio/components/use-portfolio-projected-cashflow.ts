@@ -140,6 +140,9 @@ export function usePortfolioProjectedCashflow({
       }
     },
     retry: () => {
+      setFailure((current) =>
+        current?.requestedHorizonDays === selectedHorizonDays ? null : current,
+      );
       setSnapshots((current) => {
         const snapshot = current[selectedHorizonKey];
         if (!snapshot?.response || snapshot.response.cashflow_outlook) {

@@ -309,6 +309,71 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.canSubmitReviewedRequest).toBe(false);
   });
 
+  it("tracks accepted submission handles independently for multiple portfolios", async () => {
+    optionsMock.mockImplementation((portfolioId) => {
+      const payload = buildReportOrderingResponse();
+      payload.scopeSelection.scopeId = portfolioId;
+      return Promise.resolve(parseReportOrderingResponse(payload));
+    });
+    submitMock
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_a",
+        report_job_id: "rjob_a",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_a",
+        idempotency_key: "intent_a",
+      })
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_b",
+        report_job_id: "rjob_b",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_b",
+        idempotency_key: "intent_b",
+      });
+
+    const { result, rerender } = renderHook(
+      ({ portfolioId }) =>
+        useReportOrderingWorkflow({
+          portfolioId,
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      { initialProps: { portfolioId: "PB_SG_GLOBAL_BAL_001" } },
+    );
+
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+    expect(result.current.submittedHandle?.report_job_id).toBe("rjob_a");
+
+    rerender({ portfolioId: "PB_SG_OTHER_002" });
+
+    await waitFor(() =>
+      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe("PB_SG_OTHER_002"),
+    );
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+    expect(result.current.submittedHandle?.report_job_id).toBe("rjob_b");
+
+    rerender({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
+
+    await waitFor(() =>
+      expect(result.current.submittedHandle?.report_job_id).toBe("rjob_a"),
+    );
+    expect(result.current.submissionState).toBe("accepted");
+    expect(result.current.canSubmitReviewedRequest).toBe(false);
+  });
+
   it("ignores a late catalogue response from the previously selected portfolio", async () => {
     let resolveFirst: ((value: ReturnType<typeof parseReportOrderingResponse>) => void) | null = null;
     const firstResponse = new Promise<ReturnType<typeof parseReportOrderingResponse>>(
