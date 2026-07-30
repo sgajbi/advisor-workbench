@@ -492,6 +492,43 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("counts escape parity before closing CSS strings while detecting nested imports", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithEvenBackslashStringBeforeNestedImport =
+        [
+          String.raw`.before { content: "\\\\"; }`,
+          '@import "./unbudgeted.css";',
+          "body {",
+          "  margin: 0;",
+          "}",
+        ].join("\n") + "\n";
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithEvenBackslashStringBeforeNestedImport,
+      );
+      writeFixtureFile(repoRoot, "src/styles/global/unbudgeted.css", ".unsafe {\n  color: red;\n}\n");
+      const baselineWithBackslashStringImport: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithBackslashStringImport,
+        }),
+      ).toThrow(/must not contain CSS @import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale max-line headroom when a CSS layer has been reduced", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
