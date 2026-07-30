@@ -6,11 +6,11 @@ import { describe, expect, it } from "vitest";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 
 function readRootCssVariables(): Record<string, string> {
-  const globalsPath = path.resolve(__dirname, "../../src/app/globals.css");
-  const css = fs.readFileSync(globalsPath, "utf8");
+  const tokenPath = path.resolve(__dirname, "../../src/styles/global/tokens.css");
+  const css = fs.readFileSync(tokenPath, "utf8");
   const rootBlockMatch = css.match(/:root\s*\{([\s\S]*?)\n\}/);
   if (!rootBlockMatch) {
-    throw new Error("Could not find :root CSS token block in globals.css");
+    throw new Error("Could not find :root CSS token block in src/styles/global/tokens.css");
   }
 
   const variables: Record<string, string> = {};
