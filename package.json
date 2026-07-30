@@ -63,6 +63,8 @@
     "eslint": "10.8.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "jsdom": "26.1.0",
+    "postcss": "8.5.23",
+    "postcss-value-parser": "4.2.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.65.0",
     "vitest": "3.2.7"
