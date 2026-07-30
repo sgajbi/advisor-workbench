@@ -134,4 +134,32 @@ describe("CSS global governance gate", () => {
       rmSync(repoRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects imported module budgets without finite numeric limits", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const malformedBaseline: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) => {
+          if (!moduleBudget.path.endsWith("tokens.css")) {
+            return moduleBudget;
+          }
+
+          const { maxLines: _maxLines, ...moduleBudgetWithoutLineLimit } = moduleBudget;
+          return moduleBudgetWithoutLineLimit as CssBudget;
+        }),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: malformedBaseline,
+        }),
+      ).toThrow(/finite non-negative integer maxLines/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
 });
