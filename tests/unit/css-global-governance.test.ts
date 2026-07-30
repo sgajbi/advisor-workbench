@@ -307,6 +307,38 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses local URL imports with comment-separated conditions before checking module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url("../styles/global/tokens.css")/**/screen;\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithCommentSeparatedConditions: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url("../styles/global/tokens.css")/**/screen;',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+        modules: baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("tokens.css")),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithCommentSeparatedConditions,
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects same-line declarations after import statements in the entrypoint", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
@@ -422,6 +454,37 @@ describe("CSS global governance gate", () => {
         validateCssGlobalGovernance({
           repoRoot,
           baseline: baselineWithCommentSeparatedNestedModuleImport,
+        }),
+      ).toThrow(/must not contain CSS @import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves CSS strings while detecting nested imports inside governed CSS modules", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithStringCommentDelimitersAroundNestedImport =
+        '.before { content: "/*"; }\n@import "./unbudgeted.css";\n.after { content: "*/"; }\nbody {\n  margin: 0;\n}\n';
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithStringCommentDelimitersAroundNestedImport,
+      );
+      writeFixtureFile(repoRoot, "src/styles/global/unbudgeted.css", ".unsafe {\n  color: red;\n}\n");
+      const baselineWithStringDelimitedNestedImport: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithStringDelimitedNestedImport,
         }),
       ).toThrow(/must not contain CSS @import statements/);
     } finally {
