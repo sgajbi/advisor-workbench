@@ -307,6 +307,37 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("rejects malformed URL imports with multiple target values", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url("../styles/global/tokens.css", "../styles/global/other.css");\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithMalformedUrlImport: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url("../styles/global/tokens.css", "../styles/global/other.css");',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithMalformedUrlImport,
+        }),
+      ).toThrow(/only valid import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("parses local URL imports with comment-separated conditions before checking module budgets", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
