@@ -41,6 +41,16 @@ function isIdentifierCharacter(character) {
   return /[a-z0-9_-]/i.test(character);
 }
 
+function isEscapedCharacter(text, characterIndex) {
+  let slashCount = 0;
+
+  for (let index = characterIndex - 1; index >= 0 && text[index] === "\\"; index -= 1) {
+    slashCount += 1;
+  }
+
+  return slashCount % 2 === 1;
+}
+
 function replaceCssBlockCommentsOutsideStrings(text, replacement = " ") {
   let result = "";
   let activeQuote = null;
@@ -48,11 +58,10 @@ function replaceCssBlockCommentsOutsideStrings(text, replacement = " ") {
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
     const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
-    const previousCharacter = index > 0 ? text[index - 1] : "";
 
     if (activeQuote) {
       result += character;
-      if (character === activeQuote && previousCharacter !== "\\") {
+      if (character === activeQuote && !isEscapedCharacter(text, index)) {
         activeQuote = null;
       }
       continue;
@@ -87,7 +96,6 @@ function containsCssImportAtRule(text) {
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
     const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
-    const previousCharacter = index > 0 ? text[index - 1] : "";
 
     if (insideBlockComment) {
       if (character === "*" && nextCharacter === "/") {
@@ -98,7 +106,7 @@ function containsCssImportAtRule(text) {
     }
 
     if (activeQuote) {
-      if (character === activeQuote && previousCharacter !== "\\") {
+      if (character === activeQuote && !isEscapedCharacter(text, index)) {
         activeQuote = null;
       }
       continue;
@@ -144,7 +152,6 @@ function parseImportTarget(statement) {
   for (let index = 0; index < importBody.length; index += 1) {
     const character = importBody[index];
     const nextCharacter = index + 1 < importBody.length ? importBody[index + 1] : "";
-    const previousCharacter = index > 0 ? importBody[index - 1] : "";
 
     if (insideBlockComment) {
       if (character === "*" && nextCharacter === "/") {
@@ -155,7 +162,7 @@ function parseImportTarget(statement) {
     }
 
     if (activeQuote) {
-      if (character === activeQuote && previousCharacter !== "\\") {
+      if (character === activeQuote && !isEscapedCharacter(importBody, index)) {
         activeQuote = null;
       }
       continue;
