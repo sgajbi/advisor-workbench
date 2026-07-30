@@ -39,7 +39,7 @@ function isExternalImportRef(importRef) {
 
 function parseImportTarget(statement) {
   const importStatement = statement.trim();
-  const prefixMatch = importStatement.match(/^@import\s+/);
+  const prefixMatch = importStatement.match(/^@import(?:\s+|(?=["']))/i);
   if (!prefixMatch) {
     return null;
   }
@@ -175,7 +175,7 @@ function assertWithinBudget(repoRoot, budget, kind = "module") {
 
 function assertNoModuleImports(repoRoot, moduleBudget) {
   const textWithoutBlockComments = fileText(repoRoot, moduleBudget.path).replace(/\/\*[\s\S]*?\*\//g, "");
-  if (/@import\s+/i.test(textWithoutBlockComments)) {
+  if (/@import(?:\s+|(?=["']))/i.test(textWithoutBlockComments)) {
     throw new Error(
       `${moduleBudget.path} must not contain CSS @import statements. ` +
         "Keep global CSS composition in src/app/globals.css and add each imported layer to scripts/quality/css-global-governance-baseline.json."
@@ -218,17 +218,10 @@ function assertEntrypoint(repoRoot, baseline) {
 
   assertWithinBudget(repoRoot, baseline.entrypoint, "entrypoint");
 
-  const nonImports = statements.filter((line) => !line.startsWith("@import "));
-  if (nonImports.length > 0) {
-    throw new Error(
-      `${path} must remain a composition entrypoint. Found non-import statements: ${nonImports.join(", ")}`
-    );
-  }
-
   const invalidImports = statements.filter((line) => !parseImportTarget(line));
   if (invalidImports.length > 0) {
     throw new Error(
-      `${path} must contain only valid import statements with optional trailing comments. ` +
+      `${path} must remain a composition entrypoint with only valid import statements and optional trailing comments. ` +
         `Found invalid import statements: ${invalidImports.join(", ")}`
     );
   }
