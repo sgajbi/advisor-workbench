@@ -85,11 +85,12 @@ function parseImportRef(params) {
   }
 
   if (targetNode.type === "function" && targetNode.value.toLowerCase() === "url") {
-    const [urlValueNode] = significantValueNodes(targetNode.nodes);
-    if (!urlValueNode) {
+    const urlValueNodes = significantValueNodes(targetNode.nodes);
+    if (urlValueNodes.length !== 1) {
       return null;
     }
 
+    const [urlValueNode] = urlValueNodes;
     if (urlValueNode.type === "string" || urlValueNode.type === "word") {
       return urlValueNode.value;
     }
