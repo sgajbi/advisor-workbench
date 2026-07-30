@@ -67,7 +67,18 @@ type TransactionPageDraft = {
   pageSkip: number;
 };
 
-export default function PortfolioTransactionsGrid({
+export default function PortfolioTransactionsGrid(props: PortfolioTransactionsGridProps) {
+  const defaultDateKey = `${props.defaultStartDate}|${props.defaultEndDate}`;
+
+  return (
+    <PortfolioTransactionsGridBody
+      key={`${props.portfolioId}|${defaultDateKey}|${JSON.stringify(props.externalFilter ?? null)}`}
+      {...props}
+    />
+  );
+}
+
+function PortfolioTransactionsGridBody({
   portfolioId,
   baseCurrency,
   asOfDate,

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 type MockGridRow = Record<string, unknown> & {
@@ -284,6 +284,70 @@ describe("portfolio data grids", () => {
     expect(createObjectUrl).toHaveBeenCalledTimes(1);
     expect(anchorClick).toHaveBeenCalledTimes(1);
     expect(revokeObjectUrl).toHaveBeenCalledWith("blob:portfolio-transactions");
+  });
+
+  it("clears transaction date drafts when the default ledger range changes", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({ total: 0, skip: 0, limit: 200, transactions: [] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender } = render(
+      <PortfolioTransactionsGrid
+        portfolioId="MANUAL_PB_USD_DRAFT"
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialTransactions={[]}
+      />,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Transaction start date"), {
+        target: { value: "2026-03-10" },
+      });
+    });
+    expect(screen.getByLabelText("Transaction start date")).toHaveValue("2026-03-10");
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    await act(async () => {
+      rerender(
+        <PortfolioTransactionsGrid
+          portfolioId="MANUAL_PB_USD_DRAFT"
+          baseCurrency="USD"
+          asOfDate="2026-04-30"
+          defaultStartDate="2026-04-01"
+          defaultEndDate="2026-04-30"
+          initialTransactions={[]}
+        />,
+      );
+    });
+
+    expect(screen.getByLabelText("Transaction start date")).toHaveValue("2026-04-01");
+    expect(screen.getByLabelText("Transaction end date")).toHaveValue("2026-04-30");
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+
+    await act(async () => {
+      rerender(
+        <PortfolioTransactionsGrid
+          portfolioId="MANUAL_PB_USD_DRAFT"
+          baseCurrency="USD"
+          asOfDate="2026-03-28"
+          defaultStartDate="2026-03-01"
+          defaultEndDate="2026-03-28"
+          initialTransactions={[]}
+        />,
+      );
+    });
+
+    expect(screen.getByLabelText("Transaction start date")).toHaveValue("2026-03-01");
+    expect(screen.getByLabelText("Transaction end date")).toHaveValue("2026-03-28");
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("serializes portfolio grid exports as auditable CSV without spreadsheet runtime dependencies", () => {
@@ -890,7 +954,9 @@ describe("portfolio data grids", () => {
   it("shows an actionable error state when transactions cannot be loaded", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response("{}", { status: 500 }))
+      vi.fn(async () => {
+        throw new Error("Gateway unavailable");
+      })
     );
 
     const { container } = render(
