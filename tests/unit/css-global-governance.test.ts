@@ -174,6 +174,75 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses bare relative imports before checking module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText = '@import "tokens.css";\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const bareRelativeBudget = writeFixtureFile(repoRoot, "src/app/tokens.css", ":root {\n  --accent: #123456;\n}\n");
+      const baselineWithBareRelativeImport: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: ['@import "tokens.css";', '@import "../styles/global/base.css";'],
+        },
+        modules: [
+          ...baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("tokens.css")),
+          bareRelativeBudget,
+        ],
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: {
+            ...baselineWithBareRelativeImport,
+            modules: baselineWithBareRelativeImport.modules.filter(
+              (moduleBudget) => moduleBudget.path !== bareRelativeBudget.path,
+            ),
+          },
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("does not require module budgets for external imports", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import "https://cdn.example.invalid/reset.css";\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithExternalImport: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import "https://cdn.example.invalid/reset.css";',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+        modules: baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("tokens.css")),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithExternalImport,
+        }),
+      ).not.toThrow();
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale max-line headroom when a CSS layer has been reduced", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
