@@ -332,7 +332,7 @@ describe("CSS global governance gate", () => {
           repoRoot,
           baseline: baselineWithSameLineDeclaration,
         }),
-      ).toThrow(/must contain only valid import statements/);
+      ).toThrow(/only valid import statements/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
@@ -361,6 +361,36 @@ describe("CSS global governance gate", () => {
         validateCssGlobalGovernance({
           repoRoot,
           baseline: baselineWithNestedModuleImport,
+        }),
+      ).toThrow(/must not contain CSS @import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects nested imports without whitespace inside governed CSS modules", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithWhitespaceFreeNestedImport = '@import"./unbudgeted.css";\nbody {\n  margin: 0;\n}\n';
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithWhitespaceFreeNestedImport,
+      );
+      writeFixtureFile(repoRoot, "src/styles/global/unbudgeted.css", ".unsafe {\n  color: red;\n}\n");
+      const baselineWithWhitespaceFreeNestedModuleImport: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithWhitespaceFreeNestedModuleImport,
         }),
       ).toThrow(/must not contain CSS @import statements/);
     } finally {
