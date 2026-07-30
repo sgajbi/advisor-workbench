@@ -474,6 +474,17 @@ describe("canonical live validation script", () => {
     expect(script).not.toContain("client-001");
     expect(script).not.toContain("LOTUS_IDEA_CAPACITY_AUTHORIZATION");
     expect(script).not.toContain("LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT");
+
+    const startScript = readFileSync(
+      join(process.cwd(), "scripts", "live", "Start-LotusFrontOfficeCanonical.ps1"),
+      "utf8",
+    );
+    expect(startScript).toContain(
+      '$ideaCapacityTrustedCallerContext = "canonical-local-idea-capacity-seed-$([guid]::NewGuid().ToString(\'N\'))"',
+    );
+    expect(startScript).toContain("LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN");
+    expect(startScript).toContain("LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT");
+    expect(startScript).toContain("Invoke-WithProcessEnvironment");
   });
 
   it("asserts canonical performance and risk calculation sanity", () => {
