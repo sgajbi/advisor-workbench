@@ -3,8 +3,8 @@
   "description": "Ratcheting Workbench global CSS ownership baseline. Lower limits as legacy global selectors migrate beside owning features.",
   "entrypoint": {
     "path": "src/app/globals.css",
-    "maxLines": 12,
-    "maxBytes": 700,
+    "maxLines": 7,
+    "maxBytes": 398,
     "imports": [
       "@import url(\"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap\");",
       "@import \"../styles/global/tokens.css\";",
@@ -19,31 +19,31 @@
       "path": "src/styles/global/tokens.css",
       "owner": "design tokens and foundational custom properties",
       "maxLines": 164,
-      "maxBytes": 5805
+      "maxBytes": 5641
     },
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
       "maxLines": 239,
-      "maxBytes": 4866
+      "maxBytes": 4627
     },
     {
       "path": "src/styles/global/base.css",
       "owner": "browser and element defaults",
       "maxLines": 29,
-      "maxBytes": 591
+      "maxBytes": 562
     },
     {
       "path": "src/styles/global/workbench-shell.css",
       "owner": "shared Workbench shell, typography, panel, and navigation primitives",
       "maxLines": 996,
-      "maxBytes": 22348
+      "maxBytes": 21352
     },
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
       "maxLines": 14871,
-      "maxBytes": 342675
+      "maxBytes": 327804
     }
   ]
 }
