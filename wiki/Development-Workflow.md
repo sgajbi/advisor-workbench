@@ -9,9 +9,11 @@
 ## Repo-native commands
 
 - `make lint`
-  Runs `eslint . --max-warnings=0` through the repository flat ESLint configuration. The gate scans
-  application source, tests, live validators, scripts, and configuration files while keeping
-  Next/Core Web Vitals and stable React Hooks correctness rules scoped to production app source.
+  Runs the CSS global governance ratchet and then `eslint . --max-warnings=0` through the
+  repository flat ESLint configuration. The gate keeps `src/app/globals.css` as a composition
+  entrypoint, enforces the governed global-style budgets, and scans application source, tests, live
+  validators, scripts, and configuration files while keeping Next/Core Web Vitals and stable React
+  Hooks correctness rules scoped to production app source.
 - `npm run lint:react-compiler`
   Runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
   report-only evaluator for React Compiler compatibility. It is not part of `make check` until the
@@ -28,3 +30,4 @@
 - keep `wiki/` as the authored wiki source
 - route runtime and route examples into the wiki
 - keep deep product-architecture and runtime details in `docs/`
+- keep CSS ownership guidance in `docs/architecture/css-layer-governance.md`
