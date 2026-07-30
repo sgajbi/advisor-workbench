@@ -19,7 +19,7 @@ mechanical splits that hide ownership or cascade changes.
 
 ## Ratchet gate
 
-`npm run lint` runs `npm run lint:css-global` before ESLint. The gate validates:
+`make lint` runs `npm run lint:css-global` before the repository ESLint gate. The CSS gate validates:
 
 - `globals.css` contains only the governed import list;
 - imported global layers remain in the documented cascade order;

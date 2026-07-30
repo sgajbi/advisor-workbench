@@ -63,6 +63,7 @@ describe("dependency security governance", () => {
 
     expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
     expect(packageJson.scripts?.lint).not.toContain("eslint src");
+    expect(makefile).toMatch(/lint:\r?\n\tnpm run lint:css-global\r?\n\tnpm run lint/);
     expect(makefile).toMatch(/check: security lint typecheck test-coverage build/);
     expect(nextConfig).toContain("ignoreDuringBuilds: true");
     expect(eslintConfig).toContain('files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
