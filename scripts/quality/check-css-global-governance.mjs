@@ -74,9 +74,17 @@ function significantValueNodes(nodes) {
 }
 
 function parseImportRef(params) {
-  const [targetNode] = significantValueNodes(valueParser(params).nodes);
+  const [targetNode, ...conditionNodes] = significantValueNodes(valueParser(params).nodes);
 
   if (!targetNode) {
+    return null;
+  }
+
+  if (
+    conditionNodes.some(
+      (node) => node.type === "string" || (node.type === "div" && node.value === ",")
+    )
+  ) {
     return null;
   }
 
