@@ -174,7 +174,7 @@ function assertWithinBudget(repoRoot, budget, kind = "module") {
 }
 
 function assertNoModuleImports(repoRoot, moduleBudget) {
-  const textWithoutBlockComments = fileText(repoRoot, moduleBudget.path).replace(/\/\*[\s\S]*?\*\//g, "");
+  const textWithoutBlockComments = fileText(repoRoot, moduleBudget.path).replace(/\/\*[\s\S]*?\*\//g, " ");
   if (/@import(?:\s+|(?=["']))/i.test(textWithoutBlockComments)) {
     throw new Error(
       `${moduleBudget.path} must not contain CSS @import statements. ` +
