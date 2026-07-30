@@ -271,6 +271,44 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.submittedHandle).toBeNull();
   });
 
+  it("restores accepted submission posture when returning to the originating portfolio", async () => {
+    const { result, rerender } = renderHook(
+      ({ portfolioId }) =>
+        useReportOrderingWorkflow({
+          portfolioId,
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      { initialProps: { portfolioId: "PB_SG_GLOBAL_BAL_001" } },
+    );
+
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+    expect(result.current.submissionState).toBe("accepted");
+    expect(result.current.submittedHandle?.report_job_id).toBe("rjob_2");
+
+    rerender({ portfolioId: "PB_SG_OTHER_002" });
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    act(() => {
+      result.current.updateConfiguration({ asOfDate: "2026-04-23" });
+    });
+    expect(result.current.submissionState).toBe("idle");
+    expect(result.current.submittedHandle).toBeNull();
+
+    rerender({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
+
+    await waitFor(() =>
+      expect(result.current.submittedHandle?.report_job_id).toBe("rjob_2"),
+    );
+    expect(result.current.submissionState).toBe("accepted");
+    expect(result.current.canSubmitReviewedRequest).toBe(false);
+  });
+
   it("ignores a late catalogue response from the previously selected portfolio", async () => {
     let resolveFirst: ((value: ReturnType<typeof parseReportOrderingResponse>) => void) | null = null;
     const firstResponse = new Promise<ReturnType<typeof parseReportOrderingResponse>>(

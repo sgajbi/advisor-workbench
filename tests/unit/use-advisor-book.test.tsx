@@ -34,14 +34,27 @@ describe("useAdvisorBook", () => {
   });
 
   it("supports an explicit retry after an unavailable response", async () => {
+    let resolveRetry: ((value: { correlation_id: string }) => void) | null = null;
     getAdvisorBookMock
       .mockRejectedValueOnce(new Error("unavailable"))
-      .mockResolvedValueOnce({ correlation_id: "recovered" });
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveRetry = resolve;
+        }),
+      );
     const { result } = renderHook(() => useAdvisorBook({ asOfDate: "2026-04-10" }));
 
     await waitFor(() => expect(result.current.error).toBeInstanceOf(Error));
+    let retry: Promise<void> | null = null;
+    act(() => {
+      retry = result.current.reload();
+    });
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBeNull();
+
     await act(async () => {
-      await result.current.reload();
+      resolveRetry?.({ correlation_id: "recovered" });
+      await retry;
     });
     expect(result.current.response).toEqual({ correlation_id: "recovered" });
     expect(result.current.error).toBeNull();
