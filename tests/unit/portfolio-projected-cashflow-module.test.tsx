@@ -241,6 +241,33 @@ describe("PortfolioProjectedCashflowModule", () => {
     });
   });
 
+  it("clears failure posture while an unavailable projection retry is pending", async () => {
+    getPortfolioProjectedCashflow
+      .mockResolvedValueOnce(
+        buildResponse(null, {
+          warnings: ["PORTFOLIO_CASHFLOW_UNAVAILABLE"],
+        })
+      )
+      .mockReturnValueOnce(
+        new Promise<PortfolioProjectedCashflowResponse | null>(() => {})
+      );
+
+    renderModule({ initialCashflowOutlook: null });
+
+    expect(await screen.findByText("10-day projection unavailable")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry projection" }));
+
+    expect(await screen.findByText("Loading 10-day projection")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry projection" })).not.toBeInTheDocument();
+    expect(getPortfolioProjectedCashflow).toHaveBeenLastCalledWith("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      horizonDays: 10,
+      includeProjected: true,
+      forceRefresh: true,
+    });
+  });
+
   it("treats a source-backed flat horizon as no movement rather than partial liquidity", () => {
     renderModule({
       initialCashflowOutlook: buildOutlook({
