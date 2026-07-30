@@ -95,6 +95,11 @@ export default function PerformanceMultiHorizonPanel({
     period,
     selectedPeriodRow,
   });
+  const hasRelativeVisual = (rows ?? []).some(
+    (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
+  );
+  const resolvedVisualMode =
+    visualMode === "relative" && !hasRelativeVisual ? "absolute" : visualMode;
   const tableModel = useMemo(() => {
     return buildPerformanceHorizonTableModel({
       rows: rows ?? [],
@@ -109,19 +114,10 @@ export default function PerformanceMultiHorizonPanel({
       buildPerformanceHorizonVisualModel({
         rows: rows ?? [],
         basisView,
-        visualMode,
+        visualMode: resolvedVisualMode,
       }),
-    [basisView, rows, visualMode]
+    [basisView, resolvedVisualMode, rows]
   );
-  const hasRelativeVisual = (rows ?? []).some(
-    (row) => row.active_return_pct != null || row.cumulative_active_return_pct != null
-  );
-
-  useEffect(() => {
-    if (visualMode === "relative" && !hasRelativeVisual) {
-      setVisualMode("absolute");
-    }
-  }, [hasRelativeVisual, visualMode]);
 
   return (
     <PerformanceSummaryDriverModule
@@ -156,7 +152,7 @@ export default function PerformanceMultiHorizonPanel({
             <PerformanceHorizonComparisonToolbar
               tableView={tableView}
               basisView={basisView}
-              visualMode={visualMode}
+              visualMode={resolvedVisualMode}
               hasRelativeVisual={hasRelativeVisual}
               onTableViewChange={setTableView}
               onBasisViewChange={setBasisView}
@@ -164,7 +160,7 @@ export default function PerformanceMultiHorizonPanel({
             />
           </div>
           <div className="performance-horizon-panel-body">
-            <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={visualMode} />
+            <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={resolvedVisualMode} />
             <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
           </div>
         </>

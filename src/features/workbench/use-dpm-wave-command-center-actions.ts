@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   approveDpmWave,
   createDpmCampaignApprovalDecision,
@@ -153,6 +153,11 @@ type UseDpmWaveCommandCenterActionsResult = {
   ) => Promise<void>;
 };
 
+type SelectedCampaignState = {
+  campaignRowKey: string;
+  selectedCampaignKey: string | null;
+};
+
 export function useDpmWaveCommandCenterActions({
   portfolioId,
   waveList,
@@ -222,8 +227,12 @@ export function useDpmWaveCommandCenterActions({
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
     useState<DpmCampaignWorkflowCommandEvidence | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [autoLoadedWaveId, setAutoLoadedWaveId] = useState<string | null>(null);
-  const [selectedCampaignKey, setSelectedCampaignKey] = useState<string | null>(null);
+  const autoLoadedWaveIdRef = useRef<string | null>(null);
+  const [selectedCampaignState, setSelectedCampaignState] =
+    useState<SelectedCampaignState>({
+      campaignRowKey: "",
+      selectedCampaignKey: null,
+    });
 
   const model = buildDpmWaveCommandCenterModel({
     waveList,
@@ -249,28 +258,33 @@ export function useDpmWaveCommandCenterActions({
       campaignMakerCheckerControlsResponse ?? campaignMakerCheckerControls,
   });
   const selectedWaveId = model.selectedWaveId;
+  const campaignRowKey = model.campaignRows.map((row) => row.key).join("|");
+  const selectedCampaignKey =
+    selectedCampaignState.campaignRowKey === campaignRowKey &&
+    model.campaignRows.some((row) => row.key === selectedCampaignState.selectedCampaignKey)
+      ? selectedCampaignState.selectedCampaignKey
+      : model.campaignRows[0]?.key ?? null;
   const selectedCampaign =
     model.campaignRows.find((row) => row.key === selectedCampaignKey) ??
     model.campaignRows[0] ??
     null;
 
   useEffect(() => {
-    if (!selectedWaveId || autoLoadedWaveId === selectedWaveId || itemsResponse || pendingAction) {
+    if (
+      !selectedWaveId ||
+      autoLoadedWaveIdRef.current === selectedWaveId ||
+      itemsResponse ||
+      pendingAction
+    ) {
       return;
     }
-    setAutoLoadedWaveId(selectedWaveId);
+    autoLoadedWaveIdRef.current = selectedWaveId;
     getDpmWaveItems(selectedWaveId)
       .then(setItemsResponse)
       .catch(() => {
-        setAutoLoadedWaveId(null);
+        autoLoadedWaveIdRef.current = null;
       });
-  }, [autoLoadedWaveId, itemsResponse, pendingAction, selectedWaveId]);
-
-  useEffect(() => {
-    if (!selectedCampaignKey && model.campaignRows[0]) {
-      setSelectedCampaignKey(model.campaignRows[0].key);
-    }
-  }, [model.campaignRows, selectedCampaignKey]);
+  }, [itemsResponse, pendingAction, selectedWaveId]);
 
   async function runAction(label: string, action: () => Promise<DpmWaveGatewayResponse>) {
     if (pendingAction) {
@@ -359,7 +373,10 @@ export function useDpmWaveCommandCenterActions({
     if (pendingCampaignLifecycleKey) {
       return;
     }
-    setSelectedCampaignKey(row.key);
+    setSelectedCampaignState({
+      campaignRowKey,
+      selectedCampaignKey: row.key,
+    });
     setPendingCampaignLifecycleKey(row.key);
     setCampaignLifecycleError(null);
     setCampaignLifecycleResponse(null);
@@ -382,7 +399,10 @@ export function useDpmWaveCommandCenterActions({
     if (pendingCampaignLaunchHistoryKey) {
       return;
     }
-    setSelectedCampaignKey(row.key);
+    setSelectedCampaignState({
+      campaignRowKey,
+      selectedCampaignKey: row.key,
+    });
     setPendingCampaignLaunchHistoryKey(row.key);
     setCampaignLaunchHistoryError(null);
     setCampaignLaunchHistoryResponse(null);
@@ -411,7 +431,10 @@ export function useDpmWaveCommandCenterActions({
     ) {
       return;
     }
-    setSelectedCampaignKey(row.key);
+    setSelectedCampaignState({
+      campaignRowKey,
+      selectedCampaignKey: row.key,
+    });
     setPendingCampaignPreviewReadinessKey(row.key);
     setPendingCampaignLaunchPackageKey(row.key);
     setCampaignPreviewReadinessError(null);
@@ -460,7 +483,10 @@ export function useDpmWaveCommandCenterActions({
     if (pendingCampaignLaunchKey || !model.campaignLaunchPosture.canLaunch) {
       return;
     }
-    setSelectedCampaignKey(row.key);
+    setSelectedCampaignState({
+      campaignRowKey,
+      selectedCampaignKey: row.key,
+    });
     setPendingCampaignLaunchKey(row.key);
     setCampaignLaunchError(null);
     try {

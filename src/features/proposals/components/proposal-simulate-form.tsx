@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,6 +62,13 @@ type FormInput = z.infer<typeof schema>;
 const DEFAULT_ADVISORY_AS_OF_DATE = "2026-04-10";
 const DEFAULT_CANONICAL_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
 
+function createUiIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `ui-${crypto.randomUUID()}`;
+  }
+  return `ui-${Date.now()}`;
+}
+
 function simulationHighlights(result: ProposalSimulateResponse): Array<{ label: string; value: string }> {
   const highlights: Array<{ label: string; value: string }> = [];
   Object.entries(result.data).forEach(([key, value]) => {
@@ -97,12 +104,7 @@ export default function ProposalSimulateForm({
 }: {
   initialPortfolioId?: string;
 }) {
-  const defaultIdempotencyKey = useMemo(() => {
-    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-      return `ui-${crypto.randomUUID()}`;
-    }
-    return `ui-${Date.now()}`;
-  }, []);
+  const [defaultIdempotencyKey] = useState(createUiIdempotencyKey);
 
   const form = useForm<FormInput>({
     resolver: zodResolver(schema),
@@ -134,10 +136,10 @@ export default function ProposalSimulateForm({
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
 
-  const portfolioId = form.watch("portfolioId");
-  const asOfDate = form.watch("asOfDate");
-  const baseCurrency = form.watch("baseCurrency");
-  const cashAmount = form.watch("cashAmount");
+  const portfolioId = useWatch({ control: form.control, name: "portfolioId" });
+  const asOfDate = useWatch({ control: form.control, name: "asOfDate" });
+  const baseCurrency = useWatch({ control: form.control, name: "baseCurrency" });
+  const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
   const { data: portfolioBook, isLoading: positionsLoading } = useQuery({
     queryKey: ["proposal-position-builder-book", portfolioId, baseCurrency],
     queryFn: async () =>

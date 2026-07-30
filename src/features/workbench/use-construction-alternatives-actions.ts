@@ -39,6 +39,13 @@ type UseConstructionAlternativesActionsResult = {
   selectAlternative: (alternativeId: string) => Promise<void>;
 };
 
+type ExecutionAcknowledgementState = {
+  portfolioKey: string;
+  status: "loading" | "ready" | "error";
+  response: ExternalOrderExecutionAcknowledgementResponse | null;
+  error: string | null;
+};
+
 export function useConstructionAlternativesActions({
   portfolio,
 }: UseConstructionAlternativesActionsInput): UseConstructionAlternativesActionsResult {
@@ -48,14 +55,25 @@ export function useConstructionAlternativesActions({
   const [selectionPendingId, setSelectionPendingId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [executionAcknowledgementResponse, setExecutionAcknowledgementResponse] =
-    useState<ExternalOrderExecutionAcknowledgementResponse | null>(null);
-  const [executionAcknowledgementLoading, setExecutionAcknowledgementLoading] =
-    useState(false);
-  const [executionAcknowledgementError, setExecutionAcknowledgementError] =
-    useState<string | null>(null);
   const model = buildConstructionPanelModel(response);
   const portfolioId = portfolio.portfolio.portfolio_id;
+  const portfolioKey = `${portfolioId}|${portfolio.as_of_date}|${portfolio.contract_version}`;
+  const [executionAcknowledgementState, setExecutionAcknowledgementState] =
+    useState<ExecutionAcknowledgementState>({
+      portfolioKey,
+      status: "loading",
+      response: null,
+      error: null,
+    });
+  const activeExecutionAcknowledgementState =
+    executionAcknowledgementState.portfolioKey === portfolioKey
+      ? executionAcknowledgementState
+      : {
+          portfolioKey,
+          status: "loading" as const,
+          response: null,
+          error: null,
+        };
   const canSelectSelectedAlternative = canSelectConstructionAlternative({
     selectedAlternative: model.selectedAlternative,
     alternativeSetId: model.alternativeSetId,
@@ -66,33 +84,34 @@ export function useConstructionAlternativesActions({
 
   useEffect(() => {
     let cancelled = false;
-    setExecutionAcknowledgementLoading(true);
-    setExecutionAcknowledgementError(null);
     void getExternalOrderExecutionAcknowledgement({ portfolio })
       .then((nextResponse) => {
         if (!cancelled) {
-          setExecutionAcknowledgementResponse(nextResponse);
+          setExecutionAcknowledgementState({
+            portfolioKey,
+            status: "ready",
+            response: nextResponse,
+            error: null,
+          });
         }
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setExecutionAcknowledgementResponse(null);
-          setExecutionAcknowledgementError(
-            error instanceof Error
-              ? error.message
-              : "External OMS acknowledgement supportability could not be loaded."
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setExecutionAcknowledgementLoading(false);
+          setExecutionAcknowledgementState({
+            portfolioKey,
+            status: "error",
+            response: null,
+            error:
+              error instanceof Error
+                ? error.message
+                : "External OMS acknowledgement supportability could not be loaded.",
+          });
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [portfolio]);
+  }, [portfolio, portfolioKey]);
 
   async function generateAlternatives() {
     if (generatePending) {
@@ -157,9 +176,9 @@ export function useConstructionAlternativesActions({
     selectionPendingId,
     actionMessage,
     actionError,
-    executionAcknowledgementResponse,
-    executionAcknowledgementLoading,
-    executionAcknowledgementError,
+    executionAcknowledgementResponse: activeExecutionAcknowledgementState.response,
+    executionAcknowledgementLoading: activeExecutionAcknowledgementState.status === "loading",
+    executionAcknowledgementError: activeExecutionAcknowledgementState.error,
     canSelectSelectedAlternative,
     generateAlternatives,
     selectAlternative,

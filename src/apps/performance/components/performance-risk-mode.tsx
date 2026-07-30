@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   ScreenStatePanel,
@@ -25,6 +25,13 @@ import RiskSnapshotPanel from "./risk/risk-snapshot-panel";
 import RiskStatusBar from "./risk/risk-status-bar";
 import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
 
+type RiskDrawerState = {
+  contextKey: string;
+  underwaterDrawerOpen: boolean;
+  rollingDrawerOpen: boolean;
+  selectedRollingWindowKey: string;
+};
+
 export default function PerformanceRiskMode({
   workspace,
   period,
@@ -38,9 +45,28 @@ export default function PerformanceRiskMode({
     detailBasis,
     benchmark: workspace.benchmark_code ?? undefined,
   });
-  const [underwaterDrawerOpen, setUnderwaterDrawerOpen] = useState(false);
-  const [rollingDrawerOpen, setRollingDrawerOpen] = useState(false);
-  const [selectedRollingWindowKey, setSelectedRollingWindowKey] = useState("");
+  const riskContextKey = [
+    workspace.portfolio.portfolio_id,
+    workspace.as_of_date,
+    workspace.benchmark_code ?? "",
+    period,
+    detailBasis,
+  ].join("|");
+  const [drawerState, setDrawerState] = useState<RiskDrawerState>({
+    contextKey: riskContextKey,
+    underwaterDrawerOpen: false,
+    rollingDrawerOpen: false,
+    selectedRollingWindowKey: "",
+  });
+  const activeDrawerState =
+    drawerState.contextKey === riskContextKey
+      ? drawerState
+      : {
+          contextKey: riskContextKey,
+          underwaterDrawerOpen: false,
+          rollingDrawerOpen: false,
+          selectedRollingWindowKey: "",
+        };
   const {
     riskSummary,
     riskConcentration,
@@ -62,12 +88,6 @@ export default function PerformanceRiskMode({
     detailBasis,
     isDetailsPending,
   });
-
-  useEffect(() => {
-    setUnderwaterDrawerOpen(false);
-    setRollingDrawerOpen(false);
-    setSelectedRollingWindowKey("");
-  }, [detailBasis, period, workspace.as_of_date, workspace.benchmark_code, workspace.portfolio.portfolio_id]);
 
   const viewModel = buildPerformanceRiskViewModel({
     workspace,
@@ -103,7 +123,7 @@ export default function PerformanceRiskMode({
     ) : null;
 
   const resolvedSelectedRollingWindowKey =
-    viewModel.rollingWindows.find((window) => window.key === selectedRollingWindowKey)?.key ??
+    viewModel.rollingWindows.find((window) => window.key === activeDrawerState.selectedRollingWindowKey)?.key ??
     viewModel.rollingWindows[0]?.key ??
     "";
   const selectedRollingWindow =
@@ -140,7 +160,10 @@ export default function PerformanceRiskMode({
               <RiskDrawdownPanel
                 viewModel={viewModel}
                 onViewUnderwater={() => {
-                  setUnderwaterDrawerOpen(true);
+                  setDrawerState({
+                    ...activeDrawerState,
+                    underwaterDrawerOpen: true,
+                  });
                   requestDrawdownDetail();
                 }}
               />
@@ -152,10 +175,18 @@ export default function PerformanceRiskMode({
               <RiskRollingPanel
                 viewModel={viewModel}
                 selectedWindowKey={resolvedSelectedRollingWindowKey}
-                onWindowChange={setSelectedRollingWindowKey}
+                onWindowChange={(windowKey) =>
+                  setDrawerState({
+                    ...activeDrawerState,
+                    selectedRollingWindowKey: windowKey,
+                  })
+                }
                 onViewSeries={(windowKey) => {
-                  setSelectedRollingWindowKey(windowKey);
-                  setRollingDrawerOpen(true);
+                  setDrawerState({
+                    ...activeDrawerState,
+                    selectedRollingWindowKey: windowKey,
+                    rollingDrawerOpen: true,
+                  });
                   requestRollingDetail();
                 }}
               />
@@ -171,15 +202,25 @@ export default function PerformanceRiskMode({
         </div>
       )}
       <RiskDrawdownDetailDrawer
-        open={underwaterDrawerOpen}
+        open={activeDrawerState.underwaterDrawerOpen}
         viewModel={viewModel}
-        onClose={() => setUnderwaterDrawerOpen(false)}
+        onClose={() =>
+          setDrawerState({
+            ...activeDrawerState,
+            underwaterDrawerOpen: false,
+          })
+        }
       />
       <RiskRollingDetailDrawer
-        open={rollingDrawerOpen}
+        open={activeDrawerState.rollingDrawerOpen}
         viewModel={viewModel}
         selectedWindow={selectedRollingWindow}
-        onClose={() => setRollingDrawerOpen(false)}
+        onClose={() =>
+          setDrawerState({
+            ...activeDrawerState,
+            rollingDrawerOpen: false,
+          })
+        }
       />
     </PerformanceWorkspaceStageSurface>
   );

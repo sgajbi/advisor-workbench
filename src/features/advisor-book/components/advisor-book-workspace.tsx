@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 import {
   ActionButton,
@@ -33,12 +33,14 @@ export default function AdvisorBookWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = useMemo(() => queryFromSearchParams(searchParams), [searchParams]);
-  const [clientId, setClientId] = useState(query.clientId ?? "");
+  const queryClientId = query.clientId ?? "";
+  const [clientDraft, setClientDraft] = useState({
+    queryClientId,
+    clientId: queryClientId,
+  });
+  const clientId =
+    clientDraft.queryClientId === queryClientId ? clientDraft.clientId : queryClientId;
   const { response, loading, error, reload } = useAdvisorBook(query);
-
-  useEffect(() => {
-    setClientId(query.clientId ?? "");
-  }, [query.clientId]);
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -144,7 +146,12 @@ export default function AdvisorBookWorkspace() {
             <input
               id="advisor-book-client-reference"
               value={clientId}
-              onChange={(event) => setClientId(event.target.value)}
+              onChange={(event) =>
+                setClientDraft({
+                  queryClientId,
+                  clientId: event.target.value,
+                })
+              }
               placeholder="Exact client reference"
               aria-label="Client reference"
             />

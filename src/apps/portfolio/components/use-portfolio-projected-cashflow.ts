@@ -46,32 +46,31 @@ export function usePortfolioProjectedCashflow({
   const [snapshots, setSnapshots] = useState<
     Partial<Record<CashflowHorizonKey, CashflowProjectionSnapshot>>
   >(initialSnapshot ? { [initialHorizonKey]: initialSnapshot } : {});
-  const [loading, setLoading] = useState(!initialSnapshot);
-  const [refreshingEvidence, setRefreshingEvidence] = useState(false);
   const [failure, setFailure] = useState<CashflowRequestFailure | null>(null);
   const [retrySequence, setRetrySequence] = useState(0);
   const selectedSnapshot = snapshots[selectedHorizonKey] ?? null;
   const selectedHorizonDays = resolveCashflowHorizonDays(selectedHorizonKey);
+  const selectedSnapshotFailure =
+    selectedSnapshot?.response && !selectedSnapshot.response.cashflow_outlook
+      ? {
+          requestedHorizonDays: selectedHorizonDays,
+          response: selectedSnapshot.response,
+        }
+      : null;
+  const activeRequestFailure =
+    failure?.requestedHorizonDays === selectedHorizonDays ? failure : null;
+  const effectiveLoading = !selectedSnapshot && !activeRequestFailure;
+  const effectiveRefreshingEvidence = Boolean(selectedSnapshot && !selectedSnapshot.response);
+  const effectiveFailure = selectedSnapshot?.response
+    ? selectedSnapshotFailure
+    : activeRequestFailure;
 
   useEffect(() => {
     if (selectedSnapshot?.response) {
-      setLoading(false);
-      setRefreshingEvidence(false);
-      setFailure(
-        selectedSnapshot.response.cashflow_outlook
-          ? null
-          : {
-              requestedHorizonDays: selectedHorizonDays,
-              response: selectedSnapshot.response,
-            }
-      );
       return;
     }
 
     let cancelled = false;
-    setLoading(!selectedSnapshot);
-    setRefreshingEvidence(Boolean(selectedSnapshot));
-    setFailure(null);
 
     async function loadProjectedCashflow() {
       const response = await getPortfolioProjectedCashflow(portfolioId, {
@@ -110,8 +109,6 @@ export function usePortfolioProjectedCashflow({
       } else {
         setFailure({ requestedHorizonDays: selectedHorizonDays, response });
       }
-      setLoading(false);
-      setRefreshingEvidence(false);
     }
 
     void loadProjectedCashflow();
@@ -132,11 +129,11 @@ export function usePortfolioProjectedCashflow({
     selectedHorizonKey,
     selectedHorizonDays,
     selectedSnapshot,
-    loading,
-    refreshingEvidence,
-    failure,
+    loading: effectiveLoading,
+    refreshingEvidence: effectiveRefreshingEvidence,
+    failure: effectiveFailure,
     selectHorizon: (nextHorizon: CashflowHorizonKey) => {
-      if (!loading) {
+      if (!effectiveLoading) {
         setSelectedHorizonKey(nextHorizon);
       }
     },

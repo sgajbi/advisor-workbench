@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   WorkbenchToolbarPlaceholder,
 } from "@/design-system";
+import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 
 import {
   getPortfolioWorkspaceShell,
@@ -39,6 +40,11 @@ const shellInflightRequests = new Map<
   ReturnType<typeof getPortfolioWorkspaceShell>
 >();
 
+type WorkspaceStateDraft = {
+  sourceKey: string;
+  workspace: PortfolioWorkspace | null;
+};
+
 export default function PortfolioWorkspaceClient({
   portfolios,
   selectedPortfolioId,
@@ -51,22 +57,49 @@ export default function PortfolioWorkspaceClient({
   const [controls, setControls] = useState<PortfolioWorkspaceControls>(
     buildInitialPortfolioControls(initialWorkspace)
   );
-  const [workspaceState, setWorkspaceState] = useState<PortfolioWorkspace | null>(initialWorkspace);
-  const [interactiveReady, setInteractiveReady] = useState(false);
+  const initialWorkspaceSourceKey = [
+    selectedPortfolioId ?? "",
+    initialWorkspace?.portfolio.portfolio_id ?? "",
+    initialWorkspace?.as_of_date ?? "",
+    initialWorkspace?.portfolio.base_currency ?? "",
+    initialWorkspace?.positions.length ?? 0,
+    initialWorkspace?.recent_transactions.length ?? 0,
+  ].join("|");
+  const [workspaceDraft, setWorkspaceDraft] = useState<WorkspaceStateDraft>({
+    sourceKey: initialWorkspaceSourceKey,
+    workspace: initialWorkspace,
+  });
+  const workspaceState =
+    workspaceDraft.sourceKey === initialWorkspaceSourceKey
+      ? workspaceDraft.workspace
+      : initialWorkspace;
+  const setWorkspaceState = useCallback(
+    (
+      next:
+        | PortfolioWorkspace
+        | null
+        | ((current: PortfolioWorkspace | null) => PortfolioWorkspace | null),
+    ) => {
+      setWorkspaceDraft((current) => {
+        const currentWorkspace =
+          current.sourceKey === initialWorkspaceSourceKey
+            ? current.workspace
+            : initialWorkspace;
+        return {
+          sourceKey: initialWorkspaceSourceKey,
+          workspace:
+            typeof next === "function" ? next(currentWorkspace) : next,
+        };
+      });
+    },
+    [initialWorkspace, initialWorkspaceSourceKey],
+  );
+  const interactiveReady = useClientMounted();
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState]
   );
-
-  useEffect(() => {
-    setInteractiveReady(true);
-  }, []);
-
-  useEffect(() => {
-    setWorkspaceState(initialWorkspace);
-    summaryRequestRef.current = null;
-  }, [initialWorkspace, selectedPortfolioId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,7 +131,7 @@ export default function PortfolioWorkspaceClient({
     return () => {
       cancelled = true;
     };
-  }, [initialWorkspace, selectedPortfolioId, workspaceState]);
+  }, [initialWorkspace, selectedPortfolioId, setWorkspaceState, workspaceState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +172,7 @@ export default function PortfolioWorkspaceClient({
   }, [
     context,
     selectedPortfolioId,
+    setWorkspaceState,
     workspaceState,
   ]);
 
