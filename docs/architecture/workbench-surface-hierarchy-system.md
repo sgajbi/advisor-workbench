@@ -135,6 +135,12 @@ Centralized surface and spacing decisions live in:
 - `src/design-system/theme/tokens.ts`
 - `src/design-system/components/panel.tsx`
 - `src/design-system/components/analytics-module.tsx`
-- `src/app/globals.css`
+- `src/styles/global/tokens.css` for shared surface, border, radius, elevation, and layout custom
+  properties
+- `src/styles/global/workbench-shell.css` for shared Workbench shell, panel, and navigation surface
+  classes
+- `src/styles/global/legacy-global.css` or `src/styles/global/legacy-feature-overrides.css` only while
+  legacy selectors are being migrated to owned modules
 
-Normalize page-level styling toward these primitives when touching a surface.
+`src/app/globals.css` is import-only and must not receive new surface, spacing, or shell
+declarations. Normalize page-level styling toward the owned primitives when touching a surface.

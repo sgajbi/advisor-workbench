@@ -116,7 +116,12 @@ Centralized typography lives in:
 
 - `src/design-system/theme/tokens.ts`
 - `src/design-system/components/text.tsx`
-- `src/app/globals.css`
+- `src/styles/global/tokens.css` for typography custom properties
+- `src/styles/global/workbench-shell.css` for shared shell and Workbench typography classes
+- `src/styles/global/legacy-global.css` or `src/styles/global/legacy-feature-overrides.css` only while
+  legacy selectors are being migrated to owned modules
+
+`src/app/globals.css` is import-only and must not receive new typography declarations.
 
 Shared components should prefer semantic variants over page-local font classes.
 
