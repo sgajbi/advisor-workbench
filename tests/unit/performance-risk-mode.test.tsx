@@ -47,7 +47,18 @@ function renderRiskMode(
     isDetailsPending?: boolean;
   } = {},
 ) {
-  return render(
+  return render(buildRiskModeElement(scenario, options));
+}
+
+function buildRiskModeElement(
+  scenario = buildSupportedPerformanceScenario(),
+  options: {
+    detailBasis?: "NET" | "GROSS";
+    period?: string;
+    isDetailsPending?: boolean;
+  } = {},
+) {
+  return (
     <PerformanceRiskMode
       workspace={scenario.workspace}
       capabilities={scenario.capabilities}
@@ -58,7 +69,7 @@ function renderRiskMode(
       chartFrequency="monthly"
       isUpdating={false}
       isDetailsPending={options.isDetailsPending ?? false}
-    />,
+    />
   );
 }
 
@@ -740,6 +751,94 @@ describe("PerformanceRiskMode", () => {
     });
     expect(within(detailDialog).getByText("Review window")).toBeInTheDocument();
     expect(within(detailDialog).getByText("63D")).toBeInTheDocument();
+  });
+
+  it("does not revive a previously opened rolling drawer after returning to an old risk context", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockImplementation(
+      (_portfolioId, params) =>
+        Promise.resolve(
+          buildFixtureRiskSummary(
+            scenario.workspace,
+            params.period ?? "YTD",
+            params.detailBasis ?? "NET",
+          ),
+        ),
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockImplementation(
+      (_portfolioId, params) =>
+        Promise.resolve(
+          buildFixtureRiskConcentration(
+            scenario.workspace,
+            params.period ?? "YTD",
+          ),
+        ),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockImplementation(
+      (_portfolioId, params) =>
+        Promise.resolve(
+          buildFixtureRiskAttribution(
+            scenario.workspace,
+            params.period ?? "YTD",
+            params.detailBasis ?? "NET",
+          ),
+        ),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockImplementation(
+      (_portfolioId, params) =>
+        Promise.resolve(
+          buildFixtureRiskDrawdown(
+            scenario.workspace,
+            params.period ?? "YTD",
+            params.detailBasis ?? "NET",
+            { includeUnderwaterSeries: Boolean(params.includeUnderwaterSeries) },
+          ),
+        ),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockImplementation(
+      (_portfolioId, params) =>
+        Promise.resolve(
+          buildFixtureRiskRolling(
+            scenario.workspace,
+            params.period ?? "YTD",
+            params.detailBasis ?? "NET",
+            { includeTimeSeries: Boolean(params.includeTimeSeries) },
+          ),
+        ),
+    );
+
+    const { rerender } = renderRiskMode(scenario, { period: "YTD" });
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "View rolling series" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("dialog", { name: "Rolling series detail" }),
+      ).toBeInTheDocument();
+    });
+
+    rerender(buildRiskModeElement(scenario, { period: "1Y" }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Rolling series detail" }),
+      ).not.toBeInTheDocument();
+    });
+
+    rerender(buildRiskModeElement(scenario, { period: "YTD" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole("dialog", { name: "Rolling series detail" }),
+    ).not.toBeInTheDocument();
   });
 
   it("requests supported active-risk attribution directly and does not expose issuer as interactive", async () => {
