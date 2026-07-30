@@ -201,6 +201,7 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
     expect(await screen.findByText("Projection evidence refresh unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Refreshing projection evidence")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Retry evidence refresh" }));

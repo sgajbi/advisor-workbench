@@ -40,6 +40,12 @@ type SubmittedHandleState = {
   handle: ReportJobHandle;
 };
 
+type SubmissionProgressState = {
+  portfolioId: string;
+  state: ReportOrderingSubmissionState;
+  error: string | null;
+};
+
 type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
 
 export function useReportOrderingWorkflow({
@@ -61,9 +67,12 @@ export function useReportOrderingWorkflow({
   const [historyState, setHistoryState] = useState<HistoryLoadState>("loading");
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [reviewedIntent, setReviewedIntent] = useState<ReviewedIntent | null>(null);
-  const [submissionState, setSubmissionState] =
-    useState<ReportOrderingSubmissionState>("idle");
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionProgress, setSubmissionProgress] =
+    useState<SubmissionProgressState>({
+      portfolioId,
+      state: "idle",
+      error: null,
+    });
   const [submittedHandleState, setSubmittedHandleState] =
     useState<SubmittedHandleState | null>(null);
   const sourceFingerprintRef = useRef<string>("");
@@ -168,6 +177,12 @@ export function useReportOrderingWorkflow({
     submittedHandleState?.portfolioId === portfolioId
       ? submittedHandleState.handle
       : null;
+  const activeSubmissionProgress =
+    submissionProgress.portfolioId === portfolioId
+      ? submissionProgress
+      : { portfolioId, state: "idle" as const, error: null };
+  const submissionState = activeSubmissionProgress.state;
+  const submissionError = activeSubmissionProgress.error;
   const screenState = useMemo(
     () =>
       buildReportOrderingScreenState({
@@ -200,10 +215,13 @@ export function useReportOrderingWorkflow({
         return { ...current, ...patch };
       });
       setReviewedIntent(null);
-      setSubmissionError(null);
-      setSubmissionState((current) => (current === "submitting" ? current : "idle"));
+      setSubmissionProgress((current) =>
+        current.portfolioId === portfolioId && current.state === "submitting"
+          ? current
+          : { portfolioId, state: "idle", error: null },
+      );
     },
-    [catalogue],
+    [catalogue, portfolioId],
   );
 
   const toggleSection = useCallback(
@@ -239,7 +257,11 @@ export function useReportOrderingWorkflow({
         idempotencyKey: createReportOrderIntentKey(),
       };
     });
-    setSubmissionError(null);
+    setSubmissionProgress((current) =>
+      current.portfolioId === portfolioId
+        ? { ...current, error: null }
+        : { portfolioId, state: "idle", error: null },
+    );
     return true;
   }, [configuration, model?.canSubmit, portfolioId]);
 
@@ -254,8 +276,7 @@ export function useReportOrderingWorkflow({
       return false;
     }
 
-    setSubmissionState("submitting");
-    setSubmissionError(null);
+    setSubmissionProgress({ portfolioId, state: "submitting", error: null });
     try {
       const handle = await submitPortfolioReviewOrder({
         portfolioId,
@@ -276,13 +297,22 @@ export function useReportOrderingWorkflow({
         sections: configuration.selectedSections,
         idempotencyKey: activeReviewedIntent.idempotencyKey,
       });
+      if (activePortfolioIdRef.current !== portfolioId) {
+        return false;
+      }
       setSubmittedHandleState({ portfolioId, handle });
-      setSubmissionState("accepted");
+      setSubmissionProgress({ portfolioId, state: "accepted", error: null });
       await loadHistory();
       return true;
     } catch (error) {
-      setSubmissionState("error");
-      setSubmissionError(submissionErrorCopy(error));
+      if (activePortfolioIdRef.current !== portfolioId) {
+        return false;
+      }
+      setSubmissionProgress({
+        portfolioId,
+        state: "error",
+        error: submissionErrorCopy(error),
+      });
       return false;
     }
   }, [

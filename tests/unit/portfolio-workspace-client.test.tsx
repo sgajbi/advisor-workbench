@@ -45,6 +45,7 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
     <div>
       {toolbar}
       <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
+      <div data-testid="market-value">{workspace?.summary?.market_value_base ?? "none"}</div>
       <div data-testid="insight-key">{workspace?.insights?.[0]?.key ?? "none"}</div>
       <div data-testid="exception-key">{workspace?.exception_summaries?.[0]?.key ?? "none"}</div>
       <div data-testid="workflow-action">{workspace?.workflow_actions?.[0]?.title ?? "none"}</div>
@@ -163,6 +164,99 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("adopts a changed server-rendered workspace snapshot even when summary request parameters are unchanged", async () => {
+    const firstDetailsRequest: {
+      resolve: ((value: Partial<PortfolioWorkspace>) => void) | null;
+    } = { resolve: null };
+    getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
+    getSummaryDetailsMock
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          firstDetailsRequest.resolve = resolve;
+        })
+      )
+      .mockResolvedValueOnce({
+        positions: [],
+        top_positions: [],
+        allocations: [],
+        allocation_views: [],
+        income_summary: null,
+        activity_summary: null,
+      });
+
+    const initialWorkspace = buildWorkspace();
+    const refreshedWorkspace = {
+      ...buildWorkspace(),
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+      readiness: {
+        ...initialWorkspace.readiness,
+        reporting: {
+          status: "READY",
+          generated_at_utc: "2026-03-28T12:30:00Z",
+          row_count: 4,
+        },
+      },
+      warnings: ["valuation_source_refreshed"],
+    } satisfies PortfolioWorkspace;
+
+    const { rerender } = render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "MANUAL_PB_USD_001",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />
+    );
+
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    });
+
+    rerender(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "MANUAL_PB_USD_001",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={refreshedWorkspace}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
+    });
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    });
+
+    firstDetailsRequest.resolve?.({
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 1001550.05,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
+    });
   });
 
   it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
