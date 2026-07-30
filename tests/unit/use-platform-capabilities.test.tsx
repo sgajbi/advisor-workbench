@@ -142,7 +142,11 @@ describe("usePlatformCapabilities", () => {
 
     const second = renderHook(() => usePlatformCapabilities());
 
-    expect(second.result.current.loading).toBe(false);
+    expect(second.result.current.loading).toBe(true);
+    expect(second.result.current.shellBootstrapSource).toBe("loading");
+    await waitFor(() => {
+      expect(second.result.current.loading).toBe(false);
+    });
     expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
   });
 
@@ -167,7 +171,11 @@ describe("usePlatformCapabilities", () => {
 
     const second = renderHook(() => usePlatformCapabilities());
 
-    expect(second.result.current.loading).toBe(false);
+    expect(second.result.current.loading).toBe(true);
+    expect(second.result.current.shellBootstrapSource).toBe("loading");
+    await waitFor(() => {
+      expect(second.result.current.loading).toBe(false);
+    });
     expect(getPlatformCapabilitiesMock).toHaveBeenCalledTimes(1);
   });
 });

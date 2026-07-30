@@ -187,15 +187,9 @@ export function resetPlatformCapabilitiesHookCache(options?: { clearPersistedSna
 }
 
 export function usePlatformCapabilities(): UsePlatformCapabilitiesResult {
-  const [state, setState] = useState<UsePlatformCapabilitiesResult>(() => {
-    const cached = getCachedSnapshot();
-    return cached
-      ? {
-          loading: false,
-          ...cached,
-        }
-      : getInitialResult();
-  });
+  const [state, setState] = useState<UsePlatformCapabilitiesResult>(
+    getInitialResult,
+  );
 
   useEffect(() => {
     let active = true;

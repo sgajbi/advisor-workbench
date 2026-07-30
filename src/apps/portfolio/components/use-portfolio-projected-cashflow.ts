@@ -60,7 +60,9 @@ export function usePortfolioProjectedCashflow({
   const activeRequestFailure =
     failure?.requestedHorizonDays === selectedHorizonDays ? failure : null;
   const effectiveLoading = !selectedSnapshot && !activeRequestFailure;
-  const effectiveRefreshingEvidence = Boolean(selectedSnapshot && !selectedSnapshot.response);
+  const effectiveRefreshingEvidence = Boolean(
+    selectedSnapshot && !selectedSnapshot.response && !activeRequestFailure,
+  );
   const effectiveFailure = selectedSnapshot?.response
     ? selectedSnapshotFailure
     : activeRequestFailure;

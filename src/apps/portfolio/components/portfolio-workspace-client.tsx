@@ -57,14 +57,10 @@ export default function PortfolioWorkspaceClient({
   const [controls, setControls] = useState<PortfolioWorkspaceControls>(
     buildInitialPortfolioControls(initialWorkspace)
   );
-  const initialWorkspaceSourceKey = [
-    selectedPortfolioId ?? "",
-    initialWorkspace?.portfolio.portfolio_id ?? "",
-    initialWorkspace?.as_of_date ?? "",
-    initialWorkspace?.portfolio.base_currency ?? "",
-    initialWorkspace?.positions.length ?? 0,
-    initialWorkspace?.recent_transactions.length ?? 0,
-  ].join("|");
+  const initialWorkspaceSourceKey = useMemo(
+    () => buildPortfolioWorkspaceSourceKey(selectedPortfolioId, initialWorkspace),
+    [initialWorkspace, selectedPortfolioId]
+  );
   const [workspaceDraft, setWorkspaceDraft] = useState<WorkspaceStateDraft>({
     sourceKey: initialWorkspaceSourceKey,
     workspace: initialWorkspace,
@@ -142,13 +138,14 @@ export default function PortfolioWorkspaceClient({
       }
 
       const request = buildPortfolioSummaryDetailsRequest(selectedPortfolioId, context);
-      if (summaryRequestRef.current?.key === request.key) {
+      const scopedRequestKey = `${initialWorkspaceSourceKey}|${request.key}`;
+      if (summaryRequestRef.current?.key === scopedRequestKey) {
         return;
       }
 
-      summaryRequestRef.current = { key: request.key, status: "loading" };
+      summaryRequestRef.current = { key: scopedRequestKey, status: "loading" };
       const details = await getPortfolioWorkspaceSummaryDetailsOnce(
-        request.key,
+        scopedRequestKey,
         selectedPortfolioId,
         request.params
       );
@@ -161,7 +158,7 @@ export default function PortfolioWorkspaceClient({
           current ? mergePortfolioWorkspace(current, details) : current
         );
       }
-      summaryRequestRef.current = { key: request.key, status: "loaded" };
+      summaryRequestRef.current = { key: scopedRequestKey, status: "loaded" };
     }
 
     void loadSummaryDetails();
@@ -171,6 +168,7 @@ export default function PortfolioWorkspaceClient({
     };
   }, [
     context,
+    initialWorkspaceSourceKey,
     selectedPortfolioId,
     setWorkspaceState,
     workspaceState,
@@ -337,4 +335,14 @@ function getPortfolioWorkspaceShellOnce(portfolioId: string) {
   });
   shellInflightRequests.set(portfolioId, request);
   return request;
+}
+
+function buildPortfolioWorkspaceSourceKey(
+  selectedPortfolioId: string | null,
+  initialWorkspace: PortfolioWorkspace | null,
+): string {
+  return JSON.stringify({
+    selectedPortfolioId,
+    initialWorkspace,
+  });
 }
