@@ -15,7 +15,6 @@ export default function DeferredWorkbenchMount({
 
   useEffect(() => {
     if (!when) {
-      setIsMounted(false);
       return;
     }
 
@@ -28,5 +27,5 @@ export default function DeferredWorkbenchMount({
     };
   }, [when]);
 
-  return isMounted ? <>{children}</> : <>{placeholder}</>;
+  return when && isMounted ? <>{children}</> : <>{placeholder}</>;
 }

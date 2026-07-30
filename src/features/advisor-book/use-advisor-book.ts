@@ -5,6 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getAdvisorBook, type AdvisorBookQuery } from "./api";
 import type { AdvisorBookResponse } from "./contracts";
 
+type AdvisorBookLoadState = {
+  requestKey: string;
+  status: "loading" | "ready" | "error";
+  response: AdvisorBookResponse | null;
+  error: unknown;
+};
+
 export function useAdvisorBook(query: AdvisorBookQuery) {
   const {
     asOfDate,
@@ -15,15 +22,35 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
     offset,
     limit,
   } = query;
-  const [response, setResponse] = useState<AdvisorBookResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
+  const requestKey = JSON.stringify({
+    asOfDate,
+    clientId,
+    mandateType,
+    sortBy,
+    sortOrder,
+    offset,
+    limit,
+  });
+  const [loadState, setLoadState] = useState<AdvisorBookLoadState>({
+    requestKey,
+    status: "loading",
+    response: null,
+    error: null,
+  });
+  const activeLoadState =
+    loadState.requestKey === requestKey
+      ? loadState
+      : {
+          requestKey,
+          status: "loading" as const,
+          response: null,
+          error: null,
+        };
+  const loading = activeLoadState.status === "loading";
   const requestSequence = useRef(0);
 
   const load = useCallback(async () => {
     const requestId = ++requestSequence.current;
-    setLoading(true);
-    setError(null);
     try {
       const nextResponse = await getAdvisorBook({
         asOfDate,
@@ -35,26 +62,39 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
         limit,
       });
       if (requestId === requestSequence.current) {
-        setResponse(nextResponse);
+        setLoadState({
+          requestKey,
+          status: "ready",
+          response: nextResponse,
+          error: null,
+        });
       }
     } catch (nextError) {
       if (requestId === requestSequence.current) {
-        setResponse(null);
-        setError(nextError);
-      }
-    } finally {
-      if (requestId === requestSequence.current) {
-        setLoading(false);
+        setLoadState({
+          requestKey,
+          status: "error",
+          response: null,
+          error: nextError,
+        });
       }
     }
-  }, [asOfDate, clientId, limit, mandateType, offset, sortBy, sortOrder]);
+  }, [asOfDate, clientId, limit, mandateType, offset, requestKey, sortBy, sortOrder]);
 
   useEffect(() => {
-    void load();
+    const timer = window.setTimeout(() => {
+      void load();
+    }, 0);
     return () => {
+      window.clearTimeout(timer);
       requestSequence.current += 1;
     };
   }, [load]);
 
-  return { response, loading, error, reload: load };
+  return {
+    response: activeLoadState.response,
+    loading,
+    error: activeLoadState.error,
+    reload: load,
+  };
 }

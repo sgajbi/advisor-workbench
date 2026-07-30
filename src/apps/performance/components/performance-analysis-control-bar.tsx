@@ -1,7 +1,6 @@
 "use client";
 
 import type { FormEvent, ReactNode } from "react";
-import { useEffect, useState } from "react";
 import { TextField } from "@mui/material";
 
 import {
@@ -10,6 +9,7 @@ import {
   Text,
   WorkbenchSegmentedControl,
 } from "@/design-system";
+import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
@@ -65,11 +65,7 @@ export default function PerformanceAnalysisControlBar({
   onToDateChange,
   onChartViewModeChange,
 }: PerformanceAnalysisControlBarProps) {
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  const isHydrated = useClientMounted();
 
   if (!isHydrated) {
     return (

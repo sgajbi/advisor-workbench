@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Box, MenuItem, Stack, TextField } from "@mui/material";
 
@@ -8,6 +8,12 @@ import { ActionButton, MetricRow, SectionBlock, SemanticBadge, Text } from "@/de
 
 import { applySandboxChanges, createSandboxSession } from "../workbench-core-api";
 import { WorkbenchPolicyFeedback } from "../types";
+
+type RuntimeSandboxFeedback = {
+  sessionId: string;
+  warnings: string[];
+  partialFailures: Array<{ source_service: string; error_code: string; detail: string }>;
+};
 
 export default function SandboxControls({
   portfolioId,
@@ -27,14 +33,13 @@ export default function SandboxControls({
   const [evaluatePolicy, setEvaluatePolicy] = useState(true);
   const [sessionVersion, setSessionVersion] = useState<number | null>(null);
   const [policyFeedback, setPolicyFeedback] = useState<WorkbenchPolicyFeedback | null>(null);
-  const [runtimeWarnings, setRuntimeWarnings] = useState<string[]>(warnings);
-  const [runtimePartialFailures, setRuntimePartialFailures] = useState<
-    Array<{ source_service: string; error_code: string; detail: string }>
-  >([]);
-
-  useEffect(() => {
-    setRuntimeWarnings(warnings);
-  }, [warnings]);
+  const [runtimeFeedback, setRuntimeFeedback] = useState<RuntimeSandboxFeedback | null>(null);
+  const effectiveRuntimeFeedback =
+    runtimeFeedback && (runtimeFeedback.sessionId === sessionId || sessionId === null)
+      ? runtimeFeedback
+      : null;
+  const runtimeWarnings = effectiveRuntimeFeedback?.warnings ?? warnings;
+  const runtimePartialFailures = effectiveRuntimeFeedback?.partialFailures ?? [];
 
   async function onCreateSession() {
     setError(null);
@@ -46,8 +51,11 @@ export default function SandboxControls({
       });
       setSessionVersion(response.session_version);
       setPolicyFeedback(response.policy_feedback ?? null);
-      setRuntimeWarnings(response.warnings);
-      setRuntimePartialFailures(response.partial_failures);
+      setRuntimeFeedback({
+        sessionId: response.session_id,
+        warnings: response.warnings,
+        partialFailures: response.partial_failures,
+      });
       router.push(`/workbench/${encodeURIComponent(portfolioId)}?sessionId=${encodeURIComponent(response.session_id)}`);
       router.refresh();
     } catch (err) {
@@ -81,8 +89,11 @@ export default function SandboxControls({
       });
       setSessionVersion(response.session_version);
       setPolicyFeedback(response.policy_feedback);
-      setRuntimeWarnings(response.warnings);
-      setRuntimePartialFailures(response.partial_failures);
+      setRuntimeFeedback({
+        sessionId,
+        warnings: response.warnings,
+        partialFailures: response.partial_failures,
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to apply changes");

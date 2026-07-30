@@ -48,7 +48,33 @@ export function AllocationDonutChart({
   onHover: (bucket: string | null) => void;
   onSelect: (bucket: string) => void;
 }) {
-  let cumulativeAngle = -90;
+  const allocationArcs = buckets.reduce<
+    Array<{
+      bucket: PortfolioAllocationView["buckets"][number];
+      index: number;
+      startAngle: number;
+      endAngle: number;
+      path: string;
+    }>
+  >((arcs, bucket, index) => {
+    const previousArc = arcs[arcs.length - 1];
+    const startAngle = previousArc ? previousArc.endAngle : -90;
+    const portion =
+      totalWeight > 0
+        ? Math.max(bucket.weight_pct ?? 0, 0) / totalWeight
+        : 0;
+    const endAngle = startAngle + portion * 360;
+    return [
+      ...arcs,
+      {
+        bucket,
+        index,
+        startAngle,
+        endAngle,
+        path: describeAllocationArc(110, 110, 86, 58, startAngle, endAngle),
+      },
+    ];
+  }, []);
 
   return (
     <div
@@ -63,22 +89,7 @@ export function AllocationDonutChart({
           r="58"
           className="portfolio-allocation-chart-track"
         />
-        {buckets.map((bucket, index) => {
-          const portion =
-            totalWeight > 0
-              ? Math.max(bucket.weight_pct ?? 0, 0) / totalWeight
-              : 0;
-          const startAngle = cumulativeAngle;
-          const endAngle = startAngle + portion * 360;
-          cumulativeAngle = endAngle;
-          const path = describeAllocationArc(
-            110,
-            110,
-            86,
-            58,
-            startAngle,
-            endAngle,
-          );
+        {allocationArcs.map(({ bucket, index, path }) => {
           const isHovered = hoveredBucket === bucket.bucket;
           const isSelected = selectedBucket === bucket.bucket;
           return (

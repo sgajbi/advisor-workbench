@@ -56,6 +56,17 @@ type PortfolioTransactionsGridProps = {
   onRowSelect?: (row: TransactionRow) => void;
 };
 
+type TransactionDateDraft = {
+  defaultDateKey: string;
+  startDate: string;
+  endDate: string;
+};
+
+type TransactionPageDraft = {
+  pageScopeKey: string;
+  pageSkip: number;
+};
+
 export default function PortfolioTransactionsGrid({
   portfolioId,
   baseCurrency,
@@ -71,31 +82,40 @@ export default function PortfolioTransactionsGrid({
 }: PortfolioTransactionsGridProps) {
   const [transactionType, setTransactionType] = useState("ALL");
   const [componentType, setComponentType] = useState("ALL");
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
+  const defaultDateKey = `${defaultStartDate}|${defaultEndDate}`;
+  const [dateDraft, setDateDraft] = useState<TransactionDateDraft>({
+    defaultDateKey,
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
+  });
+  const activeDateDraft =
+    dateDraft.defaultDateKey === defaultDateKey
+      ? dateDraft
+      : {
+          defaultDateKey,
+          startDate: defaultStartDate,
+          endDate: defaultEndDate,
+        };
+  const startDate = activeDateDraft.startDate;
+  const endDate = activeDateDraft.endDate;
   const [transactions, setTransactions] = useState<PortfolioTransactionView[]>(initialTransactions);
   const [ledgerPage, setLedgerPage] = useState<PortfolioTransactionLedgerPage>(() => ({
     total: initialLedgerPage?.total ?? initialTransactions.length,
     skip: initialLedgerPage?.skip ?? 0,
     limit: initialLedgerPage?.limit ?? 200,
   }));
-  const [pageSkip, setPageSkip] = useState(initialLedgerPage?.skip ?? 0);
+  const pageScopeKey = `${portfolioId}|${defaultDateKey}|${JSON.stringify(externalFilter ?? null)}`;
+  const [pageDraft, setPageDraft] = useState<TransactionPageDraft>({
+    pageScopeKey,
+    pageSkip: initialLedgerPage?.skip ?? 0,
+  });
+  const pageSkip = pageDraft.pageScopeKey === pageScopeKey ? pageDraft.pageSkip : 0;
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [showExpandedColumns, setShowExpandedColumns] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
   const gridDensity = showExpandedColumns ? "expanded" : "essential";
-
-  useEffect(() => {
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
-    setPageSkip(0);
-  }, [defaultEndDate, defaultStartDate]);
-
-  useEffect(() => {
-    setPageSkip(0);
-  }, [externalFilter, portfolioId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -404,7 +424,7 @@ export default function PortfolioTransactionsGrid({
                 inputProps={{ "aria-label": "Transaction type filter" }}
                 onChange={(event) => {
                   setTransactionType(event.target.value);
-                  setPageSkip(0);
+                  setPageDraft({ pageScopeKey, pageSkip: 0 });
                 }}
               >
                 {transactionTypeOptions.map((option) => (
@@ -423,7 +443,7 @@ export default function PortfolioTransactionsGrid({
                 inputProps={{ "aria-label": "Transaction component type filter" }}
                 onChange={(event) => {
                   setComponentType(event.target.value);
-                  setPageSkip(0);
+                  setPageDraft({ pageScopeKey, pageSkip: 0 });
                 }}
               >
                 {componentTypeOptions.map((option) => (
@@ -440,8 +460,11 @@ export default function PortfolioTransactionsGrid({
               value={startDate}
               inputProps={{ "aria-label": "Transaction start date" }}
               onChange={(event) => {
-                setStartDate(event.target.value);
-                setPageSkip(0);
+                setDateDraft({
+                  ...activeDateDraft,
+                  startDate: event.target.value,
+                });
+                setPageDraft({ pageScopeKey, pageSkip: 0 });
               }}
               InputLabelProps={{ shrink: true }}
             />
@@ -452,8 +475,11 @@ export default function PortfolioTransactionsGrid({
               value={endDate}
               inputProps={{ "aria-label": "Transaction end date" }}
               onChange={(event) => {
-                setEndDate(event.target.value);
-                setPageSkip(0);
+                setDateDraft({
+                  ...activeDateDraft,
+                  endDate: event.target.value,
+                });
+                setPageDraft({ pageScopeKey, pageSkip: 0 });
               }}
               InputLabelProps={{ shrink: true }}
             />
@@ -537,7 +563,12 @@ export default function PortfolioTransactionsGrid({
               size="small"
               variant="outlined"
               disabled={!hasPreviousPage || loading}
-              onClick={() => setPageSkip(Math.max(0, ledgerPage.skip - ledgerPage.limit))}
+              onClick={() =>
+                setPageDraft({
+                  pageScopeKey,
+                  pageSkip: Math.max(0, ledgerPage.skip - ledgerPage.limit),
+                })
+              }
             >
               Previous entries
             </Button>
@@ -545,7 +576,12 @@ export default function PortfolioTransactionsGrid({
               size="small"
               variant="outlined"
               disabled={!hasNextPage || loading}
-              onClick={() => setPageSkip(ledgerPage.skip + ledgerPage.limit)}
+              onClick={() =>
+                setPageDraft({
+                  pageScopeKey,
+                  pageSkip: ledgerPage.skip + ledgerPage.limit,
+                })
+              }
             >
               Next entries
             </Button>

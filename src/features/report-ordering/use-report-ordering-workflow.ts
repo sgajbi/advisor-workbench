@@ -29,9 +29,15 @@ import {
 } from "./view-model";
 
 type ReviewedIntent = {
+  portfolioId: string;
   configurationFingerprint: string;
   sourceFingerprint: string;
   idempotencyKey: string;
+};
+
+type SubmittedHandleState = {
+  portfolioId: string;
+  handle: ReportJobHandle;
 };
 
 type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
@@ -58,7 +64,8 @@ export function useReportOrderingWorkflow({
   const [submissionState, setSubmissionState] =
     useState<ReportOrderingSubmissionState>("idle");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [submittedHandle, setSubmittedHandle] = useState<ReportJobHandle | null>(null);
+  const [submittedHandleState, setSubmittedHandleState] =
+    useState<SubmittedHandleState | null>(null);
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
 
@@ -125,15 +132,13 @@ export function useReportOrderingWorkflow({
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
     sourceFingerprintRef.current = "";
-    setCatalogue(null);
-    setConfiguration(null);
-    setHistory(null);
-    setReviewedIntent(null);
-    setSubmittedHandle(null);
-    setSubmissionState("idle");
-    setSubmissionError(null);
-    void loadCatalogue(true);
-    void loadHistory();
+    const timer = window.setTimeout(() => {
+      void loadCatalogue(true);
+      void loadHistory();
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [loadCatalogue, loadHistory, portfolioId]);
 
   const model = useMemo(
@@ -151,11 +156,18 @@ export function useReportOrderingWorkflow({
   const currentConfigurationFingerprint = configuration
     ? configurationFingerprint(configuration)
     : "";
+  const currentSourceFingerprint = catalogue ? JSON.stringify(catalogue) : "";
+  const activeReviewedIntent =
+    reviewedIntent?.portfolioId === portfolioId ? reviewedIntent : null;
   const preflightReviewed = Boolean(
-    reviewedIntent &&
-      reviewedIntent.configurationFingerprint === currentConfigurationFingerprint &&
-      reviewedIntent.sourceFingerprint === sourceFingerprintRef.current,
+    activeReviewedIntent &&
+      activeReviewedIntent.configurationFingerprint === currentConfigurationFingerprint &&
+      activeReviewedIntent.sourceFingerprint === currentSourceFingerprint,
   );
+  const submittedHandle =
+    submittedHandleState?.portfolioId === portfolioId
+      ? submittedHandleState.handle
+      : null;
   const screenState = useMemo(
     () =>
       buildReportOrderingScreenState({
@@ -221,6 +233,7 @@ export function useReportOrderingWorkflow({
         return current;
       }
       return {
+        portfolioId,
         configurationFingerprint: fingerprint,
         sourceFingerprint: sourceFingerprintRef.current,
         idempotencyKey: createReportOrderIntentKey(),
@@ -228,15 +241,15 @@ export function useReportOrderingWorkflow({
     });
     setSubmissionError(null);
     return true;
-  }, [configuration, model?.canSubmit]);
+  }, [configuration, model?.canSubmit, portfolioId]);
 
   const submitRequest = useCallback(async () => {
     if (
       !configuration ||
       !model?.canSubmit ||
-      !reviewedIntent ||
-      reviewedIntent.configurationFingerprint !== configurationFingerprint(configuration) ||
-      reviewedIntent.sourceFingerprint !== sourceFingerprintRef.current
+      !activeReviewedIntent ||
+      activeReviewedIntent.configurationFingerprint !== configurationFingerprint(configuration) ||
+      activeReviewedIntent.sourceFingerprint !== sourceFingerprintRef.current
     ) {
       return false;
     }
@@ -261,9 +274,9 @@ export function useReportOrderingWorkflow({
           ? { allocationDimensions: configuration.allocationDimensions }
           : {}),
         sections: configuration.selectedSections,
-        idempotencyKey: reviewedIntent.idempotencyKey,
+        idempotencyKey: activeReviewedIntent.idempotencyKey,
       });
-      setSubmittedHandle(handle);
+      setSubmittedHandleState({ portfolioId, handle });
       setSubmissionState("accepted");
       await loadHistory();
       return true;
@@ -278,7 +291,7 @@ export function useReportOrderingWorkflow({
     model?.canSubmit,
     portfolioId,
     publishedConfigurationFieldIds,
-    reviewedIntent,
+    activeReviewedIntent,
   ]);
 
   return {

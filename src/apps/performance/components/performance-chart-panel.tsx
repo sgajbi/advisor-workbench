@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 import {
   WorkbenchChartShell,
@@ -42,6 +42,13 @@ import {
   type PerformanceChartViewMode,
   type PerformanceControlPatch,
 } from "./performance-chart-panel-helpers";
+
+type ExplicitDateDraft = {
+  sourceStartDate: string;
+  sourceEndDate: string;
+  fromDate: string;
+  toDate: string;
+};
 
 export default function PerformanceChartPanel({
   title,
@@ -90,32 +97,37 @@ export default function PerformanceChartPanel({
     () => resolveReportDates(points, reportStartDate, reportEndDate),
     [points, reportEndDate, reportStartDate]
   );
-  const [fromDate, setFromDate] = useState(resolvedReportDates.startDate);
-  const [toDate, setToDate] = useState(resolvedReportDates.endDate);
+  const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
+    sourceStartDate: resolvedReportDates.startDate,
+    sourceEndDate: resolvedReportDates.endDate,
+    fromDate: resolvedReportDates.startDate,
+    toDate: resolvedReportDates.endDate,
+  });
+  const activeDateDraft =
+    dateDraft.sourceStartDate === resolvedReportDates.startDate &&
+    dateDraft.sourceEndDate === resolvedReportDates.endDate
+      ? dateDraft
+      : {
+          sourceStartDate: resolvedReportDates.startDate,
+          sourceEndDate: resolvedReportDates.endDate,
+          fromDate: resolvedReportDates.startDate,
+          toDate: resolvedReportDates.endDate,
+        };
+  const fromDate = activeDateDraft.fromDate;
+  const toDate = activeDateDraft.toDate;
   const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
   const hasActiveSeries = hasActiveReturnSeries(points);
-  const [chartViewMode, setChartViewMode] = useState<PerformanceChartViewMode>(
+  const [preferredChartViewMode, setPreferredChartViewMode] = useState<PerformanceChartViewMode>(
     resolveChartViewMode({
       hasBenchmarkSeries,
       hasActiveSeries,
     })
   );
-
-  useEffect(() => {
-    setFromDate(resolvedReportDates.startDate);
-    setToDate(resolvedReportDates.endDate);
-  }, [resolvedReportDates.endDate, resolvedReportDates.startDate]);
-
-  useEffect(() => {
-    const resolvedMode = resolveChartViewMode({
-      preferredMode: chartViewMode,
-      hasBenchmarkSeries,
-      hasActiveSeries,
-    });
-    if (resolvedMode !== chartViewMode) {
-      setChartViewMode(resolvedMode);
-    }
-  }, [chartViewMode, hasActiveSeries, hasBenchmarkSeries]);
+  const chartViewMode = resolveChartViewMode({
+    preferredMode: preferredChartViewMode,
+    hasBenchmarkSeries,
+    hasActiveSeries,
+  });
   const resolvedBenchmarkOptions = useMemo(
     () => buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions }),
     [benchmark, benchmarkOptions]
@@ -171,6 +183,20 @@ export default function PerformanceChartPanel({
       period: "EXPLICIT",
       reportStartDate: fromDate,
       reportEndDate: toDate,
+    });
+  }
+
+  function updateFromDate(value: string) {
+    setDateDraft({
+      ...activeDateDraft,
+      fromDate: value,
+    });
+  }
+
+  function updateToDate(value: string) {
+    setDateDraft({
+      ...activeDateDraft,
+      toDate: value,
     });
   }
 
@@ -243,9 +269,9 @@ export default function PerformanceChartPanel({
           isUpdating={isUpdating}
           onRequestChange={updateSelection}
           onApplyExplicitDates={applyExplicitDates}
-          onFromDateChange={setFromDate}
-          onToDateChange={setToDate}
-          onChartViewModeChange={setChartViewMode}
+          onFromDateChange={updateFromDate}
+          onToDateChange={updateToDate}
+          onChartViewModeChange={setPreferredChartViewMode}
         />
       }
       loadingState={

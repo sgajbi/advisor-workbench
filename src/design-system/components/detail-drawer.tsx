@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -36,12 +36,14 @@ export default function DetailDrawer({
   fullPageLabel: string;
   onClose: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState(0);
+  const drawerIdentity = `${open ? "open" : "closed"}:${kicker}:${title}`;
+  const [tabSelection, setTabSelection] = useState({
+    drawerIdentity,
+    activeTab: 0,
+  });
   const resolvedTabs = useMemo(() => tabs.filter((tab) => Boolean(tab.content)), [tabs]);
-
-  useEffect(() => {
-    setActiveTab(0);
-  }, [kicker, title, open]);
+  const activeTab =
+    tabSelection.drawerIdentity === drawerIdentity ? tabSelection.activeTab : 0;
 
   const selectedTab = resolvedTabs[activeTab] ?? resolvedTabs[0];
 
@@ -71,7 +73,12 @@ export default function DetailDrawer({
         <div className="portfolio-detail-drawer-tabs">
           <Tabs
             value={Math.min(activeTab, Math.max(resolvedTabs.length - 1, 0))}
-            onChange={(_, value) => setActiveTab(value)}
+            onChange={(_, value) =>
+              setTabSelection({
+                drawerIdentity,
+                activeTab: value,
+              })
+            }
             variant="scrollable"
             scrollButtons={false}
             aria-label={`${title || "Detail"} tabs`}
