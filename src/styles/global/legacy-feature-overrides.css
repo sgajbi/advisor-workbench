@@ -1,0 +1,239 @@
+/* Governed global layer: legacy feature overrides preserved in original cascade order. */
+
+.report-batch-operations-panel .section-block-body {
+  gap: 0.75rem;
+}
+
+.report-batch-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.report-batch-status-strip,
+.report-batch-run-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.report-batch-status-strip span,
+.report-batch-run-summary span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.outcome-review-panel .section-block-body,
+.proof-pack-panel .section-block-body {
+  gap: 0.75rem;
+}
+
+.rebalance-status-panel .section-block-body {
+  gap: 0.75rem;
+}
+
+.rebalance-status-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rebalance-status-detail-grid > span {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.625rem;
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-secondary);
+}
+
+.rebalance-status-detail-grid strong {
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: 650;
+}
+
+.rebalance-operations-dashboard {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.rebalance-operations-dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rebalance-operations-dashboard-summary > span,
+.rebalance-operations-run-row {
+  min-width: 0;
+  padding: 0.625rem;
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-secondary);
+}
+
+.rebalance-operations-dashboard-summary > span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.rebalance-operations-dashboard-summary strong {
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: 650;
+}
+
+.rebalance-operations-run-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.rebalance-operations-run-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rebalance-operations-run-row > div:first-child {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.rebalance-operations-run-id {
+  color: var(--color-text);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.rebalance-operations-run-state {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.outcome-review-badge-row,
+.outcome-review-reason-row,
+.outcome-review-report-actions,
+.outcome-review-hash-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.outcome-review-report-actions {
+  justify-content: flex-start;
+}
+
+.outcome-review-status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.outcome-review-hash-strip {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.outcome-review-hash-strip span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.proof-pack-badge-row,
+.proof-pack-action-row,
+.proof-pack-reason-row,
+.proof-pack-handoff-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.proof-pack-status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.proof-pack-panel .analytics-table-frame {
+  margin-top: 0.35rem;
+}
+
+.proof-pack-markdown-preview {
+  max-height: 18rem;
+  min-width: 0;
+  overflow: auto;
+  padding: 0.75rem;
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-secondary);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dpm-command-center-panel .analytics-table-frame {
+  margin-top: 0.85rem;
+}
+
+.dpm-command-center-badge-row,
+.dpm-command-center-action-row,
+.dpm-command-center-reason-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dpm-command-center-action-row {
+  justify-content: space-between;
+  margin-top: 0.85rem;
+}
+
+.dpm-command-center-action-row > div {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.dpm-command-center-status-strip,
+.dpm-command-center-summary-grid,
+.dpm-command-center-metric-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.dpm-command-center-status-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dpm-command-center-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dpm-command-center-subsection {
+  min-width: 0;
+}
+
+.dpm-command-center-metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dpm-command-center-reason-row {
+  margin-top: 0.75rem;
+}
