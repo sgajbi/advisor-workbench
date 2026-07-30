@@ -398,6 +398,37 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("rejects comment-separated nested URL imports inside governed CSS modules", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithCommentSeparatedNestedImport =
+        '@import/**/url("./unbudgeted.css");\nbody {\n  margin: 0;\n}\n';
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithCommentSeparatedNestedImport,
+      );
+      writeFixtureFile(repoRoot, "src/styles/global/unbudgeted.css", ".unsafe {\n  color: red;\n}\n");
+      const baselineWithCommentSeparatedNestedModuleImport: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithCommentSeparatedNestedModuleImport,
+        }),
+      ).toThrow(/must not contain CSS @import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale max-line headroom when a CSS layer has been reduced", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
