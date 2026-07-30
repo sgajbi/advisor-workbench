@@ -87,6 +87,27 @@ function normalizeUrlWordImportRef(value) {
   return normalizedValue.includes("'") || normalizedValue.includes('"') ? null : normalizedValue;
 }
 
+function hasEmptyConditionalMediaEntry(conditionNodes) {
+  let hasConditionTokenSinceComma = false;
+
+  for (const node of conditionNodes) {
+    if (node.type === "div" && node.value === ",") {
+      if (!hasConditionTokenSinceComma) {
+        return true;
+      }
+      hasConditionTokenSinceComma = false;
+      continue;
+    }
+
+    hasConditionTokenSinceComma = true;
+  }
+
+  return (
+    conditionNodes.some((node) => node.type === "div" && node.value === ",") &&
+    !hasConditionTokenSinceComma
+  );
+}
+
 function parseImportRef(params) {
   const [targetNode, ...conditionNodes] = significantValueNodes(valueParser(params).nodes);
 
@@ -98,7 +119,8 @@ function parseImportRef(params) {
     conditionNodes.some(
       (node) =>
         node.type === "string" || (node.type === "function" && node.value.toLowerCase() === "url")
-    )
+    ) ||
+    hasEmptyConditionalMediaEntry(conditionNodes)
   ) {
     return null;
   }
