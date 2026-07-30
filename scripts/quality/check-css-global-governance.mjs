@@ -47,7 +47,29 @@ function parseLocalImportPath(repoRoot, entrypointPath, statement) {
   return repoRelativePath(repoRoot, resolve(repoRoot, dirname(entrypointPath), importRef));
 }
 
-function assertWithinBudget(repoRoot, { path, maxLines, maxBytes, owner }) {
+function assertBudgetShape(kind, budget) {
+  const { path, maxLines, maxBytes } = budget;
+
+  if (typeof path !== "string" || path.length === 0) {
+    throw new Error(`CSS global governance ${kind} budget must include a non-empty path.`);
+  }
+
+  for (const [fieldName, fieldValue] of [
+    ["maxLines", maxLines],
+    ["maxBytes", maxBytes],
+  ]) {
+    if (!Number.isInteger(fieldValue) || fieldValue < 0) {
+      throw new Error(
+        `CSS global governance budget for ${path} must include a finite non-negative integer ${fieldName}.`
+      );
+    }
+  }
+}
+
+function assertWithinBudget(repoRoot, budget, kind = "module") {
+  assertBudgetShape(kind, budget);
+
+  const { path, maxLines, maxBytes, owner } = budget;
   const text = fileText(repoRoot, path);
   const actualLines = lineCount(text);
   const actualBytes = normalizedByteCount(text);
@@ -83,6 +105,10 @@ function assertWithinBudget(repoRoot, { path, maxLines, maxBytes, owner }) {
 }
 
 function assertLocalImportBudgetCoverage(entrypointPath, localImportPaths, moduleBudgets) {
+  for (const moduleBudget of moduleBudgets) {
+    assertBudgetShape("module", moduleBudget);
+  }
+
   const moduleBudgetPaths = new Set(moduleBudgets.map((moduleBudget) => moduleBudget.path));
 
   const missingBudgets = localImportPaths.filter((importPath) => !moduleBudgetPaths.has(importPath));
@@ -111,7 +137,7 @@ function assertEntrypoint(repoRoot, baseline) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  assertWithinBudget(repoRoot, baseline.entrypoint);
+  assertWithinBudget(repoRoot, baseline.entrypoint, "entrypoint");
 
   const nonImports = statements.filter((line) => !line.startsWith("@import "));
   if (nonImports.length > 0) {
