@@ -90,6 +90,31 @@ describe("Idea capacity seed evidence", () => {
       validateIdeaCapacityWorkload(
         {
           ...workload,
+          scenarios: [
+            {
+              scenario: "api",
+              sampleCount: 0,
+              acceptedCount: 0,
+              errorCount: 0,
+              conflictCount: 0,
+            },
+            workload.scenarios[0],
+            {
+              scenario: "source_ingestion",
+              sampleCount: 0,
+              acceptedCount: 0,
+              errorCount: 0,
+              conflictCount: 0,
+            },
+          ],
+        },
+        expected,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      validateIdeaCapacityWorkload(
+        {
+          ...workload,
           scenarios: [{ ...workload.scenarios[0], acceptedCount: 0, errorCount: 1 }],
         },
         expected,
