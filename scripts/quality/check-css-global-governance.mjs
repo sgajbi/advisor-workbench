@@ -82,7 +82,8 @@ function parseImportRef(params) {
 
   if (
     conditionNodes.some(
-      (node) => node.type === "string" || (node.type === "div" && node.value === ",")
+      (node) =>
+        node.type === "string" || (node.type === "function" && node.value.toLowerCase() === "url")
     )
   ) {
     return null;
