@@ -238,6 +238,7 @@ export function useReportOrderingWorkflow({
     setReviewedIntent((current) => {
       const fingerprint = configurationFingerprint(configuration);
       if (
+        current?.portfolioId === portfolioId &&
         current?.configurationFingerprint === fingerprint &&
         current.sourceFingerprint === sourceFingerprintRef.current
       ) {
