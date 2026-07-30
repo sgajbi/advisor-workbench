@@ -141,7 +141,12 @@ Current repository posture:
     restores focus. The rail owns its internal spacing and must neutralize generic `Panel` padding
     rather than accumulating nested insets. Responsive changes require production-browser proof at
     1440, 1024, 768, and 519 px and must not hide source state or invent mobile-only behavior.
-17. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
+17. Global CSS ownership is governed by `docs/architecture/css-layer-governance.md`.
+    `src/app/globals.css` is a composition entrypoint that imports token, base, Workbench shell,
+    and legacy global layers from `src/styles/global/`. `npm run lint` runs the CSS global
+    governance ratchet before ESLint. Feature-specific selectors should migrate beside their React
+    owner with a lowered baseline instead of growing `legacy-global.css`.
+18. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
     It also delegates isolated downstream-capacity resource construction and a single report-only

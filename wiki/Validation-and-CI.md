@@ -43,11 +43,17 @@ concurrency group.
   time-bounded and documented against a GitHub issue; do not weaken the severity thresholds or use
   `npm audit fix --force` as an unreviewed dependency migration.
 - `make lint`
-  runs the maintained ESLint CLI over the repository root with the flat configuration. Production
-  app source keeps the direct Next, Core Web Vitals, TypeScript, and stable React Hooks correctness
-  rules; tests, live validators, scripts, and configuration files are scanned by the shared
-  TypeScript/JavaScript policy. Deprecated `next lint` and `eslint-config-next` are not part of the
-  governed gate.
+  runs `npm run lint:css-global` and then the maintained ESLint CLI over the repository root with
+  the flat configuration. The CSS gate keeps `src/app/globals.css` as a small import-only
+  entrypoint, preserves governed global layer order, and blocks global-style budget growth unless
+  the baseline is intentionally updated with issue evidence. Production app source keeps the direct
+  Next, Core Web Vitals, TypeScript, and stable React Hooks correctness rules; tests, live
+  validators, scripts, and configuration files are scanned by the shared TypeScript/JavaScript
+  policy. Deprecated `next lint` and `eslint-config-next` are not part of the governed gate.
+- `npm run lint:css-global`
+  validates `src/app/globals.css`, `src/styles/global/*`, and
+  `scripts/quality/css-global-governance-baseline.json` against the documented CSS layer model in
+  `docs/architecture/css-layer-governance.md`.
 - `npm run lint:react-compiler`
   runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
   report-only React Compiler compatibility evaluator. It is not part of `make check`, Feature Lane,

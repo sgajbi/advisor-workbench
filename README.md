@@ -294,8 +294,11 @@ http://workbench.dev.lotus/data-products
 - `make install`
   install dependencies
 - `make lint`
-  run the flat ESLint gate across the repository, including Next/Core Web Vitals and stable React
-  Hooks correctness rules for production app source
+  run the CSS global governance ratchet and the flat ESLint gate across the repository, including
+  Next/Core Web Vitals and stable React Hooks correctness rules for production app source
+- `npm run lint:css-global`
+  verify `src/app/globals.css` remains a governed composition entrypoint and global CSS layer
+  budgets do not grow without an intentional baseline update
 - `npm run lint:react-compiler`
   report-only React Compiler compatibility lint inventory for production app source
 - `make typecheck`
