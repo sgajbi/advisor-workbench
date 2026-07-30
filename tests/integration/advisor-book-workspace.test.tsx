@@ -130,6 +130,37 @@ describe("AdvisorBookWorkspace", () => {
     );
   });
 
+  it("adopts the URL client filter when returning to an earlier query", async () => {
+    getAdvisorBookMock.mockResolvedValue(readyResponse);
+    const { rerender } = render(<AdvisorBookWorkspace />);
+    await screen.findByText("Book available");
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Client reference" }), {
+      target: { value: "CIF_SG_002" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply client" }));
+
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("asOfDate=2026-04-10&clientId=CIF_SG_002&offset=0"),
+    );
+    rerender(<AdvisorBookWorkspace />);
+    expect(await screen.findByRole("textbox", { name: "Client reference" })).toHaveValue(
+      "CIF_SG_002",
+    );
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("asOfDate=2026-04-10"));
+    rerender(<AdvisorBookWorkspace />);
+
+    expect(await screen.findByRole("textbox", { name: "Client reference" })).toHaveValue("");
+    await waitFor(() => {
+      const lastQuery = getAdvisorBookMock.mock.calls.at(-1)?.[0];
+      expect(lastQuery).toMatchObject({
+        asOfDate: "2026-04-10",
+        clientId: undefined,
+      });
+    });
+  });
+
   it("shows a permission-specific boundary without substituting the global catalogue", async () => {
     getAdvisorBookMock.mockRejectedValue(new WorkbenchApiError("advisor book", 403));
     render(<AdvisorBookWorkspace />);

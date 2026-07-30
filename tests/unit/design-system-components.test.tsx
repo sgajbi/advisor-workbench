@@ -15,6 +15,7 @@ import {
   DefinitionList,
   DeferredModulePlaceholder,
   DetailCard,
+  DetailDrawer,
   DisclosureToggleButton,
   DegradedStatePanel,
   EmptyStatePanel,
@@ -99,6 +100,68 @@ describe("design-system components", () => {
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("resets detail drawer tab selection when reopening the same item", () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <DetailDrawer
+        open
+        kicker="Position"
+        title="UST 10Y"
+        summaryItems={[{ label: "Weight", value: "4.2%" }]}
+        tabs={[
+          { key: "summary", label: "Summary", content: <div>Summary content</div> },
+          { key: "evidence", label: "Evidence", content: <div>Evidence content</div> },
+        ]}
+        fullPageHref="/portfolio?position=ust"
+        fullPageLabel="Open full record"
+        onClose={onClose}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    expect(screen.getByRole("tabpanel", { name: "Evidence" })).toHaveTextContent(
+      "Evidence content",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <DetailDrawer
+        open={false}
+        kicker="Position"
+        title="UST 10Y"
+        summaryItems={[{ label: "Weight", value: "4.2%" }]}
+        tabs={[
+          { key: "summary", label: "Summary", content: <div>Summary content</div> },
+          { key: "evidence", label: "Evidence", content: <div>Evidence content</div> },
+        ]}
+        fullPageHref="/portfolio?position=ust"
+        fullPageLabel="Open full record"
+        onClose={onClose}
+      />,
+    );
+    rerender(
+      <DetailDrawer
+        open
+        kicker="Position"
+        title="UST 10Y"
+        summaryItems={[{ label: "Weight", value: "4.2%" }]}
+        tabs={[
+          { key: "summary", label: "Summary", content: <div>Summary content</div> },
+          { key: "evidence", label: "Evidence", content: <div>Evidence content</div> },
+        ]}
+        fullPageHref="/portfolio?position=ust"
+        fullPageLabel="Open full record"
+        onClose={onClose}
+      />,
+    );
+
+    expect(screen.getByRole("tabpanel", { name: "Summary" })).toHaveTextContent(
+      "Summary content",
+    );
   });
 
   it("renders core panel and row primitives with shared classes", () => {
