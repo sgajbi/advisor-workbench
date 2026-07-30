@@ -466,6 +466,37 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("rejects URL imports with empty conditional media entries", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import/**/url("../styles/global/tokens.css"),;\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithTrailingMediaComma: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import/**/url("../styles/global/tokens.css"),;',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithTrailingMediaComma,
+        }),
+      ).toThrow(/only valid import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("parses local URL imports with layer, supports, and media conditions before checking module budgets", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
