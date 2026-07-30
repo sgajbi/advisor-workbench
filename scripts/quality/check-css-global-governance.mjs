@@ -2,6 +2,9 @@ import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import postcss from "postcss";
+import valueParser from "postcss-value-parser";
+
 function resolveDefaultRepoRoot() {
   return resolve(fileURLToPath(new URL("../..", import.meta.url)));
 }
@@ -37,206 +40,78 @@ function isExternalImportRef(importRef) {
   return /^[a-z][a-z0-9+.-]*:/i.test(importRef) || importRef.startsWith("//");
 }
 
-function isIdentifierCharacter(character) {
-  return /[a-z0-9_-]/i.test(character);
+function parseCssRoot(text, cssPath) {
+  try {
+    return postcss.parse(text, { from: cssPath });
+  } catch (error) {
+    const reason = error?.reason ?? error?.message ?? String(error);
+    throw new Error(`${cssPath} contains invalid CSS: ${reason}`);
+  }
 }
 
-function isEscapedCharacter(text, characterIndex) {
-  let slashCount = 0;
+function isImportAtRule(node) {
+  return node.type === "atrule" && /^import$/i.test(node.name);
+}
 
-  for (let index = characterIndex - 1; index >= 0 && text[index] === "\\"; index -= 1) {
-    slashCount += 1;
+function describeCssNode(node) {
+  if (node.type === "atrule") {
+    return `@${node.name}`;
   }
 
-  return slashCount % 2 === 1;
-}
-
-function replaceCssBlockCommentsOutsideStrings(text, replacement = " ") {
-  let result = "";
-  let activeQuote = null;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
-
-    if (activeQuote) {
-      result += character;
-      if (character === activeQuote && !isEscapedCharacter(text, index)) {
-        activeQuote = null;
-      }
-      continue;
-    }
-
-    if (character === '"' || character === "'") {
-      activeQuote = character;
-      result += character;
-      continue;
-    }
-
-    if (character === "/" && nextCharacter === "*") {
-      result += replacement;
-      index += 2;
-      while (index < text.length && !(text[index] === "*" && text[index + 1] === "/")) {
-        index += 1;
-      }
-      index += 1;
-      continue;
-    }
-
-    result += character;
+  if (node.type === "rule") {
+    return node.selector;
   }
 
-  return result;
-}
-
-function containsCssImportAtRule(text) {
-  let activeQuote = null;
-  let insideBlockComment = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
-
-    if (insideBlockComment) {
-      if (character === "*" && nextCharacter === "/") {
-        insideBlockComment = false;
-        index += 1;
-      }
-      continue;
-    }
-
-    if (activeQuote) {
-      if (character === activeQuote && !isEscapedCharacter(text, index)) {
-        activeQuote = null;
-      }
-      continue;
-    }
-
-    if (character === "/" && nextCharacter === "*") {
-      insideBlockComment = true;
-      index += 1;
-      continue;
-    }
-
-    if (character === '"' || character === "'") {
-      activeQuote = character;
-      continue;
-    }
-
-    if (character !== "@") {
-      continue;
-    }
-
-    const atRuleName = text.slice(index + 1, index + 7);
-    const nextAfterAtRuleName = index + 7 < text.length ? text[index + 7] : "";
-    if (/^import$/i.test(atRuleName) && !isIdentifierCharacter(nextAfterAtRuleName)) {
-      return true;
-    }
+  if (node.type === "decl") {
+    return node.prop;
   }
 
-  return false;
+  return node.type;
 }
 
-function parseImportTarget(statement) {
-  const importStatement = statement.trim();
-  const prefixMatch = importStatement.match(/^@import(?:\s+|(?=["']))/i);
-  if (!prefixMatch) {
+function significantValueNodes(nodes) {
+  return nodes.filter((node) => node.type !== "space" && node.type !== "comment");
+}
+
+function parseImportRef(params) {
+  const [targetNode] = significantValueNodes(valueParser(params).nodes);
+
+  if (!targetNode) {
     return null;
   }
 
-  const importBody = importStatement.slice(prefixMatch[0].length);
-  let activeQuote = null;
-  let insideBlockComment = false;
-  let parenthesisDepth = 0;
+  if (targetNode.type === "string") {
+    return targetNode.value;
+  }
 
-  for (let index = 0; index < importBody.length; index += 1) {
-    const character = importBody[index];
-    const nextCharacter = index + 1 < importBody.length ? importBody[index + 1] : "";
-
-    if (insideBlockComment) {
-      if (character === "*" && nextCharacter === "/") {
-        insideBlockComment = false;
-        index += 1;
-      }
-      continue;
-    }
-
-    if (activeQuote) {
-      if (character === activeQuote && !isEscapedCharacter(importBody, index)) {
-        activeQuote = null;
-      }
-      continue;
-    }
-
-    if (character === "/" && nextCharacter === "*") {
-      insideBlockComment = true;
-      index += 1;
-      continue;
-    }
-
-    if (character === '"' || character === "'") {
-      activeQuote = character;
-      continue;
-    }
-
-    if (character === "(") {
-      parenthesisDepth += 1;
-      continue;
-    }
-
-    if (character === ")" && parenthesisDepth > 0) {
-      parenthesisDepth -= 1;
-      continue;
-    }
-
-    if (character !== ";" || parenthesisDepth > 0) {
-      continue;
-    }
-
-    const trailingText = importBody.slice(index + 1).trim();
-    if (!/^(?:\/\*[\s\S]*?\*\/\s*)*$/.test(trailingText)) {
+  if (targetNode.type === "function" && targetNode.value.toLowerCase() === "url") {
+    const [urlValueNode] = significantValueNodes(targetNode.nodes);
+    if (!urlValueNode) {
       return null;
     }
 
-    const importTarget = importBody.slice(0, index).trim();
-    return importTarget.length > 0 ? importTarget : null;
+    if (urlValueNode.type === "string" || urlValueNode.type === "word") {
+      return urlValueNode.value;
+    }
   }
 
   return null;
 }
 
-function parseLocalImportPath(repoRoot, entrypointPath, statement) {
-  const importTarget = parseImportTarget(statement);
-  if (!importTarget) {
+function hasImportStatementTerminator(statement) {
+  return /;\s*(?:\/\*[\s\S]*?\*\/\s*)*$/.test(statement);
+}
+
+function parseLocalImportPath(repoRoot, entrypointPath, importNode) {
+  const importRef = parseImportRef(importNode.params);
+
+  if (!importRef || isExternalImportRef(importRef)) {
     return null;
   }
 
-  const normalizedImportTarget = replaceCssBlockCommentsOutsideStrings(importTarget);
-  const urlMatch = importTarget.match(
-    /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/i
-  );
-  const normalizedUrlMatch = normalizedImportTarget.match(
-    /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/i
-  );
-  const quotedMatch = normalizedImportTarget.match(/^(?:"([^"]+)"|'([^']+)')(?:\s+.*)?$/);
-  const importRef = [...(urlMatch?.slice(1) ?? []), ...(quotedMatch?.slice(1) ?? [])].find(Boolean);
-  const normalizedImportRef = [
-    ...(normalizedUrlMatch?.slice(1) ?? []),
-    ...(quotedMatch?.slice(1) ?? []),
-  ].find(Boolean);
-  const effectiveImportRef = importRef ?? normalizedImportRef;
-
-  if (!effectiveImportRef) {
-    return null;
-  }
-
-  if (isExternalImportRef(effectiveImportRef)) {
-    return null;
-  }
-
-  const importAbsolutePath = effectiveImportRef.startsWith("/")
-    ? resolve(repoRoot, effectiveImportRef.slice(1))
-    : resolve(repoRoot, dirname(entrypointPath), effectiveImportRef);
+  const importAbsolutePath = importRef.startsWith("/")
+    ? resolve(repoRoot, importRef.slice(1))
+    : resolve(repoRoot, dirname(entrypointPath), importRef);
   return repoRelativePath(repoRoot, importAbsolutePath);
 }
 
@@ -298,7 +173,16 @@ function assertWithinBudget(repoRoot, budget, kind = "module") {
 }
 
 function assertNoModuleImports(repoRoot, moduleBudget) {
-  if (containsCssImportAtRule(fileText(repoRoot, moduleBudget.path))) {
+  const text = fileText(repoRoot, moduleBudget.path);
+  const root = parseCssRoot(text, moduleBudget.path);
+  let nestedImport = null;
+  root.walkAtRules((node) => {
+    if (isImportAtRule(node)) {
+      nestedImport = node;
+    }
+  });
+
+  if (nestedImport) {
     throw new Error(
       `${moduleBudget.path} must not contain CSS @import statements. ` +
         "Keep global CSS composition in src/app/globals.css and add each imported layer to scripts/quality/css-global-governance-baseline.json."
@@ -334,6 +218,7 @@ function assertLocalImportBudgetCoverage(entrypointPath, localImportPaths, modul
 function assertEntrypoint(repoRoot, baseline) {
   const { path, imports } = baseline.entrypoint;
   const text = fileText(repoRoot, path);
+  const root = parseCssRoot(text, path);
   const statements = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -341,11 +226,22 @@ function assertEntrypoint(repoRoot, baseline) {
 
   assertWithinBudget(repoRoot, baseline.entrypoint, "entrypoint");
 
-  const invalidImports = statements.filter((line) => !parseImportTarget(line));
-  if (invalidImports.length > 0) {
+  const entrypointNodes = root.nodes ?? [];
+  const invalidNodes = entrypointNodes.filter((node) => node.type !== "comment" && !isImportAtRule(node));
+  const importNodes = entrypointNodes.filter(isImportAtRule);
+  const unterminatedImportStatements = statements.filter((statement) => !hasImportStatementTerminator(statement));
+  const invalidImportNodes = importNodes.filter((node) => !parseImportRef(node.params));
+
+  if (invalidNodes.length > 0 || unterminatedImportStatements.length > 0 || invalidImportNodes.length > 0) {
+    const invalidNodeSummary = invalidNodes.map(describeCssNode);
+    const invalidImportSummary = [
+      ...unterminatedImportStatements,
+      ...invalidImportNodes.map((node) => `@import ${node.params}`),
+      ...invalidNodeSummary,
+    ];
     throw new Error(
       `${path} must remain a composition entrypoint with only valid import statements and optional trailing comments. ` +
-        `Found invalid import statements: ${invalidImports.join(", ")}`
+        `Found invalid import statements: ${invalidImportSummary.join(", ")}`
     );
   }
 
@@ -356,8 +252,8 @@ function assertEntrypoint(repoRoot, baseline) {
     );
   }
 
-  const localImportPaths = statements
-    .map((statement) => parseLocalImportPath(repoRoot, path, statement))
+  const localImportPaths = importNodes
+    .map((importNode) => parseLocalImportPath(repoRoot, path, importNode))
     .filter(Boolean);
   assertLocalImportBudgetCoverage(path, localImportPaths, baseline.modules);
 }

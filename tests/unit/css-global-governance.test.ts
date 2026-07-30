@@ -339,6 +339,38 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses local URL imports with layer, supports, and media conditions before checking module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url("../styles/global/tokens.css") layer(tokens) supports(display: grid) screen;\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithConditionalImport: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url("../styles/global/tokens.css") layer(tokens) supports(display: grid) screen;',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+        modules: baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("tokens.css")),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithConditionalImport,
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects same-line declarations after import statements in the entrypoint", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
@@ -395,6 +427,36 @@ describe("CSS global governance gate", () => {
           baseline: baselineWithNestedModuleImport,
         }),
       ).toThrow(/must not contain CSS @import statements/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts CSS module strings and comments that mention import text without real at-rules", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithImportTextOnly =
+        '.before { content: "@import \\"./not-a-real-import.css\\""; }\n/* @import "./also-not-real.css"; */\nbody {\n  margin: 0;\n}\n';
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithImportTextOnly,
+      );
+      const baselineWithImportTextOnly: CssBaseline = {
+        ...baseline,
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithImportTextOnly,
+        }),
+      ).not.toThrow();
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
