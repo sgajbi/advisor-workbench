@@ -43,6 +43,7 @@ describe("report ordering screen state", () => {
           badgeLabel,
           showRequestSummary: false,
           showActions: false,
+          showValidationSummary: false,
         }),
       );
     },
@@ -72,6 +73,7 @@ describe("report ordering screen state", () => {
     expect(state.workspace.kind).toBe("empty");
     expect(state.readiness.kind).toBe("empty");
     expect(state.readiness.showActions).toBe(false);
+    expect(state.readiness.showValidationSummary).toBe(false);
   });
 
   it.each([
@@ -98,4 +100,24 @@ describe("report ordering screen state", () => {
       );
     },
   );
+
+  it("shows validation guidance only for actionable setup-required states", () => {
+    const setupRequiredModel = readyModel();
+    setupRequiredModel.readiness.state = "blocked";
+    setupRequiredModel.readiness.issues = ["Select a valid report date."];
+
+    const state = buildReportOrderingScreenState({
+      catalogueState: "ready",
+      catalogueError: null,
+      model: setupRequiredModel,
+      preflightReviewed: false,
+      submissionState: "idle",
+      submissionError: null,
+    });
+
+    expect(state.workspace.kind).toBe("configuration");
+    expect(state.readiness.kind).toBe("setup_required");
+    expect(state.readiness.showActions).toBe(true);
+    expect(state.readiness.showValidationSummary).toBe(true);
+  });
 });

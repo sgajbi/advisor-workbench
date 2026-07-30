@@ -30,6 +30,9 @@ export function ReportReadinessRail({
   const selectedOutput = model?.outputChoices.find(
     (output) => output.id === model.configuration.outputFormat,
   );
+  const validationIssues = screenState.showValidationSummary
+    ? model?.readiness.issues ?? []
+    : [];
 
   return (
     <div className={styles.readinessStack}>
@@ -56,11 +59,11 @@ export function ReportReadinessRail({
           <p>{screenState.detail}</p>
         </div>
 
-        {model?.readiness.issues.length ? (
+        {validationIssues.length ? (
           <div className={styles.validationSummary} role="alert">
             <strong>Complete before review</strong>
             <ul>
-              {model.readiness.issues.map((issue) => (
+              {validationIssues.map((issue) => (
                 <li key={issue}>{issue}</li>
               ))}
             </ul>
