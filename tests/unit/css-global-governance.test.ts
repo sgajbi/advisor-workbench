@@ -142,6 +142,38 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses local imports with whitespace before the semicolon before checking budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import "../styles/global/tokens.css" ;\n@import "../styles/global/base.css";\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithWhitespaceBeforeSemicolon: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import "../styles/global/tokens.css" ;',
+            '@import "../styles/global/base.css";',
+          ],
+        },
+        modules: baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("tokens.css")),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithWhitespaceBeforeSemicolon,
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale max-line headroom when a CSS layer has been reduced", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
