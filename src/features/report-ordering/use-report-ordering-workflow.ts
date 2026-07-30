@@ -181,8 +181,8 @@ export function useReportOrderingWorkflow({
     submissionProgress.portfolioId === portfolioId
       ? submissionProgress
       : { portfolioId, state: "idle" as const, error: null };
-  const submissionState = activeSubmissionProgress.state;
-  const submissionError = activeSubmissionProgress.error;
+  const submissionState = submittedHandle ? "accepted" : activeSubmissionProgress.state;
+  const submissionError = submittedHandle ? null : activeSubmissionProgress.error;
   const screenState = useMemo(
     () =>
       buildReportOrderingScreenState({

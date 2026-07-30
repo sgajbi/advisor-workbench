@@ -51,6 +51,12 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
 
   const load = useCallback(async () => {
     const requestId = ++requestSequence.current;
+    setLoadState((current) => ({
+      requestKey,
+      status: "loading",
+      response: current.requestKey === requestKey ? current.response : null,
+      error: null,
+    }));
     try {
       const nextResponse = await getAdvisorBook({
         asOfDate,
