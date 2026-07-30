@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
+    "lint:react-compiler": "eslint src --config eslint.react-compiler.config.mjs --max-warnings=0",
     "security:audit": "npm audit --audit-level=high && npm audit --omit=dev --audit-level=moderate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -294,7 +294,10 @@ http://workbench.dev.lotus/data-products
 - `make install`
   install dependencies
 - `make lint`
-  lint the Next.js app
+  run the flat ESLint gate across the repository, including Next/Core Web Vitals and stable React
+  Hooks correctness rules for production app source
+- `npm run lint:react-compiler`
+  report-only React Compiler compatibility lint inventory for production app source
 - `make typecheck`
   TypeScript typecheck
 - `make test-coverage`
