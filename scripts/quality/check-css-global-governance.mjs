@@ -173,6 +173,16 @@ function assertWithinBudget(repoRoot, budget, kind = "module") {
   }
 }
 
+function assertNoModuleImports(repoRoot, moduleBudget) {
+  const textWithoutBlockComments = fileText(repoRoot, moduleBudget.path).replace(/\/\*[\s\S]*?\*\//g, "");
+  if (/@import\s+/i.test(textWithoutBlockComments)) {
+    throw new Error(
+      `${moduleBudget.path} must not contain CSS @import statements. ` +
+        "Keep global CSS composition in src/app/globals.css and add each imported layer to scripts/quality/css-global-governance-baseline.json."
+    );
+  }
+}
+
 function assertLocalImportBudgetCoverage(entrypointPath, localImportPaths, moduleBudgets) {
   for (const moduleBudget of moduleBudgets) {
     assertBudgetShape("module", moduleBudget);
@@ -215,6 +225,14 @@ function assertEntrypoint(repoRoot, baseline) {
     );
   }
 
+  const invalidImports = statements.filter((line) => !parseImportTarget(line));
+  if (invalidImports.length > 0) {
+    throw new Error(
+      `${path} must contain only valid import statements with optional trailing comments. ` +
+        `Found invalid import statements: ${invalidImports.join(", ")}`
+    );
+  }
+
   if (JSON.stringify(statements) !== JSON.stringify(imports)) {
     throw new Error(
       `${path} import order drifted. Preserve the governed cascade order or update ` +
@@ -241,6 +259,7 @@ export function validateCssGlobalGovernance({
   assertEntrypoint(effectiveRepoRoot, effectiveBaseline);
 
   for (const moduleBudget of effectiveBaseline.modules) {
+    assertNoModuleImports(effectiveRepoRoot, moduleBudget);
     assertWithinBudget(effectiveRepoRoot, moduleBudget);
   }
 }
