@@ -97,7 +97,7 @@ function parseLocalImportPath(repoRoot, entrypointPath, statement) {
   }
 
   const urlMatch = importTarget.match(
-    /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/
+    /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/i
   );
   const quotedMatch = importTarget.match(/^(?:"([^"]+)"|'([^']+)')(?:\s+.*)?$/);
   const importRef = [...(urlMatch?.slice(1) ?? []), ...(quotedMatch?.slice(1) ?? [])].find(Boolean);
