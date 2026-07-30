@@ -216,6 +216,47 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.submittedHandle).toBeNull();
   });
 
+  it("creates a fresh reviewed intent when switching portfolios with the same catalogue", async () => {
+    const { result, rerender } = renderHook(
+      ({ portfolioId }) =>
+        useReportOrderingWorkflow({
+          portfolioId,
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      { initialProps: { portfolioId: "PB_SG_GLOBAL_BAL_001" } },
+    );
+
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+
+    rerender({ portfolioId: "PB_SG_OTHER_002" });
+
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    expect(result.current.preflightReviewed).toBe(false);
+
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+    expect(result.current.canSubmitReviewedRequest).toBe(true);
+
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        portfolioId: "PB_SG_OTHER_002",
+      }),
+    );
+  });
+
   it("keeps late submission completion scoped to the originating portfolio", async () => {
     let resolveSubmit:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewOrder>>) => void)
