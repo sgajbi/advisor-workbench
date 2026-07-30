@@ -39,7 +39,13 @@ Feature code should compose the shared layers. It should not redefine them.
 Source of truth:
 
 1. [tokens.ts](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/theme/tokens.ts)
-2. [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css)
+2. [tokens.css](C:/Users/Sandeep/projects/lotus-workbench/src/styles/global/tokens.css)
+3. [workbench-shell.css](C:/Users/Sandeep/projects/lotus-workbench/src/styles/global/workbench-shell.css)
+
+`src/app/globals.css` is only the governed global-style import entrypoint. Do not add token,
+typography, layout, or feature declarations there; place new shared declarations in the matching
+global layer and migrate legacy declarations out of `legacy-global.css` or
+`legacy-feature-overrides.css` as ownership becomes clear.
 
 Use tokens for:
 
