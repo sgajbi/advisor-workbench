@@ -703,15 +703,19 @@ function Invoke-CanonicalIdeaCapacitySeed {
   Wait-HttpReady -Url "http://127.0.0.1:8000/health/ready" -Description "lotus-advise"
 
   Write-Host "Seeding isolated Lotus Idea downstream-capacity evidence ..."
-  & (Join-Path $workbenchRepo "scripts\\live\\Invoke-IdeaCapacitySeed.ps1") `
-    -ProjectsRoot $ProjectsRoot `
-    -IdeaBaseUrl "http://127.0.0.1:8330" `
-    -AsOfDate $datePolicy.AsOfDate `
-    -SeededAtUtc $datePolicy.GeneratedAtUtc `
-    -RunId $ideaCanonicalRunId `
-    -ExpectedCommitSha $ideaSourceIdentity.CommitSha `
-    -ExpectedBranch $ideaSourceIdentity.Branch `
-    -EvidenceDirectory $ideaCapacityEvidenceRoot
+  Invoke-WithProcessEnvironment `
+    -Environment @{ LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT = $ideaCapacityTrustedCallerContext } `
+    -ScriptBlock {
+      & (Join-Path $workbenchRepo "scripts\\live\\Invoke-IdeaCapacitySeed.ps1") `
+        -ProjectsRoot $ProjectsRoot `
+        -IdeaBaseUrl "http://127.0.0.1:8330" `
+        -AsOfDate $datePolicy.AsOfDate `
+        -SeededAtUtc $datePolicy.GeneratedAtUtc `
+        -RunId $ideaCanonicalRunId `
+        -ExpectedCommitSha $ideaSourceIdentity.CommitSha `
+        -ExpectedBranch $ideaSourceIdentity.Branch `
+        -EvidenceDirectory $ideaCapacityEvidenceRoot
+    }
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical Lotus Idea capacity seed failed with exit code $LASTEXITCODE."
   }
@@ -763,6 +767,7 @@ if ($CoreManageOnly) {
 $ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo
 $ideaDatePolicy = Get-CanonicalFrontOfficeDatePolicy
 $ideaCanonicalRunId = "canonical-front-office-$($ideaDatePolicy.AsOfDate)-$([guid]::NewGuid().ToString('N'))"
+$ideaCapacityTrustedCallerContext = "canonical-local-idea-capacity-seed-$([guid]::NewGuid().ToString('N'))"
 $ideaBuildTimestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $ideaBuildEnvironment = @{
   LOTUS_IDEA_BUILD_GIT_COMMIT_SHA = $ideaSourceIdentity.CommitSha
@@ -772,6 +777,7 @@ $ideaBuildEnvironment = @{
   LOTUS_IDEA_BUILD_RUN_ID = $ideaCanonicalRunId
   LOTUS_IDEA_BUILD_IMAGE_ID = "$($ideaSourceIdentity.CommitSha).$ideaCanonicalRunId"
   LOTUS_IDEA_BUILD_SERVICE_VERSION = "0.1.0"
+  LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN = $ideaCapacityTrustedCallerContext
 }
 $resolvedLotusAiEnvFile = Resolve-LotusAiEnvFile -EnvFile $LotusAiEnvFile
 Write-Host "Using lotus-ai env file for canonical proof: $resolvedLotusAiEnvFile"

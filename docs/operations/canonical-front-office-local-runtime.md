@@ -169,6 +169,14 @@ Capacity evidence uses the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace
 persist credentials in evidence. This is deterministic seed and integration-readiness proof only;
 it is not load or soak evidence, capacity certification, or supported-feature promotion.
 
+The capacity seed is still exercised through Lotus Idea's public API policy. Canonical startup
+creates one per-run local trusted-caller marker, passes it to the Idea runtime as
+`LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`, and forwards the same marker to the seed process as
+`LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`. The Idea seed process must also send complete
+synthetic tenant, book, portfolio, client, role, and capability scope headers for each governed
+mutation. This is local/dev proof wiring only; it is not a production identity provider,
+session/token-claims authority, or endpoint-policy bypass.
+
 For active RFC or UI development, pass `-LocalApps` with a comma-separated app list. Local apps use
 the same canonical hostnames and public ports as Docker-backed apps, so live evidence remains
 comparable:
