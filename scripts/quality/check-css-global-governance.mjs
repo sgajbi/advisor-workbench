@@ -73,6 +73,20 @@ function significantValueNodes(nodes) {
   return nodes.filter((node) => node.type !== "space" && node.type !== "comment");
 }
 
+function normalizeUrlWordImportRef(value) {
+  const normalizedValue = value.replace(/\/\*[\s\S]*?\*\//g, "").trim();
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const quote = normalizedValue[0];
+  if (quote === "'" || quote === '"') {
+    return normalizedValue.endsWith(quote) ? normalizedValue.slice(1, -1) : null;
+  }
+
+  return normalizedValue.includes("'") || normalizedValue.includes('"') ? null : normalizedValue;
+}
+
 function parseImportRef(params) {
   const [targetNode, ...conditionNodes] = significantValueNodes(valueParser(params).nodes);
 
@@ -100,8 +114,12 @@ function parseImportRef(params) {
     }
 
     const [urlValueNode] = urlValueNodes;
-    if (urlValueNode.type === "string" || urlValueNode.type === "word") {
+    if (urlValueNode.type === "string") {
       return urlValueNode.value;
+    }
+
+    if (urlValueNode.type === "word") {
+      return normalizeUrlWordImportRef(urlValueNode.value);
     }
   }
 

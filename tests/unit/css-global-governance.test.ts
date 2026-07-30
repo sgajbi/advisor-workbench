@@ -142,6 +142,37 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("normalizes CSS comments inside URL imports before resolving module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url(/**/"../styles/global/tokens.css");\n@import url(../styles/global/base.css/**/);\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithCommentedUrlImports: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url(/**/"../styles/global/tokens.css");',
+            "@import url(../styles/global/base.css/**/);",
+          ],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithCommentedUrlImports,
+        }),
+      ).not.toThrow();
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("parses local imports with whitespace before the semicolon before checking budgets", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
