@@ -143,8 +143,9 @@ Current repository posture:
     1440, 1024, 768, and 519 px and must not hide source state or invent mobile-only behavior.
 17. Global CSS ownership is governed by `docs/architecture/css-layer-governance.md`.
     `src/app/globals.css` is a composition entrypoint that imports token, base, Workbench shell,
-    and legacy global layers from `src/styles/global/`. `make lint` runs the CSS global governance
-    ratchet before `npm run lint`/ESLint. Feature-specific selectors should migrate beside their
+    and legacy global layers from `src/styles/global/`. `npm run lint` runs the CSS global governance
+    ratchet before `npm run lint:eslint`, and `make lint` delegates to the composed npm lint gate.
+    Feature-specific selectors should migrate beside their
     React owner with a lowered baseline instead of growing `legacy-global.css`.
 18. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
@@ -406,8 +407,9 @@ Important validation expectations:
 1. unit and integration behavior is validated through Vitest coverage,
 2. dependency security rejects high/critical findings across the complete graph and
    moderate-or-higher findings in browser-delivered production dependencies,
-3. `npm run lint` uses the flat ESLint CLI gate with stable React Hooks correctness rules
-   (`rules-of-hooks` and `exhaustive-deps`) for source files. `npm run lint:react-compiler` is a
+3. `npm run lint` runs CSS global governance before the flat ESLint CLI gate
+   (`npm run lint:eslint`) with stable React Hooks correctness rules (`rules-of-hooks` and
+   `exhaustive-deps`) for source files. `npm run lint:react-compiler` is a
    separate report-only evaluator for the broader `eslint-plugin-react-hooks` recommended rule set,
    including React Compiler compatibility rules; do not promote it to blocking until the current
    finding families are refactored and the governance test/context are updated,

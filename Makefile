@@ -7,7 +7,6 @@ security:
 	npm run security:audit
 
 lint:
-	npm run lint:css-global
 	npm run lint
 
 typecheck:

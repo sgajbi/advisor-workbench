@@ -10,8 +10,13 @@ function readRepositoryFile(...segments: string[]): string {
 describe("Docker CI parity governance", () => {
   it("bounds Vitest workers without weakening assertions or individual timeouts", () => {
     const compose = readRepositoryFile("docker-compose.ci-local.yml");
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
 
     expect(compose).toContain("npm run test -- --maxWorkers=2");
+    expect(compose).toContain("npm run lint");
+    expect(packageJson.scripts?.lint).toContain("npm run lint:css-global");
     expect(compose).not.toContain("--passWithNoTests");
     expect(compose).not.toContain("--testTimeout");
     expect(compose).not.toContain("--no-file-parallelism");

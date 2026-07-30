@@ -110,6 +110,38 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("parses valid local url and single-quoted imports before checking module budgets", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const globalsText =
+        '@import url("../styles/global/tokens.css");\n@import \'../styles/global/base.css\';\n';
+      const entrypointBudget = writeFixtureFile(repoRoot, "src/app/globals.css", globalsText);
+      const baselineWithAlternateImportSyntax: CssBaseline = {
+        ...baseline,
+        entrypoint: {
+          ...baseline.entrypoint,
+          ...entrypointBudget,
+          imports: [
+            '@import url("../styles/global/tokens.css");',
+            "@import '../styles/global/base.css';",
+          ],
+        },
+        modules: baseline.modules.filter((moduleBudget) => !moduleBudget.path.endsWith("base.css")),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithAlternateImportSyntax,
+        }),
+      ).toThrow(/imports local global CSS files without module budgets/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale max-line headroom when a CSS layer has been reduced", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;
