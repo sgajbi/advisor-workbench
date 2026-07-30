@@ -37,14 +37,65 @@ function isExternalImportRef(importRef) {
   return /^[a-z][a-z0-9+.-]*:/i.test(importRef) || importRef.startsWith("//");
 }
 
-function parseLocalImportPath(repoRoot, entrypointPath, statement) {
+function parseImportTarget(statement) {
   const importStatement = statement.trim();
-  const match = importStatement.match(/^@import\s+(.+?)\s*;$/);
-  if (!match) {
+  const prefixMatch = importStatement.match(/^@import\s+/);
+  if (!prefixMatch) {
     return null;
   }
 
-  const importTarget = match[1].trim();
+  const importBody = importStatement.slice(prefixMatch[0].length);
+  let activeQuote = null;
+  let parenthesisDepth = 0;
+
+  for (let index = 0; index < importBody.length; index += 1) {
+    const character = importBody[index];
+    const previousCharacter = index > 0 ? importBody[index - 1] : "";
+
+    if (activeQuote) {
+      if (character === activeQuote && previousCharacter !== "\\") {
+        activeQuote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      activeQuote = character;
+      continue;
+    }
+
+    if (character === "(") {
+      parenthesisDepth += 1;
+      continue;
+    }
+
+    if (character === ")" && parenthesisDepth > 0) {
+      parenthesisDepth -= 1;
+      continue;
+    }
+
+    if (character !== ";" || parenthesisDepth > 0) {
+      continue;
+    }
+
+    const trailingText = importBody.slice(index + 1).trim();
+    if (!/^(?:\/\*[\s\S]*?\*\/\s*)*$/.test(trailingText)) {
+      return null;
+    }
+
+    const importTarget = importBody.slice(0, index).trim();
+    return importTarget.length > 0 ? importTarget : null;
+  }
+
+  return null;
+}
+
+function parseLocalImportPath(repoRoot, entrypointPath, statement) {
+  const importTarget = parseImportTarget(statement);
+  if (!importTarget) {
+    return null;
+  }
+
   const urlMatch = importTarget.match(
     /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/
   );
