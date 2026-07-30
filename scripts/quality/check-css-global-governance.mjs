@@ -37,6 +37,98 @@ function isExternalImportRef(importRef) {
   return /^[a-z][a-z0-9+.-]*:/i.test(importRef) || importRef.startsWith("//");
 }
 
+function isIdentifierCharacter(character) {
+  return /[a-z0-9_-]/i.test(character);
+}
+
+function replaceCssBlockCommentsOutsideStrings(text, replacement = " ") {
+  let result = "";
+  let activeQuote = null;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
+    const previousCharacter = index > 0 ? text[index - 1] : "";
+
+    if (activeQuote) {
+      result += character;
+      if (character === activeQuote && previousCharacter !== "\\") {
+        activeQuote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      activeQuote = character;
+      result += character;
+      continue;
+    }
+
+    if (character === "/" && nextCharacter === "*") {
+      result += replacement;
+      index += 2;
+      while (index < text.length && !(text[index] === "*" && text[index + 1] === "/")) {
+        index += 1;
+      }
+      index += 1;
+      continue;
+    }
+
+    result += character;
+  }
+
+  return result;
+}
+
+function containsCssImportAtRule(text) {
+  let activeQuote = null;
+  let insideBlockComment = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const nextCharacter = index + 1 < text.length ? text[index + 1] : "";
+    const previousCharacter = index > 0 ? text[index - 1] : "";
+
+    if (insideBlockComment) {
+      if (character === "*" && nextCharacter === "/") {
+        insideBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (activeQuote) {
+      if (character === activeQuote && previousCharacter !== "\\") {
+        activeQuote = null;
+      }
+      continue;
+    }
+
+    if (character === "/" && nextCharacter === "*") {
+      insideBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      activeQuote = character;
+      continue;
+    }
+
+    if (character !== "@") {
+      continue;
+    }
+
+    const atRuleName = text.slice(index + 1, index + 7);
+    const nextAfterAtRuleName = index + 7 < text.length ? text[index + 7] : "";
+    if (/^import$/i.test(atRuleName) && !isIdentifierCharacter(nextAfterAtRuleName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function parseImportTarget(statement) {
   const importStatement = statement.trim();
   const prefixMatch = importStatement.match(/^@import(?:\s+|(?=["']))/i);
@@ -46,16 +138,32 @@ function parseImportTarget(statement) {
 
   const importBody = importStatement.slice(prefixMatch[0].length);
   let activeQuote = null;
+  let insideBlockComment = false;
   let parenthesisDepth = 0;
 
   for (let index = 0; index < importBody.length; index += 1) {
     const character = importBody[index];
+    const nextCharacter = index + 1 < importBody.length ? importBody[index + 1] : "";
     const previousCharacter = index > 0 ? importBody[index - 1] : "";
+
+    if (insideBlockComment) {
+      if (character === "*" && nextCharacter === "/") {
+        insideBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
 
     if (activeQuote) {
       if (character === activeQuote && previousCharacter !== "\\") {
         activeQuote = null;
       }
+      continue;
+    }
+
+    if (character === "/" && nextCharacter === "*") {
+      insideBlockComment = true;
+      index += 1;
       continue;
     }
 
@@ -96,23 +204,32 @@ function parseLocalImportPath(repoRoot, entrypointPath, statement) {
     return null;
   }
 
+  const normalizedImportTarget = replaceCssBlockCommentsOutsideStrings(importTarget);
   const urlMatch = importTarget.match(
     /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/i
   );
-  const quotedMatch = importTarget.match(/^(?:"([^"]+)"|'([^']+)')(?:\s+.*)?$/);
+  const normalizedUrlMatch = normalizedImportTarget.match(
+    /^url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')\s]+))\s*\)(?:\s+.*)?$/i
+  );
+  const quotedMatch = normalizedImportTarget.match(/^(?:"([^"]+)"|'([^']+)')(?:\s+.*)?$/);
   const importRef = [...(urlMatch?.slice(1) ?? []), ...(quotedMatch?.slice(1) ?? [])].find(Boolean);
+  const normalizedImportRef = [
+    ...(normalizedUrlMatch?.slice(1) ?? []),
+    ...(quotedMatch?.slice(1) ?? []),
+  ].find(Boolean);
+  const effectiveImportRef = importRef ?? normalizedImportRef;
 
-  if (!importRef) {
+  if (!effectiveImportRef) {
     return null;
   }
 
-  if (isExternalImportRef(importRef)) {
+  if (isExternalImportRef(effectiveImportRef)) {
     return null;
   }
 
-  const importAbsolutePath = importRef.startsWith("/")
-    ? resolve(repoRoot, importRef.slice(1))
-    : resolve(repoRoot, dirname(entrypointPath), importRef);
+  const importAbsolutePath = effectiveImportRef.startsWith("/")
+    ? resolve(repoRoot, effectiveImportRef.slice(1))
+    : resolve(repoRoot, dirname(entrypointPath), effectiveImportRef);
   return repoRelativePath(repoRoot, importAbsolutePath);
 }
 
@@ -174,8 +291,7 @@ function assertWithinBudget(repoRoot, budget, kind = "module") {
 }
 
 function assertNoModuleImports(repoRoot, moduleBudget) {
-  const textWithoutBlockComments = fileText(repoRoot, moduleBudget.path).replace(/\/\*[\s\S]*?\*\//g, " ");
-  if (/@import(?:\s+|(?=["']))/i.test(textWithoutBlockComments)) {
+  if (containsCssImportAtRule(fileText(repoRoot, moduleBudget.path))) {
     throw new Error(
       `${moduleBudget.path} must not contain CSS @import statements. ` +
         "Keep global CSS composition in src/app/globals.css and add each imported layer to scripts/quality/css-global-governance-baseline.json."
