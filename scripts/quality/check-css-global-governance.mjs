@@ -33,6 +33,10 @@ function repoRelativePath(repoRoot, absolutePath) {
   return relative(repoRoot, absolutePath).replaceAll("\\", "/");
 }
 
+function isExternalImportRef(importRef) {
+  return /^[a-z][a-z0-9+.-]*:/i.test(importRef) || importRef.startsWith("//");
+}
+
 function parseLocalImportPath(repoRoot, entrypointPath, statement) {
   const importStatement = statement.trim();
   const match = importStatement.match(/^@import\s+(.+?)\s*;$/);
@@ -51,11 +55,14 @@ function parseLocalImportPath(repoRoot, entrypointPath, statement) {
     return null;
   }
 
-  if (!importRef.startsWith(".")) {
+  if (isExternalImportRef(importRef)) {
     return null;
   }
 
-  return repoRelativePath(repoRoot, resolve(repoRoot, dirname(entrypointPath), importRef));
+  const importAbsolutePath = importRef.startsWith("/")
+    ? resolve(repoRoot, importRef.slice(1))
+    : resolve(repoRoot, dirname(entrypointPath), importRef);
+  return repoRelativePath(repoRoot, importAbsolutePath);
 }
 
 function assertBudgetShape(kind, budget) {
