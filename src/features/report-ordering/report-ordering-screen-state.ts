@@ -41,6 +41,7 @@ export type ReportOrderingReadinessState = {
   busy: boolean;
   showRequestSummary: boolean;
   showActions: boolean;
+  showValidationSummary: boolean;
 };
 
 export type ReportOrderingScreenState = {
@@ -133,6 +134,7 @@ function terminalReadinessState(
     busy: workspace.kind === "loading",
     showRequestSummary: false,
     showActions: false,
+    showValidationSummary: false,
   };
   if (workspace.kind === "loading") {
     return {
@@ -199,6 +201,7 @@ function configuredReadinessState({
     busy: submissionState === "submitting",
     showRequestSummary: true,
     showActions: submissionState !== "accepted",
+    showValidationSummary: false,
   };
   if (submissionState === "submitting") {
     return {
@@ -240,6 +243,7 @@ function configuredReadinessState({
       tone: "warn",
       title: model.readiness.title,
       detail: model.readiness.detail,
+      showValidationSummary: true,
     };
   }
   if (preflightReviewed) {

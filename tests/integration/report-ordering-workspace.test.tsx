@@ -148,6 +148,7 @@ describe("ReportOrderingWorkspace", () => {
     const status = screen.getByRole("status");
     expect(within(status).getByRole("heading", { name: "Report ordering restricted" })).toBeInTheDocument();
     expect(within(status).getByLabelText("Status Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Complete before review")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review Request" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Submit Report Request" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
@@ -162,6 +163,7 @@ describe("ReportOrderingWorkspace", () => {
     const status = screen.getByRole("status");
     expect(within(status).getByRole("heading", { name: "Report ordering unavailable" })).toBeInTheDocument();
     expect(within(status).getByLabelText("Status Unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Complete before review")).not.toBeInTheDocument();
     const retryButton = screen.getByRole("button", { name: "Try Again" });
     expect(retryButton).toBeEnabled();
     expect(screen.queryByText("Loading report readiness")).not.toBeInTheDocument();
@@ -181,6 +183,10 @@ describe("ReportOrderingWorkspace", () => {
     expect(emptyPanels).toHaveLength(2);
     const status = screen.getByRole("status");
     expect(within(status).getByLabelText("Status No approved reports")).toBeInTheDocument();
+    expect(screen.queryByText("Complete before review")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No report is available for the selected portfolio and business role."),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review Request" })).not.toBeInTheDocument();
   });
@@ -195,6 +201,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(await screen.findByRole("heading", { name: "Approved report" })).toBeInTheDocument();
     const status = screen.getByRole("status");
     expect(within(status).getByLabelText("Status Setup required")).toBeInTheDocument();
+    expect(screen.getByText("Complete before review")).toBeInTheDocument();
     expect(screen.getByText("Select a valid report date.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review Request" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
