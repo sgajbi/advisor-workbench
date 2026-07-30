@@ -46,12 +46,19 @@ export default function DetailDrawer({
     tabSelection.drawerIdentity === drawerIdentity ? tabSelection.activeTab : 0;
 
   const selectedTab = resolvedTabs[activeTab] ?? resolvedTabs[0];
+  const handleClose = () => {
+    setTabSelection({
+      drawerIdentity: `closed:${kicker}:${title}`,
+      activeTab: 0,
+    });
+    onClose();
+  };
 
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       PaperProps={{ className: "portfolio-detail-drawer", "aria-label": `${title || "Detail"} drawer` }}
     >
       <div className="portfolio-detail-drawer-shell">
@@ -94,7 +101,7 @@ export default function DetailDrawer({
         </Box>
 
         <div className="portfolio-detail-drawer-footer">
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="outlined" onClick={handleClose}>
             Close
           </Button>
           <Button component="a" href={fullPageHref} variant="contained">

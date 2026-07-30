@@ -29,17 +29,26 @@ import styles from "../advisor-book-workspace.module.css";
 const PAGE_SIZE = 25;
 
 export default function AdvisorBookWorkspace() {
+  const searchParams = useSearchParams();
+
+  return (
+    <AdvisorBookWorkspaceContent
+      key={searchParams.toString()}
+      searchParams={searchParams}
+    />
+  );
+}
+
+function AdvisorBookWorkspaceContent({
+  searchParams,
+}: {
+  searchParams: ReturnType<typeof useSearchParams>;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const query = useMemo(() => queryFromSearchParams(searchParams), [searchParams]);
   const queryClientId = query.clientId ?? "";
-  const [clientDraft, setClientDraft] = useState({
-    queryClientId,
-    clientId: queryClientId,
-  });
-  const clientId =
-    clientDraft.queryClientId === queryClientId ? clientDraft.clientId : queryClientId;
+  const [clientId, setClientId] = useState(queryClientId);
   const { response, loading, error, reload } = useAdvisorBook(query);
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
@@ -146,12 +155,7 @@ export default function AdvisorBookWorkspace() {
             <input
               id="advisor-book-client-reference"
               value={clientId}
-              onChange={(event) =>
-                setClientDraft({
-                  queryClientId,
-                  clientId: event.target.value,
-                })
-              }
+              onChange={(event) => setClientId(event.target.value)}
               placeholder="Exact client reference"
               aria-label="Client reference"
             />
