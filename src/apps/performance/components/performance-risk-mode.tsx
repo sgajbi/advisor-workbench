@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   ScreenStatePanel,
@@ -26,11 +26,18 @@ import RiskStatusBar from "./risk/risk-status-bar";
 import RiskSupportabilityPanel from "./risk/risk-supportability-panel";
 
 type RiskDrawerState = {
-  contextKey: string;
   underwaterDrawerOpen: boolean;
   rollingDrawerOpen: boolean;
   selectedRollingWindowKey: string;
 };
+
+function buildClosedRiskDrawerState(): RiskDrawerState {
+  return {
+    underwaterDrawerOpen: false,
+    rollingDrawerOpen: false,
+    selectedRollingWindowKey: "",
+  };
+}
 
 export default function PerformanceRiskMode({
   workspace,
@@ -52,21 +59,6 @@ export default function PerformanceRiskMode({
     period,
     detailBasis,
   ].join("|");
-  const [drawerState, setDrawerState] = useState<RiskDrawerState>({
-    contextKey: riskContextKey,
-    underwaterDrawerOpen: false,
-    rollingDrawerOpen: false,
-    selectedRollingWindowKey: "",
-  });
-  const activeDrawerState =
-    drawerState.contextKey === riskContextKey
-      ? drawerState
-      : {
-          contextKey: riskContextKey,
-          underwaterDrawerOpen: false,
-          rollingDrawerOpen: false,
-          selectedRollingWindowKey: "",
-        };
   const {
     riskSummary,
     riskConcentration,
@@ -122,8 +114,42 @@ export default function PerformanceRiskMode({
       />
     ) : null;
 
+  return (
+    <PerformanceRiskInteractionState
+      key={riskContextKey}
+      contextItems={contextItems}
+      modeIntro={modeIntro}
+      requestAttribution={requestAttribution}
+      requestDrawdownDetail={requestDrawdownDetail}
+      requestRollingDetail={requestRollingDetail}
+      statePanel={statePanel}
+      viewModel={viewModel}
+    />
+  );
+}
+
+function PerformanceRiskInteractionState({
+  contextItems,
+  modeIntro,
+  requestAttribution,
+  requestDrawdownDetail,
+  requestRollingDetail,
+  statePanel,
+  viewModel,
+}: {
+  contextItems: ReturnType<typeof buildPerformanceWorkspaceContextItems>;
+  modeIntro: NonNullable<ReturnType<typeof getPerformanceWorkspaceModeDefinition>["intro"]>;
+  requestAttribution: (attributionType: string, groupingDimension: string) => void;
+  requestDrawdownDetail: () => void;
+  requestRollingDetail: () => void;
+  statePanel: ReactNode;
+  viewModel: ReturnType<typeof buildPerformanceRiskViewModel>;
+}) {
+  const [drawerState, setDrawerState] = useState<RiskDrawerState>(
+    buildClosedRiskDrawerState,
+  );
   const resolvedSelectedRollingWindowKey =
-    viewModel.rollingWindows.find((window) => window.key === activeDrawerState.selectedRollingWindowKey)?.key ??
+    viewModel.rollingWindows.find((window) => window.key === drawerState.selectedRollingWindowKey)?.key ??
     viewModel.rollingWindows[0]?.key ??
     "";
   const selectedRollingWindow =
@@ -161,7 +187,7 @@ export default function PerformanceRiskMode({
                 viewModel={viewModel}
                 onViewUnderwater={() => {
                   setDrawerState({
-                    ...activeDrawerState,
+                    ...drawerState,
                     underwaterDrawerOpen: true,
                   });
                   requestDrawdownDetail();
@@ -177,13 +203,13 @@ export default function PerformanceRiskMode({
                 selectedWindowKey={resolvedSelectedRollingWindowKey}
                 onWindowChange={(windowKey) =>
                   setDrawerState({
-                    ...activeDrawerState,
+                    ...drawerState,
                     selectedRollingWindowKey: windowKey,
                   })
                 }
                 onViewSeries={(windowKey) => {
                   setDrawerState({
-                    ...activeDrawerState,
+                    ...drawerState,
                     selectedRollingWindowKey: windowKey,
                     rollingDrawerOpen: true,
                   });
@@ -202,22 +228,22 @@ export default function PerformanceRiskMode({
         </div>
       )}
       <RiskDrawdownDetailDrawer
-        open={activeDrawerState.underwaterDrawerOpen}
+        open={drawerState.underwaterDrawerOpen}
         viewModel={viewModel}
         onClose={() =>
           setDrawerState({
-            ...activeDrawerState,
+            ...drawerState,
             underwaterDrawerOpen: false,
           })
         }
       />
       <RiskRollingDetailDrawer
-        open={activeDrawerState.rollingDrawerOpen}
+        open={drawerState.rollingDrawerOpen}
         viewModel={viewModel}
         selectedWindow={selectedRollingWindow}
         onClose={() =>
           setDrawerState({
-            ...activeDrawerState,
+            ...drawerState,
             rollingDrawerOpen: false,
           })
         }
