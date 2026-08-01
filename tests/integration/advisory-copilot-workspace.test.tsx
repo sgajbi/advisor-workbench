@@ -268,7 +268,6 @@ describe("AdvisoryCopilotWorkspace", () => {
         "copilot_run_1",
         {
           action: "APPROVE_FOR_INTERNAL_USE",
-          actor_id: "desk_head_sg_001",
           reason: {
             decision: "Reviewed against source evidence for internal advisor use.",
           },

@@ -58,8 +58,11 @@ export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Caller-Portfolio-Ids",
   "X-Caller-Client-Ids",
   "X-Caller-Book-Ids",
+  "X-Capabilities",
+  "X-Service-Identity",
   "X-Principal-Status",
   "X-Authorized-Advisor-Id",
+  "X-Authorized-Proposal-Id",
   "X-Authorized-Portfolio-Id",
 ] as const;
 

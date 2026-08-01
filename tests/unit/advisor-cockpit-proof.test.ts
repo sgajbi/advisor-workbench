@@ -56,6 +56,27 @@ type ValidateCanonicalAdvisorCockpit = (args: {
 
 let validateCanonicalAdvisorCockpit: ValidateCanonicalAdvisorCockpit;
 
+function fetchCallUrl(fetchMock: ReturnType<typeof vi.fn>, index: number): string {
+  return fetchMock.mock.calls[index][0].toString();
+}
+
+function fetchCallHeaders(
+  fetchMock: ReturnType<typeof vi.fn>,
+  index: number,
+): Record<string, string> {
+  return fetchMock.mock.calls[index][1]?.headers as Record<string, string>;
+}
+
+function expectNoLegacyAuthorityQuery(fetchMock: ReturnType<typeof vi.fn>): void {
+  for (const [url] of fetchMock.mock.calls) {
+    const value = url.toString();
+    if (value.includes("/api/v1/advisor-cockpit/")) {
+      expect(value).not.toContain("advisor_id=");
+      expect(value).not.toContain("role=");
+    }
+  }
+}
+
 function jsonResponse(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
     status,
@@ -288,27 +309,40 @@ describe("advisor cockpit live proof", () => {
       paginationCursor: null,
       roleProjectionValidated: false,
     });
-    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+    expect(fetchCallUrl(fetchMock, 0)).toContain(
       `/api/v1/advisor-cockpit/actions?portfolio_id=${PORTFOLIO_ID}`,
     );
-    expect(fetchMock.mock.calls[6][0].toString()).toContain(
+    expect(fetchCallHeaders(fetchMock, 0)).toMatchObject({
+      "X-Actor-Id": "advisor_sg_001",
+      "X-Authorized-Advisor-Id": "advisor_sg_001",
+      "X-Authorized-Portfolio-Id": PORTFOLIO_ID,
+      "X-Caller-Application": "lotus-workbench",
+      "X-Caller-Capabilities": "advisory.advisor_cockpit.read",
+      "X-Role": "ADVISOR",
+    });
+    expect(fetchCallUrl(fetchMock, 6)).toContain(
       "/api/v1/advisor-cockpit/supportability",
     );
-    expect(fetchMock.mock.calls[5][0].toString()).toContain(
+    expect(fetchCallUrl(fetchMock, 5)).toContain(
       "/api/v1/advisor-cockpit/preparation-packets",
     );
-    expect(fetchMock.mock.calls[7][0].toString()).toContain(
+    expect(fetchCallUrl(fetchMock, 7)).toContain(
       "/api/v1/advisor-cockpit/actions/aci_policy_review_001/acknowledgements",
     );
-    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchCallHeaders(fetchMock, 7)["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(JSON.parse(fetchMock.mock.calls[7][1].body as string)).toMatchObject(
-      {
-        action_item_version: 7,
-        acknowledged_by: "workbench-canonical-validator",
-      },
-    );
+    expect(fetchCallHeaders(fetchMock, 7)).toMatchObject({
+      "X-Caller-Capabilities": "advisory.advisor_cockpit.acknowledge",
+      "X-Role": "ADVISOR",
+      "X-Authorized-Advisor-Id": "advisor_sg_001",
+      "X-Authorized-Portfolio-Id": PORTFOLIO_ID,
+    });
+    expect(JSON.parse(fetchMock.mock.calls[7][1].body as string)).toEqual({
+      action_item_version: 7,
+      acknowledgement_note:
+        "Canonical validation recorded advisor cockpit acknowledgement without clearing source-owned blockers.",
+    });
     expect(summary.workflowPackChecks[0]).toMatchObject({
       actionType: "ADVISOR_COCKPIT_ACTION_ACKNOWLEDGED",
       portfolioId: PORTFOLIO_ID,
@@ -321,15 +355,19 @@ describe("advisor cockpit live proof", () => {
         "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
       replayed: true,
     });
-    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+    expect(fetchCallUrl(fetchMock, 1)).toContain(
       "/api/v1/advisor-cockpit/actions/aci_policy_review_001",
     );
-    expect(fetchMock.mock.calls[2][0].toString()).toContain(
-      "role=COMPLIANCE_REVIEWER",
+    expect(fetchCallHeaders(fetchMock, 2)["X-Role"]).toBe(
+      "COMPLIANCE_REVIEWER",
     );
-    expect(fetchMock.mock.calls[3][0].toString()).toContain(
+    expect(fetchCallHeaders(fetchMock, 2)["X-Caller-Capabilities"]).toBe(
+      "advisory.advisor_cockpit.read",
+    );
+    expect(fetchCallUrl(fetchMock, 3)).toContain(
       "cursor=invalid-rfc0026-cursor",
     );
+    expectNoLegacyAuthorityQuery(fetchMock);
   });
 
   it("seeds house-view cohort evidence and requires cockpit action projection", async () => {
@@ -385,7 +423,7 @@ describe("advisor cockpit live proof", () => {
       timeoutMs: 1000,
     });
 
-    expect(fetchMock.mock.calls[0][0].toString()).toContain(
+    expect(fetchCallUrl(fetchMock, 0)).toContain(
       "/api/v1/advisor-cockpit/house-view-cohorts/evaluate",
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject(
@@ -406,6 +444,13 @@ describe("advisor cockpit live proof", () => {
       paginationCursor: "aci_policy_review_001",
       roleProjectionValidated: true,
     });
+    expect(fetchCallHeaders(fetchMock, 5)["X-Role"]).toBe(
+      "COMPLIANCE_REVIEWER",
+    );
+    expect(fetchCallHeaders(fetchMock, 6)["X-Role"]).toBe(
+      "PORTFOLIO_MANAGER",
+    );
+    expectNoLegacyAuthorityQuery(fetchMock);
   });
 
   it("rejects missing expected cockpit action families", async () => {
@@ -552,15 +597,16 @@ describe("advisor cockpit live proof", () => {
       summary: { apiChecks: [], workflowPackChecks: [] },
     });
 
-    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchCallHeaders(fetchMock, 7)["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[15][1].headers["Idempotency-Key"]).toMatch(
+    expect(fetchCallHeaders(fetchMock, 15)["Idempotency-Key"]).toMatch(
       /^wb-advisor-cockpit-ack-/,
     );
-    expect(fetchMock.mock.calls[7][1].headers["Idempotency-Key"]).not.toBe(
-      fetchMock.mock.calls[15][1].headers["Idempotency-Key"],
+    expect(fetchCallHeaders(fetchMock, 7)["Idempotency-Key"]).not.toBe(
+      fetchCallHeaders(fetchMock, 15)["Idempotency-Key"],
     );
+    expectNoLegacyAuthorityQuery(fetchMock);
   });
 
   it("treats already acknowledged source state as repeatable canonical proof", async () => {

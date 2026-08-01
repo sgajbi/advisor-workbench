@@ -412,7 +412,7 @@ export type AdvisoryCopilotReviewRequest = {
     | "REQUEST_CHANGES"
     | "SUPERSEDE"
     | "EXPIRE";
-  actor_id: string;
+  actor_id?: string;
   reason?: Record<string, unknown>;
 };
 
