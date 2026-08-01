@@ -647,6 +647,10 @@ describe("canonical live validation script", () => {
     );
     expect(advisoryCopilotProof).toContain("wb-copilot-run");
     expect(advisoryCopilotProof).toContain("wb-copilot-review");
+    expect(advisoryCopilotProof).toContain('"X-Caller-Capabilities": "advisory.copilot.review"');
+    expect(advisoryCopilotProof).toContain('"X-Authorized-Proposal-Id": proposalId');
+    expect(advisoryCopilotProof).toContain('"X-Authorized-Portfolio-Id": portfolioId');
+    expect(advisoryCopilotProof).not.toContain('actor_id: "desk_head_sg_001"');
     expect(advisoryCopilotProof).toContain(
       "/api/v1/advisory-copilot/evidence-packets/from-proposal-version",
     );

@@ -32,7 +32,6 @@ import type {
 import styles from "./advisory-copilot-workspace.module.css";
 
 const ADVISOR_ID = "advisor_sg_001";
-const REVIEWER_ID = "desk_head_sg_001";
 
 export default function AdvisoryCopilotWorkspace({
   portfolioId,
@@ -118,7 +117,6 @@ export default function AdvisoryCopilotWorkspace({
         runId,
         {
           action: "APPROVE_FOR_INTERNAL_USE",
-          actor_id: REVIEWER_ID,
           reason: {
             decision: "Reviewed against source evidence for internal advisor use.",
           },

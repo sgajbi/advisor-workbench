@@ -1,4 +1,4 @@
-import { fetchJson, sendJson, sendJsonExpectingStatus } from "./probes.mjs";
+import { sendJson, sendJsonExpectingStatus } from "./probes.mjs";
 import {
   buildPayloadScopedIdempotencyKey,
   extractGatewayEnvelopeData,
@@ -7,18 +7,22 @@ import {
 
 const DEFAULT_ADVISOR_ID = "advisor_sg_001";
 const DEFAULT_ROLE = "ADVISOR";
+const DEFAULT_CALLER_APPLICATION = "lotus-workbench";
+const DEFAULT_TENANT_ID = "tenant-sg";
+const DEFAULT_REGION = "APAC";
+const DEFAULT_BOOKING_CENTER_CODE = "SG";
+const DEFAULT_LEGAL_ENTITY_CODE = "SGPB";
+const DEFAULT_PRINCIPAL_STATUS = "ACTIVE";
+const READ_CAPABILITY = "advisory.advisor_cockpit.read";
+const ACKNOWLEDGE_CAPABILITY = "advisory.advisor_cockpit.acknowledge";
 
 function advisorCockpitQuery({
   portfolioId,
-  advisorId = DEFAULT_ADVISOR_ID,
-  role = DEFAULT_ROLE,
   limit,
   cursor,
 }) {
   const query = new URLSearchParams({
     portfolio_id: portfolioId,
-    advisor_id: advisorId,
-    role,
   });
   if (limit) {
     query.set("limit", String(limit));
@@ -27,6 +31,27 @@ function advisorCockpitQuery({
     query.set("cursor", String(cursor));
   }
   return query.toString();
+}
+
+function advisorCockpitHeaders({
+  portfolioId,
+  advisorId = DEFAULT_ADVISOR_ID,
+  role = DEFAULT_ROLE,
+  capability = READ_CAPABILITY,
+}) {
+  return {
+    "X-Actor-Id": advisorId,
+    "X-Caller-Application": DEFAULT_CALLER_APPLICATION,
+    "X-Tenant-Id": DEFAULT_TENANT_ID,
+    "X-Region": DEFAULT_REGION,
+    "X-Booking-Center-Code": DEFAULT_BOOKING_CENTER_CODE,
+    "X-Legal-Entity-Code": DEFAULT_LEGAL_ENTITY_CODE,
+    "X-Role": role,
+    "X-Caller-Capabilities": capability,
+    "X-Principal-Status": DEFAULT_PRINCIPAL_STATUS,
+    "X-Authorized-Advisor-Id": advisorId,
+    "X-Authorized-Portfolio-Id": portfolioId,
+  };
 }
 
 function assertPortfolioScopedActions(items, portfolioId) {
@@ -221,18 +246,20 @@ async function validateActionDetail({
   summary,
   gatewayBaseUrl,
   query,
+  headers,
   policyAction,
   portfolioId,
   timeoutMs,
 }) {
   const actionItemId = readString(policyAction?.action_item_id);
-  const detail = await fetchJson(
+  const detail = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
       actionItemId,
     )}?${query}`,
     "Advisor cockpit canonical action detail",
     timeoutMs,
+    { headers },
   );
   const detailData = extractGatewayEnvelopeData(detail);
   if (readString(detailData?.action_item_id) !== actionItemId) {
@@ -263,15 +290,15 @@ async function validateActionPagination({
   }
   const pagedQuery = advisorCockpitQuery({
     portfolioId,
-    advisorId,
-    role,
     limit: 1,
   });
-  const firstPaged = await fetchJson(
+  const headers = advisorCockpitHeaders({ portfolioId, advisorId, role });
+  const firstPaged = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${pagedQuery}`,
     "Advisor cockpit canonical pagination first page",
     timeoutMs,
+    { headers },
   );
   const firstPagedData = extractGatewayEnvelopeData(firstPaged);
   const firstItems = Array.isArray(firstPagedData?.items)
@@ -283,17 +310,16 @@ async function validateActionPagination({
       "Advisor cockpit pagination did not return one item and a stable next_cursor.",
     );
   }
-  const secondPaged = await fetchJson(
+  const secondPaged = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
       portfolioId,
-      advisorId,
-      role,
       limit: 1,
       cursor: nextCursor,
     })}`,
     "Advisor cockpit canonical pagination second page",
     timeoutMs,
+    { headers },
   );
   const secondPagedData = extractGatewayEnvelopeData(secondPaged);
   const secondItems = Array.isArray(secondPagedData?.items)
@@ -320,16 +346,21 @@ async function validateRoleProjection({
   timeoutMs,
   expectedActionFamilies: families,
 }) {
-  const compliance = await fetchJson(
+  const compliance = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
       portfolioId,
-      advisorId,
-      role: "COMPLIANCE_REVIEWER",
       limit: 25,
     })}`,
     "Advisor cockpit canonical compliance projection",
     timeoutMs,
+    {
+      headers: advisorCockpitHeaders({
+        portfolioId,
+        advisorId,
+        role: "COMPLIANCE_REVIEWER",
+      }),
+    },
   );
   const compliancePage = extractGatewayEnvelopeData(compliance);
   const complianceItems = Array.isArray(compliancePage?.items)
@@ -351,16 +382,21 @@ async function validateRoleProjection({
   if (!families.includes("HOUSE_VIEW_IMPACT_REVIEW")) {
     return false;
   }
-  const dpm = await fetchJson(
+  const dpm = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
       portfolioId,
-      advisorId,
-      role: "DPM_OWNER",
       limit: 25,
     })}`,
-    "Advisor cockpit canonical DPM house-view projection",
+    "Advisor cockpit canonical portfolio-manager house-view projection",
     timeoutMs,
+    {
+      headers: advisorCockpitHeaders({
+        portfolioId,
+        advisorId,
+        role: "PORTFOLIO_MANAGER",
+      }),
+    },
   );
   const dpmPage = extractGatewayEnvelopeData(dpm);
   const dpmItems = Array.isArray(dpmPage?.items) ? dpmPage.items : [];
@@ -390,15 +426,15 @@ export async function validateCanonicalAdvisorCockpit({
   });
   const query = advisorCockpitQuery({
     portfolioId,
-    advisorId,
-    role,
     limit: 25,
   });
-  const actions = await fetchJson(
+  const readHeaders = advisorCockpitHeaders({ portfolioId, advisorId, role });
+  const actions = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${query}`,
     "Advisor cockpit canonical action list",
     timeoutMs,
+    { headers: readHeaders },
   );
   const actionPage = extractGatewayEnvelopeData(actions);
   const items = Array.isArray(actionPage?.items) ? actionPage.items : [];
@@ -439,6 +475,7 @@ export async function validateCanonicalAdvisorCockpit({
     summary,
     gatewayBaseUrl,
     query,
+    headers: readHeaders,
     policyAction,
     portfolioId,
     timeoutMs,
@@ -464,20 +501,20 @@ export async function validateCanonicalAdvisorCockpit({
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions?${advisorCockpitQuery({
       portfolioId,
-      advisorId,
-      role,
       cursor: "invalid-rfc0026-cursor",
     })}`,
     "Advisor cockpit canonical invalid cursor rejection",
     timeoutMs,
     422,
+    { headers: readHeaders },
   );
 
-  const snapshot = await fetchJson(
+  const snapshot = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/snapshot?${query}`,
     "Advisor cockpit canonical operating snapshot",
     timeoutMs,
+    { headers: readHeaders },
   );
   const snapshotData = extractGatewayEnvelopeData(snapshot);
   if (!readString(snapshotData?.snapshot_id)) {
@@ -499,11 +536,12 @@ export async function validateCanonicalAdvisorCockpit({
       `Advisor cockpit snapshot returned ${preparationPackets.length} preparation packets, expected at least ${expectedMinPreparationPackets}.`,
     );
   }
-  const preparationPacketResponse = await fetchJson(
+  const preparationPacketResponse = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/preparation-packets?${query}`,
     "Advisor cockpit canonical preparation packets",
     timeoutMs,
+    { headers: readHeaders },
   );
   const preparationPacketPage = extractGatewayEnvelopeData(
     preparationPacketResponse,
@@ -547,17 +585,16 @@ export async function validateCanonicalAdvisorCockpit({
     );
   }
 
-  const supportability = await fetchJson(
+  const supportability = await sendJson(
     summary,
     `${gatewayBaseUrl}/api/v1/advisor-cockpit/supportability?${advisorCockpitQuery(
       {
         portfolioId,
-        advisorId,
-        role,
       },
     )}`,
     "Advisor cockpit canonical supportability",
     timeoutMs,
+    { headers: readHeaders },
   );
   const supportabilityData = extractGatewayEnvelopeData(supportability);
   const supportabilityPosture = readString(supportabilityData?.posture);
@@ -581,14 +618,11 @@ export async function validateCanonicalAdvisorCockpit({
   if (!alreadyAcknowledged) {
     const acknowledgementBody = {
       action_item_version: actionItemVersion,
-      acknowledged_by: "workbench-canonical-validator",
       acknowledgement_note:
         "Canonical validation recorded advisor cockpit acknowledgement without clearing source-owned blockers.",
     };
     const acknowledgementIdempotencyMaterial = {
       portfolio_id: portfolioId,
-      advisor_id: advisorId,
-      role,
       action_item_id: actionItemId,
       ...acknowledgementBody,
     };
@@ -596,13 +630,19 @@ export async function validateCanonicalAdvisorCockpit({
       summary,
       `${gatewayBaseUrl}/api/v1/advisor-cockpit/actions/${encodeURIComponent(
         actionItemId,
-      )}/acknowledgements?${advisorCockpitQuery({ portfolioId, advisorId, role })}`,
+      )}/acknowledgements?${advisorCockpitQuery({ portfolioId })}`,
       "Advisor cockpit canonical acknowledgement",
       timeoutMs,
       {
         method: "POST",
         body: acknowledgementBody,
         headers: {
+          ...advisorCockpitHeaders({
+            portfolioId,
+            advisorId,
+            role,
+            capability: ACKNOWLEDGE_CAPABILITY,
+          }),
           "Idempotency-Key": buildPayloadScopedIdempotencyKey(
             "wb-advisor-cockpit-ack",
             acknowledgementIdempotencyMaterial,

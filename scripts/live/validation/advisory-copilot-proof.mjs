@@ -294,13 +294,14 @@ async function reviewCopilotRun({
   gatewayBaseUrl,
   run,
   action,
+  portfolioId,
+  proposalId,
   timeoutMs,
   proofExecutionId,
 }) {
   const requestBody = {
     body: {
       action: "APPROVE_FOR_INTERNAL_USE",
-      actor_id: "desk_head_sg_001",
       reason: {
         decision: "Reviewed against cited source evidence for internal advisor use.",
         scenario_id: scenario.scenarioId,
@@ -323,6 +324,14 @@ async function reviewCopilotRun({
           "wb-copilot-review",
           { run_id: run.run_id, ...requestBody },
         ),
+        "X-Actor-Id": "desk_head_sg_001",
+        "X-Tenant-Id": "tenant-sg-001",
+        "X-Legal-Entity-Code": "PB_SG",
+        "X-Role": "ADVISORY_SUPERVISOR",
+        "X-Caller-Capabilities": "advisory.copilot.review",
+        "X-Principal-Status": "ACTIVE",
+        "X-Authorized-Proposal-Id": proposalId,
+        "X-Authorized-Portfolio-Id": portfolioId,
       },
     },
   );
@@ -452,6 +461,8 @@ export async function validateCanonicalAdvisoryCopilot({
       gatewayBaseUrl,
       run,
       action,
+      portfolioId,
+      proposalId,
       timeoutMs,
       proofExecutionId,
     });

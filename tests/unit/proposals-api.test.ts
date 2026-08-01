@@ -921,7 +921,6 @@ describe("proposal api", () => {
       "copilot_run_1",
       {
         action: "APPROVE_FOR_INTERNAL_USE",
-        actor_id: "desk_head_sg_001",
         reason: { decision: "Reviewed for internal advisor use." },
       },
       "idem-copilot-review",
@@ -961,6 +960,12 @@ describe("proposal api", () => {
         headers: expect.objectContaining({
           "Idempotency-Key": "idem-copilot-review",
         }),
+        body: JSON.stringify({
+          body: {
+            action: "APPROVE_FOR_INTERNAL_USE",
+            reason: { decision: "Reviewed for internal advisor use." },
+          },
+        }),
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
@@ -969,6 +974,7 @@ describe("proposal api", () => {
     expect(JSON.stringify(fetchMock.mock.calls)).not.toContain(
       "source_sections",
     );
+    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain("actor_id");
   });
 
   it("calls proposal version endpoints", async () => {

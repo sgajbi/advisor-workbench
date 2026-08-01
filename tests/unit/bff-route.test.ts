@@ -37,6 +37,12 @@ describe("BFF proxy route", () => {
     "WORKBENCH_ADVISOR_COCKPIT_LEGAL_ENTITY_CODE",
     "WORKBENCH_ADVISOR_COCKPIT_PRINCIPAL_STATUS",
     "WORKBENCH_ADVISOR_COCKPIT_PORTFOLIO_IDS",
+    "WORKBENCH_ADVISORY_COPILOT_AUTH_MODE",
+    "WORKBENCH_ADVISORY_COPILOT_ACTOR_ID",
+    "WORKBENCH_ADVISORY_COPILOT_TENANT_ID",
+    "WORKBENCH_ADVISORY_COPILOT_LEGAL_ENTITY_CODE",
+    "WORKBENCH_ADVISORY_COPILOT_ROLE",
+    "WORKBENCH_ADVISORY_COPILOT_PRINCIPAL_STATUS",
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
@@ -83,6 +89,9 @@ describe("BFF proxy route", () => {
       expect.arrayContaining([
         "X-Actor-Id",
         "X-Caller-Capabilities",
+        "X-Capabilities",
+        "X-Service-Identity",
+        "X-Authorized-Proposal-Id",
         "Authorization",
         "Cookie",
         "Proxy-Authorization",
@@ -763,6 +772,120 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       code: "advisor_cockpit_authenticated_principal_required",
+      status: "rejected",
+    });
+  });
+
+  it("derives Advisory Copilot review authority at the BFF instead of trusting browser headers", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"data":{}}', { status: 200 }));
+    const body = JSON.stringify({
+      body: {
+        action: "APPROVE_FOR_INTERNAL_USE",
+        reason: {
+          decision: "Reviewed against source evidence for internal advisor use.",
+        },
+      },
+    });
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": "idem-copilot-review-1",
+          "X-Actor-Id": "spoofed-actor",
+          "X-Tenant-Id": "spoofed-tenant",
+          "X-Legal-Entity-Code": "spoofed-entity",
+          "X-Role": "ADVISOR",
+          "X-Caller-Capabilities": "advisory.copilot.admin",
+          "X-Capabilities": "advisory.copilot.admin",
+          "X-Service-Identity": "browser-spoofed-service",
+          "X-Principal-Status": "SUSPENDED",
+          "X-Authorized-Proposal-Id": "spoofed-proposal",
+          "X-Authorized-Portfolio-Id": "UNENTITLED_PORTFOLIO",
+          Authorization: "Bearer browser-asserted-authority",
+          Cookie: "lotus_session=browser-asserted-cookie",
+        },
+        body,
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisory-copilot",
+          "actions",
+          "copilot_run_1",
+          "reviews",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
+    expect(String(upstreamUrl)).toBe(
+      "http://gateway.dev.lotus/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
+    );
+    expect(upstreamInit?.body).toBe(body);
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("desk_head_sg_001");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg-001");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
+    expect(upstreamHeaders.get("X-Legal-Entity-Code")).toBe("PB_SG");
+    expect(upstreamHeaders.get("X-Role")).toBe("ADVISORY_SUPERVISOR");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisory.copilot.review",
+    );
+    expect(upstreamHeaders.get("X-Principal-Status")).toBe("ACTIVE");
+    expect(upstreamHeaders.get("X-Authorized-Proposal-Id")).toBeNull();
+    expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBeNull();
+    expect(upstreamHeaders.get("X-Capabilities")).toBeNull();
+    expect(upstreamHeaders.get("X-Service-Identity")).toBeNull();
+    expect(upstreamHeaders.get("Authorization")).toBeNull();
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
+  });
+
+  it("rejects browser-selected Advisory Copilot reviewer identity before proxying", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": "idem-copilot-review-1",
+        },
+        body: JSON.stringify({
+          body: {
+            action: "APPROVE_FOR_INTERNAL_USE",
+            actor_id: "browser_selected_reviewer",
+          },
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisory-copilot",
+          "actions",
+          "copilot_run_1",
+          "reviews",
+        ],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      code: "advisory_copilot_invalid_request",
       status: "rejected",
     });
   });

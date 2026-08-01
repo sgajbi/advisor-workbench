@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
+import { applyAdvisoryCopilotCallerContextHeaders } from "@/features/advisory-copilot/caller-context";
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
 import { applyAdvisorBookCallerContextHeaders } from "@/features/advisor-book/caller-context";
 import { applyAdvisorCockpitCallerContextHeaders } from "@/features/advisor-cockpit/caller-context";
@@ -68,6 +69,18 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   });
   if (advisorCockpitAuthority.status === "rejected") {
     const rejection = advisorCockpitAuthorityRejection(advisorCockpitAuthority.reason);
+    return NextResponse.json(
+      { code: rejection.code, status: "rejected" },
+      { status: rejection.status, headers: { "cache-control": "no-store" } },
+    );
+  }
+  const advisoryCopilotAuthority = applyAdvisoryCopilotCallerContextHeaders(headers, {
+    method: request.method,
+    upstreamPath,
+    bodyText: requestBody,
+  });
+  if (advisoryCopilotAuthority.status === "rejected") {
+    const rejection = advisoryCopilotAuthorityRejection(advisoryCopilotAuthority.reason);
     return NextResponse.json(
       { code: rejection.code, status: "rejected" },
       { status: rejection.status, headers: { "cache-control": "no-store" } },
@@ -142,6 +155,24 @@ function advisorBookAuthorityRejection(
     case "invalid_authority_mode":
     case "invalid_advisor_book_configuration":
       return { code: "advisor_book_authority_configuration_rejected", status: 500 };
+  }
+}
+
+function advisoryCopilotAuthorityRejection(
+  reason: Exclude<
+    ReturnType<typeof applyAdvisoryCopilotCallerContextHeaders>,
+    { status: "not_applicable" } | { status: "applied" }
+  >["reason"],
+): { code: string; status: number } {
+  switch (reason) {
+    case "authenticated_principal_required":
+      return { code: "advisory_copilot_authenticated_principal_required", status: 401 };
+    case "invalid_advisory_copilot_request":
+      return { code: "advisory_copilot_invalid_request", status: 422 };
+    case "development_authority_not_allowed":
+    case "invalid_authority_mode":
+    case "invalid_advisory_copilot_configuration":
+      return { code: "advisory_copilot_authority_configuration_rejected", status: 500 };
   }
 }
 
