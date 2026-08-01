@@ -13,7 +13,8 @@ import {
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
   const search = request.nextUrl.search;
-  const url = `${resolveGatewayBaseUrl()}/${upstreamPath}${search}`;
+  const gatewayBaseUrl = resolveGatewayBaseUrl();
+  const url = `${gatewayBaseUrl}/${upstreamPath}${search}`;
 
   const headers = new Headers();
   request.headers.forEach((value, key) => {
@@ -74,10 +75,11 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
-  const advisoryCopilotAuthority = applyAdvisoryCopilotCallerContextHeaders(headers, {
+  const advisoryCopilotAuthority = await applyAdvisoryCopilotCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
     bodyText: requestBody,
+    gatewayBaseUrl,
   });
   if (advisoryCopilotAuthority.status === "rejected") {
     const rejection = advisoryCopilotAuthorityRejection(advisoryCopilotAuthority.reason);
@@ -160,7 +162,7 @@ function advisorBookAuthorityRejection(
 
 function advisoryCopilotAuthorityRejection(
   reason: Exclude<
-    ReturnType<typeof applyAdvisoryCopilotCallerContextHeaders>,
+    Awaited<ReturnType<typeof applyAdvisoryCopilotCallerContextHeaders>>,
     { status: "not_applicable" } | { status: "applied" }
   >["reason"],
 ): { code: string; status: number } {
@@ -169,6 +171,10 @@ function advisoryCopilotAuthorityRejection(
       return { code: "advisory_copilot_authenticated_principal_required", status: 401 };
     case "invalid_advisory_copilot_request":
       return { code: "advisory_copilot_invalid_request", status: 422 };
+    case "advisory_copilot_scope_not_entitled":
+      return { code: "advisory_copilot_scope_not_entitled", status: 403 };
+    case "advisory_copilot_scope_not_resolved":
+      return { code: "advisory_copilot_scope_not_resolved", status: 502 };
     case "development_authority_not_allowed":
     case "invalid_authority_mode":
     case "invalid_advisory_copilot_configuration":

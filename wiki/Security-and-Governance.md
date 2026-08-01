@@ -48,6 +48,25 @@ Advisor Cockpit browser requests carry business scope, not caller authority. The
 This is a local and test fixture, not production authentication. UAT and production remain closed
 until Workbench #436 and platform #563 supply the governed authenticated-session principal.
 
+## Advisory Copilot review authority boundary
+
+Advisory Copilot browser review submissions carry only business review intent, not reviewer,
+proposal, portfolio, or upstream authority. The Workbench BFF:
+
+1. discards browser-supplied caller identity, tenant, legal entity, role, capability, principal
+   status, proposal scope, portfolio scope, browser `Authorization`, browser `Cookie`, proxy
+   authorization, session id, and common upstream-auth identity aliases,
+2. rejects reviewer or authority claims in the review request body,
+3. resolves the source-owned Gateway copilot action run before forwarding the review mutation,
+4. verifies the run portfolio against the server-configured development entitlement list,
+5. forwards only the server-derived reviewer context, `advisory.copilot.review`, and the
+   source-owned proposal and portfolio identifiers needed by Gateway review authorization,
+6. rejects malformed, unresolved, or cross-entitlement source scope before Gateway receives the
+   review mutation.
+
+This is a local and test fixture, not production authentication. UAT and production remain closed
+until Workbench #436 and platform #563 supply the governed authenticated-session principal.
+
 Workbench now consumes the `lotus-platform.bff-principal-session.v1` source-contract identifiers
 for the governed BFF principal boundary and keeps the certification posture explicit:
 `not_certified`, `productionIdentityCertified=false`, `supportedFeaturePromoted=false`, and

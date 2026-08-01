@@ -119,6 +119,26 @@ query parameters, or the acknowledgement body is rejected. The fixture is reject
 `dev`, `development`, `local`, or `test`; UAT and production require Workbench #436 and the
 platform authenticated-principal contract in #563.
 
+### Advisory Copilot local review authority fixture
+
+Advisor-use copilot review submissions use a separate BFF-owned development fixture:
+
+```txt
+WORKBENCH_ADVISORY_COPILOT_AUTH_MODE=development_configured
+WORKBENCH_ADVISORY_COPILOT_ACTOR_ID=desk_head_sg_001
+WORKBENCH_ADVISORY_COPILOT_TENANT_ID=tenant-sg-001
+WORKBENCH_ADVISORY_COPILOT_LEGAL_ENTITY_CODE=PB_SG
+WORKBENCH_ADVISORY_COPILOT_ROLE=ADVISORY_SUPERVISOR
+WORKBENCH_ADVISORY_COPILOT_PRINCIPAL_STATUS=ACTIVE
+WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+```
+
+The browser submits only the review action and business reason. Workbench strips browser-supplied
+reviewer and authority headers, reads the source-owned Gateway copilot run, verifies the run
+portfolio against the configured entitlement list, and forwards the run's proposal and portfolio
+scope with `advisory.copilot.review`. Missing run scope or cross-entitlement scope fails closed
+before the review mutation reaches Gateway.
+
 ## First checks
 
 ```txt
