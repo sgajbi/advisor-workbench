@@ -176,6 +176,13 @@ Current repository posture:
     `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
     advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,
     human review posture, unsupported-evidence posture, and blocked client-publication boundaries.
+    Its BFF authority adapter strips browser-supplied reviewer, proposal, portfolio, tenant,
+    legal-entity, role, capability, principal-status, authorization, cookie, proxy-authorization,
+    session, and upstream-auth identity claims; resolves the action run through Gateway before
+    review submission; applies only server-derived reviewer context; verifies the source-owned
+    portfolio against the configured development entitlement; and forwards the source-owned
+    proposal and portfolio identifiers needed by Gateway review authority. Unresolved or
+    cross-entitlement run scope fails closed before the review mutation is proxied.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through

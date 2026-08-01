@@ -43,6 +43,7 @@ describe("BFF proxy route", () => {
     "WORKBENCH_ADVISORY_COPILOT_LEGAL_ENTITY_CODE",
     "WORKBENCH_ADVISORY_COPILOT_ROLE",
     "WORKBENCH_ADVISORY_COPILOT_PRINCIPAL_STATUS",
+    "WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS",
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
@@ -778,7 +779,22 @@ describe("BFF proxy route", () => {
 
   it("derives Advisory Copilot review authority at the BFF instead of trusting browser headers", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"data":{}}', { status: 200 }));
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              run: {
+                run_id: "copilot_run_1",
+                proposal_id: "proposal_sg_structured_note_001",
+                portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              },
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response('{"data":{}}', { status: 200 }));
     const body = JSON.stringify({
       body: {
         action: "APPROVE_FOR_INTERNAL_USE",
@@ -825,7 +841,24 @@ describe("BFF proxy route", () => {
     });
 
     expect(response.status).toBe(200);
-    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0];
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [scopeLookupUrl, scopeLookupInit] = fetchMock.mock.calls[0];
+    expect(String(scopeLookupUrl)).toBe(
+      "http://gateway.dev.lotus/api/v1/advisory-copilot/actions/copilot_run_1",
+    );
+    expect(scopeLookupInit).toMatchObject({
+      method: "GET",
+      cache: "no-store",
+    });
+    const scopeLookupHeaders = scopeLookupInit?.headers as Headers;
+    expect(scopeLookupHeaders.get("X-Actor-Id")).toBe("desk_head_sg_001");
+    expect(scopeLookupHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisory.copilot.read",
+    );
+    expect(scopeLookupHeaders.get("X-Authorized-Proposal-Id")).toBeNull();
+    expect(scopeLookupHeaders.get("X-Authorized-Portfolio-Id")).toBeNull();
+
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[1];
     expect(String(upstreamUrl)).toBe(
       "http://gateway.dev.lotus/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
     );
@@ -842,12 +875,122 @@ describe("BFF proxy route", () => {
       "advisory.copilot.review",
     );
     expect(upstreamHeaders.get("X-Principal-Status")).toBe("ACTIVE");
-    expect(upstreamHeaders.get("X-Authorized-Proposal-Id")).toBeNull();
-    expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBeNull();
+    expect(upstreamHeaders.get("X-Authorized-Proposal-Id")).toBe(
+      "proposal_sg_structured_note_001",
+    );
+    expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBe(
+      "PB_SG_GLOBAL_BAL_001",
+    );
     expect(upstreamHeaders.get("X-Capabilities")).toBeNull();
     expect(upstreamHeaders.get("X-Service-Identity")).toBeNull();
     expect(upstreamHeaders.get("Authorization")).toBeNull();
     expect(upstreamHeaders.get("Cookie")).toBeNull();
+  });
+
+  it("rejects Advisory Copilot review when Gateway run scope is outside server entitlement", async () => {
+    process.env.WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS = "PB_SG_GLOBAL_BAL_001";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            run: {
+              run_id: "copilot_run_1",
+              proposal_id: "proposal_sg_structured_note_001",
+              portfolio_id: "UNENTITLED_PORTFOLIO",
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          body: {
+            action: "APPROVE_FOR_INTERNAL_USE",
+            reason: { decision: "Reviewed against source evidence." },
+          },
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisory-copilot",
+          "actions",
+          "copilot_run_1",
+          "reviews",
+        ],
+      }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(403);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "advisory_copilot_scope_not_entitled",
+      status: "rejected",
+    });
+  });
+
+  it("rejects Advisory Copilot review when Gateway run scope cannot prove proposal and portfolio", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            run: {
+              run_id: "copilot_run_1",
+              proposal_id: "proposal_sg_structured_note_001",
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/advisory-copilot/actions/copilot_run_1/reviews",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          body: {
+            action: "APPROVE_FOR_INTERNAL_USE",
+            reason: { decision: "Reviewed against source evidence." },
+          },
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "advisory-copilot",
+          "actions",
+          "copilot_run_1",
+          "reviews",
+        ],
+      }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(502);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "advisory_copilot_scope_not_resolved",
+      status: "rejected",
+    });
   });
 
   it("rejects browser-selected Advisory Copilot reviewer identity before proxying", async () => {

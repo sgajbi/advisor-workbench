@@ -5,6 +5,9 @@ import {
 } from "@/features/workbench/caller-context";
 
 const ADVISORY_COPILOT_AUTH_MODE_ENV = "WORKBENCH_ADVISORY_COPILOT_AUTH_MODE";
+const ADVISORY_COPILOT_PORTFOLIO_IDS_ENV =
+  "WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS";
+const READ_CAPABILITY = "advisory.copilot.read";
 const REVIEW_CAPABILITY = "advisory.copilot.review";
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 
@@ -14,6 +17,7 @@ const DEFAULT_DEVELOPMENT_REVIEW_AUTHORITY = {
   legalEntityCode: "PB_SG",
   role: "ADVISORY_SUPERVISOR",
   principalStatus: "ACTIVE",
+  portfolioIds: "PB_SG_GLOBAL_BAL_001",
 } as const;
 
 const AUTHORITY_BODY_FIELDS = new Set([
@@ -32,21 +36,24 @@ type AdvisoryCopilotAuthorityRejection =
   | "development_authority_not_allowed"
   | "invalid_authority_mode"
   | "invalid_advisory_copilot_configuration"
-  | "invalid_advisory_copilot_request";
+  | "invalid_advisory_copilot_request"
+  | "advisory_copilot_scope_not_entitled"
+  | "advisory_copilot_scope_not_resolved";
 
 export type AdvisoryCopilotAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
   | { status: "rejected"; reason: AdvisoryCopilotAuthorityRejection };
 
-export function applyAdvisoryCopilotCallerContextHeaders(
+export async function applyAdvisoryCopilotCallerContextHeaders(
   headers: Headers,
   request: {
     method: string;
     upstreamPath: string;
     bodyText?: string;
+    gatewayBaseUrl: string;
   },
-): AdvisoryCopilotAuthorityResolution {
+): Promise<AdvisoryCopilotAuthorityResolution> {
   if (!isAdvisoryCopilotReviewRoute(request.method, request.upstreamPath)) {
     return { status: "not_applicable" };
   }
@@ -71,15 +78,21 @@ export function applyAdvisoryCopilotCallerContextHeaders(
     };
   }
 
-  headers.set("X-Actor-Id", context.actorId);
-  headers.set("X-Caller-Application", context.callerApplication);
-  headers.set("X-Tenant-Id", context.tenantId);
-  headers.set("X-Region", context.region);
-  headers.set("X-Booking-Center-Code", context.bookingCenterCode);
-  headers.set("X-Legal-Entity-Code", context.legalEntityCode);
-  headers.set("X-Role", context.role);
-  headers.set("X-Caller-Capabilities", REVIEW_CAPABILITY);
-  headers.set("X-Principal-Status", context.principalStatus);
+  const scope = await resolveAdvisoryCopilotReviewScope({
+    context,
+    gatewayBaseUrl: request.gatewayBaseUrl,
+    upstreamPath: request.upstreamPath,
+  });
+  if (!scope) {
+    return { status: "rejected", reason: "advisory_copilot_scope_not_resolved" };
+  }
+  if (!context.portfolioIds.has(scope.portfolioId)) {
+    return { status: "rejected", reason: "advisory_copilot_scope_not_entitled" };
+  }
+
+  applyDevelopmentHeaders(headers, context, REVIEW_CAPABILITY);
+  headers.set("X-Authorized-Proposal-Id", scope.proposalId);
+  headers.set("X-Authorized-Portfolio-Id", scope.portfolioId);
 
   return { status: "applied", mode: authorityMode };
 }
@@ -114,6 +127,15 @@ function hasAuthorityField(value: unknown): boolean {
 
 function resolveAdvisoryCopilotDevelopmentContext() {
   const defaults = resolveDefaultCallerContext();
+  const portfolioIds = new Set(
+    (
+      process.env[ADVISORY_COPILOT_PORTFOLIO_IDS_ENV]?.trim() ||
+      DEFAULT_DEVELOPMENT_REVIEW_AUTHORITY.portfolioIds
+    )
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
   const context = {
     actorId:
       process.env.WORKBENCH_ADVISORY_COPILOT_ACTOR_ID?.trim() ||
@@ -133,11 +155,17 @@ function resolveAdvisoryCopilotDevelopmentContext() {
     principalStatus:
       process.env.WORKBENCH_ADVISORY_COPILOT_PRINCIPAL_STATUS?.trim().toUpperCase() ||
       DEFAULT_DEVELOPMENT_REVIEW_AUTHORITY.principalStatus,
+    portfolioIds,
   };
 
   if (
-    Object.values(context).some((value) => !IDENTIFIER_PATTERN.test(value)) ||
-    context.principalStatus !== "ACTIVE"
+    Object.entries(context).some(
+      ([key, value]) =>
+        key !== "portfolioIds" && !IDENTIFIER_PATTERN.test(String(value).trim()),
+    ) ||
+    context.principalStatus !== "ACTIVE" ||
+    portfolioIds.size === 0 ||
+    [...portfolioIds].some((portfolioId) => !IDENTIFIER_PATTERN.test(portfolioId))
   ) {
     return null;
   }
@@ -146,4 +174,104 @@ function resolveAdvisoryCopilotDevelopmentContext() {
     legalEntityCode: context.legalEntityCode.toUpperCase(),
     role: context.role.toUpperCase(),
   };
+}
+
+type AdvisoryCopilotDevelopmentContext = NonNullable<
+  ReturnType<typeof resolveAdvisoryCopilotDevelopmentContext>
+>;
+
+type AdvisoryCopilotReviewScope = {
+  proposalId: string;
+  portfolioId: string;
+};
+
+async function resolveAdvisoryCopilotReviewScope({
+  context,
+  gatewayBaseUrl,
+  upstreamPath,
+}: {
+  context: AdvisoryCopilotDevelopmentContext;
+  gatewayBaseUrl: string;
+  upstreamPath: string;
+}): Promise<AdvisoryCopilotReviewScope | null> {
+  const runId = extractReviewRunId(upstreamPath);
+  if (!runId) {
+    return null;
+  }
+
+  const headers = new Headers();
+  headers.set("Accept", "application/json");
+  applyDevelopmentHeaders(headers, context, READ_CAPABILITY);
+
+  try {
+    const response = await fetch(
+      `${gatewayBaseUrl}/api/v1/advisory-copilot/actions/${encodeURIComponent(runId)}`,
+      {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) {
+      return null;
+    }
+    return extractReviewScopeFromPayload(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+function applyDevelopmentHeaders(
+  headers: Headers,
+  context: AdvisoryCopilotDevelopmentContext,
+  capability: string,
+) {
+  headers.set("X-Actor-Id", context.actorId);
+  headers.set("X-Caller-Application", context.callerApplication);
+  headers.set("X-Tenant-Id", context.tenantId);
+  headers.set("X-Region", context.region);
+  headers.set("X-Booking-Center-Code", context.bookingCenterCode);
+  headers.set("X-Legal-Entity-Code", context.legalEntityCode);
+  headers.set("X-Role", context.role);
+  headers.set("X-Caller-Capabilities", capability);
+  headers.set("X-Principal-Status", context.principalStatus);
+}
+
+function extractReviewRunId(upstreamPath: string): string | null {
+  const match = /^api\/v1\/advisory-copilot\/actions\/([^/]+)\/reviews$/.exec(
+    upstreamPath,
+  );
+  if (!match) {
+    return null;
+  }
+  try {
+    const runId = decodeURIComponent(match[1]);
+    return IDENTIFIER_PATTERN.test(runId) ? runId : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractReviewScopeFromPayload(
+  payload: unknown,
+): AdvisoryCopilotReviewScope | null {
+  const data = objectValue(objectValue(payload)?.data) ?? objectValue(payload);
+  const run = objectValue(data?.run) ?? data;
+  const proposalId = readIdentifier(run?.proposal_id);
+  const portfolioId = readIdentifier(run?.portfolio_id);
+  return proposalId && portfolioId ? { proposalId, portfolioId } : null;
+}
+
+function objectValue(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return IDENTIFIER_PATTERN.test(trimmed) ? trimmed : null;
 }
