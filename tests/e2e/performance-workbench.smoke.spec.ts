@@ -496,17 +496,18 @@ test.describe('Performance workbench smoke', () => {
       .getByRole('button', { name: /^Advisor Brief/i });
     await advisorTab.click();
     await expect(advisorTab).toHaveAttribute('aria-current', 'page');
-    await page.setViewportSize({ width: 720, height: 1000 });
 
     const disclosure = page.locator('details').filter({ hasText: 'How this was prepared' });
     const disclosureSummary = disclosure.locator('summary');
-    await expect(disclosureSummary).toContainText('Review required');
+    await expect(disclosureSummary).toContainText('Live output • review required');
     await expect(disclosureSummary).toContainText('Performance advisor brief');
 
     await disclosureSummary.focus();
     await page.keyboard.press('Enter');
     await expect(disclosure).toHaveAttribute('open', '');
     await expect(disclosure).toContainText('Prepared with AI assistance');
+    await expect(disclosure).toContainText('Availability');
+    await expect(disclosure).toContainText('Current output is available');
     await expect(disclosure).toContainText('Source evidence attached');
     await expect(disclosure).toContainText('Human review required');
     await expect(disclosure).toContainText('Not approved for client use');
@@ -516,6 +517,14 @@ test.describe('Performance workbench smoke', () => {
     );
     await expect(page.getByText('Client Talking Points')).toHaveCount(0);
 
+    await page.screenshot({
+      path: 'output/playwright/diagnostic-ai-assistance-disclosure-532-desktop.png',
+      fullPage: true,
+    });
+
+    await page.setViewportSize({ width: 720, height: 1000 });
+    await expect(disclosure).toHaveAttribute('open', '');
+
     const overflow = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
@@ -523,7 +532,7 @@ test.describe('Performance workbench smoke', () => {
     expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(2);
 
     await page.screenshot({
-      path: 'output/playwright/diagnostic-ai-assistance-disclosure-483.png',
+      path: 'output/playwright/diagnostic-ai-assistance-disclosure-532-narrow.png',
       fullPage: true,
     });
   });
