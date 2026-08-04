@@ -231,7 +231,14 @@ Current repository posture:
     `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
     states for advisor navigation but does not calculate suitability, risk impact, consent, or
-    implementation truth locally.
+    implementation truth locally. Proposal queue counts apply only to the current Gateway source
+    window. A non-null continuation cursor or an earlier visited window keeps the workflow context
+    partial, and advisors move between cursor windows explicitly; Workbench does not traverse an
+    unbounded proposal book or infer later-window contents. Suitability policy evidence remains
+    readable during a background source refresh but is not labelled current until all active
+    policy queries settle; a failed refresh retains prior evidence with an explicit partial
+    posture. Proposal simulation publishes persisted workflow context only after the advisory
+    handoff response returns a proposal id.
 19. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
     Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
     while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be
@@ -427,7 +434,10 @@ Important validation expectations:
    separate report-only evaluator for the broader `eslint-plugin-react-hooks` recommended rule set,
    including React Compiler compatibility rules; do not promote it to blocking until the current
    finding families are refactored and the governance test/context are updated,
-4. browser smoke is validated through Playwright,
+4. browser smoke is validated through Playwright; use `PLAYWRIGHT_PORT=<free-port>` when a shared
+   stack or another worktree owns port `3000`. An explicit port must bind the production server,
+   readiness probe, and browser base URL to the same listener and must disable existing-server
+   reuse so current-worktree proof cannot silently exercise stale code,
 4. Docker and build validation remain part of the merge gate,
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and

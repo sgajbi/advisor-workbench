@@ -67,7 +67,10 @@ concurrency group.
   production build, allows up to four minutes for build and server readiness, and owns the direct
   server child so cancellation cannot leave a shell-owned listener behind. Set
   `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1` only immediately after a successful production build in the
-  same worktree; the launcher fails closed when `.next/BUILD_ID` is absent.
+  same worktree; the launcher fails closed when `.next/BUILD_ID` is absent. When port `3000`
+  belongs to a shared stack or another worktree, set `PLAYWRIGHT_PORT=<free-port>`. An explicit port
+  binds the production server, readiness probe, and browser base URL to that listener and disables
+  existing-server reuse, so the proof cannot silently exercise a stale Workbench build.
 - `npm run test:e2e:performance:populated`
   deterministic production-browser proof for complete Performance economics, supported modules,
   evidence navigation, contribution detail, and desktop layout. The isolated fixture Gateway uses

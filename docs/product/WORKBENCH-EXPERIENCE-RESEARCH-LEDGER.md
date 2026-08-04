@@ -1846,3 +1846,101 @@ toolchain. No production dependency reaches this package.
 No wiki source change is required. This is a lockfile and dependency-governance correction; it does
 not change a supported product capability, operator command, or runtime contract. Issue #519 owns
 the remediation and exact-main closure evidence.
+
+## Proposal Workflow Source Truth After Save, Refresh, And Paging
+
+### Workflow objective
+
+Help a client advisor move from proposal construction into a retained advisory record, review
+current suitability evidence, and triage a bounded proposal queue without contradictory lifecycle
+claims or false book completeness.
+
+### Current workflow research
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   separates proposal construction from downstream delivery and implementation while keeping firm
+   criteria and suitability checks in the governed workflow.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   emphasizes connected advisor workflows, book insights, next business actions, and
+   exception-oriented portfolio review.
+3. [Salesforce Financial Services Cloud Action Plans](https://help.salesforce.com/s/articleView?id=sf.fsc_action_plans&language=en_US)
+   keeps source task status and responsible action visible through a repeatable business process.
+4. [TanStack Query useQuery](https://tanstack.com/query/latest/docs/framework/react/reference/useQuery)
+   distinguishes first-load `isLoading` from background `isFetching` and refetch failure with
+   retained cached data.
+5. [Carbon pagination guidance](https://carbondesignsystem.com/components/pagination/usage/)
+   recommends explicit user-controlled pagination when loading all available data would be costly
+   or difficult to consume.
+
+### Adopted decisions
+
+1. Promote the simulation workflow rail from construction-only to `Advisor draft saved` only after
+   the approved handoff returns a source proposal id.
+2. Keep cached policy evidence readable during background refresh, label the rail `Refreshing`, and
+   downgrade a failed refresh to partial evidence instead of silently calling the source current.
+3. Treat every continuation cursor and every non-initial cursor window as partial queue coverage.
+4. Provide explicit previous/next source-window controls backed by the real cursor contract; never
+   auto-traverse an unbounded advisor book in the browser.
+5. Centralize first-load, background-refresh, unavailable, cached-refresh-failure, and permission
+   posture in a reusable query projection and centralize cursor-window navigation in a reusable
+   Workbench control.
+
+### Rejected decisions
+
+1. Optimistic persisted status, browser-authored lifecycle stage, suitability outcome, approval
+   readiness, client publication, or execution posture.
+2. Discarding readable cached evidence during a background refresh or labelling it current before
+   the source settles.
+3. Treating a zero-row first window, a terminal continuation window, or one visible page as the
+   complete proposal queue.
+4. Exposing cursor values or transport terminology in advisor-facing copy.
+5. Automatically loading every proposal window merely to derive a browser-owned book total.
+
+### Publication decision
+
+No wiki source change is required. Issues #521, #522, and #523 harden the source truth of existing
+supported proposal routes without changing their route catalogue, backend ownership, operator
+commands, or supported-feature boundary. Repository context records the new paging and refresh
+invariants; the PR must still pass strict wiki parity before merge.
+
+## Current-Worktree Browser Proof Isolation
+
+### Validation objective
+
+Prove that local production-browser validation exercises the intended Workbench commit even when a
+shared platform stack or another worktree already owns the default listener.
+
+### Current-practice research
+
+Playwright's official
+[web server configuration](https://playwright.dev/docs/api/class-testconfig#test-config-web-server)
+defines `reuseExistingServer` as permission to use any process already available at the configured
+URL. It separately recommends aligning the browser `baseURL` with the web-server URL. A successful
+readiness response therefore proves listener availability, not source-worktree provenance.
+
+### Adopted decisions
+
+1. Accept one explicit `PLAYWRIGHT_PORT` in the valid TCP range and apply it consistently to the
+   Next production server, Playwright readiness URL, and browser base URL.
+2. Disable existing-server reuse whenever the caller selects a port, so a collision fails instead
+   of silently exercising an unrelated process.
+3. Preserve the convenient default local reuse behavior on port `3000` for deliberate development
+   sessions and preserve fail-closed non-reuse behavior in CI.
+4. Run exact-commit production proof in an isolated temporary Git worktree when the canonical
+   worktree's build output may be in use by a shared listener; remove the temporary worktree after
+   validation.
+
+### Rejected decisions
+
+1. Killing or replacing a shared platform listener merely to validate a feature branch.
+2. Treating recognizable page content, a successful HTTP response, or a green test against a reused
+   listener as proof of the current source commit.
+3. Hard-coding a second repository port that can eventually collide in the same way.
+4. Allowing malformed, zero, negative, fractional, or out-of-range port values to fall back
+   silently to the default.
+
+### Publication decision
+
+The browser-proof command contract changes, so `wiki/Validation-and-CI.md` is updated in the same
+PR. After merge, publish the Workbench wiki and verify strict source/publication parity before
+closing issue #524.
