@@ -1802,3 +1802,47 @@ No wiki source change is required. This slice corrects an existing supported Per
 and records its engineering authority in repository context and review ledgers; it does not change
 the operator runbook, route catalogue, supported feature set, or validation commands. The PR must
 still pass strict wiki parity before merge.
+
+## Follow-Up Brace Expansion Availability Advisory
+
+### Validation job
+
+The Workbench development toolchain must stay audit-clean without replacing mature framework,
+lint, or test infrastructure merely because a new transitive advisory appears. Remediation must
+patch the exact compatible consumer path and preserve the semantics of unrelated dependency lines.
+
+### Current security research
+
+GitHub's reviewed advisory
+[GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895), published to the advisory
+database on 2026-08-03, records that the 5.0.8 mitigation for brace expansion did not bound two
+intermediate arrays. A small crafted pattern can terminate Node through memory exhaustion, and a
+wider padded sequence can block the event loop for minutes. GitHub rates the issue High at CVSS
+7.5 and identifies 5.0.9 as the patched 5.x release.
+
+The Workbench lock graph contains one affected node: `minimatch@10.2.6` requests
+`brace-expansion@^5.0.8` through the maintained ESLint, TypeScript-ESLint, and test-exclude
+toolchain. No production dependency reaches this package.
+
+### Adopted decisions
+
+1. Keep the current stable Next, ESLint, TypeScript-ESLint, Vitest, and coverage-tool versions.
+2. Override only `minimatch`'s compatible brace-expansion consumer to exact patched 5.0.9.
+3. Preserve the package-lock integrity and add a governance regression for the narrow override.
+4. Require both the complete-graph high-severity audit and production-graph moderate-severity audit
+   to report zero vulnerabilities before accepting the PR.
+
+### Rejected decisions
+
+1. Audit suppression, allowlisting, or lowering either protected threshold.
+2. A global brace-expansion override that could force the 5.x implementation onto incompatible
+   older-major consumers.
+3. A preview, current-major, or unrelated toolchain upgrade in a transitive patch slice.
+4. Treating the development-only path as harmless when it blocks protected CI and can process
+   repository-controlled patterns.
+
+### Publication decision
+
+No wiki source change is required. This is a lockfile and dependency-governance correction; it does
+not change a supported product capability, operator command, or runtime contract. Issue #519 owns
+the remediation and exact-main closure evidence.
