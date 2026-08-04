@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,40 +8,35 @@ import type {
   AdvisorCockpitActionPageData,
   AdvisorCockpitPreparationPacketPageData,
   AdvisorCockpitSnapshotData,
+  AdvisorCockpitSupportabilityData,
 } from "../../src/features/proposals/types";
 
-const listAdvisorCockpitActionsMock = vi.fn(
-  async (_filters?: unknown): Promise<AdvisorCockpitActionPageData> => ({
-    total_count: 1,
-    items: [
-      {
-        action_item_id: "aci_policy_review_001",
-        action_item_version: 1,
-        action_family: "POLICY_REVIEW_REQUIRED",
-        status: "PENDING_REVIEW",
-        priority: "HIGH",
-        owner_role: "ADVISOR",
-        title: "Policy review required",
-        next_required_action: "Review policy evidence before client discussion.",
-        reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
-        evidence_refs: [
-          { summary: "Policy evaluation requires compliance review." },
-        ],
-        source_readiness_gaps: [
-          {
-            message:
-              "Policy review is pending before client-ready posture can change.",
-          },
-        ],
-        unsupported_capabilities: ["CLIENT_READY_PUBLICATION"],
-        acknowledgement_state: { acknowledged: false },
-      },
-    ],
-  }),
-);
-const getAdvisorCockpitSnapshotMock = vi.fn(async (
-  _filters?: unknown,
-): Promise<AdvisorCockpitSnapshotData> => ({
+const advisorAction: NonNullable<AdvisorCockpitActionPageData["items"]>[number] = {
+  action_item_id: "aci_policy_review_001",
+  action_item_version: 1,
+  action_family: "POLICY_REVIEW_REQUIRED",
+  status: "PENDING_REVIEW",
+  priority: "HIGH",
+  owner_role: "ADVISOR",
+  title: "Policy review required",
+  next_required_action: "Review policy evidence before client discussion.",
+  reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
+  evidence_refs: [
+    { summary: "Policy evaluation requires compliance review." },
+  ],
+  source_readiness_gaps: [
+    {
+      message: "Policy review is pending before client-ready posture can change.",
+    },
+  ],
+  unsupported_capabilities: ["CLIENT_READY_PUBLICATION"],
+  acknowledgement_state: { acknowledged: false },
+};
+const actionPageFixture: AdvisorCockpitActionPageData = {
+  total_count: 1,
+  items: [advisorAction],
+};
+const snapshotFixture: AdvisorCockpitSnapshotData = {
   snapshot_id: "cockpit_snapshot_1",
   action_counts: {
     "status.PENDING_REVIEW": 1,
@@ -55,26 +50,36 @@ const getAdvisorCockpitSnapshotMock = vi.fn(async (
     client_ready_publication: "BLOCKED",
   },
   unsupported_capabilities: ["EXTERNAL_CLIENT_COMMUNICATION"],
-}));
+};
+const preparationPageFixture: AdvisorCockpitPreparationPacketPageData = {
+  total_count: 1,
+  items: [
+    {
+      packet_id: "prep_1",
+      context_type: "PORTFOLIO",
+      context_ref: "PB_SG_GLOBAL_BAL_001",
+      status: "READY",
+      evidence_refs: [{ summary: "Proposal and policy evidence available." }],
+    },
+  ],
+};
+const supportabilityFixture: AdvisorCockpitSupportabilityData = {
+  posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+  unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
+};
+const listAdvisorCockpitActionsMock = vi.fn(
+  async (_filters?: unknown): Promise<AdvisorCockpitActionPageData> => actionPageFixture,
+);
+const getAdvisorCockpitSnapshotMock = vi.fn(
+  async (_filters?: unknown): Promise<AdvisorCockpitSnapshotData> => snapshotFixture,
+);
 const listAdvisorCockpitPreparationPacketsMock = vi.fn(
-  async (_filters?: unknown): Promise<AdvisorCockpitPreparationPacketPageData> => ({
-    total_count: 1,
-    items: [
-      {
-        packet_id: "prep_1",
-        context_type: "PORTFOLIO",
-        context_ref: "PB_SG_GLOBAL_BAL_001",
-        status: "READY",
-        evidence_refs: [{ summary: "Proposal and policy evidence available." }],
-      },
-    ],
-  }),
+  async (_filters?: unknown): Promise<AdvisorCockpitPreparationPacketPageData> =>
+    preparationPageFixture,
 );
 const getAdvisorCockpitSupportabilityMock = vi.fn(
-  async (_filters?: unknown) => ({
-    posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
-    unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
-  }),
+  async (_filters?: unknown): Promise<AdvisorCockpitSupportabilityData> =>
+    supportabilityFixture,
 );
 const acknowledgeAdvisorCockpitActionMock = vi.fn(
   async (_actionItemId: string, _payload: unknown, _options: unknown) => ({
@@ -111,6 +116,16 @@ function renderWithQueryClient(ui: React.ReactElement) {
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
   );
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 describe("AdvisorCockpitWorkspace", () => {
@@ -254,6 +269,153 @@ describe("AdvisorCockpitWorkspace", () => {
     });
 
     expect(screen.getByText(/Client-ready Blocked/)).toBeInTheDocument();
+  });
+
+  it("keeps the prior advisor view qualified until every acknowledgement refresh settles", async () => {
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    const acknowledgeButton = await screen.findByRole("button", {
+      name: "Acknowledge review",
+    });
+    const snapshotRefresh = createDeferred<AdvisorCockpitSnapshotData>();
+    const actionRefresh = createDeferred<AdvisorCockpitActionPageData>();
+    const preparationRefresh =
+      createDeferred<AdvisorCockpitPreparationPacketPageData>();
+    const supportabilityRefresh =
+      createDeferred<AdvisorCockpitSupportabilityData>();
+    getAdvisorCockpitSnapshotMock.mockImplementationOnce(
+      async () => await snapshotRefresh.promise,
+    );
+    listAdvisorCockpitActionsMock.mockImplementationOnce(
+      async () => await actionRefresh.promise,
+    );
+    listAdvisorCockpitPreparationPacketsMock.mockImplementationOnce(
+      async () => await preparationRefresh.promise,
+    );
+    getAdvisorCockpitSupportabilityMock.mockImplementationOnce(
+      async () => await supportabilityRefresh.promise,
+    );
+
+    fireEvent.click(acknowledgeButton);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Confirming advisor priorities",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
+    expect(screen.getByText("Policy evaluation requires compliance review.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirming..." })).toBeDisabled();
+
+    await act(async () => {
+      snapshotRefresh.resolve({
+        ...snapshotFixture,
+        snapshot_id: "cockpit_snapshot_2",
+      });
+    });
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Confirming advisor priorities",
+      }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      preparationRefresh.resolve(preparationPageFixture);
+    });
+    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
+
+    await act(async () => {
+      supportabilityRefresh.resolve(supportabilityFixture);
+    });
+    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
+
+    await act(async () => {
+      actionRefresh.resolve({
+        total_count: 1,
+        items: [
+          {
+            ...advisorAction,
+            action_item_version: 2,
+            title: "Policy review recorded",
+            acknowledgement_state: {
+              acknowledged: true,
+              acknowledged_by: "advisor_1",
+            },
+          },
+        ],
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Policy review recorded",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Confirmation in progress")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Acknowledged" })).toBeDisabled();
+    expect(acknowledgeAdvisorCockpitActionMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps cached advisor evidence partial and blocks another action when confirmation fails", async () => {
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    const acknowledgeButton = await screen.findByRole("button", {
+      name: "Acknowledge review",
+    });
+    listAdvisorCockpitActionsMock.mockRejectedValueOnce(
+      new Error("advisor action confirmation unavailable"),
+    );
+
+    fireEvent.click(acknowledgeButton);
+
+    expect(
+      await screen.findByText("Advisor evidence is not fully confirmed"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Evidence not confirmed")).toBeInTheDocument();
+    expect(screen.getByText("Policy evaluation requires compliance review.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Acknowledge review" })).toBeDisabled();
+    expect(
+      screen.getByText("Review recorded; latest advisor evidence is not fully confirmed."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Action required")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Acknowledge review" }));
+    expect(acknowledgeAdvisorCockpitActionMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides cached cockpit evidence when a required confirmation is permission blocked", async () => {
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    const acknowledgeButton = await screen.findByRole("button", {
+      name: "Acknowledge review",
+    });
+    getAdvisorCockpitSupportabilityMock.mockRejectedValueOnce(
+      new Error("Advisor cockpit supportability failed (403): forbidden"),
+    );
+
+    fireEvent.click(acknowledgeButton);
+
+    expect(
+      await screen.findByText("Advisor Cockpit access is not available"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Your current role does not permit this portfolio's advisor operating evidence to be viewed.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Policy review required")).not.toBeInTheDocument();
+    expect(screen.queryByText("Proposal and policy evidence available.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Acknowledge review" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps previously loaded preparation evidence visible when its refresh fails", async () => {
@@ -501,16 +663,19 @@ describe("AdvisorCockpitWorkspace", () => {
     );
 
     expect(
-      await screen.findByText(
-        "Advisor action worklist is unavailable. No fallback operating worklist is shown.",
-      ),
+      await screen.findByText("Advisor evidence is not fully confirmed"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Advisor action worklist unavailable"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Worklist unavailable")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Advisor action review unavailable" }),
+      screen.getByText(
+        "The action worklist could not be loaded from the advisory workflow.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Evidence not confirmed")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Advisor priorities not fully confirmed" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByText("No advisor actions require review"),
@@ -521,7 +686,7 @@ describe("AdvisorCockpitWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the worklist posture when a non-action cockpit source fails", async () => {
+  it("keeps the worklist visible but the composite partial when a non-action source fails", async () => {
     getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
       snapshot_id: "cockpit_snapshot_with_preparation_fallback",
       action_counts: {
@@ -556,19 +721,19 @@ describe("AdvisorCockpitWorkspace", () => {
       <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
-    expect(await screen.findByText("Action required")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Advisor evidence is not fully confirmed"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Evidence not confirmed")).toBeInTheDocument();
+    expect(screen.queryByText("Action required")).not.toBeInTheDocument();
     expect(screen.queryByText("Worklist unavailable")).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        "Some Advisor Cockpit evidence is unavailable. Available source-backed information remains visible.",
+        "Previously retrieved evidence remains visible, but one or more required sources could not be confirmed.",
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Policy review required" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Acknowledge review" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Policy review required")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Acknowledge review" })).toBeDisabled();
     expect(
       screen.queryByText("Advisor action worklist unavailable"),
     ).not.toBeInTheDocument();

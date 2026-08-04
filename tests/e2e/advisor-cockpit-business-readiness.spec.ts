@@ -2,7 +2,16 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
-async function mockAdvisorCockpit(page: Page) {
+async function mockAdvisorCockpit(
+  page: Page,
+  {
+    reconciliationGate,
+  }: {
+    reconciliationGate?: Promise<void>;
+  } = {},
+) {
+  let acknowledgementRecorded = false;
+  let acknowledgementRequests = 0;
   const fulfill = async (
     route: Route,
     data: Record<string, unknown>,
@@ -15,8 +24,14 @@ async function mockAdvisorCockpit(page: Page) {
       },
     });
   };
+  const waitForReconciliation = async () => {
+    if (acknowledgementRecorded && reconciliationGate) {
+      await reconciliationGate;
+    }
+  };
 
   await page.route("**/api/bff/api/v1/advisor-cockpit/snapshot?**", async (route) => {
+    await waitForReconciliation();
     await fulfill(route, {
       snapshot_id: "cockpit_snapshot_business_readiness",
       action_counts: {
@@ -34,6 +49,7 @@ async function mockAdvisorCockpit(page: Page) {
     });
   });
   await page.route("**/api/bff/api/v1/advisor-cockpit/actions?**", async (route) => {
+    await waitForReconciliation();
     await fulfill(route, {
       total_count: 1,
       items: [
@@ -51,7 +67,9 @@ async function mockAdvisorCockpit(page: Page) {
             { summary: "Policy evaluation requires compliance review." },
           ],
           unsupported_capabilities: ["CLIENT_READY_PUBLICATION"],
-          acknowledgement_state: { acknowledged: false },
+          acknowledgement_state: acknowledgementRecorded
+            ? { acknowledged: true, acknowledged_by: "advisor_1" }
+            : { acknowledged: false },
         },
       ],
     });
@@ -59,6 +77,7 @@ async function mockAdvisorCockpit(page: Page) {
   await page.route(
     "**/api/bff/api/v1/advisor-cockpit/preparation-packets?**",
     async (route) => {
+      await waitForReconciliation();
       await fulfill(route, {
         total_count: 1,
         items: [
@@ -78,12 +97,32 @@ async function mockAdvisorCockpit(page: Page) {
   await page.route(
     "**/api/bff/api/v1/advisor-cockpit/supportability?**",
     async (route) => {
+      await waitForReconciliation();
       await fulfill(route, {
         posture: "ADVISE_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
         unsupported_capabilities: ["OMS_ORDER_LIFECYCLE"],
       });
     },
   );
+  await page.route(
+    "**/api/bff/api/v1/advisor-cockpit/actions/*/acknowledgements?**",
+    async (route) => {
+      acknowledgementRequests += 1;
+      acknowledgementRecorded = true;
+      await fulfill(route, {
+        action_item: { action_item_id: "aci_policy_review_001" },
+        acknowledgement: {
+          acknowledged: true,
+          acknowledged_by: "advisor_1",
+        },
+        replayed: false,
+      });
+    },
+  );
+
+  return {
+    acknowledgementRequests: () => acknowledgementRequests,
+  };
 }
 
 test("keeps advisor readiness business-facing and support evidence on demand", async ({
@@ -128,4 +167,34 @@ test("keeps advisor readiness business-facing and support evidence on demand", a
       fullPage: true,
     });
   }
+});
+
+test("qualifies cached advisor evidence until acknowledgement reconciliation completes", async ({
+  page,
+}) => {
+  let releaseReconciliation!: () => void;
+  const reconciliationGate = new Promise<void>((resolve) => {
+    releaseReconciliation = resolve;
+  });
+  const mockState = await mockAdvisorCockpit(page, { reconciliationGate });
+  await page.goto(`/recommendations?portfolioId=${portfolioId}&mode=cockpit`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await page.getByRole("button", { name: "Acknowledge review" }).click();
+
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Confirming advisor priorities" }),
+  ).toBeVisible();
+  await expect(page.getByText("Confirmation in progress")).toBeVisible();
+  await expect(page.getByText("Policy evaluation requires compliance review.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Confirming..." })).toBeDisabled();
+  expect(mockState.acknowledgementRequests()).toBe(1);
+
+  releaseReconciliation();
+
+  await expect(page.getByText("Action required")).toBeVisible();
+  await expect(page.getByText("Confirmation in progress")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Acknowledged" })).toBeDisabled();
+  expect(mockState.acknowledgementRequests()).toBe(1);
 });
