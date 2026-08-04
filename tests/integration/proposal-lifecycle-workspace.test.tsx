@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -204,6 +204,87 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.getByText("1 proposal needs advisor action.")).toBeInTheDocument();
     expect(screen.getByText("Gateway · advisory proposal lifecycle")).toBeInTheDocument();
     expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps suitability posture loading until the policy queue and selected evidence settle", async () => {
+    let resolvePolicyQueue: ((value: typeof policyReviewQueueFixture) => void) | undefined;
+    let resolvePolicyEvaluation:
+      | ((value: Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>) => void)
+      | undefined;
+    getAdvisoryPolicyReviewQueueMock.mockImplementationOnce(
+      async () =>
+        await new Promise<typeof policyReviewQueueFixture>((resolve) => {
+          resolvePolicyQueue = resolve;
+        })
+    );
+    getAdvisoryPolicyEvaluationMock.mockImplementationOnce(
+      async () =>
+        await new Promise<Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>>(
+          (resolve) => {
+            resolvePolicyEvaluation = resolve;
+          }
+        )
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Loading proposal posture" })).toBeInTheDocument();
+
+    await act(async () => {
+      resolvePolicyQueue?.(policyReviewQueueFixture);
+    });
+    await waitFor(() => {
+      expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
+    });
+    expect(screen.getByRole("heading", { name: "Loading proposal posture" })).toBeInTheDocument();
+
+    await act(async () => {
+      resolvePolicyEvaluation?.({
+        ...policyReviewQueueFixture.items[0],
+        evaluation_hash: "sha256:policy-evaluation-1",
+        source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+        evaluation_json: { rule_results: [] },
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /need attention|queue ready for review/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Source current")).toBeInTheDocument();
+  });
+
+  it("publishes restricted posture for proposal API authorization responses with response detail", async () => {
+    listProposalsMock.mockRejectedValueOnce(
+      new Error("Proposal list failed (403): {\"detail\":\"portfolio access denied\"}")
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Proposal posture is restricted" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Proposal posture is unavailable")).not.toBeInTheDocument();
   });
 
   it("does not show fallback rows when lifecycle data is unavailable", async () => {
