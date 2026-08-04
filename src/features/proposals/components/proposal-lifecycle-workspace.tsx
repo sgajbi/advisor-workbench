@@ -70,8 +70,14 @@ export default function ProposalLifecycleWorkspace({
 
   const proposals = useMemo(() => data?.items ?? [], [data?.items]);
   const model = useMemo(
-    () => buildProposalLifecycleWorkspaceModel({ mode, proposals }),
-    [mode, proposals]
+    () =>
+      buildProposalLifecycleWorkspaceModel({
+        mode,
+        proposals,
+        hasMoreResults: Boolean(data?.next_cursor),
+        hasPreviousResults: sourceWindow.hasPrevious,
+      }),
+    [data?.next_cursor, mode, proposals, sourceWindow.hasPrevious]
   );
   const policyReviewModel = useMemo(
     () => buildPolicyReviewQueueModel({ records: policyQueueQuery.data?.items ?? [] }),
@@ -199,9 +205,9 @@ export default function ProposalLifecycleWorkspace({
       hasError: proposalSourcePosture.isUnavailable,
       hasUnavailableEvidence:
         policySourcesActive && policySourcePosture.isUnavailable,
-      hasRefreshFailure:
-        proposalSourcePosture.hasRefreshFailure ||
-        (policySourcesActive && policySourcePosture.hasRefreshFailure),
+      hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,
+      hasSupportingEvidenceRefreshFailure:
+        policySourcesActive && policySourcePosture.hasRefreshFailure,
       hasMoreResults: Boolean(data?.next_cursor),
       hasPreviousResults: sourceWindow.hasPrevious,
       windowNumber: sourceWindow.windowNumber,

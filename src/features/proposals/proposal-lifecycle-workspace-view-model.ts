@@ -130,9 +130,13 @@ function attentionCount(rows: ProposalLifecycleRow[]): number {
 export function buildProposalLifecycleWorkspaceModel({
   mode,
   proposals,
+  hasMoreResults = false,
+  hasPreviousResults = false,
 }: {
   mode: ProposalLifecycleMode;
   proposals: ProposalSummary[];
+  hasMoreResults?: boolean;
+  hasPreviousResults?: boolean;
 }): ProposalLifecycleModel {
   const definition = MODE_DEFINITIONS[mode];
   const rows = filterByMode(proposals, mode).map((proposal) => ({
@@ -148,9 +152,24 @@ export function buildProposalLifecycleWorkspaceModel({
     href: `/proposals/${proposal.proposal_id}`,
   }));
 
+  const hasAdjacentResults = hasMoreResults || hasPreviousResults;
+  const emptyPresentation =
+    rows.length === 0 && hasAdjacentResults
+      ? {
+          emptyTitle: "No matching proposals in this view",
+          emptyBody: hasMoreResults
+            ? "No proposals match the selected queue in the proposals currently shown. Review the next proposals before concluding the queue is clear."
+            : "No proposals match the selected queue in the proposals currently shown. Return to the previous proposals to continue the review.",
+        }
+      : {
+          emptyTitle: definition.emptyTitle,
+          emptyBody: definition.emptyBody,
+        };
+
   return {
     mode,
     ...definition,
+    ...emptyPresentation,
     totalCount: rows.length,
     attentionCount: attentionCount(rows),
     rows,

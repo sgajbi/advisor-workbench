@@ -113,7 +113,10 @@ function renderWithQueryClient(ui: React.ReactElement) {
       },
     },
   });
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  return {
+    ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
+    queryClient,
+  };
 }
 
 describe("ProposalLifecycleWorkspace", () => {
@@ -354,6 +357,39 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps a failed proposal refresh distinct from supporting policy evidence", async () => {
+    const { queryClient } = renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByText("Technology concentration trim")).toBeInTheDocument();
+    listProposalsMock.mockRejectedValueOnce(new Error("proposal refresh unavailable"));
+
+    await act(async () => {
+      await queryClient.refetchQueries({
+        queryKey: ["proposal-lifecycle-workspace", "PB_SG_GLOBAL_BAL_001"],
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "Proposal view is incomplete" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("The latest proposal view could not be confirmed.")).toBeInTheDocument();
+    expect(screen.getByText(/Retry the proposal view before relying/)).toBeInTheDocument();
+    expect(screen.queryByText("The latest policy-evidence refresh did not complete.")).not.toBeInTheDocument();
+  });
+
   it("keeps policy evidence hidden when its source denies access", async () => {
     getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
       new Error("Policy queue failed (403): {\"detail\":\"portfolio access denied\"}")
@@ -402,6 +438,8 @@ describe("ProposalLifecycleWorkspace", () => {
       await screen.findByRole("heading", { name: "More proposals available" })
     ).toBeInTheDocument();
     expect(screen.getByText("0 proposals in current view")).toBeInTheDocument();
+    expect(screen.getByText("No matching proposals in this view")).toBeInTheDocument();
+    expect(screen.queryByText("No proposals in the approval queue")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
 
     await waitFor(() => {

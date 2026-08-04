@@ -99,6 +99,8 @@ test("keeps proposal counts scoped to the current source window", async ({ page 
 
   await expect(page.getByRole("heading", { name: "More proposals available" })).toBeVisible();
   await expect(page.getByText("0 proposals in current view")).toBeVisible();
+  await expect(page.getByText("No matching proposals in this view")).toBeVisible();
+  await expect(page.getByText("No proposals in the approval queue")).toHaveCount(0);
   await page.getByRole("button", { name: "Next proposals" }).click();
 
   await expect(page.getByText("Cross-asset concentration review")).toBeVisible();

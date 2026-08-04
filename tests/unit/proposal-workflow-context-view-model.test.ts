@@ -15,7 +15,8 @@ const baseQueueInput = {
   permissionBlocked: false,
   hasError: false,
   hasUnavailableEvidence: false,
-  hasRefreshFailure: false,
+  hasProposalRefreshFailure: false,
+  hasSupportingEvidenceRefreshFailure: false,
   hasMoreResults: false,
   hasPreviousResults: false,
   windowNumber: 1,
@@ -135,7 +136,7 @@ describe("proposal workflow context view model", () => {
     expect(model.blockers).toEqual([
       "One or more supporting policy-evidence sources are unavailable.",
     ]);
-    expect(model.boundaryNote).toContain("do not establish complete queue or suitability posture");
+    expect(model.boundaryNote).toContain("do not establish complete queue posture");
   });
 
   it("keeps an empty first window partial while more proposals remain", () => {
@@ -167,5 +168,32 @@ describe("proposal workflow context view model", () => {
     expect(model.title).toBe("Current proposal view");
     expect(model.facts).toContainEqual({ label: "Current view", value: "2" });
     expect(model.boundaryNote).toContain("proposals shown in this view");
+  });
+
+  it("describes a failed proposal refresh as queue posture rather than policy evidence", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      hasProposalRefreshFailure: true,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Proposal view is incomplete");
+    expect(model.blockers).toContain("The latest proposal view could not be confirmed.");
+    expect(model.nextAction).toContain("Retry the proposal view");
+    expect(`${model.title} ${model.nextAction} ${model.blockers.join(" ")}`).not.toMatch(
+      /suitability|policy-evidence/
+    );
+  });
+
+  it("keeps failed supporting-evidence refresh guidance specific to suitability", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      hasSupportingEvidenceRefreshFailure: true,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Supporting evidence is incomplete");
+    expect(model.blockers).toContain("The latest policy-evidence refresh did not complete.");
+    expect(model.nextAction).toContain("policy-evidence refresh");
   });
 });
