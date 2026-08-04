@@ -6,6 +6,7 @@ import type {
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 const waveListResponse: DpmWaveGatewayResponse = {
   correlation_id: "corr-wave-list",
@@ -144,10 +145,9 @@ describe("DPM wave command-center view model", () => {
         requested_outputs: ["wave_pm_memo", "approval_checklist"],
         audience: ["portfolio_manager", "investment_control"],
       },
-      data: {
-        run_id: "wf_run_wave_memo_001",
-        status: "REVIEW_REQUIRED",
-      },
+      data: buildDpmAiWorkflowExecution("wave-memo", {
+        runId: "wf_run_wave_memo_001",
+      }),
     };
 
     const model = buildDpmWaveCommandCenterModel({
@@ -166,7 +166,7 @@ describe("DPM wave command-center view model", () => {
 
     expect(model.reportInputStatus).toBe("READY");
     expect(model.reportInputRef).toBe("dwv_001:dpm_wave_report_input");
-    expect(model.aiMemoStatus).toBe("REVIEW_REQUIRED");
+    expect(model.aiMemoStatus).toBe("AWAITING_REVIEW");
     expect(model.aiMemoRunId).toBe("wf_run_wave_memo_001");
     expect(model.externalExecutionClaimed).toBe("N/A");
   });
@@ -188,12 +188,9 @@ describe("DPM wave command-center view model", () => {
         requested_outputs: ["operations_summary", "blocking_conditions"],
         audience: ["operations", "portfolio_manager"],
       },
-      data: {
-        workflow_pack_run: {
-          run_id: "wf_run_ops_summary_001",
-          review_state: "REVIEW_REQUIRED",
-        },
-      },
+      data: buildDpmAiWorkflowExecution("operations-handoff", {
+        runId: "wf_run_ops_summary_001",
+      }),
     };
 
     const model = buildDpmWaveCommandCenterModel({
@@ -201,7 +198,7 @@ describe("DPM wave command-center view model", () => {
       operationsHandoffSummary: operationsSummary,
     });
 
-    expect(model.operationsHandoffSummaryStatus).toBe("REVIEW_REQUIRED");
+    expect(model.operationsHandoffSummaryStatus).toBe("AWAITING_REVIEW");
     expect(model.operationsHandoffSummaryRunId).toBe("wf_run_ops_summary_001");
     expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
   });

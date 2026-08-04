@@ -12,6 +12,7 @@ import {
   shouldShowOutcomeReviewStatePanel,
 } from "../../src/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewListItem } from "../../src/features/workbench/outcome-review-view-model";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 const review: OutcomeReviewListItem = {
   outcomeReviewId: "or_1",
@@ -128,16 +129,12 @@ describe("outcome review panel helpers", () => {
 
   it("describes governed narrative workflow-pack run posture", () => {
     expect(
-      describeOutcomeNarrativeRun({
-        execution: { status: "COMPLETED" },
-        workflow_pack_run: { review_state: "PENDING_REVIEW" },
-      }),
-    ).toBe("Review request Pending Review.");
+      describeOutcomeNarrativeRun(buildDpmAiWorkflowExecution("outcome-narrative")),
+    ).toBe("Review request Awaiting Review.");
     expect(
-      describeOutcomeNarrativeRun({
-        execution: { status: "COMPLETED" },
-      }),
-    ).toBe("Review request Completed.");
-    expect(describeOutcomeNarrativeRun({})).toBe("Review request Submitted.");
+      describeOutcomeNarrativeRun(
+        buildDpmAiWorkflowExecution("outcome-narrative", { reviewState: "ACCEPTED" })
+      )
+    ).toBe("Review request Accepted.");
   });
 });

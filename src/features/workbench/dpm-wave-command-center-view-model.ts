@@ -5,6 +5,7 @@ import type {
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "./types";
+import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
 
 export type DpmWaveCommandCenterPanelState =
   | "ready"
@@ -500,41 +501,26 @@ function buildCampaignLaunchPosture(
 
 function readWorkflowPackStatus(
   response:
-    | { data: Record<string, unknown> }
+    | { data: DpmAiWorkflowExecution }
     | null
     | undefined
 ): string {
   if (!response) {
     return "NOT_REQUESTED";
   }
-  return normalizeState(
-    readString(response.data, "status") ||
-      readString(response.data, "review_state") ||
-      readString(readRecord(response.data.workflow_pack_run), "review_state") ||
-      readString(readRecord(response.data.output), "review_state") ||
-      "REVIEW_REQUIRED"
-  );
+  return normalizeState(response.data.workflow_pack_run.review_state);
 }
 
 function readWorkflowPackRunId(
   response:
-    | { data: Record<string, unknown> }
+    | { data: DpmAiWorkflowExecution }
     | null
     | undefined
 ): string {
   if (!response) {
     return "N/A";
   }
-  const workflowPackRun = readRecord(response.data.workflow_pack_run);
-  const execution = readRecord(response.data.execution);
-  const audit = readRecord(execution.audit);
-  return (
-    readString(response.data, "run_id") ||
-    readString(response.data, "workflow_run_id") ||
-    readString(workflowPackRun, "run_id") ||
-    readString(audit, "workflow_pack_run_id") ||
-    "N/A"
-  );
+  return response.data.workflow_pack_run.run_id;
 }
 
 function readReportInputRef(
@@ -554,19 +540,14 @@ function readAiMemoStatus(memo: DpmWaveAiPmMemoResponse | null | undefined): str
   if (!memo) {
     return "NOT_REQUESTED";
   }
-  return normalizeState(
-    readString(memo.data, "status") ||
-      readString(memo.data, "review_state") ||
-      readString(readRecord(memo.data.output), "review_state") ||
-      "REVIEW_REQUIRED"
-  );
+  return normalizeState(memo.data.workflow_pack_run.review_state);
 }
 
 function readAiMemoRunId(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
   if (!memo) {
     return "N/A";
   }
-  return readString(memo.data, "run_id") || readString(memo.data, "workflow_run_id") || "N/A";
+  return memo.data.workflow_pack_run.run_id;
 }
 
 function resolvePanelState(

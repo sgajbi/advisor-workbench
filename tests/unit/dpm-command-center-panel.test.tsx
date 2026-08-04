@@ -7,6 +7,7 @@ import {
   runDpmCommandCenterMonitoring,
 } from "../../src/features/workbench/dpm-command-center-api";
 import type { DpmCommandCenterGatewayResponse } from "../../src/features/workbench/types";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/dpm-command-center-api", () => ({
   requestDpmExceptionSummary: vi.fn(),
@@ -168,12 +169,9 @@ describe("DpmCommandCenterPanel", () => {
         requested_outputs: ["exception_summary", "recommended_triage"],
         audience: ["portfolio_manager", "operations"],
       },
-      data: {
-        workflow_pack_run: {
-          run_id: "wf_run_exception_summary_001",
-          review_state: "REVIEW_REQUIRED",
-        },
-      },
+      data: buildDpmAiWorkflowExecution("exception-summary", {
+        runId: "wf_run_exception_summary_001",
+      }),
     });
 
     render(
@@ -210,7 +208,7 @@ describe("DpmCommandCenterPanel", () => {
         state: "ACTIVE",
       });
     });
-    expect(await screen.findByText("Exception summary Review Required.")).toBeInTheDocument();
+    expect(await screen.findByText("Exception summary Awaiting Review.")).toBeInTheDocument();
   });
 
   it("renders empty command-center state without claiming failure", () => {

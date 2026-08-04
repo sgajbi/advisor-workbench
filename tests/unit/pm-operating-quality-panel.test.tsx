@@ -19,6 +19,7 @@ import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
 } from "../../src/features/workbench/types";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
   buildDpmPmOperatingQualityReviewActionCorrelationId: vi.fn(
@@ -155,21 +156,10 @@ const summaryResponse: DpmPmOperatingQualitySummaryResponse = {
     requested_outputs: ["score_run_summary", "governance_summary"],
     audience: ["portfolio_manager", "investment_control"],
   },
-  data: {
-    execution: {
-      status: "COMPLETED",
-      audit: { workflow_pack_run_id: "packrun_pmq_1" },
-      result: {
-        structured_output: {
-          summary_status: "REVIEW_REQUIRED",
-        },
-      },
-    },
-    workflow_pack_run: {
-      run_id: "packrun_pmq_1",
-      workflow_authority_owner: "lotus-manage",
-    },
-  },
+  data: buildDpmAiWorkflowExecution("pm-quality-summary", {
+    runId: "packrun_pmq_1",
+    structuredOutput: { summary_status: "REVIEW_REQUIRED" },
+  }),
 };
 
 const fairnessAnalysisResponse: DpmPmOperatingQualityGatewayResponse = {

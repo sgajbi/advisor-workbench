@@ -11,6 +11,7 @@ import {
 } from "../../src/features/workbench/proof-pack-api";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 import type { DpmProofPackGatewayResponse } from "../../src/features/workbench/types";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/proof-pack-api", () => ({
   generateDpmProofPackFromRun: vi.fn(),
@@ -147,12 +148,7 @@ describe("useProofPackActions", () => {
       supportability: readyProofPack.supportability,
       ai_evidence_input: { proof_pack_id: "ppack_1" },
       memo_request: { requested_outputs: ["pm_memo"], audience: ["portfolio_manager"] },
-      data: {
-        workflow_pack_run: {
-          run_id: "packrun_ppack_1",
-          review_state: "AWAITING_REVIEW",
-        },
-      },
+      data: buildDpmAiWorkflowExecution("proof-pack-memo", { runId: "packrun_ppack_1" }),
     });
     const { result } = renderProofPackActions();
 

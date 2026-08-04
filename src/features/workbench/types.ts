@@ -1,3 +1,5 @@
+import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
+
 export type WorkbenchOverview = {
   correlation_id: string;
   contract_version: string;
@@ -1390,7 +1392,7 @@ export type DpmProofPackAiPmMemoResponse = {
   supportability: DpmProofPackSupportability;
   ai_evidence_input: Record<string, unknown>;
   memo_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type DpmWaveSupportability = {
@@ -1476,7 +1478,7 @@ export type DpmPmOperatingQualitySummaryResponse = {
   supportability: DpmPmOperatingQualitySupportability;
   score_run: Record<string, unknown>;
   summary_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type DpmWaveAiPmMemoResponse = {
@@ -1489,7 +1491,7 @@ export type DpmWaveAiPmMemoResponse = {
   supportability: DpmWaveSupportability;
   wave_report_input: Record<string, unknown>;
   memo_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type DpmOperationsHandoffSummaryResponse = {
@@ -1502,7 +1504,7 @@ export type DpmOperationsHandoffSummaryResponse = {
   supportability: DpmWaveSupportability;
   wave_report_input: Record<string, unknown>;
   handoff_summary_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type DpmExceptionSummaryResponse = {
@@ -1515,7 +1517,7 @@ export type DpmExceptionSummaryResponse = {
   supportability: DpmCommandCenterSupportability;
   exception_summary_input: Record<string, unknown>;
   exception_summary_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type DpmOutcomeReviewNarrativeResponse = {
@@ -1528,7 +1530,7 @@ export type DpmOutcomeReviewNarrativeResponse = {
   supportability: DpmOutcomeReviewSupportability;
   ai_evidence_input: Record<string, unknown>;
   narrative_request: Record<string, unknown>;
-  data: Record<string, unknown>;
+  data: DpmAiWorkflowExecution;
 };
 
 export type ReportJobHandleResponse = {

@@ -6,6 +6,7 @@ import {
   readDpmWorkflowPackStatus,
   shouldShowDpmCommandCenterStatePanel,
 } from "../../src/features/workbench/dpm-command-center-panel-helpers";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 describe("DPM command-center panel helpers", () => {
   it("maps command-center states to semantic badge tones", () => {
@@ -48,16 +49,15 @@ describe("DPM command-center panel helpers", () => {
     expect(shouldShowDpmCommandCenterStatePanel("complete", null, "Run failed")).toBe(true);
   });
 
-  it("reads workflow-pack status from Gateway-owned fields in precedence order", () => {
+  it("reads workflow-pack status from the typed Gateway execution contract", () => {
     expect(readDpmWorkflowPackStatus(undefined)).toBe("NOT_REQUESTED");
-    expect(readDpmWorkflowPackStatus({ status: "SUBMITTED" })).toBe("SUBMITTED");
-    expect(readDpmWorkflowPackStatus({ review_state: "AWAITING_REVIEW" })).toBe("AWAITING_REVIEW");
     expect(
-      readDpmWorkflowPackStatus({
-        workflow_pack_run: { review_state: "REVIEW_REQUIRED" },
-      })
-    ).toBe("REVIEW_REQUIRED");
-    expect(readDpmWorkflowPackStatus({ output: { review_state: "READY" } })).toBe("READY");
-    expect(readDpmWorkflowPackStatus({ workflow_pack_run: [] })).toBe("REVIEW_REQUIRED");
+      readDpmWorkflowPackStatus(buildDpmAiWorkflowExecution("exception-summary"))
+    ).toBe("AWAITING_REVIEW");
+    expect(
+      readDpmWorkflowPackStatus(
+        buildDpmAiWorkflowExecution("exception-summary", { reviewState: "ACCEPTED" })
+      )
+    ).toBe("ACCEPTED");
   });
 });

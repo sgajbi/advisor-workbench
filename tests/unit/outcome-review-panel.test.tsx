@@ -8,6 +8,7 @@ import {
   requestDpmOutcomeReviewAiNarrative,
   submitDpmOutcomeReviewReportJob,
 } from "../../src/features/workbench/outcome-review-api";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/outcome-review-api", () => ({
   getDpmOutcomeReviewReportInput: vi.fn(),
@@ -199,10 +200,7 @@ describe("OutcomeReviewPanel", () => {
         requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
         audience: ["portfolio_manager", "cio_office", "investment_control"],
       },
-      data: {
-        execution: { status: "COMPLETED" },
-        workflow_pack_run: { run_id: "packrun_or_1", workflow_authority_owner: "lotus-manage" },
-      },
+      data: buildDpmAiWorkflowExecution("outcome-narrative", { runId: "packrun_or_1" }),
     });
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
@@ -213,7 +211,7 @@ describe("OutcomeReviewPanel", () => {
         outcomeReviewId: "or_1",
       });
     });
-    expect(await screen.findByText("Review request Completed.")).toBeInTheDocument();
+    expect(await screen.findByText("Review request Awaiting Review.")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
       "Delivery Confirmation"
     );
@@ -244,10 +242,7 @@ describe("OutcomeReviewPanel", () => {
         requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
         audience: ["portfolio_manager", "cio_office", "investment_control"],
       },
-      data: {
-        execution: { status: "COMPLETED" },
-        workflow_pack_run: { run_id: "packrun_or_1" },
-      },
+      data: buildDpmAiWorkflowExecution("outcome-narrative", { runId: "packrun_or_1" }),
     });
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
@@ -255,7 +250,7 @@ describe("OutcomeReviewPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
 
     expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
-    expect(screen.getByText("Review request Completed.")).toBeInTheDocument();
+    expect(screen.getByText("Review request Awaiting Review.")).toBeInTheDocument();
   });
 
   it("renders blocked handoff posture from supportability", () => {
