@@ -54,7 +54,7 @@ export const PERFORMANCE_WORKSPACE_MODE_DEFINITIONS: PerformanceWorkspaceModeDef
     workspaceSubtitle: "Benchmark-aware return, attribution, contribution, and evidence review.",
     intro: {
       ariaLabel: "Advisor brief mode intro",
-      kicker: "Client-ready narrative",
+      kicker: "Internal working narrative",
       title: "Source-grounded brief, drilldowns, and supportability",
       description:
         "Keep the advisory summary anchored to the same benchmark-aware performance contract, with direct paths back to analysis when the narrative needs proof.",

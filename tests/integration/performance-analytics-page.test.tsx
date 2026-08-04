@@ -665,7 +665,7 @@ describe("PerformanceAnalyticsPage", () => {
       "Source-grounded brief, drilldowns, and supportability"
     );
     expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
-      "Client-ready narrative"
+      "Internal working narrative"
     );
     expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
   });
@@ -688,7 +688,7 @@ describe("PerformanceAnalyticsPage", () => {
       "Source-grounded brief, drilldowns, and supportability"
     );
     expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
-      "Client-ready narrative"
+      "Internal working narrative"
     );
     expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
   });
@@ -704,7 +704,7 @@ describe("PerformanceAnalyticsPage", () => {
       "Source-grounded brief, drilldowns, and supportability"
     );
     expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
-      "Client-ready narrative"
+      "Internal working narrative"
     );
     expect(
       await screen.findByRole("heading", { name: "Performance Advisor Brief" })
@@ -718,15 +718,17 @@ describe("PerformanceAnalyticsPage", () => {
       expect(supportability).toHaveTextContent("Partial");
     });
     expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
-    expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
+    expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Brief provenance")).toHaveTextContent(
-      "Execution local_openai_compatible • text.local • qwen3:8b"
-    );
+    expect(screen.getByText("How this was prepared")).toBeInTheDocument();
+    expect(screen.getByText("AI-assisted")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("How this was prepared"));
+    expect(screen.getByText("Human-review status not available")).toBeInTheDocument();
+    expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
@@ -738,7 +740,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Advisor Brief" }));
     fireEvent.click(
-      within(screen.getByLabelText("Client Talking Points")).getByRole("button", {
+      within(screen.getByLabelText("Advisor Talking Points")).getByRole("button", {
         name: /Top Contributor/,
       })
     );

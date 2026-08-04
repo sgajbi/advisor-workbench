@@ -228,7 +228,7 @@ const PERFORMANCE_SURFACE_ITEMS: Array<{
     detail: "Attribution and diagnostics",
     capabilityKey: "attributionDetail",
   },
-  { mode: "advisor", label: "Advisor Brief", detail: "Client-ready narrative" },
+  { mode: "advisor", label: "Advisor Brief", detail: "Internal working narrative" },
   {
     mode: "risk",
     label: "Risk Review",
