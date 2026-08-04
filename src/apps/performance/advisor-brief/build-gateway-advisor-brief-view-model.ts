@@ -2,6 +2,7 @@ import type {
   WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspace,
 } from "@/features/workbench/types";
+import { createAiAssistanceDisclosure } from "@/design-system";
 
 import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
@@ -52,46 +53,103 @@ export function buildGatewayAdvisorBriefViewModel(
     }),
     supportability: normalizeGatewaySupportability(advisorBrief),
     reviewNotes: buildGatewayReviewNotes(advisorBrief),
-    audit: {
-      taskId: advisorBrief.ai_audit.task_id ?? "explain.v1",
-      outputLabel: advisorBrief.ai_audit.output_label ?? "EXPLANATION_ONLY",
-      promptVersion: advisorBrief.ai_audit.prompt_version ?? "foundation.explain.v1",
-      providerMode: advisorBrief.ai_audit.provider_mode ?? "unknown",
-      providerId: advisorBrief.ai_audit.provider_id ?? null,
-      adapterKind: advisorBrief.ai_audit.adapter_kind ?? null,
-      modelId: advisorBrief.ai_audit.model_id ?? null,
-      generatedAt:
-        advisorBrief.ai_audit.generated_at ??
-        advisorBrief.as_of_date ??
-        workspace.as_of_date,
-      stubbed: advisorBrief.ai_audit.stubbed ?? true,
-      sourceRefs: resolveAdvisorBriefSourceRefs(advisorBrief),
-    },
+    aiDisclosure: buildGatewayAiDisclosure(advisorBrief),
   };
 }
 
 function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
-  const workflowPackRunRef = advisorBrief.workflow_pack_run
-    ? [`lotus-ai:workflow-pack-run:${advisorBrief.workflow_pack_run.run_id}`]
-    : [];
-  const workflowPackTaskFlowRef = advisorBrief.workflow_pack_task_flow
-    ? [`lotus-ai:workflow-pack-task-flow:${advisorBrief.workflow_pack_task_flow.task_flow_id}`]
-    : [];
   const aiEvidenceRefs = advisorBrief.ai_evidence.source_refs ?? [];
   if (aiEvidenceRefs.length > 0) {
-    return Array.from(new Set([...aiEvidenceRefs, ...workflowPackRunRef, ...workflowPackTaskFlowRef]));
+    return Array.from(new Set(aiEvidenceRefs));
   }
 
   const aiAuditRefs = advisorBrief.ai_audit.source_refs ?? [];
   if (aiAuditRefs.length > 0) {
-    return Array.from(new Set([...aiAuditRefs, ...workflowPackRunRef, ...workflowPackTaskFlowRef]));
+    return Array.from(new Set(aiAuditRefs));
   }
 
-  return [
-    ...workflowPackRunRef,
-    ...workflowPackTaskFlowRef,
-    `lotus-gateway:workbench:${advisorBrief.portfolio_id}:performance-advisor-brief:${advisorBrief.period}`,
+  return [];
+}
+
+function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
+  const sourceRefs = resolveAdvisorBriefSourceRefs(advisorBrief);
+  const hasPublishedAiProvenance = Boolean(
+    advisorBrief.ai_audit.task_id ||
+      advisorBrief.ai_audit.provider_id ||
+      advisorBrief.ai_audit.model_id ||
+      advisorBrief.ai_audit.generated_at,
+  );
+  const isSimulation = advisorBrief.ai_audit.stubbed === true;
+  const isLive = advisorBrief.ai_audit.stubbed === false && hasPublishedAiProvenance;
+  const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
+  const humanReview = mapWorkflowReviewState(workflowReviewState);
+  const diagnostics = [
+    advisorBrief.workflow_pack_run?.run_id
+      ? { label: "Workflow run", value: advisorBrief.workflow_pack_run.run_id }
+      : null,
+    advisorBrief.ai_audit.generated_at
+      ? { label: "Prepared", value: advisorBrief.ai_audit.generated_at }
+      : null,
+    advisorBrief.ai_audit.provider_id
+      ? { label: "Execution provider", value: advisorBrief.ai_audit.provider_id }
+      : null,
+    advisorBrief.ai_audit.model_id
+      ? { label: "Model", value: advisorBrief.ai_audit.model_id }
+      : null,
+    sourceRefs.length > 0
+      ? { label: "Source references", value: String(sourceRefs.length) }
+      : null,
+  ].filter((item): item is { label: string; value: string } => item !== null);
+  const limitations = [
+    ...advisorBrief.partial_failures.map((failure) => failure.detail),
+    ...advisorBrief.warnings,
+    ...(humanReview.state === "reviewed"
+      ? ["Reviewer identity and review time were not published with this response."]
+      : []),
+    ...(!hasPublishedAiProvenance
+      ? ["The source did not publish enough provenance to classify this output as live AI assistance."]
+      : []),
   ];
+
+  return createAiAssistanceDisclosure({
+    scopeLabel: "Performance advisor brief",
+    preparation: hasPublishedAiProvenance || isSimulation ? "ai-assisted" : "unavailable",
+    availability:
+      advisorBrief.status === "unavailable"
+        ? "unavailable"
+        : isSimulation
+          ? "simulation"
+          : advisorBrief.status === "partial" || advisorBrief.partial_failures.length > 0
+            ? "partial"
+            : isLive
+              ? "live"
+              : "partial",
+    evidence: {
+      state: sourceRefs.length > 0 ? "supported" : "missing",
+      sourceCount: sourceRefs.length,
+    },
+    humanReview,
+    clientUse: "blocked",
+    freshness: { state: "not-reported" },
+    limitations,
+    diagnostics,
+  });
+}
+
+function mapWorkflowReviewState(reviewState: string | undefined) {
+  switch (reviewState) {
+    case "ACCEPTED":
+      return { state: "reviewed" as const, sourceRecorded: true };
+    case "REJECTED":
+    case "ABANDONED":
+      return { state: "rejected" as const, sourceRecorded: true };
+    case "AWAITING_REVIEW":
+    case "REVIEW_REQUIRED":
+    case "PENDING":
+      return { state: "review-required" as const, sourceRecorded: false };
+    default:
+      return { state: "unavailable" as const, sourceRecorded: false };
+  }
 }
 
 function normalizeGatewaySupportability(
@@ -127,13 +185,13 @@ function normalizeGatewaySupportability(
   return [
     ...normalizedItems,
     {
-      label: "AI Run",
+      label: "Generation Run",
       value: normalizeWorkflowPackRuntimeValue(advisorBrief.workflow_pack_run.runtime_state),
       tone: normalizeWorkflowPackRuntimeTone(advisorBrief.workflow_pack_run.runtime_state),
       detail: buildWorkflowPackRunDetail(advisorBrief.workflow_pack_run),
     },
     {
-      label: "AI Review",
+      label: "Human Review",
       value: normalizeWorkflowPackReviewValue(advisorBrief.workflow_pack_run.review_state),
       tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
       detail: buildWorkflowPackReviewDetail(advisorBrief.workflow_pack_run),
@@ -141,7 +199,7 @@ function normalizeGatewaySupportability(
     ...(advisorBrief.workflow_pack_task_flow
       ? [
           {
-            label: "AI Task Flow",
+            label: "Workflow Progress",
             value: normalizeTaskFlowStatusValue(advisorBrief.workflow_pack_task_flow.flow_status),
             tone: normalizeTaskFlowStatusTone(advisorBrief.workflow_pack_task_flow.flow_status),
             detail: buildTaskFlowDetail(advisorBrief.workflow_pack_task_flow),

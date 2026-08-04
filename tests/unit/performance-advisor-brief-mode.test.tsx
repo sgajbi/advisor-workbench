@@ -237,10 +237,10 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Partial");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
       expect(supportability).toHaveTextContent("Authority lotus-gateway");
-      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("AWAITING REVIEW");
       expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
-      expect(supportability).toHaveTextContent("AI Task Flow");
+      expect(supportability).toHaveTextContent("Workflow Progress");
       expect(supportability).toHaveTextContent("WAITING FOR REVIEW");
       expect(supportability).toHaveTextContent("taskflow_advisor_brief_req-1");
       expect(supportability).toHaveTextContent("Current task-flow step: generate_advisor_brief.");
@@ -264,31 +264,26 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
       "Client-ready narrative"
     );
-    expect(screen.getByLabelText("Client Talking Points")).toHaveTextContent(
+    expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
     expect(screen.getByLabelText("Risks and Exceptions")).toHaveTextContent(
       "No material supportability exceptions are flagged"
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
-    expect(screen.getByText("Audit metadata")).toBeInTheDocument();
+    expect(screen.getByText("How this was prepared")).toBeInTheDocument();
+    expect(screen.getByText("Review required")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Brief provenance")).toHaveTextContent(
-      "Execution local_openai_compatible • text.local • qwen3:8b"
-    );
     const sourceMetricsSidecar = screen.getByLabelText("Advisor brief source metrics");
     expect(within(sourceMetricsSidecar).getByLabelText("Source Metrics")).toBeInTheDocument();
     expect(within(sourceMetricsSidecar).getByLabelText("Advisor brief supportability")).toBeInTheDocument();
-    expect(within(sourceMetricsSidecar).getByLabelText("Brief provenance")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("How this was prepared"));
 
-    fireEvent.click(screen.getByText("Audit metadata"));
-
-    expect(screen.getByText("Provider ID")).toBeInTheDocument();
+    expect(screen.getByText("Execution provider")).toBeInTheDocument();
     expect(screen.getByText("text.local")).toBeInTheDocument();
-    expect(screen.getByText("OPENAI_COMPATIBLE_LOCAL")).toBeInTheDocument();
     expect(screen.getByText("qwen3:8b")).toBeInTheDocument();
-    expect(screen.getByText("Live")).toBeInTheDocument();
+    expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
@@ -530,11 +525,11 @@ describe("PerformanceAdvisorBriefMode", () => {
         }
       );
       const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("AI Run");
+      expect(supportability).toHaveTextContent("Generation Run");
       expect(supportability).toHaveTextContent("COMPLETED");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
       expect(supportability).toHaveTextContent("Authority lotus-gateway");
-      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
       expect(supportability).toHaveTextContent("Supportability READY");
       expect(supportability).toHaveTextContent(
@@ -685,7 +680,7 @@ describe("PerformanceAdvisorBriefMode", () => {
 
     await waitFor(() => {
       const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("AI Review");
+      expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
       expect(supportability).toHaveTextContent(
         "Supportability READY • Superseded by packrun_advisor_brief_req-2"

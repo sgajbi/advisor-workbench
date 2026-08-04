@@ -10,7 +10,6 @@ import type { PerformanceAdvisorBriefViewModel } from "./advisor-brief/advisor-b
 
 export type {
   PerformanceAdvisorBriefAction,
-  PerformanceAdvisorBriefAudit,
   PerformanceAdvisorBriefEvidenceRef,
   PerformanceAdvisorBriefItem,
   PerformanceAdvisorBriefMetric,

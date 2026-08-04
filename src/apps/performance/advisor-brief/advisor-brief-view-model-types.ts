@@ -1,4 +1,5 @@
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
+import type { AiAssistanceDisclosureModel } from "@/design-system";
 
 export type PerformanceAdvisorBriefStatus =
   | "ready"
@@ -46,19 +47,6 @@ export type PerformanceAdvisorBriefSupportabilityItem = {
   detail?: string | null;
 };
 
-export type PerformanceAdvisorBriefAudit = {
-  taskId: string;
-  outputLabel: string;
-  promptVersion: string;
-  providerMode: string;
-  providerId: string | null;
-  adapterKind: string | null;
-  modelId: string | null;
-  generatedAt: string;
-  stubbed: boolean;
-  sourceRefs: string[];
-};
-
 export type PerformanceAdvisorBriefViewModel = {
   status: PerformanceAdvisorBriefStatus;
   title: string;
@@ -69,5 +57,5 @@ export type PerformanceAdvisorBriefViewModel = {
   sourceMetrics: PerformanceAdvisorBriefMetric[];
   supportability: PerformanceAdvisorBriefSupportabilityItem[];
   reviewNotes: string[];
-  audit: PerformanceAdvisorBriefAudit;
+  aiDisclosure: AiAssistanceDisclosureModel;
 };

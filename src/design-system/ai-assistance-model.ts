@@ -107,7 +107,7 @@ export function createAiAssistanceDisclosure(
     limitations.add("The source did not publish a freshness date.");
   }
 
-  if (input.preparation === "requested" || input.preparation === "unavailable") {
+  if (input.preparation === "requested") {
     reviewState = "unavailable";
     sourceRecorded = false;
     clientUse = "blocked";
