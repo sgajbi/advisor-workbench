@@ -193,6 +193,14 @@ Current repository posture:
     portfolio against the configured development entitlement; and forwards the source-owned
     proposal and portfolio identifiers needed by Gateway review authority. Unresolved or
     cross-entitlement run scope fails closed before the review mutation is proxied.
+    AI-assisted or generated output must use the shared `AiAssistanceDisclosure` contract beside
+    the affected output. Preparation method, output availability, source evidence, human review,
+    client-use permission, and freshness are independent source-owned dimensions. Missing or
+    contradictory provenance fails closed; request acceptance and technical completion never
+    upgrade evidence, review, freshness, or client-use posture. Deterministic Workbench narrative
+    must be identified as rule-based, and provider/model/run identifiers remain secondary support
+    details. Performance Advisor Brief and Advisory Copilot are the first governed adopters;
+    issue #528 owns the remaining DPM workflow-output adoption.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through

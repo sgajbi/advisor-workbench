@@ -171,6 +171,32 @@ Not supported in Workbench:
 7. client contact or client messaging,
 8. direct calls to `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive`.
 
+## AI-Assisted Output Disclosure
+
+Workbench provides one reusable, business-facing disclosure beside supported AI-assisted or
+rule-based narrative output.
+
+Implemented:
+
+1. distinguishes source-authored, rule-based, requested, AI-assisted, and unavailable preparation,
+2. reports output availability, source evidence, human review, client-use permission, and freshness
+   as separate dimensions,
+3. fails closed when provenance, evidence references, source-recorded review, client-use permission,
+   or freshness is not published,
+4. keeps provider, model, workflow-run, and evidence identifiers in secondary support details,
+5. uses a keyboard- and screen-reader-native disclosure control with visible non-color status text,
+6. applies the contract to Performance Advisor Brief and Advisory Copilot output,
+7. identifies Workbench-composed Performance fallback narrative as rule-based and internal working
+   material rather than fabricating an AI provider or implying client approval.
+
+Not yet supported:
+
+1. common disclosure across DPM Copilot wave, proof-pack, exception, operations-handoff,
+   outcome-review, and PM operating-quality workflow outputs; tracked in Workbench issue #528,
+2. client-use approval when the owning source does not explicitly publish live output, adequate
+   evidence, and a source-recorded human review,
+3. Workbench inference of freshness, reviewer identity, review time, or generation provenance.
+
 The RFC40-WTBD-010 portfolio-memory panel gives portfolio managers, operations, audit, and
 sales/pre-sales a single readable event trail for DPM evidence.
 
