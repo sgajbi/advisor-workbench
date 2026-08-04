@@ -139,10 +139,10 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     availability:
       advisorBrief.status === "unavailable"
         ? "unavailable"
-        : isSimulation
-          ? "simulation"
-          : isSuperseded
-            ? "stale"
+        : isSuperseded
+          ? "stale"
+          : isSimulation
+            ? "simulation"
           : advisorBrief.status === "partial" || advisorBrief.partial_failures.length > 0
             ? "partial"
             : isLive
