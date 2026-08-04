@@ -26,6 +26,7 @@ import {
 } from "../view-model";
 import type {
   PerformanceAdvisorBriefItem,
+  PerformanceAdvisorBriefMetric,
   PerformanceAdvisorBriefStatus,
   PerformanceAdvisorBriefSupportabilityItem,
   PerformanceAdvisorBriefViewModel,
@@ -136,6 +137,53 @@ export function buildFallbackAdvisorBriefViewModel({
         : {}),
     } satisfies PerformanceAdvisorBriefSupportabilityItem,
   ];
+  const sourceMetrics: PerformanceAdvisorBriefMetric[] = [
+    {
+      label: "Portfolio Return",
+      value: portfolioReturnValue,
+      supportingText: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
+      targetMode: "summary",
+      route,
+    },
+    {
+      label: "Benchmark Return",
+      value: benchmarkReturnValue,
+      supportingText: benchmarkLabel,
+      targetMode: "summary",
+      route,
+    },
+    {
+      label: "Active Return",
+      value: activeReturnValue,
+      supportingText: `${detailBasis} basis`,
+      targetMode: "summary",
+      route,
+    },
+    {
+      label: "Net Flow",
+      value: formatCurrency(selectedPerformance.net_cash_flow, currency),
+      supportingText: `Closing MV ${formatCurrency(selectedPerformance.end_market_value, currency)}`,
+      targetMode: "summary",
+      route,
+    },
+    {
+      label: "Ending MV",
+      value: formatCurrency(selectedPerformance.end_market_value, currency),
+      supportingText: formatDate(workspace.as_of_date),
+      targetMode: "summary",
+      route,
+    },
+  ];
+  const usableSourceCount =
+    status === "empty" || status === "unavailable" || status === "permission_blocked"
+      ? 0
+      : sourceMetrics.filter(hasUsableMetricValue).length;
+  const evidenceState =
+    usableSourceCount === 0
+      ? "missing"
+      : usableSourceCount === sourceMetrics.length
+        ? "supported"
+        : "limited";
 
   return {
     status,
@@ -174,43 +222,7 @@ export function buildFallbackAdvisorBriefViewModel({
       advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
       isDetailsPending,
     }),
-    sourceMetrics: [
-      {
-        label: "Portfolio Return",
-        value: portfolioReturnValue,
-        supportingText: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
-        targetMode: "summary",
-        route,
-      },
-      {
-        label: "Benchmark Return",
-        value: benchmarkReturnValue,
-        supportingText: benchmarkLabel,
-        targetMode: "summary",
-        route,
-      },
-      {
-        label: "Active Return",
-        value: activeReturnValue,
-        supportingText: `${detailBasis} basis`,
-        targetMode: "summary",
-        route,
-      },
-      {
-        label: "Net Flow",
-        value: formatCurrency(selectedPerformance.net_cash_flow, currency),
-        supportingText: `Closing MV ${formatCurrency(selectedPerformance.end_market_value, currency)}`,
-        targetMode: "summary",
-        route,
-      },
-      {
-        label: "Ending MV",
-        value: formatCurrency(selectedPerformance.end_market_value, currency),
-        supportingText: formatDate(workspace.as_of_date),
-        targetMode: "summary",
-        route,
-      },
-    ],
+    sourceMetrics,
     reviewNotes: buildReviewNotes({
       capabilities,
       advisorBriefUnavailable,
@@ -230,8 +242,8 @@ export function buildFallbackAdvisorBriefViewModel({
             ? "partial"
             : "unavailable",
       evidence: {
-        state: status === "unavailable" || status === "permission_blocked" ? "missing" : "supported",
-        sourceCount: status === "unavailable" || status === "permission_blocked" ? 0 : 5,
+        state: evidenceState,
+        sourceCount: usableSourceCount,
       },
       humanReview: {
         state:
@@ -253,6 +265,11 @@ export function buildFallbackAdvisorBriefViewModel({
     }),
     supportability,
   };
+}
+
+function hasUsableMetricValue(metric: PerformanceAdvisorBriefMetric): boolean {
+  const normalizedValue = metric.value.trim().toLowerCase();
+  return normalizedValue.length > 0 && normalizedValue !== "n/a";
 }
 
 function buildReviewNotes({

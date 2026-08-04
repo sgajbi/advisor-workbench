@@ -58,17 +58,28 @@ export function buildGatewayAdvisorBriefViewModel(
 }
 
 function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
-  const aiEvidenceRefs = advisorBrief.ai_evidence.source_refs ?? [];
+  const aiEvidenceRefs = normalizeSourceRefs(advisorBrief.ai_evidence.source_refs ?? []);
   if (aiEvidenceRefs.length > 0) {
-    return Array.from(new Set(aiEvidenceRefs));
+    return aiEvidenceRefs;
   }
 
-  const aiAuditRefs = advisorBrief.ai_audit.source_refs ?? [];
+  const aiAuditRefs = normalizeSourceRefs(advisorBrief.ai_audit.source_refs ?? []);
   if (aiAuditRefs.length > 0) {
-    return Array.from(new Set(aiAuditRefs));
+    return aiAuditRefs;
   }
 
   return [];
+}
+
+function normalizeSourceRefs(sourceRefs: readonly unknown[]): string[] {
+  return Array.from(
+    new Set(
+      sourceRefs
+        .filter((sourceRef): sourceRef is string => typeof sourceRef === "string")
+        .map((sourceRef) => sourceRef.trim())
+        .filter((sourceRef) => sourceRef.length > 0)
+    )
+  );
 }
 
 function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
@@ -82,12 +93,15 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
   const hasPublishedAiProvenance = aiProvenanceSignals.length >= 2;
   const isSimulation = advisorBrief.ai_audit.stubbed === true;
   const isLive = advisorBrief.ai_audit.stubbed === false && hasPublishedAiProvenance;
+  const isSuperseded = advisorBrief.workflow_pack_run?.superseded === true;
+  const replacementRunId = advisorBrief.workflow_pack_run?.replacement_run_id?.trim();
   const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
   const humanReview = mapWorkflowReviewState(workflowReviewState);
   const diagnostics = [
     advisorBrief.workflow_pack_run?.run_id
       ? { label: "Workflow run", value: advisorBrief.workflow_pack_run.run_id }
       : null,
+    replacementRunId ? { label: "Replacement run", value: replacementRunId } : null,
     advisorBrief.ai_audit.generated_at
       ? { label: "Prepared", value: advisorBrief.ai_audit.generated_at }
       : null,
@@ -110,6 +124,13 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     ...(!hasPublishedAiProvenance
       ? ["The source did not publish enough provenance to classify this output as live AI assistance."]
       : []),
+    ...(isSuperseded
+      ? [
+          replacementRunId
+            ? `This output is historical. Review replacement run ${replacementRunId} before use.`
+            : "This output is historical. The source did not publish a replacement run.",
+        ]
+      : []),
   ];
 
   return createAiAssistanceDisclosure({
@@ -120,6 +141,8 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
         ? "unavailable"
         : isSimulation
           ? "simulation"
+          : isSuperseded
+            ? "stale"
           : advisorBrief.status === "partial" || advisorBrief.partial_failures.length > 0
             ? "partial"
             : isLive

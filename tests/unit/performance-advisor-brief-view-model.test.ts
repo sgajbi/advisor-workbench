@@ -1,12 +1,61 @@
 import { describe, expect, it } from "vitest";
 
 import { buildPerformanceAdvisorBriefViewModel } from "../../src/apps/performance/advisor-brief-view-model";
+import type {
+  WorkbenchPerformanceAdvisorBrief,
+  WorkbenchPerformanceWorkspace,
+} from "../../src/features/workbench/types";
 import {
   buildPerformanceCapabilities,
   buildCombinedPartialPerformanceScenario,
   buildSupportedPerformanceScenario,
   buildUnavailableContributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
+
+function buildGatewayAdvisorBriefFixture(
+  workspace: WorkbenchPerformanceWorkspace,
+  overrides: Partial<WorkbenchPerformanceAdvisorBrief> = {},
+): WorkbenchPerformanceAdvisorBrief {
+  const base: WorkbenchPerformanceAdvisorBrief = {
+    correlation_id: "corr-advisor-brief-fixture",
+    contract_version: "v1",
+    portfolio_id: workspace.portfolio.portfolio_id,
+    portfolio: workspace.portfolio,
+    as_of_date: workspace.as_of_date,
+    period: workspace.period,
+    report_start_date: workspace.report_start_date,
+    report_end_date: workspace.report_end_date,
+    detail_basis: "NET",
+    chart_frequency: "monthly",
+    contribution_dimension: "asset_class",
+    attribution_dimension: "asset_class",
+    benchmark_code: workspace.benchmark_code,
+    status: "ready",
+    summary: "Source-backed advisor brief.",
+    talking_points: [],
+    recommended_actions: [],
+    risks_and_exceptions: [],
+    source_metrics: [],
+    supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+    ai_audit: {
+      task_id: "advisor-brief-task-1",
+      provider_id: "governed-provider",
+      model_id: "governed-model",
+      stubbed: false,
+      source_refs: [],
+    },
+    ai_evidence: { source_refs: [] },
+    warnings: [],
+    partial_failures: [],
+  };
+
+  return {
+    ...base,
+    ...overrides,
+    ai_audit: { ...base.ai_audit, ...overrides.ai_audit },
+    ai_evidence: { ...base.ai_evidence, ...overrides.ai_evidence },
+  };
+}
 
 describe("buildPerformanceAdvisorBriefViewModel", () => {
   it("builds a ready deterministic brief with source metrics and drilldown evidence", () => {
@@ -292,7 +341,126 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         { label: "Advisor Brief", value: "No Material Brief", tone: "danger" },
       ])
     );
+    expect(brief.aiDisclosure.evidence).toEqual({ state: "missing", sourceCount: 0 });
   });
+
+  it("reports limited fallback evidence when only some displayed source metrics are usable", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const workspace = {
+      ...scenario.workspace,
+      net_performance: {
+        ...scenario.workspace.net_performance,
+        active_return_pct: null,
+      },
+    };
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace,
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure.evidence).toEqual({ state: "limited", sourceCount: 4 });
+  });
+
+  it.each([
+    {
+      name: "trims and de-duplicates evidence references",
+      evidenceRefs: [" source:performance ", "source:performance", "source:benchmark"],
+      auditRefs: ["source:audit"],
+      expectedCount: 2,
+    },
+    {
+      name: "falls back to audit references when evidence references are blank",
+      evidenceRefs: [" ", "\t"],
+      auditRefs: [" source:audit ", "source:audit"],
+      expectedCount: 1,
+    },
+    {
+      name: "rejects whitespace-only references",
+      evidenceRefs: [" ", "\t"],
+      auditRefs: ["  "],
+      expectedCount: 0,
+    },
+  ])("$name", ({ evidenceRefs, auditRefs, expectedCount }) => {
+    const scenario = buildSupportedPerformanceScenario();
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        ai_evidence: { source_refs: evidenceRefs },
+        ai_audit: { source_refs: auditRefs },
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure.evidence.sourceCount).toBe(expectedCount);
+    expect(brief.aiDisclosure.evidence.state).toBe(expectedCount > 0 ? "supported" : "missing");
+  });
+
+  it.each([
+    [
+      "packrun_advisor_brief_req-2",
+      "This output is historical. Review replacement run packrun_advisor_brief_req-2 before use.",
+    ],
+    [null, "This output is historical. The source did not publish a replacement run."],
+  ] as const)(
+    "maps a superseded source run to stale output with replacement %s",
+    (replacementRunId, expectedLimitation) => {
+      const scenario = buildSupportedPerformanceScenario();
+      const brief = buildPerformanceAdvisorBriefViewModel({
+        workspace: scenario.workspace,
+        advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+          workflow_pack_run: {
+            run_id: "packrun_advisor_brief_req-1",
+            runtime_state: "COMPLETED",
+            review_state: "ACCEPTED",
+            allowed_review_actions: [],
+            supportability_status: "HISTORICAL",
+            review_pending: false,
+            superseded: true,
+            workflow_authority_owner: "lotus-gateway",
+            current_summary_note: "A newer advisor brief replaced this run.",
+            replacement_run_id: replacementRunId,
+            findings: [],
+          },
+        }),
+        capabilities: scenario.capabilities,
+        period: scenario.workspace.period,
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: scenario.workspace.benchmark_code ?? undefined,
+        isDetailsPending: false,
+      });
+
+      expect(brief.aiDisclosure).toMatchObject({
+        availability: "stale",
+        clientUse: "blocked",
+      });
+      expect(brief.aiDisclosure.limitations).toContain(expectedLimitation);
+      expect(brief.aiDisclosure.diagnostics).toEqual(
+        replacementRunId
+          ? expect.arrayContaining([
+              { label: "Replacement run", value: replacementRunId },
+            ])
+          : expect.not.arrayContaining([expect.objectContaining({ label: "Replacement run" })]),
+      );
+    },
+  );
 
   it("drops risk source facts and risk drilldowns when gateway evidence is not ready", () => {
     const scenario = buildSupportedPerformanceScenario();
