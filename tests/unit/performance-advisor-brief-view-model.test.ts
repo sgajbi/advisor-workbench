@@ -582,6 +582,61 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     );
   });
 
+  it("does not classify an audit timestamp alone as live AI provenance", () => {
+    const scenario = buildSupportedPerformanceScenario();
+
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: {
+        correlation_id: "corr-timestamp-only-ai-audit",
+        contract_version: "v1",
+        portfolio_id: "PF_1001",
+        portfolio: scenario.workspace.portfolio,
+        as_of_date: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        report_start_date: scenario.workspace.report_start_date,
+        report_end_date: scenario.workspace.report_end_date,
+        detail_basis: "NET",
+        chart_frequency: "monthly",
+        contribution_dimension: "asset_class",
+        attribution_dimension: "asset_class",
+        benchmark_code: scenario.workspace.benchmark_code,
+        status: "ready",
+        summary: "Advisor brief with incomplete preparation provenance.",
+        talking_points: [],
+        recommended_actions: [],
+        risks_and_exceptions: [],
+        source_metrics: [],
+        supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
+        ai_audit: {
+          stubbed: false,
+          generated_at: "2026-08-04T08:00:00Z",
+        },
+        ai_evidence: { source_refs: ["lotus-gateway:performance-summary"] },
+        warnings: [],
+        partial_failures: [],
+      },
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "supported", sourceCount: 1 },
+      clientUse: "blocked",
+    });
+    expect(brief.aiDisclosure.limitations).toContain(
+      "The source did not publish enough provenance to classify this output as live AI assistance.",
+    );
+  });
+
   it("maps workflow-pack posture into supportability, review notes, and audit provenance", () => {
     const scenario = buildSupportedPerformanceScenario();
 
