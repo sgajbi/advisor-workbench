@@ -56,6 +56,26 @@ export type AdvisorCockpitPreparationPosture =
   | "details-unavailable"
   | "clear";
 
+export type AdvisorCockpitEvidenceState =
+  | "loading"
+  | "permission-blocked"
+  | "unavailable"
+  | "refreshing"
+  | "partial"
+  | "ready";
+
+export type AdvisorCockpitEvidencePresentation = {
+  state: AdvisorCockpitEvidenceState;
+  title: string | null;
+  body: string | null;
+  hint: string | null;
+  decisionTitle: string | null;
+  recommendedAction: string | null;
+  statusLabel: string | null;
+  statusTone: SemanticBadgeTone;
+  actionsEnabled: boolean;
+};
+
 export type AdvisorCockpitReadinessRow = {
   label: string;
   value: string;
@@ -89,6 +109,108 @@ export type AdvisorCockpitModel = {
   preparationCount: number | null;
   preparationPosture: AdvisorCockpitPreparationPosture;
 };
+
+export function buildAdvisorCockpitEvidencePresentation({
+  isInitialLoading,
+  isPermissionBlocked,
+  isRefreshing,
+  isUnavailable,
+  hasRefreshFailure,
+  hasAnyEvidence,
+}: {
+  isInitialLoading: boolean;
+  isPermissionBlocked: boolean;
+  isRefreshing: boolean;
+  isUnavailable: boolean;
+  hasRefreshFailure: boolean;
+  hasAnyEvidence: boolean;
+}): AdvisorCockpitEvidencePresentation {
+  if (isInitialLoading) {
+    return {
+      state: "loading",
+      title: "Loading advisor priorities",
+      body: "Retrieving the current action, preparation, and readiness evidence.",
+      hint: null,
+      decisionTitle: null,
+      recommendedAction: null,
+      statusLabel: null,
+      statusTone: "default",
+      actionsEnabled: false,
+    };
+  }
+
+  if (isPermissionBlocked) {
+    return {
+      state: "permission-blocked",
+      title: "Advisor Cockpit access is not available",
+      body: "Your current role does not permit this portfolio's advisor operating evidence to be viewed.",
+      hint: "Use an entitled portfolio or request access through the bank's support process.",
+      decisionTitle: null,
+      recommendedAction: null,
+      statusLabel: null,
+      statusTone: "warn",
+      actionsEnabled: false,
+    };
+  }
+
+  if (isUnavailable && !hasAnyEvidence) {
+    return {
+      state: "unavailable",
+      title: "Advisor Cockpit evidence is unavailable",
+      body: "Current action, preparation, and readiness evidence could not be retrieved.",
+      hint: "Retry after the advisory workflow becomes available; no fallback operating posture is shown.",
+      decisionTitle: null,
+      recommendedAction: null,
+      statusLabel: null,
+      statusTone: "warn",
+      actionsEnabled: false,
+    };
+  }
+
+  if (hasRefreshFailure || isUnavailable) {
+    return {
+      state: "partial",
+      title: "Advisor evidence is not fully confirmed",
+      body: isRefreshing
+        ? "One or more required evidence sources could not be confirmed. Remaining checks are still in progress, and previously retrieved evidence remains visible."
+        : "Previously retrieved evidence remains visible, but one or more required sources could not be confirmed.",
+      hint: "Verify advisor workflow readiness before taking another action or using this posture in a client discussion.",
+      decisionTitle: "Advisor priorities not fully confirmed",
+      recommendedAction:
+        "Review visible evidence as previously retrieved and verify readiness before taking another action.",
+      statusLabel: "Evidence not confirmed",
+      statusTone: "warn",
+      actionsEnabled: false,
+    };
+  }
+
+  if (isRefreshing) {
+    return {
+      state: "refreshing",
+      title: "Confirming advisor priorities",
+      body: "The current advisor view remains available while action, preparation, and readiness evidence is confirmed.",
+      hint: "Wait for confirmation before recording another review or relying on this posture for a client discussion.",
+      decisionTitle: "Confirming advisor priorities",
+      recommendedAction:
+        "Wait for the latest action, preparation, and readiness evidence before taking another action.",
+      statusLabel: "Confirmation in progress",
+      statusTone: "default",
+      actionsEnabled: false,
+    };
+  }
+
+  return {
+    state: "ready",
+    title: null,
+    body: null,
+    hint: null,
+    decisionTitle: null,
+    recommendedAction: null,
+    statusLabel: null,
+    statusTone: "default",
+    actionsEnabled: true,
+  };
+}
 
 export function buildAdvisorCockpitModel({
   snapshot,

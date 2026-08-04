@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAdvisorCockpitModel } from "../../src/features/proposals/advisor-cockpit-view-model";
+import {
+  buildAdvisorCockpitEvidencePresentation,
+  buildAdvisorCockpitModel,
+} from "../../src/features/proposals/advisor-cockpit-view-model";
 import type {
   AdvisorCockpitActionPageData,
   AdvisorCockpitPreparationPacketPageData,
@@ -93,6 +96,84 @@ const preparationPage: AdvisorCockpitPreparationPacketPageData = {
 };
 
 describe("advisor cockpit view model", () => {
+  it.each([
+    {
+      name: "initial loading",
+      input: { isInitialLoading: true },
+      state: "loading",
+      title: "Loading advisor priorities",
+      actionsEnabled: false,
+    },
+    {
+      name: "permission restriction",
+      input: { isPermissionBlocked: true, hasAnyEvidence: true },
+      state: "permission-blocked",
+      title: "Advisor Cockpit access is not available",
+      actionsEnabled: false,
+    },
+    {
+      name: "background confirmation",
+      input: { isRefreshing: true, hasAnyEvidence: true },
+      state: "refreshing",
+      title: "Confirming advisor priorities",
+      actionsEnabled: false,
+    },
+    {
+      name: "failed confirmation with retained evidence",
+      input: { hasRefreshFailure: true, hasAnyEvidence: true },
+      state: "partial",
+      title: "Advisor evidence is not fully confirmed",
+      actionsEnabled: false,
+    },
+    {
+      name: "complete unavailability",
+      input: { isUnavailable: true },
+      state: "unavailable",
+      title: "Advisor Cockpit evidence is unavailable",
+      actionsEnabled: false,
+    },
+    {
+      name: "confirmed evidence",
+      input: { hasAnyEvidence: true },
+      state: "ready",
+      title: null,
+      actionsEnabled: true,
+    },
+  ])(
+    "presents $name without promoting unsettled evidence",
+    ({ input, state, title, actionsEnabled }) => {
+      const presentation = buildAdvisorCockpitEvidencePresentation({
+        isInitialLoading: false,
+        isPermissionBlocked: false,
+        isRefreshing: false,
+        isUnavailable: false,
+        hasRefreshFailure: false,
+        hasAnyEvidence: false,
+        ...input,
+      });
+
+      expect(presentation).toMatchObject({ state, title, actionsEnabled });
+    },
+  );
+
+  it("keeps a known source failure partial while remaining evidence is still being checked", () => {
+    expect(
+      buildAdvisorCockpitEvidencePresentation({
+        isInitialLoading: false,
+        isPermissionBlocked: false,
+        isRefreshing: true,
+        isUnavailable: false,
+        hasRefreshFailure: true,
+        hasAnyEvidence: true,
+      }),
+    ).toMatchObject({
+      state: "partial",
+      title: "Advisor evidence is not fully confirmed",
+      body: expect.stringContaining("Remaining checks are still in progress"),
+      actionsEnabled: false,
+    });
+  });
+
   it("projects source-owned cockpit fields into business-facing rows without changing posture", () => {
     const model = buildAdvisorCockpitModel({
       snapshot,

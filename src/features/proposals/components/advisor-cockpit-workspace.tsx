@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Alert, CircularProgress, Stack } from "@mui/material";
+import { Alert, AlertTitle } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -12,6 +12,11 @@ import {
   Text,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import {
+  combineQuerySourcePostures,
+  projectQuerySourcePosture,
+} from "@/features/platform-runtime/query-source-posture";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import {
   acknowledgeAdvisorCockpitAction,
@@ -21,6 +26,7 @@ import {
   listAdvisorCockpitPreparationPackets,
 } from "../api";
 import {
+  buildAdvisorCockpitEvidencePresentation,
   buildAdvisorCockpitModel,
   type AdvisorCockpitActionRow,
   type AdvisorCockpitModel,
@@ -62,6 +68,49 @@ export default function AdvisorCockpitWorkspace({
         portfolioId,
       }),
     ...workbenchStrictQueryDefaults,
+  });
+  const snapshotSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(snapshotQuery.data),
+    isLoading: snapshotQuery.isLoading,
+    isFetching: snapshotQuery.isFetching,
+    hasError: Boolean(snapshotQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(snapshotQuery.error),
+  });
+  const actionSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(actionQuery.data),
+    isLoading: actionQuery.isLoading,
+    isFetching: actionQuery.isFetching,
+    hasError: Boolean(actionQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(actionQuery.error),
+  });
+  const preparationSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(preparationQuery.data),
+    isLoading: preparationQuery.isLoading,
+    isFetching: preparationQuery.isFetching,
+    hasError: Boolean(preparationQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(preparationQuery.error),
+  });
+  const supportabilitySourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(supportabilityQuery.data),
+    isLoading: supportabilityQuery.isLoading,
+    isFetching: supportabilityQuery.isFetching,
+    hasError: Boolean(supportabilityQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(supportabilityQuery.error),
+  });
+  const cockpitSourcePosture = combineQuerySourcePostures([
+    snapshotSourcePosture,
+    actionSourcePosture,
+    preparationSourcePosture,
+    supportabilitySourcePosture,
+  ]);
+  const evidencePresentation = buildAdvisorCockpitEvidencePresentation({
+    ...cockpitSourcePosture,
+    hasAnyEvidence: Boolean(
+      snapshotQuery.data ||
+        actionQuery.data ||
+        preparationQuery.data ||
+        supportabilityQuery.data,
+    ),
   });
   const model = useMemo(
     () =>
@@ -113,42 +162,70 @@ export default function AdvisorCockpitWorkspace({
       ]);
     },
   });
-  const isLoading =
-    snapshotQuery.isLoading ||
-    actionQuery.isLoading ||
-    preparationQuery.isLoading ||
-    supportabilityQuery.isLoading;
-  const hasError = Boolean(
-    snapshotQuery.error ||
-      actionQuery.error ||
-      preparationQuery.error ||
-      supportabilityQuery.error,
-  );
-  const actionWorklistUnavailable = Boolean(actionQuery.error);
-  const preparationRefreshUnavailable = Boolean(
-    preparationQuery.error && preparationQuery.data,
-  );
-  const actionStatus = actionWorklistUnavailable
+  const actionWorklistUnavailable = actionSourcePosture.isUnavailable;
+  const preparationRefreshUnavailable =
+    preparationSourcePosture.hasRefreshFailure;
+  const actionStatus = evidencePresentation.statusLabel
+    ? {
+        label: evidencePresentation.statusLabel,
+        tone: evidencePresentation.statusTone,
+      }
+    : actionWorklistUnavailable
     ? { label: "Worklist unavailable", tone: "warn" as const }
     : model.actionPosture === "actionable"
       ? { label: "Action required", tone: "warn" as const }
       : model.actionPosture === "details-unavailable"
         ? { label: "Action details unavailable", tone: "warn" as const }
         : { label: "No open actions", tone: "success" as const };
-  const primaryDecision = actionWorklistUnavailable
-    ? "Advisor action review unavailable"
-    : model.primaryDecision;
-  const recommendedAction = actionWorklistUnavailable
-    ? "Restore Advisor Cockpit worklist access before relying on action posture for client discussion."
-    : model.recommendedAction;
+  const primaryDecision =
+    evidencePresentation.decisionTitle ??
+    (actionWorklistUnavailable
+      ? "Advisor action review unavailable"
+      : model.primaryDecision);
+  const recommendedAction =
+    evidencePresentation.recommendedAction ??
+    (actionWorklistUnavailable
+      ? "Restore Advisor Cockpit worklist access before relying on action posture for client discussion."
+      : model.recommendedAction);
 
-  if (isLoading) {
+  if (evidencePresentation.state === "loading") {
     return (
       <SectionBlock>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <CircularProgress size={16} />
-          <Text variant="body">Loading advisor cockpit...</Text>
-        </Stack>
+        <ScreenStatePanel
+          kind="loading"
+          title={evidencePresentation.title!}
+          body={evidencePresentation.body!}
+          surface="default"
+          rows={4}
+        />
+      </SectionBlock>
+    );
+  }
+
+  if (evidencePresentation.state === "permission-blocked") {
+    return (
+      <SectionBlock>
+        <ScreenStatePanel
+          kind="permission_blocked"
+          title={evidencePresentation.title!}
+          body={evidencePresentation.body!}
+          hint={evidencePresentation.hint ?? undefined}
+          surface="default"
+        />
+      </SectionBlock>
+    );
+  }
+
+  if (evidencePresentation.state === "unavailable") {
+    return (
+      <SectionBlock>
+        <ScreenStatePanel
+          kind="error"
+          title={evidencePresentation.title!}
+          body={evidencePresentation.body!}
+          hint={evidencePresentation.hint ?? undefined}
+          surface="default"
+        />
       </SectionBlock>
     );
   }
@@ -158,12 +235,19 @@ export default function AdvisorCockpitWorkspace({
       title={model.title}
       subtitle="Advisor operating priorities, preparation evidence, client-use boundaries, and review acknowledgement."
     >
-      {hasError ? (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          {actionWorklistUnavailable
-            ? "Advisor action worklist is unavailable. No fallback operating worklist is shown."
-            : "Some Advisor Cockpit evidence is unavailable. Available source-backed information remains visible."}
+      {evidencePresentation.state === "refreshing" ? (
+        <Alert severity="info" role="status" aria-live="polite" sx={{ mb: 1 }}>
+          <AlertTitle>{evidencePresentation.title}</AlertTitle>
+          {evidencePresentation.body} {evidencePresentation.hint}
         </Alert>
+      ) : evidencePresentation.state === "partial" ? (
+        <ScreenStatePanel
+          kind="partial"
+          title={evidencePresentation.title!}
+          body={evidencePresentation.body!}
+          hint={evidencePresentation.hint ?? undefined}
+          surface="default"
+        />
       ) : null}
       <div className={styles.cockpitHeader}>
         <div className={styles.decisionPanel}>
@@ -221,7 +305,17 @@ export default function AdvisorCockpitWorkspace({
           acknowledgementPending={acknowledgementMutation.isPending}
           acknowledgementSucceeded={acknowledgementMutation.isSuccess}
           acknowledgementFailed={Boolean(acknowledgementMutation.error)}
-          onAcknowledge={(row) => acknowledgementMutation.mutate(row)}
+          evidenceRefreshing={cockpitSourcePosture.isRefreshing}
+          evidenceConfirmed={evidencePresentation.actionsEnabled}
+          evidencePartial={evidencePresentation.state === "partial"}
+          onAcknowledge={(row) => {
+            if (
+              evidencePresentation.actionsEnabled &&
+              !acknowledgementMutation.isPending
+            ) {
+              acknowledgementMutation.mutate(row);
+            }
+          }}
         />
       )}
 
@@ -363,12 +457,18 @@ function AdvisorCockpitActionTable({
   acknowledgementPending,
   acknowledgementSucceeded,
   acknowledgementFailed,
+  evidenceRefreshing,
+  evidenceConfirmed,
+  evidencePartial,
   onAcknowledge,
 }: {
   rows: AdvisorCockpitActionRow[];
   acknowledgementPending: boolean;
   acknowledgementSucceeded: boolean;
   acknowledgementFailed: boolean;
+  evidenceRefreshing: boolean;
+  evidenceConfirmed: boolean;
+  evidencePartial: boolean;
   onAcknowledge: (row: AdvisorCockpitActionRow) => void;
 }) {
   return (
@@ -414,15 +514,29 @@ function AdvisorCockpitActionTable({
               <td>
                 <ActionButton
                   priority="secondary"
-                  disabled={!row.canAcknowledge || acknowledgementPending}
+                  disabled={
+                    !row.canAcknowledge ||
+                    acknowledgementPending ||
+                    !evidenceConfirmed
+                  }
                   onClick={() => onAcknowledge(row)}
                 >
                   {acknowledgementPending && row.canAcknowledge
-                    ? "Recording..."
+                    ? evidenceRefreshing
+                      ? "Confirming..."
+                      : "Recording..."
                     : row.acknowledgementLabel}
                 </ActionButton>
                 <span className={styles.acknowledgementDetail}>
-                  {acknowledgementSucceeded && row.canAcknowledge
+                  {acknowledgementPending &&
+                  evidenceRefreshing &&
+                  row.canAcknowledge
+                    ? "Review recorded; confirming current advisor evidence."
+                    : acknowledgementSucceeded &&
+                        evidencePartial &&
+                        row.canAcknowledge
+                      ? "Review recorded; latest advisor evidence is not fully confirmed."
+                      : acknowledgementSucceeded && row.canAcknowledge
                     ? "Acknowledgement recorded in the source workflow."
                     : acknowledgementFailed && row.canAcknowledge
                       ? "Acknowledgement could not be recorded."
