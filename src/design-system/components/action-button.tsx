@@ -5,22 +5,19 @@ export type ActionButtonPriority = "primary" | "secondary" | "quiet";
 export default function ActionButton({
   children,
   priority = "secondary",
-  onClick,
   className,
-  disabled = false,
   type = "button",
+  ...buttonProps
 }: {
   children: React.ReactNode;
   priority?: ActionButtonPriority;
-  onClick?: () => void;
   className?: string;
-  disabled?: boolean;
   type?: "button" | "submit";
-}) {
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className" | "type">) {
   return (
     <button
+      {...buttonProps}
       type={type}
-      disabled={disabled}
       className={cx(
         "action-button",
         "lotus-primary-action",
@@ -28,7 +25,6 @@ export default function ActionButton({
         priority === "quiet" && "action-button-quiet",
         className
       )}
-      onClick={onClick}
     >
       {children}
     </button>

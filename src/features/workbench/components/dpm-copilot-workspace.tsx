@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ActionButton,
+  AiAssistanceDisclosure,
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
 } from "@/design-system";
+import {
+  buildDpmAiWorkflowOutcome,
+  type DpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
+import type { DpmAiWorkflowGatewayEnvelope } from "@/features/workbench/dpm-ai-workflow-contract";
+import type { DpmAiWorkflowFamily } from "@/features/workbench/dpm-ai-workflow-profiles";
 import { requestDpmExceptionSummary } from "@/features/workbench/dpm-command-center-api";
 import {
   requestDpmOperationsHandoffSummary,
@@ -19,26 +26,18 @@ import { requestDpmPmOperatingQualitySummary } from "@/features/workbench/pm-ope
 import { requestDpmProofPackAiPmMemo } from "@/features/workbench/proof-pack-api";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 
-type CopilotActionKey =
-  | "proof-pack-memo"
-  | "wave-memo"
-  | "operations-handoff"
-  | "exception-summary"
-  | "outcome-narrative"
-  | "pm-quality-summary";
-
 type CopilotAction = {
-  key: CopilotActionKey;
+  key: DpmAiWorkflowFamily;
   label: string;
   detail: string;
   reference: string | null;
   blockedReason: string | null;
-  run: () => Promise<unknown>;
+  run: () => Promise<DpmAiWorkflowGatewayEnvelope>;
 };
 
 type ActionState = {
-  pending: CopilotActionKey | null;
-  message: string | null;
+  pending: DpmAiWorkflowFamily | null;
+  result: DpmAiWorkflowOutcome | null;
   error: string | null;
 };
 
@@ -52,31 +51,38 @@ export default function DpmCopilotWorkspace({
   const portfolioId = data.portfolio.portfolio.portfolio_id;
   const [actionState, setActionState] = useState<ActionState>({
     pending: null,
-    message: null,
+    result: null,
     error: null,
   });
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const actions = useMemo(
     () => buildCopilotActions({ data, portfolioId, mandateId: mandateId ?? null }),
     [data, mandateId, portfolioId]
   );
   const readyCount = actions.filter((action) => !action.blockedReason).length;
 
+  useEffect(() => {
+    if (actionState.result) {
+      resultHeadingRef.current?.focus();
+    }
+  }, [actionState.result]);
+
   async function runAction(action: CopilotAction) {
     if (action.blockedReason || actionState.pending) {
       return;
     }
-    setActionState({ pending: action.key, message: null, error: null });
+    setActionState({ pending: action.key, result: null, error: null });
     try {
       const response = await action.run();
       setActionState({
         pending: null,
-        message: `${action.label} accepted by Gateway. ${summarizeWorkflowResponse(response)}`,
+        result: buildDpmAiWorkflowOutcome(action.key, response),
         error: null,
       });
     } catch (error) {
       setActionState({
         pending: null,
-        message: null,
+        result: null,
         error: error instanceof Error ? error.message : `${action.label} failed.`,
       });
     }
@@ -85,23 +91,25 @@ export default function DpmCopilotWorkspace({
   return (
     <SectionBlock
       title="PM Copilot Workspace"
-      subtitle="Review-gated AI workflow-pack requests over Manage-owned evidence and Gateway composition."
+      subtitle="Prepare internal decision-support material from governed portfolio evidence, with review and use boundaries kept explicit."
       className="dpm-copilot-workspace"
       actions={
         <div className="dpm-copilot-badge-row" aria-label="PM copilot posture">
-          <SemanticBadge tone={readyCount > 0 ? "success" : "warn"}>{readyCount} ready</SemanticBadge>
-          <SemanticBadge>Gateway only</SemanticBadge>
-          <SemanticBadge>No prompt storage</SemanticBadge>
+          <SemanticBadge tone={readyCount > 0 ? "success" : "warn"}>
+            {readyCount} workflows available
+          </SemanticBadge>
+          <SemanticBadge>Human review governed</SemanticBadge>
+          <SemanticBadge>Internal decision support</SemanticBadge>
         </div>
       }
     >
       <div className="dpm-copilot-status-strip">
         <MetricRow label="Portfolio" value={portfolioId} />
         <MetricRow label="Mandate" value={mandateId ?? "N/A"} />
-        <MetricRow label="Evidence Owner" value="lotus-manage" />
-        <MetricRow label="Workflow Owner" value="lotus-ai" />
-        <MetricRow label="Gateway Surface" value="lotus-gateway BFF" />
-        <MetricRow label="Forbidden Uses" value="client contact, orders, OMS" />
+        <MetricRow label="Available Workflows" value={`${readyCount} of ${actions.length}`} />
+        <MetricRow label="Decision Authority" value="Portfolio manager and investment control" />
+        <MetricRow label="Permitted Use" value="Internal decision support" />
+        <MetricRow label="Restricted Use" value="Client communication and order execution" />
       </div>
 
       {actionState.error ? (
@@ -112,13 +120,21 @@ export default function DpmCopilotWorkspace({
           body={actionState.error}
         />
       ) : null}
-      {actionState.message ? (
-        <ScreenStatePanel
-          kind="partial"
-          surface="portfolio"
-          title="Copilot request accepted"
-          body={actionState.message}
-        />
+      {actionState.result ? (
+        <section
+          className="dpm-copilot-result"
+          aria-label="Latest decision-support result"
+          aria-live="polite"
+        >
+          <div className="dpm-copilot-result-copy">
+            <span>Latest result</span>
+            <h3 ref={resultHeadingRef} tabIndex={-1}>
+              {actionState.result.scopeLabel}
+            </h3>
+            <p>{actionState.result.businessSummary}</p>
+          </div>
+          <AiAssistanceDisclosure disclosure={actionState.result.disclosure} />
+        </section>
       ) : null}
 
       <div className="dpm-copilot-action-grid">
@@ -128,17 +144,18 @@ export default function DpmCopilotWorkspace({
               <strong>{action.label}</strong>
               <span>{action.detail}</span>
             </div>
-            <MetricRow label="Source Ref" value={action.reference ?? "N/A"} />
+            <MetricRow label="Reference" value={action.reference ?? "Not available"} />
             <MetricRow
               label="Readiness"
-              value={action.blockedReason ? action.blockedReason : "Ready through Gateway"}
+              value={action.blockedReason ? action.blockedReason : "Available to prepare"}
             />
             <ActionButton
               priority={action.blockedReason ? "quiet" : "secondary"}
               disabled={Boolean(action.blockedReason) || Boolean(actionState.pending)}
               onClick={() => void runAction(action)}
+              aria-label={`Prepare ${action.label}`}
             >
-              {actionState.pending === action.key ? "Requesting" : "Request"}
+              {actionState.pending === action.key ? "Preparing" : "Prepare"}
             </ActionButton>
           </section>
         ))}
@@ -235,18 +252,6 @@ function buildCopilotActions({
       run: () => requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
     },
   ];
-}
-
-function summarizeWorkflowResponse(response: unknown): string {
-  const record = asRecord(response);
-  const source = readFirstString(record, ["source_service"]) ?? "Gateway";
-  const status = readFirstString(record, ["upstream_status", "ai_upstream_status"]) ?? "accepted";
-  const data = asRecord(record.data);
-  const workflowRun =
-    readFirstString(asRecord(data.workflow_pack_run), ["run_id", "workflow_run_id"]) ??
-    readFirstString(record, ["workflow_run_id", "run_id"]) ??
-    "run posture returned";
-  return `${source} status ${status}; ${workflowRun}.`;
 }
 
 function firstArrayItem(source: unknown, key: string): Record<string, unknown> | null {

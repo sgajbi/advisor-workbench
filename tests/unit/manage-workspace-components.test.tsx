@@ -54,9 +54,9 @@ describe("manage workspace split components", () => {
     expect(screen.getByText("Exception Summary")).toBeInTheDocument();
     expect(screen.getByText("Outcome Narrative")).toBeInTheDocument();
     expect(screen.getByText("PM Quality Support Summary")).toBeInTheDocument();
-    expect(screen.getByText("Gateway only")).toBeInTheDocument();
-    expect(screen.getByText("No prompt storage")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Request" })).toHaveLength(6);
+    expect(screen.getByText("Human review governed")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Internal decision support")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Prepare / })).toHaveLength(6);
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /order/i })).not.toBeInTheDocument();
   });

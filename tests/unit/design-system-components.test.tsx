@@ -310,7 +310,7 @@ describe("design-system components", () => {
         <SemanticBadge tone="warn" emphasis="strong">
           Review
         </SemanticBadge>
-        <ActionButton priority="primary" onClick={onClick}>
+        <ActionButton priority="primary" onClick={onClick} aria-label="Copy decision note">
           Copy Note
         </ActionButton>
         <ModeTabs
@@ -327,11 +327,14 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByText("Review")).toHaveClass("semantic-badge", "semantic-badge-warn", "semantic-badge-strong");
-    expect(screen.getByRole("button", { name: "Copy Note" })).toHaveClass("action-button", "action-button-primary");
+    expect(screen.getByRole("button", { name: "Copy decision note" })).toHaveClass(
+      "action-button",
+      "action-button-primary"
+    );
     expect(screen.getByRole("tablist", { name: "Workspace modes" })).toHaveClass("mode-tabs");
     expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveClass("workbench-segmented-control-button-active");
 
-    fireEvent.click(screen.getByRole("button", { name: "Copy Note" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy decision note" }));
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
 
     expect(onClick).toHaveBeenCalledTimes(1);

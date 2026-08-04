@@ -159,3 +159,13 @@ export type DpmAiWorkflowExecution = {
   workflow_pack_run: DpmAiWorkflowPackRun;
   summary: string[];
 };
+
+export type DpmAiWorkflowGatewayEnvelope = {
+  correlation_id: string;
+  contract_version: string;
+  source_service: string;
+  evidence_source_service: string;
+  manage_upstream_status: number;
+  ai_upstream_status: number;
+  data: DpmAiWorkflowExecution;
+};
