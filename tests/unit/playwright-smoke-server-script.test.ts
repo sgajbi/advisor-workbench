@@ -20,4 +20,10 @@ describe("Playwright smoke server launcher", () => {
     expect(source).toContain('existsSync(validatedBuildMarker)');
     expect(source).toContain("requires an existing .next/BUILD_ID");
   });
+
+  it("starts on the validated explicit Playwright port", () => {
+    expect(source).toContain('process.env.PLAYWRIGHT_PORT?.trim() || "3000"');
+    expect(source).toContain('String(playwrightPort)');
+    expect(source).toContain("PLAYWRIGHT_PORT must be an integer between 1 and 65535.");
+  });
 });
