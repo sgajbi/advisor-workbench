@@ -134,6 +134,69 @@ No repo wiki change is required for Slice 1. The slice changes composition and r
 client-side behavior; it does not add or change a supported feature, integration, operator command,
 or published runtime contract.
 
+## Advisory Workflow Context Rail
+
+### Business job
+
+The advisory context rail helps a relationship manager understand the current proposal queue or
+selected advisory record without leaving the active work area. It must answer four questions in
+order: what is the current posture, what business action is next, what evidence is blocking that
+action, and which approved source supplied the posture. It is not a decorative checklist and does
+not create KYC, suitability, approval, client-publication, or execution truth.
+
+### Current-product research
+
+Research was revalidated on 2026-08-04 from official product sources:
+
+1. [Salesforce Financial Services Cloud Action Plans](https://help.salesforce.com/s/articleView?id=sf.fsc_action_plans&language=en_US)
+   models business-process tasks with status, priority, completion time, responsibility, target
+   record, and reusable dependencies. That supports record-specific tasks rather than generic
+   browser-authored checklists.
+2. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   separates identify, construct, deliver, and implement stages, places suitability and pre-trade
+   checks before downstream order-management execution, and supports proposals at household,
+   client, account, or sleeve level.
+3. [BlackRock Aladdin Wealth regulation best-interest workflow](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/regulation-best-interest)
+   emphasizes recommendation evidence, consistent risk processes, and monitored exceptions rather
+   than a presentation-layer readiness assertion.
+
+These sources inform workflow hierarchy and evidence boundaries only. Lotus does not copy their
+layout, visual identity, wording, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Use one typed six-state contract for loading, empty, partial, ready, unavailable, and restricted
+   workflow context.
+2. Keep the shared shell neutral. The workspace that owns the source query publishes context; the
+   shell does not fetch, guess a selected proposal, or choose the first queue row.
+3. For queue-level views, show source-returned volume and attention posture, the current business
+   decision, recovery guidance, and an explicit instruction to open a proposal for record evidence.
+4. For simulation, state that construction has no persisted workflow record until a draft is
+   created through the approved service.
+5. Use a dense summary-to-exception-to-detail order: status, current posture, next business action,
+   blocking evidence, then source and scope disclosure.
+6. Preserve permission and source-failure boundaries without cached or fallback workflow claims.
+
+### Rejected decisions
+
+1. Hard-coded review steppers, completion controls, KYC validity, suitability completion,
+   evidence-pack progress, or client-readiness labels.
+2. A shell-owned fetch layer or implicit selection of the first proposal or policy evaluation.
+3. Combining source-specific failures into a healthy-looking generic workflow state.
+4. Client approval, delivery, communication, order, OMS, fill, settlement, or execution language
+   unless the relevant upstream contract explicitly supplies it.
+5. Decorative tabs for evidence, tasks, and audit history when no such record data is present.
+
+### Validation and publication decision
+
+Issue #407 owns implementation and recheck. Focused view-model, component, integration, and route
+tests cover the six states, live queue publication, neutral default, simulation boundary, compact
+layout, and absence of legacy authority claims. Full repository and protected CI evidence is added
+to the issue before closure.
+
+No repo wiki change is required. This slice corrects presentation authority and repository guidance
+without changing a supported route, backend contract, operator command, or published capability.
+
 ## Allocation Review
 
 ### Business job

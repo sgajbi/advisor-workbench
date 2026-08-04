@@ -33,6 +33,12 @@ It is responsible for:
 
 It should not invent unsupported backend behavior or bypass the governed gateway contract.
 
+Shared proposal and advisory shells must remain neutral unless the owning workspace publishes a
+typed source-backed workflow-context model. Queue-level context may summarize current source counts,
+attention, and recovery posture, but record-specific KYC, suitability, approval, evidence, client
+publication, or execution claims require an explicitly selected source record. Proposal simulation
+has no persisted workflow authority until the approved service creates a draft.
+
 ## Current-State Summary
 
 Current repository posture:
