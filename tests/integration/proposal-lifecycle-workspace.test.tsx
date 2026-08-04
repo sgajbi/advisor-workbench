@@ -4,6 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ProposalLifecycleWorkspace from "../../src/features/proposals/components/proposal-lifecycle-workspace";
+import {
+  ProposalWorkflowContextProvider,
+  ProposalWorkflowContextRail,
+} from "../../src/features/proposals/components/proposal-workflow-context";
+import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
 
 const proposalListFixture = {
   items: [
@@ -179,6 +184,26 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.queryByText("Execution handoff")).not.toBeInTheDocument();
     expect(screen.getByText("Risk officer approval needed")).toBeInTheDocument();
     expect(screen.getByLabelText("Proposal lifecycle counts")).toHaveTextContent(/1\s*In view/);
+  });
+
+  it("publishes the Gateway-backed queue summary to the shared workflow rail", async () => {
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByRole("heading", { name: "1 need attention" })).toBeInTheDocument();
+    expect(screen.getByText("2 proposals in view")).toBeInTheDocument();
+    expect(screen.getByText("1 proposal needs advisor action.")).toBeInTheDocument();
+    expect(screen.getByText("Gateway · advisory proposal lifecycle")).toBeInTheDocument();
+    expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
   });
 
   it("does not show fallback rows when lifecycle data is unavailable", async () => {

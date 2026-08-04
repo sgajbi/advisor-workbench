@@ -7,6 +7,7 @@ import { Alert, CircularProgress, Stack } from "@mui/material";
 
 import { ActionButton, ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import {
   getAdvisoryPolicyEvaluation,
@@ -24,6 +25,8 @@ import {
   buildPolicyEvaluationEvidenceModel,
   buildPolicyReviewQueueModel,
 } from "../proposal-policy-review-view-model";
+import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
+import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
 export default function ProposalLifecycleWorkspace({
@@ -117,6 +120,40 @@ export default function ProposalLifecycleWorkspace({
       ]);
     },
   });
+  const workflowContextModel = useMemo(
+    () =>
+      buildProposalQueueWorkflowContext({
+        portfolioId,
+        modeLabel: model.title,
+        isLoading,
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+        hasError: Boolean(error),
+        hasPartialEvidence:
+          mode === "suitability" &&
+          Boolean(
+            policyQueueQuery.error ||
+              policyEvaluationQuery.error ||
+              policySignOffPackageQuery.error ||
+              policyWorkflowQuery.error
+          ),
+        totalCount: model.totalCount,
+        attentionCount: model.attentionCount,
+        primaryDecision: model.primaryDecision,
+        recommendedAction: model.recommendedAction,
+      }),
+    [
+      error,
+      isLoading,
+      mode,
+      model,
+      policyEvaluationQuery.error,
+      policyQueueQuery.error,
+      policySignOffPackageQuery.error,
+      policyWorkflowQuery.error,
+      portfolioId,
+    ]
+  );
+  usePublishProposalWorkflowContext(workflowContextModel);
 
   if (isLoading) {
     return (
