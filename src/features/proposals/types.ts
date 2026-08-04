@@ -416,6 +416,15 @@ export type AdvisoryCopilotReviewRequest = {
   reason?: Record<string, unknown>;
 };
 
+export type AdvisoryCopilotSourceRef = {
+  source_system?: string;
+  source_type?: string;
+  source_id?: string;
+  content_hash?: string | null;
+  access_class?: string;
+  [key: string]: unknown;
+};
+
 export type AdvisoryCopilotEvidencePacketData = {
   evidence_packet?: {
     evidence_packet_id?: string;
@@ -427,7 +436,7 @@ export type AdvisoryCopilotEvidencePacketData = {
       section_key?: string;
       title?: string;
       summary_items?: string[];
-      source_refs?: Array<Record<string, unknown>>;
+      source_refs?: AdvisoryCopilotSourceRef[];
       [key: string]: unknown;
     }>;
     unsupported_evidence?: Array<{
@@ -488,8 +497,11 @@ export type AdvisoryCopilotReviewRecord = {
   [key: string]: unknown;
 };
 
-export type AdvisoryCopilotReviewData = AdvisoryCopilotRunData & {
-  review?: AdvisoryCopilotReviewRecord;
+export type AdvisoryCopilotReviewData = {
+  run?: AdvisoryCopilotRunData["run"];
+  review: AdvisoryCopilotReviewRecord;
+  replayed?: boolean;
+  [key: string]: unknown;
 };
 
 export type AdvisoryCopilotSupportabilityData = {

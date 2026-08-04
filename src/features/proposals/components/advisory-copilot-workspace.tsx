@@ -28,6 +28,7 @@ import {
 } from "../advisory-copilot-view-model";
 import type {
   AdvisoryCopilotEvidencePacketData,
+  AdvisoryCopilotReviewData,
   AdvisoryCopilotRunData,
 } from "../types";
 import styles from "./advisory-copilot-workspace.module.css";
@@ -42,7 +43,9 @@ export default function AdvisoryCopilotWorkspace({
   const [latestPacket, setLatestPacket] = useState<
     AdvisoryCopilotEvidencePacketData | undefined
   >();
-  const [latestRun, setLatestRun] = useState<AdvisoryCopilotRunData | undefined>();
+  const [latestRun, setLatestRun] = useState<
+    AdvisoryCopilotRunData | AdvisoryCopilotReviewData | undefined
+  >();
   const proposalQuery = useQuery({
     queryKey: ["advisory-copilot-proposals", portfolioId],
     queryFn: async () =>
