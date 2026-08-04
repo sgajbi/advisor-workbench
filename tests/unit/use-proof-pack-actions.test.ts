@@ -166,7 +166,13 @@ describe("useProofPackActions", () => {
 
     act(() => result.current.requestAiPmMemo());
     await waitFor(() => expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" }));
-    await waitFor(() => expect(result.current.handoffStatus).toBe("Advisor memo Awaiting Review."));
+    await waitFor(() => expect(result.current.aiMemoOutcome?.family).toBe("proof-pack-memo"));
+    expect(result.current.handoffStatus).toBeNull();
+    expect(result.current.aiMemoOutcome?.disclosure).toMatchObject({
+      availability: "live",
+      humanReview: { state: "review-required" },
+      clientUse: "internal-only",
+    });
   });
 
   it("does not call Gateway when required proof-pack or rebalance identifiers are absent", async () => {

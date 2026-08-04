@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   ActionButton,
-  AiAssistanceDisclosure,
   MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
 } from "@/design-system";
+import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import {
   buildDpmAiWorkflowOutcome,
   type DpmAiWorkflowOutcome,
@@ -54,18 +54,11 @@ export default function DpmCopilotWorkspace({
     result: null,
     error: null,
   });
-  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const actions = useMemo(
     () => buildCopilotActions({ data, portfolioId, mandateId: mandateId ?? null }),
     [data, mandateId, portfolioId]
   );
   const readyCount = actions.filter((action) => !action.blockedReason).length;
-
-  useEffect(() => {
-    if (actionState.result) {
-      resultHeadingRef.current?.focus();
-    }
-  }, [actionState.result]);
 
   async function runAction(action: CopilotAction) {
     if (action.blockedReason || actionState.pending) {
@@ -121,20 +114,7 @@ export default function DpmCopilotWorkspace({
         />
       ) : null}
       {actionState.result ? (
-        <section
-          className="dpm-copilot-result"
-          aria-label="Latest decision-support result"
-          aria-live="polite"
-        >
-          <div className="dpm-copilot-result-copy">
-            <span>Latest result</span>
-            <h3 ref={resultHeadingRef} tabIndex={-1}>
-              {actionState.result.scopeLabel}
-            </h3>
-            <p>{actionState.result.businessSummary}</p>
-          </div>
-          <AiAssistanceDisclosure disclosure={actionState.result.disclosure} />
-        </section>
+        <DpmAiWorkflowResult outcome={actionState.result} focusOnMount />
       ) : null}
 
       <div className="dpm-copilot-action-grid">

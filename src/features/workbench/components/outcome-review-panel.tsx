@@ -8,6 +8,7 @@ import {
   outcomeReviewSourceEvidenceStatus,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { useOutcomeReviewHandoffs } from "@/features/workbench/use-outcome-review-handoffs";
+import DpmAiWorkflowResult from "./dpm-ai-workflow-result";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewSummary from "./outcome-review-summary";
 import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
@@ -30,6 +31,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     reportJobPending,
     aiNarrativeAvailable,
     aiNarrativePending,
+    aiNarrativeOutcome,
     requestOutcomeReportJob,
     requestOutcomeAiNarrative,
   } = useOutcomeReviewHandoffs({ primaryReview });
@@ -69,6 +71,15 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           aiNarrativePending={aiNarrativePending}
           onRequestReportJob={requestOutcomeReportJob}
           onRequestAiNarrative={requestOutcomeAiNarrative}
+        />
+      ) : null}
+
+      {aiNarrativeOutcome ? (
+        <DpmAiWorkflowResult
+          outcome={aiNarrativeOutcome}
+          ariaLabel="Outcome-review decision-support result"
+          eyebrow="Outcome review support"
+          focusOnMount
         />
       ) : null}
 

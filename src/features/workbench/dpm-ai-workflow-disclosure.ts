@@ -23,6 +23,16 @@ export type DpmAiWorkflowOutcome = {
   disclosure: AiAssistanceDisclosureModel;
 };
 
+export type DpmAiInvocationEvidence = {
+  invocationId: string | null;
+  invocationState: string | null;
+  workflowRunId: string | null;
+  artifactRef: string | null;
+  contentHash: string | null;
+  sourceRefs: string | null;
+  reviewActionId: string | null;
+};
+
 export function buildDpmAiWorkflowOutcome(
   family: DpmAiWorkflowFamily,
   response: unknown,
@@ -60,6 +70,60 @@ export function buildDpmAiWorkflowOutcome(
     businessSummary: describeBusinessOutcome(profile.scopeLabel, disclosure),
     disclosure,
   };
+}
+
+export function buildDpmAiInvocationEvidenceOutcome(
+  evidence: DpmAiInvocationEvidence,
+): DpmAiWorkflowOutcome {
+  const profile = getDpmAiWorkflowProfile("pm-quality-summary");
+  const evidenceValues = [evidence.artifactRef, evidence.contentHash, evidence.sourceRefs].filter(
+    isPublishedValue,
+  );
+  const disclosure = createAiAssistanceDisclosure({
+    scopeLabel: profile.scopeLabel,
+    preparation: "requested",
+    availability: "unavailable",
+    evidence: {
+      state: evidenceValues.length > 0 ? "limited" : "missing",
+      sourceCount: evidenceValues.length,
+    },
+    humanReview: { state: "unavailable", sourceRecorded: false },
+    clientUse: "blocked",
+    freshness: { state: "not-reported" },
+    limitations: [
+      "Manage published an invocation and audit record, not generated summary content.",
+      "Workflow, artifact, and content identifiers do not prove that a usable output is available.",
+    ],
+    diagnostics: [
+      evidence.invocationId
+        ? { label: "Summary invocation", value: evidence.invocationId }
+        : null,
+      evidence.invocationState
+        ? { label: "Invocation state", value: evidence.invocationState }
+        : null,
+      evidence.workflowRunId
+        ? { label: "Workflow run", value: evidence.workflowRunId }
+        : null,
+      evidence.artifactRef
+        ? { label: "Artifact reference", value: evidence.artifactRef }
+        : null,
+      evidence.reviewActionId
+        ? { label: "Review action", value: evidence.reviewActionId }
+        : null,
+    ].filter((item): item is { label: string; value: string } => item !== null),
+  });
+
+  return {
+    family: "pm-quality-summary",
+    scopeLabel: profile.scopeLabel,
+    businessSummary:
+      "The summary invocation is recorded for audit, but no generated PM quality output is available from this record.",
+    disclosure,
+  };
+}
+
+function isPublishedValue(value: string | null): value is string {
+  return Boolean(value && value !== "N/A");
 }
 
 function resolvePreparation(

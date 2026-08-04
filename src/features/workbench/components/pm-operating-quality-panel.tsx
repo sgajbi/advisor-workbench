@@ -7,6 +7,7 @@ import {
   SemanticBadge,
 } from "@/design-system";
 import PmOperatingQualityFairnessEvidenceCard from "@/features/workbench/components/pm-operating-quality-fairness-evidence-card";
+import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm-operating-quality-governance-card";
 import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
 import PmOperatingQualityReviewActionsCard from "@/features/workbench/components/pm-operating-quality-review-actions-card";
@@ -74,6 +75,7 @@ export default function PmOperatingQualityPanel({
     pendingSummaryInvocationCreate,
     actionError,
     actionMessage,
+    summaryOutcome,
     fairnessCreateEvidence,
     reviewActionCreateEvidence,
     summaryInvocationCreateEvidence,
@@ -191,6 +193,15 @@ export default function PmOperatingQualityPanel({
 
         <PmOperatingQualityGovernanceCard model={model} />
       </div>
+
+      {summaryOutcome ? (
+        <DpmAiWorkflowResult
+          outcome={summaryOutcome}
+          ariaLabel="PM quality decision-support result"
+          eyebrow="Supervisory decision support"
+          focusOnMount
+        />
+      ) : null}
 
       <PmOperatingQualityFairnessEvidenceCard model={model} />
 

@@ -769,10 +769,11 @@ describe("PmOperatingQualityPanel", () => {
         scoreRunId: "pmq_run_001",
       });
     });
-    expect(
-      screen.getByText("Support summary returned review-required PM quality evidence.")
-    ).toBeInTheDocument();
-    expect(screen.getByText("PM quality support summary")).toBeInTheDocument();
+    const resultHeading = await screen.findByRole("heading", {
+      name: "Portfolio-manager quality support summary",
+    });
+    expect(resultHeading).toHaveFocus();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
     expect(screen.getByText("COMPLETED")).toBeInTheDocument();
     expect(screen.getByText("REVIEW_REQUIRED")).toBeInTheDocument();
     expect(screen.getAllByText("lotus-manage").length).toBeGreaterThan(0);

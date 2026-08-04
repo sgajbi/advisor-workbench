@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
+import {
+  buildDpmAiInvocationEvidenceOutcome,
+  buildDpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
 import { DPM_AI_WORKFLOW_PROFILES } from "@/features/workbench/dpm-ai-workflow-profiles";
 import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
 
@@ -120,5 +123,30 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.disclosure.limitations).toContain(
       "The returned workflow contract or authority evidence was incomplete or inconsistent.",
     );
+  });
+
+  it("keeps persisted invocation evidence separate from generated output", () => {
+    const outcome = buildDpmAiInvocationEvidenceOutcome({
+      invocationId: "pmq_summary_001",
+      invocationState: "PENDING_REVIEW",
+      workflowRunId: "wf_pmq_summary_001",
+      artifactRef: "artifact://pmq-summary/001",
+      contentHash: "sha256:summary-invocation",
+      sourceRefs: "lotus-manage:pmq_summary_001",
+      reviewActionId: "pmq_review_001",
+    });
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "requested",
+      availability: "unavailable",
+      evidence: { state: "limited", sourceCount: 3 },
+      humanReview: { state: "unavailable", sourceRecorded: false },
+      clientUse: "blocked",
+    });
+    expect(outcome.businessSummary).toContain("recorded for audit");
+    expect(outcome.disclosure.diagnostics).toContainEqual({
+      label: "Summary invocation",
+      value: "pmq_summary_001",
+    });
   });
 });

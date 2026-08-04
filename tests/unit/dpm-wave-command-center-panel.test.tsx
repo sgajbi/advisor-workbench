@@ -14,10 +14,13 @@ import {
   handoffDpmWave,
   launchDpmCampaignDefinition,
   previewDpmWave,
+  requestDpmOperationsHandoffSummary,
+  requestDpmWaveAiPmMemo,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
 } from "../../src/features/workbench/dpm-wave-api";
+import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,
@@ -35,6 +38,8 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   handoffDpmWave: vi.fn(),
   launchDpmCampaignDefinition: vi.fn(),
   previewDpmWave: vi.fn(),
+  requestDpmOperationsHandoffSummary: vi.fn(),
+  requestDpmWaveAiPmMemo: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),
   stageDpmWave: vi.fn(),
@@ -571,6 +576,48 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open Evidence Pack" }));
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
+  });
+
+  it("prepares governed PM and operations decision support in the rebalance workflow", async () => {
+    vi.mocked(requestDpmWaveAiPmMemo).mockResolvedValue({
+      ...buildDpmAiWorkflowResponse("wave-memo"),
+      supportability: waveResponse.supportability,
+      wave_report_input: { wave_id: "dwv_001" },
+      memo_request: { requested_outputs: ["wave_pm_memo"] },
+    });
+    vi.mocked(requestDpmOperationsHandoffSummary).mockResolvedValue({
+      ...buildDpmAiWorkflowResponse("operations-handoff"),
+      supportability: waveResponse.supportability,
+      wave_report_input: { wave_id: "dwv_001" },
+      handoff_summary_request: { requested_outputs: ["operations_summary"] },
+    });
+
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare rebalance PM memo" }));
+    await waitFor(() => expect(requestDpmWaveAiPmMemo).toHaveBeenCalledWith("dwv_001"));
+    const memoHeading = await screen.findByRole("heading", {
+      name: "Rebalance wave review memo",
+    });
+    expect(memoHeading).toHaveFocus();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Prepare rebalance operations brief" }),
+    );
+    await waitFor(() =>
+      expect(requestDpmOperationsHandoffSummary).toHaveBeenCalledWith("dwv_001"),
+    );
+    const operationsHeading = await screen.findByRole("heading", {
+      name: "Operations handoff summary",
+    });
+    expect(operationsHeading).toHaveFocus();
+    expect(screen.getAllByText("Awaiting Review").length).toBeGreaterThanOrEqual(2);
   });
 
   it("does not enable approval when mandate attention items block the workflow", async () => {
