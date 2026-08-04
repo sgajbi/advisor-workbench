@@ -482,6 +482,52 @@ test.describe('Performance workbench smoke', () => {
     expect(trendMetrics.width).toBeGreaterThan(800);
   });
 
+  test('advisor brief discloses AI, evidence, review, and client-use posture accessibly', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const session = await openPerformanceWorkbench(page, request);
+    test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
+
+    const advisorTab = page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Advisor Brief/i });
+    await advisorTab.click();
+    await expect(advisorTab).toHaveAttribute('aria-current', 'page');
+    await page.setViewportSize({ width: 720, height: 1000 });
+
+    const disclosure = page.locator('details').filter({ hasText: 'How this was prepared' });
+    const disclosureSummary = disclosure.locator('summary');
+    await expect(disclosureSummary).toContainText('Review required');
+    await expect(disclosureSummary).toContainText('Performance advisor brief');
+
+    await disclosureSummary.focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    await expect(disclosure).toContainText('Prepared with AI assistance');
+    await expect(disclosure).toContainText('Source evidence attached');
+    await expect(disclosure).toContainText('Human review required');
+    await expect(disclosure).toContainText('Not approved for client use');
+    await expect(disclosure).toContainText('Freshness not reported');
+    await expect(page.getByLabel('Advisor Talking Points')).toContainText(
+      'Portfolio outperformed its benchmark',
+    );
+    await expect(page.getByText('Client Talking Points')).toHaveCount(0);
+
+    const overflow = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(2);
+
+    await page.screenshot({
+      path: 'output/playwright/diagnostic-ai-assistance-disclosure-483.png',
+      fullPage: true,
+    });
+  });
+
   test('analysis contribution module renders live position detail cleanly', async ({ page, request }) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });

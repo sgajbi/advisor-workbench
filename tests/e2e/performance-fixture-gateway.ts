@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http';
 
 import type {
   PerformanceComparativeSummary,
+  WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
 } from '../../src/features/workbench/types';
@@ -91,6 +92,10 @@ export async function startPerformanceFixtureGateway({
       );
       return;
     }
+    if (requestUrl.pathname.endsWith('/performance/advisor-brief')) {
+      sendJson(response, buildAdvisorBriefResponse(portfolioId));
+      return;
+    }
 
     sendJson(response, { code: 'fixture_route_not_found' }, 404);
   });
@@ -99,6 +104,89 @@ export async function startPerformanceFixtureGateway({
   return {
     port,
     close: () => close(server),
+  };
+}
+
+function buildAdvisorBriefResponse(portfolioId: string): WorkbenchPerformanceAdvisorBrief {
+  return {
+    correlation_id: 'corr-advisor-brief-e2e',
+    contract_version: 'v1',
+    portfolio_id: portfolioId,
+    portfolio: {
+      portfolio_id: portfolioId,
+      client_id: 'CIF_1001',
+      base_currency: 'USD',
+      booking_center_code: 'SG',
+    },
+    as_of_date: '2026-02-24',
+    period: 'YTD',
+    report_start_date: '2026-01-01',
+    report_end_date: '2026-02-24',
+    detail_basis: 'NET',
+    chart_frequency: 'monthly',
+    contribution_dimension: 'asset_class',
+    attribution_dimension: 'asset_class',
+    benchmark_code: 'BMK_GLOBAL_BALANCED_60_40',
+    status: 'ready',
+    summary: 'Source-grounded performance narrative is ready for advisor review.',
+    talking_points: [
+      {
+        headline: 'Portfolio outperformed its benchmark over the selected period.',
+        detail: 'Active return was positive on a net basis.',
+        tone: 'positive',
+        evidence_refs: [
+          {
+            metric_label: 'Active Return',
+            metric_value: '0.51%',
+            source_surface: 'performance.return_path',
+            target_mode: 'summary',
+            route: `/performance?portfolioId=${portfolioId}`,
+          },
+        ],
+      },
+    ],
+    recommended_actions: [],
+    risks_and_exceptions: [],
+    source_metrics: [
+      {
+        label: 'Active Return',
+        value: '0.51%',
+        support_label: 'YTD Net',
+        target_mode: 'summary',
+        route: `/performance?portfolioId=${portfolioId}`,
+        state: 'ready',
+      },
+    ],
+    supportability: [{ label: 'Advisor Brief', value: 'Ready', tone: 'success' }],
+    workflow_pack_run: {
+      run_id: 'packrun_advisor_brief_e2e',
+      runtime_state: 'COMPLETED',
+      review_state: 'AWAITING_REVIEW',
+      allowed_review_actions: ['ACCEPT', 'REJECT'],
+      supportability_status: 'ACTION_REQUIRED',
+      review_pending: true,
+      superseded: false,
+      workflow_authority_owner: 'lotus-gateway',
+      current_summary_note: 'Human review is required before downstream use.',
+      replacement_run_id: null,
+      findings: [],
+    },
+    ai_audit: {
+      task_id: 'explain.v1',
+      provider_mode: 'local_openai_compatible',
+      provider_id: 'text.local',
+      model_id: 'qwen3:8b',
+      generated_at: '2026-02-24T00:00:00Z',
+      stubbed: false,
+    },
+    ai_evidence: {
+      source_refs: [
+        `lotus-gateway:workbench:${portfolioId}:performance-summary:YTD`,
+        'lotus-ai:task:explain.v1',
+      ],
+    },
+    warnings: [],
+    partial_failures: [],
   };
 }
 
