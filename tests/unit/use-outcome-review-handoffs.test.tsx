@@ -66,7 +66,15 @@ describe("useOutcomeReviewHandoffs", () => {
     expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({
       outcomeReviewId: "or_1",
     });
-    expect(result.current.handoffStatusMessages).toEqual(["Review request Awaiting Review."]);
+    expect(result.current.handoffStatusMessages).toEqual([]);
+    expect(result.current.aiNarrativeOutcome).toMatchObject({
+      family: "outcome-narrative",
+      disclosure: {
+        availability: "live",
+        humanReview: { state: "review-required" },
+        clientUse: "internal-only",
+      },
+    });
     expect(result.current.clientCommunicationBoundary).toMatchObject({
       boundaryId: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
       clientCommunicationProjected: false,

@@ -351,11 +351,13 @@ describe("usePmOperatingQualityActions", () => {
     expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
       scoreRunId: "pmq_run_001",
     });
-    await waitFor(() =>
-      expect(result.current.actionMessage).toBe(
-        "Support summary returned review-required PM quality evidence."
-      )
-    );
+    await waitFor(() => expect(result.current.summaryOutcome?.family).toBe("pm-quality-summary"));
+    expect(result.current.actionMessage).toBeNull();
+    expect(result.current.summaryOutcome?.disclosure).toMatchObject({
+      availability: "live",
+      humanReview: { state: "review-required" },
+      clientUse: "internal-only",
+    });
     expect(JSON.stringify(result.current.model.summaryPosture)).not.toContain("sha256:pm-quality");
   });
 

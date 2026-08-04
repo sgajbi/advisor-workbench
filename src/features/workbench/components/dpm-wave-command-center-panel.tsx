@@ -7,6 +7,7 @@ import {
   SemanticBadge,
 } from "@/design-system";
 import DpmWaveActiveRebalanceSection from "@/features/workbench/components/dpm-wave-active-rebalance-section";
+import DpmWaveDecisionSupport from "@/features/workbench/components/dpm-wave-decision-support";
 import DpmCampaignDefinitionsSection from "@/features/workbench/components/dpm-campaign-definitions-section";
 import DpmWaveProposedChangesSection from "@/features/workbench/components/dpm-wave-proposed-changes-section";
 import DpmWaveReadinessSummaryStrip from "@/features/workbench/components/dpm-wave-readiness-summary-strip";
@@ -89,6 +90,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
+    aiWorkflowOutcome,
     previewRebalance,
     createRebalance,
     loadProposedChanges,
@@ -98,6 +100,8 @@ export default function DpmWaveCommandCenterPanel({
     stageRebalance,
     prepareHandoff,
     openEvidencePack,
+    requestWaveMemo,
+    requestOperationsBrief,
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
@@ -179,6 +183,16 @@ export default function DpmWaveCommandCenterPanel({
         approvalBlocked={approvalBlocked}
         selectedWaveItemCount={model.selectedWaveItemCount}
         metricRows={model.metricRows}
+      />
+
+      <DpmWaveDecisionSupport
+        waveId={selectedWaveId}
+        memoStatus={model.aiMemoStatus}
+        operationsStatus={model.operationsHandoffSummaryStatus}
+        pendingAction={pendingAction}
+        outcome={aiWorkflowOutcome}
+        onRequestMemo={requestWaveMemo}
+        onRequestOperationsBrief={requestOperationsBrief}
       />
 
       <DpmCampaignDefinitionsSection

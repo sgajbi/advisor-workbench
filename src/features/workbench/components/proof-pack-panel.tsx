@@ -5,6 +5,7 @@ import {
   ProofPackAvailabilityBadge,
   ProofPackStateBadge,
 } from "@/features/workbench/components/proof-pack-badges";
+import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import ProofPackSummary from "@/features/workbench/components/proof-pack-summary";
 import ProofPackWorkspace from "@/features/workbench/components/proof-pack-workspace";
 import type {
@@ -40,6 +41,7 @@ export default function ProofPackPanel({
     pendingAction,
     actionError,
     handoffStatus,
+    aiMemoOutcome,
     markdown,
     generateProofPack,
     loadProofPack,
@@ -81,6 +83,15 @@ export default function ProofPackPanel({
         onLoadReportInput={loadReportInput}
         onRequestAiPmMemo={requestAiPmMemo}
       />
+
+      {aiMemoOutcome ? (
+        <DpmAiWorkflowResult
+          outcome={aiMemoOutcome}
+          ariaLabel="Evidence-pack decision memo result"
+          eyebrow="Portfolio decision support"
+          focusOnMount
+        />
+      ) : null}
 
       <ProofPackWorkspace
         model={model}

@@ -10,11 +10,14 @@ import {
 } from "@/features/workbench/proof-pack-api";
 import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 import {
+  buildDpmAiWorkflowOutcome,
+  type DpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
+import {
   buildProofPackPanelModel,
   type ProofPackPanelModel,
 } from "@/features/workbench/proof-pack-view-model";
 import {
-  readProofPackAiWorkflowPackStatus,
   readProofPackMarkdown,
 } from "@/features/workbench/proof-pack-panel-helpers";
 import type { DpmProofPackGatewayResponse } from "@/features/workbench/types";
@@ -34,6 +37,7 @@ type UseProofPackActionsResult = {
   pendingAction: string | null;
   actionError: string | null;
   handoffStatus: string | null;
+  aiMemoOutcome: DpmAiWorkflowOutcome | null;
   markdown: string | null;
   generateProofPack: () => void;
   loadProofPack: () => void;
@@ -52,6 +56,7 @@ export function useProofPackActions({
   const [proofPack, setProofPack] = useState<DpmProofPackGatewayResponse | null>(initialProofPack);
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [handoffStatus, setHandoffStatus] = useState<string | null>(null);
+  const [aiMemoOutcome, setAiMemoOutcome] = useState<DpmAiWorkflowOutcome | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const model = buildProofPackPanelModel(proofPack);
@@ -135,8 +140,10 @@ export function useProofPackActions({
       return;
     }
     void runAction("Open advisor memo", async () => {
+      setHandoffStatus(null);
+      setAiMemoOutcome(null);
       const response = await requestDpmProofPackAiPmMemo({ proofPackId });
-      setHandoffStatus(`Advisor memo ${readProofPackAiWorkflowPackStatus(response.data)}`);
+      setAiMemoOutcome(buildDpmAiWorkflowOutcome("proof-pack-memo", response));
     });
   }
 
@@ -147,6 +154,7 @@ export function useProofPackActions({
     pendingAction,
     actionError,
     handoffStatus,
+    aiMemoOutcome,
     markdown,
     generateProofPack,
     loadProofPack,

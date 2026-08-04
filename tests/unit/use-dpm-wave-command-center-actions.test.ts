@@ -58,6 +58,8 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   launchDpmCampaignDefinition: vi.fn(),
   listDpmCampaignDefinitions: vi.fn(),
   previewDpmWave: vi.fn(),
+  requestDpmOperationsHandoffSummary: vi.fn(),
+  requestDpmWaveAiPmMemo: vi.fn(),
   retireDpmCampaignDefinition: vi.fn(),
   simulateDpmWave: vi.fn(),
   sourceCheckDpmWave: vi.fn(),

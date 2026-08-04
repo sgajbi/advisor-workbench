@@ -208,7 +208,16 @@ describe("DpmCommandCenterPanel", () => {
         state: "ACTIVE",
       });
     });
-    expect(await screen.findByText("Exception summary Awaiting Review.")).toBeInTheDocument();
+    const resultHeading = await screen.findByRole("heading", {
+      name: "Mandate exception review summary",
+    });
+    expect(resultHeading).toHaveFocus();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Mandate exception review summary is available for internal review and is not approved for client use.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("renders empty command-center state without claiming failure", () => {

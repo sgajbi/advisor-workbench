@@ -23,15 +23,25 @@ import {
   launchDpmCampaignDefinition,
   listDpmCampaignDefinitions,
   previewDpmWave,
+  requestDpmOperationsHandoffSummary,
+  requestDpmWaveAiPmMemo,
   retireDpmCampaignDefinition,
   simulateDpmWave,
   sourceCheckDpmWave,
   stageDpmWave,
   supersedeDpmCampaignDefinition,
 } from "@/features/workbench/dpm-wave-api";
+import {
+  buildDpmAiWorkflowOutcome,
+  type DpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
+import type { DpmAiWorkflowGatewayEnvelope } from "@/features/workbench/dpm-ai-workflow-contract";
+import type { DpmAiWorkflowFamily } from "@/features/workbench/dpm-ai-workflow-profiles";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmCampaignWorkflowGatewayResponse,
+  DpmOperationsHandoffSummaryResponse,
+  DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "@/features/workbench/types";
 import {
@@ -129,6 +139,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   campaignLifecycleCommandEvidence: DpmCampaignLifecycleCommandEvidence | null;
   campaignWorkflowCommandEvidence: DpmCampaignWorkflowCommandEvidence | null;
   actionMessage: string | null;
+  aiWorkflowOutcome: DpmAiWorkflowOutcome | null;
   previewRebalance: () => void;
   createRebalance: () => void;
   loadProposedChanges: () => void;
@@ -138,6 +149,8 @@ type UseDpmWaveCommandCenterActionsResult = {
   stageRebalance: () => void;
   prepareHandoff: () => void;
   openEvidencePack: () => void;
+  requestWaveMemo: () => void;
+  requestOperationsBrief: () => void;
   loadCampaignLifecycle: (row: DpmCampaignDefinitionRow) => Promise<void>;
   loadCampaignLaunchHistory: (
     row: DpmCampaignDefinitionRow,
@@ -176,6 +189,10 @@ export function useDpmWaveCommandCenterActions({
   const [itemsResponse, setItemsResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
   const [proofPackResponse, setProofPackResponse] = useState<DpmWaveGatewayResponse | null>(null);
+  const [waveAiMemoResponse, setWaveAiMemoResponse] =
+    useState<DpmWaveAiPmMemoResponse | null>(null);
+  const [operationsHandoffSummaryResponse, setOperationsHandoffSummaryResponse] =
+    useState<DpmOperationsHandoffSummaryResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
     useState<DpmCampaignDefinitionGatewayResponse | null>(null);
   const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
@@ -227,6 +244,8 @@ export function useDpmWaveCommandCenterActions({
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
     useState<DpmCampaignWorkflowCommandEvidence | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [aiWorkflowOutcome, setAiWorkflowOutcome] =
+    useState<DpmAiWorkflowOutcome | null>(null);
   const autoLoadedWaveIdRef = useRef<string | null>(null);
   const autoLoadFailureCountsRef = useRef<Record<string, number>>({});
   const [autoLoadRetryToken, setAutoLoadRetryToken] = useState<{
@@ -244,6 +263,8 @@ export function useDpmWaveCommandCenterActions({
     waveDetail: proofPackResponse,
     waveItems: itemsResponse,
     actionResponse,
+    waveAiMemo: waveAiMemoResponse,
+    operationsHandoffSummary: operationsHandoffSummaryResponse,
     campaignDefinitions: campaignDefinitionsResponse ?? campaignDefinitions,
     campaignDiscovery,
     campaignLifecycleEvents: campaignLifecycleResponse,
@@ -390,6 +411,54 @@ export function useDpmWaveCommandCenterActions({
       setProofPackResponse(response);
       return response;
     });
+  }
+
+  async function runAiWorkflowAction<T extends DpmAiWorkflowGatewayEnvelope>(
+    label: string,
+    family: DpmAiWorkflowFamily,
+    action: () => Promise<T>,
+    recordResponse: (response: T) => void,
+  ) {
+    if (pendingAction) {
+      return;
+    }
+    setPendingAction(label);
+    setActionError(null);
+    setActionMessage(null);
+    setAiWorkflowOutcome(null);
+    try {
+      const response = await action();
+      recordResponse(response);
+      setAiWorkflowOutcome(buildDpmAiWorkflowOutcome(family, response));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `${label} failed`);
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  function requestWaveMemo() {
+    if (!selectedWaveId) {
+      return;
+    }
+    void runAiWorkflowAction(
+      "Prepare PM memo",
+      "wave-memo",
+      () => requestDpmWaveAiPmMemo(selectedWaveId),
+      setWaveAiMemoResponse,
+    );
+  }
+
+  function requestOperationsBrief() {
+    if (!selectedWaveId) {
+      return;
+    }
+    void runAiWorkflowAction(
+      "Prepare operations brief",
+      "operations-handoff",
+      () => requestDpmOperationsHandoffSummary(selectedWaveId),
+      setOperationsHandoffSummaryResponse,
+    );
   }
 
   async function loadCampaignLifecycle(row: DpmCampaignDefinitionRow) {
@@ -691,6 +760,7 @@ export function useDpmWaveCommandCenterActions({
     campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
+    aiWorkflowOutcome,
     previewRebalance,
     createRebalance,
     loadProposedChanges,
@@ -700,6 +770,8 @@ export function useDpmWaveCommandCenterActions({
     stageRebalance,
     prepareHandoff,
     openEvidencePack,
+    requestWaveMemo,
+    requestOperationsBrief,
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,

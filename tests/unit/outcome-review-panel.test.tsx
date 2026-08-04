@@ -211,7 +211,11 @@ describe("OutcomeReviewPanel", () => {
         outcomeReviewId: "or_1",
       });
     });
-    expect(await screen.findByText("Review request Awaiting Review.")).toBeInTheDocument();
+    const resultHeading = await screen.findByRole("heading", {
+      name: "Outcome review narrative",
+    });
+    expect(resultHeading).toHaveFocus();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
       "Delivery Confirmation"
     );
@@ -250,7 +254,10 @@ describe("OutcomeReviewPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
 
     expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
-    expect(screen.getByText("Review request Awaiting Review.")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Outcome review narrative" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
   });
 
   it("renders blocked handoff posture from supportability", () => {

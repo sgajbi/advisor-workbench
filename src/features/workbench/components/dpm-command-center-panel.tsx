@@ -14,6 +14,8 @@ import {
   requestDpmExceptionSummary,
   runDpmCommandCenterMonitoring,
 } from "@/features/workbench/dpm-command-center-api";
+import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
+import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import type {
   DpmCommandCenterGatewayResponse,
   DpmExceptionSummaryResponse,
@@ -79,6 +81,9 @@ export default function DpmCommandCenterPanel({
   );
   const stateCopy = dpmCommandCenterStatePanelCopy(model.state);
   const exceptionSummaryStatus = readDpmWorkflowPackStatus(exceptionSummary?.data);
+  const exceptionSummaryOutcome = exceptionSummary
+    ? buildDpmAiWorkflowOutcome("exception-summary", exceptionSummary)
+    : null;
   const runPending = pendingAction !== null;
 
   async function runMonitoring() {
@@ -112,6 +117,7 @@ export default function DpmCommandCenterPanel({
     setPendingAction("exception-summary");
     setRunError(null);
     setRunMessage(null);
+    setExceptionSummary(null);
     try {
       const response = await requestDpmExceptionSummary({
         exceptionId: model.selectedExceptionId,
@@ -119,7 +125,6 @@ export default function DpmCommandCenterPanel({
         state: "ACTIVE",
       });
       setExceptionSummary(response);
-      setRunMessage(`Exception summary ${businessStateLabel(readDpmWorkflowPackStatus(response.data))}.`);
     } catch (error) {
       setRunError(
         error instanceof Error
@@ -194,6 +199,15 @@ export default function DpmCommandCenterPanel({
           </Text>
         </div>
       </div>
+
+      {exceptionSummaryOutcome ? (
+        <DpmAiWorkflowResult
+          outcome={exceptionSummaryOutcome}
+          ariaLabel="Exception decision-support result"
+          eyebrow="Exception triage"
+          focusOnMount
+        />
+      ) : null}
 
       {model.partialReadinessReasons.length > 0 ? (
         <div className="dpm-command-center-reason-row">

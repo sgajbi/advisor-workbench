@@ -218,7 +218,11 @@ describe("ProofPackPanel", () => {
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" })
     );
-    expect(screen.getByText("Advisor memo Awaiting Review.")).toBeInTheDocument();
+    const resultHeading = await screen.findByRole("heading", {
+      name: "Portfolio decision memo",
+    });
+    expect(resultHeading).toHaveFocus();
+    expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
   });
 
   it("renders unavailable state without claiming generated proof", () => {

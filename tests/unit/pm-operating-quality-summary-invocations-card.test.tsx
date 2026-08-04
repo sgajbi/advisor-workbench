@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import PmOperatingQualitySummaryInvocationsCard from "../../src/features/workbench/components/pm-operating-quality-summary-invocations-card";
@@ -115,6 +115,19 @@ describe("PmOperatingQualitySummaryInvocationsCard", () => {
 
     expect(screen.getByText("Summary Invocation Detail")).toBeInTheDocument();
     expect(screen.getByText("Summary invocation returned by Gateway")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The summary invocation is recorded for audit, but no generated PM quality output is available from this record.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Output unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("How this was prepared"));
+    expect(
+      screen.getByText(
+        "Manage published an invocation and audit record, not generated summary content.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Not approved for client use")).toBeVisible();
     expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("pmq_run_001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("pmq_review_001").length).toBeGreaterThan(0);

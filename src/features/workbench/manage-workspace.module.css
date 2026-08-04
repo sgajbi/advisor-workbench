@@ -162,7 +162,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.manageScope :global(.dpm-copilot-result) {
+.manageScope :global(.dpm-ai-workflow-result) {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
   gap: 16px;
@@ -175,13 +175,13 @@
   box-shadow: 0 2px 7px rgba(19, 27, 46, 0.06);
 }
 
-.manageScope :global(.dpm-copilot-result-copy) {
+.manageScope :global(.dpm-ai-workflow-result-copy) {
   display: grid;
   gap: 5px;
   min-width: 0;
 }
 
-.manageScope :global(.dpm-copilot-result-copy > span) {
+.manageScope :global(.dpm-ai-workflow-result-copy > span) {
   color: #725b26;
   font-size: 10px;
   font-weight: 800;
@@ -190,7 +190,7 @@
   text-transform: uppercase;
 }
 
-.manageScope :global(.dpm-copilot-result-copy h3) {
+.manageScope :global(.dpm-ai-workflow-result-copy h3) {
   margin: 0;
   color: #191c1e;
   font-size: 17px;
@@ -198,16 +198,51 @@
   outline: none;
 }
 
-.manageScope :global(.dpm-copilot-result-copy h3:focus-visible) {
+.manageScope :global(.dpm-ai-workflow-result-copy h3:focus-visible) {
   border-radius: 2px;
   box-shadow: 0 0 0 3px rgba(114, 91, 38, 0.24);
 }
 
-.manageScope :global(.dpm-copilot-result-copy p) {
+.manageScope :global(.dpm-ai-workflow-result-copy p) {
   margin: 0;
   color: #45464d;
   font-size: 13px;
   line-height: 19px;
+}
+
+.manageScope :global(.dpm-wave-decision-support) {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+  background: #fbfcfd;
+}
+
+.manageScope :global(.dpm-wave-decision-support-header) {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.manageScope :global(.dpm-wave-decision-support-header > div:first-child) {
+  display: grid;
+  gap: 4px;
+  max-width: 720px;
+}
+
+.manageScope :global(.dpm-wave-decision-support-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.manageScope :global(.dpm-wave-decision-support-status) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .manageScope :global(.dpm-copilot-badge-row) {
@@ -3929,7 +3964,8 @@
   .manageScope :global(.manage-module-grid),
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
-  .manageScope :global(.dpm-copilot-result),
+  .manageScope :global(.dpm-ai-workflow-result),
+  .manageScope :global(.dpm-wave-decision-support-status),
   .manageScope :global(.dpm-wave-command-center-status-strip),
   .manageScope :global(.dpm-wave-command-center-workspace-grid),
   .manageScope :global(.dpm-wave-command-center-summary-grid),
@@ -3959,5 +3995,13 @@
   .manageScope :global(.portfolio-memory-detail-snapshot) {
     padding-left: 0;
     border-left: 0;
+  }
+
+  .manageScope :global(.dpm-wave-decision-support-header) {
+    flex-direction: column;
+  }
+
+  .manageScope :global(.dpm-wave-decision-support-actions) {
+    justify-content: flex-start;
   }
 }

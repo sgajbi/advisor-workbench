@@ -8,13 +8,16 @@ import {
 } from "@/features/workbench/outcome-review-api";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import {
+  buildDpmAiWorkflowOutcome,
+  type DpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
+import {
   buildOutcomeClientCommunicationBoundaryView,
   type OutcomeReviewClientCommunicationBoundaryView,
   type OutcomeReviewListItem,
 } from "@/features/workbench/outcome-review-view-model";
 import {
   buildOutcomeReviewHandoffMessages,
-  describeOutcomeNarrativeRun,
 } from "@/features/workbench/outcome-review-panel-helpers";
 
 type Params = {
@@ -28,6 +31,7 @@ export type OutcomeReviewHandoffActions = {
   reportJobPending: boolean;
   aiNarrativeAvailable: boolean;
   aiNarrativePending: boolean;
+  aiNarrativeOutcome: DpmAiWorkflowOutcome | null;
   requestOutcomeReportJob: () => Promise<void>;
   requestOutcomeAiNarrative: () => Promise<void>;
 };
@@ -38,9 +42,10 @@ export function useOutcomeReviewHandoffs({
   const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
   const [reportJobError, setReportJobError] = useState<string | null>(null);
   const [reportJobPending, setReportJobPending] = useState(false);
-  const [aiNarrativeStatus, setAiNarrativeStatus] = useState<string | null>(null);
   const [aiNarrativeError, setAiNarrativeError] = useState<string | null>(null);
   const [aiNarrativePending, setAiNarrativePending] = useState(false);
+  const [aiNarrativeOutcome, setAiNarrativeOutcome] =
+    useState<DpmAiWorkflowOutcome | null>(null);
   const [handoffBoundary, setHandoffBoundary] =
     useState<OutcomeReviewClientCommunicationBoundaryView | null>(null);
 
@@ -53,9 +58,9 @@ export function useOutcomeReviewHandoffs({
     () =>
       buildOutcomeReviewHandoffMessages(
         reportJobError ?? reportJobStatus,
-        aiNarrativeError ?? aiNarrativeStatus,
+        aiNarrativeError,
       ),
-    [aiNarrativeError, aiNarrativeStatus, reportJobError, reportJobStatus],
+    [aiNarrativeError, reportJobError, reportJobStatus],
   );
 
   const requestOutcomeReportJob = useCallback(async () => {
@@ -85,6 +90,7 @@ export function useOutcomeReviewHandoffs({
     }
     setAiNarrativePending(true);
     setAiNarrativeError(null);
+    setAiNarrativeOutcome(null);
     try {
       const narrative = await requestDpmOutcomeReviewAiNarrative({
         outcomeReviewId: primaryReview.outcomeReviewId,
@@ -92,7 +98,7 @@ export function useOutcomeReviewHandoffs({
       setHandoffBoundary(
         buildOutcomeClientCommunicationBoundaryView(narrative.ai_evidence_input),
       );
-      setAiNarrativeStatus(describeOutcomeNarrativeRun(narrative.data));
+      setAiNarrativeOutcome(buildDpmAiWorkflowOutcome("outcome-narrative", narrative));
     } catch (error) {
       setAiNarrativeError(
         error instanceof Error ? error.message : "Outcome review request failed",
@@ -109,6 +115,7 @@ export function useOutcomeReviewHandoffs({
     reportJobPending,
     aiNarrativeAvailable,
     aiNarrativePending,
+    aiNarrativeOutcome,
     requestOutcomeReportJob,
     requestOutcomeAiNarrative,
   };

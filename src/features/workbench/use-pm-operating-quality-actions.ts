@@ -40,6 +40,10 @@ import {
   buildPmOperatingQualityPanelModel,
   type PmOperatingQualityPanelModel,
 } from "@/features/workbench/pm-operating-quality-view-model";
+import {
+  buildDpmAiWorkflowOutcome,
+  type DpmAiWorkflowOutcome,
+} from "@/features/workbench/dpm-ai-workflow-disclosure";
 import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
@@ -68,6 +72,7 @@ type UsePmOperatingQualityActionsResult = {
   pendingSummaryInvocationCreate: boolean;
   actionError: PmQualityActionError | null;
   actionMessage: string | null;
+  summaryOutcome: DpmAiWorkflowOutcome | null;
   fairnessCreateEvidence: PmQualityFairnessCreateEvidence | null;
   reviewActionCreateEvidence: PmQualityReviewActionEvidence | null;
   summaryInvocationCreateEvidence: PmQualitySummaryInvocationEvidence | null;
@@ -127,6 +132,7 @@ export function usePmOperatingQualityActions({
     useState<PmQualitySummaryInvocationEvidence | null>(null);
   const [summaryResponse, setSummaryResponse] =
     useState<DpmPmOperatingQualitySummaryResponse | null>(null);
+  const [summaryOutcome, setSummaryOutcome] = useState<DpmAiWorkflowOutcome | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
@@ -362,12 +368,13 @@ export function usePmOperatingQualityActions({
     setPendingSummaryAction(true);
     setActionError(null);
     setActionMessage(null);
+    setSummaryOutcome(null);
     try {
       const response = await requestDpmPmOperatingQualitySummary({
         scoreRunId: model.selectedScoreRun.scoreRunId,
       });
       setSummaryResponse(response);
-      setActionMessage("Support summary returned review-required PM quality evidence.");
+      setSummaryOutcome(buildDpmAiWorkflowOutcome("pm-quality-summary", response));
     } catch (error) {
       setActionError(
         buildPmQualityActionError(error, "PM operating quality support summary request failed")
@@ -546,6 +553,7 @@ export function usePmOperatingQualityActions({
     pendingSummaryInvocationCreate,
     actionError,
     actionMessage,
+    summaryOutcome,
     fairnessCreateEvidence,
     reviewActionCreateEvidence,
     summaryInvocationCreateEvidence,

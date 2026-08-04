@@ -3,6 +3,8 @@
 import { AnalyticsTable, MetricRow, Text } from "@/design-system";
 import PmOperatingQualitySummaryInvocationControl from "@/features/workbench/components/pm-operating-quality-summary-invocation-control";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
+import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
+import { buildDpmAiInvocationEvidenceOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type {
   PmQualityCommandOption,
@@ -41,6 +43,17 @@ export default function PmOperatingQualitySummaryInvocationsCard({
   onCreate,
 }: Props) {
   const hasDetail = model.summaryInvocationDetail.summaryInvocationId !== "N/A";
+  const invocationEvidenceOutcome = hasDetail
+    ? buildDpmAiInvocationEvidenceOutcome({
+        invocationId: model.summaryInvocationDetail.summaryInvocationId,
+        invocationState: model.summaryInvocationDetail.invocationState,
+        workflowRunId: model.summaryInvocationDetail.workflowRunId,
+        artifactRef: model.summaryInvocationDetail.artifactRef,
+        contentHash: model.summaryInvocationDetail.contentHash,
+        sourceRefs: model.summaryInvocationDetail.sourceRefs,
+        reviewActionId: model.summaryInvocationDetail.reviewActionId,
+      })
+    : null;
 
   return (
     <>
@@ -57,6 +70,14 @@ export default function PmOperatingQualitySummaryInvocationsCard({
           onFormChange={onFormChange}
           onPreview={onPreview}
           onCreate={onCreate}
+        />
+      ) : null}
+
+      {invocationEvidenceOutcome ? (
+        <DpmAiWorkflowResult
+          outcome={invocationEvidenceOutcome}
+          ariaLabel="PM quality summary-invocation evidence boundary"
+          eyebrow="Invocation audit record"
         />
       ) : null}
 
