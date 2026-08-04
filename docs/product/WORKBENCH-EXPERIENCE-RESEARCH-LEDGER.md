@@ -1944,3 +1944,54 @@ readiness response therefore proves listener availability, not source-worktree p
 The browser-proof command contract changes, so `wiki/Validation-and-CI.md` is updated in the same
 PR. After merge, publish the Workbench wiki and verify strict source/publication parity before
 closing issue #524.
+
+## Advisor Cockpit Acknowledgement Reconciliation
+
+### Workflow objective
+
+Help a client advisor distinguish a recorded review acknowledgement from the later confirmation of
+the action, preparation, and readiness evidence used for the next business decision.
+
+### Current workflow research
+
+1. TanStack Query's official
+   [background fetching guidance](https://tanstack.com/query/latest/docs/framework/react/guides/background-fetching-indicators)
+   distinguishes initial loading from background fetching and recommends a separate visible
+   indicator while retained data remains on screen.
+2. TanStack Query's official
+   [mutation invalidation guidance](https://tanstack.com/query/latest/docs/framework/react/guides/invalidations-from-mutations)
+   confirms that returning and awaiting the invalidation promise keeps the mutation pending until
+   the affected queries finish updating.
+3. IBM Carbon's
+   [inline loading guidance](https://carbondesignsystem.com/components/inline-loading/usage/)
+   recommends descriptive active, finished, and error labels for short update operations and
+   disabling the associated interaction until processing completes.
+
+### Adopted decisions
+
+1. Compose action, snapshot, preparation, and supportability queries into one Advisor Cockpit
+   evidence posture using the shared Workbench query-state projection.
+2. Keep previously retrieved evidence readable during confirmation, but replace the settled
+   decision and badge with a business-facing `Confirmation in progress` posture until every
+   required query settles.
+3. Await all four invalidations and keep acknowledgement unavailable during recording,
+   confirmation, partial evidence, unavailability, and permission restriction.
+4. Preserve cached evidence after an ordinary refresh failure with an explicit partial posture;
+   hide all protected cockpit evidence when any required source reports a permission boundary.
+5. Prove the composite with independently controlled query completion in integration tests and a
+   delayed-response production-browser flow.
+
+### Rejected decisions
+
+1. Optimistically removing or rewriting the source-owned action after acknowledgement.
+2. Replacing the whole workspace with a blocking loader during background confirmation.
+3. Calling the acknowledgement complete while any required source still has an unsettled response.
+4. Re-enabling the action against cached evidence after a failed confirmation.
+5. Exposing cache, query-client, refetch, endpoint, or service-topology terminology to advisors.
+
+### Publication decision
+
+No wiki source change is required. Issue #526 corrects the state handling of existing supported
+Advisor Cockpit routes without changing the route catalogue, backend ownership, operator commands,
+or supported-feature boundary. Repository context records the durable composite-evidence invariant;
+the PR must still pass strict wiki parity before merge.
