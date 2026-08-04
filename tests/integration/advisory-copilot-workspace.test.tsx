@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisoryCopilotWorkspace from "../../src/features/proposals/components/advisory-copilot-workspace";
-import type { AdvisoryCopilotRunData } from "../../src/features/proposals/types";
+import type {
+  AdvisoryCopilotReviewData,
+  AdvisoryCopilotRunData,
+} from "../../src/features/proposals/types";
 
 const listProposalsMock = vi.fn(async (_filters: unknown) => ({
   items: [
@@ -38,6 +41,14 @@ const createEvidencePacketMock = vi.fn(async (_payload: unknown) => ({
         section_key: "POLICY_POSTURE",
         title: "Policy posture",
         summary_items: ["Policy evaluation requires compliance review."],
+        source_refs: [
+          {
+            source_system: "lotus-manage",
+            source_type: "policy-evaluation",
+            source_id: "policy-evaluation-1",
+            access_class: "ADVISOR_INTERNAL",
+          },
+        ],
       },
     ],
     unsupported_evidence: [
@@ -77,7 +88,7 @@ const reviewAdvisoryCopilotRunMock = vi.fn(
     _runId: string,
     _payload: unknown,
     _idempotencyKey: string,
-  ): Promise<AdvisoryCopilotRunData> => ({
+  ): Promise<AdvisoryCopilotReviewData> => ({
   run: {
     run_id: "copilot_run_1",
     evidence_packet_id: "copilot_packet_1",
@@ -97,15 +108,14 @@ const reviewAdvisoryCopilotRunMock = vi.fn(
     review_guidance_json: ["Review source evidence before internal use."],
     guardrail_results_json: [] as string[],
   },
-  reviews: [
-    {
-      review_id: "review_1",
-      run_id: "copilot_run_1",
-      action: "APPROVE_FOR_INTERNAL_USE",
-      actor_id: "advisor_sg_001",
-      occurred_at: "2026-08-04T08:05:00Z",
-    },
-  ],
+  review: {
+    review_id: "review_1",
+    run_id: "copilot_run_1",
+    action: "APPROVE_FOR_INTERNAL_USE",
+    actor_id: "advisor_sg_001",
+    occurred_at: "2026-08-04T08:05:00Z",
+  },
+  replayed: false,
   }),
 );
 
@@ -192,7 +202,7 @@ describe("AdvisoryCopilotWorkspace", () => {
     expect(screen.getByText("Review required")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Prepared with AI assistance")).toBeInTheDocument();
-    expect(screen.getByText("Source evidence attached")).toBeInTheDocument();
+    expect(screen.getByText("Limited source evidence")).toBeInTheDocument();
     expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
     expect(screen.queryByText("workflow_pack")).not.toBeInTheDocument();
     expect(screen.queryByText("PROPOSAL_EXPLANATION")).not.toBeInTheDocument();

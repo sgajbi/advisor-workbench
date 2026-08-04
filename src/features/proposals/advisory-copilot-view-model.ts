@@ -8,11 +8,14 @@ import type {
   AdvisoryCopilotAudience,
   AdvisoryCopilotActionFamily,
   AdvisoryCopilotEvidencePacketData,
+  AdvisoryCopilotReviewData,
   AdvisoryCopilotRunData,
   AdvisoryCopilotReviewRecord,
   AdvisoryCopilotSupportabilityData,
   ProposalSummary,
 } from "./types";
+
+type AdvisoryCopilotResultData = AdvisoryCopilotRunData | AdvisoryCopilotReviewData;
 
 export type AdvisoryCopilotActionOption = {
   family: AdvisoryCopilotActionFamily;
@@ -98,7 +101,7 @@ export function buildAdvisoryCopilotWorkspaceModel({
   proposals: ProposalSummary[];
   supportability?: AdvisoryCopilotSupportabilityData;
   packet?: AdvisoryCopilotEvidencePacketData;
-  run?: AdvisoryCopilotRunData;
+  run?: AdvisoryCopilotResultData;
 }): AdvisoryCopilotWorkspaceModel {
   const proposal = proposals[0];
   const supportabilityFamilies = supportability?.supported_action_families;
@@ -158,7 +161,7 @@ export function buildAdvisoryCopilotWorkspaceModel({
 
 function buildCopilotAiDisclosure(
   packet: AdvisoryCopilotEvidencePacketData | undefined,
-  run: AdvisoryCopilotRunData | undefined,
+  run: AdvisoryCopilotResultData | undefined,
 ): AiAssistanceDisclosureModel {
   const runBody = run?.run;
   const outputAvailable = Boolean(runBody?.output_sections_json?.length);
@@ -167,13 +170,15 @@ function buildCopilotAiDisclosure(
     runBody?.evidence_packet_id ?? packet?.evidence_packet?.evidence_packet_id;
   const evidencePacketHash =
     runBody?.evidence_packet_hash ?? packet?.evidence_packet?.evidence_packet_hash;
-  const hasOutputEvidence = Boolean(evidencePacketId && evidencePacketHash && runBody?.output_hash);
-  const evidenceSourceCount = [evidencePacketId, evidencePacketHash, runBody?.output_hash].filter(
-    Boolean,
-  ).length;
-  const reviewRecord = run?.reviews?.find(
-    (review) => Boolean(review.actor_id) && Boolean(review.occurred_at),
-  );
+  const evidenceSourceCount = countDistinctCopilotSourceRefs(packet);
+  const singularReview = run?.review;
+  const reviewHistory = Array.isArray(run?.reviews) ? run.reviews : [];
+  const hasSingularReview = singularReview !== undefined && singularReview !== null;
+  const reviewRecord = isSourceRecordedReview(singularReview)
+    ? singularReview
+    : hasSingularReview
+      ? undefined
+      : reviewHistory.find(isSourceRecordedReview);
   const reviewPosture = runBody?.review_posture;
   const humanReview = mapCopilotReview(reviewPosture, reviewRecord);
   const hasAiProvenance = Boolean(workflowRunId && outputAvailable);
@@ -187,6 +192,9 @@ function buildCopilotAiDisclosure(
       : []),
     ...(outputAvailable && !workflowRunId
       ? ["The source returned output without a Lotus AI workflow-run reference."]
+      : []),
+    ...(outputAvailable && evidenceSourceCount === 0
+      ? ["The evidence packet did not publish source references for this output."]
       : []),
     ...(reviewPosture === "APPROVED_FOR_INTERNAL_USE" && !reviewRecord
       ? ["The source did not publish reviewer identity and review time with this response."]
@@ -203,6 +211,8 @@ function buildCopilotAiDisclosure(
       : null,
     runBody?.created_at ? { label: "Prepared", value: runBody.created_at } : null,
     evidencePacketId ? { label: "Evidence packet", value: evidencePacketId } : null,
+    evidencePacketHash ? { label: "Evidence packet hash", value: evidencePacketHash } : null,
+    runBody?.output_hash ? { label: "Output hash", value: runBody.output_hash } : null,
   ].filter((item): item is { label: string; value: string } => item !== null);
 
   return createAiAssistanceDisclosure({
@@ -220,7 +230,12 @@ function buildCopilotAiDisclosure(
         ? "live"
         : "partial",
     evidence: {
-      state: hasOutputEvidence ? "supported" : evidenceSourceCount > 0 ? "limited" : "missing",
+      state:
+        evidenceSourceCount === 0
+          ? "missing"
+          : unsupportedEvidence.length > 0
+            ? "limited"
+            : "supported",
       sourceCount: evidenceSourceCount,
     },
     humanReview,
@@ -229,6 +244,41 @@ function buildCopilotAiDisclosure(
     limitations,
     diagnostics,
   });
+}
+
+function countDistinctCopilotSourceRefs(
+  packet: AdvisoryCopilotEvidencePacketData | undefined,
+): number {
+  const sourceIdentities = new Set<string>();
+  for (const section of packet?.evidence_packet?.sections ?? []) {
+    for (const sourceRef of section.source_refs ?? []) {
+      const sourceSystem = nonEmptyString(sourceRef.source_system);
+      const sourceType = nonEmptyString(sourceRef.source_type);
+      const sourceId = nonEmptyString(sourceRef.source_id);
+      const accessClass = nonEmptyString(sourceRef.access_class);
+      if (!sourceSystem || !sourceType || !sourceId || !accessClass) {
+        continue;
+      }
+      sourceIdentities.add(`${sourceSystem}\u0000${sourceType}\u0000${sourceId}\u0000${accessClass}`);
+    }
+  }
+  return sourceIdentities.size;
+}
+
+function isSourceRecordedReview(
+  review: unknown,
+): review is AdvisoryCopilotReviewRecord {
+  if (!review || typeof review !== "object") {
+    return false;
+  }
+  const candidate = review as Partial<AdvisoryCopilotReviewRecord>;
+  return Boolean(
+    nonEmptyString(candidate.actor_id) && nonEmptyString(candidate.occurred_at),
+  );
+}
+
+function nonEmptyString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 function mapCopilotReview(
