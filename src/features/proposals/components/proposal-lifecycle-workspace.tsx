@@ -120,39 +120,50 @@ export default function ProposalLifecycleWorkspace({
       ]);
     },
   });
-  const workflowContextModel = useMemo(
-    () =>
-      buildProposalQueueWorkflowContext({
-        portfolioId,
-        modeLabel: model.title,
-        isLoading,
-        permissionBlocked: isWorkbenchPermissionBlockedError(error),
-        hasError: Boolean(error),
-        hasPartialEvidence:
-          mode === "suitability" &&
-          Boolean(
-            policyQueueQuery.error ||
-              policyEvaluationQuery.error ||
-              policySignOffPackageQuery.error ||
-              policyWorkflowQuery.error
-          ),
-        totalCount: model.totalCount,
-        attentionCount: model.attentionCount,
-        primaryDecision: model.primaryDecision,
-        recommendedAction: model.recommendedAction,
-      }),
-    [
-      error,
-      isLoading,
-      mode,
-      model,
-      policyEvaluationQuery.error,
-      policyQueueQuery.error,
-      policySignOffPackageQuery.error,
-      policyWorkflowQuery.error,
+  const workflowContextModel = useMemo(() => {
+    const policySourceErrors =
+      mode === "suitability"
+        ? [
+            policyQueueQuery.error,
+            policyEvaluationQuery.error,
+            policySignOffPackageQuery.error,
+            policyWorkflowQuery.error,
+          ]
+        : [];
+    const policySourcesLoading =
+      mode === "suitability" &&
+      (policyQueueQuery.isLoading ||
+        policyEvaluationQuery.isLoading ||
+        policySignOffPackageQuery.isLoading ||
+        policyWorkflowQuery.isLoading);
+
+    return buildProposalQueueWorkflowContext({
       portfolioId,
-    ]
-  );
+      modeLabel: model.title,
+      isLoading: isLoading || policySourcesLoading,
+      permissionBlocked: [error, ...policySourceErrors].some(isWorkbenchPermissionBlockedError),
+      hasError: Boolean(error),
+      hasPartialEvidence: policySourceErrors.some(Boolean),
+      totalCount: model.totalCount,
+      attentionCount: model.attentionCount,
+      primaryDecision: model.primaryDecision,
+      recommendedAction: model.recommendedAction,
+    });
+  }, [
+    error,
+    isLoading,
+    mode,
+    model,
+    policyEvaluationQuery.error,
+    policyEvaluationQuery.isLoading,
+    policyQueueQuery.error,
+    policyQueueQuery.isLoading,
+    policySignOffPackageQuery.error,
+    policySignOffPackageQuery.isLoading,
+    policyWorkflowQuery.error,
+    policyWorkflowQuery.isLoading,
+    portfolioId,
+  ]);
   usePublishProposalWorkflowContext(workflowContextModel);
 
   if (isLoading) {

@@ -69,7 +69,7 @@ describe("proposal workflow context view model", () => {
     {
       expectedState: "partial",
       input: { hasPartialEvidence: true },
-      expectedTitle: "1 need attention",
+      expectedTitle: "Supporting evidence is unavailable",
     },
     {
       expectedState: "ready",
@@ -95,5 +95,22 @@ describe("proposal workflow context view model", () => {
     );
     expect(model.blockers).toEqual(["1 proposal needs advisor action."]);
     expect(model.boundaryNote).toContain("queue-level posture");
+  });
+
+  it("does not let an empty proposal queue mask unavailable suitability evidence", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      totalCount: 0,
+      attentionCount: 0,
+      hasPartialEvidence: true,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Supporting evidence is unavailable");
+    expect(model.currentPosture).toBe("No proposals in view; evidence incomplete");
+    expect(model.blockers).toEqual([
+      "One or more supporting policy-evidence sources are unavailable.",
+    ]);
+    expect(model.boundaryNote).toContain("do not establish suitability posture");
   });
 });

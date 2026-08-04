@@ -167,6 +167,32 @@ export function buildProposalQueueWorkflowContext({
     });
   }
 
+  if (hasPartialEvidence) {
+    return withStatePresentation({
+      state: "partial",
+      title: "Supporting evidence is unavailable",
+      summary:
+        totalCount === 0
+          ? "The proposal queue is empty, but one or more suitability evidence sources could not be confirmed."
+          : primaryDecision,
+      currentPosture:
+        totalCount === 0
+          ? "No proposals in view; evidence incomplete"
+          : `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in view`,
+      nextAction:
+        "Restore the unavailable policy-evidence source before relying on suitability workflow posture.",
+      blockers: ["One or more supporting policy-evidence sources are unavailable."],
+      facts: [
+        ...facts,
+        { label: "In view", value: String(totalCount) },
+        { label: "Need action", value: String(attentionCount) },
+      ],
+      sourceLabel: "Gateway · advisory proposal lifecycle",
+      boundaryNote:
+        "Proposal counts do not establish suitability posture while supporting policy evidence is unavailable.",
+    });
+  }
+
   if (totalCount === 0) {
     return withStatePresentation({
       state: "empty",
@@ -182,14 +208,13 @@ export function buildProposalQueueWorkflowContext({
   }
 
   return withStatePresentation({
-    state: hasPartialEvidence ? "partial" : "ready",
+    state: "ready",
     title: attentionCount > 0 ? `${attentionCount} need attention` : "Queue ready for review",
     summary: primaryDecision,
     currentPosture: `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in view`,
     nextAction: recommendedAction,
-    blockers: hasPartialEvidence
-      ? ["One or more supporting policy-evidence sources are unavailable."]
-      : attentionCount > 0
+    blockers:
+      attentionCount > 0
         ? [`${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} advisor action.`]
         : [],
     facts: [
