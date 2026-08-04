@@ -85,6 +85,30 @@ describe("proposal lifecycle workspace view model", () => {
     });
   });
 
+  it("does not declare a filtered queue clear while adjacent proposal views remain", () => {
+    const model = buildProposalLifecycleWorkspaceModel({
+      mode: "suitability",
+      proposals: [proposals[0]],
+      hasMoreResults: true,
+    });
+
+    expect(model.totalCount).toBe(0);
+    expect(model.emptyTitle).toBe("No matching proposals in this view");
+    expect(model.emptyBody).toContain("Review the next proposals");
+    expect(model.emptyTitle).not.toBe("No suitability items need review");
+  });
+
+  it("guides advisors back when only earlier proposal views can contain matches", () => {
+    const model = buildProposalLifecycleWorkspaceModel({
+      mode: "implementation",
+      proposals: [proposals[0]],
+      hasPreviousResults: true,
+    });
+
+    expect(model.emptyTitle).toBe("No matching proposals in this view");
+    expect(model.emptyBody).toContain("Return to the previous proposals");
+  });
+
   it("normalizes unsupported route modes to approval queue", () => {
     expect(normalizeProposalLifecycleMode("overview")).toBe("approval-queue");
     expect(normalizeProposalLifecycleMode("proposal-builder")).toBe("approval-queue");

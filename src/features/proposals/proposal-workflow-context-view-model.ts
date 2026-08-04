@@ -133,7 +133,8 @@ export function buildProposalQueueWorkflowContext({
   permissionBlocked,
   hasError,
   hasUnavailableEvidence,
-  hasRefreshFailure,
+  hasProposalRefreshFailure,
+  hasSupportingEvidenceRefreshFailure,
   hasMoreResults,
   hasPreviousResults,
   windowNumber,
@@ -149,7 +150,8 @@ export function buildProposalQueueWorkflowContext({
   permissionBlocked: boolean;
   hasError: boolean;
   hasUnavailableEvidence: boolean;
-  hasRefreshFailure: boolean;
+  hasProposalRefreshFailure: boolean;
+  hasSupportingEvidenceRefreshFailure: boolean;
   hasMoreResults: boolean;
   hasPreviousResults: boolean;
   windowNumber: number;
@@ -227,14 +229,20 @@ export function buildProposalQueueWorkflowContext({
 
   const hasPartialQueueWindow = hasMoreResults || hasPreviousResults;
   const hasPartialEvidence =
-    hasUnavailableEvidence || hasRefreshFailure || hasPartialQueueWindow;
+    hasUnavailableEvidence ||
+    hasProposalRefreshFailure ||
+    hasSupportingEvidenceRefreshFailure ||
+    hasPartialQueueWindow;
 
   if (hasPartialEvidence) {
     const blockers = [
+      ...(hasProposalRefreshFailure
+        ? ["The latest proposal view could not be confirmed."]
+        : []),
       ...(hasUnavailableEvidence
         ? ["One or more supporting policy-evidence sources are unavailable."]
         : []),
-      ...(hasRefreshFailure
+      ...(hasSupportingEvidenceRefreshFailure
         ? ["The latest policy-evidence refresh did not complete."]
         : []),
       ...(hasMoreResults
@@ -245,8 +253,10 @@ export function buildProposalQueueWorkflowContext({
         : []),
     ];
     const title =
-      hasUnavailableEvidence || hasRefreshFailure
-        ? hasPartialQueueWindow
+      hasUnavailableEvidence ||
+      hasProposalRefreshFailure ||
+      hasSupportingEvidenceRefreshFailure
+        ? hasPartialQueueWindow || hasProposalRefreshFailure
           ? "Proposal view is incomplete"
           : "Supporting evidence is incomplete"
         : attentionCount > 0
@@ -257,14 +267,20 @@ export function buildProposalQueueWorkflowContext({
     const summary =
       totalCount > 0
         ? primaryDecision
+        : hasProposalRefreshFailure
+          ? "No proposals are visible while the latest proposal view remains unconfirmed."
         : hasMoreResults
           ? "No proposals match the current view; more proposals remain available."
           : hasPreviousResults
             ? "No proposals match the current view; earlier proposals remain available."
             : "No proposals are visible while supporting policy evidence remains incomplete.";
-    const nextAction = hasUnavailableEvidence
-      ? "Restore the unavailable policy-evidence source before relying on suitability workflow posture."
-      : hasRefreshFailure
+    const nextAction = hasProposalRefreshFailure
+      ? hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
+        ? "Retry the proposal view and restore supporting policy evidence before relying on the current workflow posture."
+        : "Retry the proposal view before relying on the current queue posture."
+      : hasUnavailableEvidence
+        ? "Restore the unavailable policy-evidence source before relying on suitability workflow posture."
+      : hasSupportingEvidenceRefreshFailure
         ? "Retry the policy-evidence refresh before relying on the current suitability posture."
         : totalCount === 0 && hasMoreResults
           ? "Review the next proposals before concluding this queue is clear."
@@ -287,7 +303,7 @@ export function buildProposalQueueWorkflowContext({
       ],
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote:
-        "Counts apply only to proposals shown in this view. They do not establish complete queue or suitability posture while supporting evidence is partial.",
+        "Counts apply only to proposals shown in this view. They do not establish complete queue posture while proposal or supporting evidence is partial.",
     });
   }
 
