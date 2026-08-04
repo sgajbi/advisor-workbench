@@ -446,8 +446,21 @@ export type AdvisoryCopilotRunData = {
   run?: {
     run_id?: string;
     action_family?: AdvisoryCopilotActionFamily | string;
+    evidence_packet_id?: string;
+    evidence_packet_hash?: string;
+    output_hash?: string;
     review_posture?: string;
     client_ready_publication?: string;
+    created_at?: string;
+    updated_at?: string;
+    lotus_ai_workflow_run_id?: string | null;
+    lotus_ai_model_version?: string | null;
+    workflow_pack_id?: string;
+    workflow_pack_version?: string;
+    prompt_template_version?: string;
+    output_schema_version?: string;
+    evaluation_pack_ref?: string;
+    lineage_json?: Record<string, unknown>;
     output_sections_json?: Array<{
       section_key?: string;
       title?: string;
@@ -459,13 +472,24 @@ export type AdvisoryCopilotRunData = {
     guardrail_results_json?: string[];
     [key: string]: unknown;
   };
-  reviews?: Array<Record<string, unknown>>;
+  reviews?: AdvisoryCopilotReviewRecord[];
   replayed?: boolean;
   [key: string]: unknown;
 };
 
+export type AdvisoryCopilotReviewRecord = {
+  review_id?: string;
+  run_id?: string;
+  action?: string;
+  previous_review_posture?: string;
+  new_review_posture?: string;
+  actor_id?: string;
+  occurred_at?: string;
+  [key: string]: unknown;
+};
+
 export type AdvisoryCopilotReviewData = AdvisoryCopilotRunData & {
-  review?: Record<string, unknown>;
+  review?: AdvisoryCopilotReviewRecord;
 };
 
 export type AdvisoryCopilotSupportabilityData = {

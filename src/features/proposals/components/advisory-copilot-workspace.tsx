@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   ActionButton,
+  AiAssistanceDisclosure,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -263,6 +264,7 @@ export default function AdvisoryCopilotWorkspace({
               </ActionButton>
             </Stack>
           </div>
+          <AiAssistanceDisclosure disclosure={model.aiDisclosure} />
           {model.runSections.length > 0 ? (
             <div className={styles.sectionList}>
               {model.runSections.map((section) => (
