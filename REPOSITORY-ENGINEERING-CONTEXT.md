@@ -177,7 +177,11 @@ Current repository posture:
     verifies the selected portfolio against configured entitlement; and emits only the exact read
     or acknowledgement capability required by the allowlisted route. Non-development requests
     fail closed until the authenticated principal contract in Workbench #436 and platform #563 is
-    implemented. It must not reconstruct advisory policy semantics,
+    implemented. Action, snapshot, preparation, and supportability queries form one advisor
+    evidence posture: previously retrieved evidence may remain readable during confirmation, but
+    Workbench must not publish it as settled or enable another acknowledgement until every required
+    query settles. Any required refresh failure keeps the composite partial, and any permission
+    denial hides the protected evidence. It must not reconstruct advisory policy semantics,
     clear blockers, infer client-ready release, contact clients, route orders, or call
     `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
     advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,
