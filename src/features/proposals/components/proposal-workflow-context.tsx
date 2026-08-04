@@ -55,9 +55,14 @@ export function ProposalWorkflowContextPublisher({
 }
 
 export function usePublishProposalWorkflowContext(model: ProposalWorkflowContextModel): void {
-  const { publish, reset } = useProposalWorkflowContext();
+  const context = useContext(ProposalWorkflowContext);
+  const publish = context?.publish;
+  const reset = context?.reset;
 
   useEffect(() => {
+    if (!publish || !reset) {
+      return;
+    }
     publish(model);
     return reset;
   }, [model, publish, reset]);
