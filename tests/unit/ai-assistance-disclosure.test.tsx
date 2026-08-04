@@ -23,11 +23,12 @@ describe("AiAssistanceDisclosure", () => {
 
     const trigger = screen.getByText("How this was prepared").closest("summary");
     expect(trigger).toBeTruthy();
-    expect(screen.getByText("Review required")).toBeInTheDocument();
+    expect(screen.getByText("Partial output")).toBeInTheDocument();
     expect(screen.getByText("Performance advisor brief")).toBeInTheDocument();
 
     fireEvent.click(trigger!);
     expect(screen.getByText("Prepared with AI assistance")).toBeVisible();
+    expect(screen.getByText("Output is incomplete")).toBeVisible();
     expect(screen.getByText("Limited source evidence")).toBeVisible();
     expect(screen.getByText("Human review required")).toBeVisible();
     expect(screen.getByText("Not approved for client use")).toBeVisible();
@@ -51,6 +52,30 @@ describe("AiAssistanceDisclosure", () => {
       />,
     );
 
-    expect(screen.getByText("Rule-based")).toBeInTheDocument();
+    expect(screen.getByText("Live rule-based output")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["live", "Live AI-assisted output"],
+    ["partial", "Partial output"],
+    ["stale", "Stale output"],
+    ["simulation", "Simulation output"],
+    ["unavailable", "Output unavailable"],
+  ] as const)("names %s availability in summary text", (availability, expectedLabel) => {
+    render(
+      <AiAssistanceDisclosure
+        disclosure={createAiAssistanceDisclosure({
+          scopeLabel: "Advisor output",
+          preparation: "ai-assisted",
+          availability,
+          evidence: { state: "supported", sourceCount: 2 },
+          humanReview: { state: "not-required", sourceRecorded: false },
+          clientUse: "internal-only",
+          freshness: { state: "not-reported" },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
   });
 });
