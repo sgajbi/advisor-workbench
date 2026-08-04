@@ -91,6 +91,7 @@ export function createAiAssistanceDisclosure(
   let sourceRecorded = input.humanReview.sourceRecorded ?? false;
   let clientUse = input.clientUse;
   let freshnessState = input.freshness.state;
+  let availability = input.availability;
 
   if (evidenceState === "supported" && sourceCount === 0) {
     evidenceState = "limited";
@@ -108,17 +109,28 @@ export function createAiAssistanceDisclosure(
   }
 
   if (input.preparation === "requested") {
+    availability = "unavailable";
     reviewState = "unavailable";
     sourceRecorded = false;
     clientUse = "blocked";
     limitations.add("No usable generated output is available for review or client use.");
   }
 
-  if (input.availability === "unavailable") {
+  if (input.preparation === "unavailable" && availability === "live") {
+    availability = "partial";
+    limitations.add("Live availability cannot be confirmed without generation provenance.");
+  }
+
+  if (availability === "unavailable") {
     clientUse = "blocked";
   }
 
-  if (input.availability === "simulation" && clientUse === "approved") {
+  if (availability === "stale") {
+    clientUse = "blocked";
+    limitations.add("Historical output must not be used with a client; review the current run.");
+  }
+
+  if (availability === "simulation" && clientUse === "approved") {
     clientUse = "blocked";
     limitations.add("Simulation output is not approved for client use.");
   }
@@ -128,7 +140,7 @@ export function createAiAssistanceDisclosure(
     (reviewState !== "reviewed" ||
       !sourceRecorded ||
       evidenceState !== "supported" ||
-      input.availability !== "live")
+      availability !== "live")
   ) {
     clientUse = "blocked";
     limitations.add(
@@ -139,7 +151,7 @@ export function createAiAssistanceDisclosure(
   return {
     scopeLabel: input.scopeLabel,
     preparation: input.preparation,
-    availability: input.availability,
+    availability,
     evidence: {
       state: evidenceState,
       sourceCount,

@@ -48,9 +48,15 @@ describe("createAiAssistanceDisclosure", () => {
       expected: { clientUse: "blocked" },
     },
     {
+      name: "stale output claiming client approval",
+      input: { ...liveReviewedInput, availability: "stale" as const },
+      expected: { clientUse: "blocked" },
+    },
+    {
       name: "requested output claiming review and approval",
       input: { ...liveReviewedInput, preparation: "requested" as const },
       expected: {
+        availability: "unavailable",
         humanReview: { state: "unavailable", sourceRecorded: false },
         clientUse: "blocked",
       },
@@ -74,5 +80,30 @@ describe("createAiAssistanceDisclosure", () => {
       humanReview: { state: "review-required" },
       clientUse: "blocked",
     });
+  });
+
+  it("downgrades live availability when generation provenance is unavailable", () => {
+    const disclosure = createAiAssistanceDisclosure({
+      ...liveReviewedInput,
+      preparation: "unavailable",
+    });
+
+    expect(disclosure).toMatchObject({ availability: "partial", clientUse: "blocked" });
+    expect(disclosure.limitations).toContain(
+      "Live availability cannot be confirmed without generation provenance.",
+    );
+  });
+
+  it("adds a business limitation when stale output is blocked from client use", () => {
+    const disclosure = createAiAssistanceDisclosure({
+      ...liveReviewedInput,
+      availability: "stale",
+      clientUse: "internal-only",
+    });
+
+    expect(disclosure).toMatchObject({ availability: "stale", clientUse: "blocked" });
+    expect(disclosure.limitations).toContain(
+      "Historical output must not be used with a client; review the current run.",
+    );
   });
 });
