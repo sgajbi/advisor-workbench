@@ -1,10 +1,15 @@
-import type { SemanticBadgeTone } from "@/design-system";
+import {
+  createAiAssistanceDisclosure,
+  type AiAssistanceDisclosureModel,
+  type SemanticBadgeTone,
+} from "@/design-system";
 
 import type {
   AdvisoryCopilotAudience,
   AdvisoryCopilotActionFamily,
   AdvisoryCopilotEvidencePacketData,
   AdvisoryCopilotRunData,
+  AdvisoryCopilotReviewRecord,
   AdvisoryCopilotSupportabilityData,
   ProposalSummary,
 } from "./types";
@@ -81,6 +86,7 @@ export type AdvisoryCopilotWorkspaceModel = {
   runPosture: string;
   runTone: SemanticBadgeTone;
   clientReadyPosture: string;
+  aiDisclosure: AiAssistanceDisclosureModel;
 };
 
 export function buildAdvisoryCopilotWorkspaceModel({
@@ -146,7 +152,127 @@ export function buildAdvisoryCopilotWorkspaceModel({
     runPosture: formatCode(runBody?.review_posture ?? "No run yet"),
     runTone: reviewTone(runBody?.review_posture),
     clientReadyPosture: formatCode(runBody?.client_ready_publication ?? "BLOCKED"),
+    aiDisclosure: buildCopilotAiDisclosure(packet, run),
   };
+}
+
+function buildCopilotAiDisclosure(
+  packet: AdvisoryCopilotEvidencePacketData | undefined,
+  run: AdvisoryCopilotRunData | undefined,
+): AiAssistanceDisclosureModel {
+  const runBody = run?.run;
+  const outputAvailable = Boolean(runBody?.output_sections_json?.length);
+  const workflowRunId = runBody?.lotus_ai_workflow_run_id ?? null;
+  const evidencePacketId =
+    runBody?.evidence_packet_id ?? packet?.evidence_packet?.evidence_packet_id;
+  const evidencePacketHash =
+    runBody?.evidence_packet_hash ?? packet?.evidence_packet?.evidence_packet_hash;
+  const hasOutputEvidence = Boolean(evidencePacketId && evidencePacketHash && runBody?.output_hash);
+  const evidenceSourceCount = [evidencePacketId, evidencePacketHash, runBody?.output_hash].filter(
+    Boolean,
+  ).length;
+  const reviewRecord = run?.reviews?.find(
+    (review) => Boolean(review.actor_id) && Boolean(review.occurred_at),
+  );
+  const reviewPosture = runBody?.review_posture;
+  const humanReview = mapCopilotReview(reviewPosture, reviewRecord);
+  const hasAiProvenance = Boolean(workflowRunId && outputAvailable);
+  const unsupportedEvidence = packet?.evidence_packet?.unsupported_evidence ?? [];
+  const limitations = [
+    ...unsupportedEvidence.map(
+      (item) => item.advisor_message ?? formatCode(item.reason_code ?? "Evidence unavailable"),
+    ),
+    ...(!runBody
+      ? ["No advisory-assistance output has been requested for this proposal scope."]
+      : []),
+    ...(outputAvailable && !workflowRunId
+      ? ["The source returned output without a Lotus AI workflow-run reference."]
+      : []),
+    ...(reviewPosture === "APPROVED_FOR_INTERNAL_USE" && !reviewRecord
+      ? ["The source did not publish reviewer identity and review time with this response."]
+      : []),
+  ];
+  const diagnostics = [
+    runBody?.run_id ? { label: "Advisory run", value: runBody.run_id } : null,
+    workflowRunId ? { label: "AI workflow run", value: workflowRunId } : null,
+    runBody?.workflow_pack_id
+      ? {
+          label: "Workflow pack",
+          value: `${runBody.workflow_pack_id}${runBody.workflow_pack_version ? `@${runBody.workflow_pack_version}` : ""}`,
+        }
+      : null,
+    runBody?.created_at ? { label: "Prepared", value: runBody.created_at } : null,
+    evidencePacketId ? { label: "Evidence packet", value: evidencePacketId } : null,
+  ].filter((item): item is { label: string; value: string } => item !== null);
+
+  return createAiAssistanceDisclosure({
+    scopeLabel: "Advisory Copilot output",
+    preparation: !runBody
+      ? "requested"
+      : hasAiProvenance
+        ? "ai-assisted"
+        : outputAvailable
+          ? "unavailable"
+          : "requested",
+    availability: !runBody || !outputAvailable
+      ? "unavailable"
+      : hasAiProvenance
+        ? "live"
+        : "partial",
+    evidence: {
+      state: hasOutputEvidence ? "supported" : evidenceSourceCount > 0 ? "limited" : "missing",
+      sourceCount: evidenceSourceCount,
+    },
+    humanReview,
+    clientUse: mapClientUse(runBody?.client_ready_publication),
+    freshness: { state: "not-reported" },
+    limitations,
+    diagnostics,
+  });
+}
+
+function mapCopilotReview(
+  posture: string | undefined,
+  reviewRecord: AdvisoryCopilotReviewRecord | undefined,
+) {
+  if (posture === "APPROVED_FOR_INTERNAL_USE") {
+    return reviewRecord
+      ? {
+          state: "reviewed" as const,
+          sourceRecorded: true,
+          actor: reviewRecord.actor_id,
+          occurredAt: reviewRecord.occurred_at,
+        }
+      : { state: "unavailable" as const, sourceRecorded: false };
+  }
+  if (posture === "REVIEW_REQUIRED") {
+    return { state: "review-required" as const, sourceRecorded: false };
+  }
+  if (posture === "REJECTED") {
+    return {
+      state: "rejected" as const,
+      sourceRecorded: Boolean(reviewRecord),
+      ...(reviewRecord?.actor_id ? { actor: reviewRecord.actor_id } : {}),
+      ...(reviewRecord?.occurred_at ? { occurredAt: reviewRecord.occurred_at } : {}),
+    };
+  }
+  return { state: "unavailable" as const, sourceRecorded: false };
+}
+
+function mapClientUse(value: string | undefined) {
+  switch (value) {
+    case "APPROVED":
+    case "CLIENT_READY":
+      return "approved" as const;
+    case "ELIGIBLE_AFTER_REVIEW":
+      return "eligible-after-review" as const;
+    case "INTERNAL_ONLY":
+      return "internal-only" as const;
+    case "BLOCKED":
+      return "blocked" as const;
+    default:
+      return "unavailable" as const;
+  }
 }
 
 export function formatCode(value: unknown): string {
