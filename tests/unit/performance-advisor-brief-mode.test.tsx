@@ -272,7 +272,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
-    expect(screen.getByText("Review required")).toBeInTheDocument();
+    expect(screen.getByText("Partial output")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
     const sourceMetricsSidecar = screen.getByLabelText("Advisor brief source metrics");

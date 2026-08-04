@@ -725,7 +725,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
-    expect(screen.getByText("AI-assisted")).toBeInTheDocument();
+    expect(screen.getByText("Live AI-assisted output")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Human-review status not available")).toBeInTheDocument();
     expect(screen.getByText("Not approved for client use")).toBeInTheDocument();

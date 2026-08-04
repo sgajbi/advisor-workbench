@@ -199,7 +199,7 @@ describe("AdvisoryCopilotWorkspace", () => {
       screen.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Review required")).toBeInTheDocument();
+    expect(screen.getByText("Live output • review required")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Prepared with AI assistance")).toBeInTheDocument();
     expect(screen.getByText("Limited source evidence")).toBeInTheDocument();
