@@ -220,15 +220,13 @@ export function buildFallbackAdvisorBriefViewModel({
     aiDisclosure: createAiAssistanceDisclosure({
       scopeLabel: "Performance working narrative",
       preparation:
-        status === "loading"
-          ? "requested"
-          : status === "unavailable" || status === "permission_blocked"
-            ? "unavailable"
-            : "deterministic",
+        status === "unavailable" || status === "permission_blocked"
+          ? "unavailable"
+          : "deterministic",
       availability:
         status === "ready"
           ? "live"
-          : status === "partial"
+          : status === "partial" || status === "loading"
             ? "partial"
             : "unavailable",
       evidence: {
