@@ -81,7 +81,7 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe(expectedState);
     expect(model.title).toBe(expectedTitle);
-    expect(model.sourceLabel).toContain("Gateway");
+    expect(model.sourceLabel).toBe("Advisory proposal lifecycle");
   });
 
   it("shows source counts and an explicit queue-level boundary", () => {

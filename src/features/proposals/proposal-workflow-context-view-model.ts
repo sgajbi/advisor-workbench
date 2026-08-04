@@ -68,7 +68,7 @@ export function buildNeutralProposalWorkflowContext({
       { label: "Portfolio", value: portfolioId },
       { label: "Workspace", value: surfaceLabel },
     ],
-    sourceLabel: "Gateway-backed advisory workflow",
+    sourceLabel: "Approved advisory workflow",
     boundaryNote:
       "No approval, suitability, KYC, client-delivery, or execution status is inferred by Workbench.",
   });
@@ -134,7 +134,7 @@ export function buildProposalQueueWorkflowContext({
       nextAction: "Wait for the source response before taking an advisory action.",
       blockers: [],
       facts,
-      sourceLabel: "Gateway · advisory proposal lifecycle",
+      sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "Workbench does not show cached or fallback workflow claims while the source loads.",
     });
   }
@@ -148,7 +148,7 @@ export function buildProposalQueueWorkflowContext({
       nextAction: "Use an entitled portfolio or request access through the bank's support process.",
       blockers: ["Proposal workflow details are hidden by the source entitlement boundary."],
       facts,
-      sourceLabel: "Gateway · advisory proposal lifecycle",
+      sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "Workbench does not expose restricted workflow or entitlement details.",
     });
   }
@@ -162,7 +162,7 @@ export function buildProposalQueueWorkflowContext({
       nextAction: "Retry after the advisory service recovers; do not rely on previously displayed status.",
       blockers: ["Current proposal workflow evidence is unavailable."],
       facts,
-      sourceLabel: "Gateway · advisory proposal lifecycle",
+      sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "No fallback workflow, approval, or readiness state is shown.",
     });
   }
@@ -187,7 +187,7 @@ export function buildProposalQueueWorkflowContext({
         { label: "In view", value: String(totalCount) },
         { label: "Need action", value: String(attentionCount) },
       ],
-      sourceLabel: "Gateway · advisory proposal lifecycle",
+      sourceLabel: "Advisory proposal lifecycle",
       boundaryNote:
         "Proposal counts do not establish suitability posture while supporting policy evidence is unavailable.",
     });
@@ -202,7 +202,7 @@ export function buildProposalQueueWorkflowContext({
       nextAction: recommendedAction,
       blockers: [],
       facts: [...facts, { label: "Proposals", value: "0" }],
-      sourceLabel: "Gateway · advisory proposal lifecycle",
+      sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "An empty queue does not imply that suitability or approval checks are complete.",
     });
   }
@@ -222,7 +222,7 @@ export function buildProposalQueueWorkflowContext({
       { label: "In view", value: String(totalCount) },
       { label: "Need action", value: String(attentionCount) },
     ],
-    sourceLabel: "Gateway · advisory proposal lifecycle",
+    sourceLabel: "Advisory proposal lifecycle",
     boundaryNote:
       "This is queue-level posture. Open a proposal to inspect its record-specific workflow, evidence, and approvals.",
   });
