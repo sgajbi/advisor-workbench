@@ -73,12 +73,13 @@ function resolveAdvisorBriefSourceRefs(advisorBrief: WorkbenchPerformanceAdvisor
 
 function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief) {
   const sourceRefs = resolveAdvisorBriefSourceRefs(advisorBrief);
-  const hasPublishedAiProvenance = Boolean(
-    advisorBrief.ai_audit.task_id ||
-      advisorBrief.ai_audit.provider_id ||
-      advisorBrief.ai_audit.model_id ||
-      advisorBrief.ai_audit.generated_at,
-  );
+  const aiProvenanceSignals = [
+    advisorBrief.ai_audit.task_id,
+    advisorBrief.ai_audit.provider_id,
+    advisorBrief.ai_audit.model_id,
+    advisorBrief.workflow_pack_run?.run_id,
+  ].filter((value) => typeof value === "string" && value.trim().length > 0);
+  const hasPublishedAiProvenance = aiProvenanceSignals.length >= 2;
   const isSimulation = advisorBrief.ai_audit.stubbed === true;
   const isLive = advisorBrief.ai_audit.stubbed === false && hasPublishedAiProvenance;
   const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
