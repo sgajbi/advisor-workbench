@@ -27,7 +27,7 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.getByRole("heading", { name: "Select a source record" })).toBeInTheDocument();
     expect(screen.getByText("No record selected")).toBeInTheDocument();
     expect(screen.getByText("Next business action")).toBeInTheDocument();
-    expect(screen.getByText("Gateway-backed advisory workflow")).toBeInTheDocument();
+    expect(screen.getByText("Approved advisory workflow")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/client readiness/i)).not.toBeInTheDocument();

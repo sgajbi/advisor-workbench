@@ -202,7 +202,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(await screen.findByRole("heading", { name: "1 need attention" })).toBeInTheDocument();
     expect(screen.getByText("2 proposals in view")).toBeInTheDocument();
     expect(screen.getByText("1 proposal needs advisor action.")).toBeInTheDocument();
-    expect(screen.getByText("Gateway · advisory proposal lifecycle")).toBeInTheDocument();
+    expect(screen.getByText("Advisory proposal lifecycle")).toBeInTheDocument();
     expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
   });
 
