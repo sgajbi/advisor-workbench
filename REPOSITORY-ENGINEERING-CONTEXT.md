@@ -197,10 +197,14 @@ Current repository posture:
     the affected output. Preparation method, output availability, source evidence, human review,
     client-use permission, and freshness are independent source-owned dimensions. Missing or
     contradictory provenance fails closed; request acceptance and technical completion never
-    upgrade evidence, review, freshness, or client-use posture. Deterministic Workbench narrative
-    must be identified as rule-based, and provider/model/run identifiers remain secondary support
-    details. Performance Advisor Brief and Advisory Copilot are the first governed adopters;
-    issue #528 owns the remaining DPM workflow-output adoption.
+    upgrade evidence, review, freshness, or client-use posture. Availability remains visible in the
+    compact and expanded disclosure; superseded output is historical and client-use blocked, with
+    source-published replacement lineage shown when present. Evidence counts include only trimmed,
+    nonblank source references or usable displayed metrics; empty rule-based narrative carries zero
+    evidence. Deterministic Workbench narrative must be identified as rule-based, and
+    provider/model/run identifiers remain secondary support details. Performance Advisor Brief and
+    Advisory Copilot are the first governed adopters; issue #528 owns the remaining DPM
+    workflow-output adoption.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through
