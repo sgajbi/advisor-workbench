@@ -2,6 +2,7 @@ import ProposalSimulateForm from "@/features/proposals/components/proposal-simul
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
+import { buildSimulationProposalWorkflowContext } from "@/features/proposals/proposal-workflow-context-view-model";
 
 export default async function ProposalSimulatePage({
   searchParams,
@@ -17,6 +18,7 @@ export default async function ProposalSimulatePage({
       activeMode="proposal-builder"
       title="Proposal Workspace"
       subtitle="Build and test an advisor-use proposal before routing it for review."
+      workflowContext={buildSimulationProposalWorkflowContext({ portfolioId })}
     >
       <ProposalSimulateForm initialPortfolioId={portfolioId} />
     </ProposalWorkspaceShell>
