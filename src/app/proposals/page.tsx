@@ -26,7 +26,11 @@ export default async function ProposalsPage({
       title={lifecycleDefinition.title}
       subtitle={lifecycleDefinition.subtitle}
     >
-      <ProposalLifecycleWorkspace portfolioId={portfolioId} mode={lifecycleMode} />
+      <ProposalLifecycleWorkspace
+        key={`${portfolioId}:${lifecycleMode}`}
+        portfolioId={portfolioId}
+        mode={lifecycleMode}
+      />
     </ProposalWorkspaceShell>
   );
 }

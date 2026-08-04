@@ -5,6 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import ProposalSimulateForm from "../../src/features/proposals/components/proposal-simulate-form";
+import {
+  ProposalWorkflowContextProvider,
+  ProposalWorkflowContextRail,
+} from "../../src/features/proposals/components/proposal-workflow-context";
+import { buildSimulationProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
 
 const advisoryApiMocks = vi.hoisted(() => ({
   applyAdvisoryWorkspaceDraftAction: vi.fn(),
@@ -66,9 +71,15 @@ function workspaceEnvelope(workspaceId = "aws_test_001") {
 
 function renderForm(initialPortfolioId?: string) {
   const queryClient = new QueryClient();
+  const portfolioId = initialPortfolioId ?? "PB_SG_GLOBAL_BAL_001";
   return render(
     <QueryClientProvider client={queryClient}>
-      <ProposalSimulateForm initialPortfolioId={initialPortfolioId} />
+      <ProposalWorkflowContextProvider
+        initialModel={buildSimulationProposalWorkflowContext({ portfolioId })}
+      >
+        <ProposalSimulateForm initialPortfolioId={initialPortfolioId} />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
     </QueryClientProvider>
   );
 }
@@ -107,6 +118,58 @@ describe("ProposalSimulateForm", () => {
     renderForm("PORT_UI_1001");
     const portfolioInput = screen.getByLabelText("Portfolio ID") as HTMLInputElement;
     expect(portfolioInput.value).toBe("PORT_UI_1001");
+  });
+
+  it("moves the workflow rail from construction to the source-retained draft", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    expect(
+      screen.getByRole("heading", { name: "Draft not yet persisted" })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Advisor draft saved" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Draft retained for review")).toBeInTheDocument();
+    expect(screen.getAllByText("pp_test_001").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Draft not yet persisted")).not.toBeInTheDocument();
+  });
+
+  it("retains construction-only posture when draft persistence fails", async () => {
+    advisoryApiMocks.handoffAdvisoryWorkspace.mockRejectedValueOnce(
+      new Error("advisory service unavailable")
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    expect(await screen.findByText("advisory service unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Draft not yet persisted" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Draft retained for review")).not.toBeInTheDocument();
+  });
+
+  it("does not claim persistence when the advisory response has no proposal identity", async () => {
+    advisoryApiMocks.handoffAdvisoryWorkspace.mockResolvedValueOnce({
+      correlation_id: "corr-handoff-missing-id",
+      contract_version: "v1",
+      data: { proposal: {} },
+    });
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    expect(
+      await screen.findByText(
+        "The advisory service retained no proposal identity for this draft."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Draft not yet persisted" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Draft retained for review")).not.toBeInTheDocument();
   });
 
   it("adds a held position into the interactive draft order blotter", async () => {

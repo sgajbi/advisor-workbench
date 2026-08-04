@@ -35,6 +35,10 @@ import {
   extractLatestProposalResult,
   recordValue,
 } from "../advisory-workspace-response";
+import {
+  buildPersistedProposalDraftWorkflowContext,
+  buildSimulationProposalWorkflowContext,
+} from "../proposal-workflow-context-view-model";
 import { SectionBlock } from "@/design-system";
 import {
   AdviseEvaluationSummaryPanel,
@@ -44,6 +48,7 @@ import {
   IndicativeDraftImpactPanel,
   SavedAdvisoryDraftPanel,
 } from "./proposal-builder-domain-panels";
+import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-simulate-form.module.css";
 
 const schema = z.object({
@@ -134,12 +139,23 @@ export default function ProposalSimulateForm({
   const [workspaceEnvelope, setWorkspaceEnvelope] =
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
-  const [savedProposalId, setSavedProposalId] = useState<string | null>(null);
+  const [savedDraft, setSavedDraft] = useState<{
+    proposalId: string;
+    portfolioId: string;
+  } | null>(null);
 
   const portfolioId = useWatch({ control: form.control, name: "portfolioId" });
   const asOfDate = useWatch({ control: form.control, name: "asOfDate" });
   const baseCurrency = useWatch({ control: form.control, name: "baseCurrency" });
   const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
+  const workflowContextModel = useMemo(
+    () =>
+      savedDraft
+        ? buildPersistedProposalDraftWorkflowContext(savedDraft)
+        : buildSimulationProposalWorkflowContext({ portfolioId }),
+    [portfolioId, savedDraft]
+  );
+  usePublishProposalWorkflowContext(workflowContextModel);
   const { data: portfolioBook, isLoading: positionsLoading } = useQuery({
     queryKey: ["proposal-position-builder-book", portfolioId, baseCurrency],
     queryFn: async () =>
@@ -294,7 +310,7 @@ export default function ProposalSimulateForm({
   async function onSubmit(values: FormInput) {
     setError(null);
     setResult(null);
-    setSavedProposalId(null);
+    setSavedDraft(null);
     setWorkspaceEnvelope(null);
     setLoading(true);
     try {
@@ -335,7 +351,11 @@ export default function ProposalSimulateForm({
         },
         `${values.idempotencyKey}-handoff`
       );
-      setSavedProposalId(extractHandoffProposalId(handoffResponse));
+      const proposalId = extractHandoffProposalId(handoffResponse);
+      if (!proposalId) {
+        throw new Error("The advisory service retained no proposal identity for this draft.");
+      }
+      setSavedDraft({ proposalId, portfolioId: values.portfolioId });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -586,7 +606,7 @@ export default function ProposalSimulateForm({
         />
       ) : null}
 
-      {savedProposalId ? <SavedAdvisoryDraftPanel proposalId={savedProposalId} /> : null}
+      {savedDraft ? <SavedAdvisoryDraftPanel proposalId={savedDraft.proposalId} /> : null}
     </SectionBlock>
   );
 }

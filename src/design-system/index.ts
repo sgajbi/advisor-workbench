@@ -49,6 +49,7 @@ export { default as MainWithSideRailLayout } from "./components/main-with-side-r
 export { default as ModeTabs } from "./components/mode-tabs";
 export { default as ScreenStatePanel } from "./components/screen-state-panel";
 export type { ScreenStateKind, ScreenStateSurface } from "./components/screen-state-panel";
+export { default as SourceWindowNavigation } from "./components/source-window-navigation";
 export { default as SectionHeader } from "./components/section-header";
 export { default as SectionBlock } from "./components/section-block";
 export { default as SemanticBadge } from "./components/semantic-badge";

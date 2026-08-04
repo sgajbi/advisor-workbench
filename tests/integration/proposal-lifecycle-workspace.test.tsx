@@ -25,6 +25,7 @@ const proposalListFixture = {
       title: "Execution handoff",
     },
   ],
+  next_cursor: null as string | null,
 };
 const policyReviewQueueFixture = {
   items: [
@@ -261,6 +262,189 @@ describe("ProposalLifecycleWorkspace", () => {
       await screen.findByRole("heading", { name: /need attention|queue ready for review/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Source current")).toBeInTheDocument();
+  });
+
+  it("keeps cached policy evidence visible while its source refreshes", async () => {
+    let resolveWorkflowRefresh:
+      | ((value: Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>) => void)
+      | undefined;
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByText("Request more evidence")).toBeInTheDocument();
+    getAdvisoryPolicyWorkflowMock.mockImplementationOnce(
+      async () =>
+        await new Promise<Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>>(
+          (resolve) => {
+            resolveWorkflowRefresh = resolve;
+          }
+        )
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Request more evidence" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Refreshing proposal evidence" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Refreshing")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 4,
+        name: "Sign-off source package and source evidence",
+      })
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveWorkflowRefresh?.({
+        sign_off_status: "PENDING_REVIEW",
+        sign_off_blockers: [],
+        maker_checker_required: true,
+        sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
+        client_ready_publication: "BLOCKED",
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /need attention|queue ready for review/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Source current")).toBeInTheDocument();
+  });
+
+  it("keeps cached policy evidence visible but marks a failed refresh partial", async () => {
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByText("Request more evidence")).toBeInTheDocument();
+    getAdvisoryPolicyWorkflowMock.mockRejectedValueOnce(new Error("refresh unavailable"));
+    fireEvent.click(screen.getByRole("button", { name: "Request more evidence" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("The latest policy-evidence refresh did not complete.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The selected policy evidence could not be refreshed. The prior source package remains visible but is not confirmed current."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 4,
+        name: "Sign-off source package and source evidence",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("keeps policy evidence hidden when its source denies access", async () => {
+    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
+      new Error("Policy queue failed (403): {\"detail\":\"portfolio access denied\"}")
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Proposal posture is restricted" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Policy review access is not available")).toBeInTheDocument();
+    expect(screen.queryByText("Review required")).not.toBeInTheDocument();
+  });
+
+  it("navigates bounded proposal source windows without claiming queue completeness", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-window-2" })
+      .mockResolvedValueOnce({
+        items: [proposalListFixture.items[0]],
+        next_cursor: null,
+      });
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "More proposals available" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("0 proposals in current view")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
+
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenLastCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: "cursor-window-2",
+      });
+    });
+    expect(await screen.findByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "1 proposal needs attention in this view" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Proposal view 2")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous proposals" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Next proposals" })).toBeDisabled();
+  });
+
+  it("allows return to the prior proposal window after a later window fails", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-window-2" })
+      .mockRejectedValueOnce(new Error("gateway unavailable"));
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
+    expect(
+      await screen.findByRole("heading", { name: "Proposal posture is unavailable" })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous proposals" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "More proposals available" })
+    ).toBeInTheDocument();
   });
 
   it("publishes restricted posture for proposal API authorization responses with response detail", async () => {
