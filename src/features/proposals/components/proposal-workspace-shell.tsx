@@ -14,7 +14,10 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
-import { buildNeutralProposalWorkflowContext } from "../proposal-workflow-context-view-model";
+import {
+  buildNeutralProposalWorkflowContext,
+  type ProposalWorkflowContextModel,
+} from "../proposal-workflow-context-view-model";
 import {
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextRail,
@@ -33,6 +36,7 @@ export default function ProposalWorkspaceShell({
   activeMode = activeScreen === "advisory" ? "overview" : "approval-queue",
   title,
   subtitle,
+  workflowContext,
   children,
 }: {
   portfolioId: string;
@@ -40,12 +44,15 @@ export default function ProposalWorkspaceShell({
   activeMode?: AdvisoryJourneyMode;
   title: string;
   subtitle: string;
+  workflowContext?: ProposalWorkflowContextModel;
   children: ReactNode;
 }) {
-  const initialWorkflowContext = buildNeutralProposalWorkflowContext({
-    portfolioId,
-    surfaceLabel: activeScreen === "advisory" ? "Advisory next actions" : "Proposal lifecycle",
-  });
+  const initialWorkflowContext =
+    workflowContext ??
+    buildNeutralProposalWorkflowContext({
+      portfolioId,
+      surfaceLabel: activeScreen === "advisory" ? "Advisory next actions" : "Proposal lifecycle",
+    });
 
   return (
     <AppPageShell pageKey={activeScreen} className={`portfolio-page proposal-page ${styles.proposalScope}`}>

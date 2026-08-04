@@ -24,15 +24,23 @@ vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () =
   default: ({
     title,
     portfolioId,
+    workflowContext,
     children,
   }: {
     title: string;
     portfolioId: string;
+    workflowContext?: { title: string; sourceLabel: string };
     children: React.ReactNode;
   }) => (
     <section>
       <h1>{title}</h1>
       <p>{portfolioId}</p>
+      {workflowContext ? (
+        <aside>
+          <h2>{workflowContext.title}</h2>
+          <p>{workflowContext.sourceLabel}</p>
+        </aside>
+      ) : null}
       {children}
     </section>
   ),
@@ -55,6 +63,8 @@ describe("ProposalSimulatePage", () => {
 
     expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
     expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Draft not yet persisted" })).toBeInTheDocument();
+    expect(screen.getByText("No persisted advisory workflow record")).toBeInTheDocument();
   });
 
   it("defaults proposal simulation to the canonical front-office portfolio", async () => {
