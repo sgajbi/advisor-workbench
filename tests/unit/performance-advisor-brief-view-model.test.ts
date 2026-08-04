@@ -462,6 +462,46 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     },
   );
 
+  it("keeps a superseded simulation historical instead of presenting it as current simulation output", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        ai_audit: { stubbed: true },
+        workflow_pack_run: {
+          run_id: "packrun-advisor-brief-simulation-1",
+          runtime_state: "COMPLETED",
+          review_state: "ACCEPTED",
+          allowed_review_actions: [],
+          supportability_status: "HISTORICAL",
+          review_pending: false,
+          superseded: true,
+          workflow_authority_owner: "lotus-gateway",
+          current_summary_note: "A live advisor brief replaced this simulation.",
+          replacement_run_id: "packrun-advisor-brief-live-2",
+          findings: [],
+        },
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure).toMatchObject({
+      preparation: "ai-assisted",
+      availability: "stale",
+      clientUse: "blocked",
+    });
+    expect(brief.aiDisclosure.limitations).toContain(
+      "This output is historical. Review replacement run packrun-advisor-brief-live-2 before use.",
+    );
+  });
+
   it("drops risk source facts and risk drilldowns when gateway evidence is not ready", () => {
     const scenario = buildSupportedPerformanceScenario();
 
