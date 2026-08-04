@@ -3,6 +3,23 @@ import { describe, expect, it } from "vitest";
 import { buildAdvisoryCopilotWorkspaceModel } from "@/features/proposals/advisory-copilot-view-model";
 
 describe("buildAdvisoryCopilotWorkspaceModel AI disclosure", () => {
+  it("keeps the untouched workspace unavailable until an action is requested", () => {
+    const model = buildAdvisoryCopilotWorkspaceModel({ proposals: [] });
+
+    expect(model.aiDisclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "unavailable",
+      humanReview: { state: "unavailable", sourceRecorded: false },
+      clientUse: "blocked",
+    });
+    expect(model.aiDisclosure.limitations).toContain(
+      "No advisory-assistance output has been requested for this proposal scope.",
+    );
+    expect(model.aiDisclosure.limitations).not.toContain(
+      "No usable generated output is available for review or client use.",
+    );
+  });
+
   it("keeps a source-backed AI run review-required and client-use blocked", () => {
     const model = buildAdvisoryCopilotWorkspaceModel({
       proposals: [],
@@ -178,6 +195,27 @@ describe("buildAdvisoryCopilotWorkspaceModel AI disclosure", () => {
       evidence: { state: "missing", sourceCount: 0 },
       humanReview: { state: "review-required" },
       clientUse: "blocked",
+    });
+  });
+
+  it("does not treat metadata-only output sections as usable generated output", () => {
+    const model = buildAdvisoryCopilotWorkspaceModel({
+      proposals: [],
+      run: {
+        run: {
+          run_id: "run_4",
+          lotus_ai_workflow_run_id: "ai_run_4",
+          output_sections_json: [{ title: "Advisor summary", text: "   " }],
+        },
+      },
+    });
+
+    expect(model.runSections).toEqual([
+      { title: "Advisor summary", text: "No advisor-use output returned." },
+    ]);
+    expect(model.aiDisclosure).toMatchObject({
+      preparation: "requested",
+      availability: "unavailable",
     });
   });
 });

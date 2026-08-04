@@ -148,7 +148,7 @@ export function buildAdvisoryCopilotWorkspaceModel({
     ),
     runSections: (runBody?.output_sections_json ?? []).map((section) => ({
       title: section.title ?? formatCode(section.section_key ?? "Copilot section"),
-      text: section.text ?? "No advisor-use output returned.",
+      text: nonEmptyString(section.text) ?? "No advisor-use output returned.",
     })),
     reviewGuidance: runBody?.review_guidance_json ?? [],
     guardrailResults: (runBody?.guardrail_results_json ?? []).map(formatCode),
@@ -164,7 +164,9 @@ function buildCopilotAiDisclosure(
   run: AdvisoryCopilotResultData | undefined,
 ): AiAssistanceDisclosureModel {
   const runBody = run?.run;
-  const outputAvailable = Boolean(runBody?.output_sections_json?.length);
+  const outputAvailable = Boolean(
+    runBody?.output_sections_json?.some((section) => nonEmptyString(section.text)),
+  );
   const workflowRunId = runBody?.lotus_ai_workflow_run_id ?? null;
   const evidencePacketId =
     runBody?.evidence_packet_id ?? packet?.evidence_packet?.evidence_packet_id;
@@ -218,7 +220,7 @@ function buildCopilotAiDisclosure(
   return createAiAssistanceDisclosure({
     scopeLabel: "Advisory Copilot output",
     preparation: !runBody
-      ? "requested"
+      ? "unavailable"
       : hasAiProvenance
         ? "ai-assisted"
         : outputAvailable
