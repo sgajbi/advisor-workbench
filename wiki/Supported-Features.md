@@ -180,14 +180,19 @@ Implemented:
 
 1. distinguishes source-authored, rule-based, requested, AI-assisted, and unavailable preparation,
 2. reports output availability, source evidence, human review, client-use permission, and freshness
-   as separate dimensions,
+   as separate dimensions, with live, partial, stale, simulation, and unavailable output named in
+   the compact summary and Availability shown in expanded facts,
 3. fails closed when provenance, evidence references, source-recorded review, client-use permission,
    or freshness is not published,
 4. keeps provider, model, workflow-run, and evidence identifiers in secondary support details,
 5. uses a keyboard- and screen-reader-native disclosure control with visible non-color status text,
 6. applies the contract to Performance Advisor Brief and Advisory Copilot output,
 7. identifies Workbench-composed Performance fallback narrative as rule-based and internal working
-   material rather than fabricating an AI provider or implying client approval.
+   material rather than fabricating an AI provider or implying client approval,
+8. counts only usable Performance metrics or normalized nonblank source references as evidence;
+   empty fallback narrative reports zero evidence,
+9. treats a superseded advisor-brief run as historical, blocks client use, and shows the
+   source-published replacement run when available.
 
 Not yet supported:
 

@@ -2044,3 +2044,32 @@ Research was reviewed on 2026-08-04 from official sources:
 The supported product boundary changes because Performance Advisor Brief and Advisory Copilot now
 publish the common disclosure. `wiki/Supported-Features.md` and repository context are updated in
 this PR. Remaining DPM workflow-output adoption is tracked by issue #528.
+
+### Availability and evidence follow-up — 2026-08-05
+
+Issues #531 and #532 rechecked the same official Carbon, Microsoft HAX, NIST AI RMF, and FINRA
+guidance against the merged component and Performance adapters.
+
+Adopted:
+
+1. Name live, partial, stale, simulation, and unavailable output in compact business language and
+   retain Availability as an explicit expanded fact.
+2. Count evidence only when a displayed deterministic metric is usable or a published source
+   reference remains nonblank after normalization.
+3. Treat superseded workflow output as historical, block client use, and show source-published
+   replacement lineage beside the limitation and secondary diagnostics.
+4. Keep native disclosure semantics and add a three-column intermediate layout before the existing
+   narrow single-column layout.
+
+Rejected:
+
+1. Counting array entries, whitespace, duplicate references, or `N/A` display placeholders as
+   evidence.
+2. Treating a completed and accepted but superseded run as live.
+3. Inferring a replacement run, freshness timestamp, confidence score, or approval state that the
+   source did not publish.
+4. Introducing a Performance-only disclosure variant or ornamental AI styling.
+
+Publication decision: the reusable disclosure contract and visible supported-feature behavior
+change, so repository context and `wiki/Supported-Features.md` are updated in the same PR. Publish
+the authored wiki after merge and verify strict parity.
