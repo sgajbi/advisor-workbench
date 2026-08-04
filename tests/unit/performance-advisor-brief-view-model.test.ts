@@ -226,6 +226,16 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         "Deferred analytics are still loading; contribution and attribution evidence may update.",
       ])
     );
+    expect(brief.aiDisclosure).toMatchObject({
+      preparation: "deterministic",
+      availability: "partial",
+      evidence: { state: "supported", sourceCount: 5 },
+      humanReview: { state: "review-required", sourceRecorded: false },
+      clientUse: "internal-only",
+    });
+    expect(brief.aiDisclosure.limitations).not.toContain(
+      "No usable generated output is available for review or client use."
+    );
   });
 
   it("marks the brief as empty when no source facts support a talking point", () => {
