@@ -94,6 +94,25 @@ describe("dependency security governance", () => {
     );
   });
 
+  it("pins the patched brace expansion line only beneath its compatible minimatch consumer", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      overrides?: Record<string, unknown>;
+    };
+    const packageLock = JSON.parse(readRepositoryFile("package-lock.json")) as {
+      packages?: Record<string, { version?: string; integrity?: string }>;
+    };
+
+    expect(packageJson.overrides?.minimatch).toEqual({
+      "brace-expansion": "5.0.9",
+    });
+    expect(packageJson.overrides?.["brace-expansion"]).toBeUndefined();
+    expect(packageLock.packages?.["node_modules/brace-expansion"]).toMatchObject({
+      version: "5.0.9",
+      integrity:
+        "sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==",
+    });
+  });
+
   it("keeps the security gate in local check and protected CI lanes", () => {
     const makefile = readRepositoryFile("Makefile");
 
