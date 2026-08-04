@@ -1995,3 +1995,52 @@ No wiki source change is required. Issue #526 corrects the state handling of exi
 Advisor Cockpit routes without changing the route catalogue, backend ownership, operator commands,
 or supported-feature boundary. Repository context records the durable composite-evidence invariant;
 the PR must still pass strict wiki parity before merge.
+
+## AI-Assisted Output And Human Review Disclosure
+
+### Business job
+
+An advisor, portfolio manager, or reviewer must decide what prepared a narrative, whether a usable
+output exists, what evidence supports it, whether human review is recorded, whether it may be used
+with a client, and whether its freshness is known. These are separate decisions; workflow
+completion alone answers none of them.
+
+### Current-product research
+
+Research was reviewed on 2026-08-04 from official sources:
+
+1. [Carbon AI label usage](https://carbondesignsystem.com/components/ai-label/usage/) recommends a
+   stable, focused marker beside affected output and a consistent path to explainability; the label
+   is neither decoration nor an action trigger.
+2. [Microsoft HAX guidelines](https://www.microsoft.com/en-us/haxtoolkit/ai-guidelines/)
+   recommend explaining why an output was produced and communicating capability limits while
+   guarding against automation bias and over-trust.
+3. [NIST AI RMF Core](https://airc.nist.gov/airmf-resources/airmf/5-sec-core/) requires clear human
+   and AI roles, documented limitations, and output interpretation in the operating context.
+4. [FINRA's 2026 GenAI oversight report](https://www.finra.org/rules-guidance/guidance/reports/2026-finra-annual-regulatory-oversight-report/gen-ai)
+   confirms that supervision, communications, recordkeeping, and fair-dealing obligations continue
+   to apply to GenAI-enabled workflows.
+
+### Adopted decisions
+
+1. Use one quiet output-adjacent `How this was prepared` disclosure with visible status text.
+2. Separate preparation, availability, evidence, human review, client use, and freshness.
+3. Use native `details`/`summary` semantics for reliable keyboard and screen-reader behavior.
+4. Fail closed for missing or contradictory provenance; never fabricate task, provider, model,
+   source reference, review, freshness, or client permission.
+5. Identify deterministic browser-composed narrative as rule-based internal working material.
+6. Keep provider, model, run, and evidence identifiers secondary to business posture.
+
+### Rejected decisions
+
+1. A global AI badge or generic `AI powered` claim.
+2. Sparkle icons, glow, gradients, or ornamental AI identity.
+3. Using the disclosure marker as a regenerate or workflow action.
+4. Treating request acceptance or runtime completion as evidence, human review, or client approval.
+5. Inferring live generation, review, freshness, or client-use permission from adjacent fields.
+
+### Publication decision
+
+The supported product boundary changes because Performance Advisor Brief and Advisory Copilot now
+publish the common disclosure. `wiki/Supported-Features.md` and repository context are updated in
+this PR. Remaining DPM workflow-output adoption is tracked by issue #528.
