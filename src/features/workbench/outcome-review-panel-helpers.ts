@@ -3,6 +3,7 @@ import type {
   OutcomeReviewPanelState,
 } from "./outcome-review-view-model";
 import { businessStateLabel } from "./manage-workspace-view-model";
+import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
 
 export type OutcomeReviewBadgeTone =
   | "default"
@@ -131,21 +132,7 @@ export function buildOutcomeReviewHandoffMessages(
 }
 
 export function describeOutcomeNarrativeRun(
-  data: Record<string, unknown>,
+  data: DpmAiWorkflowExecution,
 ): string {
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const execution = readRecord(data.execution);
-  const status = readString(execution.status) ?? "submitted";
-  const reviewState = readString(workflowPackRun.review_state);
-  return `Review request ${businessStateLabel(reviewState ?? status)}.`;
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function readString(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
+  return `Review request ${businessStateLabel(data.workflow_pack_run.review_state ?? data.execution.status)}.`;
 }

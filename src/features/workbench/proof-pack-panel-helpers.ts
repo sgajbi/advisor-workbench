@@ -1,4 +1,5 @@
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import type { DpmAiWorkflowExecution } from "@/features/workbench/dpm-ai-workflow-contract";
 import type { ProofPackPanelState } from "@/features/workbench/proof-pack-view-model";
 import type { DpmProofPackGatewayResponse } from "@/features/workbench/types";
 
@@ -102,22 +103,6 @@ export function readProofPackMarkdown(
   return "No summary content is available for this evidence pack.";
 }
 
-export function readProofPackAiWorkflowPackStatus(data: Record<string, unknown>): string {
-  const workflowPackRun = readRecord(data.workflow_pack_run);
-  const reviewState = readString(workflowPackRun.review_state);
-  if (reviewState) {
-    return `${businessStateLabel(reviewState)}.`;
-  }
-
-  return "request submitted.";
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function readString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
+export function readProofPackAiWorkflowPackStatus(data: DpmAiWorkflowExecution): string {
+  return `${businessStateLabel(data.workflow_pack_run.review_state)}.`;
 }

@@ -13,6 +13,7 @@ import type {
   ReportJobHandleResponse,
 } from "../../src/features/workbench/types";
 import type { OutcomeReviewListItem } from "../../src/features/workbench/outcome-review-view-model";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/outcome-review-api", () => ({
   getDpmOutcomeReviewReportInput: vi.fn(),
@@ -65,7 +66,7 @@ describe("useOutcomeReviewHandoffs", () => {
     expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({
       outcomeReviewId: "or_1",
     });
-    expect(result.current.handoffStatusMessages).toEqual(["Review request Completed."]);
+    expect(result.current.handoffStatusMessages).toEqual(["Review request Awaiting Review."]);
     expect(result.current.clientCommunicationBoundary).toMatchObject({
       boundaryId: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
       clientCommunicationProjected: false,
@@ -180,10 +181,7 @@ function aiNarrativeResponse(): DpmOutcomeReviewNarrativeResponse {
       requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
       audience: ["portfolio_manager", "cio_office", "investment_control"],
     },
-    data: {
-      execution: { status: "COMPLETED" },
-      workflow_pack_run: { run_id: "packrun_or_1", workflow_authority_owner: "lotus-manage" },
-    },
+    data: buildDpmAiWorkflowExecution("outcome-narrative", { runId: "packrun_or_1" }),
   };
 }
 

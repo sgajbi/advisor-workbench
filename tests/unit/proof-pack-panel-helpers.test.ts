@@ -10,6 +10,7 @@ import {
   shouldShowProofPackStatePanel,
 } from "../../src/features/workbench/proof-pack-panel-helpers";
 import type { DpmProofPackGatewayResponse } from "../../src/features/workbench/types";
+import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 const proofPackResponse: DpmProofPackGatewayResponse = {
   correlation_id: "corr-rfc40",
@@ -98,13 +99,7 @@ describe("proof pack panel helpers", () => {
 
   it("summarizes AI workflow-pack request status from source-owned review state", () => {
     expect(
-      readProofPackAiWorkflowPackStatus({
-        workflow_pack_run: {
-          review_state: "AWAITING_REVIEW",
-        },
-      })
+      readProofPackAiWorkflowPackStatus(buildDpmAiWorkflowExecution("proof-pack-memo"))
     ).toBe("Awaiting Review.");
-    expect(readProofPackAiWorkflowPackStatus({ workflow_pack_run: {} })).toBe("request submitted.");
-    expect(readProofPackAiWorkflowPackStatus({ workflow_pack_run: [] })).toBe("request submitted.");
   });
 });
