@@ -58,4 +58,21 @@ describe("createAiAssistanceDisclosure", () => {
   ])("fails closed for $name", ({ input, expected }) => {
     expect(createAiAssistanceDisclosure(input)).toMatchObject(expected);
   });
+
+  it("preserves source-reported review posture when generation provenance is unavailable", () => {
+    expect(
+      createAiAssistanceDisclosure({
+        ...liveReviewedInput,
+        preparation: "unavailable",
+        availability: "partial",
+        humanReview: { state: "review-required", sourceRecorded: false },
+        clientUse: "blocked",
+      }),
+    ).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      humanReview: { state: "review-required" },
+      clientUse: "blocked",
+    });
+  });
 });

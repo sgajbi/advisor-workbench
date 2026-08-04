@@ -30,17 +30,16 @@ function buildBrief(
     sourceMetrics: [],
     supportability: [],
     reviewNotes: [],
-    audit: {
-      taskId: "task-1",
-      outputLabel: "EXPLANATION_ONLY",
-      promptVersion: "prompt.v1",
-      providerMode: "local_openai_compatible",
-      providerId: "text.local",
-      adapterKind: "OPENAI_COMPATIBLE_LOCAL",
-      modelId: "qwen3:8b",
-      generatedAt: "2026-04-14",
-      sourceRefs: ["lotus-gateway:workbench:PF_1001:performance-summary:YTD"],
-      stubbed: true,
+    aiDisclosure: {
+      scopeLabel: "Performance advisor brief",
+      preparation: "ai-assisted",
+      availability: "simulation",
+      evidence: { state: "supported", sourceCount: 1 },
+      humanReview: { state: "review-required", sourceRecorded: false },
+      clientUse: "blocked",
+      freshness: { state: "not-reported" },
+      limitations: [],
+      diagnostics: [],
     },
     ...overrides,
   };
@@ -60,7 +59,7 @@ describe("performance-advisor-brief helpers", () => {
   it("builds note copy with a default risks fallback when no exceptions are present", () => {
     const note = toAdvisorNoteCopy(buildBrief());
 
-    expect(note).toContain("Client Talking Points");
+    expect(note).toContain("Advisor Talking Points");
     expect(note).toContain("- Portfolio outperformed benchmark. Active return was 1.25%.");
     expect(note).toContain("Recommended Actions");
     expect(note).toContain("- Open Return Path");

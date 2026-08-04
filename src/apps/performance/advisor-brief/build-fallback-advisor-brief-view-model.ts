@@ -4,6 +4,7 @@ import type {
   WorkbenchPerformanceWorkspace,
 } from "@/features/workbench/types";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
+import { createAiAssistanceDisclosure } from "@/design-system";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
@@ -216,21 +217,42 @@ export function buildFallbackAdvisorBriefViewModel({
       advisorBriefPermissionBlocked: advisorBriefPermissionBlocked ?? false,
       isDetailsPending,
     }),
-    audit: {
-      taskId: "explain.v1",
-      outputLabel: "EXPLANATION_ONLY",
-      promptVersion: "foundation.explain.v1",
-      providerMode: "fixture-preview",
-      providerId: "text.stub",
-      adapterKind: "STUB",
-      modelId: null,
-      generatedAt: workspace.as_of_date,
-      stubbed: true,
-      sourceRefs: [
-        `lotus-gateway:workbench:${workspace.portfolio.portfolio_id}:performance-summary:${period}`,
-        `lotus-workbench:advisor-brief-fixture:${workspace.portfolio.portfolio_id}:${period}`,
+    aiDisclosure: createAiAssistanceDisclosure({
+      scopeLabel: "Performance working narrative",
+      preparation:
+        status === "loading"
+          ? "requested"
+          : status === "unavailable" || status === "permission_blocked"
+            ? "unavailable"
+            : "deterministic",
+      availability:
+        status === "ready"
+          ? "live"
+          : status === "partial"
+            ? "partial"
+            : "unavailable",
+      evidence: {
+        state: status === "unavailable" || status === "permission_blocked" ? "missing" : "supported",
+        sourceCount: status === "unavailable" || status === "permission_blocked" ? 0 : 5,
+      },
+      humanReview: {
+        state:
+          status === "unavailable" || status === "permission_blocked"
+            ? "unavailable"
+            : "review-required",
+        sourceRecorded: false,
+      },
+      clientUse: status === "unavailable" ? "blocked" : "internal-only",
+      freshness: { state: "not-reported" },
+      limitations: [
+        "This working narrative is assembled from defined Workbench rules, not a source-published AI run.",
+        "Review the cited performance evidence before using the narrative in client communication.",
       ],
-    },
+      diagnostics: [
+        { label: "Data as of", value: workspace.as_of_date },
+        { label: "Reporting period", value: period },
+      ],
+    }),
     supportability,
   };
 }

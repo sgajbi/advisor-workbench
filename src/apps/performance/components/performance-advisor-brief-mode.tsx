@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 
-import { ActionButton } from "@/design-system";
+import { ActionButton, AiAssistanceDisclosure } from "@/design-system";
 import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-model";
 import { usePerformanceAdvisorBrief } from "../use-performance-advisor-brief";
 
-import LotusAuditStrip from "./advisor-brief/lotus-audit-strip";
 import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
 import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
 import {
@@ -89,10 +88,10 @@ export default function PerformanceAdvisorBriefMode({
   });
   const narrativeSections = [
     {
-      ariaLabel: "Client Talking Points",
+      ariaLabel: "Advisor Talking Points",
       className: "performance-advisor-brief-section performance-advisor-brief-section-narrative",
-      title: "Client Talking Points",
-      description: "Advisor-ready narrative for the selected period.",
+      title: "Advisor Talking Points",
+      description: "Internal working narrative for the selected period; review before client use.",
       content: brief.talkingPoints.length ? (
         <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-narrative">
           {brief.talkingPoints.map((item) => (
@@ -105,7 +104,7 @@ export default function PerformanceAdvisorBriefMode({
         </div>
       ) : (
         <div className="performance-advisor-brief-empty-note">
-          No client talking points are available for this selection.
+          No advisor talking points are available for this selection.
         </div>
       ),
     },
@@ -278,6 +277,7 @@ export default function PerformanceAdvisorBriefMode({
           noteText={toAdvisorNoteCopy(brief)}
           onRefresh={refresh}
         />
+        <AiAssistanceDisclosure disclosure={brief.aiDisclosure} />
         <div className="performance-advisor-brief-body-grid">
           <section
             className="performance-advisor-brief-main-column"
@@ -307,7 +307,6 @@ export default function PerformanceAdvisorBriefMode({
               reviewNotes={brief.reviewNotes}
               reviewActionForm={reviewActionForm}
             />
-            <LotusAuditStrip audit={brief.audit} />
           </aside>
         </div>
     </PerformanceWorkspaceStageSurface>

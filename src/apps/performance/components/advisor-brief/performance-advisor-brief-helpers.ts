@@ -19,7 +19,7 @@ export function toAdvisorNoteCopy(brief: PerformanceAdvisorBriefViewModel) {
   const sections = [
     brief.summary,
     "",
-    "Client Talking Points",
+    "Advisor Talking Points",
     ...brief.talkingPoints.map((item) => `- ${item.headline} ${item.detail}`),
     "",
     "Recommended Actions",

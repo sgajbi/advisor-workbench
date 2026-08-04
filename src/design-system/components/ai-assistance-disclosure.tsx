@@ -70,8 +70,11 @@ function getDisclosureStatus(disclosure: AiAssistanceDisclosureModel): {
   label: string;
   tone: SemanticBadgeTone;
 } {
-  if (disclosure.availability === "unavailable" || disclosure.preparation === "unavailable") {
+  if (disclosure.availability === "unavailable") {
     return { label: "Output unavailable", tone: "warn" };
+  }
+  if (disclosure.preparation === "unavailable") {
+    return { label: "Provenance unavailable", tone: "warn" };
   }
   if (disclosure.availability === "simulation") {
     return { label: "Simulation", tone: "warn" };

@@ -9,7 +9,7 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 describe("buildPerformanceAdvisorBriefViewModel", () => {
-  it("builds a ready fixture-shaped brief with source metrics, audit, and drilldown evidence", () => {
+  it("builds a ready deterministic brief with source metrics and drilldown evidence", () => {
     const scenario = buildSupportedPerformanceScenario();
 
     const brief = buildPerformanceAdvisorBriefViewModel({
@@ -57,20 +57,13 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       ])
     );
     expect(brief.reviewNotes).toEqual([]);
-    expect(brief.audit).toEqual(
+    expect(brief.aiDisclosure).toEqual(
       expect.objectContaining({
-        taskId: "explain.v1",
-        outputLabel: "EXPLANATION_ONLY",
-        promptVersion: "foundation.explain.v1",
-        providerMode: "fixture-preview",
-        providerId: "text.stub",
-        adapterKind: "STUB",
-        modelId: null,
-        stubbed: true,
-        sourceRefs: expect.arrayContaining([
-          "lotus-gateway:workbench:PF_1001:performance-summary:YTD",
-          "lotus-workbench:advisor-brief-fixture:PF_1001:YTD",
-        ]),
+        preparation: "deterministic",
+        availability: "live",
+        evidence: { state: "supported", sourceCount: 5 },
+        humanReview: { state: "review-required", sourceRecorded: false },
+        clientUse: "internal-only",
       })
     );
   });
@@ -542,7 +535,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.reviewNotes).toEqual([]);
   });
 
-  it("falls back to gateway provenance when advisor brief source refs are empty", () => {
+  it("does not fabricate provenance when advisor brief source refs are empty", () => {
     const scenario = buildSupportedPerformanceScenario();
 
     const brief = buildPerformanceAdvisorBriefViewModel({
@@ -583,9 +576,10 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       isDetailsPending: false,
     });
 
-    expect(brief.audit.sourceRefs).toEqual([
-      "lotus-gateway:workbench:PF_1001:performance-advisor-brief:YTD",
-    ]);
+    expect(brief.aiDisclosure.evidence).toEqual({ state: "missing", sourceCount: 0 });
+    expect(brief.aiDisclosure.diagnostics).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ label: "Source references" })]),
+    );
   });
 
   it("maps workflow-pack posture into supportability, review notes, and audit provenance", () => {
@@ -665,19 +659,19 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         {
-          label: "AI Run",
+          label: "Generation Run",
           value: "COMPLETED",
           tone: "success",
           detail: "packrun_advisor_brief_req-1 • Authority lotus-gateway",
         },
         {
-          label: "AI Review",
+          label: "Human Review",
           value: "AWAITING REVIEW",
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
         },
         {
-          label: "AI Task Flow",
+          label: "Workflow Progress",
           value: "WAITING FOR REVIEW",
           tone: "warn",
           detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability ACTION REQUIRED",
@@ -692,11 +686,15 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         "Current task-flow step: generate_advisor_brief.",
       ])
     );
-    expect(brief.audit.sourceRefs).toEqual(
-      expect.arrayContaining([
-        "lotus-ai:workflow-pack-run:packrun_advisor_brief_req-1",
-        "lotus-ai:workflow-pack-task-flow:taskflow_advisor_brief_req-1",
-      ])
+    expect(brief.aiDisclosure).toEqual(
+      expect.objectContaining({
+        evidence: { state: "missing", sourceCount: 0 },
+        humanReview: { state: "review-required", sourceRecorded: false },
+        clientUse: "blocked",
+        diagnostics: expect.arrayContaining([
+          { label: "Workflow run", value: "packrun_advisor_brief_req-1" },
+        ]),
+      }),
     );
   });
 
@@ -784,13 +782,13 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         {
-          label: "AI Review",
+          label: "Human Review",
           value: "ACCEPTED",
           tone: "warn",
           detail: "Supportability READY • Superseded by packrun_advisor_brief_req-2",
         },
         {
-          label: "AI Task Flow",
+          label: "Workflow Progress",
           value: "SUPERSEDED",
           tone: "warn",
           detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability HISTORICAL • 1 lineage edge(s)",

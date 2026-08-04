@@ -3,7 +3,7 @@ import PerformanceSupportabilitySummary from "../performance-supportability-summ
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem): boolean {
-  return item.label === "AI Run" || item.label === "AI Review";
+  return item.label === "Generation Run" || item.label === "Human Review";
 }
 
 export default function LotusSupportabilityPanel({
