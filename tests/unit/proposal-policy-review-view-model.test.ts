@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPolicyEvaluationEvidenceModel,
+  buildPolicyReviewQueueEmptyPresentation,
   buildPolicyReviewQueueModel,
 } from "../../src/features/proposals/proposal-policy-review-view-model";
 
@@ -71,6 +72,50 @@ describe("proposal policy review view model", () => {
     expect(model.rows[0].signOffStatus).toBe("Sign-off recorded");
     expect(model.rows[1].policyStatus).toBe("Blocked");
     expect(model.rows[1].nextAction).toBe("Resolve blocking policy evidence before advisor sign-off.");
+  });
+
+  it("does not confirm an empty policy queue while its source is refreshing", () => {
+    expect(
+      buildPolicyReviewQueueEmptyPresentation({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        rowCount: 0,
+        isRefreshing: true,
+        hasRefreshFailure: false,
+      })
+    ).toMatchObject({
+      kind: "loading",
+      title: "Refreshing policy review queue",
+    });
+  });
+
+  it("treats a failed refresh of an empty policy queue as unconfirmed", () => {
+    const presentation = buildPolicyReviewQueueEmptyPresentation({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      rowCount: 0,
+      isRefreshing: false,
+      hasRefreshFailure: true,
+    });
+
+    expect(presentation).toMatchObject({
+      kind: "partial",
+      title: "Policy review queue is unconfirmed",
+    });
+    expect(presentation?.body).toContain("before concluding that no evaluations need review");
+  });
+
+  it("keeps a settled empty policy queue definitive", () => {
+    expect(
+      buildPolicyReviewQueueEmptyPresentation({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        rowCount: 0,
+        isRefreshing: false,
+        hasRefreshFailure: false,
+      })
+    ).toEqual({
+      kind: "empty",
+      title: "No policy evaluations need review",
+      body: "No suitability policy evaluations are waiting for PB_SG_GLOBAL_BAL_001.",
+    });
   });
 
   it("builds selected policy evidence without exposing source payload names", () => {
