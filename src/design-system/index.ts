@@ -1,4 +1,19 @@
 export { default as ActionLink } from "./components/action-link";
+export { default as AiAssistanceDisclosure } from "./components/ai-assistance-disclosure";
+export {
+  createAiAssistanceDisclosure,
+} from "./ai-assistance-model";
+export type {
+  AiAssistanceDiagnostic,
+  AiAssistanceDisclosure as AiAssistanceDisclosureModel,
+  AiAssistanceDisclosureInput,
+  AiClientUseState,
+  AiEvidenceState,
+  AiFreshnessState,
+  AiHumanReviewState,
+  AiOutputAvailability,
+  AiPreparationMethod,
+} from "./ai-assistance-model";
 export { default as AppPageShell } from "./components/app-page-shell";
 export { default as AnalyticsModule } from "./components/analytics-module";
 export { default as AnalyticsRankedList } from "./components/analytics-ranked-list";
