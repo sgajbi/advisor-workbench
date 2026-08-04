@@ -6,6 +6,16 @@ const projectRoot = process.cwd();
 const nextCli = resolve(projectRoot, "node_modules", "next", "dist", "bin", "next");
 const validatedBuildMarker = resolve(projectRoot, ".next", "BUILD_ID");
 const reuseValidatedBuild = process.env.PLAYWRIGHT_REUSE_VALIDATED_BUILD === "1";
+const playwrightPortValue = process.env.PLAYWRIGHT_PORT?.trim() || "3000";
+
+if (!/^\d+$/.test(playwrightPortValue)) {
+  throw new Error("PLAYWRIGHT_PORT must be an integer between 1 and 65535.");
+}
+
+const playwrightPort = Number.parseInt(playwrightPortValue, 10);
+if (playwrightPort < 1 || playwrightPort > 65_535) {
+  throw new Error("PLAYWRIGHT_PORT must be an integer between 1 and 65535.");
+}
 
 function runNext(args) {
   return new Promise((resolveRun, rejectRun) => {
@@ -36,7 +46,14 @@ function runNext(args) {
 function startServer() {
   const child = spawn(
     process.execPath,
-    [nextCli, "start", "--hostname", "127.0.0.1", "--port", "3000"],
+    [
+      nextCli,
+      "start",
+      "--hostname",
+      "127.0.0.1",
+      "--port",
+      String(playwrightPort),
+    ],
     {
       cwd: projectRoot,
       stdio: "inherit",
