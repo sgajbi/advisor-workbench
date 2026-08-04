@@ -27,6 +27,12 @@ export type PolicyReviewQueueModel = {
   rows: PolicyReviewQueueRow[];
 };
 
+export type PolicyReviewQueueEmptyPresentation = {
+  kind: "empty" | "loading" | "partial";
+  title: string;
+  body: string;
+};
+
 export type PolicyEvaluationEvidenceModel = {
   evaluationId: string;
   sourceEvaluationHash: string | null;
@@ -93,6 +99,44 @@ export function buildPolicyReviewQueueModel({
     totalCount: rows.length,
     actionCount: rows.filter((row) => row.policyStatus !== "Ready").length,
     rows,
+  };
+}
+
+export function buildPolicyReviewQueueEmptyPresentation({
+  portfolioId,
+  rowCount,
+  isRefreshing,
+  hasRefreshFailure,
+}: {
+  portfolioId: string;
+  rowCount: number;
+  isRefreshing: boolean;
+  hasRefreshFailure: boolean;
+}): PolicyReviewQueueEmptyPresentation | null {
+  if (rowCount > 0) {
+    return null;
+  }
+
+  if (isRefreshing) {
+    return {
+      kind: "loading",
+      title: "Refreshing policy review queue",
+      body: "Confirming whether any suitability policy evaluations need advisor review.",
+    };
+  }
+
+  if (hasRefreshFailure) {
+    return {
+      kind: "partial",
+      title: "Policy review queue is unconfirmed",
+      body: "The latest suitability policy queue could not be confirmed. Retry before concluding that no evaluations need review.",
+    };
+  }
+
+  return {
+    kind: "empty",
+    title: "No policy evaluations need review",
+    body: `No suitability policy evaluations are waiting for ${portfolioId}.`,
   };
 }
 

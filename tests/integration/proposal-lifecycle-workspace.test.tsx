@@ -357,6 +357,34 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not confirm an empty cached policy queue after its refresh fails", async () => {
+    getAdvisoryPolicyReviewQueueMock.mockResolvedValueOnce({ items: [] });
+    const { queryClient } = renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(await screen.findByText("No policy evaluations need review")).toBeInTheDocument();
+    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(new Error("policy refresh unavailable"));
+
+    await act(async () => {
+      await queryClient.refetchQueries({
+        queryKey: ["advisory-policy-review-queue", "PB_SG_GLOBAL_BAL_001"],
+      });
+    });
+
+    expect(await screen.findByText("Policy review queue is unconfirmed")).toBeInTheDocument();
+    expect(screen.getByText(/Retry before concluding that no evaluations need review/)).toBeInTheDocument();
+    expect(screen.queryByText("No policy evaluations need review")).not.toBeInTheDocument();
+  });
+
   it("keeps a failed proposal refresh distinct from supporting policy evidence", async () => {
     const { queryClient } = renderWithQueryClient(
       <ProposalWorkflowContextProvider

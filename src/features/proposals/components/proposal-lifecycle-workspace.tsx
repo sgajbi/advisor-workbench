@@ -34,6 +34,7 @@ import {
 } from "../proposal-lifecycle-workspace-view-model";
 import {
   buildPolicyEvaluationEvidenceModel,
+  buildPolicyReviewQueueEmptyPresentation,
   buildPolicyReviewQueueModel,
 } from "../proposal-policy-review-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
@@ -444,6 +445,13 @@ function PolicyReviewQueueSection({
   reviewRequestFailed: boolean;
   onRequestMoreEvidence: () => void;
 }) {
+  const emptyPresentation = buildPolicyReviewQueueEmptyPresentation({
+    portfolioId,
+    rowCount: model.rows.length,
+    isRefreshing,
+    hasRefreshFailure,
+  });
+
   if (isLoading) {
     return (
       <div className={styles.policyReviewPanel}>
@@ -477,12 +485,12 @@ function PolicyReviewQueueSection({
     );
   }
 
-  if (model.rows.length === 0) {
+  if (emptyPresentation) {
     return (
       <ScreenStatePanel
-        kind="empty"
-        title="No policy evaluations need review"
-        body={`No suitability policy evaluations are waiting for ${portfolioId}.`}
+        kind={emptyPresentation.kind}
+        title={emptyPresentation.title}
+        body={emptyPresentation.body}
         surface="default"
       />
     );
