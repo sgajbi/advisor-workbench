@@ -2,6 +2,7 @@ import type { SemanticBadgeTone } from "@/design-system";
 
 export type ProposalWorkflowContextState =
   | "loading"
+  | "refreshing"
   | "empty"
   | "partial"
   | "ready"
@@ -32,6 +33,7 @@ const STATE_PRESENTATION: Record<
   { label: string; tone: SemanticBadgeTone }
 > = {
   loading: { label: "Loading", tone: "default" },
+  refreshing: { label: "Refreshing", tone: "default" },
   empty: { label: "No record selected", tone: "default" },
   partial: { label: "Partial evidence", tone: "warn" },
   ready: { label: "Source current", tone: "success" },
@@ -97,13 +99,44 @@ export function buildSimulationProposalWorkflowContext({
   });
 }
 
+export function buildPersistedProposalDraftWorkflowContext({
+  portfolioId,
+  proposalId,
+}: {
+  portfolioId: string;
+  proposalId: string;
+}): ProposalWorkflowContextModel {
+  return withStatePresentation({
+    state: "ready",
+    title: "Advisor draft saved",
+    summary:
+      "The approved advisory service retained this proposal draft and returned its workflow identity.",
+    currentPosture: "Draft retained for review",
+    nextAction: "Open the saved proposal to review its current evidence and required business action.",
+    blockers: [],
+    facts: [
+      { label: "Portfolio", value: portfolioId },
+      { label: "Proposal", value: proposalId },
+      { label: "Business stage", value: "Advisor draft" },
+    ],
+    sourceLabel: "Advisory proposal lifecycle",
+    boundaryNote:
+      "A saved draft does not imply suitability completion, approval, client publication, delivery, or execution readiness.",
+  });
+}
+
 export function buildProposalQueueWorkflowContext({
   portfolioId,
   modeLabel,
   isLoading,
+  isRefreshing,
   permissionBlocked,
   hasError,
-  hasPartialEvidence,
+  hasUnavailableEvidence,
+  hasRefreshFailure,
+  hasMoreResults,
+  hasPreviousResults,
+  windowNumber,
   totalCount,
   attentionCount,
   primaryDecision,
@@ -112,9 +145,14 @@ export function buildProposalQueueWorkflowContext({
   portfolioId: string;
   modeLabel: string;
   isLoading: boolean;
+  isRefreshing: boolean;
   permissionBlocked: boolean;
   hasError: boolean;
-  hasPartialEvidence: boolean;
+  hasUnavailableEvidence: boolean;
+  hasRefreshFailure: boolean;
+  hasMoreResults: boolean;
+  hasPreviousResults: boolean;
+  windowNumber: number;
   totalCount: number;
   attentionCount: number;
   primaryDecision: string;
@@ -167,29 +205,89 @@ export function buildProposalQueueWorkflowContext({
     });
   }
 
-  if (hasPartialEvidence) {
+  if (isRefreshing) {
     return withStatePresentation({
-      state: "partial",
-      title: "Supporting evidence is unavailable",
+      state: "refreshing",
+      title: "Refreshing proposal evidence",
       summary:
-        totalCount === 0
-          ? "The proposal queue is empty, but one or more suitability evidence sources could not be confirmed."
-          : primaryDecision,
-      currentPosture:
-        totalCount === 0
-          ? "No proposals in view; evidence incomplete"
-          : `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in view`,
-      nextAction:
-        "Restore the unavailable policy-evidence source before relying on suitability workflow posture.",
-      blockers: ["One or more supporting policy-evidence sources are unavailable."],
+        "The current proposal view remains available while the approved advisory source refreshes.",
+      currentPosture: "Source refresh in progress",
+      nextAction: "Wait for refreshed evidence before relying on the current workflow posture.",
+      blockers: [],
       facts: [
         ...facts,
+        { label: "Current view", value: String(windowNumber) },
+        { label: "In view", value: String(totalCount) },
+      ],
+      sourceLabel: "Advisory proposal lifecycle",
+      boundaryNote:
+        "Visible proposal evidence remains readable during refresh but is not labelled current until the source settles.",
+    });
+  }
+
+  const hasPartialQueueWindow = hasMoreResults || hasPreviousResults;
+  const hasPartialEvidence =
+    hasUnavailableEvidence || hasRefreshFailure || hasPartialQueueWindow;
+
+  if (hasPartialEvidence) {
+    const blockers = [
+      ...(hasUnavailableEvidence
+        ? ["One or more supporting policy-evidence sources are unavailable."]
+        : []),
+      ...(hasRefreshFailure
+        ? ["The latest policy-evidence refresh did not complete."]
+        : []),
+      ...(hasMoreResults
+        ? ["More proposals are available beyond this view."]
+        : []),
+      ...(hasPreviousResults
+        ? ["Earlier proposals are not included in this view."]
+        : []),
+    ];
+    const title =
+      hasUnavailableEvidence || hasRefreshFailure
+        ? hasPartialQueueWindow
+          ? "Proposal view is incomplete"
+          : "Supporting evidence is incomplete"
+        : attentionCount > 0
+          ? `${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} attention in this view`
+          : hasMoreResults
+            ? "More proposals available"
+            : "Current proposal view";
+    const summary =
+      totalCount > 0
+        ? primaryDecision
+        : hasMoreResults
+          ? "No proposals match the current view; more proposals remain available."
+          : hasPreviousResults
+            ? "No proposals match the current view; earlier proposals remain available."
+            : "No proposals are visible while supporting policy evidence remains incomplete.";
+    const nextAction = hasUnavailableEvidence
+      ? "Restore the unavailable policy-evidence source before relying on suitability workflow posture."
+      : hasRefreshFailure
+        ? "Retry the policy-evidence refresh before relying on the current suitability posture."
+        : totalCount === 0 && hasMoreResults
+          ? "Review the next proposals before concluding this queue is clear."
+          : totalCount === 0 && hasPreviousResults
+            ? "Return to the previous proposals to continue the review."
+            : recommendedAction;
+
+    return withStatePresentation({
+      state: "partial",
+      title,
+      summary,
+      currentPosture: `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in current view`,
+      nextAction,
+      blockers,
+      facts: [
+        ...facts,
+        { label: "Current view", value: String(windowNumber) },
         { label: "In view", value: String(totalCount) },
         { label: "Need action", value: String(attentionCount) },
       ],
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote:
-        "Proposal counts do not establish suitability posture while supporting policy evidence is unavailable.",
+        "Counts apply only to proposals shown in this view. They do not establish complete queue or suitability posture while supporting evidence is partial.",
     });
   }
 

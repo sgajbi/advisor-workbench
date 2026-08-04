@@ -5,8 +5,19 @@ import { useMemo, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
-import { ActionButton, ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import {
+  ActionButton,
+  ScreenStatePanel,
+  SectionBlock,
+  SemanticBadge,
+  SourceWindowNavigation,
+  Text,
+} from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import {
+  combineQuerySourcePostures,
+  projectQuerySourcePosture,
+} from "@/features/platform-runtime/query-source-posture";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import {
@@ -26,6 +37,7 @@ import {
   buildPolicyReviewQueueModel,
 } from "../proposal-policy-review-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
+import { useProposalSourceWindow } from "../use-proposal-source-window";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
@@ -37,11 +49,14 @@ export default function ProposalLifecycleWorkspace({
   mode: ProposalLifecycleMode;
 }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["proposal-lifecycle-workspace", portfolioId, mode],
-    queryFn: async () => await listProposals({ portfolioId }),
+  const sourceWindow = useProposalSourceWindow();
+  const proposalQuery = useQuery({
+    queryKey: ["proposal-lifecycle-workspace", portfolioId, mode, sourceWindow.cursor],
+    queryFn: async () =>
+      await listProposals({ portfolioId, cursor: sourceWindow.cursor }),
     ...workbenchStrictQueryDefaults,
   });
+  const { data, isLoading } = proposalQuery;
   const policyQueueQuery = useQuery({
     queryKey: ["advisory-policy-review-queue", portfolioId],
     queryFn: async () =>
@@ -81,6 +96,52 @@ export default function ProposalLifecycleWorkspace({
     enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
     ...workbenchStrictQueryDefaults,
   });
+  const proposalSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(proposalQuery.data),
+    isLoading: proposalQuery.isLoading,
+    isFetching: proposalQuery.isFetching,
+    hasError: Boolean(proposalQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(proposalQuery.error),
+  });
+  const policyQueuePosture = projectQuerySourcePosture({
+    hasData: Boolean(policyQueueQuery.data),
+    isLoading: policyQueueQuery.isLoading,
+    isFetching: policyQueueQuery.isFetching,
+    hasError: Boolean(policyQueueQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyQueueQuery.error),
+  });
+  const policyEvaluationPosture = projectQuerySourcePosture({
+    hasData: Boolean(policyEvaluationQuery.data),
+    isLoading: policyEvaluationQuery.isLoading,
+    isFetching: policyEvaluationQuery.isFetching,
+    hasError: Boolean(policyEvaluationQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyEvaluationQuery.error),
+  });
+  const policySignOffPackagePosture = projectQuerySourcePosture({
+    hasData: Boolean(policySignOffPackageQuery.data),
+    isLoading: policySignOffPackageQuery.isLoading,
+    isFetching: policySignOffPackageQuery.isFetching,
+    hasError: Boolean(policySignOffPackageQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(policySignOffPackageQuery.error),
+  });
+  const policyWorkflowPosture = projectQuerySourcePosture({
+    hasData: Boolean(policyWorkflowQuery.data),
+    isLoading: policyWorkflowQuery.isLoading,
+    isFetching: policyWorkflowQuery.isFetching,
+    hasError: Boolean(policyWorkflowQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyWorkflowQuery.error),
+  });
+  const policySourcePosture = combineQuerySourcePostures([
+    policyQueuePosture,
+    policyEvaluationPosture,
+    policySignOffPackagePosture,
+    policyWorkflowPosture,
+  ]);
+  const policyEvidencePosture = combineQuerySourcePostures([
+    policyEvaluationPosture,
+    policySignOffPackagePosture,
+    policyWorkflowPosture,
+  ]);
   const policyEvidenceModel = useMemo(
     () =>
       buildPolicyEvaluationEvidenceModel({
@@ -121,48 +182,51 @@ export default function ProposalLifecycleWorkspace({
     },
   });
   const workflowContextModel = useMemo(() => {
-    const policySourceErrors =
-      mode === "suitability"
-        ? [
-            policyQueueQuery.error,
-            policyEvaluationQuery.error,
-            policySignOffPackageQuery.error,
-            policyWorkflowQuery.error,
-          ]
-        : [];
-    const policySourcesLoading =
-      mode === "suitability" &&
-      (policyQueueQuery.isLoading ||
-        policyEvaluationQuery.isLoading ||
-        policySignOffPackageQuery.isLoading ||
-        policyWorkflowQuery.isLoading);
+    const policySourcesActive = mode === "suitability";
 
     return buildProposalQueueWorkflowContext({
       portfolioId,
       modeLabel: model.title,
-      isLoading: isLoading || policySourcesLoading,
-      permissionBlocked: [error, ...policySourceErrors].some(isWorkbenchPermissionBlockedError),
-      hasError: Boolean(error),
-      hasPartialEvidence: policySourceErrors.some(Boolean),
+      isLoading:
+        proposalSourcePosture.isInitialLoading ||
+        (policySourcesActive && policySourcePosture.isInitialLoading),
+      isRefreshing:
+        proposalSourcePosture.isRefreshing ||
+        (policySourcesActive && policySourcePosture.isRefreshing),
+      permissionBlocked:
+        proposalSourcePosture.isPermissionBlocked ||
+        (policySourcesActive && policySourcePosture.isPermissionBlocked),
+      hasError: proposalSourcePosture.isUnavailable,
+      hasUnavailableEvidence:
+        policySourcesActive && policySourcePosture.isUnavailable,
+      hasRefreshFailure:
+        proposalSourcePosture.hasRefreshFailure ||
+        (policySourcesActive && policySourcePosture.hasRefreshFailure),
+      hasMoreResults: Boolean(data?.next_cursor),
+      hasPreviousResults: sourceWindow.hasPrevious,
+      windowNumber: sourceWindow.windowNumber,
       totalCount: model.totalCount,
       attentionCount: model.attentionCount,
       primaryDecision: model.primaryDecision,
       recommendedAction: model.recommendedAction,
     });
   }, [
-    error,
-    isLoading,
+    data?.next_cursor,
     mode,
     model,
-    policyEvaluationQuery.error,
-    policyEvaluationQuery.isLoading,
-    policyQueueQuery.error,
-    policyQueueQuery.isLoading,
-    policySignOffPackageQuery.error,
-    policySignOffPackageQuery.isLoading,
-    policyWorkflowQuery.error,
-    policyWorkflowQuery.isLoading,
+    policySourcePosture.hasRefreshFailure,
+    policySourcePosture.isInitialLoading,
+    policySourcePosture.isPermissionBlocked,
+    policySourcePosture.isRefreshing,
+    policySourcePosture.isUnavailable,
     portfolioId,
+    proposalSourcePosture.hasRefreshFailure,
+    proposalSourcePosture.isInitialLoading,
+    proposalSourcePosture.isPermissionBlocked,
+    proposalSourcePosture.isRefreshing,
+    proposalSourcePosture.isUnavailable,
+    sourceWindow.hasPrevious,
+    sourceWindow.windowNumber,
   ]);
   usePublishProposalWorkflowContext(workflowContextModel);
 
@@ -173,6 +237,19 @@ export default function ProposalLifecycleWorkspace({
           <CircularProgress size={16} />
           <Text variant="body">Loading proposal lifecycle...</Text>
         </Stack>
+      </SectionBlock>
+    );
+  }
+
+  if (proposalSourcePosture.isPermissionBlocked) {
+    return (
+      <SectionBlock>
+        <ScreenStatePanel
+          kind="permission_blocked"
+          title="Proposal access is not available"
+          body="Your current role does not permit this portfolio's proposal workflow to be viewed."
+          surface="default"
+        />
       </SectionBlock>
     );
   }
@@ -190,12 +267,20 @@ export default function ProposalLifecycleWorkspace({
         </Link>
       }
     >
-      {error ? (
+      {proposalSourcePosture.isUnavailable ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Proposal lifecycle is unavailable. No fallback proposal queue is shown.
         </Alert>
       ) : null}
-      {mode === "suitability" && policyQueueQuery.error ? (
+      {proposalSourcePosture.hasRefreshFailure ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          The proposal view could not be refreshed. Previously retrieved rows remain visible while
+          the source is rechecked.
+        </Alert>
+      ) : null}
+      {mode === "suitability" &&
+      policyQueuePosture.isUnavailable &&
+      !policyQueuePosture.isPermissionBlocked ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Policy review queue is unavailable. No fallback suitability policy queue is shown.
         </Alert>
@@ -224,20 +309,18 @@ export default function ProposalLifecycleWorkspace({
       {mode === "suitability" ? (
         <PolicyReviewQueueSection
           portfolioId={portfolioId}
-          isLoading={policyQueueQuery.isLoading}
-          hasError={Boolean(policyQueueQuery.error)}
+          isLoading={policyQueuePosture.isInitialLoading}
+          isRefreshing={policyQueuePosture.isRefreshing}
+          isPermissionBlocked={policyQueuePosture.isPermissionBlocked}
+          hasError={policyQueuePosture.isUnavailable}
+          hasRefreshFailure={policyQueuePosture.hasRefreshFailure}
           model={policyReviewModel}
           evidenceModel={policyEvidenceModel}
-          evidenceLoading={
-            policyEvaluationQuery.isLoading ||
-            policySignOffPackageQuery.isLoading ||
-            policyWorkflowQuery.isLoading
-          }
-          evidenceError={Boolean(
-            policyEvaluationQuery.error ||
-              policySignOffPackageQuery.error ||
-              policyWorkflowQuery.error
-          )}
+          evidenceLoading={policyEvidencePosture.isInitialLoading}
+          evidenceRefreshing={policyEvidencePosture.isRefreshing}
+          evidencePermissionBlocked={policyEvidencePosture.isPermissionBlocked}
+          evidenceError={policyEvidencePosture.isUnavailable}
+          evidenceRefreshFailure={policyEvidencePosture.hasRefreshFailure}
           reviewRequestPending={requestMoreEvidenceMutation.isPending}
           reviewRequestSucceeded={requestMoreEvidenceMutation.isSuccess}
           reviewRequestFailed={Boolean(requestMoreEvidenceMutation.error)}
@@ -245,7 +328,7 @@ export default function ProposalLifecycleWorkspace({
         />
       ) : null}
 
-      {error ? (
+      {proposalSourcePosture.isUnavailable ? (
         <ScreenStatePanel
           kind="error"
           title="Proposal lifecycle unavailable"
@@ -302,6 +385,18 @@ export default function ProposalLifecycleWorkspace({
           </table>
         </div>
       )}
+      {!proposalSourcePosture.isPermissionBlocked &&
+      (!proposalSourcePosture.isUnavailable || sourceWindow.hasPrevious) ? (
+        <SourceWindowNavigation
+          ariaLabel="Proposal queue navigation"
+          currentWindow={sourceWindow.windowNumber}
+          hasPrevious={sourceWindow.hasPrevious}
+          hasNext={Boolean(data?.next_cursor)}
+          isLoading={proposalQuery.isFetching}
+          onPrevious={sourceWindow.showPrevious}
+          onNext={() => sourceWindow.showNext(data?.next_cursor)}
+        />
+      ) : null}
     </SectionBlock>
   );
 }
@@ -309,11 +404,17 @@ export default function ProposalLifecycleWorkspace({
 function PolicyReviewQueueSection({
   portfolioId,
   isLoading,
+  isRefreshing,
+  isPermissionBlocked,
   hasError,
+  hasRefreshFailure,
   model,
   evidenceModel,
   evidenceLoading,
+  evidenceRefreshing,
+  evidencePermissionBlocked,
   evidenceError,
+  evidenceRefreshFailure,
   reviewRequestPending,
   reviewRequestSucceeded,
   reviewRequestFailed,
@@ -321,11 +422,17 @@ function PolicyReviewQueueSection({
 }: {
   portfolioId: string;
   isLoading: boolean;
+  isRefreshing: boolean;
+  isPermissionBlocked: boolean;
   hasError: boolean;
+  hasRefreshFailure: boolean;
   model: ReturnType<typeof buildPolicyReviewQueueModel>;
   evidenceModel: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
   evidenceLoading: boolean;
+  evidenceRefreshing: boolean;
+  evidencePermissionBlocked: boolean;
   evidenceError: boolean;
+  evidenceRefreshFailure: boolean;
   reviewRequestPending: boolean;
   reviewRequestSucceeded: boolean;
   reviewRequestFailed: boolean;
@@ -339,6 +446,17 @@ function PolicyReviewQueueSection({
           <Text variant="body">Loading policy review queue...</Text>
         </Stack>
       </div>
+    );
+  }
+
+  if (isPermissionBlocked) {
+    return (
+      <ScreenStatePanel
+        kind="permission_blocked"
+        title="Policy review access is not available"
+        body="Your current role does not permit this portfolio's suitability review queue to be viewed."
+        surface="default"
+      />
     );
   }
 
@@ -366,6 +484,17 @@ function PolicyReviewQueueSection({
 
   return (
     <div className={styles.policyReviewPanel}>
+      {isRefreshing ? (
+        <Alert severity="info" sx={{ mb: 1 }}>
+          Refreshing the policy review queue. Previously retrieved evaluations remain visible.
+        </Alert>
+      ) : null}
+      {hasRefreshFailure ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          The policy review queue could not be refreshed. Previously retrieved evaluations remain
+          visible while the source is rechecked.
+        </Alert>
+      ) : null}
       <div className={styles.policyReviewHeader}>
         <div>
           <Text variant="microLabel">Suitability Policy Queue</Text>
@@ -414,7 +543,10 @@ function PolicyReviewQueueSection({
       </div>
       <PolicyEvaluationEvidenceSection
         isLoading={evidenceLoading}
+        isRefreshing={evidenceRefreshing}
+        isPermissionBlocked={evidencePermissionBlocked}
         hasError={evidenceError}
+        hasRefreshFailure={evidenceRefreshFailure}
         model={evidenceModel}
         reviewRequestPending={reviewRequestPending}
         reviewRequestSucceeded={reviewRequestSucceeded}
@@ -427,7 +559,10 @@ function PolicyReviewQueueSection({
 
 function PolicyEvaluationEvidenceSection({
   isLoading,
+  isRefreshing,
+  isPermissionBlocked,
   hasError,
+  hasRefreshFailure,
   model,
   reviewRequestPending,
   reviewRequestSucceeded,
@@ -435,7 +570,10 @@ function PolicyEvaluationEvidenceSection({
   onRequestMoreEvidence,
 }: {
   isLoading: boolean;
+  isRefreshing: boolean;
+  isPermissionBlocked: boolean;
   hasError: boolean;
+  hasRefreshFailure: boolean;
   model: ReturnType<typeof buildPolicyEvaluationEvidenceModel>;
   reviewRequestPending: boolean;
   reviewRequestSucceeded: boolean;
@@ -450,6 +588,17 @@ function PolicyEvaluationEvidenceSection({
           <Text variant="body">Loading policy evidence...</Text>
         </Stack>
       </div>
+    );
+  }
+
+  if (isPermissionBlocked) {
+    return (
+      <ScreenStatePanel
+        kind="permission_blocked"
+        title="Policy evidence access is not available"
+        body="Your current role does not permit the selected suitability evidence to be viewed."
+        surface="default"
+      />
     );
   }
 
@@ -470,6 +619,18 @@ function PolicyEvaluationEvidenceSection({
 
   return (
     <div className={styles.policyEvidencePanel}>
+      {isRefreshing ? (
+        <Alert severity="info" sx={{ mb: 1 }}>
+          Refreshing the selected policy evidence. The prior source package remains visible during
+          this check.
+        </Alert>
+      ) : null}
+      {hasRefreshFailure ? (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          The selected policy evidence could not be refreshed. The prior source package remains
+          visible but is not confirmed current.
+        </Alert>
+      ) : null}
       <div>
         <Text variant="microLabel">Selected Policy Evidence</Text>
         <Text variant="subsectionTitle" as="h4">
