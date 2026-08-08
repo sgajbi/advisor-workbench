@@ -54,7 +54,7 @@ describe("buildDpmAiWorkflowOutcome", () => {
         stubbed: true,
       }),
       expected: {
-        preparation: "ai-assisted",
+        preparation: "deterministic",
         availability: "simulation",
         clientUse: "internal-only",
       },
@@ -89,6 +89,27 @@ describe("buildDpmAiWorkflowOutcome", () => {
     const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
 
     expect(outcome.disclosure).toMatchObject(expected);
+  });
+
+  it("blocks source-approved client use when runtime redaction is inactive", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        outputLabel: "CLIENT_USE_APPROVED",
+        reviewState: "ACCEPTED",
+        runtimeRedactionActive: false,
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "ai-assisted",
+      availability: "live",
+      humanReview: { state: "reviewed", sourceRecorded: true },
+      clientUse: "blocked",
+    });
+    expect(outcome.disclosure.limitations).toContain(
+      "Runtime redaction was not reported as active; keep the result within its governed internal scope.",
+    );
   });
 
   it.each([
