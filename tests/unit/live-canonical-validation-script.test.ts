@@ -3,6 +3,24 @@ import { join } from "node:path";
 
 const REPORT_CENTRE_CLASSIFICATION_PATTERN =
   /"reporting\.report_centre",\r?\n\s+reportCentreProof\.panelState,\r?\n\s+"lotus-report",/;
+const OWNERSHIP_MODULE = readFileSync(
+  join(
+    process.cwd(),
+    "scripts",
+    "live",
+    "CanonicalPortOwnership.psm1",
+  ),
+  "utf8",
+);
+const OWNERSHIP_CONTRACT = readFileSync(
+  join(
+    process.cwd(),
+    "scripts",
+    "quality",
+    "Test-CanonicalPortOwnership.ps1",
+  ),
+  "utf8",
+);
 
 describe("canonical live validation script", () => {
   it("seeds PM operating quality with the current trusted-tenant Manage contract", () => {
@@ -15,7 +33,6 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
-
     expect(script).toContain("CANONICAL_CALLER_CONTEXT_HEADERS");
     expect(script).toContain(
       'tenant_id: CANONICAL_CALLER_CONTEXT_HEADERS["X-Tenant-Id"]',
@@ -237,6 +254,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("Using lotus-ai env file for canonical proof");
     expect(script).toContain("[switch]$CleanCoreState");
     expect(script).toContain("[switch]$CoreManageOnly");
+    expect(script).toContain("[switch]$PortOwnershipPreflightOnly");
     expect(script).toContain("Core/manage proof mode enabled");
     expect(script).toContain("$canonicalCoreEnvironment = @{");
     expect(script).toContain('DEMO_DATA_PACK_ENABLED = "false"');
@@ -257,13 +275,38 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Test-CanonicalPortOwnership");
     expect(script).toContain('C:\\Users\\Sandeep\\projects",');
     expect(script).not.toContain('C:\\\\Users\\\\Sandeep\\\\projects",');
-    expect(script).toContain("function Normalize-HostPathForComparison");
     expect(script).toContain(
-      "$allowedWorkingDirectories = @(",
+      'Import-Module (Join-Path $PSScriptRoot "CanonicalPortOwnership.psm1") -Force',
     );
     expect(script).toContain(
-      "$allowedWorkingDirectories -contains $ownerWorkingDirectory",
+      "Test-CanonicalDockerProjectOwnership",
     );
+    expect(script).toContain(
+      "Canonical port ownership preflight passed.",
+    );
+    expect(OWNERSHIP_MODULE).toContain(
+      "function ConvertTo-CanonicalHostPathKey",
+    );
+    expect(OWNERSHIP_MODULE).toContain(
+      "function Test-CanonicalDockerProjectOwnership",
+    );
+    expect(OWNERSHIP_MODULE).toContain("[System.IO.Path]::GetFullPath($Path)");
+    expect(OWNERSHIP_MODULE).toContain(
+      "[System.IO.Path]::IsPathRooted($Path)",
+    );
+    expect(OWNERSHIP_MODULE).toContain("$isDriveAbsolute");
+    expect(OWNERSHIP_MODULE).toContain("$isUncAbsolute");
+    expect(OWNERSHIP_MODULE).toContain("$AllowedProjects -icontains $Project");
+    expect(OWNERSHIP_MODULE).toContain("$allowedPathKey -ieq $ownerPathKey");
+    expect(OWNERSHIP_MODULE).toContain("catch {");
+    expect(OWNERSHIP_MODULE).toMatch(/catch \{\r?\n\s+return ""/);
+    expect(OWNERSHIP_CONTRACT).toContain('Case "repeated separators"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "case difference"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "trailing separator"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "parent segment"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "foreign directory"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "relative owner path"');
+    expect(OWNERSHIP_CONTRACT).toContain('Case "malformed owner path"');
     expect(script).toContain(
       "Canonical port preflight failed before hosts, builds, containers, or processes were changed.",
     );
@@ -285,6 +328,11 @@ describe("canonical live validation script", () => {
       script.indexOf(
         "Previewing managed canonical hosts block from lotus-platform",
       ),
+    );
+    expect(
+      script.indexOf("if ($PortOwnershipPreflightOnly)"),
+    ).toBeLessThan(
+      script.lastIndexOf("Invoke-MainlineSourceProvenancePreflight"),
     );
     expect(
       script.indexOf(

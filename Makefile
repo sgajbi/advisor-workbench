@@ -1,4 +1,4 @@
-.PHONY: install security lint typecheck test test-coverage test-e2e build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
+.PHONY: install security lint typecheck test test-coverage test-runtime-ownership test-e2e build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
 
 install:
 	npm install
@@ -17,6 +17,9 @@ test:
 
 test-coverage:
 	npm run test:coverage
+
+test-runtime-ownership:
+	npm run test:runtime-ownership
 
 test-e2e:
 	npm run test:e2e
