@@ -649,7 +649,7 @@ describe("design-system components", () => {
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Holdings" })).toBeInTheDocument();
     expect(screen.getByText("Pricing not yet published")).toBeInTheDocument();
-    expect(screen.getByText("Partial data")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Partial data", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("Portfolio Context")).toBeInTheDocument();
     expect(screen.getByText("Operational Detail")).toBeInTheDocument();
     expect(screen.getByText("Latest transaction")).toHaveClass("workbench-definition-term");

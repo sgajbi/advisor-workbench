@@ -24,7 +24,7 @@ export default function ModuleStatePanel({
   return (
     <div className={`module-state-panel module-state-panel-${state}`}>
       <div className="module-state-panel-header">
-        <strong>{title}</strong>
+        <strong role="heading" aria-level={2}>{title}</strong>
         {why ? <StateInfoHint body={why.body} title={why.title} label={why.label} /> : null}
       </div>
       <p>{body}</p>
