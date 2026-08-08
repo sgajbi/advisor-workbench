@@ -8,6 +8,7 @@ import {
   formatBusinessMandateType,
   formatBusinessOwner,
   formatBusinessReason,
+  toneForState,
 } from "../../src/features/workbench/manage-workspace-view-model";
 
 describe("manage workspace business presentation", () => {
@@ -30,6 +31,13 @@ describe("manage workspace business presentation", () => {
     expect(formatBusinessMandateType(undefined)).toBe("Not available");
     expect(formatBusinessBook(null)).toBe("Not available");
     expect(formatBusinessOwner("Not assigned")).toBe("Not assigned");
+  });
+
+  it("classifies negative and stale source posture before positive substrings", () => {
+    expect(toneForState("SUPPORTED")).toBe("success");
+    expect(toneForState("UNSUPPORTED")).toBe("danger");
+    expect(toneForState("NOT_SUPPORTED")).toBe("danger");
+    expect(toneForState("STALE")).toBe("warn");
   });
 
   it("keeps missing exception actions and owners visibly unassigned", () => {
