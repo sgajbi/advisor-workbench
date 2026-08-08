@@ -112,6 +112,29 @@ describe("buildDpmAiWorkflowOutcome", () => {
     },
   );
 
+  it.each([
+    ["missing review state", null, true],
+    ["unknown review state", "FUTURE_STATE", true],
+    ["review required without a review workflow", "NOT_REVIEW_REQUIRED", true],
+    ["review workflow without review required", "AWAITING_REVIEW", false],
+  ])("fails closed for %s", (_name, reviewState, reviewRequired) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+    Object.assign(response.data.workflow_pack_run, {
+      review_state: reviewState,
+      review_required: reviewRequired,
+    });
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
   it.each([null, "UNSUPPORTED", "PARTIAL", "DEGRADED", "UNKNOWN", "EMPTY", "DISABLED"])(
     "fails closed for source supportability state %s",
     (state) => {
@@ -148,6 +171,56 @@ describe("buildDpmAiWorkflowOutcome", () => {
     });
     expect(outcome.material.sections).toEqual([]);
   });
+
+  it.each([
+    ["proof-pack-memo", "proof_pack_id"],
+    ["wave-memo", "wave_id"],
+    ["operations-handoff", "wave_id"],
+    ["pm-quality-summary", "score_run_id"],
+  ] as const)(
+    "fails closed when the %s supportability belongs to another business object",
+    (family, identityField) => {
+      const response = buildDpmAiWorkflowResponse(family);
+      Object.assign(response.supportability, {
+        [identityField]: "different-source-object",
+      });
+
+      const outcome = buildDpmAiWorkflowOutcome(family, response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["proof-pack-memo", "proof_pack_id"],
+    ["wave-memo", "wave_id"],
+    ["operations-handoff", "wave_id"],
+    ["pm-quality-summary", "score_run_id"],
+  ] as const)(
+    "accepts matching %s supportability business-object identity",
+    (family, identityField) => {
+      const response = buildDpmAiWorkflowResponse(family);
+      Object.assign(response.supportability, {
+        [identityField]: getDpmAiWorkflowFixtureSourceReference(family),
+      });
+
+      const outcome = buildDpmAiWorkflowOutcome(family, response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "ai-assisted",
+        availability: "live",
+        evidence: { state: "supported" },
+        clientUse: "internal-only",
+      });
+      expect(outcome.material.sections).not.toEqual([]);
+    },
+  );
 
   it.each([
     {

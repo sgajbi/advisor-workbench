@@ -93,6 +93,7 @@ export function normalizeDpmAiWorkflowExecution(
     executionStatus === "COMPLETED" &&
     (runtimeState === "COMPLETED" || runtimeState === "SUPERSEDED");
   const reviewState = readReviewState(run.review_state);
+  const reviewRequired = readBoolean(run.review_required);
   const supportabilityStatus = readString(run.supportability_status);
   const supersededByRunId = readString(run.superseded_by_run_id);
   const replacementRunId = readString(run.replacement_run_id);
@@ -107,6 +108,15 @@ export function normalizeDpmAiWorkflowExecution(
   const runCallerApp = readString(run.caller_app);
   const workflowAuthorityOwner = readString(run.workflow_authority_owner);
   const sourceSupportabilityState = readUpperString(sourceSupportability.state);
+  const sourceSupportabilityIdentity =
+    profile.sourceSupportabilityIdentityField === null
+      ? null
+      : readString(
+          sourceSupportability[profile.sourceSupportabilityIdentityField],
+        );
+  const sourceSupportabilityIdentityTrusted =
+    sourceSupportabilityIdentity === null ||
+    sourceSupportabilityIdentity === requestedSourceReference;
   const sourceSupportabilityTrusted =
     readString(sourceSupportability.source_service) === "lotus-manage" &&
     readString(sourceSupportability.authority) ===
@@ -114,7 +124,8 @@ export function normalizeDpmAiWorkflowExecution(
     sourceSupportabilityState !== null &&
     profile.liveSourceSupportabilityStates.some(
       (state) => state === sourceSupportabilityState,
-    );
+    ) &&
+    sourceSupportabilityIdentityTrusted;
   const safetyMode = readString(safety.safety_mode);
   const safetyDisposition = readUpperString(safety.disposition);
   const enforcedSafetyControls = new Set(
@@ -156,6 +167,9 @@ export function normalizeDpmAiWorkflowExecution(
     matchesDpmAiWorkflowSource(response, profile, requestedSourceReference),
     supportabilityStatus !== null &&
       SUPPORTED_WORKFLOW_SUPPORTABILITY_STATUSES.has(supportabilityStatus),
+    reviewState !== null,
+    reviewRequired !== null &&
+      reviewRequired === (reviewState !== "NOT_REVIEW_REQUIRED"),
     readString(eligibility.pack_id) === profile.packId,
     readString(run.pack_id) === profile.packId,
     readString(run.workflow_surface) === profile.workflowSurface,
