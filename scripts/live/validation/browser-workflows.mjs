@@ -1019,7 +1019,7 @@ export async function validateAdvisorBriefPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Client Talking Points" }),
+    page.getByRole("heading", { name: "Advisor Talking Points" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
