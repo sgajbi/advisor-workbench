@@ -1835,6 +1835,7 @@ describe("workbench api", () => {
     await getDpmCommandCenterExceptions({
       tenantId: "default",
       portfolioManagerId: "PM_SG_DPM_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
       state: "ACTIVE",
       limit: 25,
     });
@@ -1843,7 +1844,7 @@ describe("workbench api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock.mock.calls[0][0].toString()).toContain(
-      "/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&state=ACTIVE"
+      "/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PB_SG_GLOBAL_BAL_001&state=ACTIVE"
     );
     expect(fetchMock.mock.calls[1][0]).toBe(
       `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001`

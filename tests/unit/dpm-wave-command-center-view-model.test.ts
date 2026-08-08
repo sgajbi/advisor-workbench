@@ -45,6 +45,12 @@ const waveListResponse: DpmWaveGatewayResponse = {
 };
 
 describe("DPM wave command-center view model", () => {
+  it("keeps issue count unknown without source wave evidence", () => {
+    const model = buildDpmWaveCommandCenterModel({ waveList: null });
+
+    expect(model.selectedWaveIssueCount).toBe("N/A");
+  });
+
   it("preserves manage wave supportability, item, proof-pack, and handoff truth", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,
