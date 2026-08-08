@@ -6,10 +6,17 @@ import * as browserWorkflowModule from "../../scripts/live/validation/browser-wo
 import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-metadata.mjs";
 
 const {
+  buildReportCentreProofPosture,
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
   validateAdvisoryJourneyScreens,
 } = browserWorkflowModule as unknown as {
+  buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
+    panelState: "partial";
+    outputFormat: "json" | "pdf";
+    pdfOutputState: "ready" | "unavailable";
+    reason: string;
+  };
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
@@ -65,6 +72,44 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain("getByText(portfolioId");
     expect(source).toContain('{ name: "Operational details" }');
     expect(source).not.toContain('{ name: "Support details" }');
+  });
+
+  it.each([
+    {
+      pdfOutputReady: false,
+      expected: {
+        panelState: "partial",
+        outputFormat: "json",
+        pdfOutputState: "unavailable",
+        reason:
+          "Structured report data is available while governed PDF creation remains unavailable; archive retention and client delivery remain separate controls.",
+      },
+    },
+    {
+      pdfOutputReady: true,
+      expected: {
+        panelState: "partial",
+        outputFormat: "pdf",
+        pdfOutputState: "ready",
+        reason:
+          "Structured report data and governed PDF creation are available for advisor review; archive retention and client delivery remain separate controls.",
+      },
+    },
+  ])(
+    "classifies source-backed PDF readiness when ready is $pdfOutputReady",
+    ({ pdfOutputReady, expected }) => {
+      expect(buildReportCentreProofPosture(pdfOutputReady)).toEqual(expected);
+    },
+  );
+
+  it("observes the rendered PDF readiness control before exercising Report Centre", () => {
+    const source = browserWorkflowModule.validateReportCentrePanel.toString();
+
+    expect(source).toContain("governedPdfRadio.isDisabled()");
+    expect(source).toContain("governedPdfRadio.check");
+    expect(source).toContain("Governed document creation is available.");
+    expect(source).toContain("PDF creation is temporarily unavailable");
+    expect(source).toContain("return reportCentreProof");
   });
 
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {

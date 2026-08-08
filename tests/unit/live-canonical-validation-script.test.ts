@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const REPORT_CENTRE_CLASSIFICATION_PATTERN =
-  /"reporting\.report_centre",\r?\n\s+"partial",\r?\n\s+"lotus-report",/;
+  /"reporting\.report_centre",\r?\n\s+reportCentreProof\.panelState,\r?\n\s+"lotus-report",/;
 
 describe("canonical live validation script", () => {
   it("seeds PM operating quality with the current trusted-tenant Manage contract", () => {
@@ -34,7 +34,7 @@ describe("canonical live validation script", () => {
     (newline) => {
       const classification = [
         '"reporting.report_centre",',
-        '      "partial",',
+        "      reportCentreProof.panelState,",
         '      "lotus-report",',
       ].join(newline);
 
@@ -917,6 +917,16 @@ describe("canonical live validation script", () => {
     expect(reportWorkflowIndex).toBeGreaterThan(-1);
     expect(reportClassificationIndex).toBeGreaterThan(reportWorkflowIndex);
     expect(finalAlignmentIndex).toBeGreaterThan(reportClassificationIndex);
+    expect(script).toContain(
+      "const reportCentreProof = await validateReportCentrePanel(page",
+    );
+    expect(script).toContain(
+      "outputFormat: reportCentreProof.outputFormat",
+    );
+    expect(script).toContain(
+      "pdfOutputState: reportCentreProof.pdfOutputState",
+    );
+    expect(script).toContain("reason: reportCentreProof.reason");
     expect(
       script.slice(reportClassificationIndex, finalAlignmentIndex),
     ).toMatch(REPORT_CENTRE_CLASSIFICATION_PATTERN);

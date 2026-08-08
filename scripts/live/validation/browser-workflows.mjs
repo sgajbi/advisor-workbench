@@ -723,6 +723,26 @@ export async function validatePortfolioPanels(
   await screenshotRegisteredPanel(page, "portfolio.summary");
 }
 
+export function buildReportCentreProofPosture(pdfOutputReady) {
+  if (pdfOutputReady) {
+    return {
+      panelState: "partial",
+      outputFormat: "pdf",
+      pdfOutputState: "ready",
+      reason:
+        "Structured report data and governed PDF creation are available for advisor review; archive retention and client delivery remain separate controls.",
+    };
+  }
+
+  return {
+    panelState: "partial",
+    outputFormat: "json",
+    pdfOutputState: "unavailable",
+    reason:
+      "Structured report data is available while governed PDF creation remains unavailable; archive retention and client delivery remain separate controls.",
+  };
+}
+
 export async function validateReportCentrePanel(
   page,
   {
@@ -743,15 +763,29 @@ export async function validateReportCentrePanel(
   await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(
-    page.getByRole("radio", { name: /Structured data package/ }),
-  ).toBeChecked({ timeout: timeoutMs });
-  await expect(
-    page.getByRole("radio", { name: /Governed PDF document/ }),
-  ).toBeDisabled({ timeout: timeoutMs });
-  await expect(
-    page.getByText(/PDF creation is temporarily unavailable/),
-  ).toBeVisible({ timeout: timeoutMs });
+  const structuredDataRadio = page.getByRole("radio", {
+    name: /Structured data package/,
+  });
+  const governedPdfRadio = page.getByRole("radio", {
+    name: /Governed PDF document/,
+  });
+  const reportCentreProof = buildReportCentreProofPosture(
+    !(await governedPdfRadio.isDisabled()),
+  );
+
+  if (reportCentreProof.pdfOutputState === "ready") {
+    await governedPdfRadio.check({ timeout: timeoutMs });
+    await expect(governedPdfRadio).toBeChecked({ timeout: timeoutMs });
+    await expect(
+      page.getByText("Governed document creation is available."),
+    ).toBeVisible({ timeout: timeoutMs });
+  } else {
+    await expect(structuredDataRadio).toBeChecked({ timeout: timeoutMs });
+    await expect(governedPdfRadio).toBeDisabled({ timeout: timeoutMs });
+    await expect(
+      page.getByText(/PDF creation is temporarily unavailable/),
+    ).toBeVisible({ timeout: timeoutMs });
+  }
   await expect(page.getByText("Review before any client use")).toBeVisible({
     timeout: timeoutMs,
   });
@@ -776,6 +810,7 @@ export async function validateReportCentrePanel(
     "Recent portfolio report requests",
   );
   await screenshotRegisteredPanel(page, "reporting.report_centre");
+  return reportCentreProof;
 }
 
 export async function validateAdvisorBookPanel(
