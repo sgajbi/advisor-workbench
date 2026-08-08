@@ -1,7 +1,24 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
-const CANONICAL_IDEA_CANDIDATE_ID = "idea_high_cash_001";
+const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
+
+export function resolveHighCashIdeaCandidateId(candidateHref, workbenchBaseUrl) {
+  if (!candidateHref) {
+    throw new Error("The canonical high-cash candidate link has no href.");
+  }
+
+  const candidateId = new URL(candidateHref, workbenchBaseUrl).searchParams.get(
+    "candidateId",
+  );
+  if (!candidateId || !HIGH_CASH_IDEA_CANDIDATE_PATTERN.test(candidateId)) {
+    throw new Error(
+      `The canonical Idea queue exposed an invalid high-cash candidate id: ${candidateId ?? "missing"}.`,
+    );
+  }
+
+  return candidateId;
+}
 
 export function hasAcceptedAdvisorBriefReviewPosture(text) {
   return (
@@ -342,13 +359,17 @@ export async function validateAdvisoryJourneyScreens(
         "Idea candidate review queue",
       );
       const canonicalCandidateLink = candidateTable.getByRole("link", {
-        name: new RegExp(`\\b${CANONICAL_IDEA_CANDIDATE_ID}\\b`),
+        name: /^High Cash - idea_high_cash_[0-9a-f]{16}$/,
       });
       await expect(canonicalCandidateLink).toBeVisible({ timeout: timeoutMs });
+      const canonicalCandidateId = resolveHighCashIdeaCandidateId(
+        await canonicalCandidateLink.getAttribute("href"),
+        workbenchBaseUrl,
+      );
       await canonicalCandidateLink.click();
       await expect(page).toHaveURL(
         new RegExp(
-          `candidateId=${encodeURIComponent(CANONICAL_IDEA_CANDIDATE_ID)}`,
+          `candidateId=${encodeURIComponent(canonicalCandidateId)}`,
         ),
         { timeout: timeoutMs },
       );
@@ -357,7 +378,7 @@ export async function validateAdvisoryJourneyScreens(
       );
       await expect(candidateDetailPanel).toBeVisible({ timeout: timeoutMs });
       await expect(
-        candidateDetailPanel.getByText(CANONICAL_IDEA_CANDIDATE_ID, {
+        candidateDetailPanel.getByText(canonicalCandidateId, {
           exact: true,
         }),
       ).toBeVisible({ timeout: timeoutMs });
@@ -424,7 +445,7 @@ export async function validateAdvisoryJourneyScreens(
         route: "/recommendations?mode=opportunities",
         owner: "lotus-idea",
         gatewayBacked: true,
-        selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID,
+        selectedCandidateId: canonicalCandidateId,
         canonicalCandidateProof:
           "candidate_id_policy_evaluation_source_signal_and_source_ref_verified",
         sourceHashVerified: ideaDetailHashAvailable,
