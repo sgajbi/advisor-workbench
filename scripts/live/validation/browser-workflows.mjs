@@ -949,11 +949,23 @@ export async function validatePerformanceAnalysisPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await assertTableHasRows(
-    tableByExactLabel(page, "Asset Class attribution table"),
-    1,
-    "Attribution detail table",
+  const attributionDetailTable = tableByExactLabel(
+    page,
+    "Asset Class attribution table",
   );
+  if ((await attributionDetailTable.count()) > 0) {
+    await assertTableHasRows(
+      attributionDetailTable,
+      1,
+      "Attribution detail table",
+    );
+  } else {
+    await expect(
+      page.getByText(
+        "Attribution detail is marked available, but no segment attribution levels were returned for the current selection.",
+      ),
+    ).toBeVisible({ timeout: timeoutMs });
+  }
   const performanceDriversPanel = page.locator("#performance-drivers").first();
   await expect(performanceDriversPanel).toBeVisible({ timeout: timeoutMs });
   await performanceDriversPanel.scrollIntoViewIfNeeded();

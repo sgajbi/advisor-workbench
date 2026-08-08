@@ -1224,6 +1224,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
+    expect(browserWorkflowModule).toContain(
+      "Attribution detail is marked available, but no segment attribution levels were returned for the current selection.",
+    );
     expect(browserWorkflowModule).not.toContain(
       'getByRole("group", { name: "Post-Trade Outcome Review"',
     );
