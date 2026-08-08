@@ -56,7 +56,13 @@ describe("manage workspace split components", () => {
     expect(screen.getByText("PM Quality Support Summary")).toBeInTheDocument();
     expect(screen.getByText("Human review governed")).toBeInTheDocument();
     expect(screen.getByLabelText("Status Internal decision support")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /^Prepare / })).toHaveLength(6);
+    expect(screen.getAllByRole("button")).toHaveLength(6);
+    expect(screen.getAllByRole("button", { name: /^Prepare / })).toHaveLength(5);
+    expect(
+      screen.getByRole("button", {
+        name: "Proof-Pack PM Memo unavailable: Current evidence pack unavailable",
+      }),
+    ).toBeDisabled();
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /order/i })).not.toBeInTheDocument();
   });
