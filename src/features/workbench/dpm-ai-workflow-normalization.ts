@@ -23,7 +23,12 @@ const SUPPORTED_OUTPUT_LABELS = new Set([
 ]);
 const MATERIAL_MAX_DEPTH = 3;
 const MATERIAL_MAX_CONTAINER_ITEMS = 20;
-const MATERIAL_MAX_VALUES_PER_FIELD = 50;
+const MATERIAL_MAX_VALUES_PER_SECTION = 50;
+
+type MaterialValueNormalization = {
+  values: string[];
+  withinBudget: boolean;
+};
 
 export function normalizeDpmAiWorkflowExecution(
   response: unknown,
@@ -100,6 +105,7 @@ export function normalizeDpmAiWorkflowExecution(
   const identityChecks = [
     data.service === "lotus-ai",
     readString(data.version) !== null,
+    readString(eligibility.service) === "lotus-ai",
     readString(envelope.source_service) === "lotus-ai",
     readString(envelope.evidence_source_service) === "lotus-manage",
     readHttpSuccess(envelope.manage_upstream_status),
@@ -128,7 +134,8 @@ export function normalizeDpmAiWorkflowExecution(
     outputKeys.length === structuredOutputKeys.length &&
       outputKeys.every((key, index) => key === structuredOutputKeys[index]),
     usableOutputKeys.length > 0,
-    normalizedMaterial.sections.length > 0,
+    normalizedMaterial.withinBudget,
+    normalizedMaterial.material.sections.length > 0,
   ];
 
   const contractComplete = identityChecks.every(Boolean) && authorized;
@@ -152,7 +159,7 @@ export function normalizeDpmAiWorkflowExecution(
     packVersion,
     workflowAuthorityOwner,
     material: contractComplete && materialRuntimeComplete
-      ? normalizedMaterial
+      ? normalizedMaterial.material
       : { title: profile.materialTitle, sections: [] },
     providerId: readString(audit.provider_id),
     modelId: readString(audit.model_id),
@@ -173,62 +180,123 @@ export function normalizeDpmAiWorkflowExecution(
 function normalizeWorkflowMaterial(
   structuredOutput: Record<string, unknown>,
   profile: DpmAiWorkflowProfile,
-): DpmAiWorkflowMaterial {
+): { material: DpmAiWorkflowMaterial; withinBudget: boolean } {
   const materialByLabel = new Map<string, string[]>();
   for (const { key, label } of profile.materialFields) {
-    const values = formatMaterialValues(structuredOutput[key]);
-    if (values.length > 0 && values.length <= MATERIAL_MAX_VALUES_PER_FIELD) {
-      materialByLabel.set(label, [
-        ...(materialByLabel.get(label) ?? []),
-        ...values,
-      ]);
+    if (!Object.hasOwn(structuredOutput, key)) {
+      continue;
+    }
+    const normalized = formatMaterialValues(
+      structuredOutput[key],
+      0,
+      isMaterialEnumField(key),
+    );
+    const existingValues = materialByLabel.get(label) ?? [];
+    if (
+      !normalized.withinBudget ||
+      existingValues.length + normalized.values.length > MATERIAL_MAX_VALUES_PER_SECTION
+    ) {
+      return {
+        material: { title: profile.materialTitle, sections: [] },
+        withinBudget: false,
+      };
+    }
+    if (normalized.values.length > 0) {
+      materialByLabel.set(label, [...existingValues, ...normalized.values]);
     }
   }
   const sections = Array.from(materialByLabel, ([label, values]) => ({
     label,
     values,
   }));
-  return { title: profile.materialTitle, sections };
+  return {
+    material: { title: profile.materialTitle, sections },
+    withinBudget: true,
+  };
 }
 
-function formatMaterialValues(value: unknown, depth = 0): string[] {
+function formatMaterialValues(
+  value: unknown,
+  depth = 0,
+  formatEnumValues = false,
+): MaterialValueNormalization {
   if (typeof value === "string") {
     const normalized = value.trim();
-    return normalized ? [formatMaterialText(normalized)] : [];
+    return {
+      values: normalized
+        ? [formatEnumValues ? formatMaterialLabel(normalized) : normalized]
+        : [],
+      withinBudget: true,
+    };
   }
   if (typeof value === "boolean") {
-    return [value ? "Yes" : "No"];
+    return { values: [value ? "Yes" : "No"], withinBudget: true };
   }
   if (typeof value === "number" && Number.isFinite(value)) {
-    return [String(value)];
+    return { values: [String(value)], withinBudget: true };
   }
   if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return { values: [], withinBudget: true };
+    }
     if (depth >= MATERIAL_MAX_DEPTH || value.length > MATERIAL_MAX_CONTAINER_ITEMS) {
-      return [];
+      return { values: [], withinBudget: false };
     }
-    return value.flatMap((item) => formatMaterialValues(item, depth + 1));
-  }
-  if (depth < MATERIAL_MAX_DEPTH && value !== null && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>);
-    if (entries.length > MATERIAL_MAX_CONTAINER_ITEMS) {
-      return [];
-    }
-    return entries.flatMap(
-      ([key, nestedValue]) => {
-        const nestedValues = formatMaterialValues(nestedValue, depth + 1);
-        return nestedValues.map(
-          (nested) => `${formatMaterialLabel(key)}: ${nested}`,
-        );
-      },
+    return combineMaterialValues(
+      value.map((item) => formatMaterialValues(item, depth + 1, formatEnumValues)),
     );
   }
-  return [];
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length === 0) {
+      return { values: [], withinBudget: true };
+    }
+    if (depth >= MATERIAL_MAX_DEPTH || entries.length > MATERIAL_MAX_CONTAINER_ITEMS) {
+      return { values: [], withinBudget: false };
+    }
+    return combineMaterialValues(
+      entries.map(([key, nestedValue]) => {
+        const nested = formatMaterialValues(
+          nestedValue,
+          depth + 1,
+          isMaterialEnumField(key),
+        );
+        return {
+          values: nested.values.map(
+            (nestedValue) => `${formatMaterialLabel(key)}: ${nestedValue}`,
+          ),
+          withinBudget: nested.withinBudget,
+        };
+      }),
+    );
+  }
+  return { values: [], withinBudget: true };
 }
 
-function formatMaterialText(value: string): string {
-  return /^[A-Za-z0-9_-]+$/.test(value) && /[_-]/.test(value)
-    ? formatMaterialLabel(value)
-    : value;
+function combineMaterialValues(
+  normalizedValues: MaterialValueNormalization[],
+): MaterialValueNormalization {
+  const values: string[] = [];
+  for (const normalized of normalizedValues) {
+    if (
+      !normalized.withinBudget ||
+      values.length + normalized.values.length > MATERIAL_MAX_VALUES_PER_SECTION
+    ) {
+      return { values: [], withinBudget: false };
+    }
+    values.push(...normalized.values);
+  }
+  return { values, withinBudget: true };
+}
+
+function isMaterialEnumField(key: string): boolean {
+  return (
+    key === "state" ||
+    key === "scope" ||
+    key === "status" ||
+    key.endsWith("_state") ||
+    key.endsWith("_status")
+  );
 }
 
 function formatMaterialLabel(value: string): string {

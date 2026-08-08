@@ -378,6 +378,49 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.material.sections).toEqual([]);
   });
 
+  it("fails closed when an over-budget section accompanies smaller presentable material", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: {
+          pm_memo: Array.from({ length: 3 }, (_, group) =>
+            Array.from(
+              { length: 20 },
+              (_, item) => `Memo point ${group * 20 + item + 1}`,
+            ),
+          ),
+          state: "REVIEW_REQUIRED",
+        },
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
+  it("preserves opaque supporting references exactly", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "operations-handoff",
+      buildDpmAiWorkflowResponse("operations-handoff", {
+        structuredOutput: {
+          support_references: ["proof_pack_ABC_001", "artifact-XYZ-009"],
+        },
+      }),
+    );
+
+    expect(outcome.material.sections).toEqual([
+      {
+        label: "Supporting references",
+        values: ["proof_pack_ABC_001", "artifact-XYZ-009"],
+      },
+    ]);
+  });
+
   it("keeps zero and false values when the structured result explicitly publishes them", () => {
     const outcome = buildDpmAiWorkflowOutcome(
       "proof-pack-memo",
@@ -472,6 +515,24 @@ describe("buildDpmAiWorkflowOutcome", () => {
       "The source did not publish a bound authorization decision.",
     );
   });
+
+  it.each([null, "lotus-idea"])(
+    "fails closed for eligibility service identity %s",
+    (service) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      Object.assign(response.data.eligibility, { service });
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
 
   it.each([
     {
