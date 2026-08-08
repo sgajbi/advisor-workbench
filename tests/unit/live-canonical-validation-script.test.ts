@@ -5,6 +5,30 @@ const REPORT_CENTRE_CLASSIFICATION_PATTERN =
   /"reporting\.report_centre",\r?\n\s+"partial",\r?\n\s+"lotus-report",/;
 
 describe("canonical live validation script", () => {
+  it("seeds PM operating quality with the current trusted-tenant Manage contract", () => {
+    const script = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validate-canonical-workbench-live.mjs",
+      ),
+      "utf8",
+    );
+
+    expect(script).toContain("CANONICAL_CALLER_CONTEXT_HEADERS");
+    expect(script).toContain(
+      'tenant_id: CANONICAL_CALLER_CONTEXT_HEADERS["X-Tenant-Id"]',
+    );
+    expect(script).toContain("enabled: true");
+    expect(script).toContain("weights: [");
+    expect(script).toContain("governance_approval: {");
+    expect(script).toContain("source_refs: [outcomeDisciplineSourceRef]");
+    expect(script).toContain("source_refs: [sourceQualitySourceRef]");
+    expect(script).not.toContain("indicator_weights:");
+    expect(script).not.toContain("governance_evidence:");
+  });
+
   it.each(["\n", "\r\n"])(
     "recognizes the report-panel classification with %j newlines",
     (newline) => {
