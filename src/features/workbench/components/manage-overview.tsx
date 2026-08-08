@@ -29,17 +29,19 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
         </SemanticBadge>
       }
     >
-      <div className="manage-decision-readiness-grid" aria-label="Decision readiness">
-        {model.readinessCards.map((item) => (
+      <div className="manage-decision-readiness-grid" aria-label="Operating posture">
+        {model.postureCards.map((item) => (
           <div className={`manage-decision-readiness-card is-${item.tone}`} key={item.key}>
             <div>
               <span>{item.label}</span>
               <strong>{item.value}</strong>
             </div>
             <span className="manage-status-icon" data-icon={item.icon} aria-hidden="true" />
-            <div className="manage-readiness-meter" aria-hidden="true">
-              <i style={{ width: `${item.progress}%` }} />
-            </div>
+            {item.progress === null ? null : (
+              <div className="manage-readiness-meter" aria-hidden="true">
+                <i style={{ width: `${item.progress}%` }} />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -119,31 +121,20 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
               Stage: {businessStateLabel(model.activeRebalance.state)}
             </SemanticBadge>
           </div>
-          <div className="manage-wave-stepper" aria-label="Rebalance wave lifecycle">
-            {model.activeRebalance.steps.map(({ step, isActive, isComplete }) => {
-              return (
-                <span
-                  key={step}
-                  className={[
-                    isComplete ? "manage-wave-step-complete" : "",
-                    isActive ? "manage-wave-step-active" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  {step}
-                </span>
-              );
-            })}
-          </div>
-          <div className="manage-rebalance-blocker">
-            <span className="manage-status-icon" data-icon="info" aria-hidden="true" />
-            <p>
-              {model.activeRebalance.approvalReadiness === "Blocked"
-                ? "Blocker: approval pending exception resolution."
-                : "Ready for approval review."}
-            </p>
-          </div>
+          <dl className="manage-rebalance-evidence">
+            <div>
+              <dt>Source readiness</dt>
+              <dd>{businessStateLabel(model.activeRebalance.supportabilityState)}</dd>
+            </div>
+            <div>
+              <dt>Source-reported issues</dt>
+              <dd>{model.activeRebalance.issueCount}</dd>
+            </div>
+            <div>
+              <dt>Support note</dt>
+              <dd>{businessStateLabel(model.activeRebalance.supportabilityReason)}</dd>
+            </div>
+          </dl>
         </div>
       </div>
 

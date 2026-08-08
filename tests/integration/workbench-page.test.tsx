@@ -30,7 +30,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Decision readiness")).toBeInTheDocument();
+    expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Rebalance Ready/i })).toHaveAttribute(

@@ -15,22 +15,32 @@ describe("manage overview model", () => {
       positionCount: 12,
       riskProfile: "Balanced",
     });
-    expect(model.readinessCards).toEqual(
+    expect(model.postureCards).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "mandate",
-          label: "Mandate Readiness",
+          label: "Mandate Health",
           value: "Needs attention",
           tone: "warn",
+          progress: 82,
         }),
         expect.objectContaining({
-          key: "approval",
-          label: "Approval Readiness",
-          value: "Ready",
-          tone: "success",
+          key: "attention",
+          label: "Active Attention Items",
+          value: "2",
+          tone: "warn",
+          progress: null,
         }),
       ])
     );
+    expect(model.postureCards.map((card) => card.key)).not.toContain("approval");
+    expect(model.activeRebalance).toMatchObject({
+      state: "READY",
+      supportabilityState: "SUPPORTED",
+      issueCount: "0",
+    });
+    expect(model.activeRebalance).not.toHaveProperty("steps");
+    expect(model.activeRebalance).not.toHaveProperty("approvalReadiness");
     expect(model.moduleItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -107,11 +117,11 @@ describe("manage overview model", () => {
         event: "No recent operating activity.",
       },
     ]);
-    expect(model.readinessCards).toEqual(
+    expect(model.postureCards).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          key: "approval",
-          value: "Ready",
+          key: "attention",
+          value: "0",
           tone: "success",
         }),
       ])

@@ -925,84 +925,35 @@
   text-decoration: underline;
 }
 
-.manageScope :global(.manage-wave-stepper) {
-  position: relative;
+.manageScope :global(.manage-rebalance-evidence) {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin: 18px 20px 12px;
-  padding: 14px 0 30px;
-  border: 0;
-  background: transparent;
+  gap: 0;
+  margin: 0;
 }
 
-.manageScope :global(.manage-wave-stepper::before) {
-  content: "";
-  position: absolute;
-  top: 25px;
-  right: 24px;
-  left: 24px;
-  height: 2px;
-  background: #e0e3e5;
+.manageScope :global(.manage-rebalance-evidence > div) {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.4fr);
+  gap: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid #e0e3e5;
 }
 
-.manageScope :global(.manage-wave-stepper span) {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  color: #76777d;
-  font-size: 10px;
+.manageScope :global(.manage-rebalance-evidence dt) {
+  color: #5f6068;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   line-height: 16px;
   text-transform: uppercase;
 }
 
-.manageScope :global(.manage-wave-stepper span::before) {
-  content: "";
-  position: relative;
-  z-index: 1;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #c6c6cd;
-  border-radius: 50%;
-  background: #f2f4f6;
-}
-
-.manageScope :global(.manage-wave-stepper .manage-wave-step-complete::before) {
-  border-color: #0f8a3b;
-  background: #0f8a3b;
-}
-
-.manageScope :global(.manage-wave-stepper .manage-wave-step-active) {
-  color: #594410;
-}
-
-.manageScope :global(.manage-wave-stepper .manage-wave-step-active::before) {
-  border: 3px solid #e2c383;
-  background: #000000;
-  box-shadow: 0 0 0 4px #ffffff;
-}
-
-.manageScope :global(.manage-rebalance-blocker) {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 20px 18px;
-  padding-top: 16px;
-  border-top: 1px solid #c6c6cd;
-  color: #45464d;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.manageScope :global(.manage-rebalance-blocker .manage-status-icon) {
-  color: #ba1a1a;
-}
-
-.manageScope :global(.manage-rebalance-blocker p) {
+.manageScope :global(.manage-rebalance-evidence dd) {
   margin: 0;
+  color: #131b2e;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 18px;
 }
 
 .manageScope :global(.manage-module-grid) {

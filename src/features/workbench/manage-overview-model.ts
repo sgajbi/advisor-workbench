@@ -2,6 +2,10 @@ import type { SemanticBadgeTone } from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
+import {
+  clampMandateHealthPercent,
+  mandateHealthScoreToPercent,
+} from "@/features/workbench/manage-mandate-health-helpers";
 import { buildManageModeHref } from "@/features/workbench/manage-workspace-navigation";
 import {
   businessLastReviewed,
@@ -33,7 +37,6 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
   const activeExceptionCount = parseCount(commandModel.activeExceptionCount);
-  const selectedWaveIssueCount = parseCount(waveModel.selectedWaveIssueCount);
   const latestActivities = buildManageActivityRows(commandModel, waveModel, reviewModel);
   const latestProofPackId = firstNonEmpty(
     reviewModel.items.find((item) => item.proofPackId !== "N/A")?.proofPackId,
@@ -59,8 +62,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const mandateTone = toneForState(mandateSourceState);
   const dataTone = toneForState(commandModel.dataCompletenessState);
   const rebalanceTone = toneForState(waveModel.selectedWaveState);
-  const approvalReadiness =
-    activeExceptionCount > 0 || selectedWaveIssueCount > 0 ? "Blocked" : "Ready";
+  const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
 
   return {
     portfolioSummary: {
@@ -71,14 +73,15 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       positionCount: portfolio.overview.position_count,
       riskProfile: readStringFromResponse(data.mandate, "risk_profile") ?? "Balanced",
     },
-    readinessCards: [
+    postureCards: [
       {
         key: "mandate",
-        label: "Mandate Readiness",
-        value: activeExceptionCount > 0 ? "Needs Attention" : businessStateLabel(mandateSourceState),
-        icon: activeExceptionCount > 0 ? "warning" : mandateTone === "success" ? "verified" : "pending",
-        tone: activeExceptionCount > 0 ? "danger" : mandateTone,
-        progress: activeExceptionCount > 0 ? 75 : mandateTone === "success" ? 100 : 50,
+        label: "Mandate Health",
+        value: businessStateLabel(mandateSourceState),
+        icon: mandateTone === "success" ? "verified" : "pending",
+        tone: mandateTone,
+        progress:
+          mandateScore === null ? null : clampMandateHealthPercent(mandateScore),
       },
       {
         key: "data",
@@ -86,7 +89,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         value: businessStateLabel(commandModel.dataCompletenessState),
         icon: dataTone === "success" ? "check_circle" : "pending",
         tone: dataTone === "danger" ? "danger" : dataTone === "success" ? "success" : "warn",
-        progress: dataTone === "success" ? 100 : 50,
+        progress: null,
       },
       {
         key: "rebalance",
@@ -95,15 +98,15 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         icon: rebalanceTone === "success" ? "check_circle" : "pending",
         tone:
           rebalanceTone === "danger" ? "danger" : rebalanceTone === "success" ? "success" : "warn",
-        progress: rebalanceTone === "success" ? 100 : 50,
+        progress: null,
       },
       {
-        key: "approval",
-        label: "Approval Readiness",
-        value: approvalReadiness,
-        icon: approvalReadiness === "Ready" ? "check_circle" : "block",
-        tone: approvalReadiness === "Ready" ? "success" : "danger",
-        progress: approvalReadiness === "Ready" ? 100 : 25,
+        key: "attention",
+        label: "Active Attention Items",
+        value: String(activeExceptionCount),
+        icon: activeExceptionCount > 0 ? "warning" : "check_circle",
+        tone: activeExceptionCount > 0 ? "warn" : "success",
+        progress: null,
       },
     ] satisfies Array<{
       key: string;
@@ -111,18 +114,15 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       value: string;
       icon: string;
       tone: SemanticBadgeTone;
-      progress: number;
+      progress: number | null;
     }>,
     exceptionRows,
     activeRebalance: {
       triggerType: waveModel.summaryRows[0]?.triggerType,
       state: waveModel.selectedWaveState,
-      approvalReadiness,
-      steps: ["Preview", "Source", "Simulation", "Approval", "Staging"].map((step, index) => ({
-        step,
-        isComplete: index < 2,
-        isActive: step === "Simulation" || waveModel.selectedWaveState.includes(step.toUpperCase()),
-      })),
+      supportabilityState: waveModel.supportabilityState,
+      issueCount: waveModel.selectedWaveIssueCount,
+      supportabilityReason: waveModel.selectedWaveSupportabilityReason,
     },
     moduleItems: [
       {
