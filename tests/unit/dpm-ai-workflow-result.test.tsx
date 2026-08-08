@@ -25,6 +25,9 @@ describe("DpmAiWorkflowResult", () => {
 
     rerender(resultView("packrun_exception_002", "New workflow result"));
     await waitFor(() => expect(heading).toHaveFocus());
+    expect(screen.getByText("Repair missing tax-lot evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Validate source completeness")).toBeInTheDocument();
+    expect(screen.queryByText("exception_summary")).not.toBeInTheDocument();
   });
 });
 
@@ -40,7 +43,13 @@ function resultView(runId: string, ownerState: string) {
       <DpmAiWorkflowResult
         outcome={buildDpmAiWorkflowOutcome(
           "exception-summary",
-          buildDpmAiWorkflowResponse("exception-summary", { runId }),
+          buildDpmAiWorkflowResponse("exception-summary", {
+            runId,
+            structuredOutput: {
+              exception_summary: "Repair missing tax-lot evidence.",
+              recommended_triage: ["Validate source completeness"],
+            },
+          }),
           getDpmAiWorkflowFixtureSourceReference("exception-summary"),
         )}
         focusOnMount

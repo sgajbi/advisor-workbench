@@ -64,6 +64,8 @@ export function useOutcomeReviewHandoffs({
   const currentContextKey = primaryReview
     ? outcomeReviewSourceContextKey(primaryReview)
     : null;
+  const currentContextKeyRef = useRef(currentContextKey);
+  currentContextKeyRef.current = currentContextKey;
 
   const reportJobStatus = valueForContext(reportJobState.result, currentContextKey);
   const reportJobError = valueForContext(reportJobState.error, currentContextKey);
@@ -108,6 +110,12 @@ export function useOutcomeReviewHandoffs({
     try {
       const reportInput = await getDpmOutcomeReviewReportInput(outcomeReviewId);
       assertOutcomeReviewIdentity(outcomeReviewId, reportInput.data);
+      if (
+        requestSequence !== reportRequestSequenceRef.current ||
+        currentContextKey !== currentContextKeyRef.current
+      ) {
+        return;
+      }
       const handle = await submitDpmOutcomeReviewReportJob({
         outcomeReviewId,
         outcomeReportInput: reportInput.data,

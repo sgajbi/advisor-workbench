@@ -182,6 +182,7 @@ describe("useOutcomeReviewHandoffs", () => {
       await completion;
     });
 
+    expect(submitDpmOutcomeReviewReportJob).not.toHaveBeenCalled();
     expect(result.current.handoffStatusMessages).toEqual([]);
     expect(result.current.clientCommunicationBoundary).toBeNull();
   });

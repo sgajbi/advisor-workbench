@@ -5,6 +5,14 @@ export type NormalizedDpmAiExecution = ReturnType<
   typeof normalizeDpmAiWorkflowExecution
 >;
 
+export type DpmAiWorkflowMaterial = {
+  title: string;
+  sections: Array<{
+    label: string;
+    values: string[];
+  }>;
+};
+
 const SUPPORTED_OUTPUT_LABELS = new Set([
   "EXPLANATION_ONLY",
   "INTERNAL_ONLY",
@@ -41,6 +49,7 @@ export function normalizeDpmAiWorkflowExecution(
     ...readArray(evidence.descriptors),
     ...readArray(run.evidence_descriptors),
   ]);
+  const normalizedMaterial = normalizeWorkflowMaterial(structuredOutput, profile);
   const runId = readString(run.run_id);
   const taskId = readString(execution.task_id);
   const requestId = readString(run.request_id);
@@ -69,6 +78,7 @@ export function normalizeDpmAiWorkflowExecution(
   const authorizationCallerApp = readString(authorization.caller_app);
   const authenticatedCallerApp = readString(authorization.authenticated_caller_app);
   const runCallerApp = readString(run.caller_app);
+  const workflowAuthorityOwner = readString(run.workflow_authority_owner);
   const authorized =
     readString(eligibility.eligibility_result) === "ALLOWED" &&
     eligibility.allowed === true &&
@@ -91,6 +101,7 @@ export function normalizeDpmAiWorkflowExecution(
     readString(eligibility.pack_id) === profile.packId,
     readString(run.pack_id) === profile.packId,
     readString(run.workflow_surface) === profile.workflowSurface,
+    workflowAuthorityOwner === "lotus-manage",
     requestedVersion !== null && requestedVersion === packVersion,
     evaluatedRegistrationRef !== null &&
       evaluatedRegistrationRef === registrationRef,
@@ -109,10 +120,13 @@ export function normalizeDpmAiWorkflowExecution(
     outputKeys.length === structuredOutputKeys.length &&
       outputKeys.every((key, index) => key === structuredOutputKeys[index]),
     usableOutputKeys.length > 0,
+    normalizedMaterial.sections.length > 0,
   ];
 
+  const contractComplete = identityChecks.every(Boolean) && authorized;
+
   return {
-    contractComplete: identityChecks.every(Boolean) && authorized,
+    contractComplete,
     authorized,
     runtimeState,
     executionStatus: readString(execution.status),
@@ -127,7 +141,10 @@ export function normalizeDpmAiWorkflowExecution(
     runId,
     packId: readString(run.pack_id),
     packVersion,
-    workflowAuthorityOwner: readString(run.workflow_authority_owner),
+    workflowAuthorityOwner,
+    material: contractComplete
+      ? normalizedMaterial
+      : { title: profile.materialTitle, sections: [] },
     providerId: readString(audit.provider_id),
     modelId: readString(audit.model_id),
     generatedAt: readString(audit.generated_at),
@@ -142,6 +159,69 @@ export function normalizeDpmAiWorkflowExecution(
     },
     runtimeRedactionActive: readBoolean(safety.runtime_redaction_active),
   };
+}
+
+function normalizeWorkflowMaterial(
+  structuredOutput: Record<string, unknown>,
+  profile: DpmAiWorkflowProfile,
+): DpmAiWorkflowMaterial {
+  const materialByLabel = new Map<string, string[]>();
+  for (const { key, label } of profile.materialFields) {
+    const values = formatMaterialValues(structuredOutput[key]);
+    if (values.length > 0) {
+      materialByLabel.set(label, [
+        ...(materialByLabel.get(label) ?? []),
+        ...values,
+      ]);
+    }
+  }
+  const sections = Array.from(materialByLabel, ([label, values]) => ({
+    label,
+    values,
+  }));
+  return { title: profile.materialTitle, sections };
+}
+
+function formatMaterialValues(value: unknown, depth = 0): string[] {
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized ? [formatMaterialText(normalized)] : [];
+  }
+  if (typeof value === "boolean") {
+    return [value ? "Yes" : "No"];
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return [String(value)];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => formatMaterialValues(item, depth));
+  }
+  if (depth < 2 && value !== null && typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>).flatMap(
+      ([key, nestedValue]) => {
+        const nestedValues = formatMaterialValues(nestedValue, depth + 1);
+        return nestedValues.map(
+          (nested) => `${formatMaterialLabel(key)}: ${nested}`,
+        );
+      },
+    );
+  }
+  return [];
+}
+
+function formatMaterialText(value: string): string {
+  return /^[A-Za-z0-9_-]+$/.test(value) && /[_-]/.test(value)
+    ? formatMaterialLabel(value)
+    : value;
+}
+
+function formatMaterialLabel(value: string): string {
+  const words = value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase();
+  return words ? `${words.charAt(0).toUpperCase()}${words.slice(1)}` : value;
 }
 
 function normalizeEvidenceDescriptors(values: unknown[]) {
