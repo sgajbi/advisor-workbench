@@ -159,11 +159,6 @@ export default function ManageMandateHealth({ data }: Props) {
         {selectedException ? (
           <SelectedReviewItem
             row={selectedException}
-            mandateId={selectedException.mandateId}
-            monitoringRunId={commandModel.latestMonitoringRunId}
-            sourceRunId={commandModel.sourceRunId}
-            correlationId={commandModel.correlationId}
-            authority={commandModel.authority}
           />
         ) : null}
       </div>
@@ -366,18 +361,8 @@ function AttentionReviewQueue({
 
 function SelectedReviewItem({
   row,
-  mandateId,
-  monitoringRunId,
-  sourceRunId,
-  correlationId,
-  authority,
 }: {
   row: ManageExceptionRow;
-  mandateId: string | null;
-  monitoringRunId: string;
-  sourceRunId: string;
-  correlationId: string;
-  authority: string;
 }) {
   return (
     <aside
@@ -426,23 +411,23 @@ function SelectedReviewItem({
             </div>
             <div>
               <dt>Mandate ID</dt>
-              <dd>{businessIdentifier(mandateId)}</dd>
+              <dd>{businessIdentifier(row.mandateId)}</dd>
             </div>
             <div>
               <dt>Monitoring run</dt>
-              <dd>{businessIdentifier(monitoringRunId)}</dd>
+              <dd>{businessIdentifier(row.monitoringRunId)}</dd>
             </div>
             <div>
               <dt>Source run</dt>
-              <dd>{businessIdentifier(sourceRunId)}</dd>
+              <dd>{businessIdentifier(row.sourceRunId)}</dd>
             </div>
             <div>
-              <dt>Correlation ID</dt>
-              <dd>{businessIdentifier(correlationId)}</dd>
+              <dt>Exception correlation</dt>
+              <dd>{businessIdentifier(row.correlationId)}</dd>
             </div>
             <div>
-              <dt>Authority</dt>
-              <dd>{businessIdentifier(authority)}</dd>
+              <dt>Exception authority</dt>
+              <dd>{businessIdentifier(row.authority)}</dd>
             </div>
           </dl>
         </details>

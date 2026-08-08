@@ -19,6 +19,10 @@ describe("manage workspace split components", () => {
     expect(within(detail).getByText("Review Benchmark Mapping")).toBeInTheDocument();
     expect(within(detail).getByText("Accountable owner")).toBeInTheDocument();
     expect(within(detail).getByText("Open for")).toBeInTheDocument();
+    expect(within(detail).getByText("run_prior_001")).toBeInTheDocument();
+    expect(within(detail).getByText("source_prior_001")).toBeInTheDocument();
+    expect(within(detail).getByText("corr_exception_001")).toBeInTheDocument();
+    expect(within(detail).queryByText("run_001")).not.toBeInTheDocument();
     const attentionQueue = screen.getByLabelText("Mandate attention items");
     expect(within(attentionQueue).getByRole("columnheader", { name: "Observation" })).toBeInTheDocument();
     expect(within(attentionQueue).getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
@@ -33,6 +37,8 @@ describe("manage workspace split components", () => {
     expect(within(detail).getByText("Data Operations")).toBeInTheDocument();
     expect(within(detail).getByText("Request data refresh")).toBeInTheDocument();
     expect(within(detail).getByText("exc_002")).toBeInTheDocument();
+    expect(within(detail).queryByText("run_001")).not.toBeInTheDocument();
+    expect(within(detail).getAllByText("Not available").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText("Advisor review recommended before rebalance approval.")).not.toBeInTheDocument();
   });
 

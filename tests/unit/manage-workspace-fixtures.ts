@@ -69,6 +69,10 @@ export function buildManageWorkspaceData(
           {
             exception_id: "exc_001",
             mandate_id: "mandate_001",
+            monitoring_run_id: "run_prior_001",
+            source_run_id: "source_prior_001",
+            correlation_id: "corr_exception_001",
+            authority: "lotus-manage:monitoring-exception",
             severity: "HIGH",
             title: "Missing benchmark constituent mapping",
             source_system: "lotus-performance",
