@@ -10,6 +10,7 @@ const {
   classifyAttributionDetailEvidence,
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
+  resolveHighCashIdeaCandidateId,
   validateAdvisoryJourneyScreens,
 } = browserWorkflowModule as unknown as {
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
@@ -30,6 +31,10 @@ const {
     | "ready_empty_state";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+  resolveHighCashIdeaCandidateId: (
+    candidateHref: string | null,
+    workbenchBaseUrl: string,
+  ) => string;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
 };
 
@@ -109,6 +114,29 @@ describe("live validation browser workflow helpers", () => {
       'getByRole("heading", { name: "Review Evidence", exact: true })',
     );
     expect(source).not.toContain('getByText("Review Evidence")');
+  });
+
+  it("derives the source-owned high-cash candidate identity from its queue link", () => {
+    expect(
+      resolveHighCashIdeaCandidateId(
+        "/recommendations?mode=opportunities&candidateId=idea_high_cash_ef02ad8793485081",
+        "http://workbench.dev.lotus",
+      ),
+    ).toBe("idea_high_cash_ef02ad8793485081");
+  });
+
+  it.each([
+    null,
+    "/recommendations?mode=opportunities",
+    "/recommendations?candidateId=idea_high_cash_001",
+    "/recommendations?candidateId=idea_concentration_ef02ad8793485081",
+  ])("rejects a non-canonical Idea candidate queue link: %s", (candidateHref) => {
+    expect(() =>
+      resolveHighCashIdeaCandidateId(
+        candidateHref,
+        "http://workbench.dev.lotus",
+      ),
+    ).toThrow(/high-cash candidate/i);
   });
 
   it("binds Advisor Book proof to portfolio context rather than its display label", () => {

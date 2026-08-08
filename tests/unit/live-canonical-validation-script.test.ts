@@ -1335,20 +1335,24 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("route: observedRoute");
     expect(browserWorkflowModule).toContain("idea-review-queue-through-gateway");
     expect(browserWorkflowModule).toContain(
-      'const CANONICAL_IDEA_CANDIDATE_ID = "idea_high_cash_001"',
+      "resolveHighCashIdeaCandidateId",
     );
+    expect(browserWorkflowModule).toContain(
+      "^High Cash - idea_high_cash_[0-9a-f]{16}$",
+    );
+    expect(browserWorkflowModule).not.toContain("idea_high_cash_001");
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
     expect(browserWorkflowModule).toContain("canonicalCandidateLink");
     expect(browserWorkflowModule).toContain(
-      "candidateId=${encodeURIComponent(CANONICAL_IDEA_CANDIDATE_ID)}",
+      "candidateId=${encodeURIComponent(canonicalCandidateId)}",
     );
     expect(browserWorkflowModule).not.toContain(
       'candidateTable.locator("tbody tr a").first().click()',
     );
     expect(browserWorkflowModule).toContain("Idea candidate source-safe detail");
     expect(browserWorkflowModule).toContain(
-      "selectedCandidateId: CANONICAL_IDEA_CANDIDATE_ID",
+      "selectedCandidateId: canonicalCandidateId",
     );
     expect(browserWorkflowModule).toContain(
       "canonicalCandidateProof:",
