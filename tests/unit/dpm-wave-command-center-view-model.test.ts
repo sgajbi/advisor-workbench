@@ -203,6 +203,24 @@ describe("DPM wave command-center view model", () => {
     expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
   });
 
+  it("fails closed when workflow-pack detail is absent at runtime", () => {
+    const malformedMemo = { data: {} } as unknown as DpmWaveAiPmMemoResponse;
+    const malformedOperations = {
+      data: {},
+    } as unknown as DpmOperationsHandoffSummaryResponse;
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveAiMemo: malformedMemo,
+      operationsHandoffSummary: malformedOperations,
+    });
+
+    expect(model.aiMemoStatus).toBe("UNAVAILABLE");
+    expect(model.aiMemoRunId).toBe("N/A");
+    expect(model.operationsHandoffSummaryStatus).toBe("UNAVAILABLE");
+    expect(model.operationsHandoffSummaryRunId).toBe("N/A");
+  });
+
   it("surfaces manage-owned campaign lifecycle events without deriving campaign state", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,

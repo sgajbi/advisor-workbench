@@ -221,6 +221,8 @@ export function useDpmWaveCommandCenterActions({
   const [campaignMakerCheckerControlsResponse, setCampaignMakerCheckerControlsResponse] =
     useState<DpmCampaignWorkflowGatewayResponse | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [pendingAiAction, setPendingAiAction] =
+    useState<WaveBoundValue<string> | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] =
     useState<string | null>(null);
   const [pendingCampaignLaunchHistoryKey, setPendingCampaignLaunchHistoryKey] =
@@ -236,6 +238,8 @@ export function useDpmWaveCommandCenterActions({
   const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
     useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [aiActionError, setAiActionError] =
+    useState<WaveBoundValue<string> | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] = useState<string | null>(null);
   const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] =
     useState<string | null>(null);
@@ -253,6 +257,7 @@ export function useDpmWaveCommandCenterActions({
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [aiWorkflowOutcome, setAiWorkflowOutcome] =
     useState<WaveBoundValue<DpmAiWorkflowOutcome> | null>(null);
+  const aiRequestSequenceRef = useRef(0);
   const autoLoadedWaveIdRef = useRef<string | null>(null);
   const autoLoadFailureCountsRef = useRef<Record<string, number>>({});
   const [autoLoadRetryToken, setAutoLoadRetryToken] = useState<{
@@ -295,6 +300,14 @@ export function useDpmWaveCommandCenterActions({
       campaignMakerCheckerControlsResponse ?? campaignMakerCheckerControls,
   });
   const selectedWaveId = model.selectedWaveId;
+  const selectedAiPendingAction = valueForSelectedWave(
+    pendingAiAction,
+    selectedWaveId,
+  );
+  const selectedAiActionError = valueForSelectedWave(
+    aiActionError,
+    selectedWaveId,
+  );
   const campaignRowKey = model.campaignRows.map((row) => row.key).join("|");
   const selectedCampaignKey =
     selectedCampaignState.campaignRowKey === campaignRowKey &&
@@ -431,24 +444,39 @@ export function useDpmWaveCommandCenterActions({
     action: () => Promise<T>,
     recordResponse: (response: WaveBoundValue<T>) => void,
   ) {
-    if (pendingAction) {
+    if (pendingAction || pendingAiAction?.waveId === sourceWaveId) {
       return;
     }
-    setPendingAction(label);
-    setActionError(null);
+    const requestSequence = aiRequestSequenceRef.current + 1;
+    aiRequestSequenceRef.current = requestSequence;
+    setPendingAiAction({ waveId: sourceWaveId, value: label });
+    setAiActionError(null);
     setActionMessage(null);
     setAiWorkflowOutcome(null);
     try {
       const response = await action();
+      if (requestSequence !== aiRequestSequenceRef.current) {
+        return;
+      }
       recordResponse({ waveId: sourceWaveId, value: response });
       setAiWorkflowOutcome({
         waveId: sourceWaveId,
         value: buildDpmAiWorkflowOutcome(family, response, sourceWaveId),
       });
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : `${label} failed`);
+      if (requestSequence === aiRequestSequenceRef.current) {
+        setAiActionError({
+          waveId: sourceWaveId,
+          value: error instanceof Error ? error.message : `${label} failed`,
+        });
+      }
     } finally {
-      setPendingAction(null);
+      setPendingAiAction((current) =>
+        requestSequence === aiRequestSequenceRef.current &&
+        current?.waveId === sourceWaveId
+          ? null
+          : current,
+      );
     }
   }
 
@@ -758,7 +786,7 @@ export function useDpmWaveCommandCenterActions({
     model,
     selectedCampaign,
     selectedCampaignKey,
-    pendingAction,
+    pendingAction: pendingAction ?? selectedAiPendingAction,
     pendingCampaignLifecycleKey,
     pendingCampaignLaunchHistoryKey,
     pendingCampaignPreviewReadinessKey,
@@ -766,7 +794,7 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignLaunchKey,
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
-    actionError,
+    actionError: actionError ?? selectedAiActionError,
     proofPackLoaded: proofPackResponse?.waveId === model.selectedWaveId,
     campaignLifecycleError,
     campaignLaunchHistoryError,
@@ -799,6 +827,13 @@ export function useDpmWaveCommandCenterActions({
     recordCampaignLifecycleCommand,
     recordCampaignWorkflowCommand,
   };
+}
+
+function valueForSelectedWave<T>(
+  boundValue: WaveBoundValue<T> | null,
+  selectedWaveId: string | null,
+): T | null {
+  return boundValue?.waveId === selectedWaveId ? boundValue.value : null;
 }
 
 function buildCampaignLifecycleCommandEvidence(

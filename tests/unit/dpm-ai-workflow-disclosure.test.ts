@@ -238,6 +238,23 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.businessSummary).toContain("incomplete");
   });
 
+  it("fails closed when workflow-surface eligibility was not applied", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        workflowSurfaceApplied: false,
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
   it.each([null, "lotus-idea"])(
     "fails closed for workflow authority owner %s",
     (owner) => {
@@ -318,6 +335,37 @@ describe("buildDpmAiWorkflowOutcome", () => {
         ],
       },
     ]);
+  });
+
+  it("fails closed for deeply nested material arrays without unbounded recursion", () => {
+    let nestedMaterial: unknown = "Do not reach this value.";
+    for (let depth = 0; depth < 10_000; depth += 1) {
+      nestedMaterial = [nestedMaterial];
+    }
+
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: { memo_sections: nestedMaterial },
+      }),
+    );
+
+    expect(outcome.disclosure.availability).toBe("unavailable");
+    expect(outcome.material.sections).toEqual([]);
+  });
+
+  it("fails closed when a material field exceeds its container item budget", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: {
+          memo_sections: Array.from({ length: 21 }, (_, index) => `Section ${index + 1}`),
+        },
+      }),
+    );
+
+    expect(outcome.disclosure.availability).toBe("unavailable");
+    expect(outcome.material.sections).toEqual([]);
   });
 
   it("keeps zero and false values when the structured result explicitly publishes them", () => {

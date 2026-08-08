@@ -21,6 +21,9 @@ const SUPPORTED_OUTPUT_LABELS = new Set([
   "CLIENT_USE_APPROVED",
   "CLIENT_USE_BLOCKED",
 ]);
+const MATERIAL_MAX_DEPTH = 3;
+const MATERIAL_MAX_CONTAINER_ITEMS = 20;
+const MATERIAL_MAX_VALUES_PER_FIELD = 50;
 
 export function normalizeDpmAiWorkflowExecution(
   response: unknown,
@@ -89,6 +92,7 @@ export function normalizeDpmAiWorkflowExecution(
     readString(authorization.outcome) === "ALLOWED" &&
     authorization.allowed === true &&
     authorization.caller_identity_bound === true &&
+    eligibility.workflow_surface_applied === true &&
     eligibilityCallerApp !== null &&
     eligibilityCallerApp === authorizationCallerApp &&
     eligibilityCallerApp === authenticatedCallerApp &&
@@ -173,7 +177,7 @@ function normalizeWorkflowMaterial(
   const materialByLabel = new Map<string, string[]>();
   for (const { key, label } of profile.materialFields) {
     const values = formatMaterialValues(structuredOutput[key]);
-    if (values.length > 0) {
+    if (values.length > 0 && values.length <= MATERIAL_MAX_VALUES_PER_FIELD) {
       materialByLabel.set(label, [
         ...(materialByLabel.get(label) ?? []),
         ...values,
@@ -199,10 +203,17 @@ function formatMaterialValues(value: unknown, depth = 0): string[] {
     return [String(value)];
   }
   if (Array.isArray(value)) {
-    return value.flatMap((item) => formatMaterialValues(item, depth));
+    if (depth >= MATERIAL_MAX_DEPTH || value.length > MATERIAL_MAX_CONTAINER_ITEMS) {
+      return [];
+    }
+    return value.flatMap((item) => formatMaterialValues(item, depth + 1));
   }
-  if (depth < 2 && value !== null && typeof value === "object") {
-    return Object.entries(value as Record<string, unknown>).flatMap(
+  if (depth < MATERIAL_MAX_DEPTH && value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length > MATERIAL_MAX_CONTAINER_ITEMS) {
+      return [];
+    }
+    return entries.flatMap(
       ([key, nestedValue]) => {
         const nestedValues = formatMaterialValues(nestedValue, depth + 1);
         return nestedValues.map(
@@ -281,7 +292,7 @@ function readArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-function isUsableStructuredOutputValue(value: unknown): boolean {
+function isUsableStructuredOutputValue(value: unknown, depth = 0): boolean {
   if (typeof value === "string") {
     return value.trim().length > 0;
   }
@@ -292,10 +303,19 @@ function isUsableStructuredOutputValue(value: unknown): boolean {
     return true;
   }
   if (Array.isArray(value)) {
-    return value.some(isUsableStructuredOutputValue);
+    return (
+      depth < MATERIAL_MAX_DEPTH &&
+      value.length <= MATERIAL_MAX_CONTAINER_ITEMS &&
+      value.some((item) => isUsableStructuredOutputValue(item, depth + 1))
+    );
   }
   if (value && typeof value === "object") {
-    return Object.values(value).some(isUsableStructuredOutputValue);
+    const values = Object.values(value);
+    return (
+      depth < MATERIAL_MAX_DEPTH &&
+      values.length <= MATERIAL_MAX_CONTAINER_ITEMS &&
+      values.some((item) => isUsableStructuredOutputValue(item, depth + 1))
+    );
   }
   return false;
 }

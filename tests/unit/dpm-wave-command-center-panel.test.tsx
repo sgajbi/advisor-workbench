@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/dpm-wave-command-center-panel";
@@ -676,6 +676,69 @@ describe("DpmWaveCommandCenterPanel", () => {
       .closest("section");
     expect(decisionSupport).not.toBeNull();
     expect(within(decisionSupport!).getAllByText("Not requested")).toHaveLength(2);
+  });
+
+  it("does not carry an in-flight workflow posture or error into another wave", async () => {
+    let rejectMemo!: (reason?: unknown) => void;
+    const memoRequest = new Promise<
+      Awaited<ReturnType<typeof requestDpmWaveAiPmMemo>>
+    >((_, reject) => {
+      rejectMemo = reject;
+    });
+    vi.mocked(requestDpmWaveAiPmMemo).mockReturnValue(memoRequest);
+    const nextWaveList: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-002",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        items: [
+          {
+            wave_id: "dwv_002",
+            state: "CREATED",
+            trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+            as_of_date: "2026-05-04",
+            item_count: 0,
+            supportability_state: "ready",
+          },
+        ],
+      },
+    };
+
+    const { rerender } = render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare rebalance PM memo" }));
+    await screen.findByText("Preparing PM memo");
+
+    rerender(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={nextWaveList}
+      />,
+    );
+
+    const nextWaveMemo = screen.getByRole("button", {
+      name: "Prepare rebalance PM memo",
+    });
+    expect(nextWaveMemo).toBeEnabled();
+    expect(nextWaveMemo).toHaveTextContent("Prepare PM memo");
+
+    await act(async () => {
+      rejectMemo(new Error("Wave A memo request failed."));
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(screen.queryByText("Wave A memo request failed.")).not.toBeInTheDocument();
+      expect(nextWaveMemo).toBeEnabled();
+    });
   });
 
   it("does not enable approval when mandate attention items block the workflow", async () => {
