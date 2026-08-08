@@ -230,7 +230,12 @@ Current repository posture:
     historical superseded run); running and failed output stays hidden even when partial structured
     content and otherwise complete provenance are present. Traverse structured material with shared
     depth, container-item, and rendered-value budgets across both usability detection and business
-    formatting; over-budget payloads are unavailable, never partially rendered by accident.
+    formatting; if any present adopted section exceeds a budget, the whole material contract is
+    unavailable rather than silently dropping that section and trusting smaller siblings. Preserve
+    opaque source, evidence, security, and artifact identifiers exactly in material values; humanize
+    only presentation keys and values from explicitly recognized enum fields. Trust eligibility
+    only when its independently published issuing service is `lotus-ai` as well as when the outer
+    workflow envelope and data service agree.
     Treat every Gateway response as untrusted at runtime even when the API client exposes a typed
     contract. Presentation helpers must guard optional nested records and fail to an unavailable
     business state so contract drift cannot crash the owning workstation panel before shared
