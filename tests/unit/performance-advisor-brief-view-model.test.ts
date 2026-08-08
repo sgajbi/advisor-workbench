@@ -39,6 +39,7 @@ function buildGatewayAdvisorBriefFixture(
     supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
     ai_audit: {
       task_id: "advisor-brief-task-1",
+      provider_mode: "local_openai_compatible",
       provider_id: "governed-provider",
       model_id: "governed-model",
       stubbed: false,
@@ -411,6 +412,112 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
   });
 
   it.each([
+    {
+      name: "disabled deterministic provider",
+      providerMode: "disabled",
+      stubbed: true,
+      preparation: "deterministic",
+      availability: "simulation",
+    },
+    {
+      name: "explicit stub provider",
+      providerMode: "stub",
+      stubbed: true,
+      preparation: "deterministic",
+      availability: "simulation",
+    },
+    {
+      name: "managed OpenAI provider",
+      providerMode: "openai",
+      stubbed: false,
+      preparation: "ai-assisted",
+      availability: "live",
+    },
+    {
+      name: "local OpenAI-compatible provider",
+      providerMode: "local_openai_compatible",
+      stubbed: false,
+      preparation: "ai-assisted",
+      availability: "live",
+    },
+    {
+      name: "disabled provider presented as live",
+      providerMode: "disabled",
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+    {
+      name: "stub provider presented as live",
+      providerMode: "stub",
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+    {
+      name: "managed OpenAI provider presented as deterministic",
+      providerMode: "openai",
+      stubbed: true,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+    {
+      name: "local OpenAI-compatible provider presented as deterministic",
+      providerMode: "local_openai_compatible",
+      stubbed: true,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+    {
+      name: "missing provider mode",
+      providerMode: undefined,
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+    {
+      name: "unknown provider mode",
+      providerMode: "future_provider",
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+    },
+  ] as const)(
+    "classifies $name through the shared provider contract",
+    ({ providerMode, stubbed, preparation, availability }) => {
+      const scenario = buildSupportedPerformanceScenario();
+      const brief = buildPerformanceAdvisorBriefViewModel({
+        workspace: scenario.workspace,
+        advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+          ai_audit: {
+            provider_mode: providerMode,
+            stubbed,
+          },
+        }),
+        capabilities: scenario.capabilities,
+        period: scenario.workspace.period,
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: scenario.workspace.benchmark_code ?? undefined,
+        isDetailsPending: false,
+      });
+
+      expect(brief.aiDisclosure).toMatchObject({
+        preparation,
+        availability,
+        clientUse: "blocked",
+      });
+      if (preparation === "unavailable") {
+        expect(brief.aiDisclosure.limitations).toContain(
+          "Generation provenance is missing, unsupported, or contradictory, so this output cannot be classified as live AI assistance.",
+        );
+      }
+    },
+  );
+
+  it.each([
     [
       "packrun_advisor_brief_req-2",
       "This output is historical. Review replacement run packrun_advisor_brief_req-2 before use.",
@@ -467,7 +574,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
-        ai_audit: { stubbed: true },
+        ai_audit: { provider_mode: "stub", stubbed: true },
         workflow_pack_run: {
           run_id: "packrun-advisor-brief-simulation-1",
           runtime_state: "COMPLETED",
@@ -493,7 +600,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     });
 
     expect(brief.aiDisclosure).toMatchObject({
-      preparation: "ai-assisted",
+      preparation: "deterministic",
       availability: "stale",
       clientUse: "blocked",
     });
@@ -827,6 +934,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         source_metrics: [],
         supportability: [{ label: "Advisor Brief", value: "Ready", tone: "success" }],
         ai_audit: {
+          provider_mode: "local_openai_compatible",
           stubbed: false,
           generated_at: "2026-08-04T08:00:00Z",
         },

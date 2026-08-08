@@ -294,6 +294,52 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(onSelectMode).toHaveBeenCalledWith("analysis");
   });
 
+  it("fails closed when a disabled provider is presented as live AI assistance", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      warnings: [],
+      partial_failures: [],
+      ai_audit: {
+        ...readyAdvisorBriefResponse.ai_audit,
+        provider_mode: "disabled",
+        stubbed: false,
+      },
+    });
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Partial output")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Live AI-assisted output")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("How this was prepared"));
+
+    expect(screen.getByText("Generation provenance unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Generation provenance is missing, unsupported, or contradictory, so this output cannot be classified as live AI assistance."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
+  });
+
   it("opens Summary when a source metric card is selected", async () => {
     const workspace = buildSupportedPerformanceScenario().workspace;
     const onSelectMode = vi.fn();
