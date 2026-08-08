@@ -7,6 +7,7 @@ export type BadgeTone = "default" | "success" | "warn" | "danger";
 
 export type ManageExceptionRow = {
   key: string;
+  mandateId: string | null;
   severity: string;
   title: string;
   source: string;
@@ -45,6 +46,7 @@ export function buildManageExceptionRows(
       `exception-${index + 1}`;
     return {
       key: exceptionId,
+      mandateId: readString(record, "mandate_id"),
       severity: readString(record, "severity") || "UNKNOWN",
       title:
         readString(record, "title") ||
@@ -68,6 +70,17 @@ export function buildManageExceptionRows(
         "N/A",
     };
   });
+}
+
+export function filterManageExceptionRowsForMandate(
+  rows: ManageExceptionRow[],
+  mandateId: string | null | undefined
+): ManageExceptionRow[] {
+  const normalizedMandateId = mandateId?.trim();
+  if (!normalizedMandateId || normalizedMandateId === "N/A") {
+    return [];
+  }
+  return rows.filter((row) => row.mandateId === normalizedMandateId);
 }
 
 export function buildMandateSourceReadinessRows(

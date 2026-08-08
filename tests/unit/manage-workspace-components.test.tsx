@@ -36,6 +36,40 @@ describe("manage workspace split components", () => {
     expect(screen.queryByText("Advisor review recommended before rebalance approval.")).not.toBeInTheDocument();
   });
 
+  it("excludes book-level exceptions that belong to another mandate", () => {
+    const data = buildManageWorkspaceData();
+    if (!data.commandCenterExceptions) {
+      throw new Error("Fixture command-center exceptions are required");
+    }
+    const items = Array.isArray(data.commandCenterExceptions.data.items)
+      ? data.commandCenterExceptions.data.items
+      : [];
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions,
+      data: {
+        ...data.commandCenterExceptions.data,
+        items: [
+          ...items,
+          {
+            exception_id: "exc_other_mandate",
+            mandate_id: "mandate_002",
+            severity: "HIGH",
+            title: "Foreign mandate exception",
+            state: "ACTIVE",
+          },
+        ],
+      },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(
+      screen.queryByRole("button", { name: "Foreign mandate exception" })
+    ).not.toBeInTheDocument();
+    const detail = screen.getByLabelText("Selected mandate review item");
+    expect(within(detail).getByText("mandate_001")).toBeInTheDocument();
+  });
+
   it.each([
     ["EMPTY", "No mandate monitoring records"],
     ["BLOCKED", "Mandate monitoring is not available for this access context"],
@@ -101,6 +135,29 @@ describe("manage workspace split components", () => {
     expect(
       within(screen.getByLabelText("Mandate health summary")).getAllByText("Ready").length,
     ).toBeGreaterThan(0);
+  });
+
+  it("marks missing mandate-health evidence as partial even when command-center data is complete", () => {
+    const data = buildManageWorkspaceData({ mandateHealth: null, mandateHealthError: null });
+    if (!data.commandCenter) {
+      throw new Error("Fixture command center is required");
+    }
+    data.commandCenter = {
+      ...data.commandCenter,
+      data: {
+        ...data.commandCenter.data,
+        summary: {
+          active_exception_count: 2,
+          data_completeness_state: "COMPLETE",
+        },
+      },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("Mandate monitoring requires attention")).toBeInTheDocument();
+    const summary = screen.getByLabelText("Mandate health summary");
+    expect(within(summary).getAllByText("Not available").length).toBeGreaterThan(0);
   });
 
   it("renders overview operating posture from Gateway-backed manage data", () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildManageExceptionRows,
+  filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessExceptionTitle,
   formatBusinessMandateType,
@@ -47,9 +48,43 @@ describe("manage workspace business presentation", () => {
     });
 
     expect(rows[0]).toMatchObject({
+      mandateId: null,
       owner: "Not assigned",
       nextAction: "N/A",
       title: "Mandate exception details unavailable",
     });
+  });
+
+  it("preserves source mandate identity and scopes book exceptions to the selected mandate", () => {
+    const response = {
+      correlation_id: "corr-exceptions",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:exceptions",
+        state: "SUPPORTED",
+        partial_readiness_reasons: [],
+      },
+      data: {
+        items: [
+          { exception_id: "exception-current", mandate_id: "mandate-current" },
+          { exception_id: "exception-other", mandate_id: "mandate-other" },
+          { exception_id: "exception-unbound" },
+        ],
+      },
+    };
+    const rows = buildManageExceptionRows(response);
+
+    expect(rows.map((row) => row.mandateId)).toEqual([
+      "mandate-current",
+      "mandate-other",
+      null,
+    ]);
+    expect(filterManageExceptionRowsForMandate(rows, "mandate-current")).toEqual([
+      expect.objectContaining({ key: "exception-current", mandateId: "mandate-current" }),
+    ]);
+    expect(filterManageExceptionRowsForMandate(rows, "N/A")).toEqual([]);
   });
 });

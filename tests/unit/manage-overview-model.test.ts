@@ -69,17 +69,68 @@ describe("manage overview model", () => {
   it("keeps partial posture source-owned and exposes blocked surfaces without local capability claims", () => {
     const model = buildManageOverviewModel(
       buildManageWorkspaceData({
+        mandateHealth: null,
+        mandateHealthError: "Gateway timeout",
         pmOperatingQualityPoliciesError: "Gateway timeout",
         pmOperatingQualityScoreRunsError: "Gateway timeout",
         outcomeReviewError: "Gateway timeout",
       })
     );
 
-    expect(model.blockedSurfaces).toEqual(["PM operating quality", "Outcome reviews"]);
+    expect(model.blockedSurfaces).toEqual([
+      "Mandate health",
+      "PM operating quality",
+      "Outcome reviews",
+    ]);
     expect(model.overviewPostureLabel).toBe("Needs attention");
     expect(model.overviewPostureTone).toBe("warn");
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Client Communication");
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Trade Approval");
+  });
+
+  it("keeps book-level exceptions outside the selected mandate posture", () => {
+    const data = buildManageWorkspaceData();
+    if (!data.commandCenter || !data.commandCenterExceptions) {
+      throw new Error("Command-center fixtures are required");
+    }
+    const items = Array.isArray(data.commandCenterExceptions.data.items)
+      ? data.commandCenterExceptions.data.items
+      : [];
+    data.commandCenter = {
+      ...data.commandCenter,
+      data: {
+        ...data.commandCenter.data,
+        summary: {
+          active_exception_count: 3,
+          data_completeness_state: "PARTIAL",
+        },
+      },
+    };
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions,
+      data: {
+        ...data.commandCenterExceptions.data,
+        items: [
+          ...items,
+          {
+            exception_id: "exception-other",
+            mandate_id: "mandate-other",
+            severity: "HIGH",
+            state: "ACTIVE",
+          },
+        ],
+      },
+    };
+
+    const model = buildManageOverviewModel(data);
+
+    expect(model.exceptionRows.map((row) => row.key)).toEqual(["exc_001", "exc_002"]);
+    expect(model.postureCards).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "attention", value: "2" }),
+      ])
+    );
+    expect(model.latestActivities[0]?.event).toContain("2 attention items");
   });
 
   it("uses the operating activity fallback when source-backed activity is absent", () => {

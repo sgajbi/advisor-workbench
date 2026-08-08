@@ -537,6 +537,7 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           items: [
             {
               exception_id: "exc_001",
+              mandate_id: "mandate_001",
               severity: "HIGH",
               title: "Missing benchmark constituent mapping",
               source_system: "lotus-performance",
@@ -547,6 +548,7 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
             },
             {
               exception_id: "exc_002",
+              mandate_id: "mandate_001",
               severity: "MEDIUM",
               title: "Stale price for fixed income instrument",
               source_system: "lotus-pricing",
