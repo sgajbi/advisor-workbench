@@ -195,11 +195,15 @@ export type DpmWaveCommandCenterPanelModel = {
 export function buildDpmWaveCommandCenterModel(params: {
   waveList: DpmWaveGatewayResponse | null;
   waveDetail?: DpmWaveGatewayResponse | null;
+  waveDetailSourceWaveId?: string | null;
   waveItems?: DpmWaveGatewayResponse | null;
+  waveItemsSourceWaveId?: string | null;
   actionResponse?: DpmWaveGatewayResponse | null;
   waveReportInput?: DpmWaveGatewayResponse | null;
   waveAiMemo?: DpmWaveAiPmMemoResponse | null;
+  waveAiMemoSourceWaveId?: string | null;
   operationsHandoffSummary?: DpmOperationsHandoffSummaryResponse | null;
+  operationsHandoffSummarySourceWaveId?: string | null;
   campaignDefinitions?: DpmCampaignDefinitionGatewayResponse | null;
   campaignDiscovery?: DpmCampaignDefinitionGatewayResponse | null;
   campaignLifecycleEvents?: DpmCampaignDefinitionGatewayResponse | null;
@@ -217,41 +221,76 @@ export function buildDpmWaveCommandCenterModel(params: {
   campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
   campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 }): DpmWaveCommandCenterPanelModel {
-  const primary =
+  const selectionPrimary =
     params.actionResponse ??
     params.waveDetail ??
     params.waveReportInput ??
     params.waveList ??
     params.waveItems;
   const listRows = buildSummaryRows(params.waveList?.data);
-  const waveRecord = readWaveRecord(params.actionResponse?.data) || readWaveRecord(params.waveDetail?.data);
-  const itemData = params.waveItems?.data ?? params.actionResponse?.data ?? params.waveDetail?.data;
+  const selectionWaveRecord =
+    readWaveRecord(params.actionResponse?.data) ||
+    readWaveRecord(params.waveDetail?.data);
+  const selectionSupportability = selectionPrimary?.supportability;
+  const selectedWaveId =
+    readString(selectionWaveRecord ?? {}, "wave_id") ||
+    selectionSupportability?.wave_id ||
+    listRows[0]?.waveId ||
+    null;
+  const waveDetail = matchesSelectedWave(
+    params.waveDetailSourceWaveId,
+    selectedWaveId,
+  )
+    ? params.waveDetail
+    : null;
+  const waveItems = matchesSelectedWave(
+    params.waveItemsSourceWaveId,
+    selectedWaveId,
+  )
+    ? params.waveItems
+    : null;
+  const primary =
+    params.actionResponse ??
+    waveDetail ??
+    params.waveReportInput ??
+    params.waveList ??
+    waveItems;
+  const waveRecord =
+    readWaveRecord(params.actionResponse?.data) || readWaveRecord(waveDetail?.data);
+  const itemData = waveItems?.data ?? params.actionResponse?.data ?? waveDetail?.data;
   const itemRows = buildItemRows(itemData);
   const proofPackPosture = firstRecord(
     waveRecord?.proof_pack_posture,
     params.actionResponse?.data.proof_pack_posture ??
-      params.waveDetail?.data.proof_pack_posture,
-    params.waveItems?.data.proof_pack_posture,
-    params.actionResponse?.data
+      waveDetail?.data.proof_pack_posture,
+    waveItems?.data.proof_pack_posture,
+    params.actionResponse?.data,
   );
   const supportability = primary?.supportability;
   const supportabilityState = normalizeState(supportability?.state);
-  const selectedWaveId =
-    readString(waveRecord ?? {}, "wave_id") ||
-    supportability?.wave_id ||
-    listRows[0]?.waveId ||
-    null;
   const selectedWaveState =
     readString(waveRecord ?? {}, "state") ||
     supportability?.wave_state ||
     listRows[0]?.state ||
     "N/A";
+  const waveAiMemo = matchesSelectedWave(
+    params.waveAiMemoSourceWaveId,
+    selectedWaveId,
+  )
+    ? params.waveAiMemo
+    : null;
+  const operationsHandoffSummary = matchesSelectedWave(
+    params.operationsHandoffSummarySourceWaveId,
+    selectedWaveId,
+  )
+    ? params.operationsHandoffSummary
+    : null;
   const selectedListRecord = findSelectedWaveListRecord(params.waveList?.data, selectedWaveId);
   const metricSource = firstRecord(
     waveRecord?.aggregate_metrics,
     params.actionResponse?.data.aggregate_metrics,
-    params.waveItems?.data.aggregate_metrics,
-    selectedListRecord?.aggregate_metrics
+    waveItems?.data.aggregate_metrics,
+    selectedListRecord?.aggregate_metrics,
   );
 
   return {
@@ -273,14 +312,14 @@ export function buildDpmWaveCommandCenterModel(params: {
       listRows.find((row) => row.waveId === selectedWaveId)?.supportabilityReason ||
       firstNonEmpty(supportability?.reason_codes) ||
       "N/A",
-    reportInputRef: readReportInputRef(params.waveReportInput?.data, params.waveAiMemo),
+    reportInputRef: readReportInputRef(params.waveReportInput?.data, waveAiMemo),
     reportInputStatus: params.waveReportInput
       ? normalizeState(params.waveReportInput.supportability.state)
       : "NOT_REQUESTED",
-    aiMemoStatus: readAiMemoStatus(params.waveAiMemo),
-    aiMemoRunId: readAiMemoRunId(params.waveAiMemo),
-    operationsHandoffSummaryStatus: readWorkflowPackStatus(params.operationsHandoffSummary),
-    operationsHandoffSummaryRunId: readWorkflowPackRunId(params.operationsHandoffSummary),
+    aiMemoStatus: readAiMemoStatus(waveAiMemo),
+    aiMemoRunId: readAiMemoRunId(waveAiMemo),
+    operationsHandoffSummaryStatus: readWorkflowPackStatus(operationsHandoffSummary),
+    operationsHandoffSummaryRunId: readWorkflowPackRunId(operationsHandoffSummary),
     summaryRows: listRows,
     campaignRows: buildCampaignDefinitionRows(
       params.campaignDefinitions?.data,
@@ -541,6 +580,16 @@ function readAiMemoStatus(memo: DpmWaveAiPmMemoResponse | null | undefined): str
     return "NOT_REQUESTED";
   }
   return normalizeState(memo.data.workflow_pack_run.review_state);
+}
+
+function matchesSelectedWave(
+  sourceWaveId: string | null | undefined,
+  selectedWaveId: string | null,
+): boolean {
+  return (
+    sourceWaveId === undefined ||
+    (sourceWaveId !== null && sourceWaveId === selectedWaveId)
+  );
 }
 
 function readAiMemoRunId(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
