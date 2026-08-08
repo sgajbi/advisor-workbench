@@ -234,6 +234,12 @@ Current repository posture:
     `response_labeling`, `correlation_and_audit`, and `runtime_redaction_engine` controls, and an
     `ENFORCED_PASSTHROUGH` or `ENFORCED_REDACTED` disposition. Documented-only, blocked, degraded,
     missing, or contradictory safety evidence fails closed even when output labels agree.
+    The inner workflow-pack `supportability_status` is also a closed
+    `READY | ACTION_REQUIRED | HISTORICAL` vocabulary; missing or unknown values make the output
+    contract incomplete. Returned source-object identity governs adjacent review status, run ids,
+    references, and errors as well as generated material. Never project workflow posture under a
+    locally captured exception, wave, proof pack, outcome review, or score run unless the response
+    itself identifies that same business object.
     A successful workflow must render its returned decision-support material, not only availability
     and audit posture. Keep the six family-specific source-field mappings declarative in the shared
     profile. The same profile is the single source for each family's default `requested_outputs`;
