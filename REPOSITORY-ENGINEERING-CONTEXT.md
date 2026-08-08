@@ -378,6 +378,15 @@ Current repository posture:
 
 ## Architecture And Module Map
 
+Portfolio record tasks use a split composition boundary. `portfolio-record-screen-data.ts` owns
+shared server-side portfolio selection and Gateway-backed record loading;
+`portfolio-record-screen-shell.tsx` owns the shared business frame, navigation, evidence, and
+degraded posture; and Allocation, Positions, Transactions, Cashflow, and Income each own a small
+Client entry point that imports only that task workspace. Do not reintroduce a client dispatcher
+that statically imports every record workspace. `npm run build` runs the deterministic
+`quality:portfolio-record-bundles` gate after Next.js compilation and must keep AG Grid out of the
+Cashflow and Income initial graphs while retaining it for the three grid workflows.
+
 Primary areas:
 
 1. `src/app/`
