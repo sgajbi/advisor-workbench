@@ -297,7 +297,9 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByText("Balanced Mandate")).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(page.getByText("Review Evidence")).toBeVisible({
+      await expect(
+        page.getByRole("heading", { name: "Review Evidence", exact: true }),
+      ).toBeVisible({
         timeout: timeoutMs,
       });
     },

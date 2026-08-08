@@ -102,6 +102,15 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain('getByText("Supportability", { exact: true })');
   });
 
+  it("binds Client Context proof to the exact Review Evidence heading", () => {
+    const source = validateAdvisoryJourneyScreens.toString();
+
+    expect(source).toContain(
+      'getByRole("heading", { name: "Review Evidence", exact: true })',
+    );
+    expect(source).not.toContain('getByText("Review Evidence")');
+  });
+
   it("binds Advisor Book proof to portfolio context rather than its display label", () => {
     const source = browserWorkflowModule.validateAdvisorBookPanel.toString();
 
