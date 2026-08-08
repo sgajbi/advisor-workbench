@@ -113,6 +113,22 @@ describe("dependency security governance", () => {
     });
   });
 
+  it("pins the patched nanoid line used by the production PostCSS graph", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      overrides?: Record<string, unknown>;
+    };
+    const packageLock = JSON.parse(readRepositoryFile("package-lock.json")) as {
+      packages?: Record<string, { version?: string; integrity?: string }>;
+    };
+
+    expect(packageJson.overrides?.nanoid).toBe("3.3.17");
+    expect(packageLock.packages?.["node_modules/nanoid"]).toMatchObject({
+      version: "3.3.17",
+      integrity:
+        "sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g==",
+    });
+  });
+
   it("keeps the security gate in local check and protected CI lanes", () => {
     const makefile = readRepositoryFile("Makefile");
 
