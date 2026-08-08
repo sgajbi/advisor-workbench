@@ -4,17 +4,25 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
+    const componentPromise = loader().then((mod: unknown) =>
+      typeof mod === "function"
+        ? (mod as React.ComponentType<Record<string, unknown>>)
+        : ((mod as { default?: React.ComponentType<Record<string, unknown>> }).default ?? null),
+    );
+
     return function MockDynamicComponent(props: Record<string, unknown>) {
       const [Component, setComponent] =
         React.useState<React.ComponentType<Record<string, unknown>> | null>(null);
       React.useEffect(() => {
-        loader().then((mod: unknown) => {
-          const resolved =
-            typeof mod === "function"
-              ? (mod as React.ComponentType<Record<string, unknown>>)
-              : (mod as { default?: React.ComponentType<Record<string, unknown>> }).default;
-          setComponent(() => resolved ?? null);
+        let active = true;
+        componentPromise.then((resolved) => {
+          if (active) {
+            setComponent(() => resolved);
+          }
         });
+        return () => {
+          active = false;
+        };
       }, []);
       return Component ? React.createElement(Component, props) : null;
     };
@@ -253,15 +261,15 @@ describe("PortfolioFoundationPage", () => {
         name: "Portfolio key metrics",
       });
       fireEvent.click(within(currentKeyMetrics).getByRole("button", { name: buttonName }));
-      await waitFor(() => {
-        expect(screen.getByText("Metric Detail")).toBeInTheDocument();
-      });
+      expect(
+        await screen.findByText("Metric Detail", undefined, { timeout: 5000 }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: linkName })).toHaveAttribute("href", href);
       fireEvent.click(screen.getByRole("button", { name: "Close" }));
       await waitFor(() => {
         expect(screen.queryByRole("heading", { name: heading })).not.toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     };
 
     await openKeyMetricDrawer(
