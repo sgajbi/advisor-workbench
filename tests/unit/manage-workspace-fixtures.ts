@@ -127,6 +127,7 @@ export function buildManageWorkspaceData(
         health_score: 82,
       },
     },
+    commandCenterExceptionsError: null,
     mandateHealthError: null,
     commandCenterError: null,
     portfolioMemory: {

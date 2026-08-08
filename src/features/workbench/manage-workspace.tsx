@@ -29,6 +29,7 @@ import {
   readDpmMandateId,
   type ManageWorkspaceData,
 } from "@/features/workbench/manage-workspace-data";
+import { isManageExceptionEvidenceComplete } from "@/features/workbench/manage-workspace-view-model";
 import styles from "./manage-workspace.module.css";
 
 export function ManageWorkspace({
@@ -42,7 +43,11 @@ export function ManageWorkspace({
   const modeDefinition = getManageModeDefinition(mode);
   const dpmMandateId = readDpmMandateId(data.mandate?.data ?? null);
   const hasMandateEvidenceGap = Boolean(
-    data.commandCenterError || data.mandateHealthError || !data.mandateHealth
+    data.commandCenterError ||
+      data.commandCenterExceptionsError ||
+      !isManageExceptionEvidenceComplete(data) ||
+      data.mandateHealthError ||
+      !data.mandateHealth
   );
 
   return (

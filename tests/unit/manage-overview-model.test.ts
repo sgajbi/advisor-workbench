@@ -88,6 +88,58 @@ describe("manage overview model", () => {
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Trade Approval");
   });
 
+  it("keeps unavailable exception evidence distinct from a confirmed zero-attention queue", () => {
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        commandCenterExceptions: null,
+        commandCenterExceptionsError: "Gateway timeout",
+      })
+    );
+
+    expect(model.hasCompleteExceptionEvidence).toBe(false);
+    expect(model.postureCards).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "attention",
+          value: "Not available",
+          tone: "warn",
+        }),
+      ])
+    );
+    expect(model.moduleItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "mandate",
+          metric: "Attention evidence unavailable",
+        }),
+      ])
+    );
+    expect(model.latestActivities[0]?.event).toBe(
+      "Daily mandate review completed; attention-item evidence is unavailable."
+    );
+    expect(model.blockedSurfaces).toContain("Mandate attention items");
+  });
+
+  it("does not treat a degraded exception response as complete evidence", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        commandCenterExceptions: {
+          ...base.commandCenterExceptions!,
+          supportability: {
+            ...base.commandCenterExceptions!.supportability,
+            state: "DEGRADED",
+          },
+        },
+      })
+    );
+
+    expect(model.hasCompleteExceptionEvidence).toBe(false);
+    expect(model.postureCards.find((card) => card.key === "attention")?.value).toBe(
+      "Not available"
+    );
+  });
+
   it("keeps book-level exceptions outside the selected mandate posture", () => {
     const data = buildManageWorkspaceData();
     if (!data.commandCenter || !data.commandCenterExceptions) {

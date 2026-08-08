@@ -13,6 +13,7 @@ import {
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,
+  isManageExceptionEvidenceComplete,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
@@ -40,7 +41,8 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
     buildManageExceptionRows(data.commandCenterExceptions),
     commandModel.mandateId
   );
-  const activeExceptionCount = exceptionRows.length;
+  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
+  const activeExceptionCount = hasCompleteExceptionEvidence ? exceptionRows.length : null;
   const latestActivities = buildManageActivityRows(
     commandModel,
     waveModel,
@@ -56,9 +58,12 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const pmQualityFairnessAnalysisCount =
     data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
   const blockedSurfaces = [
-    data.commandCenterError || data.mandateHealthError || !data.mandateHealth
+    data.commandCenterError ||
+    data.mandateHealthError ||
+    !data.mandateHealth
       ? "Mandate health"
       : null,
+    !hasCompleteExceptionEvidence ? "Mandate attention items" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
     data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError
@@ -114,9 +119,9 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       {
         key: "attention",
         label: "Active Attention Items",
-        value: String(activeExceptionCount),
-        icon: activeExceptionCount > 0 ? "warning" : "check_circle",
-        tone: activeExceptionCount > 0 ? "warn" : "success",
+        value: activeExceptionCount === null ? "Not available" : String(activeExceptionCount),
+        icon: activeExceptionCount === 0 ? "check_circle" : "warning",
+        tone: activeExceptionCount === 0 ? "success" : "warn",
         progress: null,
       },
     ] satisfies Array<{
@@ -128,6 +133,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       progress: number | null;
     }>,
     exceptionRows,
+    hasCompleteExceptionEvidence,
     activeRebalance: {
       triggerType: waveModel.summaryRows[0]?.triggerType,
       state: waveModel.selectedWaveState,
@@ -140,7 +146,10 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         key: "mandate",
         title: "Mandate Health",
         icon: "health_and_safety",
-        metric: `${activeExceptionCount} attention items`,
+        metric:
+          activeExceptionCount === null
+            ? "Attention evidence unavailable"
+            : `${activeExceptionCount} attention items`,
         href: buildManageModeHref(portfolioId, "mandate"),
       },
       {
@@ -199,14 +208,17 @@ function buildManageActivityRows(
   commandModel: CommandModel,
   waveModel: WaveModel,
   reviewModel: ReviewModel,
-  activeExceptionCount: number
+  activeExceptionCount: number | null
 ) {
   const rows = [
     commandModel.latestMonitoringRunId !== "N/A"
       ? {
           key: "monitoring",
           time: businessLastReviewed(commandModel.latestMonitoringRunStatus),
-          event: `Daily mandate review completed with ${activeExceptionCount} attention items.`,
+          event:
+            activeExceptionCount === null
+              ? "Daily mandate review completed; attention-item evidence is unavailable."
+              : `Daily mandate review completed with ${activeExceptionCount} attention items.`,
         }
       : null,
     waveModel.selectedWaveId
