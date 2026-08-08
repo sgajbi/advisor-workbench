@@ -24,7 +24,23 @@ type DpmAiWorkflowFixtureOptions = {
   authorizationAllowed?: boolean;
   callerIdentityBound?: boolean;
   runtimeRedactionActive?: boolean;
+  sourceReference?: string;
 };
+
+const SOURCE_REFERENCE_BY_FAMILY: Record<DpmAiWorkflowFamily, string> = {
+  "proof-pack-memo": "ppack_1",
+  "wave-memo": "dwv_001",
+  "operations-handoff": "dwv_001",
+  "exception-summary": "me_1",
+  "outcome-narrative": "outcome_review_001",
+  "pm-quality-summary": "score_run_001",
+};
+
+export function getDpmAiWorkflowFixtureSourceReference(
+  family: DpmAiWorkflowFamily,
+): string {
+  return SOURCE_REFERENCE_BY_FAMILY[family];
+}
 
 export function buildDpmAiWorkflowExecution(
   family: DpmAiWorkflowFamily,
@@ -178,6 +194,8 @@ export function buildDpmAiWorkflowResponse(
   family: DpmAiWorkflowFamily,
   options: DpmAiWorkflowFixtureOptions = {},
 ) {
+  const sourceReference =
+    options.sourceReference ?? getDpmAiWorkflowFixtureSourceReference(family);
   return {
     correlation_id: `corr-${family}`,
     contract_version: "1.0.0",
@@ -185,6 +203,26 @@ export function buildDpmAiWorkflowResponse(
     evidence_source_service: "lotus-manage",
     manage_upstream_status: 200,
     ai_upstream_status: 200,
+    ...buildSourceInput(family, sourceReference),
     data: buildDpmAiWorkflowExecution(family, options),
   };
+}
+
+function buildSourceInput(
+  family: DpmAiWorkflowFamily,
+  sourceReference: string,
+): Record<string, Record<string, unknown>> {
+  switch (family) {
+    case "proof-pack-memo":
+      return { ai_evidence_input: { proof_pack_id: sourceReference } };
+    case "wave-memo":
+    case "operations-handoff":
+      return { wave_report_input: { wave_id: sourceReference } };
+    case "exception-summary":
+      return { exception_summary_input: { exception_id: sourceReference } };
+    case "outcome-narrative":
+      return { ai_evidence_input: { outcome_review_id: sourceReference } };
+    case "pm-quality-summary":
+      return { score_run: { score_run_id: sourceReference } };
+  }
 }

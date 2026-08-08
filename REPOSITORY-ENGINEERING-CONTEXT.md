@@ -223,6 +223,11 @@ Current repository posture:
     replace newer evidence, and validate response identity before publishing state or continuing a
     dependent mutation. An effect-only reset is not sufficient because an older request can still
     complete after the reset.
+    Every DPM workflow-output boundary must also receive the business-object reference requested by
+    its caller and compare it with the family-specific source input published by Gateway. Workflow
+    pack, surface, and authority identity do not prove that a result belongs to the requested proof
+    pack, wave, exception, outcome review, or score run. Owning-screen state remains bound to that
+    source object and is hidden when a newly current object replaces it.
     When a newly published result receives keyboard focus, bind that effect to a stable source
     result identity. Rebuilding an equivalent view-model object during an unrelated owning-panel
     update must not steal focus from the advisor's current command.

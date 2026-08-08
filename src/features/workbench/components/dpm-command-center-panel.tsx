@@ -82,7 +82,11 @@ export default function DpmCommandCenterPanel({
   const stateCopy = dpmCommandCenterStatePanelCopy(model.state);
   const exceptionSummaryStatus = readDpmWorkflowPackStatus(exceptionSummary?.data);
   const exceptionSummaryOutcome = exceptionSummary
-    ? buildDpmAiWorkflowOutcome("exception-summary", exceptionSummary)
+    ? buildDpmAiWorkflowOutcome(
+        "exception-summary",
+        exceptionSummary,
+        model.selectedExceptionId ?? "",
+      )
     : null;
   const runPending = pendingAction !== null;
 

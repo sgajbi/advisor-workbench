@@ -100,7 +100,11 @@ export default function DpmCopilotWorkspace({
         pending: null,
         result: {
           contextKey: action.contextKey,
-          outcome: buildDpmAiWorkflowOutcome(action.key, response),
+          outcome: buildDpmAiWorkflowOutcome(
+            action.key,
+            response,
+            action.reference ?? "",
+          ),
         },
         error: null,
       });

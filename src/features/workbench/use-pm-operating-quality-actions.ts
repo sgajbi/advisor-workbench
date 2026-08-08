@@ -370,11 +370,14 @@ export function usePmOperatingQualityActions({
     setActionMessage(null);
     setSummaryOutcome(null);
     try {
+      const scoreRunId = model.selectedScoreRun.scoreRunId;
       const response = await requestDpmPmOperatingQualitySummary({
-        scoreRunId: model.selectedScoreRun.scoreRunId,
+        scoreRunId,
       });
       setSummaryResponse(response);
-      setSummaryOutcome(buildDpmAiWorkflowOutcome("pm-quality-summary", response));
+      setSummaryOutcome(
+        buildDpmAiWorkflowOutcome("pm-quality-summary", response, scoreRunId),
+      );
     } catch (error) {
       setActionError(
         buildPmQualityActionError(error, "PM operating quality support summary request failed")

@@ -8,8 +8,10 @@ export type NormalizedDpmAiExecution = ReturnType<
 export function normalizeDpmAiWorkflowExecution(
   response: unknown,
   profile: DpmAiWorkflowProfile,
+  expectedSourceReference: string,
 ) {
   const envelope = asRecord(response);
+  const sourceInput = asRecord(envelope[profile.sourceInputField]);
   const data = asRecord(envelope.data);
   const eligibility = asRecord(data.eligibility);
   const execution = asRecord(data.execution);
@@ -39,6 +41,8 @@ export function normalizeDpmAiWorkflowExecution(
     eligibility.evaluated_registration_ref,
   );
   const registrationRef = readString(run.registration_ref);
+  const requestedSourceReference = readString(expectedSourceReference);
+  const sourceReference = readString(sourceInput[profile.sourceIdentityField]);
   const outputLabel = readString(execution.output_label);
   const providerMode = readString(run.provider_mode);
   const stubbed = readBoolean(run.stubbed);
@@ -73,6 +77,8 @@ export function normalizeDpmAiWorkflowExecution(
     readString(envelope.evidence_source_service) === "lotus-manage",
     readHttpSuccess(envelope.manage_upstream_status),
     readHttpSuccess(envelope.ai_upstream_status),
+    requestedSourceReference !== null &&
+      sourceReference === requestedSourceReference,
     readString(eligibility.pack_id) === profile.packId,
     readString(run.pack_id) === profile.packId,
     readString(run.workflow_surface) === profile.workflowSurface,
@@ -107,6 +113,7 @@ export function normalizeDpmAiWorkflowExecution(
     evidenceCount: evidenceDescriptors.length,
     stubbed,
     historical,
+    sourceReference,
     runId,
     packId: readString(run.pack_id),
     packVersion,

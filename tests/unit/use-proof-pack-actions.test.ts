@@ -175,6 +175,50 @@ describe("useProofPackActions", () => {
     });
   });
 
+  it("removes a memo outcome when generation replaces its source proof pack", async () => {
+    const replacementProofPack: DpmProofPackGatewayResponse = {
+      ...readyProofPack,
+      correlation_id: "corr-rfc40-replacement",
+      supportability: {
+        ...readyProofPack.supportability,
+        proof_pack_id: "ppack_2",
+        content_hash: "sha256:replacement-proof-pack",
+      },
+      data: {
+        proof_pack: {
+          ...(readyProofPack.data.proof_pack as Record<string, unknown>),
+          proof_pack_id: "ppack_2",
+        },
+      },
+    };
+    vi.mocked(requestDpmProofPackAiPmMemo).mockResolvedValue({
+      correlation_id: "corr-rfc40-ai-memo",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyProofPack.supportability,
+      ai_evidence_input: { proof_pack_id: "ppack_1" },
+      memo_request: { requested_outputs: ["pm_memo"] },
+      data: buildDpmAiWorkflowExecution("proof-pack-memo", {
+        runId: "packrun_ppack_1",
+      }),
+    });
+    vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(
+      replacementProofPack,
+    );
+    const { result } = renderProofPackActions();
+
+    act(() => result.current.requestAiPmMemo());
+    await waitFor(() => expect(result.current.aiMemoOutcome).not.toBeNull());
+
+    act(() => result.current.generateProofPack());
+    await waitFor(() => expect(result.current.proofPackId).toBe("ppack_2"));
+
+    expect(result.current.aiMemoOutcome).toBeNull();
+  });
+
   it("does not call Gateway when required proof-pack or rebalance identifiers are absent", async () => {
     const { result } = renderHook(() =>
       useProofPackActions({
