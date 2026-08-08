@@ -141,9 +141,28 @@ with the port, container or process, Compose project, and working-directory prov
 resolve the conflict. The preflight never stops a foreign owner.
 Port-owner comparisons normalize host paths before comparing Docker Compose working-directory
 labels, so an existing canonical container is not misclassified because one path uses redundant
-separators. Core portfolio seeding is also invoked with the repository root and
-`src/libs/portfolio-common` on `PYTHONPATH`; missing shared-library imports are startup defects, not
-grounds to bypass canonical source readiness.
+separators. The reusable predicate uses [.NET `Path.GetFullPath`](https://learn.microsoft.com/en-us/dotnet/api/system.io.path.getfullpath)
+and PowerShell's explicit case-insensitive comparison semantics. Invalid or missing project/path
+evidence never matches an allowlist entry, and relative labels are rejected instead of being
+resolved against the launcher's mutable current directory.
+
+Audit the current port owners without changing hosts, builds, containers, processes, seeds, or
+validation state:
+
+```powershell
+npm run live:stack:preflight
+```
+
+The executable path/ownership contract used by the feature, PR, and main quality lanes is:
+
+```powershell
+npm run test:runtime-ownership
+```
+
+It covers canonical, repeated-separator, case, trailing-separator, parent-segment, wrong-project,
+missing, relative, malformed, and genuinely foreign path decisions. Core portfolio seeding is also
+invoked with the repository root and `src/libs/portfolio-common` on `PYTHONPATH`; missing
+shared-library imports are startup defects, not grounds to bypass canonical source readiness.
 The governed `lotus-core` startup explicitly sets `DEMO_DATA_PACK_ENABLED=false`; the broad
 app-local demo pack remains available for diagnostics, but it is not part of canonical
 `PB_SG_GLOBAL_BAL_001` seeding or evidence collection.
