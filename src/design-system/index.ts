@@ -1,5 +1,7 @@
 export { default as ActionLink } from "./components/action-link";
 export { default as AiAssistanceDisclosure } from "./components/ai-assistance-disclosure";
+export { classifyAiProviderPosture } from "./ai-provider-posture";
+export type { AiProviderPosture } from "./ai-provider-posture";
 export {
   createAiAssistanceDisclosure,
 } from "./ai-assistance-model";

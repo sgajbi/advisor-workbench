@@ -1,3 +1,5 @@
+import { classifyAiProviderPosture } from "@/design-system";
+
 import type { DpmAiWorkflowReviewState } from "./dpm-ai-workflow-contract";
 import type { DpmAiWorkflowProfile } from "./dpm-ai-workflow-profiles";
 
@@ -189,6 +191,7 @@ export function normalizeDpmAiWorkflowExecution(
     outputLabel !== null && SUPPORTED_OUTPUT_LABELS.has(outputLabel),
     providerMode !== null && providerMode === readString(audit.provider_mode),
     stubbed !== null && stubbed === readBoolean(audit.stubbed),
+    classifyAiProviderPosture(providerMode, stubbed) !== "untrusted",
     outputKeys.length === structuredOutputKeys.length &&
       outputKeys.every((key, index) => key === structuredOutputKeys[index]),
     usableOutputKeys.length > 0,
