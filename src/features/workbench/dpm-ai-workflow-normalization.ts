@@ -65,6 +65,10 @@ export function normalizeDpmAiWorkflowExecution(
   const providerMode = readString(run.provider_mode);
   const stubbed = readBoolean(run.stubbed);
   const runtimeState = readString(run.runtime_state);
+  const executionStatus = readString(execution.status);
+  const materialRuntimeComplete =
+    executionStatus === "COMPLETED" &&
+    (runtimeState === "COMPLETED" || runtimeState === "SUPERSEDED");
   const reviewState = readReviewState(run.review_state);
   const supportabilityStatus = readString(run.supportability_status);
   const supersededByRunId = readString(run.superseded_by_run_id);
@@ -129,7 +133,8 @@ export function normalizeDpmAiWorkflowExecution(
     contractComplete,
     authorized,
     runtimeState,
-    executionStatus: readString(execution.status),
+    executionStatus,
+    materialRuntimeComplete,
     reviewState,
     supportabilityStatus,
     outputLabel,
@@ -142,7 +147,7 @@ export function normalizeDpmAiWorkflowExecution(
     packId: readString(run.pack_id),
     packVersion,
     workflowAuthorityOwner,
-    material: contractComplete
+    material: contractComplete && materialRuntimeComplete
       ? normalizedMaterial
       : { title: profile.materialTitle, sections: [] },
     providerId: readString(audit.provider_id),
