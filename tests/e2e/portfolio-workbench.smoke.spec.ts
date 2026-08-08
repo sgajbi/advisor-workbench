@@ -168,6 +168,35 @@ async function openCashflowPortfolio(
 }
 
 test.describe('Portfolio workbench smoke', () => {
+  test('record navigation preserves one selected portfolio across all five business tasks', async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width: 1800, height: 1400 });
+    const session = await openPositionsPortfolio(page, request);
+    test.skip(!session.available, 'Portfolio records upstream unavailable in standalone smoke environment.');
+
+    const destinations = [
+      { label: 'Allocation', route: '/allocation', heading: /^Allocation$/i },
+      { label: 'Transactions', route: '/transactions', heading: /^Transactions$/i },
+      { label: 'Income & Activity', route: '/income', heading: /^Income & Activity$/i },
+      { label: 'Cashflow', route: '/cashflow', heading: /^Cashflow$/i },
+      { label: 'Positions', route: '/positions', heading: /^Positions$/i },
+    ];
+
+    for (const destination of destinations) {
+      await page
+        .getByRole('navigation', { name: 'Workbench screen navigation' })
+        .getByRole('link', { name: new RegExp(`^${destination.label}`) })
+        .click();
+      await expect(page).toHaveURL(
+        new RegExp(`${destination.route}\\?portfolioId=${session.portfolioId}$`)
+      );
+      await expect(page.getByRole('heading', { name: destination.heading }).first()).toBeVisible();
+      await expect(page.getByText(session.portfolioId!, { exact: true }).first()).toBeVisible();
+    }
+  });
+
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPortfolioReview(page, request);
