@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import { ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
@@ -8,25 +12,22 @@ import {
   formatMandateHealthDimensionLabel,
   formatMandateHealthDisplayDate,
   formatMandateHealthObservation,
-  formatMandateRecommendedDetail,
   mandateHealthScoreToPercent,
   mandateHealthSummaryStateLabel,
 } from "@/features/workbench/manage-mandate-health-helpers";
 import {
-  businessLastReviewed,
   businessStateLabel,
   buildManageExceptionRows,
   buildMandateHealthDimensionRows,
-  buildMandateRecommendedActions,
   formatBusinessMandateType,
   formatBusinessOwner,
+  formatBusinessSource,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
 
 import type {
   MandateHealthRow,
-  MandateRecommendedActionRow,
   ManageExceptionRow,
 } from "@/features/workbench/manage-workspace-view-model";
 
@@ -45,99 +46,114 @@ export default function ManageMandateHealth({ data }: Props) {
   });
   const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
   const healthRows = buildMandateHealthDimensionRows(commandModel);
-  const actionRows = buildMandateRecommendedActions(commandModel, exceptionRows);
+  const [selectedExceptionKey, setSelectedExceptionKey] = useState<string | null>(
+    exceptionRows[0]?.key ?? null,
+  );
+  const selectedException =
+    exceptionRows.find((row) => row.key === selectedExceptionKey) ?? exceptionRows[0] ?? null;
   const mandateType = formatBusinessMandateType(
     readStringFromResponse(data.mandate, "mandate_type") ??
-      readStringFromResponse(data.mandate, "type")
+      readStringFromResponse(data.mandate, "type"),
   );
   const riskProfile =
     readStringFromResponse(data.mandate, "risk_profile") ??
     readStringFromResponse(data.mandate, "risk_profile_code") ??
-    "Balanced";
+    "Not available";
   const currency =
     readStringFromResponse(data.mandate, "base_currency") ??
     readStringFromResponse(data.mandate, "currency") ??
     data.portfolio.portfolio.base_currency ??
-    "USD";
+    "Not available";
   const asOfDate =
     readStringFromResponse(data.mandate, "as_of_date") ??
     readStringFromResponse(data.mandate, "as_of") ??
-    "13 May 2026";
-  const healthState =
-    commandModel.mandateHealthState !== "N/A"
-      ? commandModel.mandateHealthState
-      : commandModel.dataCompletenessState;
-  const readinessLabel = exceptionRows.length > 0 ? "Needs Attention" : businessStateLabel(healthState);
-  const dataReadiness = businessStateLabel(commandModel.dataCompletenessState);
+    data.portfolio.as_of_date ??
+    "N/A";
   const marketDataRow = findMandateHealthRow(healthRows, ["market", "source", "data"]);
   const benchmarkRow = findMandateHealthRow(healthRows, ["benchmark"]);
-  const constraintRow = findMandateHealthRow(healthRows, ["constraint", "mandate"]);
-  const latestReview = businessLastReviewed(commandModel.latestMonitoringRunStatus);
+  const healthScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
+  const dataReadinessScore = mandateHealthScoreToPercent(marketDataRow?.score);
+  const benchmarkScore = mandateHealthScoreToPercent(benchmarkRow?.score);
 
   return (
     <SectionBlock
-      title="Mandate Health"
-      subtitle="Mandate readiness, advisor attention items, and recommended actions for review."
+      title="Mandate review workflow"
+      subtitle="Review mandate posture, select an attention item, and inspect its source-owned next step and evidence."
       className="manage-mandate-panel"
-      actions={<SemanticBadge tone={toneForState(healthState)}>Evidence Available</SemanticBadge>}
+      actions={
+        <SemanticBadge tone={toneForState(commandModel.supportabilityState)}>
+          {businessStateLabel(commandModel.supportabilityState)}
+        </SemanticBadge>
+      }
     >
-      {data.commandCenterError ? (
-        <ScreenStatePanel
-          kind="partial"
-          surface="portfolio"
-          title="Mandate readiness data is partial"
-          body={data.commandCenterError}
-        />
-      ) : null}
+      <MandateStateNotice
+        state={commandModel.state}
+        supportabilityState={commandModel.supportabilityState}
+        dataCompletenessState={commandModel.dataCompletenessState}
+        mandateHealthState={commandModel.mandateHealthState}
+        hasGatewayError={Boolean(data.commandCenterError)}
+      />
 
       <div className="mandate-health-context-row" aria-label="Mandate context">
         <span>{mandateType}</span>
         <span>{riskProfile}</span>
         <span>{currency}</span>
-        <span>As of {formatMandateHealthDisplayDate(asOfDate)}</span>
+        <span>
+          As of {asOfDate === "N/A" ? "Not available" : formatMandateHealthDisplayDate(asOfDate)}
+        </span>
       </div>
 
       <div className="mandate-health-summary-grid" aria-label="Mandate health summary">
         <HealthSummaryCard
-          label="Mandate Readiness"
-          value={readinessLabel}
-          tone={exceptionRows.length > 0 ? "danger" : toneForState(healthState)}
-          meter={exceptionRows.length > 0 ? 74 : 96}
+          label="Mandate health"
+          value={businessStateLabel(commandModel.mandateHealthState)}
+          detail={formatSourceScoreDetail(healthScore)}
+          tone={toneForState(commandModel.mandateHealthState)}
+          meter={healthScore}
         />
         <HealthSummaryCard
-          label="Data Readiness"
-          value={dataReadiness}
+          label="Data readiness"
+          value={businessStateLabel(commandModel.dataCompletenessState)}
+          detail={formatSourceScoreDetail(dataReadinessScore)}
           tone={toneForState(commandModel.dataCompletenessState)}
-          meter={mandateHealthScoreToPercent(marketDataRow?.score, dataReadiness.includes("attention") ? 62 : 82)}
+          meter={dataReadinessScore}
         />
         <HealthSummaryCard
-          label="Benchmark Alignment"
-          value={mandateHealthSummaryStateLabel(benchmarkRow, "On Track")}
-          tone={toneForState(benchmarkRow?.state ?? "READY")}
-          meter={mandateHealthScoreToPercent(benchmarkRow?.score, 98)}
+          label="Benchmark alignment"
+          value={mandateHealthSummaryStateLabel(benchmarkRow)}
+          detail={formatSourceScoreDetail(benchmarkScore)}
+          tone={toneForState(benchmarkRow?.state ?? "N/A")}
+          meter={benchmarkScore}
         />
         <HealthSummaryCard
-          label="Constraint Fit"
-          value={mandateHealthSummaryStateLabel(constraintRow, "Compliant")}
-          tone={toneForState(constraintRow?.state ?? "READY")}
-          meter={mandateHealthScoreToPercent(constraintRow?.score, 100)}
+          label="Latest monitoring"
+          value={businessStateLabel(commandModel.latestMonitoringRunStatus)}
+          detail={
+            commandModel.latestMonitoringRunId === "N/A"
+              ? "Run not available"
+              : `Run ${commandModel.latestMonitoringRunId}`
+          }
+          tone={toneForState(commandModel.latestMonitoringRunStatus)}
+          meter={null}
         />
       </div>
 
-      <div className="mandate-health-workspace-grid">
-        <AttentionRequiredCard rows={exceptionRows} />
-
-        <div className="mandate-side-stack">
-          <RecommendedActionsCard rows={actionRows} healthState={healthState} />
-          <LatestReviewCard
-            latestReview={latestReview}
-            dataReadiness={dataReadiness}
-            owner={formatBusinessOwner(
-              commandModel.remediationOwner,
-              commandModel.sourceService
-            )}
+      <div className="mandate-health-review-workspace" id="mandate-attention-review">
+        <AttentionReviewQueue
+          rows={exceptionRows}
+          selectedKey={selectedException?.key ?? null}
+          onSelect={setSelectedExceptionKey}
+        />
+        {selectedException ? (
+          <SelectedReviewItem
+            row={selectedException}
+            mandateId={commandModel.mandateId}
+            monitoringRunId={commandModel.latestMonitoringRunId}
+            sourceRunId={commandModel.sourceRunId}
+            correlationId={commandModel.correlationId}
+            authority={commandModel.authority}
           />
-        </div>
+        ) : null}
       </div>
 
       <HealthDimensionsCard rows={healthRows} />
@@ -145,187 +161,328 @@ export default function ManageMandateHealth({ data }: Props) {
   );
 }
 
+function MandateStateNotice({
+  state,
+  supportabilityState,
+  dataCompletenessState,
+  mandateHealthState,
+  hasGatewayError,
+}: {
+  state: ReturnType<typeof buildDpmCommandCenterPanelModel>["state"];
+  supportabilityState: string;
+  dataCompletenessState: string;
+  mandateHealthState: string;
+  hasGatewayError: boolean;
+}) {
+  const hasPartialEvidence = [dataCompletenessState, mandateHealthState].some((value) =>
+    /PARTIAL|DEGRADED|STALE|UNKNOWN/i.test(value),
+  );
+  if (state === "complete" && !hasGatewayError && !hasPartialEvidence) {
+    return null;
+  }
+  if (state === "empty") {
+    return (
+      <ScreenStatePanel
+        kind="empty"
+        surface="portfolio"
+        title="No mandate monitoring records"
+        body="Manage returned no mandate monitoring records for the selected portfolio."
+      />
+    );
+  }
+  if (state === "unsupported") {
+    if (supportabilityState.toUpperCase() !== "BLOCKED") {
+      return (
+        <ScreenStatePanel
+          kind="unavailable"
+          surface="portfolio"
+          title="Mandate monitoring is not supported"
+          body="The current service contract does not publish mandate monitoring for this portfolio."
+        />
+      );
+    }
+    return (
+      <ScreenStatePanel
+        kind="permission_blocked"
+        surface="portfolio"
+        title="Mandate monitoring is not available for this access context"
+        body="Your current access or the supported service contract does not permit this mandate monitoring view."
+      />
+    );
+  }
+  if (state === "unavailable") {
+    return (
+      <ScreenStatePanel
+        kind="unavailable"
+        surface="portfolio"
+        title="Mandate monitoring is unavailable"
+        body="The Gateway could not load mandate monitoring. Portfolio context remains available while the service recovers."
+      />
+    );
+  }
+  return (
+    <ScreenStatePanel
+      kind="partial"
+      surface="portfolio"
+      title="Mandate monitoring requires attention"
+      body="Some mandate monitoring evidence is stale, degraded, or unavailable. Available source-owned results remain visible below."
+    />
+  );
+}
+
 function HealthSummaryCard({
   label,
   value,
+  detail,
   tone,
   meter,
 }: {
   label: string;
   value: string;
+  detail: string;
   tone: "default" | "success" | "warn" | "danger";
-  meter: number;
+  meter: number | null;
 }) {
   return (
     <div className={`mandate-health-card is-${tone}`}>
       <span>{label}</span>
       <strong>{value}</strong>
-      <i aria-hidden="true">
-        <span style={{ width: `${clampMandateHealthPercent(meter)}%` }} />
-      </i>
-    </div>
-  );
-}
-
-function AttentionRequiredCard({ rows }: { rows: ManageExceptionRow[] }) {
-  return (
-    <div className="manage-overview-table-card mandate-attention-card">
-      <div className="manage-overview-card-header">
-        <div>
-          <span>Attention Required</span>
-          <h3>{rows.length ? `${rows.length} items for review` : "No open items"}</h3>
+      <small>{detail}</small>
+      {meter === null ? null : (
+        <div
+          className="mandate-health-meter"
+          role="img"
+          aria-label={`Source score ${clampMandateHealthPercent(meter)} out of 100`}
+        >
+          <span style={{ width: `${clampMandateHealthPercent(meter)}%` }} />
         </div>
-      </div>
-      <table className="manage-overview-table">
-        <thead>
-          <tr>
-            <th>Priority</th>
-            <th>Observation</th>
-            <th>Owner</th>
-            <th>Age</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.slice(0, 5).map((row) => (
-              <tr key={row.key}>
-                <td>
-                  <SemanticBadge tone={toneForState(row.severity)}>
-                    {businessStateLabel(row.severity)}
-                  </SemanticBadge>
-                </td>
-                <td>{formatMandateAttentionObservation(row)}</td>
-                <td>{formatBusinessOwner(row.owner, row.source)}</td>
-                <td>{row.age === "N/A" ? "Current" : row.age}</td>
-                <td>{formatMandateAction(row.nextAction)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5}>No advisor attention items are open.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      )}
     </div>
   );
 }
 
-function RecommendedActionsCard({
+function AttentionReviewQueue({
   rows,
-  healthState,
+  selectedKey,
+  onSelect,
 }: {
-  rows: MandateRecommendedActionRow[];
-  healthState: string;
+  rows: ManageExceptionRow[];
+  selectedKey: string | null;
+  onSelect: (key: string) => void;
 }) {
   return (
-    <div className="manage-overview-card mandate-recommended-actions-card" id="mandate-recommended-actions">
+    <section
+      className="manage-overview-table-card mandate-attention-card"
+      aria-labelledby="mandate-attention-heading"
+    >
       <div className="manage-overview-card-header">
         <div>
-          <span>Recommended Actions</span>
-          <h3>{rows.length ? `${rows.length} suggested` : "No action required"}</h3>
+          <span>Mandate monitoring</span>
+          <h3 id="mandate-attention-heading">Attention Required</h3>
         </div>
-        <SemanticBadge tone={toneForState(healthState)}>{businessStateLabel(healthState)}</SemanticBadge>
+        <strong>{rows.length ? `${rows.length} open` : "No open items"}</strong>
       </div>
-      <div className="mandate-action-stack" role="list">
-        {rows.length ? (
-          rows.slice(0, 3).map((row, index) => (
-            <div className="mandate-action-card" role="listitem" key={row.key}>
-              <span>{index + 1}</span>
-              <strong>{formatMandateAction(row.action)}</strong>
-              <p>{formatMandateRecommendedDetail(row.detail)}</p>
-            </div>
-          ))
-        ) : (
-          <ScreenStatePanel
-            kind="empty"
-            surface="portfolio"
-            title="No recommended actions"
-            body="The mandate is ready for the next advisor review."
-          />
-        )}
-      </div>
-    </div>
+      {rows.length ? (
+        <div
+          className="mandate-attention-table-scroll"
+          tabIndex={0}
+          aria-label="Mandate attention items"
+        >
+          <table className="manage-overview-table">
+            <thead>
+              <tr>
+                <th>Observation</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr
+                  className={row.key === selectedKey ? "is-selected" : undefined}
+                  key={row.key}
+                >
+                  <td>
+                    <button
+                      type="button"
+                      aria-pressed={row.key === selectedKey}
+                      onClick={() => onSelect(row.key)}
+                    >
+                      {formatMandateAttentionObservation(row)}
+                    </button>
+                  </td>
+                  <td>
+                    <SemanticBadge tone={toneForState(row.severity)}>
+                      {businessStateLabel(row.severity)}
+                    </SemanticBadge>
+                  </td>
+                  <td>{formatBusinessOwner(row.owner)}</td>
+                  <td>{row.age === "N/A" ? "Not available" : row.age}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <ScreenStatePanel
+          kind="empty"
+          surface="portfolio"
+          title="No open attention items"
+          body="Manage returned no open mandate exceptions for this portfolio."
+        />
+      )}
+    </section>
   );
 }
 
-function LatestReviewCard({
-  latestReview,
-  dataReadiness,
-  owner,
+function SelectedReviewItem({
+  row,
+  mandateId,
+  monitoringRunId,
+  sourceRunId,
+  correlationId,
+  authority,
 }: {
-  latestReview: string;
-  dataReadiness: string;
-  owner: string;
+  row: ManageExceptionRow;
+  mandateId: string;
+  monitoringRunId: string;
+  sourceRunId: string;
+  correlationId: string;
+  authority: string;
 }) {
   return (
-    <div className="mandate-latest-review-card">
-      <span>Latest Review</span>
-      <strong>{latestReview}</strong>
-      <dl>
+    <aside
+      className="mandate-review-detail"
+      aria-label="Selected mandate review item"
+      aria-live="polite"
+    >
+      <div className="manage-overview-card-header">
         <div>
-          <dt>Data Readiness</dt>
-          <dd>{dataReadiness}</dd>
+          <span>Selected review item</span>
+          <h3>{formatMandateAttentionObservation(row)}</h3>
         </div>
-        <div>
-          <dt>Review Owner</dt>
-          <dd>{owner}</dd>
+        <SemanticBadge tone={toneForState(row.severity)}>
+          {businessStateLabel(row.severity)}
+        </SemanticBadge>
+      </div>
+      <div className="mandate-review-detail-body">
+        <dl className="mandate-review-facts">
+          <div>
+            <dt>Workflow status</dt>
+            <dd>{businessStateLabel(row.state)}</dd>
+          </div>
+          <div>
+            <dt>Accountable owner</dt>
+            <dd>{formatBusinessOwner(row.owner)}</dd>
+          </div>
+          <div>
+            <dt>Open for</dt>
+            <dd>{row.age === "N/A" ? "Not available" : row.age}</dd>
+          </div>
+          <div>
+            <dt>Evidence source</dt>
+            <dd>{formatBusinessSource(row.source)}</dd>
+          </div>
+        </dl>
+        <div className="mandate-source-next-step">
+          <span>Source-owned next step</span>
+          <strong>{formatMandateAction(row.nextAction)}</strong>
         </div>
-        <div>
-          <dt>Audit Trail</dt>
-          <dd>Available</dd>
-        </div>
-      </dl>
-    </div>
+        <details className="mandate-technical-evidence">
+          <summary>Evidence and technical identifiers</summary>
+          <dl>
+            <div>
+              <dt>Exception ID</dt>
+              <dd>{row.key}</dd>
+            </div>
+            <div>
+              <dt>Mandate ID</dt>
+              <dd>{businessIdentifier(mandateId)}</dd>
+            </div>
+            <div>
+              <dt>Monitoring run</dt>
+              <dd>{businessIdentifier(monitoringRunId)}</dd>
+            </div>
+            <div>
+              <dt>Source run</dt>
+              <dd>{businessIdentifier(sourceRunId)}</dd>
+            </div>
+            <div>
+              <dt>Correlation ID</dt>
+              <dd>{businessIdentifier(correlationId)}</dd>
+            </div>
+            <div>
+              <dt>Authority</dt>
+              <dd>{businessIdentifier(authority)}</dd>
+            </div>
+          </dl>
+        </details>
+      </div>
+    </aside>
   );
 }
 
 function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
   return (
-    <div className="manage-overview-table-card mandate-health-dimensions-card">
+    <section
+      className="manage-overview-table-card mandate-health-dimensions-card"
+      aria-labelledby="mandate-dimensions-heading"
+    >
       <div className="manage-overview-card-header">
         <div>
-          <span>Health Dimensions Breakdown</span>
-          <h3>Mandate review factors</h3>
+          <span>Source-owned mandate evidence</span>
+          <h3 id="mandate-dimensions-heading">Health Dimensions Breakdown</h3>
         </div>
       </div>
-      <table className="manage-overview-table">
-        <thead>
-          <tr>
-            <th>Dimension</th>
-            <th>Score</th>
-            <th>Status</th>
-            <th>Latest Review</th>
-            <th>Recommended Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.map((row) => (
-              <tr key={row.key}>
-                <td>{formatMandateHealthDimensionLabel(row.dimension)}</td>
-                <td>{row.score}</td>
-                <td>
-                  <SemanticBadge tone={toneForState(row.state)}>
-                    {businessStateLabel(row.state)}
-                  </SemanticBadge>
-                </td>
-                <td>{formatMandateHealthObservation(row.reasons)}</td>
-                <td>
-                  {row.state.toUpperCase() === "READY"
-                    ? "No action required"
-                    : formatMandateAction(row.recommendedAction)}
-                </td>
-              </tr>
-            ))
-          ) : (
+      <div
+        className="mandate-health-dimensions-scroll"
+        tabIndex={0}
+        aria-label="Mandate health dimensions"
+      >
+        <table className="manage-overview-table">
+          <thead>
             <tr>
-              <td colSpan={5}>No mandate health dimensions are available.</td>
+              <th>Dimension</th>
+              <th>Source score</th>
+              <th>Status</th>
+              <th>Source observation</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.length ? (
+              rows.map((row) => (
+                <tr key={row.key}>
+                  <td>{formatMandateHealthDimensionLabel(row.dimension)}</td>
+                  <td>{formatSourceScore(mandateHealthScoreToPercent(row.score))}</td>
+                  <td>
+                    <SemanticBadge tone={toneForState(row.state)}>
+                      {businessStateLabel(row.state)}
+                    </SemanticBadge>
+                  </td>
+                  <td>{formatMandateHealthObservation(row.reasons)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4}>No mandate health dimensions are available.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
+}
+
+function formatSourceScoreDetail(score: number | null): string {
+  return score === null ? "Score not available" : `Source score ${formatSourceScore(score)}`;
+}
+
+function formatSourceScore(score: number | null): string {
+  return score === null ? "Not available" : `${clampMandateHealthPercent(score)}/100`;
+}
+
+function businessIdentifier(value: string): string {
+  return !value || value === "N/A" ? "Not available" : value;
 }

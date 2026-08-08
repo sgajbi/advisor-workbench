@@ -8,7 +8,6 @@ import {
   formatMandateHealthDimensionLabel,
   formatMandateHealthDisplayDate,
   formatMandateHealthObservation,
-  formatMandateRecommendedDetail,
   mandateHealthScoreToPercent,
   mandateHealthSummaryStateLabel,
 } from "../../src/features/workbench/manage-mandate-health-helpers";
@@ -24,7 +23,6 @@ const healthRows: MandateHealthRow[] = [
     score: "0.82",
     state: "PENDING_REVIEW",
     reasons: "TAX_LOT_SOURCE_PARTIAL",
-    recommendedAction: "REVIEW_WORKFLOW",
   },
   {
     key: "mandate-constraints",
@@ -32,7 +30,6 @@ const healthRows: MandateHealthRow[] = [
     score: "98",
     state: "READY",
     reasons: "READY",
-    recommendedAction: "N/A",
   },
 ];
 
@@ -53,13 +50,14 @@ describe("manage mandate health helpers", () => {
     expect(findMandateHealthRow(healthRows, ["benchmark"])).toBeUndefined();
   });
 
-  it("keeps summary labels and meter values deterministic", () => {
-    expect(mandateHealthSummaryStateLabel(undefined, "On Track")).toBe("On Track");
-    expect(mandateHealthSummaryStateLabel(healthRows[1], "Compliant")).toBe("Compliant");
-    expect(mandateHealthSummaryStateLabel(healthRows[0], "On Track")).toBe("Pending Review");
-    expect(mandateHealthScoreToPercent("0.82", 50)).toBe(82);
-    expect(mandateHealthScoreToPercent("98%", 50)).toBe(98);
-    expect(mandateHealthScoreToPercent("not-a-score", 50)).toBe(50);
+  it("does not fabricate summary labels or meter values", () => {
+    expect(mandateHealthSummaryStateLabel(undefined)).toBe("Not available");
+    expect(mandateHealthSummaryStateLabel(healthRows[1])).toBe("Ready");
+    expect(mandateHealthSummaryStateLabel(healthRows[0])).toBe("Pending Review");
+    expect(mandateHealthScoreToPercent("0.82")).toBe(82);
+    expect(mandateHealthScoreToPercent("98%")).toBe(98);
+    expect(mandateHealthScoreToPercent("not-a-score")).toBeNull();
+    expect(mandateHealthScoreToPercent(undefined)).toBeNull();
     expect(clampMandateHealthPercent(101.4)).toBe(100);
     expect(clampMandateHealthPercent(-3)).toBe(0);
   });
@@ -78,15 +76,15 @@ describe("manage mandate health helpers", () => {
     );
     expect(formatMandateAction("SIMULATE_REBALANCE")).toBe("Review rebalance simulation");
     expect(formatMandateAction("REVIEW_WORKFLOW")).toBe("Review mandate workflow");
-    expect(formatMandateAction("-")).toBe("No action required");
+    expect(formatMandateAction("REPAIR_SOURCE_DATA")).toBe("Resolve data readiness");
+    expect(formatMandateAction("-")).toBe("Not provided by mandate monitoring");
   });
 
-  it("formats health observations and details without inventing backend decisions", () => {
+  it("formats health observations without inventing backend decisions", () => {
     expect(formatMandateHealthObservation("ALLOCATION_DRIFT")).toBe("Allocation drift review");
     expect(formatMandateHealthObservation("READY")).toBe("No action required");
-    expect(formatMandateRecommendedDetail("CASH_RANGE_REVIEW")).toBe(
-      "Confirm tactical cash position remains within mandate tolerance."
+    expect(formatMandateHealthObservation("TAX_LOT_SOURCE_PARTIAL")).toBe(
+      "Tax-lot data is incomplete",
     );
-    expect(formatMandateRecommendedDetail("Advisor note pending")).toBe("Advisor note pending");
   });
 });

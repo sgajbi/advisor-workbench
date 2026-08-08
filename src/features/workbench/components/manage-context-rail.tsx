@@ -6,7 +6,6 @@ import {
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
-  businessLastReviewed,
   businessStateLabel,
   buildManageExceptionRows,
   formatBusinessBook,
@@ -41,11 +40,12 @@ export default function ManageContextRail({
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");
+  const hasTraceableMonitoring =
+    commandModel.correlationId !== "N/A" || commandModel.sourceRunId !== "N/A";
   const nextActions =
     activeMode === "mandate"
       ? [
-          ["Review Recommended Actions", "#mandate-recommended-actions"],
-          ["Review Attention Items", buildManageModeHref(portfolio.portfolio_id, "mandate")],
+          ["Review Attention Items", "#mandate-attention-review"],
           ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
           ["Return to Manage Overview", buildManageModeHref(portfolio.portfolio_id, "overview")],
         ]
@@ -89,7 +89,11 @@ export default function ManageContextRail({
       <WorkbenchRailCard>
         <div className="manage-context-rail-header">
           <Text variant="label">Review Posture</Text>
-          <strong>{attentionCount ? "Needs advisor attention" : "Ready for review"}</strong>
+          <strong>
+            {attentionCount
+              ? "Needs portfolio manager attention"
+              : businessStateLabel(commandModel.mandateHealthState)}
+          </strong>
         </div>
         <DefinitionList
           ariaLabel="Manage review posture"
@@ -101,10 +105,13 @@ export default function ManageContextRail({
             },
             { label: "Rebalance", value: businessStateLabel(waveModel.selectedWaveState) },
             { label: "Evidence", value: hasEvidence ? "Available" : "Not requested" },
-            { label: "Audit Trail", value: "Available" },
             {
-              label: "Last Refreshed",
-              value: businessLastReviewed(commandModel.latestMonitoringRunStatus),
+              label: "Evidence Trail",
+              value: hasTraceableMonitoring ? "Traceable" : "Not available",
+            },
+            {
+              label: "Monitoring",
+              value: businessStateLabel(commandModel.latestMonitoringRunStatus),
             },
           ]}
         />

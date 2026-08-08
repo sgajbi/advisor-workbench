@@ -102,13 +102,14 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getAllByRole("heading", { name: "Mandate Health" }).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Data Readiness").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Recommended Actions").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Data readiness/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Selected mandate review item")).toBeInTheDocument();
     expect(screen.getAllByText("Attention Required").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Health Dimensions Breakdown").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Latest Review").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Latest monitoring/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Market Data/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Stale price/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Advisor review recommended before rebalance approval.")).not.toBeInTheDocument();
     expect(screen.queryByText("Execute Trade")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
   });

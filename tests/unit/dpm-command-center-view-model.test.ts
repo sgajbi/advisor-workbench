@@ -135,6 +135,32 @@ describe("DPM command-center view model", () => {
     expect(model.latestMonitoringRunStatus).toBe("SUCCEEDED");
   });
 
+  it("reads current command-center book metrics from the source-owned summary", () => {
+    const model = buildDpmCommandCenterPanelModel({
+      commandCenter: {
+        ...commandCenterResponse,
+        supportability: {
+          ...commandCenterResponse.supportability,
+          data_completeness_state: null,
+          source_run_id: null,
+        },
+        data: {
+          summary: {
+            evaluated_mandates: 12,
+            active_exception_count: 3,
+            data_completeness_state: "PARTIAL",
+            source_run_id: "summary-run-12",
+          },
+        },
+      },
+    });
+
+    expect(model.evaluatedMandates).toBe("12");
+    expect(model.activeExceptionCount).toBe("3");
+    expect(model.dataCompletenessState).toBe("PARTIAL");
+    expect(model.sourceRunId).toBe("summary-run-12");
+  });
+
   it("treats degraded supportability as explicit partial command-center posture", () => {
     const model = buildDpmCommandCenterPanelModel({
       commandCenter: {

@@ -24,21 +24,12 @@ export type MandateSourceReadinessRow = {
   reasonCode: string;
 };
 
-export type MandateRecommendedActionRow = {
-  key: string;
-  severity: string;
-  surface: string;
-  action: string;
-  detail: string;
-};
-
 export type MandateHealthRow = {
   key: string;
   dimension: string;
   score: string;
   state: string;
   reasons: string;
-  recommendedAction: string;
 };
 
 type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
@@ -59,7 +50,7 @@ export function buildManageExceptionRows(
         readString(record, "title") ||
         readString(record, "description") ||
         readString(record, "reason_code") ||
-        "Manage exception",
+        "Mandate exception details unavailable",
       source:
         readString(record, "source_system") ||
         readString(record, "source_service") ||
@@ -68,13 +59,13 @@ export function buildManageExceptionRows(
       owner:
         readString(record, "owner") ||
         readString(record, "remediation_owner") ||
-        "PM Ops",
+        "Not assigned",
       age: formatAge(record.age_hours ?? record.age_days),
       state: readString(record, "state") || readString(record, "status") || "ACTIVE",
       nextAction:
         readString(record, "next_action") ||
         readString(record, "recommended_action") ||
-        "Review",
+        "N/A",
     };
   });
 }
@@ -130,43 +121,10 @@ export function buildMandateSourceReadinessRows(
   }));
 }
 
-export function buildMandateRecommendedActions(
-  commandModel: CommandCenterModel,
-  exceptionRows: ManageExceptionRow[]
-): MandateRecommendedActionRow[] {
-  const modelRows = commandModel.recommendedActions.map((row, index) => ({
-    key: row.key || `action-${index + 1}`,
-    severity: row.severity !== "N/A" ? row.severity : "MEDIUM",
-    surface: row.count !== "N/A" ? `${row.count} affected` : "Mandate Health",
-    action: row.action,
-    detail: "Advisor review recommended before rebalance approval.",
-  }));
-
-  if (modelRows.length > 0) {
-    return modelRows;
-  }
-
-  return exceptionRows.slice(0, 3).map((row) => ({
-    key: row.key,
-    severity: row.severity,
-    surface: `Affected area: ${formatBusinessSource(row.source)}`,
-    action: row.nextAction,
-    detail: formatBusinessExceptionTitle(row.title),
-  }));
-}
-
 export function buildMandateHealthDimensionRows(
   commandModel: CommandCenterModel
 ): MandateHealthRow[] {
-  return commandModel.mandateHealthDimensions.map((row) => ({
-    ...row,
-    recommendedAction:
-      row.reasons !== "N/A"
-        ? "Review Evidence"
-        : commandModel.mandateRecommendedAction !== "N/A"
-          ? commandModel.mandateRecommendedAction
-          : "-",
-  }));
+  return commandModel.mandateHealthDimensions;
 }
 
 export function readStringFromResponse(
@@ -247,14 +205,14 @@ export function businessStateLabel(value: string | number | null | undefined): s
 
 export function formatBusinessMandateType(value: string | null | undefined): string {
   if (!value) {
-    return "Discretionary Balanced";
+    return "Not available";
   }
   return toTitleCase(value.replace(/^DPM[-_\s]*/i, "Discretionary ").replaceAll("_", " "));
 }
 
 export function formatBusinessBook(value: string | null | undefined): string {
   if (!value) {
-    return "Balanced Advisory";
+    return "Not available";
   }
   return toTitleCase(value.replace(/^PM[_-\s]BOOK[_-\s]*/i, "").replaceAll("_", " "));
 }
@@ -270,8 +228,11 @@ export function formatBusinessTrigger(value: string | null | undefined): string 
   return businessStateLabel(value);
 }
 
-export function formatBusinessOwner(owner: string, source: string): string {
-  const normalized = `${owner} ${source}`.toLowerCase();
+export function formatBusinessOwner(owner: string): string {
+  if (!owner || owner === "N/A" || owner === "Not assigned") {
+    return "Not assigned";
+  }
+  const normalized = owner.toLowerCase();
   if (normalized.includes("pricing") || normalized.includes("data")) {
     return "Data Operations";
   }
@@ -284,11 +245,17 @@ export function formatBusinessOwner(owner: string, source: string): string {
   if (normalized.includes("system") || normalized.includes("lotus") || normalized.includes("core")) {
     return "Operations";
   }
-  return owner || "Operations";
+  return owner;
 }
 
 export function formatBusinessExceptionTitle(title: string): string {
   const normalized = title.toLowerCase();
+  if (normalized.includes("dpm_source_stale") || normalized.includes("source stale")) {
+    return "Mandate data requires refresh";
+  }
+  if (normalized.includes("tax_lot_source_partial") || normalized.includes("tax lot")) {
+    return "Tax-lot data is incomplete";
+  }
   if (normalized.includes("benchmark") || normalized.includes("mapping")) {
     return "Benchmark mapping requires review";
   }
@@ -323,6 +290,12 @@ export function formatBusinessReason(value: string | null | undefined): string {
     return "-";
   }
   const normalized = value.toUpperCase();
+  if (normalized.includes("DPM_SOURCE_STALE")) {
+    return "Mandate data requires refresh";
+  }
+  if (normalized.includes("TAX_LOT_SOURCE_PARTIAL")) {
+    return "Tax-lot data is incomplete";
+  }
   if (normalized.includes("PRICE_STALE")) {
     return "Stale price";
   }

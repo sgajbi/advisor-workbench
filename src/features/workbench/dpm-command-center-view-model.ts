@@ -113,6 +113,7 @@ export function buildDpmCommandCenterPanelModel(params: {
   const supportability = commandCenter.supportability;
   const supportabilityState = normalizeState(supportability.state);
   const commandData = commandCenter.data;
+  const commandSummary = readRecord(commandData.summary);
   const mandateData = params.mandate?.data ?? {};
   const mandateHealthData = params.mandateHealth?.data ?? {};
   const mandateId =
@@ -132,6 +133,7 @@ export function buildDpmCommandCenterPanelModel(params: {
     dataCompletenessState:
       supportability.data_completeness_state ||
       readString(commandData, "data_completeness_state") ||
+      readString(commandSummary, "data_completeness_state") ||
       "UNKNOWN",
     partialReadinessReasons: extractStringArray(
       supportability.partial_readiness_reasons,
@@ -143,14 +145,17 @@ export function buildDpmCommandCenterPanelModel(params: {
     sourceRunId:
       supportability.source_run_id ||
       readString(commandData, "source_run_id") ||
+      readString(commandSummary, "source_run_id") ||
       readString(latestMonitoringRun, "monitoring_run_id") ||
       "N/A",
     remediationOwner: supportability.remediation_owner ?? "N/A",
     evaluatedMandates: formatValue(
-      readValue(commandData, "evaluated_mandates"),
+      readValue(commandData, "evaluated_mandates") ??
+        readValue(commandSummary, "evaluated_mandates"),
     ),
     activeExceptionCount: formatValue(
-      readValue(commandData, "active_exception_count"),
+      readValue(commandData, "active_exception_count") ??
+        readValue(commandSummary, "active_exception_count"),
     ),
     latestMonitoringRunId:
       readString(latestMonitoringRun, "monitoring_run_id") ||
