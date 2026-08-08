@@ -84,9 +84,60 @@ describe("manage overview model", () => {
     ]);
     expect(model.overviewPostureLabel).toBe("Needs attention");
     expect(model.overviewPostureTone).toBe("warn");
+    expect(model.postureCards).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "mandate",
+          value: "Not available",
+          tone: "warn",
+        }),
+      ])
+    );
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Client Communication");
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Trade Approval");
   });
+
+  it.each([
+    ["SUPPORTED", "Supported", "success"],
+    ["READY", "Ready", "success"],
+    ["PARTIAL", "Needs attention", "warn"],
+    ["DEGRADED", "Needs attention", "warn"],
+    ["STALE", "Stale", "warn"],
+    ["BLOCKED", "Blocked", "danger"],
+    ["UNSUPPORTED", "Unsupported", "danger"],
+    ["EMPTY", "Not available", "warn"],
+    ["UNKNOWN", "Not available", "warn"],
+  ] as const)(
+    "keeps the source-owned mandate health state %s in the overview",
+    (healthState, expectedValue, expectedTone) => {
+      const base = buildManageWorkspaceData();
+      if (!base.mandateHealth) {
+        throw new Error("Mandate-health fixture is required");
+      }
+
+      const model = buildManageOverviewModel(
+        buildManageWorkspaceData({
+          mandateHealth: {
+            ...base.mandateHealth,
+            data: {
+              ...base.mandateHealth.data,
+              health_state: healthState,
+            },
+          },
+        })
+      );
+
+      expect(model.postureCards).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: "mandate",
+            value: expectedValue,
+            tone: expectedTone,
+          }),
+        ])
+      );
+    }
+  );
 
   it("keeps unavailable exception evidence distinct from a confirmed zero-attention queue", () => {
     const model = buildManageOverviewModel(

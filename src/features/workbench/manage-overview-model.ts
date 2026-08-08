@@ -71,11 +71,8 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       : null,
     data.outcomeReviewError ? "Outcome reviews" : null,
   ].filter((surface): surface is string => Boolean(surface));
-  const mandateSourceState =
-    commandModel.mandateHealthState !== "N/A"
-      ? commandModel.mandateHealthState
-      : commandModel.supportabilityState;
-  const mandateTone = toneForState(mandateSourceState);
+  const mandateHealthState = commandModel.mandateHealthState;
+  const mandateTone = toneForState(mandateHealthState);
   const dataTone = toneForState(commandModel.dataCompletenessState);
   const rebalanceTone = toneForState(waveModel.selectedWaveState);
   const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
@@ -93,7 +90,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       {
         key: "mandate",
         label: "Mandate Health",
-        value: businessStateLabel(mandateSourceState),
+        value: businessStateLabel(mandateHealthState),
         icon: mandateTone === "success" ? "verified" : "pending",
         tone: mandateTone,
         progress:

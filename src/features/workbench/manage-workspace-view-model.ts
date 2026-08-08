@@ -181,6 +181,16 @@ export function readStringFromResponse(
 export function toneForState(value: string): BadgeTone {
   const normalized = value.toUpperCase();
   if (
+    normalized.includes("ERROR") ||
+    normalized.includes("FAILED") ||
+    normalized.includes("BLOCKED") ||
+    normalized.includes("HIGH") ||
+    normalized.includes("UNSUPPORTED") ||
+    normalized.includes("NOT_SUPPORTED")
+  ) {
+    return "danger";
+  }
+  if (
     normalized.includes("READY") ||
     normalized.includes("SUPPORTED") ||
     normalized === "AVAILABLE" ||
@@ -192,6 +202,7 @@ export function toneForState(value: string): BadgeTone {
   if (
     normalized.includes("PARTIAL") ||
     normalized.includes("DEGRADED") ||
+    normalized.includes("STALE") ||
     normalized.includes("REVIEW") ||
     normalized.includes("PENDING") ||
     normalized.includes("MEDIUM") ||
@@ -200,15 +211,6 @@ export function toneForState(value: string): BadgeTone {
     normalized === "N/A"
   ) {
     return "warn";
-  }
-  if (
-    normalized.includes("ERROR") ||
-    normalized.includes("FAILED") ||
-    normalized.includes("BLOCKED") ||
-    normalized.includes("HIGH") ||
-    normalized.includes("UNSUPPORTED")
-  ) {
-    return "danger";
   }
   return "default";
 }
