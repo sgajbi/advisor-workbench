@@ -18,6 +18,7 @@ import {
 
 export type DpmAiWorkflowOutcome = {
   family: DpmAiWorkflowFamily;
+  sourceIdentity: string;
   scopeLabel: string;
   businessSummary: string;
   disclosure: AiAssistanceDisclosureModel;
@@ -64,6 +65,7 @@ export function buildDpmAiWorkflowOutcome(
 
   return {
     family,
+    sourceIdentity: workflowResultSourceIdentity(family, normalized),
     scopeLabel: profile.scopeLabel,
     businessSummary: describeBusinessOutcome(profile.scopeLabel, disclosure),
     disclosure,
@@ -113,6 +115,14 @@ export function buildDpmAiInvocationEvidenceOutcome(
 
   return {
     family: "pm-quality-summary",
+    sourceIdentity: JSON.stringify([
+      "pm-quality-summary",
+      evidence.invocationId,
+      evidence.workflowRunId,
+      evidence.artifactRef,
+      evidence.contentHash,
+      evidence.reviewActionId,
+    ]),
     scopeLabel: profile.scopeLabel,
     businessSummary:
       "The summary invocation is recorded for audit, but no generated PM quality output is available from this record.",
@@ -315,14 +325,14 @@ function describeBusinessOutcome(
   if (disclosure.availability === "stale") {
     return `${scopeLabel} is historical and must not be used in the current decision.`;
   }
-  if (disclosure.availability === "simulation") {
-    return `${scopeLabel} is available as a simulation for internal evaluation only.`;
-  }
   if (disclosure.availability === "partial") {
     return `${scopeLabel} is incomplete and requires source or control follow-up.`;
   }
   if (disclosure.humanReview.state === "rejected") {
     return `${scopeLabel} was rejected by the recorded control review and must not be used.`;
+  }
+  if (disclosure.availability === "simulation") {
+    return `${scopeLabel} is available as a simulation for internal evaluation only.`;
   }
   if (disclosure.humanReview.state === "review-required") {
     return `${scopeLabel} is available for internal review and is not approved for client use.`;
@@ -331,4 +341,17 @@ function describeBusinessOutcome(
     return `${scopeLabel} has a source-recorded review; permitted use remains governed by its disclosure.`;
   }
   return `${scopeLabel} is available within its disclosed internal-use boundary.`;
+}
+
+function workflowResultSourceIdentity(
+  family: DpmAiWorkflowFamily,
+  normalized: NormalizedDpmAiExecution,
+): string {
+  return JSON.stringify([
+    family,
+    normalized.runId,
+    normalized.generatedAt,
+    normalized.lastUpdatedAt,
+    normalized.reviewState,
+  ]);
 }
