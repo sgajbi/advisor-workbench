@@ -1198,6 +1198,8 @@ describe("canonical live validation script", () => {
     );
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Accept Brief");
+    expect(browserWorkflowModule).toContain("Advisor Talking Points");
+    expect(browserWorkflowModule).not.toContain("Client Talking Points");
     expect(browserWorkflowModule).toContain(
       "hasAcceptedAdvisorBriefReviewPosture",
     );
