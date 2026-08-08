@@ -1113,10 +1113,14 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain(
       "candidate-source preview/no-caller-portfolio guard",
     );
-    expect(browserWorkflowModule).toContain("Mandate Readiness");
+    expect(browserWorkflowModule).toContain("Mandate review workflow");
+    expect(browserWorkflowModule).toContain("Mandate attention items");
+    expect(browserWorkflowModule).toContain("Source-owned next step");
     expect(browserWorkflowModule).toContain("Attention Required");
-    expect(browserWorkflowModule).toContain("Recommended Actions");
     expect(browserWorkflowModule).toContain("Health Dimensions Breakdown");
+    expect(browserWorkflowModule).toContain("aria-pressed");
+    expect(browserWorkflowModule).toContain("[1024, 768, 720, 519]");
+    expect(browserWorkflowModule).toContain("page-level horizontal scrolling");
     expect(script).toContain("Generate DPM proof-pack evidence");
     expect(script).toContain("workbench-proof-pack");
     expect(script).toContain("workbench-proof-pack-operator");
