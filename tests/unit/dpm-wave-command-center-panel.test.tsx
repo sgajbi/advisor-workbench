@@ -620,6 +620,64 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getAllByText("Awaiting Review").length).toBeGreaterThanOrEqual(2);
   });
 
+  it("never carries decision support from one rebalance wave into another", async () => {
+    const nextWaveResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-002",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_002",
+          state: "CREATED",
+          trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+        },
+      },
+    };
+    vi.mocked(requestDpmWaveAiPmMemo).mockResolvedValue({
+      ...buildDpmAiWorkflowResponse("wave-memo"),
+      supportability: waveResponse.supportability,
+      wave_report_input: { wave_id: "dwv_001" },
+      memo_request: { requested_outputs: ["wave_pm_memo"] },
+    });
+    vi.mocked(requestDpmOperationsHandoffSummary).mockResolvedValue({
+      ...buildDpmAiWorkflowResponse("operations-handoff"),
+      supportability: waveResponse.supportability,
+      wave_report_input: { wave_id: "dwv_001" },
+      handoff_summary_request: { requested_outputs: ["operations_summary"] },
+    });
+    vi.mocked(createDpmWave).mockResolvedValue(nextWaveResponse);
+
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare rebalance PM memo" }));
+    await screen.findByRole("heading", { name: "Rebalance wave review memo" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Prepare rebalance operations brief" }),
+    );
+    await screen.findByRole("heading", { name: "Operations handoff summary" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Rebalance" }));
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_002"));
+
+    expect(
+      screen.queryByRole("heading", { name: "Operations handoff summary" }),
+    ).not.toBeInTheDocument();
+    const decisionSupport = screen
+      .getByRole("heading", { name: "Decision support" })
+      .closest("section");
+    expect(decisionSupport).not.toBeNull();
+    expect(within(decisionSupport!).getAllByText("Not requested")).toHaveLength(2);
+  });
+
   it("does not enable approval when mandate attention items block the workflow", async () => {
     render(
       <DpmWaveCommandCenterPanel
