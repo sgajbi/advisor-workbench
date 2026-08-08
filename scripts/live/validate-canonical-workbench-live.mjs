@@ -14,6 +14,7 @@ import {
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
 import {
+  CANONICAL_CALLER_CONTEXT_HEADERS,
   checkDns,
   fetchJson,
   fetchJsonUntil,
@@ -405,11 +406,13 @@ function buildPmQualitySourceRef({
 
 function buildCanonicalPmQualityPolicy(asOfDate) {
   return {
+    tenant_id: CANONICAL_CALLER_CONTEXT_HEADERS["X-Tenant-Id"],
     policy_id: "pmq_canonical_dpm",
     policy_version: "2026.05",
+    enabled: true,
     as_of_date: asOfDate,
     access_purpose: "SUPERVISORY_CONTROL_REVIEW",
-    indicator_weights: [
+    weights: [
       {
         indicator: "OUTCOME_DISCIPLINE",
         weight: "70",
@@ -421,7 +424,7 @@ function buildCanonicalPmQualityPolicy(asOfDate) {
         minimum_evidence_count: 1,
       },
     ],
-    governance_evidence: {
+    governance_approval: {
       approval_ref: "PMQ-CANONICAL-APPROVAL-2026-05",
       approved_by: "pm_quality_committee",
       approved_at: "2026-05-03T09:00:00Z",
@@ -448,6 +451,21 @@ function buildCanonicalPmQualityPolicy(asOfDate) {
 }
 
 function buildCanonicalPmQualityScoreRunRequest(asOfDate) {
+  const outcomeDisciplineSourceRef = buildPmQualitySourceRef({
+    sourceSystem: "lotus-manage",
+    sourceType: "DPM_OUTCOME_REVIEW_POSTURE",
+    sourceId: "canonical-outcome-review-posture",
+    sourceVersion: asOfDate,
+    contentHash: "sha256:pmq-canonical-outcome",
+  });
+  const sourceQualitySourceRef = buildPmQualitySourceRef({
+    sourceSystem: "lotus-core",
+    sourceType: "PortfolioManagerBookMembership",
+    sourceId: dpmCommandCenterDefaults.bookId,
+    sourceVersion: asOfDate,
+    contentHash: "sha256:pmq-canonical-source-quality",
+  });
+
   return {
     pm_id: dpmCommandCenterDefaults.portfolioManagerId,
     book_id: dpmCommandCenterDefaults.bookId,
@@ -461,8 +479,7 @@ function buildCanonicalPmQualityScoreRunRequest(asOfDate) {
         source_system: "lotus-manage",
         source_type: "DPM_OUTCOME_REVIEW_POSTURE",
         source_id: "canonical-outcome-review-posture",
-        source_version: asOfDate,
-        content_hash: "sha256:pmq-canonical-outcome",
+        source_refs: [outcomeDisciplineSourceRef],
       },
       {
         indicator: "SOURCE_QUALITY",
@@ -471,8 +488,7 @@ function buildCanonicalPmQualityScoreRunRequest(asOfDate) {
         source_system: "lotus-core",
         source_type: "PortfolioManagerBookMembership",
         source_id: dpmCommandCenterDefaults.bookId,
-        source_version: asOfDate,
-        content_hash: "sha256:pmq-canonical-source-quality",
+        source_refs: [sourceQualitySourceRef],
       },
     ],
     actor_id: "workbench-system",
