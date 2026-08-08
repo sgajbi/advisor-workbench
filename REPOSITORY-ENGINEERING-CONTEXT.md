@@ -202,9 +202,12 @@ Current repository posture:
     source-published replacement lineage shown when present. Evidence counts include only trimmed,
     nonblank source references or usable displayed metrics; empty rule-based narrative carries zero
     evidence. Deterministic Workbench narrative must be identified as rule-based, and
-    provider/model/run identifiers remain secondary support details. Performance Advisor Brief and
-    Advisory Copilot are the first governed adopters; issue #528 owns the remaining DPM
-    workflow-output adoption.
+    provider/model/run identifiers remain secondary support details. Performance Advisor Brief,
+    Advisory Copilot, and the six DPM workflow-output families use this governed disclosure.
+    DPM source responses must be normalized through `buildDpmAiWorkflowOutcome` and presented with
+    `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
+    audit evidence only unless its source contract independently proves returned output; request
+    acceptance, invocation persistence, and runtime completion never imply available material.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through

@@ -2073,3 +2073,64 @@ Rejected:
 Publication decision: the reusable disclosure contract and visible supported-feature behavior
 change, so repository context and `wiki/Supported-Features.md` are updated in the same PR. Publish
 the authored wiki after merge and verify strict parity.
+
+### DPM workflow adoption — 2026-08-08
+
+#### Workflow objective and users
+
+Portfolio managers, CIO reviewers, investment-control users, and operations specialists need to
+request decision support where the underlying work occurs and then distinguish a recorded request
+from available material, supporting evidence, human review, permitted use, and freshness. The
+adoption covers proof-pack PM memo, wave PM memo, operations brief, monitoring-exception summary,
+outcome-review narrative, and PM operating-quality support summary workflows.
+
+#### Workflow research
+
+The implementation rechecked the shared disclosure research against DPM operating controls and
+reviewed these additional official sources:
+
+1. [NIST AI RMF Core](https://airc.nist.gov/airmf-resources/airmf/5-sec-core/) requires explicit
+   human-AI roles, oversight, knowledge limits, and permitted-use boundaries.
+2. [FINRA 2026 GenAI oversight](https://www.finra.org/rules-guidance/guidance/reports/2026-finra-annual-regulatory-oversight-report/gen-ai)
+   keeps supervision, communications, recordkeeping, and fair-dealing obligations in force for
+   AI-enabled workflows.
+3. [Singapore PDPC Model AI Governance Framework](https://www.pdpc.gov.sg/help-and-resources/2020/01/model-ai-governance-framework)
+   recommends human-centric, explainable decisions, an explicit degree of human involvement, and
+   communication that affected users can understand.
+
+#### Adopted decisions
+
+1. Put the request beside its owning workflow and use one shared business result pattern across all
+   six families rather than routing every decision through a generic Copilot banner.
+2. Normalize each exact Gateway response through a typed family profile while preserving one
+   disclosure contract and presentation component.
+3. Announce and focus a newly returned result, then expose the native disclosure control for
+   keyboard and screen-reader review.
+4. Treat acceptance as request posture only. Output availability, evidence, review, client use,
+   freshness, supersession, and simulation remain independent source facts and fail closed when
+   absent or contradictory.
+5. Label persisted PM-quality invocation history as audit evidence only. Without a returned output,
+   it reports output unavailable and client use blocked even when the invocation record exists.
+6. Keep provider, model, runtime, run, and source identifiers in secondary support details while
+   leading with what was requested, what is available, who must review it, and what may happen next.
+
+#### Rejected decisions
+
+1. One `Promise<unknown>` response summarizer or one universal success badge.
+2. Treating HTTP acceptance, workflow completion, or invocation persistence as generated material.
+3. Inventing citations, confidence, reviewer identity, review time, freshness, or replacement
+   lineage in Workbench.
+4. Making technical provider, model, endpoint, or run vocabulary the primary operating message.
+5. Duplicating six page-specific disclosure cards or storing generated output in browser-owned
+   state beyond the bounded returned workflow result.
+
+#### Expected measurable improvement and publication decision
+
+Every supported DPM assistance action now produces the same six independent business facts and a
+review-required, fail-closed client-use boundary; the wave memo and operations brief are also
+available at their point of work. Table-driven adapter and owning-screen tests prove all six
+families plus invocation-only evidence. The supported product and integration boundary changes, so
+`wiki/Supported-Features.md`, `wiki/Integrations.md`, repository context, and the codebase review
+ledger are updated. Routes, environment variables, API paths, canonical operator commands, and
+README onboarding do not change, so no README, API Surface, or runbook update is required. Publish
+the authored wiki after merge and verify strict parity.
