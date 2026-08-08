@@ -1,6 +1,7 @@
 .disclosure {
   border-block: 1px solid var(--border);
   color: var(--text);
+  container-type: inline-size;
 }
 
 .summary {
@@ -119,6 +120,20 @@
 
   .diagnostics {
     grid-template-columns: 1fr;
+  }
+}
+
+@container (max-width: 24rem) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    padding-block: 10px;
+  }
+
+  .scope {
+    grid-column: auto;
+    text-align: left;
+    white-space: normal;
   }
 }
 

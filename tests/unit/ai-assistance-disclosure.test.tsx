@@ -95,5 +95,8 @@ describe("AiAssistanceDisclosure", () => {
     );
     expect(styles).not.toContain("repeat(6, minmax(0, 1fr))");
     expect(styles).toContain("overflow-wrap: break-word;");
+    expect(styles).toContain("container-type: inline-size;");
+    expect(styles).toContain("@container (max-width: 24rem)");
+    expect(styles).toContain("grid-template-columns: minmax(0, 1fr);");
   });
 });
