@@ -26,6 +26,13 @@ type DpmAiWorkflowFixtureOptions = {
   runtimeRedactionActive?: boolean;
   sourceReference?: string;
   workflowSurfaceApplied?: boolean;
+  sourceSupportabilityState?: string;
+  safetyMode?: string;
+  safetyDisposition?: string;
+  enforcedSafetyControls?: string[];
+  callerIdentityClass?: string;
+  callerIdentitySource?: string;
+  reviewTransitionCount?: number;
 };
 
 const SOURCE_REFERENCE_BY_FAMILY: Record<DpmAiWorkflowFamily, string> = {
@@ -86,7 +93,7 @@ export function buildDpmAiWorkflowExecution(
       evaluated_registration_ref: `${profile.packId}@v1`,
       caller_app: "lotus-gateway",
       environment: "DEVELOPMENT",
-      caller_identity_class: "INTERNAL_SERVICE",
+      caller_identity_class: options.callerIdentityClass ?? "INTERNAL_SERVICE",
       tenant_scope_applied: false,
       workflow_surface_applied: options.workflowSurfaceApplied ?? true,
     },
@@ -107,17 +114,22 @@ export function buildDpmAiWorkflowExecution(
         model_id: stubbed ? null : "governed-model",
         model_version: stubbed ? null : "2026-08-01",
         safety: {
-          safety_mode: "enforced",
+          safety_mode: options.safetyMode ?? "runtime_enforced",
           output_label: outputLabel,
           redaction_posture: "MINIMIZATION_REQUIRED",
-          disposition: "INTERNAL_REVIEW",
+          disposition: options.safetyDisposition ?? "ENFORCED_PASSTHROUGH",
           runtime_redaction_active: options.runtimeRedactionActive ?? true,
-          enforced_controls: ["response_labeling", "correlation_and_audit"],
+          enforced_controls: options.enforcedSafetyControls ?? [
+            "response_labeling",
+            "correlation_and_audit",
+            "runtime_redaction_engine",
+          ],
         },
         authorization: {
           caller_app: "lotus-gateway",
           authenticated_caller_app: "lotus-gateway",
-          caller_identity_source: "trusted_http_header",
+          caller_identity_source:
+            options.callerIdentitySource ?? "trusted_http_header",
           caller_identity_bound: options.callerIdentityBound ?? true,
           capability_type: "task_execution",
           outcome:
@@ -153,7 +165,8 @@ export function buildDpmAiWorkflowExecution(
       review_summary: {
         latest_review_event_at: reviewRecorded ? "2026-08-05T08:05:00Z" : null,
         latest_review_actor: reviewRecorded ? "investment-control-001" : null,
-        review_transition_count: reviewRecorded ? 1 : 0,
+        review_transition_count:
+          options.reviewTransitionCount ?? (reviewRecorded ? 1 : 0),
         has_review_history: reviewRecorded,
       },
       review_required: reviewState !== "NOT_REVIEW_REQUIRED",
@@ -195,6 +208,7 @@ export function buildDpmAiWorkflowResponse(
   family: DpmAiWorkflowFamily,
   options: DpmAiWorkflowFixtureOptions = {},
 ) {
+  const profile = getDpmAiWorkflowProfile(family);
   const sourceReference =
     options.sourceReference ?? getDpmAiWorkflowFixtureSourceReference(family);
   return {
@@ -204,6 +218,14 @@ export function buildDpmAiWorkflowResponse(
     evidence_source_service: "lotus-manage",
     manage_upstream_status: 200,
     ai_upstream_status: 200,
+    supportability: {
+      source_service: "lotus-manage",
+      authority: profile.sourceSupportabilityAuthority,
+      state:
+        options.sourceSupportabilityState ??
+        profile.liveSourceSupportabilityStates[0],
+      reason_codes: [],
+    },
     ...buildSourceInput(family, sourceReference),
     data: buildDpmAiWorkflowExecution(family, options),
   };

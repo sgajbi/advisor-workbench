@@ -68,6 +68,67 @@ describe("buildDpmAiWorkflowOutcome", () => {
     },
   );
 
+  it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
+    "fails closed when the %s source supportability is blocked",
+    (family) => {
+      const typedFamily = family as DpmAiWorkflowFamily;
+      const outcome = buildDpmAiWorkflowOutcome(
+        typedFamily,
+        buildDpmAiWorkflowResponse(typedFamily, {
+          sourceSupportabilityState: "BLOCKED",
+        }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+      expect(outcome.disclosure.limitations).toContain(
+        "The supporting source did not publish a ready, authoritative posture for this assistance result.",
+      );
+    },
+  );
+
+  it.each([null, "UNSUPPORTED", "PARTIAL", "DEGRADED", "UNKNOWN", "EMPTY", "DISABLED"])(
+    "fails closed for source supportability state %s",
+    (state) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      Object.assign(response.supportability, { state });
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["missing source service", { source_service: null }],
+    ["different source service", { source_service: "lotus-idea" }],
+    ["missing authority", { authority: null }],
+    ["different authority", { authority: "lotus-manage:RFC-0099" }],
+  ])("fails closed for source supportability with %s", (_name, mutation) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+    Object.assign(response.supportability, mutation);
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
   it.each([
     {
       family: "proof-pack-memo" as const,
@@ -221,13 +282,98 @@ describe("buildDpmAiWorkflowOutcome", () => {
     );
 
     expect(outcome.disclosure).toMatchObject({
-      preparation: "ai-assisted",
-      availability: "live",
+      preparation: "unavailable",
+      availability: "partial",
       humanReview: { state: "reviewed", sourceRecorded: true },
       clientUse: "blocked",
     });
     expect(outcome.disclosure.limitations).toContain(
       "Runtime redaction was not reported as active; keep the result within its governed internal scope.",
+    );
+  });
+
+  it.each([
+    {
+      name: "missing safety mode",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        Object.assign(response.data.execution.audit.safety, { safety_mode: null });
+      },
+    },
+    {
+      name: "documented-only safety mode",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.safety_mode = "documented_only";
+      },
+    },
+    {
+      name: "disabled safety mode",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.safety_mode = "disabled";
+      },
+    },
+    {
+      name: "documented-only disposition",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.disposition = "DOCUMENTED_ONLY";
+      },
+    },
+    {
+      name: "blocked disposition",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.disposition = "BLOCKED";
+      },
+    },
+    {
+      name: "degraded disposition",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.disposition = "DEGRADED";
+      },
+    },
+    {
+      name: "missing response labeling control",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.enforced_controls = [
+          "correlation_and_audit",
+          "runtime_redaction_engine",
+        ];
+      },
+    },
+    {
+      name: "missing correlation and audit control",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.enforced_controls = [
+          "response_labeling",
+          "runtime_redaction_engine",
+        ];
+      },
+    },
+    {
+      name: "missing runtime redaction control",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.safety.enforced_controls = [
+          "response_labeling",
+          "correlation_and_audit",
+        ];
+      },
+    },
+  ])("fails closed for $name", ({ mutate }) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo", {
+      outputLabel: "CLIENT_USE_APPROVED",
+      reviewState: "ACCEPTED",
+    });
+    mutate(response);
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+    expect(outcome.disclosure.limitations).toContain(
+      "Required safety controls were not reported as enforced for this assistance result.",
     );
   });
 
@@ -302,6 +448,26 @@ describe("buildDpmAiWorkflowOutcome", () => {
       expect(outcome.material.sections).toEqual([]);
     },
   );
+
+  it.each([
+    ["missing eligibility identity class", { callerIdentityClass: "" }],
+    ["different eligibility identity class", { callerIdentityClass: "BANKER_PRODUCT" }],
+    ["missing authorization identity source", { callerIdentitySource: "" }],
+    ["different authorization identity source", { callerIdentitySource: "request_body" }],
+  ])("fails closed for %s", (_name, options) => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", options),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
 
   it.each([
     ["blank text", { memo: "   " }],
@@ -698,6 +864,25 @@ describe("buildDpmAiWorkflowOutcome", () => {
       state: "unavailable",
       sourceRecorded: false,
     });
+  });
+
+  it("requires a positive source transition count before showing reviewed posture", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "outcome-narrative",
+      buildDpmAiWorkflowResponse("outcome-narrative", {
+        reviewState: "ACCEPTED",
+        reviewTransitionCount: 0,
+        outputLabel: "CLIENT_USE_APPROVED",
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      humanReview: { state: "unavailable", sourceRecorded: false },
+      clientUse: "blocked",
+    });
+    expect(outcome.disclosure.limitations).toContain(
+      "The source did not publish the review record supporting its review state.",
+    );
   });
 
   it("downgrades a response published for another workflow family", () => {
