@@ -3,6 +3,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Portfolio decision memo",
     packId: "dpm_pm_memo.pack",
     workflowSurface: "dpm-proof-pack-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0040",
+    liveSourceSupportabilityStates: ["READY", "SUPPORTED"],
     sourceInputField: "ai_evidence_input",
     sourceIdentityField: "proof_pack_id",
     requestedOutputs: [
@@ -34,6 +36,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Rebalance wave review memo",
     packId: "dpm_wave_pm_memo.pack",
     workflowSurface: "dpm-wave-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0041",
+    liveSourceSupportabilityStates: ["READY"],
     sourceInputField: "wave_report_input",
     sourceIdentityField: "wave_id",
     requestedOutputs: [
@@ -62,6 +66,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Operations handoff summary",
     packId: "dpm_operations_handoff_summary.pack",
     workflowSurface: "dpm-operations-handoff-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0041",
+    liveSourceSupportabilityStates: ["READY"],
     sourceInputField: "wave_report_input",
     sourceIdentityField: "wave_id",
     requestedOutputs: [
@@ -88,6 +94,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Mandate exception review summary",
     packId: "dpm_exception_summary.pack",
     workflowSurface: "dpm-exception-summary-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0038",
+    liveSourceSupportabilityStates: ["READY"],
     sourceInputField: "exception_summary_input",
     sourceIdentityField: "exception_id",
     requestedOutputs: [
@@ -114,6 +122,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Outcome review narrative",
     packId: "outcome_review_narrative.pack",
     workflowSurface: "dpm-outcome-review-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0042",
+    liveSourceSupportabilityStates: ["SUPPORTED", "READY"],
     sourceInputField: "ai_evidence_input",
     sourceIdentityField: "outcome_review_id",
     requestedOutputs: [
@@ -138,6 +148,8 @@ export const DPM_AI_WORKFLOW_PROFILES = {
     scopeLabel: "Portfolio-manager quality support summary",
     packId: "pm_quality_summary.pack",
     workflowSurface: "dpm-pm-quality-ai-evidence",
+    sourceSupportabilityAuthority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+    liveSourceSupportabilityStates: ["READY"],
     sourceInputField: "score_run",
     sourceIdentityField: "score_run_id",
     requestedOutputs: [

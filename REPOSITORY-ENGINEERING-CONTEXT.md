@@ -212,9 +212,13 @@ Current repository posture:
     restriction was explicitly applied; an allowed decision with `workflow_surface_applied` false
     is still fail-closed. Authorization is trusted only for the explicit `task_execution`
     capability; an allowed decision for a missing or unrelated capability is not reusable authority.
-    Accepted, revised, rejected, and abandoned review states require source history, actor, and
-    event time before Workbench describes the review as recorded. A terminal state without that
-    record remains client-use blocked and is disclosed as unverified.
+    Eligibility must identify `INTERNAL_SERVICE`, and authorization must identify the bound
+    `trusted_http_header` source used by lotus-ai; missing or contradictory caller-identity posture
+    is not reusable authority. Accepted, revised, rejected, and abandoned review states require
+    source history, actor, event time, and a positive recorded-transition count before Workbench
+    describes the review as recorded. A terminal state without that record remains client-use
+    blocked and is disclosed as unverified. A `CLIENT_USE_APPROVED` label additionally requires an
+    accepted or revised complete review record; a label cannot substitute for its audit evidence.
     DPM source responses must be normalized through `buildDpmAiWorkflowOutcome` and presented with
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request
@@ -222,6 +226,14 @@ Current repository posture:
     Stubbed workflow output is deterministic preparation, not AI-assisted preparation. A source
     client-use approval remains blocked unless runtime redaction is explicitly active; a
     contradictory internal-scope limitation must never coexist with an approved client-use state.
+    For DPM workflow output, transport success and inner runtime completion do not override the
+    outer Manage supportability envelope. The family profile owns the exact Manage authority and
+    live source states; missing, blocked, unsupported, partial, degraded, unknown, empty, disabled,
+    or wrong-authority posture makes the whole output contract incomplete. Trusted live material
+    also requires lotus-ai `runtime_enforced` mode, active runtime redaction, the
+    `response_labeling`, `correlation_and_audit`, and `runtime_redaction_engine` controls, and an
+    `ENFORCED_PASSTHROUGH` or `ENFORCED_REDACTED` disposition. Documented-only, blocked, degraded,
+    missing, or contradictory safety evidence fails closed even when output labels agree.
     A successful workflow must render its returned decision-support material, not only availability
     and audit posture. Keep the six family-specific source-field mappings declarative in the shared
     profile. The same profile is the single source for each family's default `requested_outputs`;

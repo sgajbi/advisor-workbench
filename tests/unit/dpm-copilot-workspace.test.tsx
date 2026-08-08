@@ -43,7 +43,7 @@ describe("DpmCopilotWorkspace", () => {
       ...buildDpmAiWorkflowResponse("proof-pack-memo"),
       supportability: {
         source_service: "lotus-manage",
-        authority: "lotus-manage:proof-pack",
+        authority: "lotus-manage:RFC-0040",
         state: "READY",
         proof_pack_id: "ppack_001",
         reason_codes: ["PROOF_PACK_READY"],
@@ -92,7 +92,7 @@ describe("DpmCopilotWorkspace", () => {
       ...buildDpmAiWorkflowResponse("proof-pack-memo"),
       supportability: {
         source_service: "lotus-manage",
-        authority: "lotus-manage:proof-pack",
+        authority: "lotus-manage:RFC-0040",
         state: "READY",
         proof_pack_id: "ppack_001",
         reason_codes: ["PROOF_PACK_READY"],
@@ -228,7 +228,7 @@ function buildProofPack({
     upstream_status: 200,
     supportability: {
       source_service: "lotus-manage",
-      authority: "lotus-manage:proof-pack",
+      authority: "lotus-manage:RFC-0040",
       state,
       proof_pack_id: proofPackId,
       reason_codes: ["PROOF_PACK_READY"],

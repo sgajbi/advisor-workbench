@@ -69,7 +69,11 @@ function buildExceptionSummaryResponse(
     evidence_source_service: "lotus-manage",
     manage_upstream_status: 200,
     ai_upstream_status: 200,
-    supportability: readyResponse.supportability,
+    supportability: {
+      ...readyResponse.supportability,
+      state: "READY",
+      data_completeness_state: "READY",
+    },
     exception_summary_input: {
       exception_id: exceptionId,
       source_refs: [`lotus-manage:monitoring-exception:${exceptionId}`],

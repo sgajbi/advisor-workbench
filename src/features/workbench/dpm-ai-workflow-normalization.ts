@@ -21,6 +21,15 @@ const SUPPORTED_OUTPUT_LABELS = new Set([
   "CLIENT_USE_APPROVED",
   "CLIENT_USE_BLOCKED",
 ]);
+const REQUIRED_SAFETY_CONTROLS = [
+  "response_labeling",
+  "correlation_and_audit",
+  "runtime_redaction_engine",
+] as const;
+const TRUSTED_SAFETY_DISPOSITIONS = new Set([
+  "ENFORCED_PASSTHROUGH",
+  "ENFORCED_REDACTED",
+]);
 const MATERIAL_MAX_DEPTH = 3;
 const MATERIAL_MAX_CONTAINER_ITEMS = 20;
 const MATERIAL_MAX_VALUES_PER_SECTION = 50;
@@ -36,6 +45,7 @@ export function normalizeDpmAiWorkflowExecution(
   expectedSourceReference: string,
 ) {
   const envelope = asRecord(response);
+  const sourceSupportability = asRecord(envelope.supportability);
   const sourceInput = asRecord(envelope[profile.sourceInputField]);
   const data = asRecord(envelope.data);
   const eligibility = asRecord(data.eligibility);
@@ -91,6 +101,28 @@ export function normalizeDpmAiWorkflowExecution(
   const authenticatedCallerApp = readString(authorization.authenticated_caller_app);
   const runCallerApp = readString(run.caller_app);
   const workflowAuthorityOwner = readString(run.workflow_authority_owner);
+  const sourceSupportabilityState = readUpperString(sourceSupportability.state);
+  const sourceSupportabilityTrusted =
+    readString(sourceSupportability.source_service) === "lotus-manage" &&
+    readString(sourceSupportability.authority) ===
+      profile.sourceSupportabilityAuthority &&
+    sourceSupportabilityState !== null &&
+    profile.liveSourceSupportabilityStates.some(
+      (state) => state === sourceSupportabilityState,
+    );
+  const safetyMode = readString(safety.safety_mode);
+  const safetyDisposition = readUpperString(safety.disposition);
+  const enforcedSafetyControls = new Set(
+    readStringArray(safety.enforced_controls),
+  );
+  const safetyEnforced =
+    safetyMode === "runtime_enforced" &&
+    safety.runtime_redaction_active === true &&
+    safetyDisposition !== null &&
+    TRUSTED_SAFETY_DISPOSITIONS.has(safetyDisposition) &&
+    REQUIRED_SAFETY_CONTROLS.every((control) =>
+      enforcedSafetyControls.has(control),
+    );
   const authorized =
     readString(eligibility.eligibility_result) === "ALLOWED" &&
     eligibility.allowed === true &&
@@ -98,6 +130,9 @@ export function normalizeDpmAiWorkflowExecution(
     authorization.allowed === true &&
     authorization.caller_identity_bound === true &&
     readString(authorization.capability_type) === "task_execution" &&
+    readString(authorization.caller_identity_source) ===
+      "trusted_http_header" &&
+    readString(eligibility.caller_identity_class) === "INTERNAL_SERVICE" &&
     eligibility.workflow_surface_applied === true &&
     eligibilityCallerApp !== null &&
     eligibilityCallerApp === authorizationCallerApp &&
@@ -111,6 +146,8 @@ export function normalizeDpmAiWorkflowExecution(
     readString(envelope.evidence_source_service) === "lotus-manage",
     readHttpSuccess(envelope.manage_upstream_status),
     readHttpSuccess(envelope.ai_upstream_status),
+    sourceSupportabilityTrusted,
+    safetyEnforced,
     requestedSourceReference !== null &&
       sourceReference === requestedSourceReference,
     readString(eligibility.pack_id) === profile.packId,
@@ -154,6 +191,8 @@ export function normalizeDpmAiWorkflowExecution(
     evidenceCount: evidenceDescriptors.length,
     stubbed,
     historical,
+    sourceSupportabilityState,
+    sourceSupportabilityTrusted,
     sourceReference,
     runId,
     packId: readString(run.pack_id),
@@ -173,7 +212,13 @@ export function normalizeDpmAiWorkflowExecution(
       actor: readString(reviewSummary.latest_review_actor),
       occurredAt: readString(reviewSummary.latest_review_event_at),
       hasHistory: reviewSummary.has_review_history === true,
+      transitionCount: readNonNegativeInteger(
+        reviewSummary.review_transition_count,
+      ),
     },
+    safetyMode,
+    safetyDisposition,
+    safetyEnforced,
     runtimeRedactionActive: readBoolean(safety.runtime_redaction_active),
   };
 }
@@ -348,6 +393,16 @@ function readBoolean(value: unknown): boolean | null {
 
 function readString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function readUpperString(value: unknown): string | null {
+  return readString(value)?.toUpperCase() ?? null;
+}
+
+function readNonNegativeInteger(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? value
+    : null;
 }
 
 function readStringArray(value: unknown): string[] {

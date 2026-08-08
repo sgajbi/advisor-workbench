@@ -246,7 +246,9 @@ function resolveGovernedClientUse(
   const sourceClientUse = resolveClientUse(normalized.outputLabel);
   if (
     sourceClientUse === "approved" &&
-    normalized.runtimeRedactionActive !== true
+    (normalized.runtimeRedactionActive !== true ||
+      !["ACCEPTED", "REVISED"].includes(normalized.reviewState ?? "") ||
+      !hasCompleteReviewRecord(normalized))
   ) {
     return "blocked";
   }
@@ -263,6 +265,12 @@ function buildLimitations(normalized: NormalizedDpmAiExecution): string[] {
   return [
     !normalized.contractComplete
       ? "The returned workflow contract or authority evidence was incomplete or inconsistent."
+      : null,
+    !normalized.sourceSupportabilityTrusted
+      ? "The supporting source did not publish a ready, authoritative posture for this assistance result."
+      : null,
+    !normalized.safetyEnforced
+      ? "Required safety controls were not reported as enforced for this assistance result."
       : null,
     !normalized.authorized
       ? "The source did not publish a bound authorization decision."
@@ -310,6 +318,18 @@ function buildDiagnostics(normalized: NormalizedDpmAiExecution) {
           label: "Workflow authority",
           value: normalized.workflowAuthorityOwner,
         }
+      : null,
+    normalized.sourceSupportabilityState
+      ? {
+          label: "Source readiness",
+          value: normalized.sourceSupportabilityState,
+        }
+      : null,
+    normalized.safetyMode
+      ? { label: "Safety mode", value: normalized.safetyMode }
+      : null,
+    normalized.safetyDisposition
+      ? { label: "Safety outcome", value: normalized.safetyDisposition }
       : null,
     normalized.generatedAt
       ? { label: "Prepared", value: normalized.generatedAt }
@@ -366,7 +386,9 @@ function hasCompleteReviewRecord(
   return Boolean(
     normalized.reviewSummary.hasHistory &&
     normalized.reviewSummary.actor &&
-    normalized.reviewSummary.occurredAt,
+    normalized.reviewSummary.occurredAt &&
+    normalized.reviewSummary.transitionCount !== null &&
+    normalized.reviewSummary.transitionCount > 0,
   );
 }
 
