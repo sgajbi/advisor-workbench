@@ -16,6 +16,8 @@ import {
 } from "@/features/workbench/dpm-command-center-api";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
+import { matchesDpmAiWorkflowSource } from "@/features/workbench/dpm-ai-workflow-normalization";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import type {
   DpmCommandCenterGatewayResponse,
   DpmExceptionSummaryResponse,
@@ -46,6 +48,8 @@ type ExceptionSummaryState = {
   response: DpmExceptionSummaryResponse | null;
   error: string | null;
 };
+
+const EXCEPTION_SUMMARY_PROFILE = getDpmAiWorkflowProfile("exception-summary");
 
 export default function DpmCommandCenterPanel({
   commandCenter,
@@ -144,6 +148,20 @@ export default function DpmCommandCenterPanel({
         mandateId: model.mandateId !== "N/A" ? model.mandateId : undefined,
         state: "ACTIVE",
       });
+      if (
+        !matchesDpmAiWorkflowSource(
+          response,
+          EXCEPTION_SUMMARY_PROFILE,
+          exceptionId,
+        )
+      ) {
+        setExceptionSummaryState({
+          exceptionId,
+          response: null,
+          error: "The returned summary did not match the selected exception.",
+        });
+        return;
+      }
       setExceptionSummaryState({ exceptionId, response, error: null });
     } catch (error) {
       setExceptionSummaryState({

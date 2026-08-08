@@ -92,6 +92,26 @@ describe("buildDpmAiWorkflowOutcome", () => {
     },
   );
 
+  it.each([null, "FUTURE_STATE"])(
+    "fails closed for workflow supportability status %s",
+    (status) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      Object.assign(response.data.workflow_pack_run, {
+        supportability_status: status,
+      });
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
   it.each([null, "UNSUPPORTED", "PARTIAL", "DEGRADED", "UNKNOWN", "EMPTY", "DISABLED"])(
     "fails closed for source supportability state %s",
     (state) => {

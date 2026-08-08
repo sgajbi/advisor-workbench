@@ -6,7 +6,10 @@ import type {
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
-import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
+import {
+  buildDpmAiWorkflowExecution,
+  buildDpmAiWorkflowResponse,
+} from "../fixtures/dpm-ai-workflow-fixtures";
 
 const waveListResponse: DpmWaveGatewayResponse = {
   correlation_id: "corr-wave-list",
@@ -201,6 +204,70 @@ describe("DPM wave command-center view model", () => {
     expect(model.operationsHandoffSummaryStatus).toBe("AWAITING_REVIEW");
     expect(model.operationsHandoffSummaryRunId).toBe("wf_run_ops_summary_001");
     expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
+  });
+
+  it("rejects memo and operations posture returned for another wave", () => {
+    const mismatchedMemo = {
+      ...buildDpmAiWorkflowResponse("wave-memo"),
+      supportability: waveListResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_002",
+        report_input_ref: "report-input:dwv_002",
+      },
+      memo_request: { requested_outputs: ["wave_pm_memo"] },
+    } as DpmWaveAiPmMemoResponse;
+    const mismatchedOperations = {
+      ...buildDpmAiWorkflowResponse("operations-handoff"),
+      supportability: waveListResponse.supportability,
+      wave_report_input: {
+        wave_id: "dwv_002",
+        report_input_ref: "report-input:dwv_002",
+      },
+      handoff_summary_request: {
+        requested_outputs: ["operations_summary"],
+      },
+    } as DpmOperationsHandoffSummaryResponse;
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveAiMemo: mismatchedMemo,
+      operationsHandoffSummary: mismatchedOperations,
+    });
+
+    expect(model.aiMemoStatus).toBe("NOT_REQUESTED");
+    expect(model.aiMemoRunId).toBe("N/A");
+    expect(model.operationsHandoffSummaryStatus).toBe("NOT_REQUESTED");
+    expect(model.operationsHandoffSummaryRunId).toBe("N/A");
+    expect(model.reportInputRef).toBe("N/A");
+  });
+
+  it("does not project workflow posture when the returned wave identity is missing", () => {
+    const memoWithoutWaveIdentity = {
+      ...buildDpmAiWorkflowResponse("wave-memo"),
+      supportability: waveListResponse.supportability,
+      wave_report_input: {},
+      memo_request: { requested_outputs: ["wave_pm_memo"] },
+    } as DpmWaveAiPmMemoResponse;
+    const operationsWithoutWaveIdentity = {
+      ...buildDpmAiWorkflowResponse("operations-handoff"),
+      supportability: waveListResponse.supportability,
+      wave_report_input: {},
+      handoff_summary_request: {
+        requested_outputs: ["operations_summary"],
+      },
+    } as DpmOperationsHandoffSummaryResponse;
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveAiMemo: memoWithoutWaveIdentity,
+      operationsHandoffSummary: operationsWithoutWaveIdentity,
+    });
+
+    expect(model.aiMemoStatus).toBe("UNAVAILABLE");
+    expect(model.aiMemoRunId).toBe("N/A");
+    expect(model.operationsHandoffSummaryStatus).toBe("UNAVAILABLE");
+    expect(model.operationsHandoffSummaryRunId).toBe("N/A");
+    expect(model.reportInputRef).toBe("N/A");
   });
 
   it("fails closed when workflow-pack detail is absent at runtime", () => {

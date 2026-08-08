@@ -5,6 +5,16 @@ import type {
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "./types";
+import { readDpmAiWorkflowSourceReference } from "./dpm-ai-workflow-normalization";
+import {
+  getDpmAiWorkflowProfile,
+  type DpmAiWorkflowProfile,
+} from "./dpm-ai-workflow-profiles";
+
+const WAVE_MEMO_PROFILE = getDpmAiWorkflowProfile("wave-memo");
+const OPERATIONS_HANDOFF_PROFILE = getDpmAiWorkflowProfile(
+  "operations-handoff",
+);
 
 export type DpmWaveCommandCenterPanelState =
   | "ready"
@@ -272,18 +282,20 @@ export function buildDpmWaveCommandCenterModel(params: {
     supportability?.wave_state ||
     listRows[0]?.state ||
     "N/A";
-  const waveAiMemo = matchesSelectedWave(
+  const waveAiMemoSelection = selectWaveWorkflowResponse(
+    params.waveAiMemo,
     params.waveAiMemoSourceWaveId,
     selectedWaveId,
-  )
-    ? params.waveAiMemo
-    : null;
-  const operationsHandoffSummary = matchesSelectedWave(
+    WAVE_MEMO_PROFILE,
+  );
+  const operationsHandoffSummarySelection = selectWaveWorkflowResponse(
+    params.operationsHandoffSummary,
     params.operationsHandoffSummarySourceWaveId,
     selectedWaveId,
-  )
-    ? params.operationsHandoffSummary
-    : null;
+    OPERATIONS_HANDOFF_PROFILE,
+  );
+  const waveAiMemo = waveAiMemoSelection.response;
+  const operationsHandoffSummary = operationsHandoffSummarySelection.response;
   const selectedListRecord = findSelectedWaveListRecord(params.waveList?.data, selectedWaveId);
   const metricSource = firstRecord(
     waveRecord?.aggregate_metrics,
@@ -315,9 +327,15 @@ export function buildDpmWaveCommandCenterModel(params: {
     reportInputStatus: params.waveReportInput
       ? normalizeState(params.waveReportInput.supportability.state)
       : "NOT_REQUESTED",
-    aiMemoStatus: readAiMemoStatus(waveAiMemo),
+    aiMemoStatus: readAiMemoStatus(
+      waveAiMemo,
+      waveAiMemoSelection.receivedForSelectedSource,
+    ),
     aiMemoRunId: readAiMemoRunId(waveAiMemo),
-    operationsHandoffSummaryStatus: readWorkflowPackStatus(operationsHandoffSummary),
+    operationsHandoffSummaryStatus: readWorkflowPackStatus(
+      operationsHandoffSummary,
+      operationsHandoffSummarySelection.receivedForSelectedSource,
+    ),
     operationsHandoffSummaryRunId: readWorkflowPackRunId(operationsHandoffSummary),
     summaryRows: listRows,
     campaignRows: buildCampaignDefinitionRows(
@@ -539,9 +557,10 @@ function buildCampaignLaunchPosture(
 
 function readWorkflowPackStatus(
   response: unknown,
+  receivedForSelectedSource = false,
 ): string {
   if (!response) {
-    return "NOT_REQUESTED";
+    return receivedForSelectedSource ? "UNAVAILABLE" : "NOT_REQUESTED";
   }
   const reviewState = readString(readWorkflowPackRun(response), "review_state");
   return reviewState ? normalizeState(reviewState) : "UNAVAILABLE";
@@ -568,9 +587,12 @@ function readReportInputRef(
   );
 }
 
-function readAiMemoStatus(memo: unknown): string {
+function readAiMemoStatus(
+  memo: unknown,
+  receivedForSelectedSource = false,
+): string {
   if (!memo) {
-    return "NOT_REQUESTED";
+    return receivedForSelectedSource ? "UNAVAILABLE" : "NOT_REQUESTED";
   }
   const reviewState = readString(readWorkflowPackRun(memo), "review_state");
   return reviewState ? normalizeState(reviewState) : "UNAVAILABLE";
@@ -589,6 +611,24 @@ function matchesSelectedWave(
     sourceWaveId === undefined ||
     (sourceWaveId !== null && sourceWaveId === selectedWaveId)
   );
+}
+
+function selectWaveWorkflowResponse<T>(
+  response: T | null | undefined,
+  sourceWaveId: string | null | undefined,
+  selectedWaveId: string | null,
+  profile: DpmAiWorkflowProfile,
+): { response: T | null; receivedForSelectedSource: boolean } {
+  if (!matchesSelectedWave(sourceWaveId, selectedWaveId) || !response) {
+    return { response: null, receivedForSelectedSource: false };
+  }
+  const responseWaveId = readDpmAiWorkflowSourceReference(response, profile);
+  if (responseWaveId === null) {
+    return { response: null, receivedForSelectedSource: true };
+  }
+  return responseWaveId === selectedWaveId
+    ? { response, receivedForSelectedSource: true }
+    : { response: null, receivedForSelectedSource: false };
 }
 
 function readAiMemoRunId(memo: unknown): string {

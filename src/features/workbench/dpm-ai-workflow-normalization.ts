@@ -30,6 +30,11 @@ const TRUSTED_SAFETY_DISPOSITIONS = new Set([
   "ENFORCED_PASSTHROUGH",
   "ENFORCED_REDACTED",
 ]);
+const SUPPORTED_WORKFLOW_SUPPORTABILITY_STATUSES = new Set([
+  "READY",
+  "ACTION_REQUIRED",
+  "HISTORICAL",
+]);
 const MATERIAL_MAX_DEPTH = 3;
 const MATERIAL_MAX_CONTAINER_ITEMS = 20;
 const MATERIAL_MAX_VALUES_PER_SECTION = 50;
@@ -148,8 +153,9 @@ export function normalizeDpmAiWorkflowExecution(
     readHttpSuccess(envelope.ai_upstream_status),
     sourceSupportabilityTrusted,
     safetyEnforced,
-    requestedSourceReference !== null &&
-      sourceReference === requestedSourceReference,
+    matchesDpmAiWorkflowSource(response, profile, requestedSourceReference),
+    supportabilityStatus !== null &&
+      SUPPORTED_WORKFLOW_SUPPORTABILITY_STATUSES.has(supportabilityStatus),
     readString(eligibility.pack_id) === profile.packId,
     readString(run.pack_id) === profile.packId,
     readString(run.workflow_surface) === profile.workflowSurface,
@@ -221,6 +227,30 @@ export function normalizeDpmAiWorkflowExecution(
     safetyEnforced,
     runtimeRedactionActive: readBoolean(safety.runtime_redaction_active),
   };
+}
+
+export function matchesDpmAiWorkflowSource(
+  response: unknown,
+  profile: DpmAiWorkflowProfile,
+  expectedSourceReference: unknown,
+): boolean {
+  const requestedSourceReference = readString(expectedSourceReference);
+  if (requestedSourceReference === null) {
+    return false;
+  }
+  return (
+    readDpmAiWorkflowSourceReference(response, profile) ===
+    requestedSourceReference
+  );
+}
+
+export function readDpmAiWorkflowSourceReference(
+  response: unknown,
+  profile: DpmAiWorkflowProfile,
+): string | null {
+  const envelope = asRecord(response);
+  const sourceInput = asRecord(envelope[profile.sourceInputField]);
+  return readString(sourceInput[profile.sourceIdentityField]);
 }
 
 function normalizeWorkflowMaterial(

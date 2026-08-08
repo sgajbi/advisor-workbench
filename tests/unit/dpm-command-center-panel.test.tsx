@@ -253,6 +253,32 @@ describe("DpmCommandCenterPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("rejects a summary returned for a different exception", async () => {
+    vi.mocked(requestDpmExceptionSummary).mockResolvedValue(
+      buildExceptionSummaryResponse("me_2"),
+    );
+
+    render(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={exceptionProjection("me_1")}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Exception summary" }));
+
+    expect(
+      await screen.findByText(
+        "The returned summary did not match the selected exception.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        name: "Mandate exception review summary",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it("removes a completed summary when the selected exception changes", async () => {
     vi.mocked(requestDpmExceptionSummary).mockResolvedValue(
       buildExceptionSummaryResponse("me_1"),
