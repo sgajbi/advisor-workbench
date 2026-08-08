@@ -179,7 +179,7 @@ test.describe('Portfolio workbench smoke', () => {
     const destinations = [
       { label: 'Allocation', route: '/allocation', heading: /^Allocation$/i },
       { label: 'Transactions', route: '/transactions', heading: /^Transactions$/i },
-      { label: 'Income & Activity', route: '/income', heading: /^Income & Activity$/i },
+      { label: 'Income', route: '/income', heading: /^Income & Activity$/i },
       { label: 'Cashflow', route: '/cashflow', heading: /^Cashflow$/i },
       { label: 'Positions', route: '/positions', heading: /^Positions$/i },
     ];
