@@ -5,6 +5,7 @@ import {
   observeWorkbenchMutation,
   observeWorkbenchResource,
 } from "@/features/workbench/api-client";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import {
   resolveDefaultCallerContext,
   resolveDefaultDpmContext,
@@ -155,13 +156,8 @@ export async function requestDpmExceptionSummary(params: {
   state?: string;
 }): Promise<DpmExceptionSummaryResponse> {
   const body: Record<string, unknown> = {
-    requested_outputs: [
-      "exception_summary",
-      "severity_summary",
-      "recommended_triage",
-      "support_references",
-      "evidence_gaps",
-    ],
+    requested_outputs:
+      getDpmAiWorkflowProfile("exception-summary").requestedOutputs,
     audience: ["portfolio_manager", "investment_control", "operations"],
   };
   if (params.portfolioId) {

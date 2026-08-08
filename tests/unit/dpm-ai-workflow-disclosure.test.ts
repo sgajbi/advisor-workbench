@@ -24,6 +24,16 @@ function buildDpmAiWorkflowOutcome(
 }
 
 describe("buildDpmAiWorkflowOutcome", () => {
+  it.each(Object.entries(DPM_AI_WORKFLOW_PROFILES))(
+    "adopts every default output requested by the %s workflow",
+    (_family, profile) => {
+      const adoptedKeys = new Set(profile.materialFields.map(({ key }) => key));
+
+      expect(profile.requestedOutputs).not.toHaveLength(0);
+      expect(profile.requestedOutputs.filter((key) => !adoptedKeys.has(key))).toEqual([]);
+    },
+  );
+
   it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
     "maps the %s action through its exact source contract",
     (family) => {

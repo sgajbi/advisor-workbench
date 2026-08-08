@@ -488,6 +488,25 @@ describe("PM operating quality view model", () => {
     expect(JSON.stringify(model.summaryPosture)).not.toContain("sha256:pm-quality");
   });
 
+  it("fails closed before projecting posture for another score run", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      summary: {
+        ...summary,
+        score_run: { score_run_id: "pmq_run_other" },
+      },
+    });
+
+    expect(model.operationEvidence.operation).not.toBe("PM quality support summary");
+    expect(model.summaryPosture).toMatchObject({
+      status: "Not requested",
+      reviewState: "N/A",
+      workflowAuthority: "N/A",
+      runId: "N/A",
+    });
+  });
+
   it("renders persisted fairness-analysis list posture without browser-side fairness calculation", () => {
     const model = buildPmOperatingQualityPanelModel({
       policies,

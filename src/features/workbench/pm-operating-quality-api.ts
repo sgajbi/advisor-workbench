@@ -6,6 +6,7 @@ import {
   observeWorkbenchResource,
   type WorkbenchRequestTarget,
 } from "@/features/workbench/api-client";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import {
   resolveDefaultCallerContext,
   resolveDefaultDpmContext,
@@ -260,13 +261,9 @@ export async function requestDpmPmOperatingQualitySummary(params: {
           method: "POST",
           headers: buildDpmPmOperatingQualityCallerHeaders(params.actorId),
           body: JSON.stringify({
-            requested_outputs: params.requestedOutputs ?? [
-              "score_run_summary",
-              "governance_summary",
-              "fairness_review_posture",
-              "support_references",
-              "evidence_gaps",
-            ],
+            requested_outputs:
+              params.requestedOutputs ??
+              getDpmAiWorkflowProfile("pm-quality-summary").requestedOutputs,
             audience: params.audience ?? [
               "portfolio_manager",
               "investment_control",

@@ -6,6 +6,7 @@ import {
   observeWorkbenchResource,
   type WorkbenchObservedOperation,
 } from "@/features/workbench/api-client";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import {
   resolveDefaultCallerContext,
   resolveDefaultDpmContext,
@@ -911,14 +912,8 @@ export async function requestDpmWaveAiPmMemo(waveId: string): Promise<DpmWaveAiP
           method: "POST",
           headers: buildDpmWaveCallerHeaders(),
           body: JSON.stringify({
-            requested_outputs: [
-              "wave_pm_memo",
-              "wave_rationale_summary",
-              "approval_checklist",
-              "risk_caveats",
-              "operations_handoff",
-              "evidence_gaps",
-            ],
+            requested_outputs:
+              getDpmAiWorkflowProfile("wave-memo").requestedOutputs,
             audience: ["portfolio_manager", "investment_control", "operations"],
           }),
         }
@@ -942,13 +937,8 @@ export async function requestDpmOperationsHandoffSummary(
           method: "POST",
           headers: buildDpmWaveCallerHeaders(),
           body: JSON.stringify({
-            requested_outputs: [
-              "operations_summary",
-              "execution_prerequisites",
-              "blocking_conditions",
-              "support_references",
-              "evidence_gaps",
-            ],
+            requested_outputs:
+              getDpmAiWorkflowProfile("operations-handoff").requestedOutputs,
             audience: ["operations", "portfolio_manager", "investment_control"],
           }),
         }

@@ -5,6 +5,7 @@ import {
   observeWorkbenchMutation,
   observeWorkbenchResource,
 } from "@/features/workbench/api-client";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import { buildReportingCallerHeaders } from "@/features/workbench/reporting-caller-headers";
 import type {
   DpmOutcomeReviewGatewayResponse,
@@ -105,12 +106,9 @@ export async function requestDpmOutcomeReviewAiNarrative(params: {
             "X-Correlation-Id": `corr-workbench-outcome-ai-${params.outcomeReviewId}`,
           },
           body: JSON.stringify({
-            requested_outputs: params.requestedOutputs ?? [
-              "pm_summary",
-              "cio_summary",
-              "control_summary",
-              "evidence_gaps",
-            ],
+            requested_outputs:
+              params.requestedOutputs ??
+              getDpmAiWorkflowProfile("outcome-narrative").requestedOutputs,
             audience: params.audience ?? [
               "portfolio_manager",
               "cio_office",
