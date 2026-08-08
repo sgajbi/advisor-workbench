@@ -17,6 +17,13 @@ describe("manage workspace split components", () => {
     expect(within(detail).getByRole("heading", { name: "Benchmark mapping requires review" })).toBeInTheDocument();
     expect(within(detail).getByText("Portfolio Manager")).toBeInTheDocument();
     expect(within(detail).getByText("Review Benchmark Mapping")).toBeInTheDocument();
+    expect(within(detail).getByText("Accountable owner")).toBeInTheDocument();
+    expect(within(detail).getByText("Open for")).toBeInTheDocument();
+    const attentionQueue = screen.getByLabelText("Mandate attention items");
+    expect(within(attentionQueue).getByRole("columnheader", { name: "Observation" })).toBeInTheDocument();
+    expect(within(attentionQueue).getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
+    expect(within(attentionQueue).queryByRole("columnheader", { name: "Owner" })).not.toBeInTheDocument();
+    expect(within(attentionQueue).queryByRole("columnheader", { name: "Age" })).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Stale price requires review" }),

@@ -520,7 +520,7 @@
 }
 
 .manageScope :global(.mandate-attention-card .manage-overview-table) {
-  min-width: 680px;
+  min-width: 0;
 }
 
 .manageScope :global(.mandate-attention-card .manage-overview-table td) {
@@ -533,7 +533,7 @@
 }
 
 .manageScope :global(.mandate-attention-card td:first-child) {
-  width: 48%;
+  width: 76%;
 }
 
 .manageScope :global(.mandate-attention-card td button) {
