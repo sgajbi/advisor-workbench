@@ -106,6 +106,21 @@ describe("ReportOrderingWorkspace", () => {
     );
   });
 
+  it("keeps recent report requests visible when support correlation is unavailable", async () => {
+    const history = buildReportJobListResponse();
+    history.items[0].correlationId = "";
+    historyMock.mockResolvedValue(history);
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    const recentRequests = await screen.findByRole("table", {
+      name: "Recent portfolio report requests",
+    });
+    expect(within(recentRequests).getByText("Portfolio review")).toBeInTheDocument();
+    expect(within(recentRequests).getByText("rjob_1")).toBeInTheDocument();
+    expect(screen.queryByText("Recent requests unavailable")).not.toBeInTheDocument();
+  });
+
   it("invalidates reviewed readiness after a business-date change", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });

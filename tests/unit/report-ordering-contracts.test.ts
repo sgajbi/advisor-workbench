@@ -60,4 +60,19 @@ describe("report ordering contracts", () => {
       "PB_SG_GLOBAL_BAL_001",
     ]);
   });
+
+  it("keeps valid report history when a legacy job has no correlation reference", () => {
+    const response = buildReportJobListResponse();
+    response.items[0].correlationId = "";
+
+    const history = parseReportJobListResponse(response);
+
+    expect(history.items).toHaveLength(1);
+    expect(history.items[0]).toEqual(
+      expect.objectContaining({
+        reportJobId: "rjob_1",
+        correlationId: "",
+      }),
+    );
+  });
 });
