@@ -33,6 +33,8 @@ jobs:
           cache: "npm"
       - name: Install
         run: make install
+      - name: Canonical Runtime Ownership Contracts
+        run: make test-runtime-ownership
       - name: Dependency Security Gate
         run: make security
       - name: Lint
