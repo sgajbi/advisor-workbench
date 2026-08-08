@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
   ActionButton,
@@ -29,6 +29,7 @@ import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-
 
 type CopilotAction = {
   key: DpmAiWorkflowFamily;
+  contextKey: string;
   label: string;
   detail: string;
   referenceLabel: string;
@@ -38,9 +39,9 @@ type CopilotAction = {
 };
 
 type ActionState = {
-  pending: DpmAiWorkflowFamily | null;
-  result: DpmAiWorkflowOutcome | null;
-  error: string | null;
+  pending: { key: DpmAiWorkflowFamily; contextKey: string } | null;
+  result: { contextKey: string; outcome: DpmAiWorkflowOutcome } | null;
+  error: { contextKey: string; message: string } | null;
 };
 
 export default function DpmCopilotWorkspace({
@@ -56,29 +57,64 @@ export default function DpmCopilotWorkspace({
     result: null,
     error: null,
   });
+  const requestSequenceRef = useRef(0);
   const actions = useMemo(
     () => buildCopilotActions({ data, portfolioId, mandateId: mandateId ?? null }),
     [data, mandateId, portfolioId]
   );
+  const currentContextKeys = useMemo(
+    () => new Set(actions.map((action) => action.contextKey)),
+    [actions],
+  );
+  const pending =
+    actionState.pending && currentContextKeys.has(actionState.pending.contextKey)
+      ? actionState.pending
+      : null;
+  const result =
+    actionState.result && currentContextKeys.has(actionState.result.contextKey)
+      ? actionState.result
+      : null;
+  const error =
+    actionState.error && currentContextKeys.has(actionState.error.contextKey)
+      ? actionState.error
+      : null;
   const readyCount = actions.filter((action) => !action.blockedReason).length;
 
   async function runAction(action: CopilotAction) {
-    if (action.blockedReason || actionState.pending) {
+    if (action.blockedReason || pending) {
       return;
     }
-    setActionState({ pending: action.key, result: null, error: null });
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
+    setActionState({
+      pending: { key: action.key, contextKey: action.contextKey },
+      result: null,
+      error: null,
+    });
     try {
       const response = await action.run();
+      if (requestSequence !== requestSequenceRef.current) {
+        return;
+      }
       setActionState({
         pending: null,
-        result: buildDpmAiWorkflowOutcome(action.key, response),
+        result: {
+          contextKey: action.contextKey,
+          outcome: buildDpmAiWorkflowOutcome(action.key, response),
+        },
         error: null,
       });
     } catch (error) {
+      if (requestSequence !== requestSequenceRef.current) {
+        return;
+      }
       setActionState({
         pending: null,
         result: null,
-        error: error instanceof Error ? error.message : `${action.label} failed.`,
+        error: {
+          contextKey: action.contextKey,
+          message: error instanceof Error ? error.message : `${action.label} failed.`,
+        },
       });
     }
   }
@@ -119,16 +155,16 @@ export default function DpmCopilotWorkspace({
         />
       </div>
 
-      {actionState.error ? (
+      {error ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
           title="Copilot request needs attention"
-          body={actionState.error}
+          body={error.message}
         />
       ) : null}
-      {actionState.result ? (
-        <DpmAiWorkflowResult outcome={actionState.result} focusOnMount />
+      {result ? (
+        <DpmAiWorkflowResult outcome={result.outcome} focusOnMount />
       ) : null}
 
       <div className="dpm-copilot-action-grid">
@@ -145,7 +181,7 @@ export default function DpmCopilotWorkspace({
             />
             <ActionButton
               priority={action.blockedReason ? "quiet" : "secondary"}
-              disabled={Boolean(action.blockedReason) || Boolean(actionState.pending)}
+              disabled={Boolean(action.blockedReason) || Boolean(pending)}
               onClick={() => void runAction(action)}
               aria-label={
                 action.blockedReason
@@ -155,7 +191,7 @@ export default function DpmCopilotWorkspace({
             >
               {action.blockedReason
                 ? "Unavailable"
-                : actionState.pending === action.key
+                : pending?.key === action.key
                   ? "Preparing"
                   : "Prepare"}
             </ActionButton>
@@ -211,7 +247,7 @@ function buildCopilotActions({
       "score_run_id",
     ]) ?? readFirstString(data.pmOperatingQualityScoreRuns?.supportability, ["score_run_id"]);
 
-  return [
+  const actions: Array<Omit<CopilotAction, "contextKey">> = [
     {
       key: "proof-pack-memo",
       label: "Proof-Pack PM Memo",
@@ -273,6 +309,15 @@ function buildCopilotActions({
       run: () => requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
     },
   ];
+  return actions.map((action) => ({
+    ...action,
+    contextKey: JSON.stringify([
+      portfolioId,
+      mandateId,
+      action.key,
+      action.reference,
+    ]),
+  }));
 }
 
 function resolveProofPackMemoBlockedReason({
