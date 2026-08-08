@@ -1,0 +1,35 @@
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  align-items: start;
+}
+
+.label,
+.value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.value {
+  text-align: right;
+}
+
+.stacked {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem;
+}
+
+.stacked .value {
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .value {
+    text-align: left;
+  }
+}

@@ -97,12 +97,24 @@ export default function DpmCopilotWorkspace({
       }
     >
       <div className="dpm-copilot-status-strip">
-        <MetricRow label="Portfolio" value={portfolioId} />
-        <MetricRow label="Mandate" value={mandateId ?? "N/A"} />
-        <MetricRow label="Available Workflows" value={`${readyCount} of ${actions.length}`} />
-        <MetricRow label="Decision Authority" value="Portfolio manager and investment control" />
-        <MetricRow label="Permitted Use" value="Internal decision support" />
-        <MetricRow label="Restricted Use" value="Client communication and order execution" />
+        <MetricRow layout="stacked" label="Portfolio" value={portfolioId} />
+        <MetricRow layout="stacked" label="Mandate" value={mandateId ?? "N/A"} />
+        <MetricRow
+          layout="stacked"
+          label="Available Workflows"
+          value={`${readyCount} of ${actions.length}`}
+        />
+        <MetricRow
+          layout="stacked"
+          label="Decision Authority"
+          value="Portfolio manager and investment control"
+        />
+        <MetricRow layout="stacked" label="Permitted Use" value="Internal decision support" />
+        <MetricRow
+          layout="stacked"
+          label="Restricted Use"
+          value="Client communication and order execution"
+        />
       </div>
 
       {actionState.error ? (
@@ -133,9 +145,17 @@ export default function DpmCopilotWorkspace({
               priority={action.blockedReason ? "quiet" : "secondary"}
               disabled={Boolean(action.blockedReason) || Boolean(actionState.pending)}
               onClick={() => void runAction(action)}
-              aria-label={`Prepare ${action.label}`}
+              aria-label={
+                action.blockedReason
+                  ? `${action.label} unavailable: ${action.blockedReason}`
+                  : `Prepare ${action.label}`
+              }
             >
-              {actionState.pending === action.key ? "Preparing" : "Prepare"}
+              {action.blockedReason
+                ? "Unavailable"
+                : actionState.pending === action.key
+                  ? "Preparing"
+                  : "Prepare"}
             </ActionButton>
           </section>
         ))}
