@@ -24,7 +24,7 @@ export default function DpmAiWorkflowResult({
     if (focusOnMount) {
       headingRef.current?.focus();
     }
-  }, [focusOnMount, outcome]);
+  }, [focusOnMount, outcome.sourceIdentity]);
 
   return (
     <section className="dpm-ai-workflow-result" aria-label={ariaLabel} aria-live="polite">

@@ -200,6 +200,44 @@ describe("buildDpmAiWorkflowOutcome", () => {
     );
   });
 
+  it.each([
+    {
+      name: "workflow-pack version",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.eligibility.requested_version = "";
+        response.data.workflow_pack_run.pack_version = "";
+      },
+    },
+    {
+      name: "registration reference",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.eligibility.evaluated_registration_ref = null;
+        response.data.workflow_pack_run.registration_ref = "";
+      },
+    },
+    {
+      name: "caller application",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.eligibility.caller_app = "";
+        response.data.workflow_pack_run.caller_app = "";
+        response.data.execution.audit.authorization.caller_app = "";
+        response.data.execution.audit.authorization.authenticated_caller_app = null;
+      },
+    },
+  ])("fails closed when both $name identity fields are missing", ({ mutate }) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+    mutate(response);
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+  });
+
   it("classifies source-completed superseded output as historical", () => {
     const outcome = buildDpmAiWorkflowOutcome(
       "proof-pack-memo",
@@ -236,6 +274,28 @@ describe("buildDpmAiWorkflowOutcome", () => {
       });
       expect(outcome.businessSummary).toContain("was rejected");
       expect(outcome.businessSummary).toContain("must not be used");
+    },
+  );
+
+  it.each(["REJECTED", "ABANDONED"] as const)(
+    "keeps rejected %s simulations explicitly unusable",
+    (reviewState) => {
+      const outcome = buildDpmAiWorkflowOutcome(
+        "proof-pack-memo",
+        buildDpmAiWorkflowResponse("proof-pack-memo", {
+          reviewState,
+          stubbed: true,
+        }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        availability: "simulation",
+        humanReview: { state: "rejected" },
+        clientUse: "blocked",
+      });
+      expect(outcome.businessSummary).toContain("was rejected");
+      expect(outcome.businessSummary).toContain("must not be used");
+      expect(outcome.businessSummary).not.toContain("internal evaluation");
     },
   );
 

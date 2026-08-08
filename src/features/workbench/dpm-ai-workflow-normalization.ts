@@ -33,6 +33,12 @@ export function normalizeDpmAiWorkflowExecution(
   const runId = readString(run.run_id);
   const taskId = readString(execution.task_id);
   const requestId = readString(run.request_id);
+  const requestedVersion = readString(eligibility.requested_version);
+  const packVersion = readString(run.pack_version);
+  const evaluatedRegistrationRef = readString(
+    eligibility.evaluated_registration_ref,
+  );
+  const registrationRef = readString(run.registration_ref);
   const outputLabel = readString(execution.output_label);
   const providerMode = readString(run.provider_mode);
   const stubbed = readBoolean(run.stubbed);
@@ -70,9 +76,9 @@ export function normalizeDpmAiWorkflowExecution(
     readString(eligibility.pack_id) === profile.packId,
     readString(run.pack_id) === profile.packId,
     readString(run.workflow_surface) === profile.workflowSurface,
-    readString(eligibility.requested_version) === readString(run.pack_version),
-    readString(eligibility.evaluated_registration_ref) ===
-      readString(run.registration_ref),
+    requestedVersion !== null && requestedVersion === packVersion,
+    evaluatedRegistrationRef !== null &&
+      evaluatedRegistrationRef === registrationRef,
     eligibilityCallerApp === runCallerApp,
     readString(eligibility.version) === readString(data.version),
     taskId !== null && taskId === readString(run.task_id),
@@ -103,7 +109,7 @@ export function normalizeDpmAiWorkflowExecution(
     historical,
     runId,
     packId: readString(run.pack_id),
-    packVersion: readString(run.pack_version),
+    packVersion,
     workflowAuthorityOwner: readString(run.workflow_authority_owner),
     providerId: readString(audit.provider_id),
     modelId: readString(audit.model_id),

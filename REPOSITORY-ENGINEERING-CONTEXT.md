@@ -216,6 +216,9 @@ Current repository posture:
     replace newer evidence, and validate response identity before publishing state or continuing a
     dependent mutation. An effect-only reset is not sufficient because an older request can still
     complete after the reset.
+    When a newly published result receives keyboard focus, bind that effect to a stable source
+    result identity. Rebuilding an equivalent view-model object during an unrelated owning-panel
+    update must not steal focus from the advisor's current command.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through
