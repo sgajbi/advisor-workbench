@@ -11,6 +11,7 @@ import {
   filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessMandateType,
+  isManageExceptionEvidenceComplete,
   readStringFromResponse,
 } from "@/features/workbench/manage-workspace-view-model";
 import {
@@ -41,6 +42,7 @@ export default function ManageContextRail({
     commandModel.mandateId
   );
   const attentionCount = attentionRows.length;
+  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");
@@ -94,7 +96,9 @@ export default function ManageContextRail({
         <div className="manage-context-rail-header">
           <Text variant="label">Review Posture</Text>
           <strong>
-            {attentionCount
+            {!hasCompleteExceptionEvidence
+              ? "Attention evidence unavailable"
+              : attentionCount
               ? "Needs portfolio manager attention"
               : businessStateLabel(commandModel.mandateHealthState)}
           </strong>
@@ -102,7 +106,10 @@ export default function ManageContextRail({
         <DefinitionList
           ariaLabel="Manage review posture"
           items={[
-            { label: "Attention Items", value: `${attentionCount} open` },
+            {
+              label: "Attention Items",
+              value: hasCompleteExceptionEvidence ? `${attentionCount} open` : "Not available",
+            },
             {
               label: "Data Readiness",
               value: businessStateLabel(commandModel.dataCompletenessState),

@@ -71,7 +71,11 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
         <div className="manage-overview-table-card manage-attention-card">
           <div className="manage-overview-card-header">
             <h3>Attention Required</h3>
-            <span>{model.exceptionRows.length} items pending</span>
+            <span>
+              {model.hasCompleteExceptionEvidence
+                ? `${model.exceptionRows.length} items pending`
+                : "Evidence unavailable"}
+            </span>
           </div>
           <table className="manage-overview-table">
             <thead>
@@ -84,7 +88,14 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
               </tr>
             </thead>
             <tbody>
-              {model.exceptionRows.length ? (
+              {!model.hasCompleteExceptionEvidence ? (
+                <tr>
+                  <td colSpan={5}>
+                    Attention-item evidence is temporarily unavailable; no zero-attention
+                    conclusion has been inferred.
+                  </td>
+                </tr>
+              ) : model.exceptionRows.length ? (
                 model.exceptionRows.slice(0, 4).map((row) => (
                   <tr key={row.key}>
                     <td>

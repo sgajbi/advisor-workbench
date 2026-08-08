@@ -83,6 +83,20 @@ export function filterManageExceptionRowsForMandate(
   return rows.filter((row) => row.mandateId === normalizedMandateId);
 }
 
+export function isManageExceptionEvidenceComplete(data: ManageWorkspaceData): boolean {
+  if (data.commandCenterExceptionsError || !data.commandCenterExceptions) {
+    return false;
+  }
+  const supportabilityState = data.commandCenterExceptions.supportability.state
+    .trim()
+    .toUpperCase();
+  if (!["COMPLETE", "READY", "SUPPORTED"].includes(supportabilityState)) {
+    return false;
+  }
+  const responseData = asRecord(data.commandCenterExceptions.data);
+  return Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
+}
+
 export function buildMandateSourceReadinessRows(
   data: ManageWorkspaceData,
   commandModel: CommandCenterModel

@@ -35,6 +35,7 @@ export type ManageWorkspaceData = {
   portfolio: Awaited<ReturnType<typeof getPortfolio360>>;
   commandCenter: Awaited<ReturnType<typeof getDpmCommandCenter>> | null;
   commandCenterExceptions: Awaited<ReturnType<typeof getDpmCommandCenterExceptions>> | null;
+  commandCenterExceptionsError: string | null;
   mandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null;
   mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null;
   mandateHealthError: string | null;
@@ -253,6 +254,10 @@ export async function loadManageWorkspaceData(
     portfolio,
     commandCenter: readSettledValue(commandCenterResult),
     commandCenterExceptions: readSettledValue(exceptionsResult),
+    commandCenterExceptionsError: readSettledError(
+      exceptionsResult,
+      "Mandate attention evidence is temporarily unavailable."
+    ),
     mandate,
     mandateHealth,
     mandateHealthError,

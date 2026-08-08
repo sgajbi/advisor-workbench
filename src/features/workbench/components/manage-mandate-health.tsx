@@ -23,6 +23,7 @@ import {
   formatBusinessMandateType,
   formatBusinessOwner,
   formatBusinessSource,
+  isManageExceptionEvidenceComplete,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
@@ -49,6 +50,7 @@ export default function ManageMandateHealth({ data }: Props) {
     buildManageExceptionRows(data.commandCenterExceptions),
     commandModel.mandateId,
   );
+  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
   const healthRows = buildMandateHealthDimensionRows(commandModel);
   const [selectedExceptionKey, setSelectedExceptionKey] = useState<string | null>(
     exceptionRows[0]?.key ?? null,
@@ -95,7 +97,12 @@ export default function ManageMandateHealth({ data }: Props) {
         supportabilityState={commandModel.supportabilityState}
         dataCompletenessState={commandModel.dataCompletenessState}
         mandateHealthState={commandModel.mandateHealthState}
-        hasSourceError={Boolean(data.commandCenterError || data.mandateHealthError)}
+        hasSourceError={Boolean(
+          data.commandCenterError ||
+            data.commandCenterExceptionsError ||
+            !hasCompleteExceptionEvidence ||
+            data.mandateHealthError
+        )}
       />
 
       <div className="mandate-health-context-row" aria-label="Mandate context">
@@ -145,6 +152,7 @@ export default function ManageMandateHealth({ data }: Props) {
       <div className="mandate-health-review-workspace" id="mandate-attention-review">
         <AttentionReviewQueue
           rows={exceptionRows}
+          hasCompleteEvidence={hasCompleteExceptionEvidence}
           selectedKey={selectedException?.key ?? null}
           onSelect={setSelectedExceptionKey}
         />
@@ -272,10 +280,12 @@ function HealthSummaryCard({
 
 function AttentionReviewQueue({
   rows,
+  hasCompleteEvidence,
   selectedKey,
   onSelect,
 }: {
   rows: ManageExceptionRow[];
+  hasCompleteEvidence: boolean;
   selectedKey: string | null;
   onSelect: (key: string) => void;
 }) {
@@ -289,9 +299,22 @@ function AttentionReviewQueue({
           <span>Mandate monitoring</span>
           <h3 id="mandate-attention-heading">Attention Required</h3>
         </div>
-        <strong>{rows.length ? `${rows.length} open` : "No open items"}</strong>
+        <strong>
+          {hasCompleteEvidence
+            ? rows.length
+              ? `${rows.length} open`
+              : "No open items"
+            : "Evidence unavailable"}
+        </strong>
       </div>
-      {rows.length ? (
+      {!hasCompleteEvidence ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Attention items are temporarily unavailable"
+          body="The mandate summary remains visible, but the source exception queue could not be confirmed. No zero-attention conclusion has been inferred."
+        />
+      ) : rows.length ? (
         <div
           className="mandate-attention-table-scroll"
           tabIndex={0}

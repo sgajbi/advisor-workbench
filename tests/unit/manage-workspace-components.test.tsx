@@ -160,6 +160,29 @@ describe("manage workspace split components", () => {
     expect(within(summary).getAllByText("Not available").length).toBeGreaterThan(0);
   });
 
+  it("renders unavailable exception evidence without claiming zero attention items", () => {
+    const data = buildManageWorkspaceData({
+      commandCenterExceptions: null,
+      commandCenterExceptionsError: "Gateway timeout",
+    });
+
+    const { rerender } = render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("Attention items are temporarily unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Evidence unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("No open items")).not.toBeInTheDocument();
+
+    rerender(<ManageOverview data={data} />);
+    expect(screen.getAllByText("Evidence unavailable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No active attention items.")).not.toBeInTheDocument();
+
+    rerender(<ManageContextRail data={data} activeMode="reviews" />);
+    const posture = screen.getByLabelText("Manage review posture");
+    expect(within(posture).getByText("Not available")).toBeInTheDocument();
+    expect(within(posture).queryByText("0 open")).not.toBeInTheDocument();
+  });
+
   it("renders overview operating posture from Gateway-backed manage data", () => {
     render(<ManageOverview data={buildManageWorkspaceData()} />);
 
