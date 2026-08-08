@@ -236,10 +236,15 @@ Current repository posture:
     missing, or contradictory safety evidence fails closed even when output labels agree.
     The inner workflow-pack `supportability_status` is also a closed
     `READY | ACTION_REQUIRED | HISTORICAL` vocabulary; missing or unknown values make the output
-    contract incomplete. Returned source-object identity governs adjacent review status, run ids,
-    references, and errors as well as generated material. Never project workflow posture under a
-    locally captured exception, wave, proof pack, outcome review, or score run unless the response
-    itself identifies that same business object.
+    contract incomplete. Review state is also closed and required, and `review_required` must agree
+    exactly: every state except `NOT_REVIEW_REQUIRED` requires review. Missing, unknown, or
+    contradictory review posture makes the output contract incomplete. When the outer
+    supportability envelope publishes a proof-pack, wave, or score-run identity, it must match the
+    business object requested by the caller; a ready authority for another object is not reusable
+    support. Returned source-object identity governs adjacent review status, run ids, references,
+    and errors as well as generated material. Never project workflow posture under a locally
+    captured exception, wave, proof pack, outcome review, or score run unless the response itself
+    identifies that same business object.
     A successful workflow must render its returned decision-support material, not only availability
     and audit posture. Keep the six family-specific source-field mappings declarative in the shared
     profile. The same profile is the single source for each family's default `requested_outputs`;
