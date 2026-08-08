@@ -216,6 +216,11 @@ Current repository posture:
     Stubbed workflow output is deterministic preparation, not AI-assisted preparation. A source
     client-use approval remains blocked unless runtime redaction is explicitly active; a
     contradictory internal-scope limitation must never coexist with an approved client-use state.
+    A successful workflow must render its returned decision-support material, not only availability
+    and audit posture. Keep the six family-specific source-field mappings declarative in the shared
+    profile; render only adopted business fields with readable labels and bounded structure; keep
+    technical hashes and raw keys out of primary material. An otherwise usable payload with no
+    supported presentable field fails closed rather than claiming live but unreadable output.
     Treat every Gateway response as untrusted at runtime even when the API client exposes a typed
     contract. Presentation helpers must guard optional nested records and fail to an unavailable
     business state so contract drift cannot crash the owning workstation panel before shared
@@ -225,7 +230,9 @@ Current repository posture:
     the current source context, sequence overlapping requests so an earlier completion cannot
     replace newer evidence, and validate response identity before publishing state or continuing a
     dependent mutation. An effect-only reset is not sufficient because an older request can still
-    complete after the reset.
+    complete after the reset. When a read precedes a side-effecting command, revalidate both the
+    request sequence and current source-context key immediately before the mutation; filtering the
+    eventual UI result cannot undo an artifact created for a superseded business object.
     Every DPM workflow-output boundary must also receive the business-object reference requested by
     its caller and compare it with the family-specific source input published by Gateway. Workflow
     pack, surface, and authority identity do not prove that a result belongs to the requested proof

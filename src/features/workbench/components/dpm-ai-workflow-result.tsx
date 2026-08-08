@@ -35,6 +35,32 @@ export default function DpmAiWorkflowResult({
         </h3>
         <p>{outcome.businessSummary}</p>
       </div>
+      {outcome.material.sections.length > 0 ? (
+        <section
+          className="dpm-ai-workflow-material"
+          aria-label={outcome.material.title}
+        >
+          <h4>{outcome.material.title}</h4>
+          <dl>
+            {outcome.material.sections.map((section) => (
+              <div key={section.label}>
+                <dt>{section.label}</dt>
+                <dd>
+                  {section.values.length === 1 ? (
+                    section.values[0]
+                  ) : (
+                    <ul>
+                      {section.values.map((value, index) => (
+                        <li key={`${section.label}-${index}`}>{value}</li>
+                      ))}
+                    </ul>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
       <AiAssistanceDisclosure disclosure={outcome.disclosure} />
     </section>
   );

@@ -9,6 +9,7 @@ import {
 
 import {
   normalizeDpmAiWorkflowExecution,
+  type DpmAiWorkflowMaterial,
   type NormalizedDpmAiExecution,
 } from "./dpm-ai-workflow-normalization";
 import {
@@ -21,6 +22,7 @@ export type DpmAiWorkflowOutcome = {
   sourceIdentity: string;
   scopeLabel: string;
   businessSummary: string;
+  material: DpmAiWorkflowMaterial;
   disclosure: AiAssistanceDisclosureModel;
 };
 
@@ -73,6 +75,7 @@ export function buildDpmAiWorkflowOutcome(
     sourceIdentity: workflowResultSourceIdentity(family, normalized),
     scopeLabel: profile.scopeLabel,
     businessSummary: describeBusinessOutcome(profile.scopeLabel, disclosure),
+    material: normalized.material,
     disclosure,
   };
 }
@@ -131,6 +134,10 @@ export function buildDpmAiInvocationEvidenceOutcome(
     scopeLabel: profile.scopeLabel,
     businessSummary:
       "The summary invocation is recorded for audit, but no generated PM quality output is available from this record.",
+    material: {
+      title: profile.materialTitle,
+      sections: [],
+    },
     disclosure,
   };
 }

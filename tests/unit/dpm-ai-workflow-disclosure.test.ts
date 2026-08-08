@@ -36,6 +36,13 @@ describe("buildDpmAiWorkflowOutcome", () => {
       expect(outcome).toMatchObject({
         family: typedFamily,
         scopeLabel: DPM_AI_WORKFLOW_PROFILES[typedFamily].scopeLabel,
+        material: {
+          title: DPM_AI_WORKFLOW_PROFILES[typedFamily].materialTitle,
+          sections: expect.arrayContaining([
+            { label: "Review posture", values: ["Review required"] },
+            { label: "Permitted scope", values: ["Support only"] },
+          ]),
+        },
         disclosure: {
           preparation: "ai-assisted",
           availability: "live",
@@ -50,6 +57,59 @@ describe("buildDpmAiWorkflowOutcome", () => {
       );
     },
   );
+
+  it.each([
+    {
+      family: "proof-pack-memo" as const,
+      output: { pm_memo: "Review allocation drift before approval." },
+      label: "Portfolio manager memo",
+      value: "Review allocation drift before approval.",
+    },
+    {
+      family: "wave-memo" as const,
+      output: { memo_sections: ["Allocation drift", "Tax impact"] },
+      label: "Memo sections",
+      value: "Tax impact",
+    },
+    {
+      family: "operations-handoff" as const,
+      output: { sections: ["Validate settlement instructions"] },
+      label: "Handoff sections",
+      value: "Validate settlement instructions",
+    },
+    {
+      family: "exception-summary" as const,
+      output: { recommended_triage: ["Repair source data"] },
+      label: "Recommended triage",
+      value: "Repair source data",
+    },
+    {
+      family: "outcome-narrative" as const,
+      output: { pm_summary: "Outcome remains within mandate." },
+      label: "Portfolio manager summary",
+      value: "Outcome remains within mandate.",
+    },
+    {
+      family: "pm-quality-summary" as const,
+      output: { score_run_summary: "Quality controls require review." },
+      label: "Quality summary",
+      value: "Quality controls require review.",
+    },
+  ])("normalizes readable $family business material", ({ family, output, label, value }) => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      family,
+      buildDpmAiWorkflowResponse(family, { structuredOutput: output }),
+    );
+
+    expect(outcome.material.sections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label,
+          values: expect.arrayContaining([value]),
+        }),
+      ]),
+    );
+  });
 
   it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
     "fails closed when the %s response belongs to another source object",
@@ -165,6 +225,24 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.businessSummary).toContain("incomplete");
   });
 
+  it.each([null, "lotus-idea"])(
+    "fails closed for workflow authority owner %s",
+    (owner) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      response.data.workflow_pack_run.workflow_authority_owner = owner as string;
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
   it.each([
     ["blank text", { memo: "   " }],
     ["null value", { summary: null }],
@@ -188,11 +266,55 @@ describe("buildDpmAiWorkflowOutcome", () => {
     );
   });
 
+  it("fails closed when output has no supported business-material field", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: {
+          unmapped_generated_text: "This cannot be presented without an adopted business meaning.",
+        },
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
+  it("groups adopted aliases under one business label", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: {
+          pm_memo: "Primary portfolio-manager view.",
+          memo: "Supporting portfolio-manager context.",
+        },
+      }),
+    );
+
+    expect(outcome.material.sections).toEqual([
+      {
+        label: "Portfolio manager memo",
+        values: [
+          "Primary portfolio-manager view.",
+          "Supporting portfolio-manager context.",
+        ],
+      },
+    ]);
+  });
+
   it("keeps zero and false values when the structured result explicitly publishes them", () => {
     const outcome = buildDpmAiWorkflowOutcome(
       "proof-pack-memo",
       buildDpmAiWorkflowResponse("proof-pack-memo", {
-        structuredOutput: { exceptionCount: 0, escalationRequired: false },
+        structuredOutput: {
+          evidence_gap_count: 0,
+          escalation_required: false,
+        },
       }),
     );
 
@@ -202,6 +324,12 @@ describe("buildDpmAiWorkflowOutcome", () => {
       evidence: { state: "supported" },
       clientUse: "internal-only",
     });
+    expect(outcome.material.sections).toEqual(
+      expect.arrayContaining([
+        { label: "Evidence gaps", values: ["0"] },
+        { label: "Escalation required", values: ["No"] },
+      ]),
+    );
   });
 
   it.each([

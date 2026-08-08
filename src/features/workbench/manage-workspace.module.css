@@ -210,6 +210,62 @@
   line-height: 19px;
 }
 
+.manageScope :global(.dpm-ai-workflow-material) {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #d8dde4;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.manageScope :global(.dpm-ai-workflow-material h4) {
+  margin: 0;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.manageScope :global(.dpm-ai-workflow-material dl) {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.manageScope :global(.dpm-ai-workflow-material dl > div) {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid #e5e8ec;
+}
+
+.manageScope :global(.dpm-ai-workflow-material dt),
+.manageScope :global(.dpm-ai-workflow-material dd) {
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.manageScope :global(.dpm-ai-workflow-material dt) {
+  color: #5b5d63;
+  font-weight: 700;
+}
+
+.manageScope :global(.dpm-ai-workflow-material dd) {
+  color: #24272b;
+}
+
+.manageScope :global(.dpm-ai-workflow-material ul) {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+
 .manageScope :global(.dpm-wave-decision-support) {
   display: grid;
   gap: 12px;
@@ -3965,6 +4021,7 @@
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
   .manageScope :global(.dpm-ai-workflow-result),
+  .manageScope :global(.dpm-ai-workflow-material dl > div),
   .manageScope :global(.dpm-wave-decision-support-status),
   .manageScope :global(.dpm-wave-command-center-status-strip),
   .manageScope :global(.dpm-wave-command-center-workspace-grid),
