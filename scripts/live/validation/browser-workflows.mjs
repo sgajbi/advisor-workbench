@@ -1437,23 +1437,72 @@ export async function validateDpmCommandCenterPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText("Mandate Readiness").first()).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(page.getByText("Data Readiness").first()).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(page.getByText("Attention Required").first()).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(page.getByText("Recommended Actions").first()).toBeVisible({
-    timeout: timeoutMs,
-  });
+  const mandatePanel = workbenchPanelByClass(page, "manage-mandate-panel");
   await expect(
-    page.getByText("Health Dimensions Breakdown").first(),
+    mandatePanel.getByRole("heading", { name: "Mandate review workflow" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(mandatePanel.getByText("Mandate health", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(mandatePanel.getByText("Data readiness", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    mandatePanel.getByRole("heading", { name: "Attention Required" }),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    mandatePanel.getByRole("heading", { name: "Health Dimensions Breakdown" }),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+
+  const attentionItems = mandatePanel.getByLabel("Mandate attention items");
+  const attentionButtons = attentionItems.getByRole("button");
+  const attentionCount = await attentionButtons.count();
+  if (attentionCount < 1) {
+    throw new Error("DPM mandate review expected at least one source-owned attention item.");
+  }
+  const selectedIndex = attentionCount > 1 ? 1 : 0;
+  const selectedAttention = attentionButtons.nth(selectedIndex);
+  await selectedAttention.focus();
+  await selectedAttention.press("Enter");
+  await expect(selectedAttention).toHaveAttribute("aria-pressed", "true", {
+    timeout: timeoutMs,
+  });
+
+  const selectedReview = mandatePanel.getByLabel("Selected mandate review item");
+  await expect(selectedReview.getByText("Source-owned next step")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await selectedReview.getByText("Evidence and technical identifiers").click();
+  await expect(selectedReview.getByText("Exception ID")).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(mandatePanel.getByText("DPM_SOURCE_STALE", { exact: true })).toHaveCount(0);
+  await expect(
+    mandatePanel.getByText("Advisor review recommended before rebalance approval.", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  const originalViewport = page.viewportSize() ?? { width: 1440, height: 1000 };
+  for (const width of [1024, 768, 720, 519]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(mandatePanel).toBeVisible({ timeout: timeoutMs });
+    const pageReflows = await page.evaluate(
+      () =>
+        globalThis.document.documentElement.scrollWidth <=
+        globalThis.document.documentElement.clientWidth + 1,
+    );
+    if (!pageReflows) {
+      throw new Error(`DPM mandate review creates page-level horizontal scrolling at ${width}px.`);
+    }
+  }
+  await page.setViewportSize(originalViewport);
   await screenshotRegisteredPanel(page, "dpm.command_center");
 }
 
