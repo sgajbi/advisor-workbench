@@ -115,10 +115,13 @@ export async function runDpmCommandCenterMonitoring(params?: {
 export async function getDpmCommandCenterExceptions(params?: {
   tenantId?: string;
   portfolioManagerId?: string;
+  mandateId?: string;
+  portfolioId?: string;
   monitoringRunId?: string;
   state?: string;
   severity?: string;
   limit?: number;
+  cursor?: string;
 }): Promise<DpmCommandCenterGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const query = new URLSearchParams();
@@ -128,6 +131,12 @@ export async function getDpmCommandCenterExceptions(params?: {
     params?.portfolioManagerId ?? dpmContext.commandCenterPortfolioManagerId
   );
   query.set("limit", String(params?.limit ?? 25));
+  if (params?.mandateId) {
+    query.set("mandate_id", params.mandateId);
+  }
+  if (params?.portfolioId) {
+    query.set("portfolio_id", params.portfolioId);
+  }
   if (params?.monitoringRunId) {
     query.set("monitoring_run_id", params.monitoringRunId);
   }
@@ -136,6 +145,9 @@ export async function getDpmCommandCenterExceptions(params?: {
   }
   if (params?.severity) {
     query.set("severity", params.severity);
+  }
+  if (params?.cursor) {
+    query.set("cursor", params.cursor);
   }
   return await observeWorkbenchResource(
     "dpm.command-center.exceptions.list",

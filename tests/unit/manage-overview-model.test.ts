@@ -140,6 +140,36 @@ describe("manage overview model", () => {
     );
   });
 
+  it("keeps attention counts unknown when the portfolio exception page is truncated", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        commandCenterExceptions: {
+          ...base.commandCenterExceptions!,
+          data: {
+            ...base.commandCenterExceptions!.data,
+            next_cursor: "exc_002",
+          },
+        },
+      })
+    );
+
+    expect(model.hasCompleteExceptionEvidence).toBe(false);
+    expect(model.postureCards.find((card) => card.key === "attention")?.value).toBe(
+      "Not available"
+    );
+    expect(model.latestActivities[0]?.event).toContain("evidence is unavailable");
+  });
+
+  it("preserves an unknown source issue count when wave evidence is unavailable", () => {
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({ waves: null, wavesError: "Gateway timeout" })
+    );
+
+    expect(model.activeRebalance.issueCount).toBe("N/A");
+    expect(model.blockedSurfaces).toContain("Rebalance waves");
+  });
+
   it("keeps book-level exceptions outside the selected mandate posture", () => {
     const data = buildManageWorkspaceData();
     if (!data.commandCenter || !data.commandCenterExceptions) {
@@ -200,7 +230,7 @@ describe("manage overview model", () => {
         },
         commandCenterExceptions: {
           ...base.commandCenterExceptions!,
-          data: { items: [] },
+          data: { items: [], next_cursor: null },
         },
         waves: {
           ...base.waves!,

@@ -94,7 +94,12 @@ export function isManageExceptionEvidenceComplete(data: ManageWorkspaceData): bo
     return false;
   }
   const responseData = asRecord(data.commandCenterExceptions.data);
-  return Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
+  const hasExceptionRows =
+    Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
+  const hasCompletePageMetadata =
+    Object.prototype.hasOwnProperty.call(responseData, "next_cursor") &&
+    responseData.next_cursor === null;
+  return hasExceptionRows && hasCompletePageMetadata;
 }
 
 export function buildMandateSourceReadinessRows(

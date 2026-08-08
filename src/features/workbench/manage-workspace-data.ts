@@ -128,7 +128,7 @@ export async function loadManageWorkspaceData(
     reviewsResult,
   ] = await Promise.allSettled([
     getDpmCommandCenter({ limit: 25 }),
-    getDpmCommandCenterExceptions({ state: "ACTIVE", limit: 25 }),
+    getDpmCommandCenterExceptions({ portfolioId, state: "ACTIVE", limit: 25 }),
     getDpmMandateByPortfolio(portfolioId),
     getDpmPortfolioMemory({ portfolioId, limit: 100 }),
     searchDpmPortfolioMemory({ portfolioIds: [portfolioId], limit: 10, sourceScanLimit: 250 }),

@@ -318,7 +318,11 @@ export function buildDpmWaveCommandCenterModel(params: {
     selectedWaveItemCount: formatValue(
       supportability?.item_count ?? readValue(metricSource, "item_count") ?? itemRows.length
     ),
-    selectedWaveIssueCount: formatValue(supportability?.issue_count ?? 0),
+    selectedWaveIssueCount: formatValue(
+      supportability?.issue_count ??
+        readValue(metricSource, "issue_count") ??
+        readValue(selectedListRecord ?? {}, "issue_count")
+    ),
     selectedWaveSupportabilityReason:
       listRows.find((row) => row.waveId === selectedWaveId)?.supportabilityReason ||
       firstNonEmpty(supportability?.reason_codes) ||

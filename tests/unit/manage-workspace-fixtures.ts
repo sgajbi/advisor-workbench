@@ -64,6 +64,7 @@ export function buildManageWorkspaceData(
         blocked_actions: [],
       },
       data: {
+        next_cursor: null,
         items: [
           {
             exception_id: "exc_001",
