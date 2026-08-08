@@ -195,10 +195,12 @@ must travel through Gateway-shaped contracts.
     proof-pack sections and wave report input remain manage-owned evidence.
 17. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
     `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
-    contracts. Workbench renders manage-owned health distribution, source readiness,
-    supportability, active exceptions, monitoring-run lineage, and mandate health dimensions
-    without reconstructing mandate-health scores, source readiness, PM-book membership, exception
-    queues, or resolution state.
+    contracts. Workbench renders Manage-owned mandate health, source readiness, supportability,
+    active exceptions, exception-specific owners and next steps, monitoring-run lineage, and health
+    dimensions as a selected-item review flow. Missing scores, owners, actions, and evidence remain
+    unavailable. Workbench does not reconstruct mandate-health scores, source readiness, PM-book
+    membership, exception queues, priority, aggregate-to-item action relationships, or resolution
+    state.
 18. `lotus-advise` owns advisor-led proposal workflow truth. Workbench proposal queue/detail
     routes consume that truth through Gateway proposal endpoints only. The RFC-0023 proposal detail
     panel can record advisor-use narrative review and request reviewed narrative report packaging

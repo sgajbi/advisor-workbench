@@ -2134,3 +2134,59 @@ families plus invocation-only evidence. The supported product and integration bo
 ledger are updated. Routes, environment variables, API paths, canonical operator commands, and
 README onboarding do not change, so no README, API Surface, or runbook update is required. Publish
 the authored wiki after merge and verify strict parity.
+
+### DPM mandate review workflow — 2026-08-09
+
+#### Workflow objective and users
+
+Portfolio managers and investment-control users need to move from mandate posture to the exact
+source-owned item requiring attention, understand who owns it and what Manage recommends next, and
+inspect lineage without scanning duplicate dashboards or relying on Workbench-invented readiness.
+
+#### Research anchors
+
+1. [CFA Institute Standard III(C): Suitability](https://www.cfainstitute.org/standards/professionals/code-ethics-standards/standards-of-practice-iii-c)
+   supports periodic review of investor objectives and constraints rather than local suitability
+   inference.
+2. [ESMA MiFID II Article 25](https://www.esma.europa.eu/publications-and-data/interactive-single-rulebook/mifid-ii/article-25-assessment-suitability-and)
+   anchors periodic portfolio-management review in the client's preferences, objectives, and
+   characteristics.
+3. [FCA Consumer Duty outcomes monitoring](https://handbook.fca.org.uk/handbook/prin2a/prin2as9)
+   links management information to identifying emerging risk and taking accountable action.
+4. [Carbon data-table guidance](https://carbondesignsystem.com/components/data-table/usage/)
+   supports compact task tables and progressive disclosure for supplementary detail.
+5. [WCAG 2.2 reflow guidance](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html)
+   requires content and controls to remain usable without page-level two-dimensional scrolling.
+
+#### Adopted decisions
+
+1. Use one operating sequence: mandate health, attention queue, selected source-owned next step,
+   then evidence and version identifiers.
+2. Make each exception observation a native button with visible selected state and keyboard
+   activation; bind owner, age, source, and next step to that same exception.
+3. Render a summary meter only when Manage publishes a usable score. Missing context, ownership,
+   action, monitoring, and lineage remain visibly unavailable.
+4. Translate known source codes into business language while keeping exception, mandate, run,
+   correlation, and authority identifiers under native progressive disclosure.
+5. Keep wide operational tables inside labelled scroll containers and prove page reflow at desktop,
+   tablet, compact, and effective 200% zoom widths.
+
+#### Rejected decisions
+
+1. Inferring mandate readiness from the number of active exceptions.
+2. Hard-coded health percentages, mandate type, risk profile, currency, as-of date, or audit-trail
+   availability.
+3. Attaching book-level recommended actions to a selected exception without a source relationship.
+4. Generating remediation prose such as approval guidance from a reason or action code.
+5. Repeating attention, action, latest-review, and health-dimension data as equally weighted card
+   stacks or exposing raw reason codes as the primary observation.
+
+#### Expected measurable improvement and publication decision
+
+Focused model, helper, component, integration, and canonical-script tests prove current summary
+contract mapping, all supported operating states, keyboard selection, evidence disclosure, removal
+of fabricated defaults, and responsive proof. The product boundary and operator proof changed, so
+repository context, the canonical runtime runbook, `wiki/Supported-Features.md`,
+`wiki/API-Surface.md`, and `wiki/Integrations.md` are updated. README commands, public routes,
+environment variables, and platform-wide routing do not change. Publish the authored wiki after
+merge and verify strict parity.
