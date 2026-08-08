@@ -250,6 +250,12 @@ export function formatBusinessOwner(owner: string): string {
 
 export function formatBusinessExceptionTitle(title: string): string {
   const normalized = title.toLowerCase();
+  if (
+    normalized.includes("source_risk_health_attention") ||
+    normalized.includes("source risk health attention")
+  ) {
+    return "Risk posture requires review";
+  }
   if (normalized.includes("dpm_source_stale") || normalized.includes("source stale")) {
     return "Mandate data requires refresh";
   }
@@ -290,6 +296,9 @@ export function formatBusinessReason(value: string | null | undefined): string {
     return "-";
   }
   const normalized = value.toUpperCase();
+  if (normalized.includes("SOURCE_RISK_HEALTH_ATTENTION")) {
+    return "Risk posture requires review";
+  }
   if (normalized.includes("DPM_SOURCE_STALE")) {
     return "Mandate data requires refresh";
   }

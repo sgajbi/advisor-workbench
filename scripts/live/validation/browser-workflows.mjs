@@ -1484,6 +1484,12 @@ export async function validateDpmCommandCenterPanel(
   });
   await expect(mandatePanel.getByText("DPM_SOURCE_STALE", { exact: true })).toHaveCount(0);
   await expect(
+    mandatePanel.getByText("SOURCE_RISK_HEALTH_ATTENTION", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    mandatePanel.getByText("Source Risk Health Attention", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
     mandatePanel.getByText("Advisor review recommended before rebalance approval.", {
       exact: true,
     }),

@@ -78,6 +78,13 @@ describe("manage mandate health helpers", () => {
     expect(formatMandateAction("REVIEW_WORKFLOW")).toBe("Review mandate workflow");
     expect(formatMandateAction("REPAIR_SOURCE_DATA")).toBe("Resolve data readiness");
     expect(formatMandateAction("-")).toBe("Not provided by mandate monitoring");
+    expect(
+      formatMandateAttentionObservation({
+        ...exceptionRow,
+        title: "SOURCE_RISK_HEALTH_ATTENTION",
+        nextAction: "REVIEW_WORKFLOW",
+      }),
+    ).toBe("Risk posture requires review");
   });
 
   it("formats health observations without inventing backend decisions", () => {
@@ -85,6 +92,9 @@ describe("manage mandate health helpers", () => {
     expect(formatMandateHealthObservation("READY")).toBe("No action required");
     expect(formatMandateHealthObservation("TAX_LOT_SOURCE_PARTIAL")).toBe(
       "Tax-lot data is incomplete",
+    );
+    expect(formatMandateHealthObservation("SOURCE_RISK_HEALTH_ATTENTION")).toBe(
+      "Risk posture requires review",
     );
   });
 });

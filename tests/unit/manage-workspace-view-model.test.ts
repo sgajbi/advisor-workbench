@@ -14,8 +14,14 @@ describe("manage workspace business presentation", () => {
     expect(formatBusinessExceptionTitle("DPM_SOURCE_STALE")).toBe(
       "Mandate data requires refresh",
     );
+    expect(formatBusinessExceptionTitle("SOURCE_RISK_HEALTH_ATTENTION")).toBe(
+      "Risk posture requires review",
+    );
     expect(formatBusinessReason("TAX_LOT_SOURCE_PARTIAL")).toBe(
       "Tax-lot data is incomplete",
+    );
+    expect(formatBusinessReason("SOURCE_RISK_HEALTH_ATTENTION")).toBe(
+      "Risk posture requires review",
     );
   });
 

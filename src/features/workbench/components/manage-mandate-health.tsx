@@ -293,8 +293,6 @@ function AttentionReviewQueue({
               <tr>
                 <th>Observation</th>
                 <th>Status</th>
-                <th>Owner</th>
-                <th>Age</th>
               </tr>
             </thead>
             <tbody>
@@ -317,8 +315,6 @@ function AttentionReviewQueue({
                       {businessStateLabel(row.severity)}
                     </SemanticBadge>
                   </td>
-                  <td>{formatBusinessOwner(row.owner)}</td>
-                  <td>{row.age === "N/A" ? "Not available" : row.age}</td>
                 </tr>
               ))}
             </tbody>
