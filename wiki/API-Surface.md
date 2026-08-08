@@ -161,13 +161,14 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/dpm/command-center`,
   `/api/v1/dpm/command-center/monitoring/run-once`,
   `/api/v1/dpm/command-center/exceptions`, and
-  `/api/v1/dpm/command-center/mandates*`. Workbench renders manage-owned book health
-  distribution, source readiness, attention queue, recommended actions, latest monitoring-run
-  lineage, active exceptions, governed exception-summary workflow-pack posture, and mandate health
-  dimensions. It does not calculate mandate health, infer PM-book membership, reconstruct source
-  readiness, merge exceptions, resolve exceptions locally, generate exception-summary narrative,
-  or call `lotus-manage` or `lotus-ai` directly. Demo promotion still requires the canonical
-  `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review.
+  `/api/v1/dpm/command-center/mandates*`. Workbench renders Manage-owned mandate health, source
+  readiness, monitoring posture, active exceptions, exception-specific owners and next steps,
+  health dimensions, and progressively disclosed lineage in a selected-item workflow. It renders
+  scores only when the source publishes usable values and leaves missing attributes unavailable.
+  It does not calculate mandate health, infer PM-book membership or exception priority, reconstruct
+  source readiness, merge exceptions, bind aggregate actions to an individual exception, resolve
+  exceptions locally, or call `lotus-manage` or `lotus-ai` directly. Demo promotion still requires
+  the canonical `PB_SG_GLOBAL_BAL_001` live evidence pack and screenshot review.
 - RFC-0098/RFC-0039 construction alternatives rendering is implemented on
   `/workbench/{portfolioId}?mode=construction` through Gateway
   `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful

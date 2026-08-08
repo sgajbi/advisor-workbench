@@ -543,7 +543,11 @@ or another source service changed, use the default `npm run live:stack:up:valida
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center
 supportability must not collapse into a false ready panel. Do not treat partial screenshot output
-as successful evidence.
+as successful evidence. The browser proof selects a source-owned attention item with the keyboard,
+opens its evidence identifiers, rejects raw primary reason-code and fabricated-remediation language,
+and verifies page-level reflow at 1024, 768, 720 (effective 200% zoom for a 1440-pixel workspace),
+and 519 pixels. Wide operational tables may scroll inside their labelled table container; the page
+must not introduce horizontal scrolling.
 
 The summary includes `calculationChecks` for canonical performance and risk sanity. These checks
 assert numeric ranges, contribution reconciliation, governed attribution fallback posture, risk

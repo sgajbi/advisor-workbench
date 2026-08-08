@@ -77,11 +77,14 @@ Current repository posture:
 9. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
    Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
    `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`.
-   Workbench shows manage-owned source readiness, recommended actions, latest monitoring-run
-   lineage, active exceptions, governed exception-summary workflow-pack posture, and mandate health
-   dimensions without calculating mandate health, reconstructing source readiness, merging
-   exceptions, generating exception-summary narrative locally, or calling `lotus-manage`/`lotus-ai`
-   directly.
+   Workbench presents Manage-owned mandate health, source readiness, latest monitoring posture,
+   active exceptions, exception-specific next steps, lineage, and health dimensions as one selected
+   review-item workflow. Summary meters render only when Manage publishes a usable score; missing
+   mandate attributes, scores, owners, actions, and evidence remain visibly unavailable rather than
+   receiving Workbench defaults. Technical identifiers use progressive disclosure. Workbench does
+   not calculate mandate health, infer readiness or priority from exception count, merge exceptions,
+   attach book-level actions to an exception, generate remediation narrative locally, or call
+   `lotus-manage`/`lotus-ai` directly.
 10. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
