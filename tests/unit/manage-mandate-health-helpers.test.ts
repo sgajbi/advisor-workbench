@@ -36,6 +36,10 @@ const healthRows: MandateHealthRow[] = [
 const exceptionRow: ManageExceptionRow = {
   key: "exception_1",
   mandateId: "mandate_001",
+  monitoringRunId: "N/A",
+  sourceRunId: "N/A",
+  correlationId: "corr_exception_1",
+  authority: "lotus-manage:monitoring-exception",
   severity: "HIGH",
   title: "SUSTAINABILITY_PREFERENCES_MISSING",
   source: "lotus-manage",

@@ -8,6 +8,10 @@ export type BadgeTone = "default" | "success" | "warn" | "danger";
 export type ManageExceptionRow = {
   key: string;
   mandateId: string | null;
+  monitoringRunId: string;
+  sourceRunId: string;
+  correlationId: string;
+  authority: string;
   severity: string;
   title: string;
   source: string;
@@ -47,6 +51,12 @@ export function buildManageExceptionRows(
     return {
       key: exceptionId,
       mandateId: readString(record, "mandate_id"),
+      monitoringRunId: readString(record, "monitoring_run_id") || "N/A",
+      sourceRunId: readString(record, "source_run_id") || "N/A",
+      correlationId:
+        readString(record, "correlation_id") || exceptions?.correlation_id || "N/A",
+      authority:
+        readString(record, "authority") || exceptions?.supportability.authority || "N/A",
       severity: readString(record, "severity") || "UNKNOWN",
       title:
         readString(record, "title") ||
