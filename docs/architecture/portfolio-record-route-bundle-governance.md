@@ -58,7 +58,7 @@ budget merely to make CI pass.
 ## Baseline and current evidence
 
 Issue #481 recorded a 1.31 MB Next.js First Load JS baseline for every record route. After task
-isolation, the same production report records 988 kB for Cashflow and 979 kB for Income, while the
+isolation, the same production report records 988 kB for Cashflow and approximately 980 kB for Income, while the
 three grid routes retain their business behavior. The deterministic raw report records 3.07 MB and
 3.04 MB respectively and confirms AG Grid is absent from both initial graphs.
 

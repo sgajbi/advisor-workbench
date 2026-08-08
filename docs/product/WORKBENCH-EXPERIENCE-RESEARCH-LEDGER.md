@@ -2241,7 +2241,7 @@ Research was refreshed on 2026-08-09 from official Next.js sources:
 ### Expected measurable improvement and publication decision
 
 The production build moved Cashflow First Load JS from 1.31 MB to 988 kB (24.6% reduction) and
-Income from 1.31 MB to 979 kB (25.3% reduction). The raw initial-JavaScript report records 3.07 MB
+Income from 1.31 MB to approximately 980 kB (25.2% reduction). The raw initial-JavaScript report records 3.07 MB
 for Cashflow and 3.04 MB for Income, with no AG Grid marker in either initial graph; Allocation,
 Positions, and Transactions retain their required grids. Focused tests cover preserved task
 behavior, all five loading/error identities, accessible recovery, and budget failures.
