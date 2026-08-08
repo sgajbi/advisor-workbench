@@ -18,7 +18,8 @@ describe("WorkbenchPage", () => {
   });
 
   it("renders a focused manage overview with shared Workbench navigation", async () => {
-    vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_1001" })));
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_1001" }));
+    vi.stubGlobal("fetch", fetchMock);
 
     render(
       await WorkbenchPage({
@@ -33,6 +34,13 @@ describe("WorkbenchPage", () => {
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input
+          .toString()
+          .includes("/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PF_1001&state=ACTIVE")
+      )
+    ).toBe(true);
     expect(screen.getByRole("link", { name: /Rebalance Ready/i })).toHaveAttribute(
       "href",
       "/workbench/PF_1001?mode=waves"
@@ -534,6 +542,7 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           blocked_actions: [],
         },
         data: {
+          next_cursor: null,
           items: [
             {
               exception_id: "exc_001",
