@@ -182,7 +182,9 @@ must travel through Gateway-shaped contracts.
     narrative, and PM-quality support-summary execution envelope. Workbench normalizes each family
     into one fail-closed disclosure while preserving preparation, output availability, evidence,
     review, client use, freshness, supersession, runtime, and stub posture as independent
-    source-backed facts. A persisted PM-quality summary invocation remains audit evidence with
+    source-backed facts. Historical outcome-review proof-pack references remain lineage and cannot
+    authorize a proof-pack memo unless the current Gateway proof-pack contract declares AI evidence
+    available. A persisted PM-quality summary invocation remains audit evidence with
     output unavailable unless the owning source independently returns generated material.
     Workbench does not create browser-owned prompts, generated-text retention, PM ranking,
     client-contact, order, execution, or OMS truth.

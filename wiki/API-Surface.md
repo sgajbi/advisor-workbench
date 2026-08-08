@@ -183,7 +183,9 @@ promote dormant labels into product ownership just because historical route file
   surfaced by the Gateway Workbench rebalance snapshot, load Gateway-provided Markdown/report/AI
   evidence payload posture, and request the governed PM memo through Gateway; it does not treat RFC-0042
   outcome-review `dpp_*` proof ids or expected-snapshot run ids as RFC-0040 proof-pack ids or
-  generation sources. Reviewable Manage business states such as `PENDING_REVIEW` remain valid
+  generation sources. The PM Copilot workspace may display those historical references as lineage,
+  but enables a proof-pack memo only when the current Gateway proof-pack response declares its AI
+  evidence input available. Reviewable Manage business states such as `PENDING_REVIEW` remain valid
   populated product evidence when proof-pack identity, sections, hashes/lineage, and handoff posture
   are present. It does not rebuild proof-pack sections, compute hashes, synthesize Markdown,
   construct report input, construct AI evidence, construct PM memo prompts, materialize PDF
