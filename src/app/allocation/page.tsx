@@ -1,9 +1,10 @@
-import PortfolioRecordScreen from "@/apps/portfolio/portfolio-record-screen";
+import PortfolioAllocationRecordScreen from "@/apps/portfolio/components/portfolio-allocation-record-screen";
+import { loadPortfolioRecordScreenData } from "@/apps/portfolio/portfolio-record-screen-data";
 
-export default function AllocationPage({
+export default async function AllocationPage({
   searchParams,
 }: {
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
-  return <PortfolioRecordScreen searchParams={searchParams} screen="allocation" />;
+  return <PortfolioAllocationRecordScreen {...(await loadPortfolioRecordScreenData({ searchParams }))} />;
 }

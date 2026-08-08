@@ -8,7 +8,9 @@ import type {
   PortfolioWorkspace,
 } from "../../src/apps/portfolio/types";
 import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-holdings-grid";
-import PortfolioRecordScreenClient from "../../src/apps/portfolio/components/portfolio-record-screen-client";
+import PortfolioAllocationRecordScreen from "../../src/apps/portfolio/components/portfolio-allocation-record-screen";
+import PortfolioPositionsRecordScreen from "../../src/apps/portfolio/components/portfolio-positions-record-screen";
+import PortfolioTransactionsRecordScreen from "../../src/apps/portfolio/components/portfolio-transactions-record-screen";
 
 type MockGridRow = { transactionId: string };
 
@@ -187,8 +189,7 @@ vi.mock(
 describe("PortfolioRecordScreenClient allocation flow", () => {
   it("connects direct exposure selection to contributing holdings and clears it", () => {
     render(
-      <PortfolioRecordScreenClient
-        screen="allocation"
+      <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={buildWorkspace()}
       />,
@@ -221,8 +222,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
 
   it("renders source cash balances as direct cash contributors", () => {
     render(
-      <PortfolioRecordScreenClient
-        screen="allocation"
+      <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={buildWorkspace()}
       />,
@@ -242,8 +242,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
 
   it("resets allocation review state when the portfolio identity changes", () => {
     const { rerender } = render(
-      <PortfolioRecordScreenClient
-        screen="allocation"
+      <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={buildWorkspace()}
       />,
@@ -256,8 +255,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     nextWorkspace.portfolio.portfolio_id = "PB_SG_INCOME_002";
     nextWorkspace.portfolio.display_name = "Income Mandate";
     rerender(
-      <PortfolioRecordScreenClient
-        screen="allocation"
+      <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_INCOME_002"
         workspace={nextWorkspace}
       />,
@@ -271,8 +269,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
 
   it("keeps booked holdings distinct from unavailable expanded contributors", () => {
     render(
-      <PortfolioRecordScreenClient
-        screen="allocation"
+      <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={buildWorkspace()}
       />,
@@ -330,8 +327,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     ];
 
     render(
-      <PortfolioRecordScreenClient
-        screen="positions"
+      <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={workspace}
       />,
@@ -368,8 +364,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     };
 
     render(
-      <PortfolioRecordScreenClient
-        screen="positions"
+      <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={workspace}
       />,
@@ -410,8 +405,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       "FXC-FIRST",
     );
     const { rerender } = render(
-      <PortfolioRecordScreenClient
-        screen="transactions"
+      <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         workspace={firstWorkspace}
       />,
@@ -426,8 +420,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       "FXC-SECOND",
     );
     rerender(
-      <PortfolioRecordScreenClient
-        screen="transactions"
+      <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_INCOME_002"
         workspace={secondWorkspace}
       />,
@@ -446,8 +439,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       "FXC-THIRD",
     );
     rerender(
-      <PortfolioRecordScreenClient
-        screen="transactions"
+      <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_PRESERVATION_003"
         workspace={thirdWorkspace}
       />,

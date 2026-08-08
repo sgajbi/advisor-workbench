@@ -1,9 +1,10 @@
-import PortfolioRecordScreen from "@/apps/portfolio/portfolio-record-screen";
+import PortfolioPositionsRecordScreen from "@/apps/portfolio/components/portfolio-positions-record-screen";
+import { loadPortfolioRecordScreenData } from "@/apps/portfolio/portfolio-record-screen-data";
 
-export default function PositionsPage({
+export default async function PositionsPage({
   searchParams,
 }: {
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
-  return <PortfolioRecordScreen searchParams={searchParams} screen="positions" />;
+  return <PortfolioPositionsRecordScreen {...(await loadPortfolioRecordScreenData({ searchParams }))} />;
 }

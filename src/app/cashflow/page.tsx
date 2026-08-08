@@ -1,9 +1,10 @@
-import PortfolioRecordScreen from "@/apps/portfolio/portfolio-record-screen";
+import PortfolioCashflowRecordScreen from "@/apps/portfolio/components/portfolio-cashflow-record-screen";
+import { loadPortfolioRecordScreenData } from "@/apps/portfolio/portfolio-record-screen-data";
 
-export default function CashflowPage({
+export default async function CashflowPage({
   searchParams,
 }: {
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
-  return <PortfolioRecordScreen searchParams={searchParams} screen="cashflow" />;
+  return <PortfolioCashflowRecordScreen {...(await loadPortfolioRecordScreenData({ searchParams }))} />;
 }

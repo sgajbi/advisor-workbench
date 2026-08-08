@@ -5,29 +5,32 @@ import {
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "./api";
-import PortfolioRecordScreenClient from "./components/portfolio-record-screen-client";
 import { resolveSelectedPortfolioId } from "./portfolio-selection";
-import {
-  type PortfolioRecordScreenKind,
-  resolvePortfolioRecordScreenWindow,
-} from "./portfolio-record-screen-view-model";
+import { resolvePortfolioRecordScreenWindow } from "./portfolio-record-screen-view-model";
+import type { PortfolioWorkspace } from "./types";
 
-export type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
+export type PortfolioRecordScreenData = {
+  portfolioId: string | null;
+  workspace: PortfolioWorkspace | null;
+  startDate?: string;
+  endDate?: string;
+};
 
-export default async function PortfolioRecordScreen({
+export async function loadPortfolioRecordScreenData({
   searchParams,
-  screen,
 }: {
   searchParams: Promise<{ portfolioId?: string }>;
-  screen: PortfolioRecordScreenKind;
-}) {
+}): Promise<PortfolioRecordScreenData> {
   const portfolios = await getPortfolioCatalog();
   const resolvedSearch = await searchParams;
   const selectedPortfolioId = resolveSelectedPortfolioId(portfolios, resolvedSearch.portfolioId);
   const shell = selectedPortfolioId ? await getPortfolioWorkspaceShell(selectedPortfolioId) : null;
 
   if (!selectedPortfolioId || !shell) {
-    return <PortfolioRecordScreenClient screen={screen} portfolioId={selectedPortfolioId} workspace={null} />;
+    return {
+      portfolioId: selectedPortfolioId,
+      workspace: null,
+    };
   }
 
   const window = resolvePortfolioRecordScreenWindow(shell.as_of_date);
@@ -53,20 +56,15 @@ export default async function PortfolioRecordScreen({
     ...(detailedDetails ?? {}),
     record_data_availability: {
       positions: summaryDetails ? "ready" : "unavailable",
-      liquidity:
-        detailedDetails?.record_data_availability.liquidity ?? "unavailable",
-      transactions:
-        detailedDetails?.record_data_availability.transactions ?? "unavailable",
+      liquidity: detailedDetails?.record_data_availability.liquidity ?? "unavailable",
+      transactions: detailedDetails?.record_data_availability.transactions ?? "unavailable",
     },
   });
 
-  return (
-    <PortfolioRecordScreenClient
-      screen={screen}
-      portfolioId={selectedPortfolioId}
-      workspace={workspace}
-      startDate={window.startDate}
-      endDate={window.endDate}
-    />
-  );
+  return {
+    portfolioId: selectedPortfolioId,
+    workspace,
+    startDate: window.startDate,
+    endDate: window.endDate,
+  };
 }
