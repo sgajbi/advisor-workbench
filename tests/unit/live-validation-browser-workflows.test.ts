@@ -35,6 +35,11 @@ describe("live validation browser workflow helpers", () => {
       )
     ).toBe(true);
     expect(
+      hasAcceptedAdvisorBriefReviewPosture(
+        "Human Review Supportability READY ACCEPTED Task flow taskflow_advisor_brief is completed. Handoff taskflow_advisor_brief_handoff_packrun_advisor_brief is ready for handoff for lotus-gateway."
+      )
+    ).toBe(true);
+    expect(
       hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
     ).toBe(false);
   });

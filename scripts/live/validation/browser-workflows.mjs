@@ -5,7 +5,7 @@ const CANONICAL_IDEA_CANDIDATE_ID = "idea_high_cash_001";
 
 export function hasAcceptedAdvisorBriefReviewPosture(text) {
   return (
-    text.includes("AI Review") &&
+    (text.includes("Human Review") || text.includes("AI Review")) &&
     text.includes("ACCEPTED") &&
     (text.includes("Supportability ACTION REQUIRED") ||
       text.includes("Supportability READY"))
