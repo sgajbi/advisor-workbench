@@ -97,6 +97,7 @@ export function normalizeDpmAiWorkflowExecution(
     readString(authorization.outcome) === "ALLOWED" &&
     authorization.allowed === true &&
     authorization.caller_identity_bound === true &&
+    readString(authorization.capability_type) === "task_execution" &&
     eligibility.workflow_surface_applied === true &&
     eligibilityCallerApp !== null &&
     eligibilityCallerApp === authorizationCallerApp &&

@@ -210,7 +210,11 @@ Current repository posture:
     is not an extensibility signal: it makes the result incomplete until Workbench deliberately
     adopts and maps the new business meaning. Eligibility is trusted only when the workflow surface
     restriction was explicitly applied; an allowed decision with `workflow_surface_applied` false
-    is still fail-closed.
+    is still fail-closed. Authorization is trusted only for the explicit `task_execution`
+    capability; an allowed decision for a missing or unrelated capability is not reusable authority.
+    Accepted, revised, rejected, and abandoned review states require source history, actor, and
+    event time before Workbench describes the review as recorded. A terminal state without that
+    record remains client-use blocked and is disclosed as unverified.
     DPM source responses must be normalized through `buildDpmAiWorkflowOutcome` and presented with
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request

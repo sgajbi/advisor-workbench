@@ -283,6 +283,26 @@ describe("buildDpmAiWorkflowOutcome", () => {
     },
   );
 
+  it.each([null, "portfolio_read"])(
+    "fails closed for authorization capability %s",
+    (capability) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      Object.assign(response.data.execution.audit.authorization, {
+        capability_type: capability,
+      });
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
   it.each([
     ["blank text", { memo: "   " }],
     ["null value", { summary: null }],
@@ -608,6 +628,34 @@ describe("buildDpmAiWorkflowOutcome", () => {
       });
       expect(outcome.businessSummary).toContain("was rejected");
       expect(outcome.businessSummary).toContain("must not be used");
+    },
+  );
+
+  it.each(["REJECTED", "ABANDONED"] as const)(
+    "keeps %s blocked but marks its missing review record unverified",
+    (reviewState) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo", {
+        reviewState,
+      });
+      response.data.workflow_pack_run.review_summary = {
+        latest_review_event_at: null,
+        latest_review_actor: null,
+        review_transition_count: 1,
+        has_review_history: true,
+      };
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        humanReview: { state: "rejected", sourceRecorded: false },
+        clientUse: "blocked",
+      });
+      expect(outcome.disclosure.limitations).toContain(
+        "The source did not publish the review record supporting its review state.",
+      );
+      expect(outcome.businessSummary).toContain("unverified rejection state");
+      expect(outcome.businessSummary).toContain("must not be used");
+      expect(outcome.businessSummary).not.toContain("recorded control review");
     },
   );
 
