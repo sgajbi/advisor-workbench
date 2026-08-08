@@ -221,6 +221,9 @@ Current repository posture:
     profile; render only adopted business fields with readable labels and bounded structure; keep
     technical hashes and raw keys out of primary material. An otherwise usable payload with no
     supported presentable field fails closed rather than claiming live but unreadable output.
+    Presentable material also requires a source-completed runtime (including an intentionally
+    historical superseded run); running and failed output stays hidden even when partial structured
+    content and otherwise complete provenance are present.
     Treat every Gateway response as untrusted at runtime even when the API client exposes a typed
     contract. Presentation helpers must guard optional nested records and fail to an unavailable
     business state so contract drift cannot crash the owning workstation panel before shared

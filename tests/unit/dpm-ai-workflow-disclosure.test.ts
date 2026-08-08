@@ -187,6 +187,19 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.disclosure).toMatchObject(expected);
   });
 
+  it.each(["RUNNING", "FAILED"] as const)(
+    "does not publish material from a %s workflow run",
+    (runtimeState) => {
+      const outcome = buildDpmAiWorkflowOutcome(
+        "proof-pack-memo",
+        buildDpmAiWorkflowResponse("proof-pack-memo", { runtimeState }),
+      );
+
+      expect(outcome.disclosure.availability).toBe("unavailable");
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
   it("blocks source-approved client use when runtime redaction is inactive", () => {
     const outcome = buildDpmAiWorkflowOutcome(
       "proof-pack-memo",
