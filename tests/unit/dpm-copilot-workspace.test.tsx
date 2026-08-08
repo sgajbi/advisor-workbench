@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import DpmCopilotWorkspace from "../../src/features/workbench/components/dpm-copilot-workspace";
@@ -87,6 +87,61 @@ describe("DpmCopilotWorkspace", () => {
     ).toHaveTextContent("packrun_dpm_pm_memo_001");
   });
 
+  it("discards an in-flight result when its portfolio and source reference change", async () => {
+    const response = {
+      ...buildDpmAiWorkflowResponse("proof-pack-memo"),
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:proof-pack",
+        state: "READY",
+        proof_pack_id: "ppack_001",
+        reason_codes: ["PROOF_PACK_READY"],
+        markdown_available: true,
+        report_input_available: true,
+        ai_evidence_input_available: true,
+      },
+      ai_evidence_input: { proof_pack_id: "ppack_001" },
+      memo_request: { requested_outputs: ["pm_memo"] },
+    };
+    let resolveRequest: ((value: typeof response) => void) | null = null;
+    vi.mocked(requestDpmProofPackAiPmMemo).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+    const initialData = buildManageWorkspaceData();
+    initialData.proofPack = buildProofPack({ aiEvidenceInputAvailable: true });
+    const { rerender } = render(
+      <DpmCopilotWorkspace data={initialData} mandateId="mandate_001" />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
+    );
+
+    const nextData = buildManageWorkspaceData();
+    nextData.portfolio.portfolio.portfolio_id = "PB_SG_GLOBAL_GROWTH_002";
+    nextData.proofPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_002",
+    });
+    rerender(<DpmCopilotWorkspace data={nextData} mandateId="mandate_002" />);
+
+    await act(async () => {
+      resolveRequest?.(response);
+    });
+
+    expect(
+      screen.queryByRole("heading", { name: "Portfolio decision memo" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("PB_SG_GLOBAL_GROWTH_002")).toBeInTheDocument();
+    expect(screen.getByText("ppack_002")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
+    ).toBeEnabled();
+  });
+
   it("keeps unavailable actions disabled and names their business blocker", () => {
     const data = buildManageWorkspaceData();
     data.proofPack = null;
@@ -159,9 +214,11 @@ describe("DpmCopilotWorkspace", () => {
 
 function buildProofPack({
   aiEvidenceInputAvailable,
+  proofPackId = "ppack_001",
   state = "READY",
 }: {
   aiEvidenceInputAvailable: boolean;
+  proofPackId?: string;
   state?: string;
 }): DpmProofPackGatewayResponse {
   return {
@@ -173,7 +230,7 @@ function buildProofPack({
       source_service: "lotus-manage",
       authority: "lotus-manage:proof-pack",
       state,
-      proof_pack_id: "ppack_001",
+      proof_pack_id: proofPackId,
       reason_codes: ["PROOF_PACK_READY"],
       markdown_available: true,
       report_input_available: true,
@@ -181,7 +238,7 @@ function buildProofPack({
     },
     data: {
       proof_pack: {
-        proof_pack_id: "ppack_001",
+        proof_pack_id: proofPackId,
         sections: [{ section: "mandate_alignment", state: "READY" }],
       },
     },
