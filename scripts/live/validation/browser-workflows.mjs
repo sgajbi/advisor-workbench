@@ -50,6 +50,10 @@ export function createBrowserValidationHelpers({
     summary.uiChecks.push({ description, kind: "table", rowCount: count });
   }
 
+  function recordUiCheck(check) {
+    summary.uiChecks.push(check);
+  }
+
   async function screenshot(page, name, metadata) {
     const target = path.join(outputDir, name);
     await page.mouse?.move(1, 1);
@@ -102,10 +106,34 @@ export function createBrowserValidationHelpers({
   return {
     assertListHasItems,
     assertTableHasRows,
+    recordUiCheck,
     screenshotAdvisoryJourney,
     screenshotRegisteredPanel,
     resolveRegistryRoute,
   };
+}
+
+export function classifyAttributionDetailEvidence({
+  detailTableCount,
+  summaryTableCount,
+  partialFallbackCount,
+  readyEmptyStateCount,
+}) {
+  if (detailTableCount > 0) {
+    return "detail_rows";
+  }
+  if (summaryTableCount > 0) {
+    return "summary_fallback";
+  }
+  if (partialFallbackCount > 0) {
+    return "governed_partial_fallback";
+  }
+  if (readyEmptyStateCount > 0) {
+    return "ready_empty_state";
+  }
+  throw new Error(
+    "Attribution detail has neither source rows nor a governed fallback state.",
+  );
 }
 
 async function assertRailModeActive(page, labelPattern, timeoutMs) {
@@ -926,6 +954,7 @@ export async function validatePerformanceAnalysisPanel(
     canonicalAsOfDate,
     timeoutMs,
     assertTableHasRows,
+    recordUiCheck,
     screenshotRegisteredPanel,
   },
 ) {
@@ -940,7 +969,7 @@ export async function validatePerformanceAnalysisPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Attribution Detail" }),
+    page.getByRole("heading", { name: "Attribution Detail", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -953,19 +982,38 @@ export async function validatePerformanceAnalysisPanel(
     page,
     "Asset Class attribution table",
   );
-  if ((await attributionDetailTable.count()) > 0) {
-    await assertTableHasRows(
-      attributionDetailTable,
-      1,
-      "Attribution detail table",
-    );
+  const attributionSummaryTable = tableByExactLabel(
+    page,
+    "Asset Class attribution totals",
+  );
+  const partialFallbackHeading = page.getByRole("heading", {
+    name: "Attribution detail is partial",
+    exact: true,
+  });
+  const readyEmptyState = page.getByText(
+    "Attribution detail is marked available, but no segment attribution levels were returned for the current selection.",
+    { exact: true },
+  );
+  const attributionEvidence = classifyAttributionDetailEvidence({
+    detailTableCount: await attributionDetailTable.count(),
+    summaryTableCount: await attributionSummaryTable.count(),
+    partialFallbackCount: await partialFallbackHeading.count(),
+    readyEmptyStateCount: await readyEmptyState.count(),
+  });
+  if (attributionEvidence === "detail_rows") {
+    await assertTableHasRows(attributionDetailTable, 1, "Attribution detail table");
+  } else if (attributionEvidence === "summary_fallback") {
+    await assertTableHasRows(attributionSummaryTable, 1, "Attribution summary fallback table");
+  } else if (attributionEvidence === "governed_partial_fallback") {
+    await expect(partialFallbackHeading).toBeVisible({ timeout: timeoutMs });
   } else {
-    await expect(
-      page.getByText(
-        "Attribution detail is marked available, but no segment attribution levels were returned for the current selection.",
-      ),
-    ).toBeVisible({ timeout: timeoutMs });
+    await expect(readyEmptyState).toBeVisible({ timeout: timeoutMs });
   }
+  recordUiCheck({
+    description: "Attribution detail evidence",
+    kind: "supportability",
+    posture: attributionEvidence,
+  });
   const performanceDriversPanel = page.locator("#performance-drivers").first();
   await expect(performanceDriversPanel).toBeVisible({ timeout: timeoutMs });
   await performanceDriversPanel.scrollIntoViewIfNeeded();

@@ -7,6 +7,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 
 const {
   buildReportCentreProofPosture,
+  classifyAttributionDetailEvidence,
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
   validateAdvisoryJourneyScreens,
@@ -17,12 +18,42 @@ const {
     pdfOutputState: "ready" | "unavailable";
     reason: string;
   };
+  classifyAttributionDetailEvidence: (counts: {
+    detailTableCount: number;
+    summaryTableCount: number;
+    partialFallbackCount: number;
+    readyEmptyStateCount: number;
+  }) =>
+    | "detail_rows"
+    | "summary_fallback"
+    | "governed_partial_fallback"
+    | "ready_empty_state";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
 };
 
 describe("live validation browser workflow helpers", () => {
+  it.each([
+    [{ detailTableCount: 1, summaryTableCount: 0, partialFallbackCount: 0, readyEmptyStateCount: 0 }, "detail_rows"],
+    [{ detailTableCount: 0, summaryTableCount: 1, partialFallbackCount: 0, readyEmptyStateCount: 0 }, "summary_fallback"],
+    [{ detailTableCount: 0, summaryTableCount: 0, partialFallbackCount: 1, readyEmptyStateCount: 0 }, "governed_partial_fallback"],
+    [{ detailTableCount: 0, summaryTableCount: 0, partialFallbackCount: 0, readyEmptyStateCount: 1 }, "ready_empty_state"],
+  ] as const)("classifies attribution detail evidence as %s", (counts, expected) => {
+    expect(classifyAttributionDetailEvidence(counts)).toBe(expected);
+  });
+
+  it("rejects attribution detail without rows or a governed fallback", () => {
+    expect(() =>
+      classifyAttributionDetailEvidence({
+        detailTableCount: 0,
+        summaryTableCount: 0,
+        partialFallbackCount: 0,
+        readyEmptyStateCount: 0,
+      }),
+    ).toThrow("neither source rows nor a governed fallback state");
+  });
+
   it("accepts both ready and degraded accepted advisor-brief review posture", () => {
     expect(
       hasAcceptedAdvisorBriefReviewPosture(
@@ -56,6 +87,9 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("Positions");
     expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Position contribution table"]\')');
     expect(source).toContain("Segment Summary");
+    expect(source).toContain('{ name: "Attribution Detail", exact: true }');
+    expect(source).toContain("governed_partial_fallback");
+    expect(source).toContain("recordUiCheck");
     expect(source).toContain("const segmentSummaryTab = performanceDriversPanel.getByRole");
     expect(source).toContain("segmentSummaryTab.scrollIntoViewIfNeeded()");
     expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Asset Class contribution table"]\')');
