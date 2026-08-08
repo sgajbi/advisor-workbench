@@ -318,6 +318,32 @@ describe("WorkbenchPage", () => {
       )
     ).toBe(false);
   });
+
+  it("keeps historical proof-pack lineage non-actionable in the Copilot workspace", async () => {
+    const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_5101" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_5101" }),
+        searchParams: Promise.resolve({ mode: "copilot" }),
+      })
+    );
+
+    expect(screen.getAllByRole("heading", { name: "PM Copilot Workspace" })).toHaveLength(2);
+    expect(screen.getByText("Historical Reference")).toBeInTheDocument();
+    expect(screen.getByText("ppack_1")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Proof-Pack PM Memo unavailable: Current evidence pack unavailable",
+      })
+    ).toBeDisabled();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/proof-packs/ppack_1/ai-pm-memo")
+      )
+    ).toBe(false);
+  });
 });
 
 function createManageFetch({ portfolioId }: { portfolioId: string }) {

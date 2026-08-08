@@ -24,12 +24,14 @@ import {
 import { requestDpmOutcomeReviewAiNarrative } from "@/features/workbench/outcome-review-api";
 import { requestDpmPmOperatingQualitySummary } from "@/features/workbench/pm-operating-quality-api";
 import { requestDpmProofPackAiPmMemo } from "@/features/workbench/proof-pack-api";
+import { buildProofPackPanelModel } from "@/features/workbench/proof-pack-view-model";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 
 type CopilotAction = {
   key: DpmAiWorkflowFamily;
   label: string;
   detail: string;
+  referenceLabel: string;
   reference: string | null;
   blockedReason: string | null;
   run: () => Promise<DpmAiWorkflowGatewayEnvelope>;
@@ -136,7 +138,7 @@ export default function DpmCopilotWorkspace({
               <strong>{action.label}</strong>
               <span>{action.detail}</span>
             </div>
-            <MetricRow label="Reference" value={action.reference ?? "Not available"} />
+            <MetricRow label={action.referenceLabel} value={action.reference ?? "Not available"} />
             <MetricRow
               label="Readiness"
               value={action.blockedReason ? action.blockedReason : "Available to prepare"}
@@ -182,8 +184,21 @@ function buildCopilotActions({
   portfolioId: string;
   mandateId: string | null;
 }): CopilotAction[] {
-  const proofPackId = readFirstString(data.proofPack?.data, ["proof_pack_id"]) ??
-    readFirstString(firstArrayItem(data.outcomeReviews?.data, "items"), ["proof_pack_id"]);
+  const proofPackModel = buildProofPackPanelModel(data.proofPack);
+  const currentProofPackId = proofPackModel.proofPackId === "N/A"
+    ? null
+    : proofPackModel.proofPackId;
+  const historicalProofPackId = readFirstString(
+    firstArrayItem(data.outcomeReviews?.data, "items"),
+    ["proof_pack_id"]
+  );
+  const proofPackReference = currentProofPackId ?? historicalProofPackId;
+  const proofPackBlockedReason = resolveProofPackMemoBlockedReason({
+    currentProofPackId,
+    historicalProofPackId,
+    supportabilityState: proofPackModel.supportabilityState,
+    aiEvidenceInputAvailable: proofPackModel.aiEvidenceInputAvailable,
+  });
   const waveId = readFirstString(firstArrayItem(data.waves?.data, "items"), ["wave_id"]);
   const exceptionId = readFirstString(firstArrayItem(data.commandCenterExceptions?.data, "items"), [
     "exception_id",
@@ -201,14 +216,16 @@ function buildCopilotActions({
       key: "proof-pack-memo",
       label: "Proof-Pack PM Memo",
       detail: "Request a review-required PM memo from proof-pack AI evidence.",
-      reference: proofPackId,
-      blockedReason: proofPackId ? null : "No proof pack available",
-      run: () => requestDpmProofPackAiPmMemo({ proofPackId: proofPackId ?? "" }),
+      referenceLabel: currentProofPackId ? "Reference" : "Historical Reference",
+      reference: proofPackReference,
+      blockedReason: proofPackBlockedReason,
+      run: () => requestDpmProofPackAiPmMemo({ proofPackId: currentProofPackId ?? "" }),
     },
     {
       key: "wave-memo",
       label: "Wave PM Memo",
       detail: "Request PM review commentary for a Manage-owned rebalance wave.",
+      referenceLabel: "Reference",
       reference: waveId,
       blockedReason: waveId ? null : "No rebalance wave available",
       run: () => requestDpmWaveAiPmMemo(waveId ?? ""),
@@ -217,6 +234,7 @@ function buildCopilotActions({
       key: "operations-handoff",
       label: "Operations Handoff Summary",
       detail: "Request support-only handoff posture for operations and investment control.",
+      referenceLabel: "Reference",
       reference: waveId,
       blockedReason: waveId ? null : "No rebalance wave available",
       run: () => requestDpmOperationsHandoffSummary(waveId ?? ""),
@@ -225,6 +243,7 @@ function buildCopilotActions({
       key: "exception-summary",
       label: "Exception Summary",
       detail: "Request triage support over a Manage monitoring exception.",
+      referenceLabel: "Reference",
       reference: exceptionId,
       blockedReason: exceptionId ? null : "No monitoring exception available",
       run: () =>
@@ -239,6 +258,7 @@ function buildCopilotActions({
       key: "outcome-narrative",
       label: "Outcome Narrative",
       detail: "Request PM/CIO/control summary over realized outcome-review evidence.",
+      referenceLabel: "Reference",
       reference: outcomeReviewId,
       blockedReason: outcomeReviewId ? null : "No outcome review available",
       run: () => requestDpmOutcomeReviewAiNarrative({ outcomeReviewId: outcomeReviewId ?? "" }),
@@ -247,11 +267,37 @@ function buildCopilotActions({
       key: "pm-quality-summary",
       label: "PM Quality Support Summary",
       detail: "Request support-only summary posture over Manage PM operating-quality evidence.",
+      referenceLabel: "Reference",
       reference: scoreRunId,
       blockedReason: scoreRunId ? null : "No PM quality score run available",
       run: () => requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
     },
   ];
+}
+
+function resolveProofPackMemoBlockedReason({
+  currentProofPackId,
+  historicalProofPackId,
+  supportabilityState,
+  aiEvidenceInputAvailable,
+}: {
+  currentProofPackId: string | null;
+  historicalProofPackId: string | null;
+  supportabilityState: string;
+  aiEvidenceInputAvailable: boolean;
+}): string | null {
+  if (!currentProofPackId) {
+    return historicalProofPackId
+      ? "Current evidence pack unavailable"
+      : "No current evidence pack available";
+  }
+  if (supportabilityState !== "READY") {
+    return "Current evidence pack not ready";
+  }
+  if (!aiEvidenceInputAvailable) {
+    return "Decision-support evidence unavailable";
+  }
+  return null;
 }
 
 function firstArrayItem(source: unknown, key: string): Record<string, unknown> | null {

@@ -118,9 +118,11 @@ Current repository posture:
     section posture, content hash, source hashes, Markdown availability, report-input readiness,
     AI-evidence readiness, and governed PM memo workflow-pack posture without client-side
     proof-pack construction, hash generation, Markdown synthesis, report-input synthesis, or
-    prompt construction. Manage surfaces also preserve Gateway-provided action-register
-    supportability from the portfolio overview `rebalance_snapshot`; missing supportability is
-    shown as unknown/N/A rather than as verified zero activity.
+    prompt construction. An outcome-review proof-pack reference is historical lineage only; it
+    must not enable a proof-pack memo action unless a current Gateway proof-pack response also
+    declares AI-evidence input available. Manage surfaces also preserve Gateway-provided
+    action-register supportability from the portfolio overview `rebalance_snapshot`; missing
+    supportability is shown as unknown/N/A rather than as verified zero activity.
 15. Manage `mode=quality` renders the PM operating quality governance surface from Gateway
     `/api/v1/dpm/command-center/pm-operating-quality/policies*`,
     `/score-runs*`, `/fairness-analyses`, `/fairness-analyses/{fairness_analysis_id}`, and
