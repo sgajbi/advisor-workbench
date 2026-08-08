@@ -91,9 +91,11 @@ describe("DpmCopilotWorkspace", () => {
 
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
 
-    expect(
-      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
-    ).toBeDisabled();
+    const unavailableAction = screen.getByRole("button", {
+      name: "Proof-Pack PM Memo unavailable: No proof pack available",
+    });
+    expect(unavailableAction).toBeDisabled();
+    expect(unavailableAction).toHaveTextContent("Unavailable");
     expect(screen.getByText("No proof pack available")).toBeInTheDocument();
     expect(requestDpmExceptionSummary).not.toHaveBeenCalled();
     expect(requestDpmWaveAiPmMemo).not.toHaveBeenCalled();

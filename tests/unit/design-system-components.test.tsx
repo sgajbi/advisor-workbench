@@ -173,14 +173,28 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByText("Summary")).toHaveClass("pill");
-    expect(screen.getByText("Positions")).toBeInTheDocument();
-    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("Positions")).toHaveClass("metric-row-label");
+    expect(screen.getByText("12")).toHaveClass("metric-row-value");
+    expect(screen.getByText("12").closest(".metric-row")).toHaveClass("suite-row");
     expect(screen.getByText("12").closest("article")).toHaveClass(
       "section-card",
       "panel-shell",
       "panel-shell-surface-primary",
       "panel-shell-density-default"
     );
+  });
+
+  it("supports stacked metric rows for long business identifiers", () => {
+    render(
+      <MetricRow
+        layout="stacked"
+        label="Mandate"
+        value="MANDATE_PB_SG_GLOBAL_BAL_001"
+      />
+    );
+
+    expect(screen.getByText("MANDATE_PB_SG_GLOBAL_BAL_001").closest(".metric-row"))
+      .toHaveClass("metric-row-stacked");
   });
 
   it("renders panel surface and density variants through the shared shell contract", () => {
