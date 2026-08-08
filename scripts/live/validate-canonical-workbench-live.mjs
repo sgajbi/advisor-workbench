@@ -2031,6 +2031,7 @@ async function run() {
       canonicalAsOfDate,
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
+      recordUiCheck: browserHelpers.recordUiCheck,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateAdvisorBriefPanel(page, {

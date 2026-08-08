@@ -1274,6 +1274,13 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("/^Performance Overview/");
     expect(browserWorkflowModule).toContain("/^Performance Analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
+    const performanceAnalysisCall = script.slice(
+      script.indexOf("await validatePerformanceAnalysisPanel"),
+      script.indexOf("await validateAdvisorBriefPanel"),
+    );
+    expect(performanceAnalysisCall).toContain(
+      "recordUiCheck: browserHelpers.recordUiCheck",
+    );
     expect(browserWorkflowModule).toContain(
       "Attribution detail is marked available, but no segment attribution levels were returned for the current selection.",
     );
