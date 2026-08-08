@@ -96,12 +96,14 @@ describe("manage workspace split components", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("renders overview decision posture from Gateway-backed manage data", () => {
+  it("renders overview operating posture from Gateway-backed manage data", () => {
     render(<ManageOverview data={buildManageWorkspaceData()} />);
 
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Decision readiness")).toBeInTheDocument();
-    expect(screen.getByText("Needs attention")).toBeInTheDocument();
+    const posture = screen.getByLabelText("Operating posture");
+    expect(within(posture).getByText("Mandate Health")).toBeInTheDocument();
+    expect(within(posture).getByText("Active Attention Items")).toBeInTheDocument();
+    expect(within(posture).getAllByText("Needs attention")).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
