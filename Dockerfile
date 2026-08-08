@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json next-env.d.ts next.config.mjs tsconfig.json ./
 COPY src ./src
+COPY scripts/quality/check-portfolio-record-bundles.mjs ./scripts/quality/check-portfolio-record-bundles.mjs
 RUN npm run build
 
 FROM ci-base AS runner

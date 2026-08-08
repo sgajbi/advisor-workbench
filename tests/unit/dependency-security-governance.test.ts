@@ -14,6 +14,32 @@ function hasExactLine(source: string, expectedLine: string): boolean {
   return source.split(/\r?\n/).includes(expectedLine);
 }
 
+function collectLocalNodeScripts(
+  scripts: Record<string, string>,
+  entrypoint: string,
+): string[] {
+  const visited = new Set<string>();
+  const localScripts = new Set<string>();
+
+  function visit(scriptName: string) {
+    if (visited.has(scriptName)) {
+      return;
+    }
+    visited.add(scriptName);
+
+    const command = scripts[scriptName] ?? "";
+    for (const match of command.matchAll(/\bnpm run ([\w:-]+)/g)) {
+      visit(match[1]);
+    }
+    for (const match of command.matchAll(/\bnode (scripts\/[^\s;&|]+)/g)) {
+      localScripts.add(match[1]);
+    }
+  }
+
+  visit(entrypoint);
+  return [...localScripts].sort();
+}
+
 describe("dependency security governance", () => {
   it("preserves stable React Hooks linting under the flat ESLint CLI gate", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
@@ -183,6 +209,24 @@ describe("dependency security governance", () => {
     expect(dockerignore).not.toContain("!output");
     expect(ciCompose).toContain("target: ci-base");
     expect(ciCompose).not.toContain("node:22-alpine");
+  });
+
+  it("copies every repository-owned build script into the governed Docker context", () => {
+    const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const dockerfile = readRepositoryFile("Dockerfile");
+    const dockerignore = readRepositoryFile(".dockerignore");
+    const localBuildScripts = collectLocalNodeScripts(
+      packageJson.scripts ?? {},
+      "build",
+    );
+
+    expect(localBuildScripts.length).toBeGreaterThan(0);
+    for (const scriptPath of localBuildScripts) {
+      expect(dockerfile).toContain(`COPY ${scriptPath} ./${scriptPath}`);
+      expect(hasExactLine(dockerignore, `!${scriptPath}`)).toBe(true);
+    }
   });
 
   it.each(["\n", "\r\n"])(

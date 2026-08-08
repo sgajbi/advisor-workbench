@@ -13,3 +13,6 @@ scripts/*
 !scripts/runtime/
 scripts/runtime/*
 !scripts/runtime/workbench-healthcheck.mjs
+!scripts/quality/
+scripts/quality/*
+!scripts/quality/check-portfolio-record-bundles.mjs
