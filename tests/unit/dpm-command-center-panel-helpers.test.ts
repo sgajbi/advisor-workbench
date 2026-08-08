@@ -60,4 +60,12 @@ describe("DPM command-center panel helpers", () => {
       )
     ).toBe("ACCEPTED");
   });
+
+  it("fails closed when Gateway omits the workflow-pack record", () => {
+    expect(
+      readDpmWorkflowPackStatus({
+        execution: { status: "COMPLETED" },
+      }),
+    ).toBe("UNAVAILABLE");
+  });
 });

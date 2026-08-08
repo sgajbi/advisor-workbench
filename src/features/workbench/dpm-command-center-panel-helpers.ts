@@ -1,5 +1,4 @@
 import type { DpmCommandCenterPanelState } from "@/features/workbench/dpm-command-center-view-model";
-import type { DpmAiWorkflowExecution } from "@/features/workbench/dpm-ai-workflow-contract";
 
 export type DpmCommandCenterBadgeTone = "default" | "success" | "warn" | "danger";
 
@@ -69,9 +68,28 @@ export function shouldShowDpmCommandCenterStatePanel(
   );
 }
 
-export function readDpmWorkflowPackStatus(data: DpmAiWorkflowExecution | undefined): string {
-  if (!data) {
+export function readDpmWorkflowPackStatus(data: unknown): string {
+  if (data === undefined) {
     return "NOT_REQUESTED";
   }
-  return data.workflow_pack_run.review_state ?? data.execution.status;
+  const record = readRecord(data);
+  const workflowPack = readRecord(record?.workflow_pack_run);
+  if (!record || !workflowPack) {
+    return "UNAVAILABLE";
+  }
+  return (
+    readString(workflowPack.review_state) ??
+    readString(readRecord(record.execution)?.status) ??
+    "UNAVAILABLE"
+  );
+}
+
+function readRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }

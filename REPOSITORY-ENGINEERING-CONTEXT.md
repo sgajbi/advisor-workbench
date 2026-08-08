@@ -210,6 +210,13 @@ Current repository posture:
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request
     acceptance, invocation persistence, and runtime completion never imply available material.
+    Stubbed workflow output is deterministic preparation, not AI-assisted preparation. A source
+    client-use approval remains blocked unless runtime redaction is explicitly active; a
+    contradictory internal-scope limitation must never coexist with an approved client-use state.
+    Treat every Gateway response as untrusted at runtime even when the API client exposes a typed
+    contract. Presentation helpers must guard optional nested records and fail to an unavailable
+    business state so contract drift cannot crash the owning workstation panel before shared
+    normalization can disclose it.
     Every asynchronous workflow result, pending posture, error, and adjacent boundary must retain
     the portfolio and exact source-business-object identity that produced it. Filter state against
     the current source context, sequence overlapping requests so an earlier completion cannot

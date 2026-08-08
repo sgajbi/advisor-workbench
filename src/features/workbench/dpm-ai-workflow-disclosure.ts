@@ -150,7 +150,7 @@ function resolvePreparation(
   ) {
     return "unavailable";
   }
-  return "ai-assisted";
+  return normalized.stubbed ? "deterministic" : "ai-assisted";
 }
 
 function resolveAvailability(
@@ -239,7 +239,14 @@ function resolveGovernedClientUse(
   ) {
     return "blocked";
   }
-  return resolveClientUse(normalized.outputLabel);
+  const sourceClientUse = resolveClientUse(normalized.outputLabel);
+  if (
+    sourceClientUse === "approved" &&
+    normalized.runtimeRedactionActive !== true
+  ) {
+    return "blocked";
+  }
+  return sourceClientUse;
 }
 
 function buildLimitations(normalized: NormalizedDpmAiExecution): string[] {
