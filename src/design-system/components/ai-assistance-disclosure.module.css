@@ -46,8 +46,11 @@
 .diagnostics {
   display: grid;
   gap: 1px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin: 0;
+}
+
+.factGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
 }
 
 .fact,
@@ -71,6 +74,13 @@
   font-size: 0.78rem;
   line-height: 1.35;
   margin: 3px 0 0;
+}
+
+.fact dd {
+  overflow-wrap: break-word;
+}
+
+.diagnostics dd {
   overflow-wrap: anywhere;
 }
 
@@ -92,13 +102,7 @@
 }
 
 .diagnostics {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media (max-width: 1100px) {
-  .factGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
 }
 
 @media (max-width: 760px) {
@@ -113,7 +117,6 @@
     white-space: normal;
   }
 
-  .factGrid,
   .diagnostics {
     grid-template-columns: 1fr;
   }

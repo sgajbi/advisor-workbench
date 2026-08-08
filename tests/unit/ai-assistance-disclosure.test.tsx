@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { AiAssistanceDisclosure, createAiAssistanceDisclosure } from "@/design-system";
@@ -77,5 +79,21 @@ describe("AiAssistanceDisclosure", () => {
     );
 
     expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+  });
+
+  it("keeps business facts readable when the disclosure is embedded in a narrow panel", () => {
+    const styles = readFileSync(
+      resolve(
+        __dirname,
+        "../../src/design-system/components/ai-assistance-disclosure.module.css",
+      ),
+      "utf8",
+    );
+
+    expect(styles).toContain(
+      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));",
+    );
+    expect(styles).not.toContain("repeat(6, minmax(0, 1fr))");
+    expect(styles).toContain("overflow-wrap: break-word;");
   });
 });
