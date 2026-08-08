@@ -189,11 +189,7 @@ function resolveHumanReview(normalized: NormalizedDpmAiExecution): {
   actor?: string;
   occurredAt?: string;
 } {
-  const recordComplete = Boolean(
-    normalized.reviewSummary.hasHistory &&
-    normalized.reviewSummary.actor &&
-    normalized.reviewSummary.occurredAt,
-  );
+  const recordComplete = hasCompleteReviewRecord(normalized);
   const record = recordComplete
     ? {
         sourceRecorded: true,
@@ -258,6 +254,12 @@ function resolveGovernedClientUse(
 }
 
 function buildLimitations(normalized: NormalizedDpmAiExecution): string[] {
+  const reviewStateRequiresRecord = [
+    "ACCEPTED",
+    "REVISED",
+    "REJECTED",
+    "ABANDONED",
+  ].includes(normalized.reviewState ?? "");
   return [
     !normalized.contractComplete
       ? "The returned workflow contract or authority evidence was incomplete or inconsistent."
@@ -283,9 +285,7 @@ function buildLimitations(normalized: NormalizedDpmAiExecution): string[] {
     normalized.outputLabel === null
       ? "The source did not publish a permitted-use label for this output."
       : null,
-    (normalized.reviewState === "ACCEPTED" ||
-      normalized.reviewState === "REVISED") &&
-    !normalized.reviewSummary.hasHistory
+    reviewStateRequiresRecord && !hasCompleteReviewRecord(normalized)
       ? "The source did not publish the review record supporting its review state."
       : null,
     normalized.runtimeRedactionActive === false
@@ -344,7 +344,9 @@ function describeBusinessOutcome(
     return `${scopeLabel} is incomplete and requires source or control follow-up.`;
   }
   if (disclosure.humanReview.state === "rejected") {
-    return `${scopeLabel} was rejected by the recorded control review and must not be used.`;
+    return disclosure.humanReview.sourceRecorded
+      ? `${scopeLabel} was rejected by the recorded control review and must not be used.`
+      : `${scopeLabel} publishes an unverified rejection state and must not be used.`;
   }
   if (disclosure.availability === "simulation") {
     return `${scopeLabel} is available as a simulation for internal evaluation only.`;
@@ -356,6 +358,16 @@ function describeBusinessOutcome(
     return `${scopeLabel} has a source-recorded review; permitted use remains governed by its disclosure.`;
   }
   return `${scopeLabel} is available within its disclosed internal-use boundary.`;
+}
+
+function hasCompleteReviewRecord(
+  normalized: NormalizedDpmAiExecution,
+): boolean {
+  return Boolean(
+    normalized.reviewSummary.hasHistory &&
+    normalized.reviewSummary.actor &&
+    normalized.reviewSummary.occurredAt,
+  );
 }
 
 function workflowResultSourceIdentity(
