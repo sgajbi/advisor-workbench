@@ -177,10 +177,15 @@ must travel through Gateway-shaped contracts.
     create/list/detail, fairness-analysis preview, review-action preview/create/list/detail, and score-run
     support-summary contracts when Manage/Gateway expose source-defined segment assignments,
     review actions, and a selected score run.
-    The implemented PM copilot workspace consumes the same Gateway-only proof-pack PM memo, wave
-    PM memo, operations handoff summary, exception summary, outcome narrative, and PM quality
-    support-summary contracts in one governed product surface without creating browser-owned
-    prompts, generated text retention, PM ranking, client-contact, order, execution, or OMS truth.
+    The implemented PM copilot workspace and each owning DPM workflow consume the same typed
+    Gateway-only proof-pack PM memo, wave PM memo, operations brief, exception summary, outcome
+    narrative, and PM-quality support-summary execution envelope. Workbench normalizes each family
+    into one fail-closed disclosure while preserving preparation, output availability, evidence,
+    review, client use, freshness, supersession, runtime, and stub posture as independent
+    source-backed facts. A persisted PM-quality summary invocation remains audit evidence with
+    output unavailable unless the owning source independently returns generated material.
+    Workbench does not create browser-owned prompts, generated-text retention, PM ranking,
+    client-contact, order, execution, or OMS truth.
     Workbench must not calculate expected-versus-realized values. It must not rebuild proof-pack
     sections, compute proof-pack hashes, construct prompts, infer PM quality, calculate wave
     readiness, construct report input, generate memo or exception-summary narrative locally, reconstruct
