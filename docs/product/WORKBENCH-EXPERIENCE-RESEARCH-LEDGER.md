@@ -2190,3 +2190,63 @@ repository context, the canonical runtime runbook, `wiki/Supported-Features.md`,
 `wiki/API-Surface.md`, and `wiki/Integrations.md` are updated. README commands, public routes,
 environment variables, and platform-wide routing do not change. Publish the authored wiki after
 merge and verify strict parity.
+
+## Portfolio Record Route Performance And Resilience
+
+### Business job
+
+Private bankers move repeatedly among Allocation, Positions, Transactions, Cashflow, and Income
+during review preparation. Each transition should load the selected business task promptly without
+shipping unrelated grids or analytical workspaces, while preserving portfolio identity, source
+truth, navigation, evidence, and a clear recovery path.
+
+### Current-practice research
+
+Research was refreshed on 2026-08-09 from official Next.js sources:
+
+1. [Next.js lazy-loading guidance](https://nextjs.org/docs/app/guides/lazy-loading) states that
+   deferring Client Components and imported libraries reduces the JavaScript needed to render a
+   route, while Server Components are automatically code split.
+2. [Next.js package-bundling guidance](https://nextjs.org/docs/pages/guides/package-bundling)
+   explains that smaller bundles reduce transfer and JavaScript execution cost and improve Core
+   Web Vitals.
+3. The stable App Router, Client Component, production-manifest, and `next build` surfaces already
+   used by this Next.js 15 application are sufficient; the Next.js 16 experimental analyzer is not
+   required for a protected production gate.
+
+### Adopted decisions
+
+1. Keep one server data loader for selected-portfolio resolution and Gateway-backed shell, summary,
+   and detailed records.
+2. Keep one reusable client shell for business title, portfolio identity, navigation, evidence,
+   KPIs, and unavailable posture.
+3. Give each record route a task-owned Client entry point so only its workspace and dependencies
+   enter the initial graph.
+4. Use one layout-stable, screen-reader-announced loading frame and one keyboard-native retry frame
+   with business language across all five tasks.
+5. Inspect deterministic Next.js production artifacts after every build, report raw initial client
+   JavaScript for all five routes, require AG Grid for the three grid tasks, and forbid it for
+   Cashflow and Income.
+
+### Rejected decisions
+
+1. Five copied page shells or data-loading implementations.
+2. A single client dispatcher that statically imports all business workspaces and branches only
+   after hydration.
+3. Framework, grid, chart, or backend replacement for a frontend module-graph defect.
+4. Next.js 16 experimental bundle analysis in the protected Next.js 15 build.
+5. Compression-only evidence, a blank transition region, an indefinite spinner, or technical
+   service/error wording in the primary recovery path.
+
+### Expected measurable improvement and publication decision
+
+The production build moved Cashflow First Load JS from 1.31 MB to 988 kB (24.6% reduction) and
+Income from 1.31 MB to 979 kB (25.3% reduction). The raw initial-JavaScript report records 3.07 MB
+for Cashflow and 3.04 MB for Income, with no AG Grid marker in either initial graph; Allocation,
+Positions, and Transactions retain their required grids. Focused tests cover preserved task
+behavior, all five loading/error identities, accessible recovery, and budget failures.
+
+This changes frontend architecture and build governance, so repository context, the codebase review
+ledger, and `docs/architecture/portfolio-record-route-bundle-governance.md` are updated. It does not
+change a supported feature, route, API, operator command, or business procedure, so no README,
+runbook, or repo-authored wiki source change is required.
