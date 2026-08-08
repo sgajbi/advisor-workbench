@@ -5,7 +5,6 @@ import type {
   DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "./types";
-import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
 
 export type DpmWaveCommandCenterPanelState =
   | "ready"
@@ -539,27 +538,20 @@ function buildCampaignLaunchPosture(
 }
 
 function readWorkflowPackStatus(
-  response:
-    | { data: DpmAiWorkflowExecution }
-    | null
-    | undefined
+  response: unknown,
 ): string {
   if (!response) {
     return "NOT_REQUESTED";
   }
-  return normalizeState(response.data.workflow_pack_run.review_state);
+  const reviewState = readString(readWorkflowPackRun(response), "review_state");
+  return reviewState ? normalizeState(reviewState) : "UNAVAILABLE";
 }
 
-function readWorkflowPackRunId(
-  response:
-    | { data: DpmAiWorkflowExecution }
-    | null
-    | undefined
-): string {
+function readWorkflowPackRunId(response: unknown): string {
   if (!response) {
     return "N/A";
   }
-  return response.data.workflow_pack_run.run_id;
+  return readString(readWorkflowPackRun(response), "run_id") || "N/A";
 }
 
 function readReportInputRef(
@@ -567,19 +559,26 @@ function readReportInputRef(
   memo: DpmWaveAiPmMemoResponse | null | undefined
 ): string {
   const evidenceRef = readRecord(reportInput?.evidence_ref);
+  const waveReportInput = readRecord(readRecord(memo).wave_report_input);
   return (
     readString(reportInput ?? {}, "report_input_ref") ||
     readString(evidenceRef, "ref_id") ||
-    readString(memo?.wave_report_input ?? {}, "report_input_ref") ||
+    readString(waveReportInput, "report_input_ref") ||
     "N/A"
   );
 }
 
-function readAiMemoStatus(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
+function readAiMemoStatus(memo: unknown): string {
   if (!memo) {
     return "NOT_REQUESTED";
   }
-  return normalizeState(memo.data.workflow_pack_run.review_state);
+  const reviewState = readString(readWorkflowPackRun(memo), "review_state");
+  return reviewState ? normalizeState(reviewState) : "UNAVAILABLE";
+}
+
+function readWorkflowPackRun(response: unknown): Record<string, unknown> {
+  const data = readRecord(readRecord(response).data);
+  return readRecord(data.workflow_pack_run);
 }
 
 function matchesSelectedWave(
@@ -592,11 +591,8 @@ function matchesSelectedWave(
   );
 }
 
-function readAiMemoRunId(memo: DpmWaveAiPmMemoResponse | null | undefined): string {
-  if (!memo) {
-    return "N/A";
-  }
-  return memo.data.workflow_pack_run.run_id;
+function readAiMemoRunId(memo: unknown): string {
+  return readWorkflowPackRunId(memo);
 }
 
 function resolvePanelState(

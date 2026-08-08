@@ -208,7 +208,9 @@ Current repository posture:
     Advisory Copilot, and the six DPM workflow-output families use this governed disclosure.
     Permitted-use labels are a closed, source-contract vocabulary. A consistent but unknown label
     is not an extensibility signal: it makes the result incomplete until Workbench deliberately
-    adopts and maps the new business meaning.
+    adopts and maps the new business meaning. Eligibility is trusted only when the workflow surface
+    restriction was explicitly applied; an allowed decision with `workflow_surface_applied` false
+    is still fail-closed.
     DPM source responses must be normalized through `buildDpmAiWorkflowOutcome` and presented with
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request
@@ -223,11 +225,15 @@ Current repository posture:
     supported presentable field fails closed rather than claiming live but unreadable output.
     Presentable material also requires a source-completed runtime (including an intentionally
     historical superseded run); running and failed output stays hidden even when partial structured
-    content and otherwise complete provenance are present.
+    content and otherwise complete provenance are present. Traverse structured material with shared
+    depth, container-item, and rendered-value budgets across both usability detection and business
+    formatting; over-budget payloads are unavailable, never partially rendered by accident.
     Treat every Gateway response as untrusted at runtime even when the API client exposes a typed
     contract. Presentation helpers must guard optional nested records and fail to an unavailable
     business state so contract drift cannot crash the owning workstation panel before shared
-    normalization can disclose it.
+    normalization can disclose it. This includes every wave memo and operations helper that reads
+    workflow status, run identity, or report-input identity; do not leave a parallel typed-only read
+    beside a guarded helper.
     Every asynchronous workflow result, pending posture, error, and adjacent boundary must retain
     the portfolio and exact source-business-object identity that produced it. Filter state against
     the current source context, sequence overlapping requests so an earlier completion cannot

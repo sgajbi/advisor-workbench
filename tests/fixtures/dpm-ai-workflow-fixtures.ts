@@ -25,6 +25,7 @@ type DpmAiWorkflowFixtureOptions = {
   callerIdentityBound?: boolean;
   runtimeRedactionActive?: boolean;
   sourceReference?: string;
+  workflowSurfaceApplied?: boolean;
 };
 
 const SOURCE_REFERENCE_BY_FAMILY: Record<DpmAiWorkflowFamily, string> = {
@@ -87,7 +88,7 @@ export function buildDpmAiWorkflowExecution(
       environment: "DEVELOPMENT",
       caller_identity_class: "INTERNAL_SERVICE",
       tenant_scope_applied: false,
-      workflow_surface_applied: true,
+      workflow_surface_applied: options.workflowSurfaceApplied ?? true,
     },
     execution: {
       status: runtimeState === "FAILED" ? "FAILED" : "COMPLETED",
