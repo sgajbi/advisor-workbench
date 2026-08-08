@@ -91,7 +91,7 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
                       </SemanticBadge>
                     </td>
                     <td>{formatBusinessExceptionTitle(row.title)}</td>
-                    <td>{formatBusinessOwner(row.owner, row.source)}</td>
+                    <td>{formatBusinessOwner(row.owner)}</td>
                     <td>{row.age}</td>
                     <td>
                       <a href={buildManageModeHref(model.portfolioSummary.portfolioId, "mandate")}>

@@ -21,27 +21,22 @@ export function findMandateHealthRow(
 
 export function mandateHealthSummaryStateLabel(
   row: MandateHealthRow | undefined,
-  fallback: string
 ): string {
   if (!row || row.state === "N/A") {
-    return fallback;
-  }
-  if (row.state.toUpperCase() === "READY") {
-    return fallback;
+    return "Not available";
   }
   return businessStateLabel(row.state);
 }
 
 export function mandateHealthScoreToPercent(
   score: string | undefined,
-  fallback: number
-): number {
+): number | null {
   if (!score) {
-    return fallback;
+    return null;
   }
   const numeric = Number.parseFloat(score.replace(/[^\d.]/g, ""));
   if (!Number.isFinite(numeric)) {
-    return fallback;
+    return null;
   }
   return numeric > 1 ? numeric : numeric * 100;
 }
@@ -115,23 +110,6 @@ export function formatMandateAttentionObservation(row: ManageExceptionRow): stri
   return formatBusinessExceptionTitle(row.title);
 }
 
-export function formatMandateRecommendedDetail(value: string): string {
-  const normalized = value.toUpperCase();
-  if (normalized.includes("SUSTAINABILITY")) {
-    return "Confirm mandate-specific sustainability preferences before approval.";
-  }
-  if (normalized.includes("ALLOCATION")) {
-    return "Review allocation drift before moving the rebalance forward.";
-  }
-  if (normalized.includes("CASH")) {
-    return "Confirm tactical cash position remains within mandate tolerance.";
-  }
-  if (normalized.includes("ADVISOR")) {
-    return value;
-  }
-  return businessStateLabel(value);
-}
-
 export function formatMandateHealthObservation(value: string): string {
   const normalized = value.toUpperCase();
   if (normalized.includes("ALLOCATION")) {
@@ -152,9 +130,12 @@ export function formatMandateHealthObservation(value: string): string {
 
 export function formatMandateAction(value: string): string {
   if (!value || value === "-" || value === "N/A") {
-    return "No action required";
+    return "Not provided by mandate monitoring";
   }
   const normalized = value.toUpperCase();
+  if (normalized.includes("REPAIR_SOURCE_DATA") || normalized.includes("REQUEST_SOURCE_REFRESH")) {
+    return "Resolve data readiness";
+  }
   if (normalized.includes("SIMULATE_REBALANCE")) {
     return "Review rebalance simulation";
   }
@@ -166,6 +147,9 @@ export function formatMandateAction(value: string): string {
   }
   if (normalized.includes("ACKNOWLEDGE")) {
     return "Acknowledge";
+  }
+  if (normalized.includes("REQUEST REFRESH")) {
+    return "Request data refresh";
   }
   if (value.toLowerCase().includes("evidence")) {
     return "Review supporting evidence";
