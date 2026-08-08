@@ -2,7 +2,10 @@ import type {
   WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspace,
 } from "@/features/workbench/types";
-import { createAiAssistanceDisclosure } from "@/design-system";
+import {
+  classifyAiProviderPosture,
+  createAiAssistanceDisclosure,
+} from "@/design-system";
 
 import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
@@ -91,8 +94,12 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     advisorBrief.workflow_pack_run?.run_id,
   ].filter((value) => typeof value === "string" && value.trim().length > 0);
   const hasPublishedAiProvenance = aiProvenanceSignals.length >= 2;
-  const isSimulation = advisorBrief.ai_audit.stubbed === true;
-  const isLive = advisorBrief.ai_audit.stubbed === false && hasPublishedAiProvenance;
+  const providerPosture = classifyAiProviderPosture(
+    advisorBrief.ai_audit.provider_mode,
+    advisorBrief.ai_audit.stubbed,
+  );
+  const isSimulation = providerPosture === "deterministic";
+  const isLive = providerPosture === "live" && hasPublishedAiProvenance;
   const isSuperseded = advisorBrief.workflow_pack_run?.superseded === true;
   const replacementRunId = advisorBrief.workflow_pack_run?.replacement_run_id?.trim();
   const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
@@ -121,9 +128,15 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     ...(humanReview.state === "reviewed"
       ? ["Reviewer identity and review time were not published with this response."]
       : []),
-    ...(!hasPublishedAiProvenance
-      ? ["The source did not publish enough provenance to classify this output as live AI assistance."]
-      : []),
+    ...(providerPosture === "untrusted"
+      ? [
+          "Generation provenance is missing, unsupported, or contradictory, so this output cannot be classified as live AI assistance.",
+        ]
+      : providerPosture === "live" && !hasPublishedAiProvenance
+        ? [
+            "The source did not publish enough provenance to classify this output as live AI assistance.",
+          ]
+        : []),
     ...(isSuperseded
       ? [
           replacementRunId
@@ -135,7 +148,7 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
 
   return createAiAssistanceDisclosure({
     scopeLabel: "Performance advisor brief",
-    preparation: hasPublishedAiProvenance || isSimulation ? "ai-assisted" : "unavailable",
+    preparation: isSimulation ? "deterministic" : isLive ? "ai-assisted" : "unavailable",
     availability:
       advisorBrief.status === "unavailable"
         ? "unavailable"
