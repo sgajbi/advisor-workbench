@@ -171,7 +171,7 @@ const reportJobListItemSchema = z
     retryEligible: z.boolean(),
     cancelRequested: z.boolean(),
     idempotencyKey: z.string().min(1),
-    correlationId: z.string().min(1),
+    correlationId: z.string(),
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
   })
