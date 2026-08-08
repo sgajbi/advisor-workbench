@@ -5,6 +5,15 @@ export type NormalizedDpmAiExecution = ReturnType<
   typeof normalizeDpmAiWorkflowExecution
 >;
 
+const SUPPORTED_OUTPUT_LABELS = new Set([
+  "EXPLANATION_ONLY",
+  "INTERNAL_ONLY",
+  "SUPPORT_ONLY",
+  "ELIGIBLE_AFTER_REVIEW",
+  "CLIENT_USE_APPROVED",
+  "CLIENT_USE_BLOCKED",
+]);
+
 export function normalizeDpmAiWorkflowExecution(
   response: unknown,
   profile: DpmAiWorkflowProfile,
@@ -94,6 +103,7 @@ export function normalizeDpmAiWorkflowExecution(
     runId !== null && runId === readString(audit.workflow_pack_run_id),
     outputLabel !== null && outputLabel === readString(audit.output_label),
     outputLabel === readString(safety.output_label),
+    outputLabel !== null && SUPPORTED_OUTPUT_LABELS.has(outputLabel),
     providerMode !== null && providerMode === readString(audit.provider_mode),
     stubbed !== null && stubbed === readBoolean(audit.stubbed),
     outputKeys.length === structuredOutputKeys.length &&
