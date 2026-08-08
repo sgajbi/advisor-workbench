@@ -100,6 +100,14 @@ type UsePmOperatingQualityActionsResult = {
   createSummaryInvocation: () => Promise<void>;
 };
 
+type PmQualitySummaryState = {
+  scoreRunId: string;
+  pending: boolean;
+  response: DpmPmOperatingQualitySummaryResponse | null;
+  outcome: DpmAiWorkflowOutcome | null;
+  error: PmQualityActionError | null;
+};
+
 export function usePmOperatingQualityActions({
   policies,
   scoreRuns,
@@ -130,20 +138,18 @@ export function usePmOperatingQualityActions({
     useState<PmQualityReviewActionEvidence | null>(null);
   const [summaryInvocationCreateEvidence, setSummaryInvocationCreateEvidence] =
     useState<PmQualitySummaryInvocationEvidence | null>(null);
-  const [summaryResponse, setSummaryResponse] =
-    useState<DpmPmOperatingQualitySummaryResponse | null>(null);
-  const [summaryOutcome, setSummaryOutcome] = useState<DpmAiWorkflowOutcome | null>(null);
+  const [summaryState, setSummaryState] =
+    useState<PmQualitySummaryState | null>(null);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
-  const [pendingSummaryAction, setPendingSummaryAction] = useState(false);
   const [pendingReviewActionPreview, setPendingReviewActionPreview] = useState(false);
   const [pendingReviewActionCreate, setPendingReviewActionCreate] = useState(false);
   const [pendingSummaryInvocationPreview, setPendingSummaryInvocationPreview] = useState(false);
   const [pendingSummaryInvocationCreate, setPendingSummaryInvocationCreate] = useState(false);
   const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const model = buildPmOperatingQualityPanelModel({
+  const sourceModel = buildPmOperatingQualityPanelModel({
     policies,
     scoreRuns,
     fairnessAnalyses,
@@ -154,11 +160,40 @@ export function usePmOperatingQualityActions({
     summaryInvocationDetail:
       createdSummaryInvocationResponse ??
       summaryInvocationPreviewResponse ??
-      summaryInvocationDetail,
+    summaryInvocationDetail,
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
-    summary: summaryResponse,
+    summary: null,
   });
+  const currentSummaryState =
+    summaryState?.scoreRunId === sourceModel.selectedScoreRun?.scoreRunId
+      ? summaryState
+      : null;
+  const model = currentSummaryState?.response
+    ? buildPmOperatingQualityPanelModel({
+        policies,
+        scoreRuns,
+        fairnessAnalyses,
+        fairnessAnalysisDetail:
+          createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
+        reviewActions,
+        reviewActionDetail:
+          createdReviewActionResponse ??
+          reviewActionPreviewResponse ??
+          reviewActionDetail,
+        summaryInvocations,
+        summaryInvocationDetail:
+          createdSummaryInvocationResponse ??
+          summaryInvocationPreviewResponse ??
+          summaryInvocationDetail,
+        preview: previewResponse,
+        fairnessPreview: fairnessPreviewResponse,
+        summary: currentSummaryState.response,
+      })
+    : sourceModel;
+  const pendingSummaryAction = currentSummaryState?.pending ?? false;
+  const summaryOutcome = currentSummaryState?.outcome ?? null;
+  const summaryActionError = currentSummaryState?.error ?? null;
   const defaultReviewTarget = resolveReviewActionTarget(model);
   const [reviewActionForm, setReviewActionForm] = useState<PmQualityReviewActionForm>(() => ({
     actorId: "workbench-pm-operating-quality-supervisor",
@@ -358,32 +393,49 @@ export function usePmOperatingQualityActions({
   }
 
   async function requestSupportSummary() {
-    if (pendingSummaryAction) {
+    if (summaryState?.pending) {
       return;
     }
     if (model.summaryRequestReadinessState !== "READY" || !model.selectedScoreRun) {
       setActionError(buildPmQualityBlockedActionError(model.summaryRequestReadiness));
       return;
     }
-    setPendingSummaryAction(true);
+    const scoreRunId = model.selectedScoreRun.scoreRunId;
+    setSummaryState({
+      scoreRunId,
+      pending: true,
+      response: null,
+      outcome: null,
+      error: null,
+    });
     setActionError(null);
     setActionMessage(null);
-    setSummaryOutcome(null);
     try {
-      const scoreRunId = model.selectedScoreRun.scoreRunId;
       const response = await requestDpmPmOperatingQualitySummary({
         scoreRunId,
       });
-      setSummaryResponse(response);
-      setSummaryOutcome(
-        buildDpmAiWorkflowOutcome("pm-quality-summary", response, scoreRunId),
-      );
+      setSummaryState({
+        scoreRunId,
+        pending: false,
+        response,
+        outcome: buildDpmAiWorkflowOutcome(
+          "pm-quality-summary",
+          response,
+          scoreRunId,
+        ),
+        error: null,
+      });
     } catch (error) {
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality support summary request failed")
-      );
-    } finally {
-      setPendingSummaryAction(false);
+      setSummaryState({
+        scoreRunId,
+        pending: false,
+        response: null,
+        outcome: null,
+        error: buildPmQualityActionError(
+          error,
+          "PM operating quality support summary request failed",
+        ),
+      });
     }
   }
 
@@ -554,7 +606,7 @@ export function usePmOperatingQualityActions({
     pendingReviewActionCreate,
     pendingSummaryInvocationPreview,
     pendingSummaryInvocationCreate,
-    actionError,
+    actionError: summaryActionError ?? actionError,
     actionMessage,
     summaryOutcome,
     fairnessCreateEvidence,

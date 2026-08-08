@@ -6,7 +6,10 @@ import {
   requestDpmExceptionSummary,
   runDpmCommandCenterMonitoring,
 } from "../../src/features/workbench/dpm-command-center-api";
-import type { DpmCommandCenterGatewayResponse } from "../../src/features/workbench/types";
+import type {
+  DpmCommandCenterGatewayResponse,
+  DpmExceptionSummaryResponse,
+} from "../../src/features/workbench/types";
 import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
 
 vi.mock("../../src/features/workbench/dpm-command-center-api", () => ({
@@ -55,6 +58,49 @@ const readyResponse: DpmCommandCenterGatewayResponse = {
     ],
   },
 };
+
+function buildExceptionSummaryResponse(
+  exceptionId: string,
+): DpmExceptionSummaryResponse {
+  return {
+    correlation_id: `corr-exception-summary-${exceptionId}`,
+    contract_version: "v1",
+    source_service: "lotus-ai",
+    evidence_source_service: "lotus-manage",
+    manage_upstream_status: 200,
+    ai_upstream_status: 200,
+    supportability: readyResponse.supportability,
+    exception_summary_input: {
+      exception_id: exceptionId,
+      source_refs: [`lotus-manage:monitoring-exception:${exceptionId}`],
+    },
+    exception_summary_request: {
+      requested_outputs: ["exception_summary", "recommended_triage"],
+      audience: ["portfolio_manager", "operations"],
+    },
+    data: buildDpmAiWorkflowExecution("exception-summary", {
+      runId: `wf_run_exception_summary_${exceptionId}`,
+    }),
+  };
+}
+
+function exceptionProjection(exceptionId: string): DpmCommandCenterGatewayResponse {
+  return {
+    ...readyResponse,
+    data: {
+      items: [
+        {
+          exception_id: exceptionId,
+          mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+          severity: "HIGH",
+          reason_code: "TAX_LOT_SOURCE_PARTIAL",
+          recommended_action: "REPAIR_SOURCE_DATA",
+          state: "ACTIVE",
+        },
+      ],
+    },
+  };
+}
 
 describe("DpmCommandCenterPanel", () => {
   afterEach(() => {
@@ -153,26 +199,9 @@ describe("DpmCommandCenterPanel", () => {
   });
 
   it("requests exception summary through Gateway only and preserves workflow-pack posture", async () => {
-    vi.mocked(requestDpmExceptionSummary).mockResolvedValue({
-      correlation_id: "corr-exception-summary",
-      contract_version: "v1",
-      source_service: "lotus-ai",
-      evidence_source_service: "lotus-manage",
-      manage_upstream_status: 200,
-      ai_upstream_status: 200,
-      supportability: readyResponse.supportability,
-      exception_summary_input: {
-        exception_id: "me_1",
-        source_refs: ["lotus-manage:monitoring-exception:me_1"],
-      },
-      exception_summary_request: {
-        requested_outputs: ["exception_summary", "recommended_triage"],
-        audience: ["portfolio_manager", "operations"],
-      },
-      data: buildDpmAiWorkflowExecution("exception-summary", {
-        runId: "wf_run_exception_summary_001",
-      }),
-    });
+    vi.mocked(requestDpmExceptionSummary).mockResolvedValue(
+      buildExceptionSummaryResponse("me_1"),
+    );
 
     render(
       <DpmCommandCenterPanel
@@ -218,6 +247,69 @@ describe("DpmCommandCenterPanel", () => {
         "Mandate exception review summary is available for internal review and is not approved for client use.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("removes a completed summary when the selected exception changes", async () => {
+    vi.mocked(requestDpmExceptionSummary).mockResolvedValue(
+      buildExceptionSummaryResponse("me_1"),
+    );
+    const { rerender } = render(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={exceptionProjection("me_1")}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Exception summary" }));
+    await screen.findByRole("heading", {
+      name: "Mandate exception review summary",
+    });
+
+    rerender(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={exceptionProjection("me_2")}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("heading", {
+        name: "Mandate exception review summary",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("discards an in-flight summary after the selected exception changes", async () => {
+    let resolveSummary!: (value: DpmExceptionSummaryResponse) => void;
+    vi.mocked(requestDpmExceptionSummary).mockReturnValue(
+      new Promise((resolve) => {
+        resolveSummary = resolve;
+      }),
+    );
+    const { rerender } = render(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={exceptionProjection("me_1")}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Exception summary" }));
+    await waitFor(() => expect(requestDpmExceptionSummary).toHaveBeenCalled());
+    rerender(
+      <DpmCommandCenterPanel
+        commandCenter={readyResponse}
+        exceptions={exceptionProjection("me_2")}
+      />,
+    );
+    resolveSummary(buildExceptionSummaryResponse("me_1"));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", {
+          name: "Mandate exception review summary",
+        }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("renders empty command-center state without claiming failure", () => {

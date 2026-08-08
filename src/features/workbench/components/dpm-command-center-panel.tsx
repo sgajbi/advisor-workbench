@@ -41,6 +41,12 @@ type Props = {
   errorMessage?: string | null;
 };
 
+type ExceptionSummaryState = {
+  exceptionId: string;
+  response: DpmExceptionSummaryResponse | null;
+  error: string | null;
+};
+
 export default function DpmCommandCenterPanel({
   commandCenter,
   exceptions = null,
@@ -55,8 +61,8 @@ export default function DpmCommandCenterPanel({
   >(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [runMessage, setRunMessage] = useState<string | null>(null);
-  const [exceptionSummary, setExceptionSummary] =
-    useState<DpmExceptionSummaryResponse | null>(null);
+  const [exceptionSummaryState, setExceptionSummaryState] =
+    useState<ExceptionSummaryState | null>(null);
   const model = buildDpmCommandCenterPanelModel({
     commandCenter,
     exceptions,
@@ -74,21 +80,30 @@ export default function DpmCommandCenterPanel({
     runModel.latestMonitoringRunStatus !== "N/A"
       ? runModel.latestMonitoringRunStatus
       : model.latestMonitoringRunStatus;
+  const currentExceptionSummary =
+    exceptionSummaryState?.exceptionId === model.selectedExceptionId
+      ? exceptionSummaryState
+      : null;
+  const currentError = currentExceptionSummary?.error ?? runError;
   const shouldShowStatePanel = shouldShowDpmCommandCenterStatePanel(
     model.state,
     errorMessage,
-    runError,
+    currentError,
   );
   const stateCopy = dpmCommandCenterStatePanelCopy(model.state);
-  const exceptionSummaryStatus = readDpmWorkflowPackStatus(exceptionSummary?.data);
-  const exceptionSummaryOutcome = exceptionSummary
+  const exceptionSummaryStatus = readDpmWorkflowPackStatus(
+    currentExceptionSummary?.response?.data,
+  );
+  const exceptionSummaryOutcome = currentExceptionSummary?.response
     ? buildDpmAiWorkflowOutcome(
         "exception-summary",
-        exceptionSummary,
-        model.selectedExceptionId ?? "",
+        currentExceptionSummary.response,
+        currentExceptionSummary.exceptionId,
       )
     : null;
   const runPending = pendingAction !== null;
+  const currentExceptionSummaryPending =
+    pendingAction === "exception-summary" && currentExceptionSummary !== null;
 
   async function runMonitoring() {
     if (runPending) {
@@ -118,23 +133,27 @@ export default function DpmCommandCenterPanel({
     if (runPending || !model.selectedExceptionId) {
       return;
     }
+    const exceptionId = model.selectedExceptionId;
     setPendingAction("exception-summary");
     setRunError(null);
     setRunMessage(null);
-    setExceptionSummary(null);
+    setExceptionSummaryState({ exceptionId, response: null, error: null });
     try {
       const response = await requestDpmExceptionSummary({
-        exceptionId: model.selectedExceptionId,
+        exceptionId,
         mandateId: model.mandateId !== "N/A" ? model.mandateId : undefined,
         state: "ACTIVE",
       });
-      setExceptionSummary(response);
+      setExceptionSummaryState({ exceptionId, response, error: null });
     } catch (error) {
-      setRunError(
-        error instanceof Error
-          ? error.message
-          : "DPM exception summary request failed",
-      );
+      setExceptionSummaryState({
+        exceptionId,
+        response: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "DPM exception summary request failed",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -156,14 +175,14 @@ export default function DpmCommandCenterPanel({
     >
       {shouldShowStatePanel ? (
         <ScreenStatePanel
-          kind={errorMessage || runError ? "partial" : stateCopy.kind}
+          kind={errorMessage || currentError ? "partial" : stateCopy.kind}
           surface="portfolio"
           title={
-            errorMessage || runError
+            errorMessage || currentError
               ? "Mandate health is unavailable"
               : stateCopy.title
           }
-          body={errorMessage ?? runError ?? stateCopy.body}
+          body={errorMessage ?? currentError ?? stateCopy.body}
         />
       ) : null}
 
@@ -190,7 +209,7 @@ export default function DpmCommandCenterPanel({
           onClick={requestExceptionSummary}
           disabled={runPending || !model.selectedExceptionId}
         >
-          {pendingAction === "exception-summary" ? "Requesting summary" : "Exception summary"}
+          {currentExceptionSummaryPending ? "Requesting summary" : "Exception summary"}
         </ActionButton>
         <div>
           {runMessage ? (

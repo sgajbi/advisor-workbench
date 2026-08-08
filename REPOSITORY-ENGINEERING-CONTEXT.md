@@ -206,6 +206,9 @@ Current repository posture:
     evidence. Deterministic Workbench narrative must be identified as rule-based, and
     provider/model/run identifiers remain secondary support details. Performance Advisor Brief,
     Advisory Copilot, and the six DPM workflow-output families use this governed disclosure.
+    Permitted-use labels are a closed, source-contract vocabulary. A consistent but unknown label
+    is not an extensibility signal: it makes the result incomplete until Workbench deliberately
+    adopts and maps the new business meaning.
     DPM source responses must be normalized through `buildDpmAiWorkflowOutcome` and presented with
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request

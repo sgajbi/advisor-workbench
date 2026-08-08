@@ -119,6 +119,23 @@ const scoreRuns: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+const replacementScoreRuns: DpmPmOperatingQualityGatewayResponse = {
+  ...scoreRuns,
+  correlation_id: "corr-score-replacement",
+  data: {
+    score_runs: [
+      {
+        ...(
+          (scoreRuns.data.score_runs as Array<Record<string, unknown>>)[0] ?? {}
+        ),
+        score_run_id: "pmq_run_002",
+        content_hash: "sha256:pm-quality-replacement",
+      },
+    ],
+    fairness_segments: [],
+  },
+};
+
 const fairnessAnalysisResponse: DpmPmOperatingQualityGatewayResponse = {
   ...scoreRuns,
   correlation_id: "corr-pmq-fairness-create",
@@ -359,6 +376,66 @@ describe("usePmOperatingQualityActions", () => {
       clientUse: "internal-only",
     });
     expect(JSON.stringify(result.current.model.summaryPosture)).not.toContain("sha256:pm-quality");
+  });
+
+  it("removes a completed support summary when its score run is replaced", async () => {
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue(
+      summaryResponse,
+    );
+    const { result, rerender } = renderHook(
+      ({ currentScoreRuns }) =>
+        usePmOperatingQualityActions({
+          policies,
+          scoreRuns: currentScoreRuns,
+        }),
+      { initialProps: { currentScoreRuns: scoreRuns } },
+    );
+
+    await act(async () => {
+      await result.current.requestSupportSummary();
+    });
+    expect(result.current.summaryOutcome).not.toBeNull();
+
+    rerender({ currentScoreRuns: replacementScoreRuns });
+
+    expect(result.current.model.selectedScoreRun?.scoreRunId).toBe("pmq_run_002");
+    expect(result.current.summaryOutcome).toBeNull();
+    expect(result.current.pendingSummaryAction).toBe(false);
+  });
+
+  it("discards an in-flight support summary after its score run is replaced", async () => {
+    let resolveSummary!: (value: DpmPmOperatingQualitySummaryResponse) => void;
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockReturnValue(
+      new Promise((resolve) => {
+        resolveSummary = resolve;
+      }),
+    );
+    const { result, rerender } = renderHook(
+      ({ currentScoreRuns }) =>
+        usePmOperatingQualityActions({
+          policies,
+          scoreRuns: currentScoreRuns,
+        }),
+      { initialProps: { currentScoreRuns: scoreRuns } },
+    );
+
+    act(() => {
+      void result.current.requestSupportSummary();
+    });
+    await waitFor(() =>
+      expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
+        scoreRunId: "pmq_run_001",
+      }),
+    );
+    rerender({ currentScoreRuns: replacementScoreRuns });
+    await act(async () => {
+      resolveSummary(summaryResponse);
+      await Promise.resolve();
+    });
+
+    expect(result.current.model.selectedScoreRun?.scoreRunId).toBe("pmq_run_002");
+    expect(result.current.summaryOutcome).toBeNull();
+    expect(result.current.pendingSummaryAction).toBe(false);
   });
 
   it("previews before creating bounded supervisory review actions through Gateway", async () => {

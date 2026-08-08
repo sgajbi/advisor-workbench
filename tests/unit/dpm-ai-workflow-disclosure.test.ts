@@ -148,6 +148,23 @@ describe("buildDpmAiWorkflowOutcome", () => {
     );
   });
 
+  it("fails closed for an unknown output-use label", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        outputLabel: "PUBLIC_OK",
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.businessSummary).toContain("incomplete");
+  });
+
   it.each([
     ["blank text", { memo: "   " }],
     ["null value", { summary: null }],
