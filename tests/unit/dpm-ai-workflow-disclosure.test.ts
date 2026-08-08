@@ -68,6 +68,154 @@ describe("buildDpmAiWorkflowOutcome", () => {
     },
   );
 
+  it.each([
+    {
+      name: "disabled deterministic provider",
+      providerMode: "disabled",
+      stubbed: true,
+      preparation: "deterministic",
+      availability: "simulation",
+      trusted: true,
+    },
+    {
+      name: "explicit stub provider",
+      providerMode: "stub",
+      stubbed: true,
+      preparation: "deterministic",
+      availability: "simulation",
+      trusted: true,
+    },
+    {
+      name: "managed OpenAI provider",
+      providerMode: "openai",
+      stubbed: false,
+      preparation: "ai-assisted",
+      availability: "live",
+      trusted: true,
+    },
+    {
+      name: "local OpenAI-compatible provider",
+      providerMode: "local_openai_compatible",
+      stubbed: false,
+      preparation: "ai-assisted",
+      availability: "live",
+      trusted: true,
+    },
+    {
+      name: "disabled provider presented as live",
+      providerMode: "disabled",
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+      trusted: false,
+    },
+    {
+      name: "stub provider presented as live",
+      providerMode: "stub",
+      stubbed: false,
+      preparation: "unavailable",
+      availability: "partial",
+      trusted: false,
+    },
+    {
+      name: "managed OpenAI provider presented as deterministic",
+      providerMode: "openai",
+      stubbed: true,
+      preparation: "unavailable",
+      availability: "partial",
+      trusted: false,
+    },
+    {
+      name: "local OpenAI-compatible provider presented as deterministic",
+      providerMode: "local_openai_compatible",
+      stubbed: true,
+      preparation: "unavailable",
+      availability: "partial",
+      trusted: false,
+    },
+  ] as const)(
+    "classifies $name through the closed provider contract",
+    ({ providerMode, stubbed, preparation, availability, trusted }) => {
+      const outcome = buildDpmAiWorkflowOutcome(
+        "proof-pack-memo",
+        buildDpmAiWorkflowResponse("proof-pack-memo", {
+          providerMode,
+          stubbed,
+        }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation,
+        availability,
+        clientUse: trusted ? "internal-only" : "blocked",
+      });
+      expect(outcome.material.sections.length > 0).toBe(trusted);
+    },
+  );
+
+  it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
+    "fails closed when the %s family presents a disabled provider as live assistance",
+    (family) => {
+      const typedFamily = family as DpmAiWorkflowFamily;
+      const outcome = buildDpmAiWorkflowOutcome(
+        typedFamily,
+        buildDpmAiWorkflowResponse(typedFamily, {
+          providerMode: "disabled",
+          stubbed: false,
+        }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
+  it.each([null, "future_provider"])(
+    "fails closed for unsupported provider mode %s",
+    (providerMode) => {
+      const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+      Object.assign(response.data.execution.audit, { provider_mode: providerMode });
+      Object.assign(response.data.workflow_pack_run, { provider_mode: providerMode });
+
+      const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        clientUse: "blocked",
+      });
+      expect(outcome.material.sections).toEqual([]);
+    },
+  );
+
+  it.each([
+    {
+      name: "provider modes disagree",
+      audit: { provider_mode: "local_openai_compatible" },
+    },
+    {
+      name: "stub postures disagree",
+      audit: { stubbed: true },
+    },
+  ])("fails closed when run and audit $name", ({ audit }) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+    Object.assign(response.data.execution.audit, audit);
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      clientUse: "blocked",
+    });
+    expect(outcome.material.sections).toEqual([]);
+  });
+
   it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
     "fails closed when the %s source supportability is blocked",
     (family) => {

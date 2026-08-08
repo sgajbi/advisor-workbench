@@ -223,7 +223,16 @@ Current repository posture:
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request
     acceptance, invocation persistence, and runtime completion never imply available material.
-    Stubbed workflow output is deterministic preparation, not AI-assisted preparation. A source
+    Stubbed workflow output is deterministic preparation, not AI-assisted preparation. DPM
+    provider provenance is a closed semantic pair: `disabled` and `stub` require stubbed output,
+    while `openai` and `local_openai_compatible` require non-stubbed live output. Missing, unknown,
+    cross-record contradictory, or mode/stub contradictory provenance fails the shared workflow
+    contract, hides returned material, and blocks client use across all six DPM workflow families.
+    The reusable `classifyAiProviderPosture` design-system primitive owns this closed vocabulary;
+    DPM normalization consumes it rather than defining a family-local mode list. Performance
+    Advisor Brief adoption is tracked in Workbench #542. Gateway issues #528 and #529 own equivalent
+    validation for DPM and Advisor Brief at the Experience API boundary; Workbench keeps this
+    final-boundary defense rather than trusting duplicated-field equality alone. A source
     client-use approval remains blocked unless runtime redaction is explicitly active; a
     contradictory internal-scope limitation must never coexist with an approved client-use state.
     For DPM workflow output, transport success and inner runtime completion do not override the

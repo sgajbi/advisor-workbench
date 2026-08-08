@@ -16,6 +16,7 @@ type DpmAiWorkflowFixtureOptions = {
   reviewState?: DpmAiWorkflowReviewState;
   supportabilityStatus?: DpmAiWorkflowSupportabilityStatus;
   stubbed?: boolean;
+  providerMode?: string;
   outputLabel?: string;
   structuredOutput?: Record<string, unknown>;
   evidenceDescriptors?: DpmAiEvidenceDescriptor[];
@@ -78,7 +79,7 @@ export function buildDpmAiWorkflowExecution(
     "REVISED",
     "ABANDONED",
   ].includes(reviewState);
-  const providerMode = stubbed ? "disabled" : "openai";
+  const providerMode = options.providerMode ?? (stubbed ? "disabled" : "openai");
 
   return {
     service: "lotus-ai",

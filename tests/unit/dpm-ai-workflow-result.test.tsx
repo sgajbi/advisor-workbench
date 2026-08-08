@@ -29,6 +29,37 @@ describe("DpmAiWorkflowResult", () => {
     expect(screen.getByText("Validate source completeness")).toBeInTheDocument();
     expect(screen.queryByText("exception_summary")).not.toBeInTheDocument();
   });
+
+  it("renders contradictory provider provenance as partial and hides its material", () => {
+    const response = buildDpmAiWorkflowResponse("exception-summary", {
+      providerMode: "disabled",
+      stubbed: false,
+      structuredOutput: {
+        exception_summary: "Do not expose contradictory provider material.",
+      },
+    });
+
+    render(
+      <DpmAiWorkflowResult
+        outcome={buildDpmAiWorkflowOutcome(
+          "exception-summary",
+          response,
+          getDpmAiWorkflowFixtureSourceReference("exception-summary"),
+        )}
+      />,
+    );
+
+    expect(screen.getByText("Partial output")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Mandate exception review summary is incomplete and requires source or control follow-up.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Do not expose contradictory provider material."),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Live AI-assisted output")).not.toBeInTheDocument();
+  });
 });
 
 function renderResult(runId: string, ownerState: string) {
