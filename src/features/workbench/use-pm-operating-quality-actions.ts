@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   buildDpmPmOperatingQualityReviewActionCorrelationId,
@@ -38,6 +38,7 @@ import {
 } from "@/features/workbench/pm-operating-quality-actions";
 import {
   buildPmOperatingQualityPanelModel,
+  matchesPmOperatingQualitySummaryScoreRun,
   type PmOperatingQualityPanelModel,
 } from "@/features/workbench/pm-operating-quality-view-model";
 import {
@@ -140,6 +141,7 @@ export function usePmOperatingQualityActions({
     useState<PmQualitySummaryInvocationEvidence | null>(null);
   const [summaryState, setSummaryState] =
     useState<PmQualitySummaryState | null>(null);
+  const summaryRequestSequenceRef = useRef(0);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
@@ -393,14 +395,16 @@ export function usePmOperatingQualityActions({
   }
 
   async function requestSupportSummary() {
-    if (summaryState?.pending) {
-      return;
-    }
     if (model.summaryRequestReadinessState !== "READY" || !model.selectedScoreRun) {
       setActionError(buildPmQualityBlockedActionError(model.summaryRequestReadiness));
       return;
     }
     const scoreRunId = model.selectedScoreRun.scoreRunId;
+    if (summaryState?.pending && summaryState.scoreRunId === scoreRunId) {
+      return;
+    }
+    const requestSequence = summaryRequestSequenceRef.current + 1;
+    summaryRequestSequenceRef.current = requestSequence;
     setSummaryState({
       scoreRunId,
       pending: true,
@@ -414,10 +418,15 @@ export function usePmOperatingQualityActions({
       const response = await requestDpmPmOperatingQualitySummary({
         scoreRunId,
       });
+      if (requestSequence !== summaryRequestSequenceRef.current) {
+        return;
+      }
       setSummaryState({
         scoreRunId,
         pending: false,
-        response,
+        response: matchesPmOperatingQualitySummaryScoreRun(response, scoreRunId)
+          ? response
+          : null,
         outcome: buildDpmAiWorkflowOutcome(
           "pm-quality-summary",
           response,
@@ -426,6 +435,9 @@ export function usePmOperatingQualityActions({
         error: null,
       });
     } catch (error) {
+      if (requestSequence !== summaryRequestSequenceRef.current) {
+        return;
+      }
       setSummaryState({
         scoreRunId,
         pending: false,

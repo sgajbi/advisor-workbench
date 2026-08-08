@@ -6,6 +6,7 @@ import {
   observeWorkbenchResource,
   type WorkbenchRequestTarget,
 } from "@/features/workbench/api-client";
+import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import type {
   DpmProofPackAiPmMemoResponse,
   DpmProofPackGatewayResponse,
@@ -144,14 +145,9 @@ export async function requestDpmProofPackAiPmMemo(params: {
             "X-Correlation-Id": `corr-workbench-proof-pack-ai-memo-${params.proofPackId}`,
           },
           body: JSON.stringify({
-            requested_outputs: params.requestedOutputs ?? [
-              "pm_memo",
-              "rationale_summary",
-              "approval_checklist",
-              "risk_caveats",
-              "operations_handoff",
-              "evidence_gaps",
-            ],
+            requested_outputs:
+              params.requestedOutputs ??
+              getDpmAiWorkflowProfile("proof-pack-memo").requestedOutputs,
             audience: params.audience ?? [
               "portfolio_manager",
               "investment_control",

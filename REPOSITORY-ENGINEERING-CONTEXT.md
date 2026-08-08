@@ -220,8 +220,11 @@ Current repository posture:
     contradictory internal-scope limitation must never coexist with an approved client-use state.
     A successful workflow must render its returned decision-support material, not only availability
     and audit posture. Keep the six family-specific source-field mappings declarative in the shared
-    profile; render only adopted business fields with readable labels and bounded structure; keep
-    technical hashes and raw keys out of primary material. An otherwise usable payload with no
+    profile. The same profile is the single source for each family's default `requested_outputs`;
+    every requested section must have an adopted business label so risk, control, governance, and
+    operations content cannot be requested and then silently withheld. Render only adopted business
+    fields with readable labels and bounded structure; keep technical hashes and raw keys out of
+    primary material. An otherwise usable payload with no
     supported presentable field fails closed rather than claiming live but unreadable output.
     Presentable material also requires a source-completed runtime (including an intentionally
     historical superseded run); running and failed output stays hidden even when partial structured
@@ -246,7 +249,11 @@ Current repository posture:
     its caller and compare it with the family-specific source input published by Gateway. Workflow
     pack, surface, and authority identity do not prove that a result belongs to the requested proof
     pack, wave, exception, outcome review, or score run. Owning-screen state remains bound to that
-    source object and is hidden when a newly current object replaces it.
+    source object and is hidden when a newly current object replaces it. Apply the same identity
+    check before projecting adjacent status, review, authority, run, or supportability metadata;
+    fail-closed material beside wrong-object posture is still wrong attribution. A newly selected
+    source object may start its own request while an obsolete object's request is pending; the
+    visible enabled state and the request guard must use the same source-bound predicate.
     When a newly published result receives keyboard focus, bind that effect to a stable source
     result identity. Rebuilding an equivalent view-model object during an unrelated owning-panel
     update must not steal focus from the advisor's current command.

@@ -272,6 +272,22 @@ const summaryResponse: DpmPmOperatingQualitySummaryResponse = {
   data: buildDpmAiWorkflowExecution("pm-quality-summary", { runId: "packrun_pmq_1" }),
 };
 
+const replacementSummaryResponse: DpmPmOperatingQualitySummaryResponse = {
+  ...summaryResponse,
+  correlation_id: "corr-pmq-summary-replacement",
+  supportability: {
+    ...summaryResponse.supportability,
+    score_run_id: "pmq_run_002",
+  },
+  score_run: {
+    score_run_id: "pmq_run_002",
+    content_hash: "sha256:pm-quality-replacement",
+  },
+  data: buildDpmAiWorkflowExecution("pm-quality-summary", {
+    runId: "packrun_pmq_2",
+  }),
+};
+
 function renderActions(overrides: Partial<Parameters<typeof usePmOperatingQualityActions>[0]> = {}) {
   return renderHook(() =>
     usePmOperatingQualityActions({
@@ -436,6 +452,81 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.model.selectedScoreRun?.scoreRunId).toBe("pmq_run_002");
     expect(result.current.summaryOutcome).toBeNull();
     expect(result.current.pendingSummaryAction).toBe(false);
+  });
+
+  it("does not project summary posture from a mismatched score run", async () => {
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue({
+      ...summaryResponse,
+      score_run: { score_run_id: "pmq_run_other" },
+    });
+    const { result } = renderActions();
+
+    await act(async () => {
+      await result.current.requestSupportSummary();
+    });
+
+    expect(result.current.summaryOutcome?.disclosure).toMatchObject({
+      availability: "partial",
+      clientUse: "blocked",
+    });
+    expect(result.current.model.summaryPosture).toMatchObject({
+      status: "Not requested",
+      reviewState: "N/A",
+      workflowAuthority: "N/A",
+      runId: "N/A",
+    });
+  });
+
+  it("starts the newly selected score-run request while the prior run is pending", async () => {
+    let resolveFirst!: (value: DpmPmOperatingQualitySummaryResponse) => void;
+    let resolveSecond!: (value: DpmPmOperatingQualitySummaryResponse) => void;
+    vi.mocked(requestDpmPmOperatingQualitySummary)
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveFirst = resolve;
+      }))
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveSecond = resolve;
+      }));
+    const { result, rerender } = renderHook(
+      ({ currentScoreRuns }) =>
+        usePmOperatingQualityActions({
+          policies,
+          scoreRuns: currentScoreRuns,
+        }),
+      { initialProps: { currentScoreRuns: scoreRuns } },
+    );
+
+    act(() => {
+      void result.current.requestSupportSummary();
+    });
+    await waitFor(() => expect(result.current.pendingSummaryAction).toBe(true));
+
+    rerender({ currentScoreRuns: replacementScoreRuns });
+    expect(result.current.pendingSummaryAction).toBe(false);
+    act(() => {
+      void result.current.requestSupportSummary();
+    });
+    await waitFor(() => {
+      expect(requestDpmPmOperatingQualitySummary).toHaveBeenNthCalledWith(2, {
+        scoreRunId: "pmq_run_002",
+      });
+      expect(result.current.pendingSummaryAction).toBe(true);
+    });
+
+    await act(async () => {
+      resolveSecond(replacementSummaryResponse);
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(result.current.model.summaryPosture.runId).toBe("packrun_pmq_2");
+      expect(result.current.pendingSummaryAction).toBe(false);
+    });
+
+    await act(async () => {
+      resolveFirst(summaryResponse);
+      await Promise.resolve();
+    });
+    expect(result.current.model.summaryPosture.runId).toBe("packrun_pmq_2");
   });
 
   it("previews before creating bounded supervisory review actions through Gateway", async () => {

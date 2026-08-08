@@ -234,8 +234,20 @@ export function buildPmOperatingQualityPanelModel(params: {
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
   summary?: DpmPmOperatingQualitySummaryResponse | null;
 }): PmOperatingQualityPanelModel {
+  const policyRows = buildPolicyRows(params.policies);
+  const scoreRunRows = [
+    ...buildScoreRunRows(params.preview),
+    ...buildScoreRunRows(params.scoreRuns),
+  ].filter(uniqueByScoreRunId);
+  const selectedScoreRun = scoreRunRows[0] ?? null;
+  const summary = matchesPmOperatingQualitySummaryScoreRun(
+    params.summary,
+    selectedScoreRun?.scoreRunId ?? null,
+  )
+    ? params.summary
+    : null;
   const primary =
-    params.summary ??
+    summary ??
     params.summaryInvocationDetail ??
     params.summaryInvocations ??
     params.fairnessPreview ??
@@ -248,11 +260,6 @@ export function buildPmOperatingQualityPanelModel(params: {
     params.policies;
   const supportability = primary?.supportability;
   const supportabilityState = normalizeState(supportability?.state);
-  const policyRows = buildPolicyRows(params.policies);
-  const scoreRunRows = [
-    ...buildScoreRunRows(params.preview),
-    ...buildScoreRunRows(params.scoreRuns),
-  ].filter(uniqueByScoreRunId);
   const fairnessAnalysisRows = [
     ...buildFairnessAnalysisRows(params.fairnessAnalysisDetail),
     ...buildFairnessAnalysisRows(params.fairnessPreview),
@@ -271,7 +278,6 @@ export function buildPmOperatingQualityPanelModel(params: {
   );
   const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
   const fairnessSegmentRequests = extractFairnessSegmentRequests(params.scoreRuns);
-  const selectedScoreRun = scoreRunRows[0] ?? null;
   const selectedFairnessAnalysis = fairnessAnalysisRows[0] ?? null;
   const selectedReviewAction = reviewActionRows[0] ?? null;
   const reasonCodes = [
@@ -368,9 +374,9 @@ export function buildPmOperatingQualityPanelModel(params: {
       summaryInvocationDetail: params.summaryInvocationDetail,
       preview: params.preview,
       fairnessPreview: params.fairnessPreview,
-      summary: params.summary,
+      summary,
     }),
-    summaryPosture: buildSummaryPosture(params.summary),
+    summaryPosture: buildSummaryPosture(summary),
     summaryRequestReadinessState: summaryRequestReadiness.state,
     summaryRequestReadiness: summaryRequestReadiness.detail,
     scoreRunPreviewReadinessState: scoreRunPreviewReadiness.state,
@@ -378,6 +384,16 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
     fairnessPreviewReadiness: fairnessPreviewReadiness.detail,
   };
+}
+
+export function matchesPmOperatingQualitySummaryScoreRun(
+  response: DpmPmOperatingQualitySummaryResponse | null | undefined,
+  expectedScoreRunId: string | null | undefined,
+): response is DpmPmOperatingQualitySummaryResponse {
+  if (!response || !expectedScoreRunId) {
+    return false;
+  }
+  return readString(asRecord(response.score_run), "score_run_id") === expectedScoreRunId;
 }
 
 function buildOperationEvidence(params: {
