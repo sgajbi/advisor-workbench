@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repositoryRoot = join(__dirname, "..", "..");
+const governedLintCommand =
+  "npm run lint:css-global && npm run lint:risk-architecture && npm run lint:eslint";
 
 function readRepositoryFile(...segments: string[]): string {
   return readFileSync(join(repositoryRoot, ...segments), "utf8");
@@ -20,7 +22,7 @@ describe("dependency security governance", () => {
     };
     const eslintConfig = readRepositoryFile("eslint.config.mjs");
 
-    expect(packageJson.scripts?.lint).toBe("npm run lint:css-global && npm run lint:eslint");
+    expect(packageJson.scripts?.lint).toBe(governedLintCommand);
     expect(packageJson.scripts?.["lint:eslint"]).toBe("eslint . --max-warnings=0");
     expect(packageJson.devDependencies?.["eslint-plugin-react-hooks"]).toBe(
       "7.1.1",
@@ -62,7 +64,7 @@ describe("dependency security governance", () => {
     const nextConfig = readRepositoryFile("next.config.mjs");
     const makefile = readRepositoryFile("Makefile");
 
-    expect(packageJson.scripts?.lint).toBe("npm run lint:css-global && npm run lint:eslint");
+    expect(packageJson.scripts?.lint).toBe(governedLintCommand);
     expect(packageJson.scripts?.["lint:eslint"]).toBe("eslint . --max-warnings=0");
     expect(packageJson.scripts?.lint).not.toContain("eslint src");
     expect(makefile).toMatch(/lint:\r?\n\tnpm run lint/);
