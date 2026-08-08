@@ -443,7 +443,7 @@ export function useDpmWaveCommandCenterActions({
       recordResponse({ waveId: sourceWaveId, value: response });
       setAiWorkflowOutcome({
         waveId: sourceWaveId,
-        value: buildDpmAiWorkflowOutcome(family, response),
+        value: buildDpmAiWorkflowOutcome(family, response, sourceWaveId),
       });
     } catch (error) {
       setActionError(error instanceof Error ? error.message : `${label} failed`);

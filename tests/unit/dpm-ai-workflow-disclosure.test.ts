@@ -2,10 +2,26 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildDpmAiInvocationEvidenceOutcome,
-  buildDpmAiWorkflowOutcome,
+  buildDpmAiWorkflowOutcome as buildSourceBoundDpmAiWorkflowOutcome,
 } from "@/features/workbench/dpm-ai-workflow-disclosure";
+import type { DpmAiWorkflowFamily } from "@/features/workbench/dpm-ai-workflow-profiles";
 import { DPM_AI_WORKFLOW_PROFILES } from "@/features/workbench/dpm-ai-workflow-profiles";
-import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
+import {
+  buildDpmAiWorkflowResponse,
+  getDpmAiWorkflowFixtureSourceReference,
+} from "../fixtures/dpm-ai-workflow-fixtures";
+
+function buildDpmAiWorkflowOutcome(
+  family: DpmAiWorkflowFamily,
+  response: unknown,
+  expectedSourceReference = getDpmAiWorkflowFixtureSourceReference(family),
+) {
+  return buildSourceBoundDpmAiWorkflowOutcome(
+    family,
+    response,
+    expectedSourceReference,
+  );
+}
 
 describe("buildDpmAiWorkflowOutcome", () => {
   it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
@@ -32,6 +48,26 @@ describe("buildDpmAiWorkflowOutcome", () => {
       expect(outcome.businessSummary).toContain(
         "available for internal review",
       );
+    },
+  );
+
+  it.each(Object.keys(DPM_AI_WORKFLOW_PROFILES))(
+    "fails closed when the %s response belongs to another source object",
+    (family) => {
+      const typedFamily = family as DpmAiWorkflowFamily;
+      const outcome = buildDpmAiWorkflowOutcome(
+        typedFamily,
+        buildDpmAiWorkflowResponse(typedFamily, {
+          sourceReference: "different-source-object",
+        }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        preparation: "unavailable",
+        availability: "partial",
+        evidence: { state: "limited" },
+        clientUse: "blocked",
+      });
     },
   );
 

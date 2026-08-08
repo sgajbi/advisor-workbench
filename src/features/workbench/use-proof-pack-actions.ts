@@ -46,6 +46,11 @@ type UseProofPackActionsResult = {
   requestAiPmMemo: () => void;
 };
 
+type ProofPackBoundAiMemo = {
+  proofPackId: string;
+  outcome: DpmAiWorkflowOutcome;
+};
+
 export function useProofPackActions({
   initialProofPack,
   contextProofPackId,
@@ -56,7 +61,7 @@ export function useProofPackActions({
   const [proofPack, setProofPack] = useState<DpmProofPackGatewayResponse | null>(initialProofPack);
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [handoffStatus, setHandoffStatus] = useState<string | null>(null);
-  const [aiMemoOutcome, setAiMemoOutcome] = useState<DpmAiWorkflowOutcome | null>(null);
+  const [aiMemo, setAiMemo] = useState<ProofPackBoundAiMemo | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const model = buildProofPackPanelModel(proofPack);
@@ -66,6 +71,8 @@ export function useProofPackActions({
     contextRebalanceRunId ?? (model.rebalanceRunId !== "N/A" ? model.rebalanceRunId : null);
   const resolvedMandateId =
     mandateId ?? contextMandateId ?? (model.mandateId !== "N/A" ? model.mandateId : null);
+  const aiMemoOutcome =
+    aiMemo?.proofPackId === proofPackId ? aiMemo.outcome : null;
 
   async function runAction(label: string, action: () => Promise<void>) {
     if (pendingAction) {
@@ -141,9 +148,16 @@ export function useProofPackActions({
     }
     void runAction("Open advisor memo", async () => {
       setHandoffStatus(null);
-      setAiMemoOutcome(null);
+      setAiMemo(null);
       const response = await requestDpmProofPackAiPmMemo({ proofPackId });
-      setAiMemoOutcome(buildDpmAiWorkflowOutcome("proof-pack-memo", response));
+      setAiMemo({
+        proofPackId,
+        outcome: buildDpmAiWorkflowOutcome(
+          "proof-pack-memo",
+          response,
+          proofPackId,
+        ),
+      });
     });
   }
 

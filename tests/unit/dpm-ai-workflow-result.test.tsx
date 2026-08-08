@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
-import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
+import {
+  buildDpmAiWorkflowResponse,
+  getDpmAiWorkflowFixtureSourceReference,
+} from "../fixtures/dpm-ai-workflow-fixtures";
 
 describe("DpmAiWorkflowResult", () => {
   it("focuses only when a newly identified workflow result is published", async () => {
@@ -38,6 +41,7 @@ function resultView(runId: string, ownerState: string) {
         outcome={buildDpmAiWorkflowOutcome(
           "exception-summary",
           buildDpmAiWorkflowResponse("exception-summary", { runId }),
+          getDpmAiWorkflowFixtureSourceReference("exception-summary"),
         )}
         focusOnMount
       />

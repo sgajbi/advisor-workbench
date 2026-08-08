@@ -186,7 +186,11 @@ export function useOutcomeReviewHandoffs({
         pendingContextKey: null,
         result: bindToContext(
           currentContextKey,
-          buildDpmAiWorkflowOutcome("outcome-narrative", narrative),
+          buildDpmAiWorkflowOutcome(
+            "outcome-narrative",
+            narrative,
+            outcomeReviewId,
+          ),
         ),
         error: null,
       });

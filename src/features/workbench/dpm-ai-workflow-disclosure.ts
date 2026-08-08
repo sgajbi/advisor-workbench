@@ -37,9 +37,14 @@ export type DpmAiInvocationEvidence = {
 export function buildDpmAiWorkflowOutcome(
   family: DpmAiWorkflowFamily,
   response: unknown,
+  expectedSourceReference: string,
 ): DpmAiWorkflowOutcome {
   const profile = getDpmAiWorkflowProfile(family);
-  const normalized = normalizeDpmAiWorkflowExecution(response, profile);
+  const normalized = normalizeDpmAiWorkflowExecution(
+    response,
+    profile,
+    expectedSourceReference,
+  );
   const limitations = buildLimitations(normalized);
   const disclosure = createAiAssistanceDisclosure({
     scopeLabel: profile.scopeLabel,
@@ -357,6 +362,7 @@ function workflowResultSourceIdentity(
   return JSON.stringify([
     family,
     normalized.runId,
+    normalized.sourceReference,
     normalized.generatedAt,
     normalized.lastUpdatedAt,
     normalized.reviewState,
