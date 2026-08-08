@@ -12,11 +12,13 @@ param(
   [switch]$SkipSeedCleanup,
   [switch]$BuildImages,
   [switch]$CoreManageOnly,
+  [switch]$PortOwnershipPreflightOnly,
   [switch]$RequireMainlineSources,
   [switch]$RunValidation
 )
 
 $ErrorActionPreference = "Stop"
+Import-Module (Join-Path $PSScriptRoot "CanonicalPortOwnership.psm1") -Force
 
 $coreRepo = Join-Path $ProjectsRoot "lotus-core"
 $performanceRepo = Join-Path $ProjectsRoot "lotus-performance"
@@ -117,20 +119,6 @@ function Test-HttpReady {
     return $response.StatusCode -ge 200 -and $response.StatusCode -lt 300
   } catch {
     return $false
-  }
-}
-
-function Normalize-HostPathForComparison {
-  param([string]$Path)
-
-  if ([string]::IsNullOrWhiteSpace($Path)) {
-    return ""
-  }
-
-  try {
-    return ([System.IO.Path]::GetFullPath($Path)).TrimEnd("\", "/")
-  } catch {
-    return $Path.Trim().TrimEnd("\", "/")
   }
 }
 
@@ -329,16 +317,11 @@ function Test-CanonicalPortOwnership {
     $dockerOwners = @($publishedPortOwners | Where-Object { $_.Port -eq $requiredPort.Port })
     if ($dockerOwners.Count -gt 0) {
       foreach ($owner in $dockerOwners) {
-        $allowedWorkingDirectories = @(
-          $requiredPort.AllowedDockerWorkingDirectories |
-            ForEach-Object { Normalize-HostPathForComparison ([string]$_) }
-        )
-        $ownerWorkingDirectory = Normalize-HostPathForComparison $owner.WorkingDirectory
-        $projectAllowed = (
-          -not [string]::IsNullOrWhiteSpace($owner.Project) -and
-          ($requiredPort.AllowedDockerProjects -contains $owner.Project) -and
-          ($allowedWorkingDirectories -contains $ownerWorkingDirectory)
-        )
+        $projectAllowed = Test-CanonicalDockerProjectOwnership `
+          -Project $owner.Project `
+          -WorkingDirectory $owner.WorkingDirectory `
+          -AllowedProjects $requiredPort.AllowedDockerProjects `
+          -AllowedWorkingDirectories $requiredPort.AllowedDockerWorkingDirectories
         $containerAllowed = $requiredPort.AllowedContainerNames -contains $owner.Name
         if (-not $projectAllowed -and -not $containerAllowed) {
           $project = if ([string]::IsNullOrWhiteSpace($owner.Project)) { "<none>" } else { $owner.Project }
@@ -722,6 +705,13 @@ function Invoke-CanonicalIdeaCapacitySeed {
 }
 
 Test-CanonicalPortOwnership -CoreManageOnlyMode:$CoreManageOnly
+if ($PortOwnershipPreflightOnly) {
+  Write-Host (
+    "Canonical port ownership preflight passed. " +
+    "No hosts, builds, containers, processes, seeds, or validation state were changed."
+  )
+  return
+}
 if ($RequireMainlineSources) {
   $mainlineProvenance = Invoke-MainlineSourceProvenancePreflight
   $ideaCapacityEvidenceRoot = $mainlineProvenance.EvidenceRoot
