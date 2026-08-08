@@ -46,10 +46,20 @@ export function normalizeDpmAiWorkflowExecution(
     reviewState === "SUPERSEDED" ||
     supportabilityStatus === "HISTORICAL" ||
     Boolean(supersededByRunId || replacementRunId);
+  const eligibilityCallerApp = readString(eligibility.caller_app);
+  const authorizationCallerApp = readString(authorization.caller_app);
+  const authenticatedCallerApp = readString(authorization.authenticated_caller_app);
+  const runCallerApp = readString(run.caller_app);
   const authorized =
+    readString(eligibility.eligibility_result) === "ALLOWED" &&
     eligibility.allowed === true &&
+    readString(authorization.outcome) === "ALLOWED" &&
     authorization.allowed === true &&
-    authorization.caller_identity_bound === true;
+    authorization.caller_identity_bound === true &&
+    eligibilityCallerApp !== null &&
+    eligibilityCallerApp === authorizationCallerApp &&
+    eligibilityCallerApp === authenticatedCallerApp &&
+    eligibilityCallerApp === runCallerApp;
   const identityChecks = [
     data.service === "lotus-ai",
     readString(data.version) !== null,
@@ -63,7 +73,7 @@ export function normalizeDpmAiWorkflowExecution(
     readString(eligibility.requested_version) === readString(run.pack_version),
     readString(eligibility.evaluated_registration_ref) ===
       readString(run.registration_ref),
-    readString(eligibility.caller_app) === readString(run.caller_app),
+    eligibilityCallerApp === runCallerApp,
     readString(eligibility.version) === readString(data.version),
     taskId !== null && taskId === readString(run.task_id),
     taskId === readString(audit.task_id),

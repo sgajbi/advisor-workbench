@@ -83,6 +83,145 @@ describe("useOutcomeReviewHandoffs", () => {
     });
   });
 
+  it("keeps an earlier narrative completion outside the current outcome-review context", async () => {
+    const firstRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    const secondRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    vi.mocked(requestDpmOutcomeReviewAiNarrative)
+      .mockReturnValueOnce(firstRequest.promise)
+      .mockReturnValueOnce(secondRequest.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let firstCompletion!: Promise<void>;
+    act(() => {
+      firstCompletion = result.current.requestOutcomeAiNarrative();
+    });
+    expect(result.current.aiNarrativePending).toBe(true);
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+        rebalanceRunId: "rr_2",
+        waveId: "wave_2",
+        proofPackId: "ppack_2",
+        expectedSnapshotHash: "sha256:expected-2",
+        realizedSnapshotHash: "sha256:realized-2",
+        updatedAt: "2026-05-14T09:35:00Z",
+      }),
+    });
+
+    expect(result.current.aiNarrativePending).toBe(false);
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+
+    let secondCompletion!: Promise<void>;
+    act(() => {
+      secondCompletion = result.current.requestOutcomeAiNarrative();
+    });
+    expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenLastCalledWith({
+      outcomeReviewId: "or_2",
+    });
+
+    await act(async () => {
+      secondRequest.resolve(aiNarrativeResponse("or_2", "packrun_or_2"));
+      await secondCompletion;
+    });
+
+    expect(result.current.aiNarrativeOutcome?.disclosure.diagnostics).toContainEqual({
+      label: "Workflow run",
+      value: "packrun_or_2",
+    });
+    expect(result.current.clientCommunicationBoundary?.boundaryId).toBe(
+      "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY_or_2",
+    );
+
+    await act(async () => {
+      firstRequest.resolve(aiNarrativeResponse("or_1", "packrun_or_1"));
+      await firstCompletion;
+    });
+
+    expect(result.current.aiNarrativeOutcome?.disclosure.diagnostics).toContainEqual({
+      label: "Workflow run",
+      value: "packrun_or_2",
+    });
+    expect(result.current.clientCommunicationBoundary?.boundaryId).toBe(
+      "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY_or_2",
+    );
+  });
+
+  it("does not attach an earlier report handoff to a different review", async () => {
+    const reportInput = deferred<DpmOutcomeReviewHandoffResponse>();
+    vi.mocked(getDpmOutcomeReviewReportInput).mockReturnValue(reportInput.promise);
+    vi.mocked(submitDpmOutcomeReviewReportJob).mockResolvedValue(reportJobHandle());
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let completion!: Promise<void>;
+    act(() => {
+      completion = result.current.requestOutcomeReportJob();
+    });
+    expect(result.current.reportJobPending).toBe(true);
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+      }),
+    });
+    expect(result.current.reportJobPending).toBe(false);
+
+    await act(async () => {
+      reportInput.resolve(reportInputResponse("or_1"));
+      await completion;
+    });
+
+    expect(result.current.handoffStatusMessages).toEqual([]);
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+  });
+
+  it("rejects narrative evidence returned for a different outcome review", async () => {
+    vi.mocked(requestDpmOutcomeReviewAiNarrative).mockResolvedValue(
+      aiNarrativeResponse("or_2", "packrun_or_2"),
+    );
+    const { result } = renderHook(() =>
+      useOutcomeReviewHandoffs({ primaryReview: reviewItem() }),
+    );
+
+    await act(async () => {
+      await result.current.requestOutcomeAiNarrative();
+    });
+
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+    expect(result.current.handoffStatusMessages).toEqual([
+      "The returned evidence belongs to a different outcome review. Refresh this review before continuing.",
+    ]);
+  });
+
+  it("rejects report input returned for a different outcome review", async () => {
+    vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue(reportInputResponse("or_2"));
+    const { result } = renderHook(() =>
+      useOutcomeReviewHandoffs({ primaryReview: reviewItem() }),
+    );
+
+    await act(async () => {
+      await result.current.requestOutcomeReportJob();
+    });
+
+    expect(submitDpmOutcomeReviewReportJob).not.toHaveBeenCalled();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+    expect(result.current.handoffStatusMessages).toEqual([
+      "The returned evidence belongs to a different outcome review. Refresh this review before continuing.",
+    ]);
+  });
+
   it("keeps blocked handoffs fail-closed without calling Gateway", async () => {
     const { result } = renderHook(() =>
       useOutcomeReviewHandoffs({
@@ -111,7 +250,7 @@ describe("useOutcomeReviewHandoffs", () => {
   });
 });
 
-function reviewItem(): OutcomeReviewListItem {
+function reviewItem(overrides: Partial<OutcomeReviewListItem> = {}): OutcomeReviewListItem {
   return {
     outcomeReviewId: "or_1",
     reviewLabel: "13 May 2026 review",
@@ -136,10 +275,11 @@ function reviewItem(): OutcomeReviewListItem {
     clientCommunicationBoundary: null,
     dimensions: [],
     lineage: [],
+    ...overrides,
   };
 }
 
-function reportInputResponse(): DpmOutcomeReviewHandoffResponse {
+function reportInputResponse(outcomeReviewId = "or_1"): DpmOutcomeReviewHandoffResponse {
   return {
     correlation_id: "corr-report",
     contract_version: "v1",
@@ -154,9 +294,9 @@ function reportInputResponse(): DpmOutcomeReviewHandoffResponse {
       remediation_owner: null,
     },
     data: {
-      outcome_review_id: "or_1",
+      outcome_review_id: outcomeReviewId,
       content_hash: "sha256:report-input",
-      client_communication_boundary: clientCommunicationBoundary(),
+      client_communication_boundary: clientCommunicationBoundary(outcomeReviewId),
     },
   };
 }
@@ -171,7 +311,10 @@ function reportJobHandle(): ReportJobHandleResponse {
   };
 }
 
-function aiNarrativeResponse(): DpmOutcomeReviewNarrativeResponse {
+function aiNarrativeResponse(
+  outcomeReviewId = "or_1",
+  runId = "packrun_or_1",
+): DpmOutcomeReviewNarrativeResponse {
   return {
     correlation_id: "corr-ai",
     contract_version: "v1",
@@ -181,21 +324,24 @@ function aiNarrativeResponse(): DpmOutcomeReviewNarrativeResponse {
     ai_upstream_status: 200,
     supportability: reportInputResponse().supportability,
     ai_evidence_input: {
-      outcome_review_id: "or_1",
+      outcome_review_id: outcomeReviewId,
       content_hash: "sha256:ai-evidence",
-      client_communication_boundary: clientCommunicationBoundary(),
+      client_communication_boundary: clientCommunicationBoundary(outcomeReviewId),
     },
     narrative_request: {
       requested_outputs: ["pm_summary", "cio_summary", "control_summary", "evidence_gaps"],
       audience: ["portfolio_manager", "cio_office", "investment_control"],
     },
-    data: buildDpmAiWorkflowExecution("outcome-narrative", { runId: "packrun_or_1" }),
+    data: buildDpmAiWorkflowExecution("outcome-narrative", { runId }),
   };
 }
 
-function clientCommunicationBoundary(): Record<string, unknown> {
+function clientCommunicationBoundary(outcomeReviewId = "or_1"): Record<string, unknown> {
   return {
-    boundary_id: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
+    boundary_id:
+      outcomeReviewId === "or_1"
+        ? "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY"
+        : `DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY_${outcomeReviewId}`,
     supportability_state: "BLOCKED",
     client_communication_projected: false,
     client_approval_projected: false,
@@ -206,4 +352,14 @@ function clientCommunicationBoundary(): Record<string, unknown> {
     summary: "Manage does not publish client communication events for this outcome review.",
     content_hash: "sha256:client-communication-boundary",
   };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, reject, resolve };
 }
