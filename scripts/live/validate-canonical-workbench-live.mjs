@@ -1992,7 +1992,7 @@ async function run() {
       assertListHasItems: browserHelpers.assertListHasItems,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await validateReportCentrePanel(page, {
+    const reportCentreProof = await validateReportCentrePanel(page, {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,
@@ -2001,15 +2001,16 @@ async function run() {
     });
     panelGovernance.recordPanelClassification(
       "reporting.report_centre",
-      "partial",
+      reportCentreProof.panelState,
       "lotus-report",
       {
         portfolioId,
         route: `/reports?portfolioId=${portfolioId}`,
         source:
           "Workbench BFF report catalogue, portfolio-review request, and request history proof",
-        reason:
-          "Structured report creation is available while governed PDF creation remains unavailable.",
+        outputFormat: reportCentreProof.outputFormat,
+        pdfOutputState: reportCentreProof.pdfOutputState,
+        reason: reportCentreProof.reason,
       },
     );
     await validatePerformanceSummaryPanel(page, {

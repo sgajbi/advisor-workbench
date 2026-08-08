@@ -393,10 +393,12 @@ visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal m
 the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
 review, request memo report-package posture, request non-authoritative commentary, preserve replay
 hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.
-Report Centre checks prove the Gateway-owned catalogue renders for the canonical portfolio,
-structured report data remains selected while unavailable governed PDF creation is disabled,
-advisor review gates submission, one request is accepted, recent report-data history is populated,
-and archive/client delivery remain separate. The governed panel identifier is
+Report Centre checks prove the Gateway-owned catalogue renders for the canonical portfolio and
+observe each output's source-owned readiness. When governed PDF creation is unavailable, structured
+report data remains selected and PDF stays disabled. When governed PDF creation is ready, the
+validator selects it and proves the reviewed request can be submitted. Both paths prove advisor
+review gates submission, one request is accepted, recent report-data history is populated, and
+archive retention and client delivery remain separate controls. The governed panel identifier is
 `reporting.report_centre`; central platform registration is tracked in `lotus-platform#582`.
 Advisor-book checks prove exactly one canonical portfolio belongs to the configured manager's
 Gateway own-book response through Core `PortfolioManagerBookMembership:v1` with
