@@ -817,6 +817,8 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validateReportCentrePanel");
     expect(browserWorkflowModule).toContain('"reporting.report_centre"');
     expect(browserWorkflowModule).toContain('name: "Submit Report Request"');
+    expect(browserWorkflowModule).toContain("Report request accepted");
+    expect(browserWorkflowModule).not.toContain('name: "Request Accepted"');
     expect(script).not.toContain("assertRegionHasButtons");
     expect(runbook).toContain("RFC-0077");
     expect(runbook).toContain("panel registry");
@@ -1203,6 +1205,18 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Supportability READY");
     expect(browserWorkflowModule).toContain('"Portfolio Review"');
     expect(browserWorkflowModule).toContain('"Portfolio decision review"');
+    expect(browserWorkflowModule).toContain(
+      ".workbench-decision-brief-attention-item",
+    );
+    expect(browserWorkflowModule).toContain(
+      ".workbench-decision-brief-empty",
+    );
+    expect(browserWorkflowModule).toContain(
+      '"No source-reported items need attention."',
+    );
+    expect(browserWorkflowModule).not.toContain(
+      '"No priority attention items for the selected view."',
+    );
     expect(browserWorkflowModule).toContain('"Performance Snapshot"');
     expect(browserWorkflowModule).toContain('"Summary"');
     expect(browserWorkflowModule).toContain('"Detailed"');

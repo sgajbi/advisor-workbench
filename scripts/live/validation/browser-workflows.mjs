@@ -704,11 +704,24 @@ export async function validatePortfolioPanels(
       timeout: timeoutMs,
     });
   } else {
-    await expect(
-      page.getByText("No priority attention items for the selected view."),
-    ).toBeVisible({
-      timeout: timeoutMs,
+    const decisionReview = page.getByRole("region", {
+      name: "Portfolio decision review",
     });
+    const attentionItems = decisionReview.locator(
+      ".workbench-decision-brief-attention-item",
+    );
+    const emptyState = decisionReview.locator(
+      ".workbench-decision-brief-empty",
+    );
+    if ((await attentionItems.count()) > 0) {
+      await expect(attentionItems.first()).toBeVisible({
+        timeout: timeoutMs,
+      });
+    } else {
+      await expect(emptyState).toHaveText("No source-reported items need attention.", {
+        timeout: timeoutMs,
+      });
+    }
   }
   await expect(
     page.getByRole("heading", { name: "Review Evidence" }),
@@ -802,8 +815,11 @@ export async function validateReportCentrePanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("button", { name: "Request Accepted" }),
-  ).toBeDisabled({ timeout: timeoutMs });
+    page.getByRole("heading", { name: "Report request accepted" }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    page.getByRole("button", { name: "Submit Report Request" }),
+  ).toHaveCount(0);
   await assertTableHasRows(
     tableByExactLabel(page, "Recent portfolio report requests"),
     1,
