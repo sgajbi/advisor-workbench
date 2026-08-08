@@ -11,6 +11,7 @@ import {
   businessLastReviewed,
   businessStateLabel,
   buildManageExceptionRows,
+  filterManageExceptionRowsForMandate,
   firstNonEmpty,
   readStringFromResponse,
   toneForState,
@@ -35,9 +36,17 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
-  const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
-  const activeExceptionCount = parseCount(commandModel.activeExceptionCount);
-  const latestActivities = buildManageActivityRows(commandModel, waveModel, reviewModel);
+  const exceptionRows = filterManageExceptionRowsForMandate(
+    buildManageExceptionRows(data.commandCenterExceptions),
+    commandModel.mandateId
+  );
+  const activeExceptionCount = exceptionRows.length;
+  const latestActivities = buildManageActivityRows(
+    commandModel,
+    waveModel,
+    reviewModel,
+    activeExceptionCount
+  );
   const latestProofPackId = firstNonEmpty(
     reviewModel.items.find((item) => item.proofPackId !== "N/A")?.proofPackId,
     "N/A"
@@ -47,7 +56,9 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const pmQualityFairnessAnalysisCount =
     data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
   const blockedSurfaces = [
-    data.commandCenterError ? "Mandate readiness" : null,
+    data.commandCenterError || data.mandateHealthError || !data.mandateHealth
+      ? "Mandate health"
+      : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
     data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError
@@ -184,13 +195,18 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   };
 }
 
-function buildManageActivityRows(commandModel: CommandModel, waveModel: WaveModel, reviewModel: ReviewModel) {
+function buildManageActivityRows(
+  commandModel: CommandModel,
+  waveModel: WaveModel,
+  reviewModel: ReviewModel,
+  activeExceptionCount: number
+) {
   const rows = [
     commandModel.latestMonitoringRunId !== "N/A"
       ? {
           key: "monitoring",
           time: businessLastReviewed(commandModel.latestMonitoringRunStatus),
-          event: `Daily mandate review completed with ${commandModel.activeExceptionCount} attention items.`,
+          event: `Daily mandate review completed with ${activeExceptionCount} attention items.`,
         }
       : null,
     waveModel.selectedWaveId
@@ -235,15 +251,4 @@ function formatPct(value: number | null | undefined): string {
     return "N/A";
   }
   return `${value.toFixed(2)}%`;
-}
-
-function parseCount(value: number | string | null | undefined): number {
-  if (typeof value === "number") {
-    return value;
-  }
-  if (typeof value !== "string") {
-    return 0;
-  }
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : 0;
 }

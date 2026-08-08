@@ -67,6 +67,7 @@ export function buildManageWorkspaceData(
         items: [
           {
             exception_id: "exc_001",
+            mandate_id: "mandate_001",
             severity: "HIGH",
             title: "Missing benchmark constituent mapping",
             source_system: "lotus-performance",
@@ -77,6 +78,7 @@ export function buildManageWorkspaceData(
           },
           {
             exception_id: "exc_002",
+            mandate_id: "mandate_001",
             severity: "MEDIUM",
             title: "Stale price for fixed income instrument",
             source_system: "lotus-pricing",
@@ -125,6 +127,7 @@ export function buildManageWorkspaceData(
         health_score: 82,
       },
     },
+    mandateHealthError: null,
     commandCenterError: null,
     portfolioMemory: {
       correlation_id: "corr_memory",

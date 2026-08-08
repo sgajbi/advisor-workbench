@@ -37,6 +37,7 @@ export type ManageWorkspaceData = {
   commandCenterExceptions: Awaited<ReturnType<typeof getDpmCommandCenterExceptions>> | null;
   mandate: Awaited<ReturnType<typeof getDpmMandateByPortfolio>> | null;
   mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null;
+  mandateHealthError: string | null;
   commandCenterError: string | null;
   portfolioMemory: Awaited<ReturnType<typeof getDpmPortfolioMemory>> | null;
   portfolioMemorySearch: Awaited<ReturnType<typeof searchDpmPortfolioMemory>> | null;
@@ -150,12 +151,19 @@ export async function loadManageWorkspaceData(
   const mandateId = readDpmMandateId(mandate?.data ?? null);
   const outcomeReviews = readSettledValue(reviewsResult);
   let mandateHealth: Awaited<ReturnType<typeof getDpmMandateHealth>> | null = null;
+  let mandateHealthError = readSettledError(
+    mandateResult,
+    "Mandate health evidence is temporarily unavailable."
+  );
   if (mandateId) {
     try {
       mandateHealth = await getDpmMandateHealth(mandateId);
     } catch {
       mandateHealth = null;
+      mandateHealthError = "Mandate health evidence is temporarily unavailable.";
     }
+  } else if (!mandateHealthError) {
+    mandateHealthError = "Mandate health evidence is unavailable for this portfolio.";
   }
 
   let proofPack: Awaited<ReturnType<typeof getDpmProofPack>> | null = null;
@@ -247,6 +255,7 @@ export async function loadManageWorkspaceData(
     commandCenterExceptions: readSettledValue(exceptionsResult),
     mandate,
     mandateHealth,
+    mandateHealthError,
     commandCenterError: readSettledError(
       commandCenterResult,
       "Mandate readiness is temporarily unavailable."

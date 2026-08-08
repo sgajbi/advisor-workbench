@@ -8,6 +8,7 @@ import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-co
 import {
   businessStateLabel,
   buildManageExceptionRows,
+  filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessMandateType,
   readStringFromResponse,
@@ -35,8 +36,11 @@ export default function ManageContextRail({
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
-  const attentionRows = buildManageExceptionRows(data.commandCenterExceptions);
-  const attentionCount = attentionRows.length || commandModel.activeExceptionCount;
+  const attentionRows = filterManageExceptionRowsForMandate(
+    buildManageExceptionRows(data.commandCenterExceptions),
+    commandModel.mandateId
+  );
+  const attentionCount = attentionRows.length;
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");

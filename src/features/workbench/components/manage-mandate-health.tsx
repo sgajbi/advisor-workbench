@@ -19,6 +19,7 @@ import {
   businessStateLabel,
   buildManageExceptionRows,
   buildMandateHealthDimensionRows,
+  filterManageExceptionRowsForMandate,
   formatBusinessMandateType,
   formatBusinessOwner,
   formatBusinessSource,
@@ -44,7 +45,10 @@ export default function ManageMandateHealth({ data }: Props) {
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
-  const exceptionRows = buildManageExceptionRows(data.commandCenterExceptions);
+  const exceptionRows = filterManageExceptionRowsForMandate(
+    buildManageExceptionRows(data.commandCenterExceptions),
+    commandModel.mandateId,
+  );
   const healthRows = buildMandateHealthDimensionRows(commandModel);
   const [selectedExceptionKey, setSelectedExceptionKey] = useState<string | null>(
     exceptionRows[0]?.key ?? null,
@@ -91,7 +95,7 @@ export default function ManageMandateHealth({ data }: Props) {
         supportabilityState={commandModel.supportabilityState}
         dataCompletenessState={commandModel.dataCompletenessState}
         mandateHealthState={commandModel.mandateHealthState}
-        hasGatewayError={Boolean(data.commandCenterError)}
+        hasSourceError={Boolean(data.commandCenterError || data.mandateHealthError)}
       />
 
       <div className="mandate-health-context-row" aria-label="Mandate context">
@@ -147,7 +151,7 @@ export default function ManageMandateHealth({ data }: Props) {
         {selectedException ? (
           <SelectedReviewItem
             row={selectedException}
-            mandateId={commandModel.mandateId}
+            mandateId={selectedException.mandateId}
             monitoringRunId={commandModel.latestMonitoringRunId}
             sourceRunId={commandModel.sourceRunId}
             correlationId={commandModel.correlationId}
@@ -166,18 +170,23 @@ function MandateStateNotice({
   supportabilityState,
   dataCompletenessState,
   mandateHealthState,
-  hasGatewayError,
+  hasSourceError,
 }: {
   state: ReturnType<typeof buildDpmCommandCenterPanelModel>["state"];
   supportabilityState: string;
   dataCompletenessState: string;
   mandateHealthState: string;
-  hasGatewayError: boolean;
+  hasSourceError: boolean;
 }) {
-  const hasPartialEvidence = [dataCompletenessState, mandateHealthState].some((value) =>
-    /PARTIAL|DEGRADED|STALE|UNKNOWN/i.test(value),
-  );
-  if (state === "complete" && !hasGatewayError && !hasPartialEvidence) {
+  const hasPartialEvidence = [dataCompletenessState, mandateHealthState].some((value) => {
+    const normalized = value.trim();
+    return (
+      !normalized ||
+      normalized === "N/A" ||
+      /PARTIAL|DEGRADED|STALE|UNKNOWN/i.test(normalized)
+    );
+  });
+  if (state === "complete" && !hasSourceError && !hasPartialEvidence) {
     return null;
   }
   if (state === "empty") {
@@ -341,7 +350,7 @@ function SelectedReviewItem({
   authority,
 }: {
   row: ManageExceptionRow;
-  mandateId: string;
+  mandateId: string | null;
   monitoringRunId: string;
   sourceRunId: string;
   correlationId: string;
@@ -479,6 +488,6 @@ function formatSourceScore(score: number | null): string {
   return score === null ? "Not available" : `${clampMandateHealthPercent(score)}/100`;
 }
 
-function businessIdentifier(value: string): string {
+function businessIdentifier(value: string | null | undefined): string {
   return !value || value === "N/A" ? "Not available" : value;
 }

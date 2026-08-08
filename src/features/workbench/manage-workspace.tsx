@@ -41,6 +41,9 @@ export function ManageWorkspace({
   const portfolio = data.portfolio.portfolio;
   const modeDefinition = getManageModeDefinition(mode);
   const dpmMandateId = readDpmMandateId(data.mandate?.data ?? null);
+  const hasMandateEvidenceGap = Boolean(
+    data.commandCenterError || data.mandateHealthError || !data.mandateHealth
+  );
 
   return (
     <AppPageShell pageKey="manage" className={`portfolio-page manage-page ${styles.manageScope}`}>
@@ -67,8 +70,10 @@ export function ManageWorkspace({
               subtitle={modeDefinition.description}
               actions={
                 <>
-                  <SemanticBadge tone={data.commandCenterError ? "warn" : "success"}>
-                    {data.commandCenterError ? "Needs attention" : "Evidence available"}
+                  <SemanticBadge
+                    tone={hasMandateEvidenceGap ? "warn" : "success"}
+                  >
+                    {hasMandateEvidenceGap ? "Needs attention" : "Evidence available"}
                   </SemanticBadge>
                   <SemanticBadge>{portfolio.base_currency}</SemanticBadge>
                 </>
