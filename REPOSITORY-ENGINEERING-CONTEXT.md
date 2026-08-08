@@ -210,6 +210,12 @@ Current repository posture:
     `DpmAiWorkflowResult` beside the owning action. A persisted PM-quality summary invocation is
     audit evidence only unless its source contract independently proves returned output; request
     acceptance, invocation persistence, and runtime completion never imply available material.
+    Every asynchronous workflow result, pending posture, error, and adjacent boundary must retain
+    the portfolio and exact source-business-object identity that produced it. Filter state against
+    the current source context, sequence overlapping requests so an earlier completion cannot
+    replace newer evidence, and validate response identity before publishing state or continuing a
+    dependent mutation. An effect-only reset is not sufficient because an older request can still
+    complete after the reset.
     It must not construct evidence sections, prompts, guardrails, AI/model lineage, review state,
     policy semantics, client-ready release, client communication, order, fill, settlement, or OMS
     posture locally. The proposal builder sources positions and cash through

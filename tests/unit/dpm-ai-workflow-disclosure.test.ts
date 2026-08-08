@@ -158,6 +158,70 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.businessSummary).toContain("incomplete");
   });
 
+  it.each([
+    {
+      name: "denied eligibility decision",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.eligibility.eligibility_result = "DENIED";
+      },
+    },
+    {
+      name: "denied authorization decision",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.authorization.outcome = "DENIED";
+      },
+    },
+    {
+      name: "missing authenticated caller",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.authorization.authenticated_caller_app = null;
+      },
+    },
+    {
+      name: "different authenticated caller",
+      mutate: (response: ReturnType<typeof buildDpmAiWorkflowResponse>) => {
+        response.data.execution.audit.authorization.authenticated_caller_app = "untrusted-app";
+      },
+    },
+  ])("fails closed for contradictory authority with $name", ({ mutate }) => {
+    const response = buildDpmAiWorkflowResponse("proof-pack-memo");
+    mutate(response);
+
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.disclosure.limitations).toContain(
+      "The source did not publish a bound authorization decision.",
+    );
+  });
+
+  it("classifies source-completed superseded output as historical", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        runtimeState: "SUPERSEDED",
+        replacementRunId: "packrun_replacement_002",
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "ai-assisted",
+      availability: "stale",
+      freshness: { state: "stale" },
+      clientUse: "blocked",
+    });
+    expect(outcome.businessSummary).toContain("historical");
+    expect(outcome.disclosure.diagnostics).toContainEqual({
+      label: "Replacement run",
+      value: "packrun_replacement_002",
+    });
+  });
+
   it.each(["REJECTED", "ABANDONED"] as const)(
     "blocks and clearly describes %s decision support",
     (reviewState) => {

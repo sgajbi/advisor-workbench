@@ -146,9 +146,12 @@ function resolvePreparation(
 function resolveAvailability(
   normalized: NormalizedDpmAiExecution,
 ): AiOutputAvailability {
+  const materialRuntimeComplete =
+    normalized.runtimeState === "COMPLETED" ||
+    normalized.runtimeState === "SUPERSEDED";
   if (
     normalized.executionStatus !== "COMPLETED" ||
-    normalized.runtimeState !== "COMPLETED" ||
+    !materialRuntimeComplete ||
     normalized.outputCount === 0
   ) {
     return "unavailable";

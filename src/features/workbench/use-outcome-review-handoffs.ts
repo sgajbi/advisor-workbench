@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   getDpmOutcomeReviewReportInput,
   requestDpmOutcomeReviewAiNarrative,
@@ -24,6 +24,17 @@ type Params = {
   primaryReview: OutcomeReviewListItem | null;
 };
 
+type ContextBoundValue<T> = {
+  contextKey: string;
+  value: T;
+};
+
+type ContextBoundActionState<T> = {
+  pendingContextKey: string | null;
+  result: ContextBoundValue<T> | null;
+  error: ContextBoundValue<string> | null;
+};
+
 export type OutcomeReviewHandoffActions = {
   clientCommunicationBoundary: OutcomeReviewClientCommunicationBoundaryView | null;
   handoffStatusMessages: string[];
@@ -39,20 +50,34 @@ export type OutcomeReviewHandoffActions = {
 export function useOutcomeReviewHandoffs({
   primaryReview,
 }: Params): OutcomeReviewHandoffActions {
-  const [reportJobStatus, setReportJobStatus] = useState<string | null>(null);
-  const [reportJobError, setReportJobError] = useState<string | null>(null);
-  const [reportJobPending, setReportJobPending] = useState(false);
-  const [aiNarrativeError, setAiNarrativeError] = useState<string | null>(null);
-  const [aiNarrativePending, setAiNarrativePending] = useState(false);
-  const [aiNarrativeOutcome, setAiNarrativeOutcome] =
-    useState<DpmAiWorkflowOutcome | null>(null);
-  const [handoffBoundary, setHandoffBoundary] =
-    useState<OutcomeReviewClientCommunicationBoundaryView | null>(null);
+  const [reportJobState, setReportJobState] = useState<
+    ContextBoundActionState<string>
+  >({ pendingContextKey: null, result: null, error: null });
+  const [aiNarrativeState, setAiNarrativeState] = useState<
+    ContextBoundActionState<DpmAiWorkflowOutcome>
+  >({ pendingContextKey: null, result: null, error: null });
+  const [handoffBoundaries, setHandoffBoundaries] = useState<
+    Record<string, OutcomeReviewClientCommunicationBoundaryView>
+  >({});
+  const reportRequestSequenceRef = useRef(0);
+  const aiRequestSequenceRef = useRef(0);
+  const currentContextKey = primaryReview
+    ? outcomeReviewSourceContextKey(primaryReview)
+    : null;
+
+  const reportJobStatus = valueForContext(reportJobState.result, currentContextKey);
+  const reportJobError = valueForContext(reportJobState.error, currentContextKey);
+  const reportJobPending = reportJobState.pendingContextKey === currentContextKey;
+  const aiNarrativeError = valueForContext(aiNarrativeState.error, currentContextKey);
+  const aiNarrativePending = aiNarrativeState.pendingContextKey === currentContextKey;
+  const aiNarrativeOutcome = valueForContext(aiNarrativeState.result, currentContextKey);
 
   const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
   const aiNarrativeAvailable = Boolean(primaryReview && !primaryReview.aiEvidenceBlocked);
   const clientCommunicationBoundary =
-    handoffBoundary ?? primaryReview?.clientCommunicationBoundary ?? null;
+    (currentContextKey ? handoffBoundaries[currentContextKey] : null) ??
+    primaryReview?.clientCommunicationBoundary ??
+    null;
 
   const handoffStatusMessages = useMemo(
     () =>
@@ -64,49 +89,121 @@ export function useOutcomeReviewHandoffs({
   );
 
   const requestOutcomeReportJob = useCallback(async () => {
-    if (!primaryReview || primaryReview.reportInputBlocked || reportJobPending) {
+    if (
+      !primaryReview ||
+      !currentContextKey ||
+      primaryReview.reportInputBlocked ||
+      reportJobPending
+    ) {
       return;
     }
-    setReportJobPending(true);
-    setReportJobError(null);
+    const requestSequence = reportRequestSequenceRef.current + 1;
+    reportRequestSequenceRef.current = requestSequence;
+    const outcomeReviewId = primaryReview.outcomeReviewId;
+    setReportJobState({
+      pendingContextKey: currentContextKey,
+      result: null,
+      error: null,
+    });
     try {
-      const reportInput = await getDpmOutcomeReviewReportInput(primaryReview.outcomeReviewId);
-      setHandoffBoundary(buildOutcomeClientCommunicationBoundaryView(reportInput.data));
+      const reportInput = await getDpmOutcomeReviewReportInput(outcomeReviewId);
+      assertOutcomeReviewIdentity(outcomeReviewId, reportInput.data);
       const handle = await submitDpmOutcomeReviewReportJob({
-        outcomeReviewId: primaryReview.outcomeReviewId,
+        outcomeReviewId,
         outcomeReportInput: reportInput.data,
       });
-      setReportJobStatus(`Report request ${businessStateLabel(handle.status)}.`);
+      if (requestSequence !== reportRequestSequenceRef.current) {
+        return;
+      }
+      const boundary = buildOutcomeClientCommunicationBoundaryView(reportInput.data);
+      if (boundary) {
+        setHandoffBoundaries((current) => ({
+          ...current,
+          [currentContextKey]: boundary,
+        }));
+      }
+      setReportJobState({
+        pendingContextKey: null,
+        result: bindToContext(
+          currentContextKey,
+          `Report request ${businessStateLabel(handle.status)}.`,
+        ),
+        error: null,
+      });
     } catch (error) {
-      setReportJobError(error instanceof Error ? error.message : "Outcome report job failed");
-    } finally {
-      setReportJobPending(false);
+      if (requestSequence !== reportRequestSequenceRef.current) {
+        return;
+      }
+      setReportJobState({
+        pendingContextKey: null,
+        result: null,
+        error: bindToContext(
+          currentContextKey,
+          error instanceof Error ? error.message : "Outcome report job failed",
+        ),
+      });
     }
-  }, [primaryReview, reportJobPending]);
+  }, [currentContextKey, primaryReview, reportJobPending]);
 
   const requestOutcomeAiNarrative = useCallback(async () => {
-    if (!primaryReview || primaryReview.aiEvidenceBlocked || aiNarrativePending) {
+    if (
+      !primaryReview ||
+      !currentContextKey ||
+      primaryReview.aiEvidenceBlocked ||
+      aiNarrativePending
+    ) {
       return;
     }
-    setAiNarrativePending(true);
-    setAiNarrativeError(null);
-    setAiNarrativeOutcome(null);
+    const requestSequence = aiRequestSequenceRef.current + 1;
+    aiRequestSequenceRef.current = requestSequence;
+    const outcomeReviewId = primaryReview.outcomeReviewId;
+    setAiNarrativeState({
+      pendingContextKey: currentContextKey,
+      result: null,
+      error: null,
+    });
     try {
       const narrative = await requestDpmOutcomeReviewAiNarrative({
-        outcomeReviewId: primaryReview.outcomeReviewId,
+        outcomeReviewId,
       });
-      setHandoffBoundary(
-        buildOutcomeClientCommunicationBoundaryView(narrative.ai_evidence_input),
+      assertOutcomeReviewIdentity(
+        outcomeReviewId,
+        narrative.ai_evidence_input,
       );
-      setAiNarrativeOutcome(buildDpmAiWorkflowOutcome("outcome-narrative", narrative));
+      if (requestSequence !== aiRequestSequenceRef.current) {
+        return;
+      }
+      const boundary = buildOutcomeClientCommunicationBoundaryView(
+        narrative.ai_evidence_input,
+      );
+      if (boundary) {
+        setHandoffBoundaries((current) => ({
+          ...current,
+          [currentContextKey]: boundary,
+        }));
+      }
+      setAiNarrativeState({
+        pendingContextKey: null,
+        result: bindToContext(
+          currentContextKey,
+          buildDpmAiWorkflowOutcome("outcome-narrative", narrative),
+        ),
+        error: null,
+      });
     } catch (error) {
-      setAiNarrativeError(
-        error instanceof Error ? error.message : "Outcome review request failed",
-      );
-    } finally {
-      setAiNarrativePending(false);
+      if (requestSequence !== aiRequestSequenceRef.current) {
+        return;
+      }
+      setAiNarrativeState({
+        pendingContextKey: null,
+        result: null,
+        error: bindToContext(
+          currentContextKey,
+          error instanceof Error ? error.message : "Outcome review request failed",
+        ),
+      });
     }
-  }, [aiNarrativePending, primaryReview]);
+  }, [aiNarrativePending, currentContextKey, primaryReview]);
 
   return {
     clientCommunicationBoundary,
@@ -119,4 +216,39 @@ export function useOutcomeReviewHandoffs({
     requestOutcomeReportJob,
     requestOutcomeAiNarrative,
   };
+}
+
+function outcomeReviewSourceContextKey(review: OutcomeReviewListItem): string {
+  return JSON.stringify([
+    review.portfolioId,
+    review.outcomeReviewId,
+    review.rebalanceRunId,
+    review.waveId,
+    review.proofPackId,
+    review.expectedSnapshotHash,
+    review.realizedSnapshotHash,
+    review.updatedAt,
+  ]);
+}
+
+function bindToContext<T>(contextKey: string, value: T): ContextBoundValue<T> {
+  return { contextKey, value };
+}
+
+function valueForContext<T>(
+  boundValue: ContextBoundValue<T> | null,
+  contextKey: string | null,
+): T | null {
+  return boundValue?.contextKey === contextKey ? boundValue.value : null;
+}
+
+function assertOutcomeReviewIdentity(
+  expected: string,
+  payload: Record<string, unknown>,
+): void {
+  if (payload.outcome_review_id !== expected) {
+    throw new Error(
+      "The returned evidence belongs to a different outcome review. Refresh this review before continuing.",
+    );
+  }
 }
