@@ -92,6 +92,14 @@ concurrency group.
   The startup preflight accepts only expected canonical Docker owners after normalizing host paths,
   and the core seed runs with the shared `portfolio_common` library on `PYTHONPATH` instead of
   depending on workstation-global Python packages.
+- `npm run live:stack:preflight`
+  non-mutating audit of current canonical host-port ownership; approved Compose project/path pairs
+  pass, while wrong-project, missing, relative, malformed, and foreign ownership fails before any
+  runtime state changes
+- `npm run test:runtime-ownership`
+  executable contract for canonical, repeated-separator, case, trailing-separator, parent-segment,
+  relative, malformed, and foreign Compose working-directory decisions; enforced in feature, PR,
+  and main quality lanes
 - `npm run live:validate:construction`
   focused RFC-0039 construction alternatives proof against the running canonical stack
 - `npm run live:evidence`
@@ -106,6 +114,7 @@ concurrency group.
 - real app-surface coverage across the active product paths
 - browser smoke for supported front-office flows
 - Docker parity for production-like runtime assumptions
+- executable canonical Compose ownership and reused-stack safety
 - canonical seeded-data validation for integrated product proof
 - dependency posture for browser-delivered code and the Node-based build/test toolchain
 - immutable official Node LTS/glibc runtime provenance, unprivileged execution, production-only
