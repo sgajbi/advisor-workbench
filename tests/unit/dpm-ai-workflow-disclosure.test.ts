@@ -91,6 +91,45 @@ describe("buildDpmAiWorkflowOutcome", () => {
     expect(outcome.disclosure).toMatchObject(expected);
   });
 
+  it.each([
+    ["blank text", { memo: "   " }],
+    ["null value", { summary: null }],
+    ["empty collection", { observations: [] }],
+    ["empty object", { decisionSupport: {} }],
+    ["nested empty values", { decisionSupport: { memo: "", observations: [null] } }],
+  ])("fails closed for schema-shaped output containing %s", (_name, structuredOutput) => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", { structuredOutput }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "requested",
+      availability: "unavailable",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.disclosure.limitations).toContain(
+      "No usable generated output was returned.",
+    );
+  });
+
+  it("keeps zero and false values when the structured result explicitly publishes them", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo", {
+        structuredOutput: { exceptionCount: 0, escalationRequired: false },
+      }),
+    );
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "ai-assisted",
+      availability: "live",
+      evidence: { state: "supported" },
+      clientUse: "internal-only",
+    });
+  });
+
   it("requires a source-recorded actor and time before showing reviewed posture", () => {
     const response = buildDpmAiWorkflowResponse("outcome-narrative", {
       reviewState: "ACCEPTED",

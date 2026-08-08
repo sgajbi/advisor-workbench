@@ -23,6 +23,9 @@ export function normalizeDpmAiWorkflowExecution(
   const structuredOutput = asRecord(result.structured_output);
   const structuredOutputKeys = readStringArray(run.structured_output_keys);
   const outputKeys = Object.keys(structuredOutput).sort();
+  const usableOutputKeys = outputKeys.filter((key) =>
+    isUsableStructuredOutputValue(structuredOutput[key]),
+  );
   const evidenceDescriptors = normalizeEvidenceDescriptors([
     ...readArray(evidence.descriptors),
     ...readArray(run.evidence_descriptors),
@@ -73,6 +76,7 @@ export function normalizeDpmAiWorkflowExecution(
     stubbed !== null && stubbed === readBoolean(audit.stubbed),
     outputKeys.length === structuredOutputKeys.length &&
       outputKeys.every((key, index) => key === structuredOutputKeys[index]),
+    usableOutputKeys.length > 0,
   ];
 
   return {
@@ -83,7 +87,7 @@ export function normalizeDpmAiWorkflowExecution(
     reviewState,
     supportabilityStatus,
     outputLabel,
-    outputCount: outputKeys.length,
+    outputCount: usableOutputKeys.length,
     evidenceCount: evidenceDescriptors.length,
     stubbed,
     historical,
@@ -157,6 +161,25 @@ function readStringArray(value: unknown): string[] {
 
 function readArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function isUsableStructuredOutputValue(value: unknown): boolean {
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+  if (typeof value === "boolean") {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some(isUsableStructuredOutputValue);
+  }
+  if (value && typeof value === "object") {
+    return Object.values(value).some(isUsableStructuredOutputValue);
+  }
+  return false;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
