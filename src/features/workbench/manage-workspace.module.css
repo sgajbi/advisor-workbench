@@ -164,7 +164,7 @@
 
 .manageScope :global(.dpm-ai-workflow-result) {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
   padding: 16px;
