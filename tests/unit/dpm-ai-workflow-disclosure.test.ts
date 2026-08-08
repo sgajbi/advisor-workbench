@@ -130,6 +130,51 @@ describe("buildDpmAiWorkflowOutcome", () => {
     });
   });
 
+  it.each([
+    {
+      name: "unbound caller",
+      response: buildDpmAiWorkflowResponse("proof-pack-memo", {
+        supportabilityStatus: "HISTORICAL",
+        supersededByRunId: "packrun_replacement_002",
+        callerIdentityBound: false,
+      }),
+    },
+    {
+      name: "different workflow family",
+      response: buildDpmAiWorkflowResponse("wave-memo", {
+        supportabilityStatus: "HISTORICAL",
+        supersededByRunId: "packrun_replacement_002",
+      }),
+    },
+  ])("does not classify historical output with $name as trusted", ({ response }) => {
+    const outcome = buildDpmAiWorkflowOutcome("proof-pack-memo", response);
+
+    expect(outcome.disclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "partial",
+      evidence: { state: "limited" },
+      clientUse: "blocked",
+    });
+    expect(outcome.businessSummary).toContain("incomplete");
+  });
+
+  it.each(["REJECTED", "ABANDONED"] as const)(
+    "blocks and clearly describes %s decision support",
+    (reviewState) => {
+      const outcome = buildDpmAiWorkflowOutcome(
+        "proof-pack-memo",
+        buildDpmAiWorkflowResponse("proof-pack-memo", { reviewState }),
+      );
+
+      expect(outcome.disclosure).toMatchObject({
+        humanReview: { state: "rejected", sourceRecorded: true },
+        clientUse: "blocked",
+      });
+      expect(outcome.businessSummary).toContain("was rejected");
+      expect(outcome.businessSummary).toContain("must not be used");
+    },
+  );
+
   it("requires a source-recorded actor and time before showing reviewed posture", () => {
     const response = buildDpmAiWorkflowResponse("outcome-narrative", {
       reviewState: "ACCEPTED",
