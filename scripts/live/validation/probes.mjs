@@ -4,6 +4,7 @@ export const CANONICAL_CALLER_CONTEXT_HEADERS = {
   "X-Actor-Id": "workbench-system",
   "X-Tenant-Id": "tenant-sg",
   "X-Region": "APAC",
+  "X-Role": "PORTFOLIO_MANAGER",
 };
 
 export async function checkDns(summary, hostname, { required = true, lookup = dns.lookup } = {}) {

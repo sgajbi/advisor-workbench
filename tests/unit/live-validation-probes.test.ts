@@ -177,6 +177,7 @@ describe("live validation probe helpers", () => {
           "X-Actor-Id": "workbench-system",
           "X-Tenant-Id": "tenant-sg",
           "X-Region": "APAC",
+          "X-Role": "PORTFOLIO_MANAGER",
         }),
         body: JSON.stringify({ ok: true }),
       }),
