@@ -54,9 +54,7 @@ export function buildDpmAiWorkflowOutcome(
       sourceCount: normalized.evidenceCount,
     },
     humanReview: resolveHumanReview(normalized),
-    clientUse: normalized.contractComplete
-      ? resolveClientUse(normalized.outputLabel)
-      : "blocked",
+    clientUse: resolveGovernedClientUse(normalized),
     freshness: normalized.historical
       ? { state: "stale", asOf: normalized.lastUpdatedAt }
       : { state: "not-reported" },
@@ -148,9 +146,6 @@ function resolvePreparation(
 function resolveAvailability(
   normalized: NormalizedDpmAiExecution,
 ): AiOutputAvailability {
-  if (normalized.historical && normalized.outputCount > 0) {
-    return "stale";
-  }
   if (
     normalized.executionStatus !== "COMPLETED" ||
     normalized.runtimeState !== "COMPLETED" ||
@@ -160,6 +155,9 @@ function resolveAvailability(
   }
   if (!normalized.contractComplete) {
     return "partial";
+  }
+  if (normalized.historical) {
+    return "stale";
   }
   return normalized.stubbed ? "simulation" : "live";
 }
@@ -216,6 +214,19 @@ function resolveClientUse(outputLabel: string | null): AiClientUseState {
     default:
       return "unavailable";
   }
+}
+
+function resolveGovernedClientUse(
+  normalized: NormalizedDpmAiExecution,
+): AiClientUseState {
+  if (
+    !normalized.contractComplete ||
+    normalized.reviewState === "REJECTED" ||
+    normalized.reviewState === "ABANDONED"
+  ) {
+    return "blocked";
+  }
+  return resolveClientUse(normalized.outputLabel);
 }
 
 function buildLimitations(normalized: NormalizedDpmAiExecution): string[] {
@@ -306,6 +317,9 @@ function describeBusinessOutcome(
   }
   if (disclosure.availability === "partial") {
     return `${scopeLabel} is incomplete and requires source or control follow-up.`;
+  }
+  if (disclosure.humanReview.state === "rejected") {
+    return `${scopeLabel} was rejected by the recorded control review and must not be used.`;
   }
   if (disclosure.humanReview.state === "review-required") {
     return `${scopeLabel} is available for internal review and is not approved for client use.`;
