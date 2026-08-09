@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Ratcheting Workbench global CSS ownership baseline. Lower limits as legacy global selectors migrate beside owning features.",
+  "forbiddenSelectorPrefixes": ["portfolio-screen-rail"],
   "entrypoint": {
     "path": "src/app/globals.css",
     "maxLines": 7,
@@ -42,8 +43,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 14871,
-      "maxBytes": 327804
+      "maxLines": 14457,
+      "maxBytes": 318664
     }
   ]
 }

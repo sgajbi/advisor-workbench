@@ -135,7 +135,7 @@ export default function PerformanceWorkspaceView({
   return (
     <MainWithSideRailLayout
       className="performance-layout portfolio-page"
-      railClassName="portfolio-screen-rail-shell performance-rail-shell"
+      railClassName="performance-rail-shell"
       mainClassName="performance-main"
       sideClassName="performance-side performance-side-wide"
       sideDensity="comfortable"

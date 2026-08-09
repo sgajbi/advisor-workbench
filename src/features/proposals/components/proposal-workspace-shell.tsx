@@ -60,7 +60,7 @@ export default function ProposalWorkspaceShell({
         <ProposalWorkflowContextProvider initialModel={initialWorkflowContext}>
           <MainWithSideRailLayout
             className="proposal-layout portfolio-page"
-            railClassName="portfolio-screen-rail-shell proposal-rail-shell"
+            railClassName="proposal-rail-shell"
             mainClassName="proposal-main"
             sideClassName={styles.proposalSide}
             sideDensity="comfortable"

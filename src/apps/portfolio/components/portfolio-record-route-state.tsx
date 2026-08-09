@@ -77,7 +77,6 @@ function PortfolioRecordRouteStateFrame({
     <PortfolioPageLayout>
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
-        railClassName="portfolio-screen-rail-shell"
         mainClassName="portfolio-main portfolio-record-screen-main"
         rail={
           <div aria-hidden="true">

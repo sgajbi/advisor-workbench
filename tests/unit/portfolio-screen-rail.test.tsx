@@ -86,8 +86,9 @@ describe("PortfolioScreenRail", () => {
     const disclosure = screen.getByRole("button", { name: /current view income/i });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(disclosure).toHaveAttribute("aria-controls");
-    expect(screen.getByRole("navigation", { name: "Workbench screen navigation" })).toHaveClass(
-      "portfolio-screen-rail-nav-collapsed",
+    expect(screen.getByRole("navigation", { name: "Workbench screen navigation" })).toHaveAttribute(
+      "data-navigation-state",
+      "collapsed",
     );
     expect(screen.getByRole("link", { name: /income income and activity/i })).toHaveAttribute(
       "aria-current",
@@ -110,12 +111,12 @@ describe("PortfolioScreenRail", () => {
       name: "Workbench screen navigation",
     });
     expect(disclosure).toHaveAttribute("aria-expanded", "true");
-    expect(navigation).toHaveClass("portfolio-screen-rail-nav-expanded");
+    expect(navigation).toHaveAttribute("data-navigation-state", "expanded");
 
     fireEvent.click(within(navigation).getByRole("link", { name: /positions/i }));
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
-    expect(navigation).toHaveClass("portfolio-screen-rail-nav-collapsed");
+    expect(navigation).toHaveAttribute("data-navigation-state", "collapsed");
   });
 
   it("closes on Escape and restores focus to the disclosure control", () => {
