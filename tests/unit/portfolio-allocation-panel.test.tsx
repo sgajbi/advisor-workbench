@@ -111,7 +111,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.queryByTitle("Region pending source support")).not.toBeInTheDocument();
     expect(screen.getAllByRole("radiogroup")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
-    expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio exposure")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
@@ -122,7 +122,7 @@ describe("PortfolioAllocationPanel", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Look-through off" })).toBeEnabled());
 
     fireEvent.click(screen.getByRole("radio", { name: "Currency" }));
-    expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "Region" }));
@@ -242,7 +242,7 @@ describe("PortfolioAllocationPanel", () => {
         "This dimension requires funded holdings with current valuations before a reliable composition view can be shown."
       )
     ).toHaveLength(1);
-    expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Asset Class allocation view" })).toBeInTheDocument();
   });
 
   it("uses a visual-only compact summary layout when requested", async () => {
