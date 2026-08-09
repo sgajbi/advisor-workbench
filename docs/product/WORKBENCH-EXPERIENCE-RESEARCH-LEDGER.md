@@ -2546,6 +2546,9 @@ product data model, compliance decisions, automation, or unsupported source capa
 10. Treat publication click through source outcome as one immutable intent. Keep the reviewed
     details visible, natively disable only publication-affecting controls, expose a concise live
     progress state, and restore the same reviewed intent for exact retry after source failure.
+11. Normalize supported manual and file values through one typed domain boundary before validation
+    and review. Trim boundary whitespace, canonicalize only governed code forms, and make review,
+    idempotency, Gateway publication, and receipt reconciliation consume that same projection.
 
 ### Rejected decisions
 
@@ -2556,6 +2559,8 @@ product data model, compliance decisions, automation, or unsupported source capa
 4. Success from HTTP status or a TypeScript cast without relevant source publication evidence.
 5. Claims that publication activates a portfolio or completes valuation, reporting, analytics,
    lineage, or durable ingestion work.
+6. Validation against a trimmed copy while reviewing or publishing raw input, input-control-only
+   cleanup that file import can bypass, or reliance on undocumented Gateway/Core coercion.
 
 ### Validation and publication decision
 
