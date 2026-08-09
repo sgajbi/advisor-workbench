@@ -3,59 +3,187 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, CircularProgress, Stack } from "@mui/material";
 
-import { ScreenStatePanel, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import {
+  ScreenStatePanel,
+  SectionBlock,
+  SemanticBadge,
+  SourceWindowNavigation,
+  Text,
+} from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import { listProposals } from "../api";
 import { buildAdvisoryOverviewModel } from "../advisory-overview-view-model";
+import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
+import { useProposalSourceWindow } from "../use-proposal-source-window";
+import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./advisory-overview-workspace.module.css";
 
+const ADVISORY_OVERVIEW_WINDOW_SIZE = 8;
+
 export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId: string }) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["advisory-overview", portfolioId],
-    queryFn: async () => await listProposals({ portfolioId }),
+  const sourceWindow = useProposalSourceWindow();
+  const proposalQuery = useQuery({
+    queryKey: ["advisory-overview", portfolioId, sourceWindow.cursor],
+    queryFn: async () =>
+      await listProposals({
+        portfolioId,
+        cursor: sourceWindow.cursor,
+        limit: ADVISORY_OVERVIEW_WINDOW_SIZE,
+      }),
     ...workbenchStrictQueryDefaults,
   });
-
-  const proposals = useMemo(() => data?.items ?? [], [data?.items]);
+  const proposals = useMemo(() => proposalQuery.data?.items ?? [], [proposalQuery.data?.items]);
   const model = useMemo(
-    () => buildAdvisoryOverviewModel({ portfolioId, proposals }),
-    [portfolioId, proposals]
+    () =>
+      buildAdvisoryOverviewModel({
+        portfolioId,
+        proposals,
+        hasMoreResults: Boolean(proposalQuery.data?.next_cursor),
+        hasPreviousResults: sourceWindow.hasPrevious,
+        windowNumber: sourceWindow.windowNumber,
+      }),
+    [
+      portfolioId,
+      proposalQuery.data?.next_cursor,
+      proposals,
+      sourceWindow.hasPrevious,
+      sourceWindow.windowNumber,
+    ]
   );
+  const sourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(proposalQuery.data),
+    isLoading: proposalQuery.isLoading,
+    isFetching: proposalQuery.isFetching,
+    hasError: Boolean(proposalQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(proposalQuery.error),
+  });
+  const workflowContext = useMemo(
+    () =>
+      buildProposalQueueWorkflowContext({
+        portfolioId,
+        modeLabel: "Advisory overview",
+        isLoading: sourcePosture.isInitialLoading,
+        isRefreshing: sourcePosture.isRefreshing,
+        permissionBlocked: sourcePosture.isPermissionBlocked,
+        hasError: sourcePosture.isUnavailable,
+        hasUnavailableEvidence: false,
+        hasProposalRefreshFailure: sourcePosture.hasRefreshFailure,
+        hasSupportingEvidenceRefreshFailure: false,
+        hasMoreResults: Boolean(proposalQuery.data?.next_cursor),
+        hasPreviousResults: sourceWindow.hasPrevious,
+        windowNumber: sourceWindow.windowNumber,
+        totalCount: model.visibleProposalCount,
+        attentionCount: model.attentionCount,
+        primaryDecision: model.primaryDecision,
+        recommendedAction: model.recommendedAction,
+      }),
+    [
+      model,
+      portfolioId,
+      proposalQuery.data?.next_cursor,
+      sourcePosture.hasRefreshFailure,
+      sourcePosture.isInitialLoading,
+      sourcePosture.isPermissionBlocked,
+      sourcePosture.isRefreshing,
+      sourcePosture.isUnavailable,
+      sourceWindow.hasPrevious,
+      sourceWindow.windowNumber,
+    ]
+  );
+  usePublishProposalWorkflowContext(workflowContext);
 
-  if (isLoading) {
+  if (sourcePosture.isInitialLoading) {
     return (
       <SectionBlock>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <CircularProgress size={16} />
-          <Text variant="body">Loading advisory posture...</Text>
-        </Stack>
+        <ScreenStatePanel
+          kind="loading"
+          title="Loading advisory priorities"
+          body="Retrieving the current proposal posture for this portfolio."
+          surface="default"
+          rows={5}
+        />
+      </SectionBlock>
+    );
+  }
+
+  if (sourcePosture.isPermissionBlocked) {
+    return (
+      <SectionBlock>
+        <ScreenStatePanel
+          kind="permission_blocked"
+          title="Advisory proposal access is not available"
+          body="Your current role does not permit this portfolio's proposal workflow to be viewed."
+          hint="Use an entitled portfolio or request access through the bank's support process."
+          surface="default"
+        />
+      </SectionBlock>
+    );
+  }
+
+  if (sourcePosture.isUnavailable) {
+    return (
+      <SectionBlock>
+        <ScreenStatePanel
+          kind="error"
+          title="Advisory priorities are unavailable"
+          body="The proposal worklist could not be loaded from the approved advisory workflow."
+          hint="No fallback proposal, review, or implementation posture is shown."
+          surface="default"
+        />
       </SectionBlock>
     );
   }
 
   return (
-    <>
-      <h1 className="sr-only">Advisory Overview</h1>
-      <SectionBlock
-        title="Advisory Overview"
-        subtitle="Portfolio-scoped proposal posture, advisor decisions, and next actions."
-        actions={
-          <Link
-            className="nav-link"
-            href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
-          >
-            Build Proposal
-          </Link>
-        }
-      >
-        {error ? (
-          <Alert severity="warning" sx={{ mb: 1 }}>
-            Advisory proposal posture is unavailable. No fallback proposals are shown.
-          </Alert>
+    <SectionBlock
+      title="Advisor Priorities"
+      subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+      actions={
+        <Link
+          className="nav-link"
+          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+        >
+          Build Proposal
+        </Link>
+      }
+    >
+      <div className={styles.workspace} data-testid="advisory-overview-workspace">
+        {sourcePosture.isRefreshing ? (
+          <div className={styles.sourceNotice} role="status" aria-live="polite">
+            <SemanticBadge>Refreshing</SemanticBadge>
+            <Text variant="secondary">
+              The current worklist remains visible while source-owned proposal posture refreshes.
+            </Text>
+          </div>
         ) : null}
+        {sourcePosture.hasRefreshFailure ? (
+          <ScreenStatePanel
+            kind="partial"
+            title="Latest proposal posture is not confirmed"
+            body="Previously retrieved proposals remain visible, but the latest source refresh did not complete."
+            hint="Retry before relying on this worklist for a client discussion or implementation decision."
+            surface="default"
+          />
+        ) : null}
+
+        <section className={styles.decisionPanel} aria-labelledby="advisory-decision-title">
+          <div>
+            <Text variant="microLabel">Advisor Decision</Text>
+            <Text variant="subsectionTitle" as="h2" id="advisory-decision-title">
+              {model.primaryDecision}
+            </Text>
+            <Text variant="secondary">{model.recommendedAction}</Text>
+          </div>
+          <SemanticBadge tone={model.attentionCount > 0 ? "warn" : "success"} emphasis="strong">
+            {model.attentionCount > 0
+              ? `${model.attentionCount} ${model.attentionCount === 1 ? "item needs" : "items need"} action`
+              : "No action in view"}
+          </SemanticBadge>
+        </section>
 
         <div className={styles.summaryGrid} aria-label="Advisory overview summary">
           {model.metrics.map((metric) => (
@@ -67,110 +195,140 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
           ))}
         </div>
 
-        <div className={styles.decisionPanel}>
-          <div>
-            <Text variant="microLabel">Advisor Decision</Text>
-            <Text variant="subsectionTitle" as="h2">
-              {model.primaryDecision}
-            </Text>
-            <Text variant="secondary">{model.recommendedAction}</Text>
+        <section
+          className={styles.lifecyclePanel}
+          aria-labelledby="advisory-lifecycle-title"
+          data-testid="advisory-lifecycle-summary"
+        >
+          <div className={styles.panelHeader}>
+            <div>
+              <Text variant="microLabel">Proposal Lifecycle</Text>
+              <Text variant="subsectionTitle" as="h2" id="advisory-lifecycle-title">
+                Move recommendations from insight to implementation
+              </Text>
+            </div>
+            <Text variant="metadata">{portfolioId}</Text>
           </div>
-          <SemanticBadge tone={model.proposalRows.length ? "warn" : "success"} emphasis="strong">
-            {model.proposalRows.length ? "Action Required" : "Clear"}
-          </SemanticBadge>
-        </div>
-
-        <div className={styles.workspaceGrid}>
-          <section className={styles.journeyPanel} aria-label="Advisory journey screens">
-            <div className={styles.panelHeader}>
-              <Text variant="subsectionTitle">Advisory Journey</Text>
-              <Text variant="metadata">{model.portfolioId}</Text>
-            </div>
-            <div className={styles.journeyGrid}>
-              {model.journeyCards.map((card) => (
-                <Link key={card.key} href={card.href} className={styles.journeyCard}>
-                  <div>
-                    <Text variant="microLabel">{card.detail}</Text>
-                    <strong>{card.label}</strong>
-                    <span>{card.decision}</span>
-                  </div>
-                  <div className={styles.journeyAction}>
-                    <SemanticBadge tone={card.countLabel === "0" ? "default" : "warn"}>
-                      {card.countLabel}
-                    </SemanticBadge>
-                    <span>{card.nextAction}</span>
-                  </div>
+          <ol className={styles.lifecycleGrid}>
+            {model.lifecycleStages.map((stage) => (
+              <li key={stage.key}>
+                <Link href={stage.href} className={styles.lifecycleStage}>
+                  <span className={styles.stageSequence}>{stage.sequence}</span>
+                  <span className={styles.stageContent}>
+                    <strong>{stage.label}</strong>
+                    <span>{stage.detail}</span>
+                  </span>
+                  <span className={styles.stagePosture}>
+                    <SemanticBadge tone={stage.tone}>{stage.value}</SemanticBadge>
+                    <span>{stage.valueLabel}</span>
+                  </span>
                 </Link>
-              ))}
-            </div>
-          </section>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-          <section className={styles.priorityPanel} aria-label="Priority advisory actions">
-            <div className={styles.panelHeader}>
-              <Text variant="subsectionTitle">Priority Advisory Actions</Text>
-              <Link href={`/proposals?portfolioId=${encodeURIComponent(portfolioId)}`}>
-                Open Approval Queue
-              </Link>
+        <section
+          className={styles.priorityPanel}
+          aria-labelledby="priority-advisory-actions-title"
+          data-testid="advisory-priority-worklist"
+        >
+          <div className={styles.panelHeader}>
+            <div>
+              <Text variant="microLabel">Advisor Worklist</Text>
+              <Text variant="subsectionTitle" as="h2" id="priority-advisory-actions-title">
+                Priority Advisory Actions
+              </Text>
             </div>
+            <Link href={`/proposals?portfolioId=${encodeURIComponent(portfolioId)}`}>
+              Open Approval Queue
+            </Link>
+          </div>
 
-            {error ? (
-              <ScreenStatePanel
-                kind="error"
-                title="Advisory queue unavailable"
-                body="The proposal list could not be loaded from the approved advisory workflow."
-                surface="default"
-              />
-            ) : model.proposalRows.length === 0 ? (
-              <ScreenStatePanel
-                kind="empty"
-                title="No open advisory proposals"
-                body="Create a proposal from the live portfolio book when an advisory idea is ready."
-                action={
+          <div
+            className={`${styles.sourceWindowPosture} ${
+              model.hasPartialWindow ? styles.partialWindow : ""
+            }`}
+            data-testid="advisory-source-window-posture"
+            role="status"
+          >
+            <SemanticBadge tone={model.hasPartialWindow ? "warn" : "success"}>
+              {model.sourceWindowLabel}
+            </SemanticBadge>
+            <Text variant="secondary">{model.sourceWindowDetail}</Text>
+          </div>
+
+          {model.proposalRows.length === 0 ? (
+            <ScreenStatePanel
+              kind={model.hasPartialWindow ? "partial" : "empty"}
+              title={
+                model.hasPartialWindow
+                  ? "No proposals in this source window"
+                  : "No open advisory proposals"
+              }
+              body={
+                model.hasPartialWindow
+                  ? "Review adjacent proposal windows before concluding this portfolio has no open advisory work."
+                  : "Review source-backed ideas or build a proposal when a client objective is ready."
+              }
+              action={
+                !model.hasPartialWindow ? (
                   <Link
                     className="nav-link"
                     href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
                   >
                     Build advisor-use draft
                   </Link>
-                }
-                surface="default"
-              />
-            ) : (
-              <div className={styles.priorityTableWrap}>
-                <table className={styles.priorityTable}>
-                  <thead>
-                    <tr>
-                      <th>Proposal</th>
-                      <th>Portfolio</th>
-                      <th>Stage</th>
-                      <th>Readiness</th>
-                      <th>Next Action</th>
+                ) : undefined
+              }
+              surface="default"
+            />
+          ) : (
+            <div className={styles.priorityTableWrap}>
+              <table className={styles.priorityTable}>
+                <caption className="sr-only">
+                  Proposals ranked by the next advisor action within the current source window
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Proposal</th>
+                    <th>Stage</th>
+                    <th>Readiness</th>
+                    <th>Next Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {model.proposalRows.map((row) => (
+                    <tr key={row.proposalId}>
+                      <td>
+                        <Link href={row.href}>{row.title}</Link>
+                        <span>ID: {row.proposalId}</span>
+                      </td>
+                      <td>
+                        <SemanticBadge tone={row.stageTone}>{row.stage}</SemanticBadge>
+                      </td>
+                      <td>
+                        <SemanticBadge tone={row.readinessTone}>{row.readiness}</SemanticBadge>
+                      </td>
+                      <td>{row.nextAction}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {model.proposalRows.map((row) => (
-                      <tr key={row.proposalId}>
-                        <td>
-                          <Link href={row.href}>{row.title}</Link>
-                          <span>ID: {row.proposalId}</span>
-                        </td>
-                        <td>{row.portfolio}</td>
-                        <td>
-                          <SemanticBadge tone={row.stageTone}>{row.stage}</SemanticBadge>
-                        </td>
-                        <td>
-                          <SemanticBadge tone={row.readinessTone}>{row.readiness}</SemanticBadge>
-                        </td>
-                        <td>{row.nextAction}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </SectionBlock>
-    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <SourceWindowNavigation
+            ariaLabel="Advisory proposal worklist navigation"
+            currentWindow={sourceWindow.windowNumber}
+            hasPrevious={sourceWindow.hasPrevious}
+            hasNext={Boolean(proposalQuery.data?.next_cursor)}
+            isLoading={proposalQuery.isFetching}
+            onPrevious={sourceWindow.showPrevious}
+            onNext={() => sourceWindow.showNext(proposalQuery.data?.next_cursor)}
+          />
+        </section>
+      </div>
+    </SectionBlock>
   );
 }

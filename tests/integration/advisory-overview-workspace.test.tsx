@@ -44,16 +44,22 @@ describe("AdvisoryOverviewWorkspace", () => {
     await waitFor(() => {
       expect(listProposalsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: undefined,
+        limit: 8,
       });
     });
 
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Advisory Overview" })
+      await screen.findByRole("heading", { level: 2, name: "Advisor Priorities" })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Advisory overview summary")).toHaveTextContent(
-      /Open Proposals\s*2/
+      /Visible Proposals\s*2/
     );
     expect(screen.getByText("Resolve review blockers before preparing any client discussion material.")).toBeInTheDocument();
+    expect(screen.getByTestId("advisory-lifecycle-summary")).toHaveTextContent(
+      /Identify.*Construct.*Review & discuss.*Implement/
+    );
+    expect(screen.queryByLabelText("Advisory journey screens")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Build Proposal" })).toHaveAttribute(
       "href",
       "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
@@ -64,6 +70,9 @@ describe("AdvisoryOverviewWorkspace", () => {
     );
     expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
     expect(screen.getByText("Risk officer approval needed")).toBeInTheDocument();
+    expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
+      "Complete source window"
+    );
   });
 
   it("does not show fallback proposals when the advisory queue fails", async () => {
@@ -71,10 +80,48 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
 
+    expect(await screen.findByText("Advisory priorities are unavailable")).toBeInTheDocument();
     expect(
-      await screen.findByText("Advisory proposal posture is unavailable. No fallback proposals are shown.")
+      screen.getByText("No fallback proposal, review, or implementation posture is shown.")
     ).toBeInTheDocument();
-    expect(screen.getByText("Advisory queue unavailable")).toBeInTheDocument();
     expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
+  });
+
+  it("discloses a partial proposal window instead of overstating portfolio totals", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "PRP-PARTIAL",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "DRAFT",
+          title: "Income allocation review",
+        },
+      ],
+      next_cursor: "cursor-2",
+    });
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    expect(await screen.findByText("Income allocation review")).toBeInTheDocument();
+    expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
+      /Proposal window 1.*Counts and ranking apply only/
+    );
+    expect(screen.getByLabelText("Advisory overview summary")).toHaveTextContent(
+      /Visible Proposals\s*1.*additional proposals may sit outside this view/
+    );
+    expect(screen.getByRole("button", { name: "Next proposals" })).toBeEnabled();
+  });
+
+  it("keeps restricted proposal posture behind the source entitlement boundary", async () => {
+    listProposalsMock.mockRejectedValueOnce(
+      new Error("Proposal list failed (403): forbidden")
+    );
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    expect(
+      await screen.findByText("Advisory proposal access is not available")
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("advisory-priority-worklist")).not.toBeInTheDocument();
   });
 });
