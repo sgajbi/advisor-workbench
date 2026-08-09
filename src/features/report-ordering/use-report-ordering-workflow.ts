@@ -73,19 +73,27 @@ export function useReportOrderingWorkflow({
   >({});
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
+  const historyRequestSequenceRef = useRef(0);
 
   const loadHistory = useCallback(async () => {
+    const requestSequence = ++historyRequestSequenceRef.current;
     setHistoryState("loading");
     setHistoryError(null);
     try {
       const response = await listPortfolioReviewOrders(portfolioId);
-      if (activePortfolioIdRef.current !== portfolioId) {
+      if (
+        activePortfolioIdRef.current !== portfolioId ||
+        historyRequestSequenceRef.current !== requestSequence
+      ) {
         return;
       }
       setHistory(response);
       setHistoryState("ready");
     } catch (error) {
-      if (activePortfolioIdRef.current !== portfolioId) {
+      if (
+        activePortfolioIdRef.current !== portfolioId ||
+        historyRequestSequenceRef.current !== requestSequence
+      ) {
         return;
       }
       setHistory(null);
