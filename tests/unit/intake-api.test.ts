@@ -115,12 +115,70 @@ describe("intake api", () => {
         marketPrices: [],
         fxRates: [],
       })
-    ).rejects.toThrow("Intake ingestion failed (422)");
+    ).rejects.toThrow("Portfolio intake returned an unreadable response (422)");
 
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("portfolio-intake-bundle");
     expect(metricEventsJson).toContain('"status_class":"4xx"');
     expect(metricEventsJson).not.toContain("PF_PRIVATE");
     expect(metricEventsJson).not.toContain("portfolio PF_PRIVATE failed");
+  });
+
+  it("rejects successful HTTP responses without source confirmation evidence", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr_missing_counts",
+            contract_version: "v1",
+            data: { message: "accepted" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    await expect(
+      ingestPortfolioBundle({
+        sourceSystem: "ADVISOR_WORKBENCH_UI",
+        mode: "UPSERT",
+        businessDates: [],
+        portfolios: [],
+        instruments: [],
+        transactions: [],
+        marketPrices: [],
+        fxRates: [],
+      }),
+    ).rejects.toThrow("incomplete confirmation evidence");
+  });
+
+  it("rejects hostile or invalid published counts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr_invalid_counts",
+            contract_version: "v1",
+            data: { published_counts: { portfolios: -1, transactions: "many" } },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    await expect(
+      ingestPortfolioBundle({
+        sourceSystem: "ADVISOR_WORKBENCH_UI",
+        mode: "UPSERT",
+        businessDates: [],
+        portfolios: [],
+        instruments: [],
+        transactions: [],
+        marketPrices: [],
+        fxRates: [],
+      }),
+    ).rejects.toThrow("incomplete confirmation evidence");
   });
 });
