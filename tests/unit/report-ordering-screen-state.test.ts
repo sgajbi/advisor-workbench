@@ -94,7 +94,9 @@ describe("report ordering screen state", () => {
         submissionError: submissionState === "error" ? "Request failed." : null,
       });
 
-      expect(state.workspace.kind).toBe("configuration");
+      expect(state.workspace.kind).toBe(
+        submissionState === "accepted" ? "accepted" : "configuration",
+      );
       expect(state.readiness).toEqual(
         expect.objectContaining({ kind: readinessKind, badgeLabel }),
       );

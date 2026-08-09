@@ -321,6 +321,21 @@ export function useReportOrderingWorkflow({
     activeReviewedIntent,
   ]);
 
+  const startAnotherReport = useCallback(() => {
+    if (!submittedHandle) {
+      return false;
+    }
+
+    setSubmittedHandlesByPortfolio((current) => {
+      const next = { ...current };
+      delete next[portfolioId];
+      return next;
+    });
+    setReviewedIntent(null);
+    setSubmissionProgress({ portfolioId, state: "idle", error: null });
+    return true;
+  }, [portfolioId, submittedHandle]);
+
   return {
     catalogue,
     catalogueState,
@@ -344,6 +359,7 @@ export function useReportOrderingWorkflow({
     toggleSection,
     reviewRequest,
     submitRequest,
+    startAnotherReport,
     refreshCatalogue: () => loadCatalogue(false),
     refreshHistory: loadHistory,
   };

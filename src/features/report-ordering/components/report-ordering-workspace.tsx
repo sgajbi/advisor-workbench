@@ -36,6 +36,7 @@ export function ReportOrderingWorkspace({
     reportingCurrency: portfolio.baseCurrency,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
+  const configurationRef = useRef<HTMLDivElement>(null);
   const workspaceState = workflow.screenState.workspace;
 
   function focusReadiness() {
@@ -46,6 +47,22 @@ export function ReportOrderingWorkspace({
     await workflow.submitRequest();
     focusReadiness();
   }
+
+  function startAnotherReport() {
+    if (!workflow.startAnotherReport()) {
+      return;
+    }
+    requestAnimationFrame(() => configurationRef.current?.focus());
+  }
+
+  const requestHistory = (
+    <ReportRequestHistory
+      rows={workflow.historyRows}
+      state={workflow.historyState}
+      error={workflow.historyError}
+      onRefresh={() => void workflow.refreshHistory()}
+    />
+  );
 
   return (
     <AppPageShell pageKey="reports" className={styles.page}>
@@ -74,7 +91,8 @@ export function ReportOrderingWorkspace({
               }
             >
               <WorkbenchSectionStack className={styles.contentStack}>
-                {workspaceState.kind !== "configuration" ? (
+                {workspaceState.kind !== "configuration" &&
+                workspaceState.kind !== "accepted" ? (
                   <ScreenStatePanel
                     className={styles.terminalState}
                     kind={workspaceState.kind}
@@ -90,20 +108,24 @@ export function ReportOrderingWorkspace({
                       ) : undefined
                     }
                   />
+                ) : workspaceState.kind === "accepted" ? (
+                  requestHistory
                 ) : workflow.configuration ? (
                   <>
-                    <ReportConfigurationPanel
-                      model={workspaceState.model}
-                      configuration={workflow.configuration}
-                      updateConfiguration={workflow.updateConfiguration}
-                      toggleSection={workflow.toggleSection}
-                    />
-                    <ReportRequestHistory
-                      rows={workflow.historyRows}
-                      state={workflow.historyState}
-                      error={workflow.historyError}
-                      onRefresh={() => void workflow.refreshHistory()}
-                    />
+                    <div
+                      ref={configurationRef}
+                      tabIndex={-1}
+                      aria-label="Report configuration"
+                      className={styles.focusTarget}
+                    >
+                      <ReportConfigurationPanel
+                        model={workspaceState.model}
+                        configuration={workflow.configuration}
+                        updateConfiguration={workflow.updateConfiguration}
+                        toggleSection={workflow.toggleSection}
+                      />
+                    </div>
+                    {requestHistory}
                   </>
                 ) : null}
               </WorkbenchSectionStack>
@@ -124,6 +146,7 @@ export function ReportOrderingWorkspace({
                     focusReadiness();
                   }}
                   onSubmit={() => void submitRequest()}
+                  onStartAnother={startAnotherReport}
                 />
               </div>
             </div>

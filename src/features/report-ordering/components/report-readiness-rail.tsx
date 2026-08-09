@@ -16,6 +16,7 @@ export function ReportReadinessRail({
   submittedHandle,
   onReview,
   onSubmit,
+  onStartAnother,
 }: {
   model: ReportOrderingViewModel | null;
   screenState: ReportOrderingReadinessState;
@@ -25,6 +26,7 @@ export function ReportReadinessRail({
   submittedHandle: ReportJobHandle | null;
   onReview: () => void;
   onSubmit: () => void;
+  onStartAnother: () => void;
 }) {
   const selectedSections = model?.sectionChoices.filter((section) => section.selected) ?? [];
   const selectedOutput = model?.outputChoices.find(
@@ -110,6 +112,23 @@ export function ReportReadinessRail({
             ) : null}
           </div>
         ) : null}
+
+        {screenState.kind === "accepted" ? (
+          <div className={styles.actionStack}>
+            <ActionButton priority="primary" onClick={onStartAnother}>
+              Create another report
+            </ActionButton>
+            <small>The next request starts from the current portfolio setup.</small>
+          </div>
+        ) : null}
+
+        {screenState.kind === "accepted" && submittedHandle ? (
+          <details className={styles.supportDisclosure}>
+            <summary>Support reference</summary>
+            <code>{submittedHandle.report_job_id}</code>
+          </details>
+        ) : null}
+
         <section className={styles.boundarySection} aria-labelledby="report-client-release-title">
           <span className={styles.eyebrow}>Client-use boundary</span>
           <h3 id="report-client-release-title">{screenState.clientReleaseTitle}</h3>
@@ -122,18 +141,6 @@ export function ReportReadinessRail({
           </div>
         </section>
       </Panel>
-
-      {submittedHandle ? (
-        <Panel className={styles.submissionState} density="compact" aria-live="polite">
-          <SemanticBadge tone="success">Accepted</SemanticBadge>
-          <strong>Report request recorded</strong>
-          <p>Reporting has accepted the request. This does not mean a document was archived or sent.</p>
-          <details className={styles.supportDisclosure}>
-            <summary>Support reference</summary>
-            <code>{submittedHandle.report_job_id}</code>
-          </details>
-        </Panel>
-      ) : null}
     </div>
   );
 }

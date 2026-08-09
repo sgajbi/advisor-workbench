@@ -22,6 +22,9 @@ export function ReportConfigurationPanel({
   const currencyField = configurationFields.get("reporting_currency");
   const benchmarkField = configurationFields.get("benchmark_code");
   const allocationField = configurationFields.get("allocation_dimensions");
+  const selectedSectionCount = model.sectionChoices.filter(
+    (section) => section.selected,
+  ).length;
 
   return (
     <div className={styles.configurationStack}>
@@ -176,34 +179,46 @@ export function ReportConfigurationPanel({
 
       <SectionBlock
         title="Report contents"
-        subtitle="Required sections remain selected; optional sections can be tailored for this review."
+        subtitle={`${selectedSectionCount} of ${model.sectionChoices.length} sections included. Required sections remain selected.`}
         className={styles.section}
       >
-        <fieldset className={styles.optionFieldset}>
-          <legend className={styles.srOnly}>Select report sections</legend>
-          <div className={styles.sectionChoiceGrid}>
-            {model.sectionChoices.map((section) => (
-              <label key={section.id} className={styles.sectionChoice}>
-                <input
-                  type="checkbox"
-                  checked={section.selected}
-                  disabled={section.required}
-                  onChange={() => toggleSection(section.id)}
-                />
-                <span className={styles.choiceBody}>
-                  <span className={styles.choiceHeading}>
-                    <strong>{section.label}</strong>
-                    {section.required ? <SemanticBadge>Required</SemanticBadge> : null}
+        <details
+          className={styles.contentDisclosure}
+          open={model.readiness.state === "blocked" ? true : undefined}
+        >
+          <summary className={styles.contentSummary}>
+            <span className={styles.contentSummaryCopy}>
+              <strong>Review report contents</strong>
+              <small>Open to tailor optional sections for this client review.</small>
+            </span>
+            <SemanticBadge>{selectedSectionCount} included</SemanticBadge>
+          </summary>
+          <fieldset className={styles.contentChoices}>
+            <legend className={styles.srOnly}>Select report sections</legend>
+            <div className={styles.sectionChoiceGrid}>
+              {model.sectionChoices.map((section) => (
+                <label key={section.id} className={styles.sectionChoice}>
+                  <input
+                    type="checkbox"
+                    checked={section.selected}
+                    disabled={section.required}
+                    onChange={() => toggleSection(section.id)}
+                  />
+                  <span className={styles.choiceBody}>
+                    <span className={styles.choiceHeading}>
+                      <strong>{section.label}</strong>
+                      {section.required ? <SemanticBadge>Required</SemanticBadge> : null}
+                    </span>
+                    <span>{section.detail}</span>
+                    {section.dependencyLabels.length ? (
+                      <small>Uses {section.dependencyLabels.join(" and ").toLowerCase()}.</small>
+                    ) : null}
                   </span>
-                  <span>{section.detail}</span>
-                  {section.dependencyLabels.length ? (
-                    <small>Uses {section.dependencyLabels.join(" and ").toLowerCase()}.</small>
-                  ) : null}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </details>
       </SectionBlock>
 
       <SectionBlock
