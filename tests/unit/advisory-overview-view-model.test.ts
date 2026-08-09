@@ -39,11 +39,10 @@ describe("buildAdvisoryOverviewModel", () => {
 
     expect(model.metrics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Open Proposals", value: "4" }),
+        expect.objectContaining({ label: "Visible Proposals", value: "4" }),
         expect.objectContaining({ label: "Review Blockers", value: "1", tone: "warn" }),
         expect.objectContaining({ label: "Client Discussion", value: "1" }),
         expect.objectContaining({ label: "Implementation", value: "1" }),
-        expect.objectContaining({ label: "Draft Ideas", value: "1" }),
       ])
     );
     expect(model.recommendedAction).toMatch(/Resolve review blockers/);
@@ -53,22 +52,56 @@ describe("buildAdvisoryOverviewModel", () => {
       "PRP-DRAFT",
       "PRP-READY",
     ]);
+    expect(model.lifecycleStages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "construct", value: "1", valueLabel: "visible draft" }),
+        expect.objectContaining({ key: "deliver", value: "2", tone: "warn" }),
+        expect.objectContaining({ key: "implement", value: "1" }),
+      ])
+    );
+    expect(model.hasPartialWindow).toBe(false);
+    expect(model.sourceWindowLabel).toBe("Complete source window");
   });
 
-  it("keeps journey links portfolio scoped", () => {
+  it("keeps lifecycle handoffs portfolio scoped", () => {
     const model = buildAdvisoryOverviewModel({
       portfolioId: "PB SG/001",
       proposals: [],
     });
 
-    expect(model.recommendedAction).toMatch(/Create a proposal/);
+    expect(model.recommendedAction).toMatch(/build a proposal/);
     expect(model.metrics.find((metric) => metric.label === "Review Blockers")).toMatchObject({
       value: "0",
       tone: "success",
     });
-    expect(model.journeyCards.find((card) => card.key === "proposal-builder")).toMatchObject({
+    expect(model.lifecycleStages.find((stage) => stage.key === "construct")).toMatchObject({
       href: "/proposals/simulate?portfolioId=PB%20SG%2F001",
-      countLabel: "Open",
+      value: "0",
+    });
+  });
+
+  it("discloses that metrics and ranking cover a partial source window", () => {
+    const model = buildAdvisoryOverviewModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      proposals: [
+        {
+          proposal_id: "PRP-DRAFT",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "DRAFT",
+          title: "Income allocation review",
+        },
+      ],
+      hasMoreResults: true,
+      windowNumber: 2,
+    });
+
+    expect(model.hasPartialWindow).toBe(true);
+    expect(model.sourceWindowLabel).toBe("Proposal window 2");
+    expect(model.sourceWindowDetail).toMatch(/only to proposals visible/);
+    expect(model.metrics[0]).toMatchObject({
+      label: "Visible Proposals",
+      value: "1",
+      detail: expect.stringContaining("Current source window 2"),
     });
   });
 });
