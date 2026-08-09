@@ -49,8 +49,8 @@ export default function ModeTabs<T extends string>({
     let nextKey: T | null = null;
     if (event.key === "Home") nextKey = enabled[0].key;
     if (event.key === "End") nextKey = enabled.at(-1)!.key;
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-      const step = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
+    if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
+      const step = event.key === "ArrowLeft" ? -1 : 1;
       const startIndex = currentIndex >= 0 ? currentIndex : step > 0 ? -1 : 0;
       nextKey = enabled[(startIndex + step + enabled.length) % enabled.length].key;
     }

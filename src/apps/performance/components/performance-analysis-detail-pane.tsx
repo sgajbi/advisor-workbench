@@ -60,15 +60,22 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
         </div>
       </div>
       {summary ? <div className="performance-analysis-detail-pane-summary">{summary}</div> : null}
-      <div
-        id={modePanelId(idBase, value)}
-        role="tabpanel"
-        aria-labelledby={modeTabId(idBase, value)}
-        className="performance-analysis-detail-pane-body"
-        tabIndex={0}
-      >
-        {panels[value]}
-      </div>
+      {options.map((option) => {
+        const isSelected = option.key === value;
+        return (
+          <div
+            key={option.key}
+            id={modePanelId(idBase, option.key)}
+            role="tabpanel"
+            aria-labelledby={modeTabId(idBase, option.key)}
+            className="performance-analysis-detail-pane-body"
+            tabIndex={isSelected ? 0 : -1}
+            hidden={!isSelected}
+          >
+            {panels[option.key]}
+          </div>
+        );
+      })}
     </div>
   );
 }

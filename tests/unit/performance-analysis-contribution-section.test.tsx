@@ -41,7 +41,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     expect(
       screen.queryByText("Position-level and segment-level contribution for the selected period.")
     ).not.toBeInTheDocument();
-    expect(document.querySelectorAll(".performance-analysis-table").length).toBe(1);
+    expect(document.querySelectorAll(".performance-analysis-table").length).toBe(2);
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Contributor")).not.toBeInTheDocument();
     expect(screen.queryByText("Top Detractor")).not.toBeInTheDocument();
@@ -63,7 +63,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     ).toBeTruthy();
     expect(within(positionTable).getByText("Position")).toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Asset Class contribution table")).not.toBeVisible();
     expect(screen.getAllByText("Local").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("FX").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("Contributor Ranking")).not.toBeInTheDocument();
@@ -189,7 +189,7 @@ describe("PerformanceAnalysisContributionSection", () => {
       "aria-selected",
       "true"
     );
-    expect(screen.queryByLabelText("Position contribution detail unavailable")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Position contribution detail unavailable")).not.toBeVisible();
     expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
     expect(
@@ -197,7 +197,7 @@ describe("PerformanceAnalysisContributionSection", () => {
     ).toBeTruthy();
   });
 
-  it("shows only one detail grid at a time and switches to the grouped segment breakdown", () => {
+  it("keeps stable controlled panels mounted while showing only the selected detail grid", () => {
     render(
       <PerformanceAnalysisContributionSection
         workspace={buildWorkspace()}
@@ -209,17 +209,29 @@ describe("PerformanceAnalysisContributionSection", () => {
       />
     );
 
-    expect(screen.getByLabelText("Position contribution table")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Asset Class contribution table")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("tab", { name: /^Segment Summary/ }));
-
-    expect(screen.getByRole("tab", { name: /^Segment Summary/ })).toHaveAttribute(
-      "aria-selected",
-      "true"
+    const positionsTab = screen.getByRole("tab", { name: /^Positions/ });
+    const segmentTab = screen.getByRole("tab", { name: /^Segment Summary/ });
+    const positionsPanel = document.getElementById(
+      positionsTab.getAttribute("aria-controls") ?? "missing-positions-panel"
     );
-    expect(screen.queryByLabelText("Position contribution table")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Asset Class contribution table")).toBeInTheDocument();
+    const segmentPanel = document.getElementById(
+      segmentTab.getAttribute("aria-controls") ?? "missing-segment-panel"
+    );
+
+    expect(positionsPanel).toBeInTheDocument();
+    expect(segmentPanel).toBeInTheDocument();
+    expect(positionsPanel).toBeVisible();
+    expect(segmentPanel).not.toBeVisible();
+    expect(screen.getByLabelText("Position contribution table")).toBeVisible();
+    expect(screen.getByLabelText("Asset Class contribution table")).not.toBeVisible();
+
+    fireEvent.click(segmentTab);
+
+    expect(segmentTab).toHaveAttribute("aria-selected", "true");
+    expect(positionsPanel).not.toBeVisible();
+    expect(segmentPanel).toBeVisible();
+    expect(screen.getByLabelText("Position contribution table")).not.toBeVisible();
+    expect(screen.getByLabelText("Asset Class contribution table")).toBeVisible();
   });
 
   it("disables contribution segment options that are outside the backend capability contract", () => {
