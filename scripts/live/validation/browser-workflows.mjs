@@ -418,25 +418,35 @@ export async function validateAdvisoryJourneyScreens(
       await expect(actionPanel).toBeVisible({ timeout: timeoutMs });
 
       await actionPanel.getByRole("button", { name: "Record feedback" }).click();
-      await expect(
-        page.getByText(
-          "Feedback recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
-        ),
-      ).toBeVisible({ timeout: timeoutMs });
+      const feedbackStatus = page.getByTestId("idea-action-feedback-status");
+      await expect(feedbackStatus).toBeVisible({ timeout: timeoutMs });
+      await expect(feedbackStatus).toHaveAttribute(
+        "data-action-state",
+        "recorded-and-refreshed",
+      );
+      await expect(feedbackStatus).toContainText("Feedback recorded through Gateway.");
 
       await actionPanel.getByRole("button", { name: "Record review" }).click();
-      await expect(
-        page.getByText(
-          "Review recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
-        ),
-      ).toBeVisible({ timeout: timeoutMs });
+      const reviewStatus = page.getByTestId("idea-action-review-status");
+      await expect(reviewStatus).toBeVisible({ timeout: timeoutMs });
+      await expect(reviewStatus).toHaveAttribute(
+        "data-action-state",
+        "recorded-and-refreshed",
+      );
+      await expect(reviewStatus).toContainText("Review recorded through Gateway.");
 
       await actionPanel.getByRole("button", { name: "Record intent" }).click();
-      await expect(
-        page.getByText(
-          "Conversion intent recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
-        ),
-      ).toBeVisible({ timeout: timeoutMs });
+      const conversionStatus = page.getByTestId(
+        "idea-action-conversion-status",
+      );
+      await expect(conversionStatus).toBeVisible({ timeout: timeoutMs });
+      await expect(conversionStatus).toHaveAttribute(
+        "data-action-state",
+        "recorded-and-refreshed",
+      );
+      await expect(conversionStatus).toContainText(
+        "Conversion intent recorded through Gateway.",
+      );
 
       summary.uiChecks.push({
         description:
