@@ -249,8 +249,8 @@
   }
 }
 
-/* The three compact header tracks require 582px before shell gutters. */
-@media (max-width: 640px) {
+/* The rendered business controls require 622px, plus workstation shell gutters. */
+@media (max-width: 720px) {
   .header {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
