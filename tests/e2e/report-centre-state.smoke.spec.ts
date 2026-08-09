@@ -171,8 +171,20 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
-for (const width of [640, 620, 600, 580, 561]) {
-  test(`keeps the shared rail within its content capacity at ${width}px`, async ({
+for (const { width, stacked } of [
+  { width: 721, stacked: false },
+  { width: 720, stacked: true },
+  { width: 673, stacked: true },
+  { width: 672, stacked: true },
+  { width: 664, stacked: true },
+  { width: 641, stacked: true },
+  { width: 640, stacked: true },
+  { width: 620, stacked: true },
+  { width: 600, stacked: true },
+  { width: 580, stacked: true },
+  { width: 561, stacked: true },
+]) {
+  test(`respects the shared rail content capacity at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -190,14 +202,25 @@ for (const width of [640, 620, 600, 580, 561]) {
       (element) => element.scrollWidth <= element.clientWidth + 1,
     );
     expect(railHeaderFits).toBe(true);
-    const headerRows = await railHeader.evaluate((element) =>
-      Array.from(element.children, (child) =>
-        Math.round(child.getBoundingClientRect().top),
-      ),
+    const headerRegions = await railHeader.evaluate((element) =>
+      Array.from(element.children, (child) => {
+        const bounds = child.getBoundingClientRect();
+        return {
+          left: Math.round(bounds.left),
+          top: Math.round(bounds.top),
+          fits: child.scrollWidth <= child.clientWidth + 1,
+        };
+      }),
     );
-    expect(headerRows).toHaveLength(3);
-    expect(headerRows[0]).toBeLessThan(headerRows[1]);
-    expect(headerRows[1]).toBeLessThan(headerRows[2]);
+    expect(headerRegions).toHaveLength(3);
+    expect(headerRegions.every((region) => region.fits)).toBe(true);
+    if (stacked) {
+      expect(headerRegions[0].top).toBeLessThan(headerRegions[1].top);
+      expect(headerRegions[1].top).toBeLessThan(headerRegions[2].top);
+    } else {
+      expect(headerRegions[0].left).toBeLessThan(headerRegions[1].left);
+      expect(headerRegions[1].left).toBeLessThan(headerRegions[2].left);
+    }
     const rail = page.getByTestId("portfolio-screen-rail");
     expect(
       await computedContrastRatio(
