@@ -2302,3 +2302,69 @@ refresh, explicit failure, exact retry, and stable browser state. This changes a
 public validation semantics, operator proof, and repository truth, so repository context, the
 codebase review ledger, canonical runtime runbook, and Workbench wiki source are updated. Publish
 the authored wiki after merge and verify strict parity.
+
+## Advisor Own-Book Scan Hierarchy And Paged-Scope Truth
+
+### Business job
+
+A relationship manager needs to find one confirmed portfolio assignment quickly, understand
+whether each count describes the filtered result or only the current page, and reorder or reset the
+working view before continuing into Portfolio Review. The screen must remain useful when the source
+publishes only portfolio and client references rather than governed business names.
+
+### Current-product research
+
+Research was refreshed on 2026-08-09 from official product sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   connects Book Insights, business oversight, advisor workflow, and portfolio management while
+   keeping their operating purposes distinct.
+2. [BlackRock manage business at scale](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/manage-business-at-scale)
+   emphasises systematic book monitoring, shared analytics, and action from client-account
+   opportunities.
+3. [Salesforce Financial Services Cloud for Wealth Management](https://help.salesforce.com/s/articleView?id=sf.fsc_admin_landing_wealth.htm&language=en_US)
+   starts advisor workflows from governed customer profiles, groups and relationships, alerts,
+   tasks, and action plans.
+4. [Morningstar Direct Advisory Suite](https://www.morningstar.com/business/products/direct-advisory-suite)
+   connects client and prospect management with portfolio monitoring, planning, proposals,
+   research, and reporting.
+
+These sources guide operating hierarchy only. Lotus does not copy competitor layout, visual
+identity, wording, scoring, household models, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Keep the portfolio register as the dominant surface and make Portfolio Review the primary row
+   handoff.
+2. Separate filtered-result portfolio count from portfolios, clients, and assignment evidence shown
+   on the current page.
+3. Put exact client reference, mandate, sort field, and direction into one keyboard-native toolbar
+   with one apply action and a governed-date-preserving clear action.
+4. State the exact result range and active view immediately above the register.
+5. Present identifiers explicitly as portfolio and client references until a governed source owns
+   business names; retain assignment evidence without promoting it over the advisor's scan task.
+6. Give the reusable summary metric strip an auto-fitting dense-column default rather than leaving
+   every screen to invent its own metric layout.
+7. Continue failing closed for permission, contract drift, source failure, and unconfirmed book
+   membership without substituting the global catalogue.
+
+### Rejected decisions
+
+1. Browser-created client or portfolio names, identifier-derived names, or hiding identifiers before
+   governed business identity exists. Core #930 owns that source contract.
+2. Locally aggregated AUM, households, team or delegated scope, attention ranking, recommendations,
+   favourites, or next-best action.
+3. Treating current-page active or client counts as whole-book measures.
+4. Mixed immediate and submitted filters, a fixed hidden sort direction, or page-local reset logic
+   that drops the governed business date.
+5. A card mosaic, decorative dashboard, or copied competitor composition around a record-finding
+   workflow.
+
+### Validation and publication decision
+
+Workbench issue #567 governs the implementation and Core #930 owns future business identity
+enrichment. Focused view-model, API, and component tests cover paged-scope measures, reference
+labels, descending sorting, one-action apply, clear-view recovery, and source-failure boundaries;
+responsive production-browser and full repository evidence remain part of the issue lifecycle.
+The supported Advisor Book workflow now exposes sort direction and clear-view behaviour, so
+`wiki/Advisor-Book-Workflow.md` is updated and must be published from repo source after merge.

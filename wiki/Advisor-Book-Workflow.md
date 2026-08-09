@@ -8,12 +8,16 @@ portfolio coverage.
 1. Open **My book** from the portfolio context switcher.
 2. Confirm the own-book scope, business date, booking centre, availability, and operating
    limitations.
-3. Review source membership counts. Client counts are limited to the returned page; Lotus does
-   not present them as households.
-4. Filter by an exact client reference or supported mandate type, sort by a Gateway-supported
-   field, and page through source results.
-5. Open a portfolio to continue into Portfolio Review.
-6. From Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk,
+3. Read each measure by its stated scope: matching portfolios cover the filtered result, while
+   portfolios shown, clients shown, and assignment evidence cover the current page only. Lotus
+   does not present client references as households.
+4. Set an exact client reference, supported mandate, sort field, and ascending or descending
+   direction, then apply them as one view. **Clear view** removes those working filters and sorting
+   choices while preserving the governed business date.
+5. Confirm the result range and applied view above the portfolio register, then page through the
+   source results.
+6. Open a portfolio to continue into Portfolio Review.
+7. From Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk,
    Proposal, Advisory, Reports, or Manage, use **Portfolio context** to change portfolio while
    keeping the current business task and supported filters. Workbench loads own-book choices only
    when this disclosure is opened.

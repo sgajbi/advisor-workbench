@@ -95,6 +95,16 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await expect(page.getByText("Jordan Davis", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "My book", exact: true })).toBeVisible();
   await expect(page.getByText("Available with limitations")).toBeVisible();
+  const summaryStrip = page.getByLabel("Current book view");
+  await expect(summaryStrip).toBeVisible();
+  expect(
+    await summaryStrip.evaluate((element) =>
+      getComputedStyle(element)
+        .gridTemplateColumns.split(" ")
+        .filter((track) => track !== "0px").length,
+    ),
+  ).toBe(4);
+  expect((await summaryStrip.boundingBox())?.height).toBeLessThan(150);
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
   await expect(page.getByText("Own book only")).toBeVisible();
   await expect(page.getByText("Legacy assignment evidence")).toBeVisible();
@@ -109,8 +119,11 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await page.keyboard.type("CIF_SG_GLOBAL_BAL_001");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("combobox", { name: "Mandate" })).toBeFocused();
-  await page.getByRole("button", { name: "Apply client" }).click();
+  await page.getByRole("combobox", { name: "Sort direction" }).selectOption("desc");
+  await page.getByRole("button", { name: "Apply view" }).click();
   await expect(page).toHaveURL(/clientId=CIF_SG_GLOBAL_BAL_001/);
+  await expect(page).toHaveURL(/sortOrder=desc/);
+  await expect(page.getByRole("button", { name: "Clear view" })).toBeVisible();
 
   await expect(
     page.getByRole("link", { name: "Global Balanced Mandate" }),
@@ -130,6 +143,7 @@ test("keeps the book usable at tablet and effective 200 percent zoom width", asy
   await expect(page.getByRole("textbox", { name: "Client reference" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Mandate" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Sort by" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Sort direction" })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
