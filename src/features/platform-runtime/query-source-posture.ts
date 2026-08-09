@@ -6,6 +6,8 @@ export type QuerySourcePosture = {
   hasRefreshFailure: boolean;
 };
 
+export type QuerySourceAvailability = "checking" | "ready" | "unavailable";
+
 export function projectQuerySourcePosture({
   hasData,
   isLoading,
@@ -50,4 +52,13 @@ export function isQuerySourceSettledAndAvailable(
     || posture.isUnavailable
     || posture.hasRefreshFailure
   );
+}
+
+export function querySourceAvailability(
+  posture: QuerySourcePosture
+): QuerySourceAvailability {
+  if (posture.isInitialLoading || posture.isRefreshing) {
+    return "checking";
+  }
+  return isQuerySourceSettledAndAvailable(posture) ? "ready" : "unavailable";
 }
