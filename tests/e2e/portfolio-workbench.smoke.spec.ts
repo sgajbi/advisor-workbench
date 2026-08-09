@@ -255,6 +255,7 @@ test.describe('Portfolio workbench smoke', () => {
     page,
     request,
   }) => {
+    test.setTimeout(90_000);
     await page.setViewportSize({ width: 1280, height: 1000 });
     const session = await openCashflowPortfolio(page, request);
     test.skip(!session.available, 'Portfolio cashflow upstream unavailable in standalone smoke environment.');
@@ -268,12 +269,26 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('Ending Cumulative')).toHaveCount(0);
     await expect(page.getByText(/liquidity forecast/i)).toHaveCount(0);
 
-    await page.getByRole('radio', { name: '30D' }).click();
+    await page.getByRole('radio', { name: '10D' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('radio', { name: '30D' })).toBeFocused();
     await expect(
       page.getByText(/30-day projection(?: returned for a 30-day request)? · /i)
     ).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('radio', { name: '30D' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText(/10-day projection · /i)).toHaveCount(0);
+
+    const projectionHorizon = page.getByRole('radiogroup', { name: 'Projection horizon' });
+    for (const width of [1440, 1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await projectionHorizon.scrollIntoViewIfNeeded();
+      await expect(projectionHorizon).toBeVisible();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
   });
 
   test('allocation route connects direct exposures to contributing booked holdings', async ({ page, request }) => {

@@ -405,6 +405,28 @@ test.describe('Performance workbench smoke', () => {
     const chartMetrics = await measureElement(page.locator('.performance-chart-stage'));
     expect(chartMetrics.height).toBeLessThanOrEqual(1300);
     expect(chartMetrics.width).toBeGreaterThan(900);
+
+    const horizonChoices = page.getByRole('radiogroup', { name: 'Horizon table view' });
+    await expect(horizonChoices).toBeVisible();
+    const selectedHorizon = horizonChoices.getByRole('radio', { checked: true });
+    const originalHorizon = (await selectedHorizon.textContent())?.trim();
+    await selectedHorizon.focus();
+    await page.keyboard.press('ArrowRight');
+    const nextHorizon = horizonChoices.getByRole('radio', { checked: true });
+    await expect(nextHorizon).toBeFocused();
+    expect((await nextHorizon.textContent())?.trim()).not.toBe(originalHorizon);
+    expect(await nextHorizon.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
+
+    for (const width of [1440, 1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await horizonChoices.scrollIntoViewIfNeeded();
+      await expect(horizonChoices).toBeVisible();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
   });
 
   test('analysis mode renders live attribution analytics', async ({ page, request }) => {
@@ -592,6 +614,10 @@ test.describe('Performance workbench smoke', () => {
       contributionModule
         .getByRole('tab', { name: /^Segment Summary/i })
     ).toHaveAttribute('aria-selected', 'false');
+    const positionsTab = contributionModule.getByRole('tab', { name: /^Positions/i });
+    const positionPanel = contributionModule.getByRole('tabpanel');
+    await expect(positionsTab).toHaveAttribute('aria-controls', await positionPanel.getAttribute('id') ?? '');
+    await expect(positionPanel).toHaveAttribute('aria-labelledby', await positionsTab.getAttribute('id') ?? '');
 
     const positionHeaders = await contributionModule
       .locator('table[aria-label="Position contribution table"] thead th')
@@ -613,10 +639,12 @@ test.describe('Performance workbench smoke', () => {
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
-    await contributionModule.getByRole('tab', { name: /^Segment Summary/i }).click();
+    await positionsTab.focus();
+    await page.keyboard.press('ArrowRight');
     await expect(
       contributionModule.getByRole('tab', { name: /^Segment Summary/i })
     ).toHaveAttribute('aria-selected', 'true');
+    await expect(contributionModule.getByRole('tab', { name: /^Segment Summary/i })).toBeFocused();
     await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
     await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
     await expect(contributionModule.getByText('Equity')).toBeVisible();
