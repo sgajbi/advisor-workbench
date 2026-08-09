@@ -3,6 +3,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 type TypeScriptConfig = {
+  compilerOptions?: {
+    incremental?: boolean;
+    tsBuildInfoFile?: string;
+  };
   include?: string[];
   exclude?: string[];
 };
@@ -17,6 +21,10 @@ describe("TypeScript build boundary", () => {
     expect(config.exclude).toEqual(
       expect.arrayContaining(["node_modules", "coverage", "output", "playwright-report", "test-results"]),
     );
+    expect(config.compilerOptions).toMatchObject({
+      incremental: true,
+      tsBuildInfoFile: ".next/cache/tsconfig.tsbuildinfo",
+    });
   });
 });
 
