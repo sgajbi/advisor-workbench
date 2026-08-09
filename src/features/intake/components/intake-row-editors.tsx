@@ -23,12 +23,14 @@ export function IntakeRowsEditor({
   instrumentOptions,
   currencyOptions,
   issueFor,
+  disabled = false,
   onChange,
 }: {
   draft: RowDraft;
   instrumentOptions: string[];
   currencyOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled?: boolean;
   onChange: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   switch (draft.task) {
@@ -38,6 +40,7 @@ export function IntakeRowsEditor({
           draft={draft}
           instrumentOptions={instrumentOptions}
           issueFor={issueFor}
+          disabled={disabled}
           onChange={onChange}
         />
       );
@@ -47,6 +50,7 @@ export function IntakeRowsEditor({
           draft={draft}
           instrumentOptions={instrumentOptions}
           issueFor={issueFor}
+          disabled={disabled}
           onChange={onChange}
         />
       );
@@ -57,6 +61,7 @@ export function IntakeRowsEditor({
           instrumentOptions={instrumentOptions}
           currencyOptions={currencyOptions}
           issueFor={issueFor}
+          disabled={disabled}
           onChange={onChange}
         />
       );
@@ -67,6 +72,7 @@ export function IntakeRowsEditor({
           instrumentOptions={instrumentOptions}
           currencyOptions={currencyOptions}
           issueFor={issueFor}
+          disabled={disabled}
           onChange={onChange}
         />
       );
@@ -77,11 +83,13 @@ function PositionRows({
   draft,
   instrumentOptions,
   issueFor,
+  disabled,
   onChange,
 }: {
   draft: PositionsDraft;
   instrumentOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled: boolean;
   onChange: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   function update(rowId: string, patch: Partial<PositionsDraft["rows"][number]["value"]>) {
@@ -102,6 +110,7 @@ function PositionRows({
       empty={draft.rows.length === 0}
       emptyLabel="No position rows. Add a blank row to continue."
       addLabel="Add position"
+      disabled={disabled}
       onAdd={() =>
         onChange((current) =>
           current.task === "ADD_POSITIONS"
@@ -117,6 +126,7 @@ function PositionRows({
             key={row.rowId}
             title={`Position ${index + 1}`}
             removeLabel={`Remove position ${index + 1}`}
+            disabled={disabled}
             onRemove={() =>
               onChange((current) =>
                 current.task === "ADD_POSITIONS"
@@ -132,6 +142,7 @@ function PositionRows({
                 value={row.value.securityId}
                 options={instrumentOptions}
                 error={issueFor(`${prefix}.securityId`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { securityId: value })}
               />
               <InputField
@@ -139,6 +150,7 @@ function PositionRows({
                 label={`Instrument name, position ${index + 1}`}
                 value={row.value.instrumentName}
                 error={issueFor(`${prefix}.instrumentName`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { instrumentName: value })}
               />
               <InputField
@@ -146,6 +158,7 @@ function PositionRows({
                 label={`ISIN, position ${index + 1}`}
                 value={row.value.isin}
                 error={issueFor(`${prefix}.isin`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { isin: value.toUpperCase() })}
               />
               <InputField
@@ -153,6 +166,7 @@ function PositionRows({
                 label={`Product type, position ${index + 1}`}
                 value={row.value.productType}
                 error={issueFor(`${prefix}.productType`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { productType: value })}
               />
               <NumberField
@@ -160,6 +174,7 @@ function PositionRows({
                 label={`Quantity, position ${index + 1}`}
                 value={row.value.quantity}
                 error={issueFor(`${prefix}.quantity`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { quantity: value })}
               />
               <NumberField
@@ -167,6 +182,7 @@ function PositionRows({
                 label={`Price, position ${index + 1}`}
                 value={row.value.price}
                 error={issueFor(`${prefix}.price`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { price: value })}
               />
               <InputField
@@ -175,6 +191,7 @@ function PositionRows({
                 value={row.value.effectiveDate}
                 type="date"
                 error={issueFor(`${prefix}.effectiveDate`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { effectiveDate: value })}
               />
               <InputField
@@ -182,6 +199,7 @@ function PositionRows({
                 label={`Booking type, position ${index + 1}`}
                 value={row.value.transactionType}
                 error={issueFor(`${prefix}.transactionType`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { transactionType: value.toUpperCase() })}
               />
             </div>
@@ -196,11 +214,13 @@ function TransactionRows({
   draft,
   instrumentOptions,
   issueFor,
+  disabled,
   onChange,
 }: {
   draft: TransactionsDraft;
   instrumentOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled: boolean;
   onChange: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   function update(rowId: string, patch: Partial<TransactionsDraft["rows"][number]["value"]>) {
@@ -221,6 +241,7 @@ function TransactionRows({
       empty={draft.rows.length === 0}
       emptyLabel="No transaction rows. Add a blank row to continue."
       addLabel="Add transaction"
+      disabled={disabled}
       onAdd={() =>
         onChange((current) =>
           current.task === "ADD_TRANSACTIONS"
@@ -236,6 +257,7 @@ function TransactionRows({
             key={row.rowId}
             title={`Transaction ${index + 1}`}
             removeLabel={`Remove transaction ${index + 1}`}
+            disabled={disabled}
             onRemove={() =>
               onChange((current) =>
                 current.task === "ADD_TRANSACTIONS"
@@ -251,6 +273,7 @@ function TransactionRows({
                 value={row.value.securityId}
                 options={instrumentOptions}
                 error={issueFor(`${prefix}.securityId`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { securityId: value })}
               />
               <InputField
@@ -258,6 +281,7 @@ function TransactionRows({
                 label={`Transaction type, row ${index + 1}`}
                 value={row.value.transactionType}
                 error={issueFor(`${prefix}.transactionType`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { transactionType: value.toUpperCase() })}
               />
               <NumberField
@@ -265,6 +289,7 @@ function TransactionRows({
                 label={`Quantity, transaction ${index + 1}`}
                 value={row.value.quantity}
                 error={issueFor(`${prefix}.quantity`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { quantity: value })}
               />
               <NumberField
@@ -272,6 +297,7 @@ function TransactionRows({
                 label={`Price, transaction ${index + 1}`}
                 value={row.value.price}
                 error={issueFor(`${prefix}.price`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { price: value })}
               />
               <InputField
@@ -280,6 +306,7 @@ function TransactionRows({
                 value={row.value.transactionDate}
                 type="date"
                 error={issueFor(`${prefix}.transactionDate`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { transactionDate: value })}
               />
             </div>
@@ -295,12 +322,14 @@ function InstrumentRows({
   instrumentOptions,
   currencyOptions,
   issueFor,
+  disabled,
   onChange,
 }: {
   draft: InstrumentsDraft;
   instrumentOptions: string[];
   currencyOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled: boolean;
   onChange: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   function update(rowId: string, patch: Partial<InstrumentsDraft["rows"][number]["value"]>) {
@@ -321,6 +350,7 @@ function InstrumentRows({
       empty={draft.rows.length === 0}
       emptyLabel="No instrument rows. Add a blank row to continue."
       addLabel="Add instrument"
+      disabled={disabled}
       onAdd={() =>
         onChange((current) =>
           current.task === "ADD_INSTRUMENTS"
@@ -336,6 +366,7 @@ function InstrumentRows({
             key={row.rowId}
             title={`Instrument ${index + 1}`}
             removeLabel={`Remove instrument ${index + 1}`}
+            disabled={disabled}
             onRemove={() =>
               onChange((current) =>
                 current.task === "ADD_INSTRUMENTS"
@@ -351,6 +382,7 @@ function InstrumentRows({
                 value={row.value.securityId}
                 options={instrumentOptions}
                 error={issueFor(`${prefix}.securityId`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { securityId: value })}
               />
               <InputField
@@ -358,6 +390,7 @@ function InstrumentRows({
                 label={`Instrument name, row ${index + 1}`}
                 value={row.value.name}
                 error={issueFor(`${prefix}.name`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { name: value })}
               />
               <InputField
@@ -365,6 +398,7 @@ function InstrumentRows({
                 label={`ISIN, instrument ${index + 1}`}
                 value={row.value.isin}
                 error={issueFor(`${prefix}.isin`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { isin: value.toUpperCase() })}
               />
               <LookupField
@@ -373,6 +407,7 @@ function InstrumentRows({
                 value={row.value.instrumentCurrency}
                 options={currencyOptions}
                 error={issueFor(`${prefix}.instrumentCurrency`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { instrumentCurrency: value.toUpperCase() })}
               />
               <InputField
@@ -380,6 +415,7 @@ function InstrumentRows({
                 label={`Product type, instrument ${index + 1}`}
                 value={row.value.productType}
                 error={issueFor(`${prefix}.productType`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { productType: value })}
               />
               <InputField
@@ -387,6 +423,7 @@ function InstrumentRows({
                 label={`Asset class, instrument ${index + 1}`}
                 value={row.value.assetClass}
                 error={issueFor(`${prefix}.assetClass`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { assetClass: value })}
               />
             </div>
@@ -402,12 +439,14 @@ function MarketDataRows({
   instrumentOptions,
   currencyOptions,
   issueFor,
+  disabled,
   onChange,
 }: {
   draft: MarketDataDraft;
   instrumentOptions: string[];
   currencyOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled: boolean;
   onChange: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   function update(rowId: string, patch: Partial<MarketDataDraft["rows"][number]["value"]>) {
@@ -428,6 +467,7 @@ function MarketDataRows({
       empty={draft.rows.length === 0}
       emptyLabel="No price observations. Add a blank row to continue."
       addLabel="Add price observation"
+      disabled={disabled}
       onAdd={() =>
         onChange((current) =>
           current.task === "ADD_MARKET_DATA"
@@ -443,6 +483,7 @@ function MarketDataRows({
             key={row.rowId}
             title={`Price observation ${index + 1}`}
             removeLabel={`Remove price observation ${index + 1}`}
+            disabled={disabled}
             onRemove={() =>
               onChange((current) =>
                 current.task === "ADD_MARKET_DATA"
@@ -458,6 +499,7 @@ function MarketDataRows({
                 value={row.value.securityId}
                 options={instrumentOptions}
                 error={issueFor(`${prefix}.securityId`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { securityId: value })}
               />
               <InputField
@@ -466,6 +508,7 @@ function MarketDataRows({
                 value={row.value.priceDate}
                 type="date"
                 error={issueFor(`${prefix}.priceDate`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { priceDate: value })}
               />
               <NumberField
@@ -473,6 +516,7 @@ function MarketDataRows({
                 label={`Price, observation ${index + 1}`}
                 value={row.value.price}
                 error={issueFor(`${prefix}.price`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { price: value })}
               />
               <LookupField
@@ -481,6 +525,7 @@ function MarketDataRows({
                 value={row.value.currency}
                 options={currencyOptions}
                 error={issueFor(`${prefix}.currency`)}
+                disabled={disabled}
                 onChange={(value) => update(row.rowId, { currency: value.toUpperCase() })}
               />
             </div>
@@ -495,12 +540,14 @@ function RowCollection({
   empty,
   emptyLabel,
   addLabel,
+  disabled,
   onAdd,
   children,
 }: {
   empty: boolean;
   emptyLabel: string;
   addLabel: string;
+  disabled: boolean;
   onAdd: () => void;
   children: React.ReactNode;
 }) {
@@ -508,7 +555,9 @@ function RowCollection({
     <div id={fieldId("rows")} className={styles.rows}>
       {empty ? <div className={styles.emptyRows}>{emptyLabel}</div> : children}
       <div className={styles.rowActions}>
-        <ActionButton onClick={onAdd}>{addLabel}</ActionButton>
+        <ActionButton onClick={onAdd} disabled={disabled}>
+          {addLabel}
+        </ActionButton>
       </div>
     </div>
   );
@@ -517,11 +566,13 @@ function RowCollection({
 function RowCard({
   title,
   removeLabel,
+  disabled,
   onRemove,
   children,
 }: {
   title: string;
   removeLabel: string;
+  disabled: boolean;
   onRemove: () => void;
   children: React.ReactNode;
 }) {
@@ -529,7 +580,7 @@ function RowCard({
     <section className={styles.rowCard} aria-label={title}>
       <div className={styles.rowHeader}>
         <strong>{title}</strong>
-        <ActionButton priority="quiet" aria-label={removeLabel} onClick={onRemove}>
+        <ActionButton priority="quiet" aria-label={removeLabel} onClick={onRemove} disabled={disabled}>
           Remove
         </ActionButton>
       </div>
@@ -544,6 +595,7 @@ export function LookupField({
   value,
   options,
   error,
+  disabled = false,
   onChange,
 }: {
   id: string;
@@ -551,6 +603,7 @@ export function LookupField({
   value: string;
   options: string[];
   error?: string;
+  disabled?: boolean;
   onChange: (value: string) => void;
 }) {
   return (
@@ -558,6 +611,7 @@ export function LookupField({
       freeSolo
       options={options}
       value={value}
+      disabled={disabled}
       onInputChange={(_event, next) => onChange(next)}
       renderInput={(params) => (
         <TextField
@@ -578,6 +632,7 @@ export function InputField({
   label,
   value,
   error,
+  disabled = false,
   type = "text",
   onChange,
 }: {
@@ -585,6 +640,7 @@ export function InputField({
   label: string;
   value: string;
   error?: string;
+  disabled?: boolean;
   type?: "text" | "date";
   onChange: (value: string) => void;
 }) {
@@ -598,6 +654,7 @@ export function InputField({
       value={value}
       error={Boolean(error)}
       helperText={error}
+      disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
       slotProps={type === "date" ? { inputLabel: { shrink: true } } : undefined}
     />
@@ -609,12 +666,14 @@ function NumberField({
   label,
   value,
   error,
+  disabled = false,
   onChange,
 }: {
   id: string;
   label: string;
   value: number;
   error?: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }) {
   return (
@@ -627,6 +686,7 @@ function NumberField({
       value={value || ""}
       error={Boolean(error)}
       helperText={error}
+      disabled={disabled}
       onChange={(event) => onChange(Number(event.target.value) || 0)}
       slotProps={{ htmlInput: { min: 0, step: "any" } }}
     />

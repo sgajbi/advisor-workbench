@@ -43,6 +43,9 @@ export function useIntakeWorkflow() {
   const [referenceDataRequested, setReferenceDataRequested] = useState(false);
   const activeFileReadRef = useRef(0);
   const draftGenerationRef = useRef(0);
+  const submissionStateRef = useRef<SubmissionState>("idle");
+  submissionStateRef.current = submissionState;
+  const publicationIsPending = () => submissionStateRef.current === "submitting";
 
   const portfolioLookupQuery = useQuery({
     queryKey: ["intake-lookups", "portfolios"],
@@ -64,6 +67,7 @@ export function useIntakeWorkflow() {
   });
 
   const validationIssues = useMemo(() => (draft ? validateIntakeDraft(draft) : []), [draft]);
+  const isPublicationPending = submissionState === "submitting";
   const referenceDataState = resolveReferenceDataState({
     requested: referenceDataRequested,
     loading:
@@ -81,6 +85,7 @@ export function useIntakeWorkflow() {
   });
 
   function selectTask(task: IntakeTask) {
+    if (publicationIsPending()) return;
     activeFileReadRef.current += 1;
     draftGenerationRef.current += 1;
     setDraft(createBlankIntakeDraft(task));
@@ -94,6 +99,7 @@ export function useIntakeWorkflow() {
   }
 
   function updateDraft(updater: (current: IntakeDraft) => IntakeDraft) {
+    if (publicationIsPending()) return;
     draftGenerationRef.current += 1;
     setDraft((current) => (current ? updater(current) : current));
     setReviewedIntent(null);
@@ -103,6 +109,7 @@ export function useIntakeWorkflow() {
   }
 
   function reviewRequest(): boolean {
+    if (publicationIsPending()) return false;
     if (!draft) return false;
     setValidationAttempted(true);
     if (validationIssues.length > 0) return false;
@@ -120,6 +127,7 @@ export function useIntakeWorkflow() {
   }
 
   async function submitReviewedRequest(): Promise<boolean> {
+    if (publicationIsPending()) return false;
     if (!draft || !reviewedIntent || reviewedIntent.fingerprint !== intakeDraftFingerprint(draft)) {
       return false;
     }
@@ -145,6 +153,7 @@ export function useIntakeWorkflow() {
   }
 
   async function parseFile(file: File): Promise<boolean> {
+    if (publicationIsPending()) return false;
     if (draft?.task !== "IMPORT_FILE") return false;
     const readSequence = ++activeFileReadRef.current;
     draftGenerationRef.current += 1;
@@ -175,6 +184,7 @@ export function useIntakeWorkflow() {
   }
 
   function startAnotherRequest() {
+    if (publicationIsPending()) return;
     activeFileReadRef.current += 1;
     draftGenerationRef.current += 1;
     setDraft(null);
@@ -205,6 +215,7 @@ export function useIntakeWorkflow() {
     submissionState,
     submissionError,
     receipt,
+    isPublicationPending,
     fileParseState,
     fileParseError,
     referenceDataState,

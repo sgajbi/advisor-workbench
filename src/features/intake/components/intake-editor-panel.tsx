@@ -21,6 +21,7 @@ export function IntakeEditorPanel({
   currencyOptions,
   fileParseState,
   fileParseError,
+  isMutationLocked,
   onChangeTask,
   onLoadReferenceData,
   onUpdate,
@@ -35,6 +36,7 @@ export function IntakeEditorPanel({
   currencyOptions: string[];
   fileParseState: "idle" | "parsing" | "ready" | "error";
   fileParseError: string | null;
+  isMutationLocked: boolean;
   onChangeTask: () => void;
   onLoadReferenceData: () => void;
   onUpdate: (updater: (current: IntakeDraft) => IntakeDraft) => void;
@@ -51,7 +53,7 @@ export function IntakeEditorPanel({
       actions={
         <div className={styles.editorHeaderActions}>
           <SemanticBadge>{draft.task === "IMPORT_FILE" ? "File review" : "Manual entry"}</SemanticBadge>
-          <ActionButton priority="quiet" onClick={onChangeTask}>
+          <ActionButton priority="quiet" onClick={onChangeTask} disabled={isMutationLocked}>
             Change request type
           </ActionButton>
         </div>
@@ -59,7 +61,13 @@ export function IntakeEditorPanel({
     >
       <div className={styles.editorStack}>
         {draft.task !== "IMPORT_FILE" ? (
-          <ReferenceDataSupport state={referenceDataState} onLoad={onLoadReferenceData} />
+          <ReferenceDataSupport state={referenceDataState} onLoad={onLoadReferenceData} disabled={isMutationLocked} />
+        ) : null}
+
+        {isMutationLocked ? (
+          <Alert severity="info" role="status">
+            Publishing reviewed request. Editing and file replacement are locked until the source outcome returns.
+          </Alert>
         ) : null}
 
         {visibleIssues.length > 0 ? <ValidationSummary issues={visibleIssues} /> : null}
@@ -70,6 +78,7 @@ export function IntakeEditorPanel({
             portfolioOptions={portfolioOptions}
             currencyOptions={currencyOptions}
             issueFor={(field) => issueByField.get(field)}
+            disabled={isMutationLocked}
             onUpdate={onUpdate}
           />
         ) : null}
@@ -83,6 +92,7 @@ export function IntakeEditorPanel({
                 value={draft.portfolioId}
                 options={portfolioOptions}
                 error={issueByField.get("portfolioId")}
+                disabled={isMutationLocked}
                 onChange={(value) =>
                   onUpdate((current) =>
                     current.task === "ADD_POSITIONS" || current.task === "ADD_TRANSACTIONS"
@@ -97,6 +107,7 @@ export function IntakeEditorPanel({
                 value={draft.baseCurrency}
                 options={currencyOptions}
                 error={issueByField.get("baseCurrency")}
+                disabled={isMutationLocked}
                 onChange={(value) =>
                   onUpdate((current) =>
                     current.task === "ADD_POSITIONS" || current.task === "ADD_TRANSACTIONS"
@@ -111,6 +122,7 @@ export function IntakeEditorPanel({
               instrumentOptions={instrumentOptions}
               currencyOptions={currencyOptions}
               issueFor={(field) => issueByField.get(field)}
+              disabled={isMutationLocked}
               onChange={onUpdate}
             />
           </>
@@ -122,6 +134,7 @@ export function IntakeEditorPanel({
             instrumentOptions={instrumentOptions}
             currencyOptions={currencyOptions}
             issueFor={(field) => issueByField.get(field)}
+            disabled={isMutationLocked}
             onChange={onUpdate}
           />
         ) : null}
@@ -132,6 +145,7 @@ export function IntakeEditorPanel({
             parseState={fileParseState}
             parseError={fileParseError}
             error={issueByField.get("file")}
+            disabled={isMutationLocked}
             onParseFile={onParseFile}
           />
         ) : null}
@@ -145,12 +159,14 @@ function PortfolioProfileEditor({
   portfolioOptions,
   currencyOptions,
   issueFor,
+  disabled,
   onUpdate,
 }: {
   draft: CreatePortfolioDraft;
   portfolioOptions: string[];
   currencyOptions: string[];
   issueFor: (field: string) => string | undefined;
+  disabled: boolean;
   onUpdate: (updater: (current: IntakeDraft) => IntakeDraft) => void;
 }) {
   function update(patch: Partial<CreatePortfolioDraft["input"]>) {
@@ -169,6 +185,7 @@ function PortfolioProfileEditor({
         value={draft.input.portfolioId}
         options={portfolioOptions}
         error={issueFor("portfolioId")}
+        disabled={disabled}
         onChange={(value) => update({ portfolioId: value })}
       />
       <InputField
@@ -176,6 +193,7 @@ function PortfolioProfileEditor({
         label="Client reference"
         value={draft.input.cifId}
         error={issueFor("cifId")}
+        disabled={disabled}
         onChange={(value) => update({ cifId: value })}
       />
       <InputField
@@ -183,6 +201,7 @@ function PortfolioProfileEditor({
         label="Responsible advisor code"
         value={draft.input.advisorId}
         error={issueFor("advisorId")}
+        disabled={disabled}
         onChange={(value) => update({ advisorId: value })}
       />
       <LookupField
@@ -191,6 +210,7 @@ function PortfolioProfileEditor({
         value={draft.input.baseCurrency}
         options={currencyOptions}
         error={issueFor("baseCurrency")}
+        disabled={disabled}
         onChange={(value) => update({ baseCurrency: value.toUpperCase() })}
       />
       <InputField
@@ -199,6 +219,7 @@ function PortfolioProfileEditor({
         value={draft.input.openDate}
         type="date"
         error={issueFor("openDate")}
+        disabled={disabled}
         onChange={(value) => update({ openDate: value })}
       />
       <InputField
@@ -206,6 +227,7 @@ function PortfolioProfileEditor({
         label="Booking centre"
         value={draft.input.bookingCenter}
         error={issueFor("bookingCenter")}
+        disabled={disabled}
         onChange={(value) => update({ bookingCenter: value })}
       />
       <InputField
@@ -213,6 +235,7 @@ function PortfolioProfileEditor({
         label="Mandate type"
         value={draft.input.portfolioType}
         error={issueFor("portfolioType")}
+        disabled={disabled}
         onChange={(value) => update({ portfolioType: value })}
       />
       <InputField
@@ -220,6 +243,7 @@ function PortfolioProfileEditor({
         label="Approved risk profile"
         value={draft.input.riskExposure}
         error={issueFor("riskExposure")}
+        disabled={disabled}
         onChange={(value) => update({ riskExposure: value })}
       />
       <InputField
@@ -227,6 +251,7 @@ function PortfolioProfileEditor({
         label="Investment time horizon"
         value={draft.input.investmentTimeHorizon}
         error={issueFor("investmentTimeHorizon")}
+        disabled={disabled}
         onChange={(value) => update({ investmentTimeHorizon: value })}
       />
       <InputField
@@ -234,6 +259,7 @@ function PortfolioProfileEditor({
         label="Opening portfolio status"
         value={draft.input.status}
         error={issueFor("status")}
+        disabled={disabled}
         onChange={(value) => update({ status: value })}
       />
     </div>
@@ -243,9 +269,11 @@ function PortfolioProfileEditor({
 function ReferenceDataSupport({
   state,
   onLoad,
+  disabled,
 }: {
   state: "manual" | "loading" | "available" | "unavailable";
   onLoad: () => void;
+  disabled: boolean;
 }) {
   const copy = {
     manual: {
@@ -273,7 +301,7 @@ function ReferenceDataSupport({
         <span>{copy.body}</span>
       </div>
       <div className={styles.sourceActions}>
-        <ActionButton onClick={onLoad} disabled={state === "loading"}>
+        <ActionButton onClick={onLoad} disabled={state === "loading" || disabled}>
           {state === "manual" ? "Load reference data" : "Refresh reference data"}
         </ActionButton>
       </div>
@@ -303,12 +331,14 @@ function FileImportEditor({
   parseState,
   parseError,
   error,
+  disabled,
   onParseFile,
 }: {
   draft: Extract<IntakeDraft, { task: "IMPORT_FILE" }>;
   parseState: "idle" | "parsing" | "ready" | "error";
   parseError: string | null;
   error?: string;
+  disabled: boolean;
   onParseFile: (file: File) => void;
 }) {
   return (
@@ -319,7 +349,7 @@ function FileImportEditor({
           id={fieldId("file")}
           type="file"
           accept=".csv,text/csv"
-          disabled={parseState === "parsing"}
+          disabled={parseState === "parsing" || disabled}
           aria-describedby={error ? `${fieldId("file")}-error` : undefined}
           onChange={(event) => {
             const file = event.target.files?.[0];
