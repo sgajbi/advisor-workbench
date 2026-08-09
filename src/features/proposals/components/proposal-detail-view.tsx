@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
@@ -80,6 +80,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [versionActionError, setVersionActionError] = useState<string | null>(null);
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
+  const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
@@ -114,6 +115,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
   });
 
   useEffect(() => {
+    activeActionRef.current = null;
+    setActing(false);
     setReviewMode("narrative");
     setError(null);
     setActionMessage(null);
@@ -123,7 +126,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setCreatedVersionNo(null);
   }, [proposalId]);
 
-  async function refreshActionEvidence(previousState: string): Promise<string> {
+  async function refreshActionEvidence(
+    previousState: string,
+    expectedProposalId: string,
+  ): Promise<string> {
     const [detailResult, workflowResult, approvalsResult, lineageResult] = await Promise.all([
       detailQuery.refetch(),
       workflowQuery.refetch(),
@@ -133,6 +139,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
     if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
       throw new Error(
         "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+      );
+    }
+    if (detailResult.data?.proposal?.proposal_id !== expectedProposalId) {
+      throw new Error(
+        "The source action returned evidence for a different proposal. Reload the proposal before continuing."
       );
     }
     const refreshedState = detailResult.data?.proposal?.current_state;
@@ -149,15 +160,19 @@ export default function ProposalDetailView({ proposalId }: Props) {
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
-    if (!previousState) return;
+    if (!previousState || activeActionRef.current) return;
+    const actionContext = { proposalId, token: Symbol("proposal-action") };
+    activeActionRef.current = actionContext;
     setActing(true);
     setError(null);
     setActionMessage(null);
     try {
       await action();
-      const refreshedState = await refreshActionEvidence(previousState);
+      const refreshedState = await refreshActionEvidence(previousState, actionContext.proposalId);
+      if (activeActionRef.current?.token !== actionContext.token) return;
       setActionMessage(`${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`);
     } catch (err) {
+      if (activeActionRef.current?.token !== actionContext.token) return;
       const message = err instanceof Error ? err.message : "";
       setError(
         message.startsWith("The source action")
@@ -165,7 +180,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
           : "The proposal action could not be completed. Review the current posture and try again."
       );
     } finally {
-      setActing(false);
+      if (activeActionRef.current?.token === actionContext.token) {
+        activeActionRef.current = null;
+        setActing(false);
+      }
     }
   }
 
