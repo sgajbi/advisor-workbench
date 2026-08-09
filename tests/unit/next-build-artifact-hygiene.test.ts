@@ -4,7 +4,11 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 type CleanNextBuildArtifactsModule = {
-  cleanNextBuildArtifacts: (options: { cwd: string; expectedPackageName?: string }) => string;
+  cleanNextBuildArtifacts: (options: {
+    cwd: string;
+    expectedPackageName?: string;
+    fileSystem?: Pick<typeof fs, "existsSync" | "readFileSync" | "readdirSync" | "rmSync">;
+  }) => string;
 };
 
 const cleanModulePromise =
@@ -41,6 +45,41 @@ describe("Next.js build artifact hygiene", () => {
     expect(() => cleanNextBuildArtifacts({ cwd: repository })).toThrow(
       "Refusing to clean Next.js build artifacts",
     );
+  });
+
+  it("clears a verified mounted .next directory without removing its mount point", async () => {
+    const { cleanNextBuildArtifacts } = await cleanModulePromise;
+    const repository = createRepository("lotus-workbench");
+    const nextDirectory = path.join(repository, ".next");
+    const nestedDirectory = path.join(nextDirectory, "cache");
+    fs.mkdirSync(nestedDirectory, { recursive: true });
+    fs.writeFileSync(path.join(nextDirectory, "BUILD_ID"), "stale");
+    fs.writeFileSync(path.join(nestedDirectory, "stale-pack"), "stale");
+    let simulatedMountPoint = true;
+
+    const removedDirectory = cleanNextBuildArtifacts({
+      cwd: repository,
+      fileSystem: {
+        existsSync: fs.existsSync,
+        readFileSync: fs.readFileSync,
+        readdirSync: fs.readdirSync,
+        rmSync(target, options) {
+          if (simulatedMountPoint && path.resolve(target.toString()) === nextDirectory) {
+            simulatedMountPoint = false;
+            throw Object.assign(new Error("resource busy or locked"), {
+              code: "EBUSY",
+              path: nextDirectory,
+            });
+          }
+          fs.rmSync(target, options);
+        },
+      },
+    });
+
+    expect(removedDirectory).toBe(nextDirectory);
+    expect(fs.existsSync(nextDirectory)).toBe(true);
+    expect(fs.readdirSync(nextDirectory)).toEqual([]);
+    expect(fs.existsSync(path.join(repository, "package.json"))).toBe(true);
   });
 });
 
