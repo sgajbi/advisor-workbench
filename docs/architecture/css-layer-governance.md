@@ -32,6 +32,14 @@ business dataset under issue #573. The global CSS ratchet forbids those selector
 returning; any future Home presentation must be owned by the canonical Home feature and backed by
 governed business state.
 
+Role-correct view controls follow the same ownership rule. `WorkbenchChoiceGroup` owns exclusive
+filter, period, basis, and visualization choices in a colocated design-system CSS Module;
+`ModeTabs` owns only navigation between associated tab panels. Portfolio and Performance may add
+layout-only CSS Modules beside their consuming components, but must not restyle these primitives
+through global selector repair. The retired segmented-control, intake-operation-tab,
+portfolio-primary-view-tab, and legacy mode-tab selector families are forbidden from returning to
+governed global CSS.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.

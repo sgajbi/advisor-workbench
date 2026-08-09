@@ -735,7 +735,7 @@ visual identity, forecasts, calculations, scenario features, or unsupported capa
    unavailable liquidity posture.
 7. Render movement dates in the review table while keeping every returned source point in the
    export and disclosing the difference.
-8. Reuse the Workbench segmented control, analytical module, module-state, dense table, and
+8. Reuse the Workbench choice group, analytical module, module-state, dense table, and
    support-reference patterns instead of introducing Cashflow-only interaction conventions.
 
 ### Rejected decisions
@@ -759,7 +759,7 @@ rows. A horizon-keyed hook owns requests and retries without allowing cross-hori
 The Portfolio API adapter now preserves the full Gateway response envelope instead of returning only
 the outlook.
 
-The screen uses the shared segmented control and analytical module patterns, shows source scope and
+The screen uses the shared choice-group and analytical-module patterns, shows source scope and
 limitations before the chart, removes the unsupported ending-balance tile, reduces zero-heavy chart
 markers, and keeps movement-only table rows distinct from complete export coverage. Record header,
 navigation, evidence, Income handoff, and supporting metric language now consistently describe
@@ -2595,3 +2595,61 @@ bounded rendered-card count; independent family state; exact source order; and o
 Gateway-envelope publication containing every imported row.
 Repository context, historical RFC truth, review ledgers, and Supported Features change in the same
 issue and must be published from main after merge.
+
+## Cross-screen exclusive choices and true tabs
+
+### Business job
+
+Advisors and portfolio specialists repeatedly change period, basis, grouping, chart, and review
+dimension without leaving the current analytical task. Those controls must be dense and fast while
+remaining predictable to keyboard and assistive-technology users. A genuine tab is different: it
+navigates among named content panels within one contribution-detail region.
+
+### Standards research
+
+Research was reviewed on 2026-08-10 from primary design-system and accessibility sources:
+
+1. [W3C ARIA APG tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) defines a tab as a control
+   associated with a `tabpanel`, with one tab stop and arrow/Home/End navigation.
+2. [W3C ARIA APG radio group](https://www.w3.org/WAI/ARIA/apg/patterns/radio/examples/radio/)
+   defines one-of-many selection through `radiogroup` / `radio`, roving focus, arrow navigation,
+   and checked state.
+3. [IBM Carbon content switcher](https://carbondesignsystem.com/components/content-switcher/usage/)
+   distinguishes alternate views or filtering of related content from tabs that organize distinct
+   content sections.
+4. [IBM Carbon tabs](https://carbondesignsystem.com/components/tabs/usage/) reinforces tabs as
+   navigation between related content panels and a single keyboard tab stop.
+
+These sources inform semantics and interaction behavior only. Lotus retains its own visual system,
+business vocabulary, supported controls, and source-backed workflow boundaries.
+
+### Adopted decisions
+
+1. Period, basis, dimension, grouping, horizon, and visualization choices use the shared
+   `WorkbenchChoiceGroup` radio-group contract.
+2. Each group has one tab stop; arrow keys wrap across enabled choices; Home and End select the
+   first and last enabled choices; disabled choices remain discoverable but cannot activate.
+3. Performance contribution detail alone keeps `ModeTabs`, because each choice controls a stable,
+   labelled tab panel.
+4. Shared interaction presentation is colocated with the design-system primitive; Portfolio and
+   Performance own only bounded layout adaptations in feature CSS Modules.
+5. Standard density retains a 44-pixel outer target; compact analytical toolbars retain explicit
+   focus treatment and keyboard parity while preserving the dense workstation rhythm.
+
+### Rejected decisions
+
+1. Fake `tablist` / `tab` roles for controls that only redraw or filter one analytical surface.
+2. A binary use of the choice group; binary states need a governed toggle or switch pattern.
+3. Page-local copies of keyboard logic, selected-state CSS, or focus treatment.
+4. A new component library or styling framework for an interaction already supported by React,
+   semantic HTML, ARIA, and the Workbench token system.
+5. Keeping dormant selector families as compatibility CSS after all production consumers have
+   migrated.
+
+### Validation and publication decision
+
+Workbench #588 owns the migration. Focused component tests prove radio-group and true-tab semantics,
+one tab stop, disabled-choice behavior, and source consumer updates. Portfolio cash-movement and
+Performance contribution browser flows carry the representative production proof. This corrects
+interaction semantics and CSS ownership without adding a supported business capability or changing
+an operator procedure; repo-local wiki source is intentionally unchanged.
