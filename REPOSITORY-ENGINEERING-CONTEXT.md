@@ -417,7 +417,10 @@ Primary areas:
 8. `src/features/advisor-book/`
    Own-book contracts, fail-closed BFF authority, URL-persisted source filters, reusable loading
    state, business presentation, dedicated landing workspace, and task-preserving portfolio
-   context switching over Gateway `PortfolioManagerBookMembership:v1` evidence.
+   context switching over Gateway `PortfolioManagerBookMembership:v1` evidence. Requested URL
+   controls and returned page posture are distinct: visible result ordering must follow returned
+   `page.sort_by` and `page.sort_order`, with the requested order disclosed only when it differs;
+   Workbench must not reorder source rows to hide that distinction.
 9. `src/features/advisor-cockpit/`
    Reusable route/method allowlist, server-derived development principal, least-privilege
    capability projection, and selected-portfolio entitlement enforcement for Advisor Cockpit BFF

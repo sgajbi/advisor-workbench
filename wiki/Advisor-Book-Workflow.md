@@ -14,8 +14,9 @@ portfolio coverage.
 4. Set an exact client reference, supported mandate, sort field, and ascending or descending
    direction, then apply them as one view. **Clear view** removes those working filters and sorting
    choices while preserving the governed business date.
-5. Confirm the result range and applied view above the portfolio register, then page through the
-   source results.
+5. Confirm the result range and displayed order above the portfolio register, then page through the
+   source results. Displayed order follows the order returned for the page. If it differs from the
+   requested controls, Workbench keeps both the displayed and requested order explicit.
 6. Open a portfolio to continue into Portfolio Review.
 7. From Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk,
    Proposal, Advisory, Reports, or Manage, use **Portfolio context** to change portfolio while
