@@ -234,6 +234,7 @@ describe("IntakePage", () => {
     expect(screen.getByRole("heading", { name: "Portfolio PORT_001" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Instrument SEC_001" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Transaction TRN_PORT_001_SEC_001_1" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Business date 2026-08-08" })).toBeInTheDocument();
     expect(screen.getByText("2026-08-08T00:00:00Z")).toBeInTheDocument();
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });

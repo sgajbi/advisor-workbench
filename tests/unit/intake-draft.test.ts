@@ -229,6 +229,15 @@ describe("intake draft", () => {
               }),
             ]),
           }),
+          expect.objectContaining({
+            title: "Business date records",
+            records: [
+              {
+                title: "Business date 2026-08-08",
+                facts: [{ label: "Date", value: "2026-08-08" }],
+              },
+            ],
+          }),
         ]),
       }),
     );
