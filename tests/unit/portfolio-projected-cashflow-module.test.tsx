@@ -34,7 +34,7 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
-    expect(screen.getByRole("tab", { name: "10D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("radio", { name: "10D" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("10-day projection · USD")).toBeInTheDocument();
     await waitFor(() => {
       expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
@@ -44,7 +44,7 @@ describe("PortfolioProjectedCashflowModule", () => {
       });
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "30D" }));
 
     expect(screen.getByText("Loading 30-day projection")).toBeInTheDocument();
     await waitFor(() => {
@@ -55,7 +55,7 @@ describe("PortfolioProjectedCashflowModule", () => {
       });
     });
     expect(await screen.findByText("30-day projection · USD")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "30D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("radio", { name: "30D" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByLabelText("Projection scope")).toHaveTextContent("Projection as of");
   });
 
@@ -70,13 +70,13 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
-    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "30D" }));
     expect(await screen.findByText("30-day projection · USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "10D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "10D" }));
     expect(await screen.findByText("Refreshing projection evidence")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "30D" }));
 
     await waitFor(() => {
       expect(screen.queryByText("Refreshing projection evidence")).not.toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("PortfolioProjectedCashflowModule", () => {
     });
 
     expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("500 USD");
-    fireEvent.click(screen.getByRole("tab", { name: "30D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "30D" }));
 
     expect(await screen.findByText("30-day projection unavailable")).toBeInTheDocument();
     expect(

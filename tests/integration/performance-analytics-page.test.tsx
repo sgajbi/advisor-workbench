@@ -134,7 +134,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelectorAll(".workbench-summary-module-card").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
-    expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
+    expect(document.querySelector(".workbench-page-header-actions [role='radiogroup']"))
       .toBeFalsy();
     expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
     const workbenchScreenNav = screen.getByRole("navigation", {
@@ -409,9 +409,9 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
       expect(mainShell?.querySelector(".performance-horizon-review-bar")).toBeTruthy();
       expect(mainShell?.querySelector(".performance-horizon-toolbar.workbench-summary-toolbar")).toBeTruthy();
-      expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
-      expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
-      expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: "Horizon table view" })).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: "Horizon basis view" })).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
       expect(
@@ -864,7 +864,7 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Close Rolling series detail" }));
 
-    fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Active Risk" }));
     await waitFor(() => {
       expect(
         fetchMock.mock.calls.some(([input]) =>
@@ -874,7 +874,7 @@ describe("PerformanceAnalyticsPage", () => {
         )
       ).toBe(true);
     });
-    fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Asset Class" }));
 
     await waitFor(() => {
       expect(

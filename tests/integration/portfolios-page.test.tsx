@@ -192,8 +192,8 @@ describe("PortfolioFoundationPage", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("tablist", { name: "Portfolio view navigation" })).not.toBeInTheDocument();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
-    expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
-      .toBeTruthy();
+    expect(screen.getByRole("radiogroup", { name: "Portfolio period presets" }))
+      .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 

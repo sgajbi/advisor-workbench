@@ -193,7 +193,7 @@ describe("PerformanceWorkspaceView", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance" })).toBeInTheDocument();
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
-    expect(document.querySelector(".workbench-page-header-actions .workbench-segmented-control"))
+    expect(document.querySelector(".workbench-page-header-actions [role='radiogroup']"))
       .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(

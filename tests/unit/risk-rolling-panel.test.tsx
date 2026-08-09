@@ -72,14 +72,14 @@ describe("RiskRollingPanel", () => {
     expect(headlineLabels.length).toBeGreaterThan(4);
     expect(container.querySelector(".performance-risk-rolling-headline-grid")).toBeTruthy();
 
-    expect(screen.getByRole("tab", { name: "21D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("radio", { name: "21D" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("Review window")).toBeInTheDocument();
     expect(screen.getByLabelText("Rolling risk summary table")).toBeInTheDocument();
     expect(screen.queryByText("Window detail")).not.toBeInTheDocument();
     expect(container.querySelector(".performance-risk-detail-section-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-analytical-table-compact")).toBeTruthy();
     expect(container.querySelector(".performance-risk-rolling-detail-table")).toBeTruthy();
-    expect(container.querySelector(".performance-risk-compact-segmented-control")).toBeTruthy();
+    expect(screen.getByRole("radiogroup", { name: "Rolling risk windows" })).toBeInTheDocument();
     expect(container.querySelector(".performance-risk-rolling-headline-grid")).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: "Current" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Typical" })).toBeInTheDocument();
@@ -107,9 +107,9 @@ describe("RiskRollingPanel", () => {
     const viewModel = buildRiskViewModel();
     renderRollingPanel(viewModel);
 
-    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "63D" }));
 
-    expect(screen.getByRole("tab", { name: "63D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("radio", { name: "63D" })).toHaveAttribute("aria-checked", "true");
     expect(screen.queryByText("21D selected-window review")).not.toBeInTheDocument();
   });
 
@@ -165,7 +165,7 @@ describe("RiskRollingPanel", () => {
 
     render(<RollingHarness />);
 
-    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "63D" }));
     fireEvent.click(screen.getByRole("button", { name: "View rolling series" }));
 
     expect(onViewSeries).toHaveBeenCalledWith("63");

@@ -76,9 +76,9 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(
       screen.queryByText("Open the full economics and return breakdown. Scroll horizontally for wide columns.")
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Horizon table view" })).toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Horizon basis view" })).toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Horizon visual mode" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Horizon table view" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Horizon basis view" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Horizon visual mode" })).toBeInTheDocument();
     expect(screen.getAllByText("Portfolio").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Benchmark").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText("Detailed table"));
@@ -110,7 +110,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getAllByText("YTD").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("1Y").length).toBeGreaterThanOrEqual(2);
 
-    fireEvent.click(screen.getByRole("tab", { name: "Returns" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Returns" }));
     expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Opening Cash Flow")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Closing Cash Flow")).not.toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Economics" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Economics" }));
     expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Closing Cash Flow")).toBeInTheDocument();
@@ -130,15 +130,15 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Benchmark Return")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Relative" }));
     expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Cumulative").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Cumulative")).toBeInTheDocument();
     expect(screen.queryByText("Support")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Combined" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Net" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Combined" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Net" }));
     expect(within(horizonTable).getByText("Net Return")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
@@ -146,14 +146,14 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(horizonTable).queryByText("Cumulative Gross")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Basis" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Basis" }));
     expect(screen.getAllByText("Net").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gross").length).toBeGreaterThan(0);
     expect(screen.getByText("Support")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Net")).toBeInTheDocument();
     expect(screen.getByLabelText("MTD Gross")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Gross" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Gross" }));
     expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Cumulative Gross")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Annualized Gross")).toBeInTheDocument();

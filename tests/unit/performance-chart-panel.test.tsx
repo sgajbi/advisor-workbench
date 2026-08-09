@@ -175,7 +175,7 @@ describe("PerformanceChartPanel", () => {
       },
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Relative" }));
 
     series = Array.isArray(lastChartOption?.series)
       ? (lastChartOption.series as ChartSeriesProbe[])
@@ -191,7 +191,7 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).queryByText("Cum. Benchmark")).not.toBeInTheDocument();
     expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Absolute" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Absolute" }));
 
     series = Array.isArray(lastChartOption?.series)
       ? (lastChartOption.series as ChartSeriesProbe[])
@@ -262,9 +262,9 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
-    expect(screen.getByRole("tablist", { name: "Horizon" })).toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Return view" })).toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Basis" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Horizon" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
     expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();

@@ -61,6 +61,61 @@ export default function PerformanceAnalysisContributionSection({
     : null;
   const segmentLevel = workspace.contribution?.levels?.[0] ?? null;
   const contributionMethodologyRows = getContributionMethodologyRows(workspace.contribution);
+  const positionPanel = positionTableModel ? (
+    <AnalyticsTable
+      className="performance-analysis-table"
+      density="compact"
+      variant="analysis"
+      ariaLabel="Position contribution table"
+      columns={positionTableModel.columns}
+      rows={positionTableModel.rows.map((row) => ({
+        key: row.key,
+        ariaLabel: row.ariaLabel,
+        cells: row.cells,
+      }))}
+    />
+  ) : (
+    <AnalyticsTable
+      className="performance-analysis-table"
+      density="compact"
+      variant="analysis"
+      ariaLabel="Position contribution detail unavailable"
+      columns={[
+        { key: "position", label: "Position" },
+        { key: "contribution", label: "Contribution", align: "right" },
+      ]}
+      rows={[]}
+      emptyState={{
+        title: "Position ranking unavailable",
+        body: "Open Segment Contribution to inspect grouped contribution for the selected segment.",
+      }}
+    />
+  );
+  const segmentPanel = segmentLevel ? (
+    <PerformanceContributionAggregateTable
+      className="performance-analysis-table"
+      contribution={workspace.contribution!}
+      level={segmentLevel}
+      ariaLabel={`${formatLabel(segmentLevel.name)} contribution table`}
+      rowKeyPrefix={segmentLevel.name}
+    />
+  ) : (
+    <AnalyticsTable
+      className="performance-analysis-table"
+      density="compact"
+      variant="analysis"
+      ariaLabel="Segment contribution detail unavailable"
+      columns={[
+        { key: "segment", label: "Segment" },
+        { key: "contribution", label: "Contribution", align: "right" },
+      ]}
+      rows={[]}
+      emptyState={{
+        title: "Segment breakdown unavailable",
+        body: "Grouped contribution is not available for the current selection and horizon.",
+      }}
+    />
+  );
 
   return (
     <WorkbenchDataGridFrame
@@ -90,6 +145,7 @@ export default function PerformanceAnalysisContributionSection({
       >
         {workspace.contribution ? (
           <PerformanceAnalysisDetailPane
+            idBase="performance-contribution-detail"
             value={detailView}
             onChange={setDetailView}
             options={getContributionDetailOptions({
@@ -121,66 +177,8 @@ export default function PerformanceAnalysisContributionSection({
               </div>
             }
             className="performance-analysis-contribution-detail-pane"
-          >
-            {detailView === "positions" ? (
-              positionTableModel ? (
-                <AnalyticsTable
-                  className="performance-analysis-table"
-                  density="compact"
-                  variant="analysis"
-                  ariaLabel="Position contribution table"
-                  columns={positionTableModel.columns}
-                  rows={positionTableModel.rows.map((row) => ({
-                    key: row.key,
-                    ariaLabel: row.ariaLabel,
-                    cells: row.cells,
-                  }))}
-                />
-              ) : (
-                <AnalyticsTable
-                  className="performance-analysis-table"
-                  density="compact"
-                  variant="analysis"
-                  ariaLabel="Position contribution detail unavailable"
-                  columns={[
-                    { key: "position", label: "Position" },
-                    { key: "contribution", label: "Contribution", align: "right" },
-                  ]}
-                  rows={[]}
-                  emptyState={{
-                    title: "Position ranking unavailable",
-                    body:
-                      "Open Segment Contribution to inspect grouped contribution for the selected segment.",
-                  }}
-                />
-              )
-            ) : segmentLevel ? (
-              <PerformanceContributionAggregateTable
-                className="performance-analysis-table"
-                contribution={workspace.contribution}
-                level={segmentLevel}
-                ariaLabel={`${formatLabel(segmentLevel.name)} contribution table`}
-                rowKeyPrefix={segmentLevel.name}
-              />
-            ) : (
-              <AnalyticsTable
-                className="performance-analysis-table"
-                density="compact"
-                variant="analysis"
-                ariaLabel="Segment contribution detail unavailable"
-                columns={[
-                  { key: "segment", label: "Segment" },
-                  { key: "contribution", label: "Contribution", align: "right" },
-                ]}
-                rows={[]}
-                emptyState={{
-                  title: "Segment breakdown unavailable",
-                  body:
-                    "Grouped contribution is not available for the current selection and horizon.",
-                }}
-              />
-            )}
-          </PerformanceAnalysisDetailPane>
+            panels={{ positions: positionPanel, segments: segmentPanel }}
+          />
         ) : null}
       </PerformanceAnalysisModuleState>
     </WorkbenchDataGridFrame>

@@ -1,10 +1,11 @@
-import { WorkbenchSegmentedControl, WorkbenchSummaryToolbar } from "@/design-system";
+import { WorkbenchChoiceGroup, WorkbenchSummaryToolbar } from "@/design-system";
 
 import type {
   PerformanceHorizonBasisView,
   PerformanceHorizonTableView,
   PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
+import choiceStyles from "./performance-choice-groups.module.css";
 
 type PerformanceHorizonComparisonToolbarProps = {
   tableView: PerformanceHorizonTableView;
@@ -27,9 +28,10 @@ export default function PerformanceHorizonComparisonToolbar({
 }: PerformanceHorizonComparisonToolbarProps) {
   return (
     <WorkbenchSummaryToolbar className="performance-horizon-toolbar">
-      <WorkbenchSegmentedControl
+      <WorkbenchChoiceGroup
         ariaLabel="Horizon table view"
-        className="performance-horizon-table-view"
+        className={choiceStyles.horizon}
+        density="compact"
         value={tableView}
         onChange={onTableViewChange}
         options={[
@@ -38,9 +40,10 @@ export default function PerformanceHorizonComparisonToolbar({
           { key: "economics", label: "Economics" },
         ]}
       />
-      <WorkbenchSegmentedControl
+      <WorkbenchChoiceGroup
         ariaLabel="Horizon basis view"
-        className="performance-horizon-basis-view"
+        className={choiceStyles.horizon}
+        density="compact"
         value={basisView}
         onChange={onBasisViewChange}
         options={[
@@ -49,9 +52,10 @@ export default function PerformanceHorizonComparisonToolbar({
           { key: "gross", label: "Gross" },
         ]}
       />
-      <WorkbenchSegmentedControl
+      <WorkbenchChoiceGroup
         ariaLabel="Horizon visual mode"
-        className="performance-horizon-visual-mode"
+        className={choiceStyles.horizon}
+        density="compact"
         value={visualMode}
         onChange={onVisualModeChange}
         options={[

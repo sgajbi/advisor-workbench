@@ -94,16 +94,11 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(periodControls).toBeInTheDocument();
     expect(within(contextControls).getByText("Context")).toHaveClass("workbench-toolbar-group-title");
     expect(within(periodControls).getAllByText("Period")[0]).toHaveClass("workbench-toolbar-group-title");
-    expect(document.querySelector(".workbench-segmented-control[aria-label='Portfolio period presets']"))
-      .toBeTruthy();
-    expect(
-      document.querySelector(
-        ".workbench-segmented-control.portfolio-workspace-toolbar-period-control[aria-label='Portfolio period presets']"
-      )
-    ).toBeTruthy();
+    expect(screen.getByRole("radiogroup", { name: "Portfolio period presets" }))
+      .toBeInTheDocument();
     expect(screen.queryByRole("tablist", { name: "Portfolio view navigation" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "YTD" }));
+    fireEvent.click(screen.getByRole("radio", { name: "YTD" }));
     expect(onControlsChange).toHaveBeenCalledWith({ timeWindow: "YTD" });
     fireEvent.click(screen.getByRole("button", { name: /Export portfolio data/i }));
     expect(onExport).toHaveBeenCalledTimes(1);

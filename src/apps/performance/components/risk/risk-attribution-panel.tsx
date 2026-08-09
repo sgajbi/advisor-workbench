@@ -1,6 +1,6 @@
 import {
   ScreenStatePanel,
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
   WorkbenchStatusRow,
 } from "@/design-system";
 
@@ -10,6 +10,7 @@ import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskModuleShell from "./risk-module-shell";
 import RiskPanelUtilityRow from "./risk-panel-utility-row";
 import { riskAttributionPanelCopy } from "./risk-secondary-copy";
+import choiceStyles from "../performance-choice-groups.module.css";
 import RiskShareBar from "./risk-share-bar";
 import RiskTableText from "./risk-table-text";
 
@@ -44,7 +45,7 @@ export default function RiskAttributionPanel({
           toolbar={
             controls ? (
               <div className="performance-risk-attribution-toolbar">
-                <WorkbenchSegmentedControl
+                <WorkbenchChoiceGroup
                   value={controls.selectedAttributionType}
                   onChange={(nextValue) =>
                     onSelectAttribution(nextValue, controls.selectedGroupingDimension)
@@ -56,10 +57,10 @@ export default function RiskAttributionPanel({
                     title: option.reason ?? undefined,
                   }))}
                   ariaLabel={riskAttributionPanelCopy.attributionTypeAriaLabel}
-                  className="performance-risk-compact-segmented-control"
-                  buttonClassName="performance-risk-compact-segmented-control-button"
+                  className={choiceStyles.riskCompact}
+                  density="compact"
                 />
-                <WorkbenchSegmentedControl
+                <WorkbenchChoiceGroup
                   value={controls.selectedGroupingDimension}
                   onChange={(nextValue) =>
                     onSelectAttribution(controls.selectedAttributionType, nextValue)
@@ -71,8 +72,8 @@ export default function RiskAttributionPanel({
                     title: option.reason ?? undefined,
                   }))}
                   ariaLabel={riskAttributionPanelCopy.groupingAriaLabel}
-                  className="performance-risk-compact-segmented-control"
-                  buttonClassName="performance-risk-compact-segmented-control-button"
+                  className={choiceStyles.riskCompact}
+                  density="compact"
                 />
               </div>
             ) : null

@@ -732,10 +732,10 @@ describe("PerformanceRiskMode", () => {
     renderRiskMode(scenario);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "63D" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "63D" }));
     fireEvent.click(
       screen.getByRole("button", { name: "View rolling series" }),
     );
@@ -810,10 +810,10 @@ describe("PerformanceRiskMode", () => {
     const { rerender } = renderRiskMode(scenario, { period: "YTD" });
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "63D" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "63D" }));
+    fireEvent.click(screen.getByRole("radio", { name: "63D" }));
     fireEvent.click(
       screen.getByRole("button", { name: "View rolling series" }),
     );
@@ -834,7 +834,7 @@ describe("PerformanceRiskMode", () => {
     rerender(buildRiskModeElement(scenario, { period: "YTD" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "63D" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "63D" })).toBeInTheDocument();
     });
     expect(
       screen.queryByRole("dialog", { name: "Rolling series detail" }),
@@ -881,7 +881,7 @@ describe("PerformanceRiskMode", () => {
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Active Risk" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Active Risk" }));
     await waitFor(() => {
       expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledWith(
         "PF_1001",
@@ -896,7 +896,7 @@ describe("PerformanceRiskMode", () => {
         },
       );
     });
-    fireEvent.click(screen.getByRole("tab", { name: "Asset Class" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Asset Class" }));
 
     await waitFor(() => {
       expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(3);
@@ -914,7 +914,10 @@ describe("PerformanceRiskMode", () => {
       },
     );
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Issuer" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "Issuer" })).toHaveAttribute(
+        "aria-disabled",
+        "true"
+      );
     });
   });
 

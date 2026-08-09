@@ -7,7 +7,7 @@ import {
   AnalyticsTable,
   DisclosureToggleButton,
   SectionHeader,
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
 } from "@/design-system";
 
 import { formatCurrency, formatDate } from "../formatters";
@@ -28,6 +28,7 @@ import type {
 } from "../types";
 import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
 import PortfolioModuleState from "./portfolio-module-state";
+import choiceStyles from "./portfolio-choice-groups.module.css";
 import { usePortfolioProjectedCashflow } from "./use-portfolio-projected-cashflow";
 
 export default function PortfolioProjectedCashflowModule({
@@ -96,7 +97,7 @@ export default function PortfolioProjectedCashflowModule({
         subtitle={subtitle}
         actions={
           <>
-            <WorkbenchSegmentedControl
+            <WorkbenchChoiceGroup
               value={cashflow.selectedHorizonKey}
               onChange={cashflow.selectHorizon}
               options={CASHFLOW_HORIZON_OPTIONS.map((option) => ({
@@ -106,7 +107,7 @@ export default function PortfolioProjectedCashflowModule({
                 title: `${option.days}-day projected cash movement`,
               }))}
               ariaLabel="Projection horizon"
-              className="portfolio-cashflow-horizon-control"
+              className={choiceStyles.cashflowHorizon}
             />
             <button
               type="button"
