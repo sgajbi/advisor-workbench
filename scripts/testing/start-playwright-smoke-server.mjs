@@ -2,6 +2,8 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 
+import { cleanNextBuildArtifacts } from "../quality/clean-next-build-artifacts.mjs";
+
 const projectRoot = process.cwd();
 const nextCli = resolve(projectRoot, "node_modules", "next", "dist", "bin", "next");
 const validatedBuildMarker = resolve(projectRoot, ".next", "BUILD_ID");
@@ -97,7 +99,8 @@ async function main() {
     }
     console.log("Reusing caller-validated production build for Playwright smoke.");
   } else {
-    console.log("Building Workbench for Playwright smoke (incremental cache retained).");
+    console.log("Building Workbench for Playwright smoke from clean production artifacts.");
+    cleanNextBuildArtifacts();
     await runNext(["build"]);
   }
 

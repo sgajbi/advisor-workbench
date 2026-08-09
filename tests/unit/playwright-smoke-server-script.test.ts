@@ -8,6 +8,8 @@ describe("Playwright smoke server launcher", () => {
   );
 
   it("starts Next directly and forwards shutdown signals without a shell child", () => {
+    expect(source).toContain('import { cleanNextBuildArtifacts }');
+    expect(source).toContain('cleanNextBuildArtifacts();');
     expect(source).toContain('spawn(process.execPath, [nextCli, ...args]');
     expect(source).toContain('child.kill(signal)');
     expect(source).toContain('process.once("SIGTERM"');

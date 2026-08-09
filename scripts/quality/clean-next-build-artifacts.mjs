@@ -27,7 +27,7 @@ export function cleanNextBuildArtifacts({
     throw new Error(`Refusing to clean unexpected Next.js build directory: ${buildDirectory}.`);
   }
 
-  fs.rmSync(buildDirectory, { recursive: true, force: true });
+  fs.rmSync(buildDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   return buildDirectory;
 }
 
