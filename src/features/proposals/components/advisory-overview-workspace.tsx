@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
+  ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -129,9 +130,28 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
       <SectionBlock>
         <ScreenStatePanel
           kind="error"
-          title="Advisory priorities are unavailable"
-          body="The proposal worklist could not be loaded from the approved advisory workflow."
-          hint="No fallback proposal, review, or implementation posture is shown."
+          title={
+            sourceWindow.hasPrevious
+              ? "This proposal window is unavailable"
+              : "Advisory priorities are unavailable"
+          }
+          body={
+            sourceWindow.hasPrevious
+              ? "The next proposal window could not be loaded from the approved advisory workflow."
+              : "The proposal worklist could not be loaded from the approved advisory workflow."
+          }
+          hint={
+            sourceWindow.hasPrevious
+              ? "Return to the previously loaded proposal window or retry after the source recovers."
+              : "No fallback proposal, review, or implementation posture is shown."
+          }
+          action={
+            sourceWindow.hasPrevious ? (
+              <ActionButton priority="secondary" onClick={sourceWindow.showPrevious}>
+                Return to previous proposals
+              </ActionButton>
+            ) : undefined
+          }
           surface="default"
         />
       </SectionBlock>
