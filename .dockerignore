@@ -15,4 +15,5 @@ scripts/runtime/*
 !scripts/runtime/workbench-healthcheck.mjs
 !scripts/quality/
 scripts/quality/*
+!scripts/quality/clean-next-build-artifacts.mjs
 !scripts/quality/check-portfolio-record-bundles.mjs
