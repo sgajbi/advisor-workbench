@@ -2760,3 +2760,81 @@ navigation, duplicate-catalogue absence, stable evidence ids, and zero page-leve
 overflow, with captures under `output/issue-591/`. The change uses the existing Gateway proposal
 contract and does not change supported capability or operator procedure, so repo-local wiki source
 is intentionally unchanged.
+
+## Decision-first Proposal Review And Progressive Evidence
+
+### Business job
+
+An advisor reviewing a proposal needs to establish what changed, understand the portfolio impact,
+resolve the next governed review step, and prepare an advisor-use narrative or memo without losing
+source evidence. Audit and lineage material must remain available, but it should not force the
+advisor to read implementation vocabulary or traverse every historical record before making the
+current decision.
+
+### Current-product research
+
+Research was refreshed on 2026-08-10 from official product, service-design, and accessibility
+sources:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   connects portfolio construction, risk analytics, suitability controls, and proposal delivery in
+   one workflow, supporting a decision hierarchy rather than a catalogue of disconnected evidence.
+2. [BlackRock governed AI commentary](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor)
+   frames generated commentary as a governed drafting aid whose traceability and human review must
+   remain visible; Lotus therefore keeps narrative and memo work advisor-use and source-evidenced.
+3. [GOV.UK Check answers](https://design-system.service.gov.uk/patterns/check-answers/)
+   recommends grouping related information, making change paths explicit, and using the review
+   screen to help a person confirm the material facts before submission.
+4. [WAI-ARIA Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/)
+   provides the keyboard and state model for evidence that remains available without occupying the
+   primary decision surface.
+5. [WCAG 2.2 status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important success and error information to be programmatically determinable without
+   moving focus, supporting a stable status region after source persistence and refresh.
+
+These sources inform hierarchy, interaction, and evidence presentation only. Gateway and its source
+services remain authoritative for proposal state, approvals, lineage, narrative, memo, delivery,
+and action persistence.
+
+### Adopted decisions
+
+1. Give proposal identity and lifecycle one owner, followed by the next decision, current posture,
+   proposed changes, allocation impact, and review gates.
+2. Treat Narrative and Memo as peer review modes using true tabs with stable, mounted tab panels so
+   switching modes does not discard in-progress advisor work.
+3. Keep version, lineage, replay, and review history available through native progressive
+   disclosure instead of permanently expanding technical evidence.
+4. Settle primary proposal detail independently from workflow, approval, and lineage reads; retain
+   usable source evidence and name each unavailable ancillary source rather than replacing the
+   entire screen.
+5. Translate source state, event, approval, and actor codes into business-facing vocabulary while
+   retaining raw values only in bounded diagnostic or evidence contracts.
+6. Announce action success only after Gateway persistence succeeds and detail, workflow, approval,
+   and lineage posture refresh coherently from source-owned responses.
+7. Use stable semantic evidence (`role="status"` and a durable test id) rather than pinning browser
+   proof to a complete sentence that product copy may legitimately refine.
+
+### Rejected decisions
+
+1. A cosmetic copy pass over the existing stacked layout: it would preserve duplicated hierarchy
+   and all-or-nothing failure behavior.
+2. Hiding audit evidence entirely: bank-operable review needs source traceability even when that
+   material is secondary to the advisor decision.
+3. Optimistic success after the mutation alone: accepted persistence without refreshed proposal
+   posture is insufficient user-visible proof.
+4. Inventing client, advisor-role, suitability, approval, client-ready, communication, or execution
+   authority in Workbench; the production principal boundary remains governed by #436.
+5. Adding a new styling framework, tab library, or Gateway shape when existing Workbench primitives
+   and source contracts support the required behavior.
+
+### Validation and publication decision
+
+Workbench #593 owns this bounded slice. Focused unit and integration proof covers business
+vocabulary, true-tab semantics, closed-by-default evidence, ancillary-source degradation, action
+success after source refresh, safe mutation failure, and refresh-failure success suppression.
+Isolated Playwright proof covers 1440, 768, and 519 pixel widths, stable status and disclosure
+evidence, the persistent action path, and zero page-level horizontal overflow, with captures under
+`output/issue-593/`. The change uses existing Gateway contracts and does not widen authentication,
+client-release, or execution authority. Repo-local `wiki/API-Surface.md` changes because the
+supported Proposal Detail operating and evidence posture changed; the README remains intentionally
+unchanged because repository role, commands, and navigation are unchanged.
