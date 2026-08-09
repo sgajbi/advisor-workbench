@@ -294,6 +294,13 @@ describe("Portfolio Intake payload ownership", () => {
 
     const projection = modules.find(({ path }) => path === "src/features/intake/draft.ts");
     expect(projection).toBeDefined();
+    const payloadBuilderModuleReferences = moduleReferenceStatements(
+      projection!.sourceFile,
+      "/payload-builder",
+    );
+    expect(payloadBuilderModuleReferences).toHaveLength(1);
+    expect(ts.isImportDeclaration(payloadBuilderModuleReferences[0])).toBe(true);
+    expect(dynamicModuleReferences(projection!.sourceFile, "/payload-builder")).toHaveLength(0);
     const governedBuilders = [
       "buildCreatePortfolioPayload",
       "buildPositionSeedPayloadFromList",
