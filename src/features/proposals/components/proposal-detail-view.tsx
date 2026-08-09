@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
@@ -22,7 +22,14 @@ import {
   submitProposal,
 } from "../api";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
-import { SectionBlock, SemanticBadge, Text } from "@/design-system";
+import {
+  ModeTabs,
+  SectionBlock,
+  SemanticBadge,
+  Text,
+  modePanelId,
+  modeTabId,
+} from "@/design-system";
 import {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -37,6 +44,7 @@ import {
   buildProposalActionIdempotencyKey,
   isValidProposalId,
   proposalStageDescription,
+  proposalStageLabel,
 } from "../proposal-workflow-copy";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
@@ -51,6 +59,8 @@ type Props = {
   proposalId: string;
 };
 
+type ProposalReviewMode = "narrative" | "memo";
+
 function isNotFound(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -62,6 +72,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [reviewMode, setReviewMode] = useState<ProposalReviewMode>("narrative");
   const [includeEvidence, setIncludeEvidence] = useState(false);
   const [versionLookupNo, setVersionLookupNo] = useState<number>(1);
   const [versionLookup, setVersionLookup] = useState<ProposalVersionData | null>(null);
@@ -78,6 +90,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
     queryKey,
     queryFn: async () => await getProposal(proposalId, includeEvidence),
     enabled: proposalIdValid,
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery?.queryKey[1] === proposalId ? previousData : undefined,
     ...workbenchStrictQueryDefaults,
   });
   const workflowQuery = useQuery({
@@ -99,13 +113,67 @@ export default function ProposalDetailView({ proposalId }: Props) {
     ...workbenchStrictQueryDefaults,
   });
 
+  useEffect(() => {
+    setReviewMode("narrative");
+    setError(null);
+    setActionMessage(null);
+    setIncludeEvidence(false);
+    setVersionLookup(null);
+    setVersionActionError(null);
+    setCreatedVersionNo(null);
+  }, [proposalId]);
+
+  async function refreshActionEvidence(previousState: string): Promise<string> {
+    const [detailResult, workflowResult, approvalsResult, lineageResult] = await Promise.all([
+      detailQuery.refetch(),
+      workflowQuery.refetch(),
+      approvalsQuery.refetch(),
+      lineageQuery.refetch(),
+    ]);
+    if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
+      throw new Error(
+        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+      );
+    }
+    const refreshedState = detailResult.data?.proposal?.current_state;
+    if (!refreshedState || refreshedState === previousState) {
+      throw new Error(
+        "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing."
+      );
+    }
+    return refreshedState;
+  }
+
+  async function runProposalAction(
+    action: () => Promise<unknown>,
+    successPrefix: string,
+  ) {
+    const previousState = detailQuery.data?.proposal?.current_state;
+    if (!previousState) return;
+    setActing(true);
+    setError(null);
+    setActionMessage(null);
+    try {
+      await action();
+      const refreshedState = await refreshActionEvidence(previousState);
+      setActionMessage(`${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      setError(
+        message.startsWith("The source action")
+          ? message
+          : "The proposal action could not be completed. Review the current posture and try again."
+      );
+    } finally {
+      setActing(false);
+    }
+  }
+
   async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    setActing(true);
-    setError(null);
-    try {
+    await runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, `submit-${reviewType.toLowerCase()}`);
       await submitProposal(proposalId, {
         actor_id: "advisor_1",
@@ -113,82 +181,52 @@ export default function ProposalDetailView({ proposalId }: Props) {
         review_type: reviewType,
         reason: { source: "ui" },
       }, idempotencyKey);
-      setRevision((value) => value + 1);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-    } finally {
-      setActing(false);
-    }
+    }, `Proposal submitted for ${reviewType === "RISK" ? "risk" : "compliance"} review.`);
   }
 
   async function onApproveRisk() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    setActing(true);
-    setError(null);
-    try {
+    await runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-risk");
       await approveRisk(proposalId, {
         actor_id: "risk_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       }, idempotencyKey);
-      setRevision((value) => value + 1);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-    } finally {
-      setActing(false);
-    }
+    }, "Risk review recorded.");
   }
 
   async function onApproveCompliance() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    setActing(true);
-    setError(null);
-    try {
+    await runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-compliance");
       await approveCompliance(proposalId, {
         actor_id: "compliance_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       }, idempotencyKey);
-      setRevision((value) => value + 1);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-    } finally {
-      setActing(false);
-    }
+    }, "Compliance review recorded.");
   }
 
   async function onRecordClientConsent() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    setActing(true);
-    setError(null);
-    try {
+    await runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "record-client-consent");
       await recordClientConsent(proposalId, {
         actor_id: "advisor_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { channel: "IN_PERSON", source: "ui" },
       }, idempotencyKey);
-      setRevision((value) => value + 1);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-    } finally {
-      setActing(false);
-    }
+    }, "Client consent recorded.");
   }
 
-  if (detailQuery.isLoading || workflowQuery.isLoading || approvalsQuery.isLoading || lineageQuery.isLoading) {
+  if (detailQuery.isLoading) {
     return (
       <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
@@ -248,7 +286,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     }
   }
 
-  const queryError = detailQuery.error ?? workflowQuery.error ?? approvalsQuery.error ?? lineageQuery.error;
+  const queryError = detailQuery.error;
 
   if (!proposalIdValid) {
     return (
@@ -286,10 +324,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     );
   }
 
-  if (error || queryError) {
+  if (queryError) {
     return (
       <Alert severity="error">
-        Error: {error ?? (queryError instanceof Error ? queryError.message : "Unknown error")}
+        The proposal could not be loaded. {queryError instanceof Error ? queryError.message : "Try again later."}
       </Alert>
     );
   }
@@ -304,6 +342,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const lineage = lineageQuery.data as ProposalLineageData | undefined;
   const evidenceModel = buildProposalDetailEvidenceModel({ data, workflow, lineage });
   const stageCopy = proposalStageDescription(data.proposal.current_state);
+  const ancillaryFailures = [
+    workflowQuery.error ? "Workflow history" : null,
+    approvalsQuery.error ? "Approval evidence" : null,
+    lineageQuery.error ? "Version lineage" : null,
+  ].filter((item): item is string => item !== null);
 
   return (
     <main className={detailStyles.page} aria-label="Proposal advisory workspace">
@@ -314,19 +357,24 @@ export default function ProposalDetailView({ proposalId }: Props) {
             Proposal {data.proposal.proposal_id}
           </Text>
           <Text variant="secondary">
-            {data.proposal.portfolio_id ?? "Portfolio not linked"} · Advisor-use proposal posture · Version{" "}
+            Portfolio {data.proposal.portfolio_id ?? "not linked"} · Version{" "}
             {String(data.proposal.current_version_no ?? "N/A")}
           </Text>
         </div>
         <div className={detailStyles.headerStatus}>
           <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
-            {stageCopy}
+            {proposalStageLabel(data.proposal.current_state)}
           </SemanticBadge>
-          <Text variant="metadata">Client-ready release remains blocked until source evidence and review gates promote it.</Text>
+          <Text variant="metadata">Advisor use only. Client release requires source evidence and completed review gates.</Text>
         </div>
       </header>
 
-      {error ? <Alert severity="error">{error}</Alert> : null}
+      {error ? <Alert severity="error" role="alert">{error}</Alert> : null}
+      {actionMessage ? (
+        <Alert severity="success" role="status" data-testid="proposal-action-status">
+          {actionMessage}
+        </Alert>
+      ) : null}
 
       <ProposalAdvisoryWorkspace
         data={data}
@@ -337,22 +385,59 @@ export default function ProposalDetailView({ proposalId }: Props) {
         artifactHash={evidenceModel.artifactHash}
         requestHash={evidenceModel.requestHash}
         simulationHash={evidenceModel.simulationHash}
+        workflowAvailable={!workflowQuery.error}
+        approvalsAvailable={!approvalsQuery.error}
+        lineageAvailable={!lineageQuery.error}
       />
 
       <div className={detailStyles.workspaceGrid}>
-        <section className={detailStyles.reviewStack} aria-label="Advisor review work areas">
-          <ProposalNarrativePosturePanel
-            proposalId={data.proposal.proposal_id}
-            currentVersionNo={data.proposal.current_version_no}
-          />
-
-          <ProposalMemoPosturePanel
-            proposalId={data.proposal.proposal_id}
-            currentVersionNo={data.proposal.current_version_no}
-          />
+        <section className={detailStyles.reviewWorkspace} aria-labelledby="proposal-review-heading">
+          <div className={detailStyles.reviewHeader}>
+            <div>
+              <Text variant="panelTitle" as="h2" id="proposal-review-heading">
+                Advisor review
+              </Text>
+              <Text variant="secondary">
+                Review the advisor narrative or prepare the evidence-backed discussion memo.
+              </Text>
+            </div>
+            <ModeTabs
+              value={reviewMode}
+              onChange={setReviewMode}
+              options={[
+                { key: "narrative", label: "Narrative review" },
+                { key: "memo", label: "Memo & evidence pack" },
+              ]}
+              ariaLabel="Proposal review work area"
+              idBase="proposal-review"
+              variant="contained"
+            />
+          </div>
+          <div
+            role="tabpanel"
+            id={modePanelId("proposal-review", "narrative")}
+            aria-labelledby={modeTabId("proposal-review", "narrative")}
+            hidden={reviewMode !== "narrative"}
+          >
+            <ProposalNarrativePosturePanel
+              proposalId={data.proposal.proposal_id}
+              currentVersionNo={data.proposal.current_version_no}
+            />
+          </div>
+          <div
+            role="tabpanel"
+            id={modePanelId("proposal-review", "memo")}
+            aria-labelledby={modeTabId("proposal-review", "memo")}
+            hidden={reviewMode !== "memo"}
+          >
+            <ProposalMemoPosturePanel
+              proposalId={data.proposal.proposal_id}
+              currentVersionNo={data.proposal.current_version_no}
+            />
+          </div>
         </section>
 
-        <aside className={detailStyles.evidenceRail} aria-label="Proposal controls and evidence">
+        <aside className={detailStyles.actionRail} aria-label="Proposal action">
           <ProposalAdvisorActionsPanel
             currentState={data.proposal.current_state}
             stageCopy={stageCopy}
@@ -364,7 +449,29 @@ export default function ProposalDetailView({ proposalId }: Props) {
             onApproveCompliance={() => void onApproveCompliance()}
             onRecordClientConsent={() => void onRecordClientConsent()}
           />
+          {ancillaryFailures.length ? (
+            <section className={detailStyles.partialEvidence} role="status">
+              <Text variant="cardTitle">Review evidence partially available</Text>
+              <Text variant="secondary">
+                {ancillaryFailures.join(", ")} could not be refreshed. Available proposal evidence remains visible.
+              </Text>
+            </section>
+          ) : null}
+        </aside>
+      </div>
 
+      <details className={detailStyles.evidenceDisclosure} data-testid="proposal-evidence-disclosure">
+        <summary>
+          <span>
+            <strong>Evidence, versions and review history</strong>
+            <small>
+              {ancillaryFailures.length
+                ? `${ancillaryFailures.length} evidence source${ancillaryFailures.length === 1 ? "" : "s"} unavailable`
+                : `${evidenceModel.lineageVersions.length} version${evidenceModel.lineageVersions.length === 1 ? "" : "s"} · ${evidenceModel.visibleWorkflowEvents.length} recent event${evidenceModel.visibleWorkflowEvents.length === 1 ? "" : "s"}`}
+            </small>
+          </span>
+        </summary>
+        <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
             onIncludeEvidenceChange={setIncludeEvidence}
@@ -377,7 +484,6 @@ export default function ProposalDetailView({ proposalId }: Props) {
             versionLookup={versionLookup}
             versionActionError={versionActionError}
           />
-
           <ProposalLineageAuditPanel
             artifactHash={evidenceModel.artifactHash}
             requestHash={evidenceModel.requestHash}
@@ -385,14 +491,13 @@ export default function ProposalDetailView({ proposalId }: Props) {
             generatedAt={evidenceModel.generatedAt}
             lineageVersions={evidenceModel.lineageVersions}
           />
-
           <ProposalReviewHistoryPanel
             workflowEvents={evidenceModel.visibleWorkflowEvents}
             hiddenWorkflowEventCount={evidenceModel.hiddenWorkflowEventCount}
             approvals={approvals?.approvals ?? []}
           />
-        </aside>
-      </div>
+        </div>
+      </details>
     </main>
   );
 }

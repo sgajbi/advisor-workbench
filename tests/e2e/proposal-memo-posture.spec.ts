@@ -1,4 +1,9 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
+
+const evidenceDirectory = path.resolve("output", "issue-593");
 
 async function mockProposalDetail(page: import("@playwright/test").Page, blocked = false) {
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
@@ -155,10 +160,13 @@ test.describe("proposal memo posture", () => {
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("region", { name: "Advisor proposal workspace" })).toBeVisible();
-    await expect(page.getByText("Advisor use only - not client ready")).toBeVisible();
+    await expect(
+      page.getByText("Advisor use only. Client release requires source evidence and completed review gates."),
+    ).toBeVisible();
     await expect(page.getByText("VTI")).toBeVisible();
     await expect(page.getByText("Global Equities")).toBeVisible();
     await expect(page.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeVisible();
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
     await expect(page.getByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
     await expect(page.getByText("Approved for advisor use").first()).toBeVisible();
     await expect(page.getByText("Advisor-use evidence ready").first()).toBeVisible();
@@ -182,6 +190,7 @@ test.describe("proposal memo posture", () => {
   test("renders degraded and blocked memo posture from source responses", async ({ page }) => {
     await mockProposalDetail(page, true);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
 
     await expect(
       page.getByText(/Memo posture is degraded or blocked by source advisory evidence/),
@@ -191,5 +200,59 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByText("DEGRADED_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText("BLOCKED_BY_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText(/ready for client/i)).toHaveCount(0);
+  });
+
+  test("keeps proposal decisions, review modes, and actions usable across supported widths", async ({
+    page,
+  }) => {
+    await mockProposalDetail(page);
+    await mkdir(evidenceDirectory, { recursive: true });
+
+    for (const viewport of [
+      { name: "desktop", width: 1440, height: 1000 },
+      { name: "tablet", width: 768, height: 1024 },
+      { name: "compact", width: 519, height: 900 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+
+      await expect(page.getByRole("heading", { level: 1, name: "Proposal pp_1" })).toBeVisible();
+      await expect(page.getByLabel("Proposal decision summary")).toBeVisible();
+      await expect(page.getByRole("tab", { name: "Narrative review" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      await page.screenshot({
+        path: path.join(evidenceDirectory, `proposal-review-${viewport.name}.png`),
+        fullPage: true,
+      });
+
+      const action = page.getByRole("button", { name: "Submit for risk review" });
+      await action.scrollIntoViewIfNeeded();
+      await expect(action).toBeVisible();
+      expect(
+        await action.evaluate((element) => {
+          const bounds = element.getBoundingClientRect();
+          const point = document.elementFromPoint(
+            bounds.left + bounds.width / 2,
+            bounds.top + bounds.height / 2,
+          );
+          return point === element || (point !== null && element.contains(point));
+        }),
+      ).toBeTruthy();
+
+      const evidence = page.getByTestId("proposal-evidence-disclosure");
+      await expect(evidence).not.toHaveAttribute("open", "");
+      await evidence.locator("summary").click();
+      await expect(evidence).toHaveAttribute("open", "");
+      await expect(page.getByText("Lineage and audit")).toBeVisible();
+
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        ),
+      ).toBeFalsy();
+
+    }
   });
 });
