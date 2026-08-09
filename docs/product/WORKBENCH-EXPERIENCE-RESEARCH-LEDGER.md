@@ -980,8 +980,9 @@ Research was reviewed on 2026-07-19 against the implemented Gateway catalogue an
    only show the empty state when neither kind is available.
 5. Keep a reviewed configuration after submission rejection and offer an explicit
    `Retry Report Request` action; disable review and submit actions while submission is active.
-6. Treat request acceptance as an end state for the ordering action while continuing to state that
-   report data, archive, client delivery, and communication are separate.
+6. Treat request acceptance as the end state for the current reviewed intent while continuing to
+   state that report data, archive, client delivery, and communication are separate. A future
+   request must begin through an explicit advisor action and a newly reviewed idempotency intent.
 
 #### Rejected decisions
 
@@ -1090,6 +1091,79 @@ No wiki source change is required. This slice corrects shared visual hierarchy, 
 and accessibility for already documented routes and capabilities; it changes no supported feature,
 integration, source contract, operator command, or runbook. Repository context and both review
 ledgers carry the reusable design and implementation rule.
+
+### Slice 4 — outcome-first accepted requests and deliberate repeat ordering
+
+Issue #571 corrects a business-workflow dead end in the portfolio Report Centre. Acceptance was
+rendered twice while the full editable configuration remained dominant, and the accepted handle was
+retained for the portfolio with no supported way to begin a second request in the same advisor
+session. The new composition treats the accepted request as the primary outcome, keeps recent
+request history in view, and requires an explicit `Create another report` action before returning to
+configuration and creating a new reviewed idempotency intent.
+
+#### Interaction and market research
+
+Research was reviewed on 2026-08-09 against the accepted and repeat-request workflow:
+
+1. [Morningstar Office reporting guidance](https://admainnew.morningstar.com/webhelp/Morningstar/Advisor_Workstation_Office_Edition_Overview.htm)
+   places client and portfolio reporting inside the advisor workstation rather than treating each
+   request as an isolated technical job. Lotus therefore preserves portfolio context and recent
+   request history when one request is accepted.
+2. [Morningstar Advisor Workstation onboarding](https://advisor.morningstar.com/enterprise/onboarding/AdvisorWorkstationOnboarding4.pdf)
+   describes selecting a client or portfolio, configuring report content, and generating reports as
+   a repeatable advisor activity. Lotus ends one reviewed intent without terminally locking future
+   requests for the selected portfolio.
+3. [Addepar reporting guidance](https://addepar.com/blog/enhanced-reporting-transforms-operations)
+   emphasizes repeatable reporting workflows and traceable output. Lotus exposes the accepted
+   support reference and portfolio request history while keeping archive and delivery outside the
+   ordering claim.
+4. [Carbon data-table guidance](https://carbondesignsystem.com/components/data-table/usage/) and
+   [Carbon progressive-disclosure guidance](https://preview.carbondesignsystem.com/building-blocks/core/patterns/forms)
+   support scan-efficient tables and revealing optional form detail only when it is useful. Optional
+   report contents move behind a native disclosure while required content remains truthful.
+5. [WCAG 2.2 status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   and [focus-order guidance](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) require
+   programmatic outcome communication and logical focus movement. Lotus publishes one polite
+   accepted status and restores focus to configuration only after the advisor starts another request.
+
+#### Adopted decisions
+
+1. Render one authoritative accepted confirmation in the readiness rail and remove duplicate
+   success chrome from the main workspace.
+2. Replace the editable configuration with recent request history after acceptance so the dominant
+   task becomes tracking the outcome, not accidentally changing an already accepted intent.
+3. Provide one explicit `Create another report` action. Preserve the valid portfolio configuration,
+   clear only the current portfolio's accepted handle and review posture, and require a new review
+   before submission.
+4. Generate a fresh idempotency key only after the advisor deliberately starts, reviews, and submits
+   the next request. Do not rotate intent during render or on acceptance.
+5. Summarize selected report contents at scan level and use a keyboard-native disclosure for optional
+   section tailoring. Automatically expose the detail when setup is blocked.
+6. Keep support correlation available through a quiet disclosure and retain the existing request,
+   report-data, archive, and client-delivery boundary.
+
+#### Rejected decisions
+
+1. Do not reset automatically after acceptance; that would obscure the source-owned result and make
+   duplicate submission easier.
+2. Do not leave the portfolio in a permanent accepted terminal state; advisors legitimately prepare
+   more than one governed report over time.
+3. Do not add a wizard, toast, second success card, scheduling, recipients, download, archive,
+   communication, or client-delivery controls unsupported by current contracts.
+4. Do not fabricate accepted posture when the strict Gateway handle is incomplete. The production
+   fixture must carry the required request, job, status, status URL, and idempotency evidence.
+5. Do not weaken assertions to accommodate stale wording. Browser proof anchors to the stable
+   accepted heading, one status region, refreshed tracking posture, focus restoration, and distinct
+   source-owned support references.
+
+#### Validation and publication decision
+
+The focused screen-state, workflow, and rendered workspace suites pass 35/35 tests. The owned
+optimized-production Report Centre matrix passes 16/16 browser journeys, including two sequential
+accepted requests at a 720 px constrained/zoom-equivalent viewport, distinct support references,
+review reset, focus restoration, and no horizontal overflow. The wiki supported-feature record is
+updated because same-session sequential report requests are newly supported; no Gateway, Report,
+OpenAPI, runtime runbook, or platform skill change is required.
 
 ## Portfolio Reporting Source Posture
 

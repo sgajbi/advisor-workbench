@@ -60,7 +60,11 @@ Current repository posture:
    report-data job history. One exhaustive screen-state projection owns both the setup workspace
    and readiness rail so loading, restricted, unavailable, empty, reviewed, submitting, accepted,
    and not-accepted states cannot contradict each other or expose actions that the source state
-   cannot support. Output readiness is source-owned by format: structured data may be ready while
+   cannot support. Acceptance ends the current reviewed intent, not the portfolio's future reporting
+   workflow: an advisor must explicitly start another report, after which Workbench clears only that
+   portfolio's accepted handle, preserves valid configuration, requires a new review, and generates
+   a fresh idempotency key only for the next submission. Output readiness is source-owned by format:
+   structured data may be ready while
    governed PDF creation is unavailable. Report-data completion does not imply archive, advisor
    approval, client delivery, or communication. The Workbench BFF strips browser reporting
    authority headers and derives the development role and portfolio entitlement from server
