@@ -107,4 +107,31 @@ describe("proposal advisory workspace view model", () => {
       detail: "Source evidence returned blocking issues.",
     });
   });
+
+  it("does not project zero or pending ancillary facts while source reads are loading", () => {
+    const loadingSourcePosture = {
+      isInitialLoading: true,
+      isRefreshing: false,
+      isPermissionBlocked: false,
+      isUnavailable: false,
+      hasRefreshFailure: false,
+    };
+    const model = buildProposalAdvisoryWorkspaceModel({
+      data: {
+        proposal: { proposal_id: "pp_loading", current_state: "DRAFT" },
+        current_version: { simulate_request: { body: {} } },
+      },
+      workflowSourcePosture: loadingSourcePosture,
+      approvalsSourcePosture: loadingSourcePosture,
+      lineageSourcePosture: loadingSourcePosture,
+    });
+
+    expect(model.approvalCountLabel).toBe("Checking");
+    expect(model.lineageCountLabel).toBe("Checking");
+    expect(model.latestEventLabel).toBe("Checking");
+    expect(model.readiness.find((item) => item.label === "Risk Review")).toMatchObject({
+      state: "Checking",
+      detail: "Checking source risk approval evidence.",
+    });
+  });
 });

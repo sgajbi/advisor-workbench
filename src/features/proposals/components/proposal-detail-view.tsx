@@ -22,6 +22,7 @@ import {
   submitProposal,
 } from "../api";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
 import {
   ModeTabs,
   SectionBlock,
@@ -112,6 +113,24 @@ export default function ProposalDetailView({ proposalId }: Props) {
     queryFn: async () => await getProposalLineage(proposalId),
     enabled: !!detailQuery.data?.proposal,
     ...workbenchStrictQueryDefaults,
+  });
+  const workflowSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(workflowQuery.data),
+    isLoading: workflowQuery.isLoading || (!workflowQuery.data && !workflowQuery.error),
+    isFetching: workflowQuery.isFetching,
+    hasError: Boolean(workflowQuery.error),
+  });
+  const approvalsSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(approvalsQuery.data),
+    isLoading: approvalsQuery.isLoading || (!approvalsQuery.data && !approvalsQuery.error),
+    isFetching: approvalsQuery.isFetching,
+    hasError: Boolean(approvalsQuery.error),
+  });
+  const lineageSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(lineageQuery.data),
+    isLoading: lineageQuery.isLoading || (!lineageQuery.data && !lineageQuery.error),
+    isFetching: lineageQuery.isFetching,
+    hasError: Boolean(lineageQuery.error),
   });
 
   useEffect(() => {
@@ -403,9 +422,9 @@ export default function ProposalDetailView({ proposalId }: Props) {
         artifactHash={evidenceModel.artifactHash}
         requestHash={evidenceModel.requestHash}
         simulationHash={evidenceModel.simulationHash}
-        workflowAvailable={!workflowQuery.error}
-        approvalsAvailable={!approvalsQuery.error}
-        lineageAvailable={!lineageQuery.error}
+        workflowSourcePosture={workflowSourcePosture}
+        approvalsSourcePosture={approvalsSourcePosture}
+        lineageSourcePosture={lineageSourcePosture}
       />
 
       <div className={detailStyles.workspaceGrid}>

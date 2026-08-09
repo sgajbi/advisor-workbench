@@ -487,6 +487,22 @@ describe("ProposalDetailView", () => {
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
   });
 
+  it("keeps ancillary approval, lineage, and event facts pending until source reads settle", async () => {
+    getWorkflowEventsMock.mockImplementationOnce(() => new Promise<never>(() => undefined));
+    getApprovalsMock.mockImplementationOnce(() => new Promise<never>(() => undefined));
+    getLineageMock.mockImplementationOnce(() => new Promise<never>(() => undefined));
+
+    renderWithQueryClient();
+
+    await screen.findByRole("region", { name: "Advisor proposal workspace" });
+    expect(screen.getAllByText("Checking")).toHaveLength(5);
+    expect(screen.queryByText("0 recorded")).not.toBeInTheDocument();
+    expect(screen.queryByText("No events returned")).not.toBeInTheDocument();
+    expect(screen.queryByText("Risk review remains required before execution.")).not.toBeInTheDocument();
+    expect(screen.getByText("Checking source risk approval evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Checking source compliance approval evidence.")).toBeInTheDocument();
+  });
+
   it("switches between preserved narrative and memo review panels with true tabs", async () => {
     renderWithQueryClient();
 
