@@ -2543,6 +2543,9 @@ product data model, compliance decisions, automation, or unsupported source capa
    rendering branches.
 9. Retire a previously parsed file immediately when its replacement starts parsing; keep review
    unavailable until the replacement payload is complete and fence every late source completion.
+10. Treat publication click through source outcome as one immutable intent. Keep the reviewed
+    details visible, natively disable only publication-affecting controls, expose a concise live
+    progress state, and restore the same reviewed intent for exact retry after source failure.
 
 ### Rejected decisions
 
@@ -2562,5 +2565,8 @@ duplicates, lineage, and durable-job authority. Focused domain/API/integration p
 desktop/narrow browser evidence cover blank first paint, exact validation, review-only submission,
 edit invalidation, same-intent retry, blank row creation, file parse-before-publish, replacement-file
 retirement, complete source-count proof, focus movement, compact record drilldown, and no overflow.
+Issue #579 additionally proves that draft fields, task changes, row operations, file replacement,
+edit, and duplicate publication remain unavailable while a source write is unresolved, without
+hiding the reviewed request or presenting success before source confirmation.
 Repository context, historical RFC truth, review ledgers, and Supported Features change in the same
 issue and must be published from main after merge.
