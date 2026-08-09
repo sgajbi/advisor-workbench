@@ -9,6 +9,7 @@ import {
   proposalStageDescription,
   proposalStageLabel,
 } from "./proposal-workflow-copy";
+import type { QuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
 
 export type ProposalTradeRow = {
   key: string;
@@ -19,7 +20,7 @@ export type ProposalTradeRow = {
 
 export type ProposalReadinessItem = {
   label: string;
-  state: "Ready" | "Pending" | "Blocked" | "Unavailable";
+  state: "Ready" | "Pending" | "Checking" | "Blocked" | "Unavailable";
   detail: string;
 };
 
@@ -107,10 +108,30 @@ function proposalTrades(data: ProposalDetailData): ProposalTradeRow[] {
   }));
 }
 
+const READY_SOURCE_POSTURE: QuerySourcePosture = {
+  isInitialLoading: false,
+  isRefreshing: false,
+  isPermissionBlocked: false,
+  isUnavailable: false,
+  hasRefreshFailure: false,
+};
+
+function sourceState(
+  posture: QuerySourcePosture,
+): "checking" | "ready" | "unavailable" {
+  if (posture.isInitialLoading || posture.isRefreshing) {
+    return "checking";
+  }
+  if (posture.isPermissionBlocked || posture.isUnavailable || posture.hasRefreshFailure) {
+    return "unavailable";
+  }
+  return "ready";
+}
+
 function readinessItems(
   data: ProposalDetailData,
   approvals: ProposalApprovalsData | undefined,
-  approvalsAvailable: boolean,
+  approvalsSourcePosture: QuerySourcePosture,
 ): ProposalReadinessItem[] {
   const evidence = evidenceBundle(data);
   const blockers = arrayValue(evidence.blockers ?? evidence.blocking_reasons ?? evidence.missing_evidence);
@@ -121,6 +142,7 @@ function readinessItems(
     (approval) => approval.approval_type === "COMPLIANCE" && approval.approved
   );
   const hasHashes = Boolean(evidence.hashes || evidence.artifact_hash || currentVersion(data).artifact_hash);
+  const approvalsSourceState = sourceState(approvalsSourcePosture);
 
   return [
     {
@@ -132,30 +154,41 @@ function readinessItems(
     },
     {
       label: "Risk Review",
-      state: !approvalsAvailable ? "Unavailable" : riskApproved ? "Ready" : "Pending",
-      detail: !approvalsAvailable
-        ? "Risk approval evidence is temporarily unavailable."
-        : riskApproved
-          ? "Risk approval is recorded."
-          : "Risk review remains required before execution.",
+      state: approvalsSourceState === "checking"
+        ? "Checking"
+        : approvalsSourceState === "unavailable"
+          ? "Unavailable"
+          : riskApproved
+            ? "Ready"
+            : "Pending",
+      detail: approvalsSourceState === "checking"
+        ? "Checking source risk approval evidence."
+        : approvalsSourceState === "unavailable"
+          ? "Risk approval evidence is temporarily unavailable."
+          : riskApproved
+            ? "Risk approval is recorded."
+            : "Risk review remains required before execution.",
     },
     {
       label: "Compliance Review",
-      state: !approvalsAvailable
-        ? "Unavailable"
-        : complianceApproved
-          ? "Ready"
-          : blockers.length > 0
-            ? "Blocked"
-            : "Pending",
-      detail:
-        !approvalsAvailable
+      state: approvalsSourceState === "checking"
+        ? "Checking"
+        : approvalsSourceState === "unavailable"
+          ? "Unavailable"
+          : complianceApproved
+            ? "Ready"
+            : blockers.length > 0
+              ? "Blocked"
+              : "Pending",
+      detail: approvalsSourceState === "checking"
+        ? "Checking source compliance approval evidence."
+        : approvalsSourceState === "unavailable"
           ? "Compliance approval evidence is temporarily unavailable."
           : blockers.length > 0
-          ? "Source evidence returned blocking issues."
-          : complianceApproved
-            ? "Compliance approval is recorded."
-            : "Compliance review remains open.",
+            ? "Source evidence returned blocking issues."
+            : complianceApproved
+              ? "Compliance approval is recorded."
+              : "Compliance review remains open.",
     },
     {
       label: "Client-Ready Release",
@@ -188,9 +221,9 @@ export function buildProposalAdvisoryWorkspaceModel({
   artifactHash,
   requestHash,
   simulationHash,
-  workflowAvailable = true,
-  approvalsAvailable = true,
-  lineageAvailable = true,
+  workflowSourcePosture = READY_SOURCE_POSTURE,
+  approvalsSourcePosture = READY_SOURCE_POSTURE,
+  lineageSourcePosture = READY_SOURCE_POSTURE,
 }: {
   data: ProposalDetailData;
   workflow?: ProposalWorkflowEventsData;
@@ -200,13 +233,16 @@ export function buildProposalAdvisoryWorkspaceModel({
   artifactHash?: string;
   requestHash?: string;
   simulationHash?: string;
-  workflowAvailable?: boolean;
-  approvalsAvailable?: boolean;
-  lineageAvailable?: boolean;
+  workflowSourcePosture?: QuerySourcePosture;
+  approvalsSourcePosture?: QuerySourcePosture;
+  lineageSourcePosture?: QuerySourcePosture;
 }): ProposalAdvisoryWorkspaceModel {
   const latestEvent = workflow?.events?.[workflow.events.length - 1];
   const approvalCount = approvals?.approvals?.length ?? 0;
   const versionCount = lineage?.versions?.length ?? 0;
+  const workflowSourceState = sourceState(workflowSourcePosture);
+  const approvalsSourceState = sourceState(approvalsSourcePosture);
+  const lineageSourceState = sourceState(lineageSourcePosture);
 
   return {
     title: data.proposal.title ?? `Proposal ${data.proposal.proposal_id}`,
@@ -215,23 +251,31 @@ export function buildProposalAdvisoryWorkspaceModel({
     currentStateLabel: proposalStageLabel(data.proposal.current_state),
     nextAction: proposalNextAction(data.proposal.current_state),
     workflowPosture: proposalStageDescription(data.proposal.current_state),
-    approvalCountLabel: approvalsAvailable ? `${approvalCount} recorded` : "Unavailable",
-    lineageCountLabel: lineageAvailable
-      ? versionCount
-        ? countLabel(versionCount, "version")
-        : "Pending"
-      : "Unavailable",
-    latestEventLabel: !workflowAvailable
-      ? "Unavailable"
-      : latestEvent
-        ? proposalStageLabel(latestEvent.to_state)
-        : "No events returned",
+    approvalCountLabel: approvalsSourceState === "checking"
+      ? "Checking"
+      : approvalsSourceState === "ready"
+        ? `${approvalCount} recorded`
+        : "Unavailable",
+    lineageCountLabel: lineageSourceState === "checking"
+      ? "Checking"
+      : lineageSourceState === "ready"
+        ? versionCount
+          ? countLabel(versionCount, "version")
+          : "Pending"
+        : "Unavailable",
+    latestEventLabel: workflowSourceState === "checking"
+      ? "Checking"
+      : workflowSourceState === "unavailable"
+        ? "Unavailable"
+        : latestEvent
+          ? proposalStageLabel(latestEvent.to_state)
+          : "No events returned",
     generatedAtLabel: generatedAt ?? "Timestamp pending",
     artifactHashLabel: artifactHash ?? "Not available",
     requestHashLabel: requestHash ?? "Not available",
     simulationHashLabel: simulationHash ?? "Not available",
     trades: proposalTrades(data),
     allocationRows: allocationImpactRows(data),
-    readiness: readinessItems(data, approvals, approvalsAvailable),
+    readiness: readinessItems(data, approvals, approvalsSourcePosture),
   };
 }

@@ -7,6 +7,7 @@ import type {
   ProposalWorkflowEventsData,
 } from "../types";
 import { buildProposalAdvisoryWorkspaceModel } from "../proposal-advisory-workspace-view-model";
+import type { QuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
 
 import styles from "./proposal-advisory-workspace.module.css";
 
@@ -19,9 +20,9 @@ type Props = {
   artifactHash?: string;
   requestHash?: string;
   simulationHash?: string;
-  workflowAvailable?: boolean;
-  approvalsAvailable?: boolean;
-  lineageAvailable?: boolean;
+  workflowSourcePosture?: QuerySourcePosture;
+  approvalsSourcePosture?: QuerySourcePosture;
+  lineageSourcePosture?: QuerySourcePosture;
 };
 
 function statusTone(state: string): string {
@@ -43,9 +44,9 @@ export default function ProposalAdvisoryWorkspace({
   artifactHash,
   requestHash,
   simulationHash,
-  workflowAvailable,
-  approvalsAvailable,
-  lineageAvailable,
+  workflowSourcePosture,
+  approvalsSourcePosture,
+  lineageSourcePosture,
 }: Props) {
   const model = buildProposalAdvisoryWorkspaceModel({
     data,
@@ -56,9 +57,9 @@ export default function ProposalAdvisoryWorkspace({
     artifactHash,
     requestHash,
     simulationHash,
-    workflowAvailable,
-    approvalsAvailable,
-    lineageAvailable,
+    workflowSourcePosture,
+    approvalsSourcePosture,
+    lineageSourcePosture,
   });
 
   return (
