@@ -353,19 +353,22 @@ describe("intake draft", () => {
       })],
       marketPrices: [expect.objectContaining({ priceDate: "2026-08-08", currency: "USD" })],
     }));
-    expect(projection.previewSections).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        title: "Transaction records",
-        records: [expect.objectContaining({ title: "Transaction TRN_001" })],
-      }),
-      expect.objectContaining({
-        title: "Business date records",
-        records: [{
-          title: "Business date 2026-08-08",
-          facts: [{ label: "Date", value: "2026-08-08" }],
-        }],
-      }),
-    ]));
+    const transactionPreview = projection.previewSections?.find(
+      ({ title }) => title === "Transaction records",
+    );
+    const businessDatePreview = projection.previewSections?.find(
+      ({ title }) => title === "Business date records",
+    );
+    expect(transactionPreview?.recordCount).toBe(1);
+    expect(transactionPreview?.recordAt(0)).toEqual(
+      expect.objectContaining({ title: "Transaction TRN_001" }),
+    );
+    expect(transactionPreview?.recordAt(1)).toBeNull();
+    expect(businessDatePreview?.recordCount).toBe(1);
+    expect(businessDatePreview?.recordAt(0)).toEqual({
+      title: "Business date 2026-08-08",
+      facts: [{ label: "Date", value: "2026-08-08" }],
+    });
   });
 
   it("does not let normalization weaken blank, identifier, date, currency, or positive-number checks", () => {
@@ -452,32 +455,31 @@ describe("intake draft", () => {
     };
 
     expect(validateIntakeDraft(draft)).toEqual([]);
-    expect(buildIntakeReviewProjection(draft)).toEqual(
+    const projection = buildIntakeReviewProjection(draft);
+    expect(projection).toEqual(
       expect.objectContaining({
         task: "IMPORT_FILE",
         facts: expect.arrayContaining([{ label: "File", value: "portfolio-bundle.csv" }]),
-        previewSections: expect.arrayContaining([
-          expect.objectContaining({
-            title: "Transaction records",
-            records: expect.arrayContaining([
-              expect.objectContaining({
-                title: "Transaction TRN_001",
-                facts: expect.arrayContaining([{ label: "Quantity", value: "10" }]),
-              }),
-            ]),
-          }),
-          expect.objectContaining({
-            title: "Business date records",
-            records: [
-              {
-                title: "Business date 2026-08-08",
-                facts: [{ label: "Date", value: "2026-08-08" }],
-              },
-            ],
-          }),
-        ]),
       }),
     );
+    const transactionPreview = projection.previewSections?.find(
+      ({ title }) => title === "Transaction records",
+    );
+    const businessDatePreview = projection.previewSections?.find(
+      ({ title }) => title === "Business date records",
+    );
+    expect(transactionPreview?.recordCount).toBe(1);
+    expect(transactionPreview?.recordAt(0)).toEqual(
+      expect.objectContaining({
+        title: "Transaction TRN_001",
+        facts: expect.arrayContaining([{ label: "Quantity", value: "10" }]),
+      }),
+    );
+    expect(businessDatePreview?.recordCount).toBe(1);
+    expect(businessDatePreview?.recordAt(0)).toEqual({
+      title: "Business date 2026-08-08",
+      facts: [{ label: "Date", value: "2026-08-08" }],
+    });
   });
 
   it("rejects imported file payloads with invalid row-level source fields", () => {
