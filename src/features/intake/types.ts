@@ -44,13 +44,3 @@ export type PortfolioBundlePayload = {
   }>;
   fxRates: Array<unknown>;
 };
-
-export type IntakeEnvelopeResponse = {
-  correlation_id: string;
-  contract_version: string;
-  data: {
-    message?: string;
-    published_counts?: Record<string, number>;
-    [key: string]: unknown;
-  };
-};

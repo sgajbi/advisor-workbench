@@ -1,4 +1,5 @@
-import { IntakeEnvelopeResponse, PortfolioBundlePayload } from "./types";
+import { IntakeEnvelopeResponseSchema, type IntakeEnvelopeResponse } from "./contracts";
+import type { PortfolioBundlePayload } from "./types";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -28,16 +29,20 @@ export async function ingestPortfolioBundle(
     });
 
     const body = await response.text();
-    let parsed: IntakeEnvelopeResponse;
+    let decoded: unknown;
     try {
-      parsed = JSON.parse(body) as IntakeEnvelopeResponse;
+      decoded = JSON.parse(body) as unknown;
     } catch {
-      throw new Error(`Intake ingestion failed (${response.status}): ${body}`);
+      throw new Error(`Portfolio intake returned an unreadable response (${response.status}).`);
     }
 
     if (!response.ok) {
-      throw new Error(`Intake ingestion failed (${response.status}): ${body}`);
+      throw new Error(`Portfolio intake was not accepted by the source service (${response.status}).`);
     }
-    return parsed;
+    const parsed = IntakeEnvelopeResponseSchema.safeParse(decoded);
+    if (!parsed.success) {
+      throw new Error("Portfolio intake returned incomplete confirmation evidence.");
+    }
+    return parsed.data;
   });
 }
