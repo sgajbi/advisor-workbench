@@ -24,6 +24,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("WORKBENCH_E2E_FIXTURE_GATEWAY: 'portfolio'");
     expect(source).toContain("PORTFOLIO_E2E_FIXTURE: scenario");
     expect(source).toContain("PORTFOLIO_E2E_FIXTURE_PORT: String(fixturePort)");
+    expect(source).toContain("PLAYWRIGHT_PORT: String(workbenchPort)");
+    expect(source).toContain("process.env.PORTFOLIO_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? '31020'");
+    expect(source).toContain("fixturePort === workbenchPort");
     expect(source).toContain("PORTFOLIO_E2E_EVIDENCE_DIR: evidenceDirectory");
     expect(source).toContain("mkdirSync(evidenceDirectory, { recursive: true })");
     expect(source).toContain("spawn(");
@@ -36,8 +39,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit'",
     );
-    expect(source).toContain(
-      "'PORTFOLIO_E2E_FIXTURE_PORT must be an unprivileged TCP port.'",
-    );
+    expect(source).toContain("parseUnprivilegedPort(");
+    expect(source).toContain("'PORTFOLIO_E2E_FIXTURE_PORT'");
+    expect(source).toContain("'PORTFOLIO_E2E_WORKBENCH_PORT'");
+    expect(source).toContain("`${name} must be an unprivileged TCP port.`");
   });
 });
