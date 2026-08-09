@@ -26,6 +26,7 @@ export async function startReportCentreFixtureGateway({
   port: number;
 }): Promise<ReportCentreFixtureGateway> {
   let recoveryAttempts = 0;
+  let acceptedRequestCount = 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
 
@@ -87,13 +88,16 @@ export async function startReportCentreFixtureGateway({
       requestUrl.pathname === "/api/v1/reports/portfolio-reviews" &&
       request.method === "POST"
     ) {
+      acceptedRequestCount += 1;
+      const requestReference = `e2e_${acceptedRequestCount}`;
       sendJson(
         response,
         {
-          report_request_id: "rrq_e2e",
-          report_job_id: "rjob_e2e",
+          report_request_id: `rrq_${requestReference}`,
+          report_job_id: `rjob_${requestReference}`,
           status: "accepted",
-          status_url: "/api/v1/report-jobs/rjob_e2e",
+          status_url: `/api/v1/report-jobs/rjob_${requestReference}`,
+          idempotency_key: `report-centre-fixture-${requestReference}`,
         },
         202,
       );
