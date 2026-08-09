@@ -2831,8 +2831,10 @@ and action persistence.
 
 Workbench #593 owns this bounded slice. Focused unit and integration proof covers business
 vocabulary, true-tab semantics, closed-by-default evidence, ancillary-source degradation, action
-success after source refresh, safe mutation failure, and refresh-failure success suppression.
-Isolated Playwright proof covers 1440, 768, and 519 pixel widths, stable status and disclosure
+success after source refresh, safe mutation failure, refresh-failure success suppression,
+duplicate-command fencing, and proposal-identity reset. Isolated Playwright proof covers source
+partial, source-refreshed success, safe failure, keyboard tab focus, reduced motion, 1440, 768, 640
+(a 1280-pixel browser at 200% reflow equivalent), and 519 pixel widths, stable status and disclosure
 evidence, the persistent action path, and zero page-level horizontal overflow, with captures under
 `output/issue-593/`. The change uses existing Gateway contracts and does not widen authentication,
 client-release, or execution authority. Repo-local `wiki/API-Surface.md` changes because the

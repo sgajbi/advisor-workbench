@@ -178,10 +178,10 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 describe("ProposalDetailView", () => {
-  function proposalDetail(state = "DRAFT") {
+  function proposalDetail(state = "DRAFT", proposalId = "pp-1") {
     return {
       proposal: {
-        proposal_id: "pp-1",
+        proposal_id: proposalId,
         current_state: state,
         portfolio_id: "pf_1",
         current_version_no: 1,
@@ -189,23 +189,33 @@ describe("ProposalDetailView", () => {
       current_version: {
         artifact_hash: "sha256:artifact-001",
         evidence_bundle: {
-          hashes: { artifact_hash: "sha256:artifact-001" },
+          generated_at: "2026-02-22T00:02:00Z",
+          hashes: {
+            request_hash: "sha256:request-001",
+            simulation_hash: "sha256:simulation-001",
+            artifact_hash: "sha256:artifact-001",
+          },
           allocation_comparison: [],
         },
-        simulate_request: { body: { proposed_trades: [] } },
+        simulate_request: {
+          body: {
+            options: { enable_proposal_simulation: true },
+            proposed_trades: [],
+          },
+        },
       },
     };
   }
 
-  function workflowEvidence(state = "DRAFT") {
+  function workflowEvidence(state = "DRAFT", proposalId = "pp-1") {
     return {
-      proposal_id: "pp-1",
+      proposal_id: proposalId,
       current_state: state,
       events: [
         {
           event_id: `event-${state}`,
           event_type: state === "DRAFT" ? "CREATED" : "SUBMITTED_FOR_REVIEW",
-          from_state: state === "DRAFT" ? null : "DRAFT",
+          from_state: null,
           to_state: state,
           actor_id: "advisor_1",
           occurred_at: "2026-02-22T00:00:00Z",
@@ -214,11 +224,11 @@ describe("ProposalDetailView", () => {
     };
   }
 
-  function renderWithQueryClient() {
+  function renderWithQueryClient(proposalId = "pp-1") {
     const queryClient = new QueryClient();
-    render(
+    return render(
       <QueryClientProvider client={queryClient}>
-        <ProposalDetailView proposalId="pp-1" />
+        <ProposalDetailView proposalId={proposalId} />
       </QueryClientProvider>
     );
   }
@@ -285,6 +295,29 @@ describe("ProposalDetailView", () => {
         "Proposal submitted for risk review. Current posture: Risk team review is currently pending."
       );
     });
+  });
+
+  it("prevents duplicate submission while the source action is pending", async () => {
+    let completeSubmission: (() => void) | undefined;
+    submitProposalMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    const previousCallCount = submitProposalMock.mock.calls.length;
+    fireEvent.click(action);
+    fireEvent.click(action);
+
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
+    await waitFor(() => expect(action).toBeDisabled());
+    completeSubmission?.();
+    await screen.findByTestId("proposal-action-status");
   });
 
   it("keeps mutation failure explicit without exposing the raw downstream response", async () => {
@@ -463,5 +496,40 @@ describe("ProposalDetailView", () => {
     expect(memoTab).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "false");
     expect(await screen.findByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
+  });
+
+  it("resets review state and does not retain prior proposal detail when identity changes", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
+    const queryClient = new QueryClient();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    fireEvent.click(screen.getByRole("tab", { name: "Memo & evidence pack" }));
+    fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
+    expect(screen.getByRole("tab", { name: "Memo & evidence pack" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByTestId("proposal-evidence-disclosure")).toHaveAttribute("open");
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    expect(screen.queryByRole("heading", { level: 1, name: "Proposal pp-1" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByTestId("proposal-evidence-disclosure")).not.toHaveAttribute("open");
   });
 });
