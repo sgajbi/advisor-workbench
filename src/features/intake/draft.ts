@@ -243,18 +243,26 @@ export function validateIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[]
       return [
         ...required("portfolioId", "Enter the target portfolio code.", draft.portfolioId),
         ...currency("baseCurrency", "Enter a three-letter base currency.", draft.baseCurrency),
+        ...atLeastOneRow("rows", "Add at least one opening position.", draft.rows.length),
         ...draft.rows.flatMap((row, index) => validatePosition(row, index)),
       ];
     case "ADD_TRANSACTIONS":
       return [
         ...required("portfolioId", "Enter the target portfolio code.", draft.portfolioId),
         ...currency("baseCurrency", "Enter a three-letter base currency.", draft.baseCurrency),
+        ...atLeastOneRow("rows", "Add at least one transaction.", draft.rows.length),
         ...draft.rows.flatMap((row, index) => validateTransaction(row, index)),
       ];
     case "ADD_INSTRUMENTS":
-      return draft.rows.flatMap((row, index) => validateInstrument(row, index));
+      return [
+        ...atLeastOneRow("rows", "Add at least one instrument.", draft.rows.length),
+        ...draft.rows.flatMap((row, index) => validateInstrument(row, index)),
+      ];
     case "ADD_MARKET_DATA":
-      return draft.rows.flatMap((row, index) => validateMarketData(row, index));
+      return [
+        ...atLeastOneRow("rows", "Add at least one price observation.", draft.rows.length),
+        ...draft.rows.flatMap((row, index) => validateMarketData(row, index)),
+      ];
     case "IMPORT_FILE":
       return draft.payload && draft.fileName
         ? []
@@ -446,6 +454,10 @@ function date(field: string, message: string, value: string): IntakeValidationIs
 
 function positive(field: string, message: string, value: number): IntakeValidationIssue[] {
   return Number.isFinite(value) && value > 0 ? [] : [{ field, message }];
+}
+
+function atLeastOneRow(field: string, message: string, count: number): IntakeValidationIssue[] {
+  return count > 0 ? [] : [{ field, message }];
 }
 
 function isStrictIsoDate(value: string): boolean {
