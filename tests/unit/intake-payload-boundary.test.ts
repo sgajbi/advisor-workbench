@@ -90,6 +90,51 @@ function reexportsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: st
   });
 }
 
+function bindingNames(name: ts.BindingName): string[] {
+  if (ts.isIdentifier(name)) return [name.text];
+  return name.elements.flatMap((element) =>
+    ts.isOmittedExpression(element) ? [] : bindingNames(element.name),
+  );
+}
+
+function hasExportModifier(node: ts.Node): boolean {
+  return Boolean(
+    ts.canHaveModifiers(node) &&
+      ts.getModifiers(node)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword),
+  );
+}
+
+function exportedNames(sourceFile: ts.SourceFile): string[] {
+  return sourceFile.statements
+    .flatMap((statement): string[] => {
+      if (ts.isExportAssignment(statement)) return ["default"];
+      if (ts.isExportDeclaration(statement)) {
+        if (statement.exportClause === undefined) return ["*"];
+        if (ts.isNamespaceExport(statement.exportClause)) return [statement.exportClause.name.text];
+        return statement.exportClause.elements.map((element) => element.name.text);
+      }
+      if (!hasExportModifier(statement)) return [];
+      if (ts.isVariableStatement(statement)) {
+        return statement.declarationList.declarations.flatMap((declaration) =>
+          bindingNames(declaration.name),
+        );
+      }
+      if (
+        (ts.isFunctionDeclaration(statement) ||
+          ts.isClassDeclaration(statement) ||
+          ts.isInterfaceDeclaration(statement) ||
+          ts.isTypeAliasDeclaration(statement) ||
+          ts.isEnumDeclaration(statement) ||
+          ts.isModuleDeclaration(statement)) &&
+        statement.name
+      ) {
+        return [statement.name.getText(sourceFile)];
+      }
+      return [];
+    })
+    .sort();
+}
+
 function accessesMember(sourceFile: ts.SourceFile, namespaceName: string, memberName: string): boolean {
   let found = false;
 
@@ -170,11 +215,22 @@ describe("Portfolio Intake payload ownership", () => {
       ts.ScriptTarget.Latest,
       true,
     );
+    const localReexport = ts.createSourceFile(
+      "local-reexport-fixture.ts",
+      [
+        'import { ingestPortfolioBundle as publishReviewedIntent } from "./api";',
+        "export { publishReviewedIntent };",
+        "export const publishAlias = publishReviewedIntent;",
+      ].join("\n"),
+      ts.ScriptTarget.Latest,
+      true,
+    );
 
     expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(importsModule(sourceFile, "/payload-builder")).toBe(true);
     expect(reexportsName(namedReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(reexportsName(namespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
+    expect(exportedNames(localReexport)).toEqual(["publishAlias", "publishReviewedIntent"]);
   });
 
   it("keeps payload construction behind the reviewed projection", () => {
@@ -214,6 +270,7 @@ describe("Portfolio Intake payload ownership", () => {
       ({ path }) => path === "src/features/intake/use-intake-workflow.ts",
     );
     expect(workflow).toBeDefined();
+    expect(exportedNames(workflow!.sourceFile)).toEqual(["useIntakeWorkflow"]);
     expect(callArguments(workflow!.sourceFile, "buildIntakeReviewProjection")).toEqual([["draft"]]);
     const publicationCalls = callExpressions(workflow!.sourceFile, "ingestPortfolioBundle");
     expect(publicationCalls).toHaveLength(1);
