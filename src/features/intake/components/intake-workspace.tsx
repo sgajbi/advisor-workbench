@@ -26,17 +26,20 @@ export function IntakeWorkspace() {
   const reviewRef = useRef<HTMLDivElement>(null);
   const focusIntentRef = useRef(0);
   const activeTask = INTAKE_TASKS.find((item) => item.task === workflow.draft?.task);
+  const isPublicationPending = workflow.isPublicationPending;
 
   function focus(ref: React.RefObject<HTMLDivElement | null>) {
     requestAnimationFrame(() => ref.current?.focus());
   }
 
   function selectTask(task: Parameters<typeof workflow.selectTask>[0]) {
+    if (isPublicationPending) return;
     workflow.selectTask(task);
     focus(editorRef);
   }
 
   function changeTask() {
+    if (isPublicationPending) return;
     focusIntentRef.current += 1;
     workflow.startAnotherRequest();
     focus(chooserRef);
@@ -57,11 +60,13 @@ export function IntakeWorkspace() {
   }
 
   function editReviewedRequest() {
+    if (isPublicationPending) return;
     workflow.updateDraft((current) => current);
     focus(editorRef);
   }
 
   function startAnotherRequest() {
+    if (isPublicationPending) return;
     focusIntentRef.current += 1;
     workflow.startAnotherRequest();
     focus(chooserRef);
@@ -127,6 +132,7 @@ export function IntakeWorkspace() {
                       currencyOptions={workflow.currencyOptions}
                       fileParseState={workflow.fileParseState}
                       fileParseError={workflow.fileParseError}
+                      isMutationLocked={isPublicationPending}
                       onChangeTask={changeTask}
                       onLoadReferenceData={workflow.loadReferenceData}
                       onUpdate={workflow.updateDraft}

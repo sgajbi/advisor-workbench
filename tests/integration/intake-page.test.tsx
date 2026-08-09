@@ -147,15 +147,26 @@ describe("IntakePage", () => {
   });
 
   it("retries the exact reviewed payload with the same idempotency key", async () => {
-    ingestPortfolioBundleMock
-      .mockRejectedValueOnce(new Error("Portfolio intake was not accepted by the source service (503)."))
-      .mockResolvedValueOnce(sourceConfirmation());
+    const pendingFailure = deferred<ReturnType<typeof sourceConfirmation>>();
+    ingestPortfolioBundleMock.mockReturnValueOnce(pendingFailure.promise).mockResolvedValueOnce(sourceConfirmation());
     renderIntakePage();
     startValidPortfolioRequest();
     fireEvent.click(screen.getByRole("button", { name: "Review request" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+    await waitFor(() => expect(screen.getByLabelText("Client reference")).toBeDisabled());
+    expect(screen.getByRole("button", { name: "Change request type" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Edit request" })).toBeDisabled();
+    expect(screen.getByText(/editing and file replacement are locked/i)).toBeInTheDocument();
+
+    await act(async () => {
+      pendingFailure.reject(new Error("Portfolio intake was not accepted by the source service (503)."));
+      await pendingFailure.promise.catch(() => undefined);
+    });
+
     expect(await screen.findByText(/source service \(503\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Client reference")).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Change request type" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Retry publication" }));
 
     await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(2));
@@ -166,7 +177,7 @@ describe("IntakePage", () => {
     expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
-  it("ignores stale source confirmation after a material edit during publication", async () => {
+  it("locks publication-affecting edits until a pending source success returns", async () => {
     const pending = deferred<ReturnType<typeof sourceConfirmation>>();
     ingestPortfolioBundleMock.mockReturnValueOnce(pending.promise);
     renderIntakePage();
@@ -175,19 +186,25 @@ describe("IntakePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
 
     await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText(/Publishing reviewed request/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Client reference")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Change request type" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Edit request" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Publish reviewed request" })).toBeDisabled();
     fireEvent.change(screen.getByLabelText("Client reference"), { target: { value: "CIF_002" } });
+    expect(screen.getByLabelText("Client reference")).toHaveValue("CIF_001");
 
     await act(async () => {
       pending.resolve(sourceConfirmation());
       await pending.promise;
     });
 
-    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Review request" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Reviewed request published" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Reviewed request published" })).toBeInTheDocument();
+    expect(ingestPortfolioBundleMock.mock.calls[0][0].portfolios[0].cifId).toBe("CIF_001");
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
-  it("keeps focus on the task chooser after changing request type during publication", async () => {
+  it("locks task changes while a publication request is pending", async () => {
     const pending = deferred<ReturnType<typeof sourceConfirmation>>();
     ingestPortfolioBundleMock.mockReturnValueOnce(pending.promise);
     renderIntakePage();
@@ -196,17 +213,18 @@ describe("IntakePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
 
     await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole("button", { name: "Change request type" }));
-    const chooser = screen.getByRole("region", { name: "Choose an intake request" });
-    await waitFor(() => expect(chooser).toHaveFocus());
+    const changeRequestType = screen.getByRole("button", { name: "Change request type" });
+    expect(changeRequestType).toBeDisabled();
+    fireEvent.click(changeRequestType);
+    expect(screen.queryByRole("region", { name: "Choose an intake request" })).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Intake request editor" })).toBeInTheDocument();
 
     await act(async () => {
       pending.resolve(sourceConfirmation());
       await pending.promise;
     });
 
-    await waitFor(() => expect(chooser).toHaveFocus());
-    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
+    expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("adds a genuinely blank keyed row instead of copying business values", async () => {
@@ -238,9 +256,8 @@ describe("IntakePage", () => {
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
 
-  it("retires the previous CSV while a replacement parses and ignores its pending publication", async () => {
+  it("locks CSV replacement while publication is pending and preserves the accepted reviewed file", async () => {
     const pendingPublication = deferred<ReturnType<typeof sourceConfirmation>>();
-    const pendingReplacement = deferred<string>();
     ingestPortfolioBundleMock.mockReturnValueOnce(pendingPublication.promise);
     renderIntakePage();
     fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
@@ -255,28 +272,21 @@ describe("IntakePage", () => {
     await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
 
     const replacementFile = new File([validCsv()], "replacement.csv", { type: "text/csv" });
-    Object.defineProperty(replacementFile, "text", { value: () => pendingReplacement.promise });
+    Object.defineProperty(replacementFile, "text", { value: async () => validCsv().replace("PORT_001", "PORT_002") });
+    expect(input).toBeDisabled();
     fireEvent.change(input, { target: { files: [replacementFile] } });
 
-    expect(await screen.findByText("Preparing selected file")).toBeInTheDocument();
-    expect(screen.queryByText("Reviewed request")).not.toBeInTheDocument();
-    expect(screen.queryByText("initial.csv")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Preparing file" })).toBeDisabled();
+    expect(screen.getAllByText("initial.csv").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("replacement.csv")).not.toBeInTheDocument();
+    expect(screen.getByText(/editing and file replacement are locked/i)).toBeInTheDocument();
 
     await act(async () => {
-      pendingReplacement.resolve(validCsv().replace("PORT_001", "PORT_002"));
-      await pendingReplacement.promise;
-    });
-    expect(await screen.findByText("replacement.csv")).toBeInTheDocument();
-    expect(screen.getByText("Ready for review")).toBeInTheDocument();
-
-    await act(async () => {
-      pendingPublication.resolve(sourceConfirmation());
+      pendingPublication.resolve(importSourceConfirmation());
       await pendingPublication.promise;
     });
-    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
-    expect(screen.getByText("replacement.csv")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Review request" })).toBeEnabled();
+
+    expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
+    expect(screen.queryByText("replacement.csv")).not.toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("blocks imported CSV review when parsed source fields are invalid", async () => {
@@ -368,6 +378,22 @@ function sourceConfirmation() {
         instruments: 0,
         transactions: 0,
         market_prices: 0,
+      },
+    },
+  };
+}
+
+function importSourceConfirmation() {
+  return {
+    correlation_id: "corr-intake-001",
+    contract_version: "v1",
+    data: {
+      published_counts: {
+        business_dates: 1,
+        portfolios: 1,
+        instruments: 1,
+        transactions: 1,
+        market_prices: 1,
       },
     },
   };
