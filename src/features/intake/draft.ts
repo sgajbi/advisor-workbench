@@ -413,97 +413,67 @@ function hasPublishableRecords(payload: PortfolioBundlePayload): boolean {
 
 function fileImportPreviewSections(payload: PortfolioBundlePayload): IntakeReviewPreviewSection[] {
   return [
-    {
-      title: "Portfolio records",
-      recordCount: payload.portfolios.length,
-      recordAt: (index: number) => {
-        const portfolio = payload.portfolios[index];
-        return portfolio
-          ? {
-              title: `Portfolio ${portfolio.portfolioId}`,
-              facts: [
-                { label: "Client reference", value: portfolio.cifId },
-                { label: "Advisor", value: portfolio.advisorId ?? "Not provided" },
-                { label: "Base currency", value: portfolio.baseCurrency },
-                { label: "Opening date", value: portfolio.openDate },
-                { label: "Mandate type", value: portfolio.portfolioType },
-                { label: "Status", value: portfolio.status },
-              ],
-            }
-          : null;
-      },
-    },
-    {
-      title: "Instrument records",
-      recordCount: payload.instruments.length,
-      recordAt: (index: number) => {
-        const instrument = payload.instruments[index];
-        return instrument
-          ? {
-              title: `Instrument ${instrument.securityId}`,
-              facts: [
-                { label: "Name", value: instrument.name },
-                { label: "ISIN", value: instrument.isin },
-                { label: "Currency", value: instrument.instrumentCurrency },
-                { label: "Product type", value: instrument.productType },
-                { label: "Asset class", value: instrument.assetClass ?? "Not provided" },
-              ],
-            }
-          : null;
-      },
-    },
-    {
-      title: "Transaction records",
-      recordCount: payload.transactions.length,
-      recordAt: (index: number) => {
-        const transaction = payload.transactions[index];
-        return transaction
-          ? {
-              title: `Transaction ${transaction.transaction_id}`,
-              facts: [
-                { label: "Portfolio", value: transaction.portfolio_id },
-                { label: "Security", value: transaction.security_id },
-                { label: "Type", value: transaction.transaction_type },
-                { label: "Quantity", value: String(transaction.quantity) },
-                { label: "Price", value: String(transaction.price) },
-                { label: "Trade date", value: transaction.transaction_date },
-              ],
-            }
-          : null;
-      },
-    },
-    {
-      title: "Price observation records",
-      recordCount: payload.marketPrices.length,
-      recordAt: (index: number) => {
-        const price = payload.marketPrices[index];
-        return price
-          ? {
-              title: `Price ${price.securityId} ${price.priceDate}`,
-              facts: [
-                { label: "Security", value: price.securityId },
-                { label: "Observation date", value: price.priceDate },
-                { label: "Price", value: String(price.price) },
-                { label: "Currency", value: price.currency },
-              ],
-            }
-          : null;
-      },
-    },
-    {
-      title: "Business date records",
-      recordCount: payload.businessDates.length,
-      recordAt: (index: number) => {
-        const businessDate = payload.businessDates[index];
-        return businessDate
-          ? {
-              title: `Business date ${businessDate.businessDate}`,
-              facts: [{ label: "Date", value: businessDate.businessDate }],
-            }
-          : null;
-      },
-    },
+    lazyPreviewSection("Portfolio records", payload.portfolios, (portfolio) => ({
+      title: `Portfolio ${portfolio.portfolioId}`,
+      facts: [
+        { label: "Client reference", value: portfolio.cifId },
+        { label: "Advisor", value: portfolio.advisorId ?? "Not provided" },
+        { label: "Base currency", value: portfolio.baseCurrency },
+        { label: "Opening date", value: portfolio.openDate },
+        { label: "Mandate type", value: portfolio.portfolioType },
+        { label: "Status", value: portfolio.status },
+      ],
+    })),
+    lazyPreviewSection("Instrument records", payload.instruments, (instrument) => ({
+      title: `Instrument ${instrument.securityId}`,
+      facts: [
+        { label: "Name", value: instrument.name },
+        { label: "ISIN", value: instrument.isin },
+        { label: "Currency", value: instrument.instrumentCurrency },
+        { label: "Product type", value: instrument.productType },
+        { label: "Asset class", value: instrument.assetClass ?? "Not provided" },
+      ],
+    })),
+    lazyPreviewSection("Transaction records", payload.transactions, (transaction) => ({
+      title: `Transaction ${transaction.transaction_id}`,
+      facts: [
+        { label: "Portfolio", value: transaction.portfolio_id },
+        { label: "Security", value: transaction.security_id },
+        { label: "Type", value: transaction.transaction_type },
+        { label: "Quantity", value: String(transaction.quantity) },
+        { label: "Price", value: String(transaction.price) },
+        { label: "Trade date", value: transaction.transaction_date },
+      ],
+    })),
+    lazyPreviewSection("Price observation records", payload.marketPrices, (price) => ({
+      title: `Price ${price.securityId} ${price.priceDate}`,
+      facts: [
+        { label: "Security", value: price.securityId },
+        { label: "Observation date", value: price.priceDate },
+        { label: "Price", value: String(price.price) },
+        { label: "Currency", value: price.currency },
+      ],
+    })),
+    lazyPreviewSection("Business date records", payload.businessDates, (businessDate) => ({
+      title: `Business date ${businessDate.businessDate}`,
+      facts: [{ label: "Date", value: businessDate.businessDate }],
+    })),
   ].filter((section) => section.recordCount > 0);
+}
+
+function lazyPreviewSection<RecordType>(
+  title: string,
+  records: readonly RecordType[],
+  project: (record: RecordType) => IntakeReviewPreviewRecord,
+): IntakeReviewPreviewSection {
+  return {
+    title,
+    recordCount: records.length,
+    recordAt: (index) => {
+      const record = records[index];
+      return record === undefined ? null : project(record);
+    },
+  };
 }
 
 function validateImportedPayload(payload: PortfolioBundlePayload): IntakeValidationIssue[] {

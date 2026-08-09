@@ -49,6 +49,23 @@ describe("IntakeRecordPreview", () => {
     expect(section.recordAt).toHaveBeenCalledTimes(recordCount);
   });
 
+  it("returns the record pane to its first row when paging", async () => {
+    const section = previewSection("Transaction records", 11);
+    render(<IntakeRecordPreview sections={[section]} />);
+    fireEvent.click(screen.getByText("Transaction records"));
+
+    await screen.findByRole("heading", { name: "Transaction record 1" });
+    const next = screen.getByRole("button", { name: "Next transaction records" });
+    const recordPane = document.getElementById(next.getAttribute("aria-controls") ?? "");
+    if (!recordPane) throw new Error("Expected a scrollable transaction record pane");
+    recordPane.scrollTop = 120;
+
+    fireEvent.click(next);
+
+    expect(await screen.findByRole("heading", { name: "Transaction record 11" })).toBeInTheDocument();
+    expect(recordPane.scrollTop).toBe(0);
+  });
+
   it("keeps page posture independent for each record family", async () => {
     const transactionSection = previewSection("Transaction records", 11);
     const priceSection = previewSection("Price observation records", 11);
