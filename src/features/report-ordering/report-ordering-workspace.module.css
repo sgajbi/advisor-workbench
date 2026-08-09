@@ -255,8 +255,7 @@
   color: #6b7781;
 }
 
-.readinessPanel,
-.submissionState {
+.readinessPanel {
   display: grid;
   gap: 12px;
 }
@@ -267,12 +266,54 @@
 }
 
 .readinessPanel p,
-.boundarySection p,
-.submissionState p {
+.boundarySection p {
   margin: 0;
   color: #596875;
   font-size: 0.8rem;
   line-height: 1.48;
+}
+
+.contentDisclosure {
+  border-top: 1px solid #e4e8ed;
+}
+
+.contentSummary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  color: #25323d;
+  cursor: pointer;
+}
+
+.contentSummary::marker {
+  color: #315d8a;
+}
+
+.contentSummary:focus-visible {
+  outline: 2px solid #315d8a;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.contentSummaryCopy {
+  display: grid;
+  gap: 3px;
+}
+
+.contentSummaryCopy small {
+  color: #66737f;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.contentChoices {
+  min-width: 0;
+  margin: 0;
+  padding: 4px 0 2px;
+  border: 0;
 }
 
 .railHeading {

@@ -14,11 +14,20 @@ export type ReportOrderingWorkspaceState =
       model: ReportOrderingViewModel;
     }
   | {
+      kind: "accepted";
+      model: ReportOrderingViewModel;
+    }
+  | {
       kind: "loading" | "permission_blocked" | "error" | "empty";
       title: string;
       body: string;
       actionLabel: string | null;
     };
+
+type ReportOrderingBaseWorkspaceState = Exclude<
+  ReportOrderingWorkspaceState,
+  { kind: "accepted" }
+>;
 
 export type ReportOrderingReadinessState = {
   kind:
@@ -64,18 +73,21 @@ export function buildReportOrderingScreenState({
   submissionState: ReportOrderingSubmissionState;
   submissionError: string | null;
 }): ReportOrderingScreenState {
-  const workspace = buildWorkspaceState(catalogueState, catalogueError, model);
-  if (workspace.kind !== "configuration") {
+  const baseWorkspace = buildWorkspaceState(catalogueState, catalogueError, model);
+  if (baseWorkspace.kind !== "configuration") {
     return {
-      workspace,
-      readiness: terminalReadinessState(workspace),
+      workspace: baseWorkspace,
+      readiness: terminalReadinessState(baseWorkspace),
     };
   }
 
   return {
-    workspace,
+    workspace:
+      submissionState === "accepted"
+        ? { kind: "accepted", model: baseWorkspace.model }
+        : baseWorkspace,
     readiness: configuredReadinessState({
-      model: workspace.model,
+      model: baseWorkspace.model,
       preflightReviewed,
       submissionState,
       submissionError,
@@ -87,7 +99,7 @@ function buildWorkspaceState(
   catalogueState: ReportOrderingCatalogueState,
   catalogueError: string | null,
   model: ReportOrderingViewModel | null,
-): ReportOrderingWorkspaceState {
+): ReportOrderingBaseWorkspaceState {
   if (catalogueState === "loading") {
     return {
       kind: "loading",
@@ -128,7 +140,10 @@ function buildWorkspaceState(
 }
 
 function terminalReadinessState(
-  workspace: Exclude<ReportOrderingWorkspaceState, { kind: "configuration" }>,
+  workspace: Exclude<
+    ReportOrderingWorkspaceState,
+    { kind: "configuration" | "accepted" }
+  >,
 ): ReportOrderingReadinessState {
   const common = {
     busy: workspace.kind === "loading",

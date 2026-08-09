@@ -69,6 +69,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.queryByText("render_metadata_unavailable")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-report")).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByText("Review report contents"));
     const requiredSection = screen.getByRole("checkbox", {
       name: /Client and mandate profile/,
     });
@@ -87,14 +88,23 @@ describe("ReportOrderingWorkspace", () => {
     await waitFor(() => expect(submitButton).toBeEnabled());
     fireEvent.click(submitButton);
 
-    expect(await screen.findByText("Report request recorded")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Report request accepted" }),
+    ).toBeInTheDocument();
     expect(
       within(screen.getByRole("status")).getByRole("heading", {
         name: "Report request accepted",
       }),
     ).toBeInTheDocument();
+    expect(screen.getAllByText("Report request accepted")).toHaveLength(1);
+    expect(screen.queryByText("Report request recorded")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Approved report" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: "Recent portfolio report requests" }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Submit Report Request" })).not.toBeInTheDocument();
-    expect(screen.getByText(/does not mean a document was archived or sent/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create another report" })).toBeEnabled();
+    expect(screen.getByText("rjob_2")).toBeInTheDocument();
     expect(submitMock).toHaveBeenCalledWith(
       expect.objectContaining({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -104,6 +114,55 @@ describe("ReportOrderingWorkspace", () => {
         idempotencyKey: expect.stringMatching(/^workbench-report-order-/),
       }),
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Create another report" }));
+    expect(await screen.findByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByLabelText("Report configuration")).toHaveFocus(),
+    );
+    expect(screen.queryByText("Report request accepted")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
+  });
+
+  it("creates a second reviewed request with a fresh idempotency intent", async () => {
+    submitMock
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_2",
+        report_job_id: "rjob_2",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_2",
+        idempotency_key: "intent_2",
+      })
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_3",
+        report_job_id: "rjob_3",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_3",
+        idempotency_key: "intent_3",
+      });
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const firstSubmit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(firstSubmit).toBeEnabled());
+    fireEvent.click(firstSubmit);
+    await screen.findByRole("heading", { name: "Report request accepted" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Create another report" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Review Request" }));
+    const secondSubmit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(secondSubmit).toBeEnabled());
+    fireEvent.click(secondSubmit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(2));
+    expect(submitMock.mock.calls[0][0].idempotencyKey).not.toBe(
+      submitMock.mock.calls[1][0].idempotencyKey,
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Report request accepted" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("rjob_3")).toBeInTheDocument();
   });
 
   it("keeps recent report requests visible when support correlation is unavailable", async () => {
@@ -255,7 +314,9 @@ describe("ReportOrderingWorkspace", () => {
         idempotency_key: "intent_2",
       });
     });
-    expect(await screen.findByText("Report request recorded")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Report request accepted" }),
+    ).toBeInTheDocument();
   });
 
   it("preserves reviewed setup and offers an explicit retry after rejection", async () => {

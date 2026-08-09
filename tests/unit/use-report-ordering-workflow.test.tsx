@@ -103,6 +103,66 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.canSubmitReviewedRequest).toBe(false);
   });
 
+  it("starts another report for the current portfolio with a fresh reviewed intent", async () => {
+    submitMock
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_2",
+        report_job_id: "rjob_2",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_2",
+        idempotency_key: "intent_2",
+      })
+      .mockResolvedValueOnce({
+        report_request_id: "rrq_3",
+        report_job_id: "rjob_3",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_3",
+        idempotency_key: "intent_3",
+      });
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+    const firstIntent = submitMock.mock.calls[0][0].idempotencyKey;
+    expect(result.current.screenState.workspace.kind).toBe("accepted");
+
+    act(() => {
+      expect(result.current.startAnotherReport()).toBe(true);
+    });
+    expect(result.current.submittedHandle).toBeNull();
+    expect(result.current.submissionState).toBe("idle");
+    expect(result.current.preflightReviewed).toBe(false);
+    expect(result.current.screenState.workspace.kind).toBe("configuration");
+    expect(result.current.configuration).toEqual(
+      expect.objectContaining({
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await act(async () => {
+      expect(await result.current.submitRequest()).toBe(true);
+    });
+
+    expect(submitMock).toHaveBeenCalledTimes(2);
+    expect(submitMock.mock.calls[1][0].idempotencyKey).not.toBe(firstIntent);
+    expect(result.current.submittedHandle?.report_job_id).toBe("rjob_3");
+  });
+
   it("submits a PDF when the source catalogue marks document creation ready", async () => {
     const payload = buildReportOrderingResponse();
     payload.catalogueAvailability.state = "ready";
