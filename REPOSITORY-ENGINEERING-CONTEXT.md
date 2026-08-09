@@ -49,12 +49,18 @@ Current repository posture:
 4. `/data-products` provides self-serve gateway-backed domain-product catalog, dependency, and
    live trust discovery for RFC-0088,
 5. the Performance advisor-brief surface consumes gateway-backed workflow-pack run posture and RFC-0097 task-flow posture without synthesizing review state or lineage client-side,
-6. `/intake` submits list-built and CSV portfolio bundles through Gateway
-   `/api/v1/intake/portfolio-bundle` via the Workbench BFF. Workbench generates a bounded
-   per-submit `X-Idempotency-Key`, reuses it for same-payload retries after a failed attempt, and
-   clears it after success so Gateway/Core own duplicate-submit replay semantics. Workbench must
-   not bypass Gateway, call `lotus-core` directly, or treat the browser idempotency key as source
-   ingestion truth.
+6. `/intake` is the review-controlled Portfolio Intake workspace. It starts without a selected
+   task or business defaults, treats portfolio creation, opening positions, transactions,
+   instruments, price observations, and CSV import as independent requests, and submits only an
+   explicitly reviewed payload through Gateway `/api/v1/intake/portfolio-bundle` via the Workbench
+   BFF. Material edits invalidate review. File selection parses locally and joins the same review
+   boundary without mutating. Workbench generates a bounded `X-Idempotency-Key` at review, reuses
+   the exact reviewed payload and key after a failed identical attempt, and requires a valid
+   Gateway envelope plus task-relevant `published_counts`, correlation id, and contract version
+   before showing acceptance. Gateway/Core continue to own validation, duplicate/replay semantics,
+   lineage, durable job truth, and downstream readiness. Workbench must not bypass Gateway, call
+   `lotus-core` directly, infer activation/valuation/reporting readiness, or treat the browser key
+   as source ingestion truth.
 7. `/reports` is the portfolio-scoped Report Centre. It consumes the Gateway-owned report-ordering
    catalogue, submits one reviewed and idempotent portfolio-review request, and shows recent
    report-data job history. One exhaustive screen-state projection owns both the setup workspace
