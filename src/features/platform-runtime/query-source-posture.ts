@@ -39,3 +39,15 @@ export function combineQuerySourcePostures(
     hasRefreshFailure: postures.some((posture) => posture.hasRefreshFailure),
   };
 }
+
+export function isQuerySourceSettledAndAvailable(
+  posture: QuerySourcePosture
+): boolean {
+  return !(
+    posture.isInitialLoading
+    || posture.isRefreshing
+    || posture.isPermissionBlocked
+    || posture.isUnavailable
+    || posture.hasRefreshFailure
+  );
+}

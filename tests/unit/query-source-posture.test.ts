@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   combineQuerySourcePostures,
+  isQuerySourceSettledAndAvailable,
   projectQuerySourcePosture,
 } from "@/features/platform-runtime/query-source-posture";
 
@@ -68,5 +69,28 @@ describe("query source posture", () => {
       isPermissionBlocked: true,
       isUnavailable: true,
     });
+  });
+
+  it("permits actions only against settled available source evidence", () => {
+    expect(isQuerySourceSettledAndAvailable(projectQuerySourcePosture({
+      hasData: true,
+      isLoading: false,
+      isFetching: false,
+      hasError: false,
+    }))).toBe(true);
+
+    expect(isQuerySourceSettledAndAvailable(projectQuerySourcePosture({
+      hasData: true,
+      isLoading: false,
+      isFetching: true,
+      hasError: false,
+    }))).toBe(false);
+
+    expect(isQuerySourceSettledAndAvailable(projectQuerySourcePosture({
+      hasData: true,
+      isLoading: false,
+      isFetching: false,
+      hasError: true,
+    }))).toBe(false);
   });
 });

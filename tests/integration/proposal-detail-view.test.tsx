@@ -297,6 +297,34 @@ describe("ProposalDetailView", () => {
     });
   });
 
+  it("keeps proposal actions unavailable until initial review evidence settles", async () => {
+    let completeWorkflowRead: (() => void) | undefined;
+    getWorkflowEventsMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeWorkflowRead = () => resolve(workflowEvidence("DRAFT"));
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    const previousCallCount = submitProposalMock.mock.calls.length;
+    expect(action).toBeDisabled();
+    expect(screen.getByText("Checking current proposal evidence before actions are available.")).toBeInTheDocument();
+    fireEvent.click(action);
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount);
+
+    completeWorkflowRead?.();
+    await waitFor(() => expect(action).toBeEnabled());
+    fireEvent.click(action);
+
+    await waitFor(() => expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1));
+    await screen.findByTestId("proposal-action-status");
+  });
+
   it("prevents duplicate submission while the source action is pending", async () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
@@ -354,6 +382,12 @@ describe("ProposalDetailView", () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
   });
 
   it("approves risk when in risk review", async () => {
@@ -485,6 +519,12 @@ describe("ProposalDetailView", () => {
     expect(screen.getByText(/Workflow history could not be refreshed/)).toBeInTheDocument();
     expect(screen.getByText("Proposed changes")).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Proposal actions are unavailable until all review evidence can be confirmed. Reload the proposal to continue."
+      )
+    ).toBeInTheDocument();
   });
 
   it("keeps ancillary approval, lineage, and event facts pending until source reads settle", async () => {

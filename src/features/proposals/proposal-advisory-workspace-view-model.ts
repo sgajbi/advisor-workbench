@@ -171,21 +171,23 @@ function readinessItems(
     },
     {
       label: "Compliance Review",
-      state: approvalsSourceState === "checking"
-        ? "Checking"
-        : approvalsSourceState === "unavailable"
-          ? "Unavailable"
-          : complianceApproved
-            ? "Ready"
-            : blockers.length > 0
-              ? "Blocked"
+      state: blockers.length > 0
+        ? "Blocked"
+        : approvalsSourceState === "checking"
+          ? "Checking"
+          : approvalsSourceState === "unavailable"
+            ? "Unavailable"
+            : complianceApproved
+              ? "Ready"
               : "Pending",
-      detail: approvalsSourceState === "checking"
-        ? "Checking source compliance approval evidence."
-        : approvalsSourceState === "unavailable"
-          ? "Compliance approval evidence is temporarily unavailable."
-          : blockers.length > 0
-            ? "Source evidence returned blocking issues."
+      detail: blockers.length > 0
+        ? approvalsSourceState === "ready"
+          ? "Source evidence returned blocking issues."
+          : "Source evidence returned blocking issues; approval evidence is not currently settled."
+        : approvalsSourceState === "checking"
+          ? "Checking source compliance approval evidence."
+          : approvalsSourceState === "unavailable"
+            ? "Compliance approval evidence is temporarily unavailable."
             : complianceApproved
               ? "Compliance approval is recorded."
               : "Compliance review remains open.",
