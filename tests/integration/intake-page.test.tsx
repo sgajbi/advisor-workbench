@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import IntakePage from "@/app/intake/page";
@@ -111,6 +111,38 @@ describe("IntakePage", () => {
     expect(screen.getByText("Contract v1")).toBeInTheDocument();
     expect(screen.getAllByText("Source confirmed").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Reviewed request published" })).toBeInTheDocument();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
+
+  it("shows and publishes the same normalized business request", async () => {
+    renderIntakePage();
+    startValidPortfolioRequest({
+      "New portfolio code": " PORT_001 ",
+      "Base currency": " usd ",
+      "Client reference": " CIF_001 ",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+
+    const reviewedRequest = screen.getByText("Reviewed request").closest("section");
+    if (!reviewedRequest) throw new Error("Expected reviewed-request section");
+    expect(within(reviewedRequest).getByText("PORT_001")).toBeInTheDocument();
+    expect(within(reviewedRequest).getByText("USD")).toBeInTheDocument();
+    expect(within(reviewedRequest).getByText("2026-08-08")).toBeInTheDocument();
+    expect(within(reviewedRequest).getByText("CIF_001")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+
+    await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+    expect(ingestPortfolioBundleMock.mock.calls[0][0]).toEqual(expect.objectContaining({
+      businessDates: [{ businessDate: "2026-08-08" }],
+      portfolios: [expect.objectContaining({
+        portfolioId: "PORT_001",
+        baseCurrency: "USD",
+        openDate: "2026-08-08",
+        cifId: "CIF_001",
+      })],
+    }));
+    expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("does not confirm publication from zero-count source evidence", async () => {
@@ -347,7 +379,7 @@ describe("IntakePage", () => {
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
 
-  function startValidPortfolioRequest() {
+  function startValidPortfolioRequest(overrides: Partial<Record<string, string>> = {}) {
     fireEvent.click(screen.getByRole("button", { name: /Create portfolio record/i }));
     const values: Array<[string, string]> = [
       ["New portfolio code", "PORT_001"],
@@ -362,7 +394,7 @@ describe("IntakePage", () => {
       ["Opening portfolio status", "Pending activation"],
     ];
     for (const [label, value] of values) {
-      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+      fireEvent.change(screen.getByLabelText(label), { target: { value: overrides[label] ?? value } });
     }
   }
 });
