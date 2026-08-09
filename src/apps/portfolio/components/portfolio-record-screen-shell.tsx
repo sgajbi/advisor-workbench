@@ -40,7 +40,6 @@ export default function PortfolioRecordScreenShell({
     <PortfolioPageLayout>
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
-        railClassName="portfolio-screen-rail-shell"
         mainClassName="portfolio-main portfolio-record-screen-main"
         rail={<PortfolioScreenRail portfolioId={resolvedPortfolioId} activeScreen={screen} />}
         side={workspace ? <PortfolioRecordEvidenceRail screen={screen} workspace={workspace} /> : undefined}

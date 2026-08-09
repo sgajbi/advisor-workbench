@@ -52,7 +52,6 @@ export function ReportOrderingWorkspace({
       <WorkbenchPageContainer className={styles.container}>
         <MainWithSideRailLayout
           className={styles.layout}
-          railClassName="portfolio-screen-rail-shell"
           mainClassName={styles.main}
           sideClassName={styles.side}
           sideDensity="comfortable"

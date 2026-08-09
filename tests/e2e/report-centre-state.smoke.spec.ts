@@ -107,9 +107,9 @@ test("recovers both Report Centre regions from a source failure", async ({ page 
   await expect(page.getByLabel("Status Ready for review")).toBeVisible();
   await expect(page.getByRole("button", { name: "Review Request" })).toBeEnabled();
 
-  const rail = page.locator(".portfolio-screen-rail");
-  const inactiveRailLabel = page
-    .locator(".portfolio-screen-rail-link:not(.portfolio-screen-rail-link-active) span")
+  const rail = page.getByTestId("portfolio-screen-rail");
+  const inactiveRailLabel = rail
+    .locator('a:not([aria-current="page"]) span')
     .first();
   expect(await computedContrastRatio(page, inactiveRailLabel, rail)).toBeGreaterThanOrEqual(4.5);
   expect(
@@ -138,7 +138,7 @@ test("keeps restricted state coherent at tablet width", async ({ page }) => {
 
   const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(pageWidth).toBeLessThanOrEqual(768);
-  const railBox = await page.locator(".portfolio-screen-rail").boundingBox();
+  const railBox = await page.getByTestId("portfolio-screen-rail").boundingBox();
   expect(railBox?.height).toBeLessThanOrEqual(100);
   await captureDiagnosticScreenshot(page, "restricted-tablet-768");
 });
@@ -193,7 +193,7 @@ test("keeps portfolio context and navigation compact and keyboard-complete on mo
     page.getByRole("navigation", { name: "Workbench screen navigation" }),
   ).not.toBeVisible();
 
-  const railBox = await page.locator(".portfolio-screen-rail").boundingBox();
+  const railBox = await page.getByTestId("portfolio-screen-rail").boundingBox();
   expect(railBox?.height).toBeLessThanOrEqual(150);
   const changePortfolio = page.getByLabel("Change portfolio");
   const portfolioContextFits = await changePortfolio.evaluate((element) => {

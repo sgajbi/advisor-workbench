@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
 import { Panel, Text } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
 import {
   buildPortfolioScreenNavigationItems,
   type PortfolioScreenNavigationKey,
 } from "../portfolio-screen-navigation";
+import styles from "./portfolio-screen-rail.module.css";
 
 export type PortfolioScreenRailModeItem = {
   key: string;
@@ -43,10 +45,11 @@ export default function PortfolioScreenRail({
   const activeItem = screens.find(
     (screen) => activeScreen === screen.key || pathname === screen.href,
   );
-  const activeLabel = activeModeItem?.label ?? activeItem?.label ?? "Portfolio review";
+  const activeLabel =
+    activeModeItem?.label ?? activeItem?.label ?? "Portfolio review";
   const activeDetail = activeModeItem
     ? `${activeItem?.label ?? "Workspace"} · ${activeModeItem.detail}`
-    : activeItem?.detail ?? "Selected portfolio workflow";
+    : (activeItem?.detail ?? "Selected portfolio workflow");
 
   function closeCompactNavigation({ restoreFocus = false } = {}) {
     setNavigationExpanded(false);
@@ -57,7 +60,8 @@ export default function PortfolioScreenRail({
 
   return (
     <Panel
-      className="portfolio-screen-rail"
+      className={styles.rail}
+      data-testid="portfolio-screen-rail"
       onKeyDown={(event) => {
         if (event.key === "Escape" && navigationExpanded) {
           event.preventDefault();
@@ -65,16 +69,19 @@ export default function PortfolioScreenRail({
         }
       }}
     >
-      <div className="portfolio-screen-rail-header">
-        <AdvisorBookContextSwitcher pathname={pathname} portfolioId={portfolioId} />
-        <div className="portfolio-screen-rail-context">
+      <div className={styles.header}>
+        <AdvisorBookContextSwitcher
+          pathname={pathname}
+          portfolioId={portfolioId}
+        />
+        <div className={styles.context}>
           <Text variant="label">Selected portfolio</Text>
           <strong title={portfolioId}>{portfolioId}</strong>
         </div>
         <button
           ref={disclosureButtonRef}
           type="button"
-          className="portfolio-screen-rail-disclosure"
+          className={styles.disclosure}
           aria-expanded={navigationExpanded}
           aria-controls={navigationId}
           onClick={() => setNavigationExpanded((expanded) => !expanded)}
@@ -84,28 +91,31 @@ export default function PortfolioScreenRail({
             <strong>{activeLabel}</strong>
             <em>{activeDetail}</em>
           </span>
-          <span className="portfolio-screen-rail-disclosure-action" aria-hidden="true">
+          <span className={styles.disclosureAction} aria-hidden="true">
             Change
           </span>
         </button>
       </div>
       <nav
         id={navigationId}
-        className={`portfolio-screen-rail-nav ${
+        className={cx(
+          styles.navigation,
           navigationExpanded
-            ? "portfolio-screen-rail-nav-expanded"
-            : "portfolio-screen-rail-nav-collapsed"
-        }`}
+            ? styles.navigationExpanded
+            : styles.navigationCollapsed,
+        )}
+        data-navigation-state={navigationExpanded ? "expanded" : "collapsed"}
         aria-label="Workbench screen navigation"
       >
         {screens.map((screen) => {
-          const active = activeScreen === screen.key || pathname === screen.href;
+          const active =
+            activeScreen === screen.key || pathname === screen.href;
           return (
             <Link
               key={screen.key}
               href={screen.href}
               aria-current={active ? "page" : undefined}
-              className={`portfolio-screen-rail-link ${active ? "portfolio-screen-rail-link-active" : ""}`}
+              className={cx(styles.link, active && styles.linkActive)}
               onClick={() => closeCompactNavigation()}
             >
               <span>{screen.label}</span>
@@ -114,17 +124,26 @@ export default function PortfolioScreenRail({
           );
         })}
         {modeItems?.length ? (
-          <div className="portfolio-screen-rail-subnav" aria-label={modeNavigationLabel}>
+          <div
+            className={styles.subnavigation}
+            aria-label={modeNavigationLabel}
+          >
             {modeItems.map((item) => {
-              const className = `portfolio-screen-rail-link portfolio-screen-rail-subnav-link ${
-                item.active ? "portfolio-screen-rail-link-active" : ""
-              }`;
+              const className = cx(
+                styles.link,
+                styles.subnavigationLink,
+                item.active && styles.linkActive,
+              );
               const content = (
                 <>
                   <span>{item.label}</span>
                   <small>
                     {item.detail}
-                    {item.status ? <em aria-label={`Status ${item.status}`}>{item.status}</em> : null}
+                    {item.status ? (
+                      <em aria-label={`Status ${item.status}`}>
+                        {item.status}
+                      </em>
+                    ) : null}
                   </small>
                 </>
               );

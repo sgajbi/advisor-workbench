@@ -55,7 +55,7 @@ export function ManageWorkspace({
       <WorkbenchPageContainer className="portfolio-page-container manage-page-container">
         <MainWithSideRailLayout
           className="manage-layout portfolio-page"
-          railClassName="portfolio-screen-rail-shell manage-rail-shell"
+          railClassName="manage-rail-shell"
           mainClassName="manage-main"
           sideClassName="manage-side"
           sideDensity="comfortable"
