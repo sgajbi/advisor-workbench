@@ -171,6 +171,51 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
+test("tracks an accepted request and deliberately starts a second at constrained width", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 720, height: 1000 });
+  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("button", { name: "Review Request" }).click();
+  await page.getByRole("button", { name: "Submit Report Request" }).click();
+
+  const acceptedStatus = page.getByRole("status");
+  await expect(
+    acceptedStatus.getByRole("heading", { name: "Report request accepted" }),
+  ).toBeVisible();
+  await expect(page.getByText("Report request accepted")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Approved report" })).toHaveCount(0);
+  await expect(
+    page.getByRole("table", { name: "Recent portfolio report requests" }),
+  ).toBeVisible();
+  await page.getByText("Support reference", { exact: true }).click();
+  await expect(page.getByText("rjob_e2e_1", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Create another report" }).click();
+  const configuration = page.getByLabel("Report configuration");
+  await expect(configuration).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Review Request" }).click();
+  await page.getByRole("button", { name: "Submit Report Request" }).click();
+  await expect(
+    acceptedStatus.getByRole("heading", { name: "Report request accepted" }),
+  ).toBeVisible();
+  await page.getByText("Support reference", { exact: true }).click();
+  await expect(page.getByText("rjob_e2e_2", { exact: true })).toBeVisible();
+
+  const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(pageWidth).toBeLessThanOrEqual(720);
+  await captureDiagnosticScreenshot(page, "accepted-next-request-720");
+});
+
 for (const { width, stacked } of [
   { width: 721, stacked: false },
   { width: 720, stacked: true },
