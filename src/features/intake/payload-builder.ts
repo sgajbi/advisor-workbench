@@ -85,10 +85,6 @@ export function buildCreatePortfolioPayload(input: CreatePortfolioInput): Portfo
   return payload;
 }
 
-export function buildPositionSeedPayload(input: PositionInput): PortfolioBundlePayload {
-  return buildPositionSeedPayloadFromList(input.portfolioId, input.baseCurrency, [input]);
-}
-
 export function buildPositionSeedPayloadFromList(
   portfolioId: string,
   baseCurrency: string,
@@ -126,10 +122,6 @@ export function buildPositionSeedPayloadFromList(
   return payload;
 }
 
-export function buildTransactionsPayload(input: TransactionInput): PortfolioBundlePayload {
-  return buildTransactionsPayloadFromList(input.portfolioId, input.baseCurrency, [input]);
-}
-
 export function buildTransactionsPayloadFromList(
   portfolioId: string,
   baseCurrency: string,
@@ -153,10 +145,6 @@ export function buildTransactionsPayloadFromList(
   return payload;
 }
 
-export function buildInstrumentsPayload(input: InstrumentInput): PortfolioBundlePayload {
-  return buildInstrumentsPayloadFromList([input]);
-}
-
 export function buildInstrumentsPayloadFromList(rows: InstrumentInput[]): PortfolioBundlePayload {
   const payload = basePayload("ADVISOR_WORKBENCH_UI_ADD_INSTRUMENTS");
   payload.instruments = rows.map((row) => ({
@@ -168,10 +156,6 @@ export function buildInstrumentsPayloadFromList(rows: InstrumentInput[]): Portfo
     assetClass: row.assetClass,
   }));
   return payload;
-}
-
-export function buildMarketDataPayload(input: MarketDataInput): PortfolioBundlePayload {
-  return buildMarketDataPayloadFromList([input]);
 }
 
 export function buildMarketDataPayloadFromList(rows: MarketDataInput[]): PortfolioBundlePayload {
