@@ -254,17 +254,17 @@ describe("Portfolio Intake payload ownership", () => {
 
     const projection = modules.find(({ path }) => path === "src/features/intake/draft.ts");
     expect(projection).toBeDefined();
-    expect(callArguments(projection!.sourceFile, "buildCreatePortfolioPayload")).toHaveLength(1);
-    expect(callArguments(projection!.sourceFile, "buildPositionSeedPayloadFromList")).toHaveLength(
-      1,
-    );
-    expect(callArguments(projection!.sourceFile, "buildTransactionsPayloadFromList")).toHaveLength(
-      1,
-    );
-    expect(callArguments(projection!.sourceFile, "buildInstrumentsPayloadFromList")).toHaveLength(
-      1,
-    );
-    expect(callArguments(projection!.sourceFile, "buildMarketDataPayloadFromList")).toHaveLength(1);
+    const governedBuilders = [
+      "buildCreatePortfolioPayload",
+      "buildPositionSeedPayloadFromList",
+      "buildTransactionsPayloadFromList",
+      "buildInstrumentsPayloadFromList",
+      "buildMarketDataPayloadFromList",
+    ];
+    for (const builderName of governedBuilders) {
+      expect(callArguments(projection!.sourceFile, builderName)).toHaveLength(1);
+      expect(identifierOccurrences(projection!.sourceFile, builderName)).toBe(2);
+    }
   });
 
   it("keeps source publication in the workflow and submits its immutable reviewed projection", () => {
