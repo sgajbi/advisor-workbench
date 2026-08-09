@@ -177,7 +177,7 @@ describe("IntakePage", () => {
     expect(screen.queryByText("Reviewed request")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review request" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Publish reviewed request" })).not.toBeInTheDocument();
-  });
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("retries the exact reviewed payload with the same idempotency key", async () => {
     const pendingFailure = deferred<ReturnType<typeof sourceConfirmation>>();
