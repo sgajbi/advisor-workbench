@@ -165,7 +165,7 @@ describe("intake draft", () => {
     draft.payload = {
       sourceSystem: "OPERATIONS_FILE_IMPORT",
       mode: "UPSERT",
-      businessDates: [{ businessDate: "2026-08-08" }],
+      businessDates: [{ businessDate: "2026-02-31" }],
       portfolios: [
         {
           portfolioId: "PORT_001",
@@ -241,5 +241,82 @@ describe("intake draft", () => {
         ]),
       }),
     );
+  });
+
+  it("rejects imported file payloads with invalid row-level source fields", () => {
+    const draft = createBlankIntakeDraft("IMPORT_FILE");
+    if (draft.task !== "IMPORT_FILE") throw new Error("Unexpected draft");
+    draft.fileName = "portfolio-bundle.csv";
+    draft.payload = {
+      sourceSystem: "OPERATIONS_FILE_IMPORT",
+      mode: "UPSERT",
+      businessDates: [{ businessDate: "2026-08-08" }],
+      portfolios: [
+        {
+          portfolioId: "",
+          baseCurrency: "US",
+          openDate: "2026-02-31",
+          riskExposure: "",
+          investmentTimeHorizon: "Long term",
+          portfolioType: "Discretionary",
+          bookingCenter: "Singapore",
+          cifId: "CIF_001",
+          status: "Pending activation",
+        },
+      ],
+      instruments: [
+        {
+          securityId: "",
+          name: "Global Equity Fund",
+          isin: "BAD",
+          instrumentCurrency: "USD",
+          productType: "Fund",
+        },
+      ],
+      transactions: [
+        {
+          transaction_id: "TRN_001",
+          portfolio_id: "",
+          instrument_id: "",
+          security_id: "",
+          transaction_date: "2026-08-08-not-a-timestamp",
+          transaction_type: "",
+          quantity: 10,
+          price: 100,
+          gross_transaction_amount: 1_000,
+          trade_currency: "USD",
+          currency: "USD",
+        },
+      ],
+      marketPrices: [
+        {
+          securityId: "",
+          priceDate: "2026-02-31",
+          price: 100,
+          currency: "US",
+        },
+      ],
+      fxRates: [],
+    };
+
+    expect(validateIntakeDraft(draft)).toEqual(
+      expect.arrayContaining([
+        { field: "file", message: "Imported portfolio 1: enter the portfolio code." },
+        { field: "file", message: "Imported portfolio 1: enter a three-letter base currency." },
+        { field: "file", message: "Imported portfolio 1: enter a valid opening date." },
+        { field: "file", message: "Imported portfolio 1: enter the approved risk profile." },
+        { field: "file", message: "Imported instrument 1: enter the security code." },
+        { field: "file", message: "Imported instrument 1: enter a valid 12-character ISIN." },
+        { field: "file", message: "Imported transaction 1: enter the portfolio code." },
+        { field: "file", message: "Imported transaction 1: enter the security code." },
+        { field: "file", message: "Imported transaction 1: enter the transaction type." },
+        { field: "file", message: "Imported transaction 1: enter a valid trade date." },
+        { field: "file", message: "Imported price 1: enter the security code." },
+        { field: "file", message: "Imported price 1: enter a valid observation date." },
+        { field: "file", message: "Imported price 1: enter a three-letter currency." },
+        { field: "file", message: "Imported business date 1: enter a valid date." },
+      ]),
+    );
+    expect(() => buildIntakeReviewProjection(draft)).toThrow("unresolved validation issues");
   });
 });
