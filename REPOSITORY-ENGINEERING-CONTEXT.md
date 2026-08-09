@@ -54,8 +54,12 @@ Current repository posture:
    instruments, price observations, and CSV import as independent requests, and submits only an
    explicitly reviewed payload through Gateway `/api/v1/intake/portfolio-bundle` via the Workbench
    BFF. Material edits invalidate review. File selection parses locally and joins the same review
-   boundary without mutating. Workbench generates a bounded `X-Idempotency-Key` at review, reuses
-   the exact reviewed payload and key after a failed identical attempt, and requires a valid
+   boundary without mutating. Once publication starts, the reviewed payload and idempotency intent
+   remain immutable until the source outcome returns: publication-affecting controls are natively
+   disabled while the exact reviewed details and progress state remain visible. A source failure
+   restores editing and exact retry against the same reviewed intent. Workbench generates a bounded
+   `X-Idempotency-Key` at review, reuses the exact reviewed payload and key after a failed identical
+   attempt, and requires a valid
    Gateway envelope plus task-relevant `published_counts`, correlation id, and contract version
    before showing acceptance. Gateway/Core continue to own validation, duplicate/replay semantics,
    lineage, durable job truth, and downstream readiness. Workbench must not bypass Gateway, call
