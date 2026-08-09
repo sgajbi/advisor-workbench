@@ -147,7 +147,7 @@ export function useIntakeWorkflow() {
     setSubmissionState("idle");
     setSubmissionError(null);
     try {
-      const payload = parseIntakeCsvToBundle(await file.text());
+      const payload = parseIntakeCsvToBundle(await readFileText(file));
       if (readSequence !== activeFileReadRef.current) return false;
       setDraft({ task: "IMPORT_FILE", fileName: file.name, payload });
       setValidationAttempted(false);
@@ -244,4 +244,21 @@ function fileParseErrorCopy(error: unknown): string {
   return error instanceof Error && error.message.trim()
     ? `The file could not be prepared for review. ${error.message}`
     : "The file could not be prepared for review. Check the supported columns and try again.";
+}
+
+async function readFileText(file: File): Promise<string> {
+  if (typeof file.text === "function") {
+    return await file.text();
+  }
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("The selected file could not be read."));
+    });
+    reader.readAsText(file);
+  });
 }
