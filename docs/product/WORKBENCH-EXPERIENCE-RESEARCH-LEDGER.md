@@ -2250,3 +2250,55 @@ This changes frontend architecture and build governance, so repository context, 
 ledger, and `docs/architecture/portfolio-record-route-bundle-governance.md` are updated. It does not
 change a supported feature, route, API, operator command, or business procedure, so no README,
 runbook, or repo-authored wiki source change is required.
+
+## Idea Advisor Action Business Reasons And Persistence Proof
+
+### Business job
+
+An advisor reviewing an opportunity must record why a review, feedback outcome, or conversion
+intent was taken without memorising service codes or typing uncontrolled technical values. The
+workstation must confirm the action only when the source system proves it was persisted and the
+advisor is looking at refreshed queue and candidate posture.
+
+### Current-practice research
+
+Research was refreshed on 2026-08-09 from authoritative interface guidance:
+
+1. [W3C form-label guidance](https://www.w3.org/WAI/tutorials/forms/labels/) requires explicit,
+   programmatic labels so controls remain understandable and operable with assistive technology.
+2. [GOV.UK select guidance](https://design-system.service.gov.uk/components/select/) recommends a
+   native select when users choose from a short, known set and requires clear label and hint text.
+3. [MUI select accessibility guidance](https://mui.com/material-ui/react-select/#accessibility)
+   requires the select to be associated with a visible label.
+
+### Adopted decisions
+
+1. Present source candidate reasons that are meaningful decision bases, translated into concise
+   private-banking business language; use the governed `review_required` fallback when a candidate
+   publishes no usable decision basis.
+2. Use a visible, explicitly associated, keyboard-native select for the short candidate-scoped set.
+3. Add the source-valid audit reason implied by the selected action; do not ask the advisor to manage
+   service taxonomy.
+4. Require `accepted` or idempotent `replayed` source persistence before success, then await both
+   source queue and candidate-detail refresh.
+5. Expose persistence failure, recorded-but-refresh-failed, and recorded-and-refreshed as distinct
+   states. Use stable machine-readable state for browser proof and concise product copy for people.
+
+### Rejected decisions
+
+1. Free-text reason entry, because it creates uncontrolled values and failed the closed source
+   contract.
+2. A 44-option technical enum or autocomplete, because most values are internal scoring, queue, AI,
+   or control evidence rather than an advisor's decision basis.
+3. A hidden fixed reason, because it would remove advisor context and produce weak audit evidence.
+4. Treating any HTTP `2xx` as persistence proof or showing success before queue/detail refresh.
+5. Keeping a brittle browser assertion tied only to one full success sentence.
+
+### Expected measurable improvement and publication decision
+
+Focused tests prove exact source-vocabulary alignment, business-option filtering, accessible
+selection, deterministic action/audit pairing, accepted source persistence, delayed success until
+refresh, explicit failure, exact retry, and stable browser state. This changes a supported workflow,
+public validation semantics, operator proof, and repository truth, so repository context, the
+codebase review ledger, canonical runtime runbook, and Workbench wiki source are updated. Publish
+the authored wiki after merge and verify strict parity.
