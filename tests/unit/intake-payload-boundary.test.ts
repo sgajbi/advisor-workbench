@@ -35,12 +35,16 @@ function sourceModules(directory = sourceRoot): SourceModule[] {
     .sort((left, right) => left.path.localeCompare(right.path));
 }
 
+function moduleMatches(moduleSpecifier: string, moduleSuffix: string): boolean {
+  return moduleSpecifier.replace(/\.(?:js|jsx|ts|tsx)$/, "").endsWith(moduleSuffix);
+}
+
 function importsModule(sourceFile: ts.SourceFile, moduleSuffix: string): boolean {
   return sourceFile.statements.some(
     (statement) =>
       ts.isImportDeclaration(statement) &&
       ts.isStringLiteral(statement.moduleSpecifier) &&
-      statement.moduleSpecifier.text.endsWith(moduleSuffix),
+      moduleMatches(statement.moduleSpecifier.text, moduleSuffix),
   );
 }
 
@@ -49,7 +53,7 @@ function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: stri
     if (
       !ts.isImportDeclaration(statement) ||
       !ts.isStringLiteral(statement.moduleSpecifier) ||
-      !statement.moduleSpecifier.text.endsWith(moduleSuffix)
+      !moduleMatches(statement.moduleSpecifier.text, moduleSuffix)
     ) {
       return false;
     }
@@ -58,7 +62,7 @@ function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: stri
     return (
       bindings !== undefined &&
       ts.isNamedImports(bindings) &&
-      bindings.elements.some((element) => element.name.text === name)
+      bindings.elements.some((element) => (element.propertyName?.text ?? element.name.text) === name)
     );
   });
 }
@@ -89,6 +93,21 @@ function callArguments(sourceFile: ts.SourceFile, functionName: string): string[
 
 describe("Portfolio Intake payload ownership", () => {
   const modules = sourceModules();
+
+  it("recognizes aliased and extension-qualified boundary imports", () => {
+    const sourceFile = ts.createSourceFile(
+      "fixture.ts",
+      [
+        'import { ingestPortfolioBundle as publishReviewedIntent } from "./api.ts";',
+        'import * as payloadBuilders from "./payload-builder.js";',
+      ].join("\n"),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+
+    expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
+    expect(importsModule(sourceFile, "/payload-builder")).toBe(true);
+  });
 
   it("keeps payload construction behind the reviewed projection", () => {
     const payloadBuilderConsumers = modules
