@@ -835,7 +835,8 @@ Delivered outcomes:
 4. mode navigation, semantic badges, action hierarchy, and disclosure seams are now shared,
 5. tables, screen states, and capability states are governed through the shared layer,
 6. naming drift and overlapping primitive APIs were materially reduced,
-7. `Intake` and `Suite` now consume the shared system instead of older route-local patterns,
+7. `Intake` consumes the shared system; the historical Suite prototype also consumed it before
+   the unsupported mock-backed surface was retired under issue #573,
 8. the product now has an explicit usage guide for future contributors.
 
 Primary implementation evidence:

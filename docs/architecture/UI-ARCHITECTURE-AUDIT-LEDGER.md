@@ -502,6 +502,11 @@ The Workbench product now uses the shared UI system across:
 Any further work should be treated as incremental product evolution, not unfinished RFC-0021
 delivery.
 
+Post-closure note (issue #573): the historical Suite prototype was later found to publish
+hard-coded business state and was retired. `/suite` is now a thin alias of the canonical Home
+entry, so it is no longer an independently supported surface or design-system consumer. This does
+not reopen RFC-0021; it removes unsupported product and styling debt.
+
 ## Active Surface Audit After Closure
 
 ### Closed in the Active-Surface Audit
@@ -540,7 +545,8 @@ delivery.
    - `src/shell/app-registry.ts` defines the active shell surfaces as:
      - `Portfolio`
      - `Performance`
-     - `Operations` (`/workbench`, `/suite`)
+     - `Operations` (`/workbench`)
+     - canonical Home (`/`; `/suite` is a compatibility alias)
    - The older proposal list/detail views remain as implementation artifacts and test fixtures, but
      they are not part of the active shell navigation baseline for RFC-0021 closure.
    - Any future modernization of those dormant views should be tracked as follow-on product work,

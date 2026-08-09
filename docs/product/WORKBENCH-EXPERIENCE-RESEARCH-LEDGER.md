@@ -2443,3 +2443,60 @@ labels, descending sorting, one-action apply, clear-view recovery, and source-fa
 responsive production-browser and full repository evidence remain part of the issue lifecycle.
 The supported Advisor Book workflow now exposes sort direction and clear-view behaviour, so
 `wiki/Advisor-Book-Workflow.md` is updated and must be published from repo source after merge.
+
+## Canonical Home Entry And Legacy Suite Retirement
+
+### Business job
+
+A private banker should enter one trusted workstation Home, understand the governed scope of their
+work, and continue into a supported task. A compatibility URL must not expose a second dashboard
+with invented clients, figures, priorities, owners, or role state.
+
+### Current-product research
+
+Research was refreshed on 2026-08-09 from official product sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   connects Book Insights, Advisor Nudges, Whole Portfolio View, Next Best Action, portfolio
+   management, and oversight through one platform while keeping their source responsibilities
+   distinct.
+2. [Morningstar Office overview](https://admainnew.morningstar.com/webhelp/Morningstar/Advisor_Workstation_Office_Edition_Overview.htm)
+   starts Home from the advisor's practice, clients, appointments, market context, and investment
+   alerts, then moves into account-level portfolio management and reporting.
+3. [Salesforce Analytics for Wealth Management](https://help.salesforce.com/s/articleView?id=ind.fsc_use_einstein_financial_services.htm&language=en_US&type=5)
+   starts an advisor from their book of business, changes, attention signals, and client-level
+   action rather than an ungoverned technical dashboard.
+
+These sources guide workflow hierarchy only. Lotus does not copy competitor layout, visual
+identity, wording, ranking, client models, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Maintain one canonical Home composition and make legacy entry paths thin aliases.
+2. Require source-owned book, priority, ownership, urgency, and analytics state before rendering a
+   business claim.
+3. Keep the Home reading order oriented around scope, attention, preparation, and direct task
+   handoff once authenticated authority is available.
+4. Keep service health, policy identifiers, and support diagnostics in secondary governed evidence
+   rather than the primary advisor reading path.
+5. Remove unsupported prototype code and its styles instead of polishing a misleading surface.
+
+### Rejected decisions
+
+1. Hard-coded demo clients, portfolios, proposal ids, figures, queues, owners, urgency, or role
+   selection in a production route.
+2. A card mosaic that repeats navigation without advancing a business task.
+3. Locally inferred advisor identity, role, priority, or recommendation.
+4. Technical service names, strict-mode flags, policy rule ids, and allowed sections as dominant
+   advisor content.
+5. Replacing the retired prototype with another unauthenticated Home while #470's source-authority
+   dependency remains unresolved.
+
+### Validation and publication decision
+
+Issue #573 owns the bounded removal; #470 continues to own the future authenticated advisor-first
+Home, and #140 owns the Gateway-backed DPM command center. Route, source-governance, CSS-ratchet,
+and production-browser tests must prove `/suite` follows the canonical Home without an intermediate
+fabricated paint at desktop and narrow widths. Because route and supported-surface truth change,
+the RFC record, repository context, review ledger, and repo-authored wiki are updated and must be
+published from main after merge.
