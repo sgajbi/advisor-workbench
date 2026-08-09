@@ -40,6 +40,13 @@ through global selector repair. The retired segmented-control, intake-operation-
 portfolio-primary-view-tab, and legacy mode-tab selector families are forbidden from returning to
 governed global CSS.
 
+The projected Cashflow workflow follows the same bounded-feature rule. Its summary, chart-specific
+marks, projection scope, source note, exact schedule treatment, and responsive reflow are owned by
+`portfolio-projected-cashflow.module.css`, shared only by the Cashflow module and chart-panel React
+owners. Generic Portfolio chart geometry and the reusable `AnalyticsTable` contract remain global
+until their own consumer boundaries are proven. Do not repair Cashflow presentation through an
+app-shell or route selector; the `portfolio-cashflow` prefix is retired from governed global CSS.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.

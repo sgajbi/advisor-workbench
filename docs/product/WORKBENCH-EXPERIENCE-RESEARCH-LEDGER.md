@@ -782,12 +782,47 @@ projected movement rather than liquidity sufficiency.
 5. Protected Workbench GitHub checks, merge, exact-main releasability, and branch cleanup remain
    pending before the slice can be marked hardened.
 
+### Slice 2 — component-owned Cashflow presentation
+
+Research was revalidated on 2026-08-10 against the official Next.js CSS Modules and module-graph
+guidance plus W3C SVG accessibility support. The existing #440 workflow decisions remain the
+business authority: the extraction does not redesign the source-backed Cashflow task.
+
+Adopted:
+
+1. colocate Cashflow-only summary, chart-mark, projection-scope, source-note, exact-schedule, and
+   responsive rules with the two React owners that emit them;
+2. retain the named SVG plus exact table/export alternative;
+3. keep genuinely shared Portfolio chart geometry and `AnalyticsTable` behavior under their
+   existing owners;
+4. remove the late app-shell repair, lower the exact global budget, and prevent the retired prefix
+   from returning.
+
+Rejected:
+
+1. bulk-moving adjacent shared selectors without a complete consumer/modifier matrix;
+2. introducing a new styling dependency or partial cascade-layer migration;
+3. changing data hierarchy, chart meaning, or source-contract claims during an ownership refactor;
+4. replacing exact table/export evidence with an SVG-only presentation.
+
+Issue #492 owns this tranche. The result changes CSS ownership and assistive terminology from
+`cashflow` to the existing business phrase `cash movement`; it does not change Gateway requests,
+calculation meaning, visible capability, or operator procedure.
+
+Validation proves the canonical `PB_SG_GLOBAL_BAL_001` Cashflow workflow through the Workbench BFF
+against an exact process-owned fixture. The production-browser scenario passes at 1440, 1024, 768,
+and 519 px with keyboard horizon selection, returned-horizon identity, exact schedule evidence,
+accessible chart and movement summaries, and no page-level horizontal overflow. Desktop and mobile
+captures are retained locally under `output/playwright/issue-492-cashflow/`. The complete repository
+gate passes 339 files and 1,933 tests at 91.43% statement/line coverage plus the optimized 25-route
+production build and portfolio-record bundle budgets.
+
 ### Publication decision
 
-No repo wiki change is required for this slice. It corrects the semantics, evidence preservation,
-state handling, and composition of an existing supported Cashflow screen without changing a
-Gateway route, supported-feature claim, operator command, or canonical runtime flow. The
-repository engineering context records the reusable horizon and movement-semantics boundary.
+No repo wiki change is required for this slice. It changes presentation ownership, recurrence
+governance, assistive terminology, and isolated test proof for an existing supported Cashflow screen
+without changing a Gateway route, supported-feature claim, operator command, or canonical runtime
+flow. The repository engineering context records the reusable component-ownership boundary.
 
 ## Responsive Portfolio Review Navigation
 
