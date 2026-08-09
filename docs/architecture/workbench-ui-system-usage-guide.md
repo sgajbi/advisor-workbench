@@ -120,16 +120,22 @@ Do not hand-build new page shell structures in feature routes unless the shared 
 Use:
 
 1. [mode-tabs.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/mode-tabs.tsx)
-2. [action-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-button.tsx)
-3. [action-link.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-link.tsx)
-4. [disclosure-toggle-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/disclosure-toggle-button.tsx)
+2. [workbench-choice-group.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/workbench-choice-group.tsx)
+3. [action-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-button.tsx)
+4. [action-link.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-link.tsx)
+5. [disclosure-toggle-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/disclosure-toggle-button.tsx)
 
 Rules:
 
-1. use `ModeTabs` for workspace-mode switching
-2. use `ActionButton` for explicit primary, secondary, and quiet actions
-3. use `ActionLink` when the action is navigation-first
-4. use `DisclosureToggleButton` for panel-level expand/collapse seams
+1. use `ModeTabs` only when each tab controls an associated `tabpanel`; provide one stable `idBase`
+2. use `WorkbenchChoiceGroup` for one-of-many filters, horizons, bases, groupings, and visual choices
+3. let both primitives own arrow, Home, End, focus, selected, and disabled behavior; do not recreate it locally
+4. use `ActionButton` for explicit primary, secondary, and quiet actions
+5. use `ActionLink` when the action is navigation-first
+6. use `DisclosureToggleButton` for panel-level expand/collapse seams
+
+Do not assign tab semantics to a choice that merely redraws or filters the same business surface.
+Do not use either primitive for a binary on/off state; use a governed switch or toggle pattern.
 
 Panel disclosure vocabulary is governed:
 

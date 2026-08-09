@@ -186,6 +186,10 @@ Current repository posture:
     a forbidden selector-prefix ratchet instead of growing `legacy-global.css`. In particular,
     `PortfolioScreenRail` owns its presentation in a colocated CSS Module; route shells own only its
     placement and must not reintroduce global or page-scoped rail color and spacing repairs.
+    `WorkbenchChoiceGroup` similarly owns exclusive one-of-many business choices with radio-group
+    semantics, while `ModeTabs` is reserved for controls with associated tab panels. Their shared
+    interaction presentation belongs in design-system CSS Modules; consuming features may own only
+    bounded layout modules and must not restore retired segmented-control selectors globally.
 18. `/suite` is a compatibility alias of the single canonical Home entry and owns no business
     surface. It must not regain hard-coded clients, portfolios, analytics, priorities, roles,
     workflow state, or technical policy diagnostics. The canonical Home currently routes to
