@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   getDpmOutcomeReviewReportInput,
   requestDpmOutcomeReviewAiNarrative,
@@ -64,8 +64,16 @@ export function useOutcomeReviewHandoffs({
   const currentContextKey = primaryReview
     ? outcomeReviewSourceContextKey(primaryReview)
     : null;
-  const currentContextKeyRef = useRef(currentContextKey);
-  currentContextKeyRef.current = currentContextKey;
+  const committedContextKeyRef = useRef(currentContextKey);
+
+  useLayoutEffect(() => {
+    if (committedContextKeyRef.current === currentContextKey) {
+      return;
+    }
+    committedContextKeyRef.current = currentContextKey;
+    reportRequestSequenceRef.current += 1;
+    aiRequestSequenceRef.current += 1;
+  }, [currentContextKey]);
 
   const reportJobStatus = valueForContext(reportJobState.result, currentContextKey);
   const reportJobError = valueForContext(reportJobState.error, currentContextKey);
@@ -101,6 +109,9 @@ export function useOutcomeReviewHandoffs({
     }
     const requestSequence = reportRequestSequenceRef.current + 1;
     reportRequestSequenceRef.current = requestSequence;
+    const requestIsCurrent = () =>
+      requestSequence === reportRequestSequenceRef.current &&
+      currentContextKey === committedContextKeyRef.current;
     const outcomeReviewId = primaryReview.outcomeReviewId;
     setReportJobState({
       pendingContextKey: currentContextKey,
@@ -110,17 +121,14 @@ export function useOutcomeReviewHandoffs({
     try {
       const reportInput = await getDpmOutcomeReviewReportInput(outcomeReviewId);
       assertOutcomeReviewIdentity(outcomeReviewId, reportInput.data);
-      if (
-        requestSequence !== reportRequestSequenceRef.current ||
-        currentContextKey !== currentContextKeyRef.current
-      ) {
+      if (!requestIsCurrent()) {
         return;
       }
       const handle = await submitDpmOutcomeReviewReportJob({
         outcomeReviewId,
         outcomeReportInput: reportInput.data,
       });
-      if (requestSequence !== reportRequestSequenceRef.current) {
+      if (!requestIsCurrent()) {
         return;
       }
       const boundary = buildOutcomeClientCommunicationBoundaryView(reportInput.data);
@@ -139,7 +147,7 @@ export function useOutcomeReviewHandoffs({
         error: null,
       });
     } catch (error) {
-      if (requestSequence !== reportRequestSequenceRef.current) {
+      if (!requestIsCurrent()) {
         return;
       }
       setReportJobState({
@@ -164,6 +172,9 @@ export function useOutcomeReviewHandoffs({
     }
     const requestSequence = aiRequestSequenceRef.current + 1;
     aiRequestSequenceRef.current = requestSequence;
+    const requestIsCurrent = () =>
+      requestSequence === aiRequestSequenceRef.current &&
+      currentContextKey === committedContextKeyRef.current;
     const outcomeReviewId = primaryReview.outcomeReviewId;
     setAiNarrativeState({
       pendingContextKey: currentContextKey,
@@ -178,7 +189,7 @@ export function useOutcomeReviewHandoffs({
         outcomeReviewId,
         narrative.ai_evidence_input,
       );
-      if (requestSequence !== aiRequestSequenceRef.current) {
+      if (!requestIsCurrent()) {
         return;
       }
       const boundary = buildOutcomeClientCommunicationBoundaryView(
@@ -203,7 +214,7 @@ export function useOutcomeReviewHandoffs({
         error: null,
       });
     } catch (error) {
-      if (requestSequence !== aiRequestSequenceRef.current) {
+      if (!requestIsCurrent()) {
         return;
       }
       setAiNarrativeState({
