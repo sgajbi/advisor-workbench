@@ -2536,11 +2536,13 @@ product data model, compliance decisions, automation, or unsupported source capa
 3. State every missing or invalid field/row directly; do not compress safety into a percentage.
 4. Hold one exact reviewed payload and idempotency key; invalidate both when material data changes.
 5. Parse a selected file into review state without mutation.
-6. Accept success only from a validated source envelope with task-relevant counts and bounded
-   correlation/contract evidence.
+6. Accept success only from a validated source envelope with exact counts for every nonempty
+   reviewed record family, including business dates, plus bounded correlation/contract evidence.
 7. Keep catalog availability secondary to the business form and preserve explicit manual recovery.
 8. Use one responsive semantic DOM and route-scoped CSS rather than duplicated desktop/mobile
    rendering branches.
+9. Retire a previously parsed file immediately when its replacement starts parsing; keep review
+   unavailable until the replacement payload is complete and fence every late source completion.
 
 ### Rejected decisions
 
@@ -2558,6 +2560,7 @@ Workbench #575 owns the UI workflow. #436 continues to own authenticated princip
 acting identity is invented here. Gateway/Core retain source validation, persistence, replay,
 duplicates, lineage, and durable-job authority. Focused domain/API/integration proof and isolated
 desktop/narrow browser evidence cover blank first paint, exact validation, review-only submission,
-edit invalidation, same-intent retry, blank row creation, file parse-before-publish, focus movement,
-and no overflow. Repository context, historical RFC truth, review ledgers, and Supported Features
-change in the same issue and must be published from main after merge.
+edit invalidation, same-intent retry, blank row creation, file parse-before-publish, replacement-file
+retirement, complete source-count proof, focus movement, compact record drilldown, and no overflow.
+Repository context, historical RFC truth, review ledgers, and Supported Features change in the same
+issue and must be published from main after merge.
