@@ -33,9 +33,9 @@ test.describe('UI smoke checks', () => {
     {
       path: '/intake',
       assertReady: async (page: Page) => {
-        await expect(
-          page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })
-        ).toBeVisible({ timeout: 60000 });
+        await expect(page.getByRole('heading', { name: 'Portfolio Intake' })).toBeVisible({
+          timeout: 60000,
+        });
       },
     },
     {
@@ -97,25 +97,33 @@ test.describe('UI smoke checks', () => {
     }
   });
 
-  test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
+  test('portfolio intake task choices are reachable and start blank-safe workspaces', async ({ page }) => {
     await page.goto('/intake', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })).toBeVisible();
-    const operationTabs = page.getByRole('tablist', { name: /Intake operation/i });
+    await expect(page.getByRole('heading', { name: 'Portfolio Intake' })).toBeVisible();
+    const taskChooser = page.getByRole('region', { name: 'Choose an intake request' });
+    await expect(taskChooser.getByRole('heading', { name: 'Start an intake request' })).toBeVisible();
+    await expect(taskChooser.getByRole('listitem')).toHaveCount(6);
+    await expect(page.getByText('No request started')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Review request' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Publish reviewed request' })).toHaveCount(0);
 
-    await operationTabs.getByRole('tab', { name: /^Create Portfolio$/i }).click();
-    await expect(page.getByRole('heading', { name: /Create Portfolio Workspace/i })).toBeVisible();
+    for (const task of [
+      'Create portfolio record',
+      'Load opening positions',
+      'Record transactions',
+      'Register instruments',
+      'Publish price observations',
+      'Import an intake file',
+    ]) {
+      await taskChooser.getByRole('button', { name: new RegExp(task, 'i') }).click();
+      const editor = page.getByRole('region', { name: 'Intake request editor' });
+      await expect(editor.getByRole('heading', { name: task })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Review request' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Publish reviewed request' })).toHaveCount(0);
 
-    await operationTabs.getByRole('tab', { name: /^Add Positions$/i }).click();
-    await expect(page.getByRole('heading', { name: /Add Positions Workspace/i })).toBeVisible();
-
-    await operationTabs.getByRole('tab', { name: /^Add Transactions$/i }).click();
-    await expect(page.getByRole('heading', { name: /Add Transactions Workspace/i })).toBeVisible();
-
-    await operationTabs.getByRole('tab', { name: /^Add Instruments$/i }).click();
-    await expect(page.getByRole('heading', { name: /Add Instruments Workspace/i })).toBeVisible();
-
-    await operationTabs.getByRole('tab', { name: /^Add Market Data$/i }).click();
-    await expect(page.getByRole('heading', { name: /Add Market Data Workspace/i })).toBeVisible();
+      await editor.getByRole('button', { name: 'Change request type' }).click();
+      await expect(taskChooser.getByRole('heading', { name: 'Start an intake request' })).toBeVisible();
+    }
   });
 
   test('workbench page renders shell and message', async ({ page }) => {
