@@ -59,12 +59,39 @@ function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: stri
     }
 
     const bindings = statement.importClause?.namedBindings;
-    return (
-      bindings !== undefined &&
-      ts.isNamedImports(bindings) &&
-      bindings.elements.some((element) => (element.propertyName?.text ?? element.name.text) === name)
-    );
+    if (bindings === undefined) return false;
+    if (ts.isNamedImports(bindings)) {
+      return bindings.elements.some(
+        (element) => (element.propertyName?.text ?? element.name.text) === name,
+      );
+    }
+    return accessesMember(sourceFile, bindings.name.text, name);
   });
+}
+
+function accessesMember(sourceFile: ts.SourceFile, namespaceName: string, memberName: string): boolean {
+  let found = false;
+
+  function visit(node: ts.Node) {
+    if (
+      (ts.isPropertyAccessExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === namespaceName &&
+        node.name.text === memberName) ||
+      (ts.isElementAccessExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === namespaceName &&
+        ts.isStringLiteral(node.argumentExpression) &&
+        node.argumentExpression.text === memberName)
+    ) {
+      found = true;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return found;
 }
 
 function callExpressions(sourceFile: ts.SourceFile, functionName: string): ts.CallExpression[] {
@@ -73,8 +100,12 @@ function callExpressions(sourceFile: ts.SourceFile, functionName: string): ts.Ca
   function visit(node: ts.Node) {
     if (
       ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === functionName
+      ((ts.isIdentifier(node.expression) && node.expression.text === functionName) ||
+        (ts.isPropertyAccessExpression(node.expression) &&
+          node.expression.name.text === functionName) ||
+        (ts.isElementAccessExpression(node.expression) &&
+          ts.isStringLiteral(node.expression.argumentExpression) &&
+          node.expression.argumentExpression.text === functionName))
     ) {
       calls.push(node);
     }
@@ -100,6 +131,8 @@ describe("Portfolio Intake payload ownership", () => {
       [
         'import { ingestPortfolioBundle as publishReviewedIntent } from "./api.ts";',
         'import * as payloadBuilders from "./payload-builder.js";',
+        'import * as intakeApi from "./api";',
+        'intakeApi["ingestPortfolioBundle"]({ sourceSystem: "fixture" });',
       ].join("\n"),
       ts.ScriptTarget.Latest,
       true,
