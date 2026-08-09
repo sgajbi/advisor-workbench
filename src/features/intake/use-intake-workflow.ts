@@ -148,6 +148,7 @@ export function useIntakeWorkflow() {
     if (draft?.task !== "IMPORT_FILE") return false;
     const readSequence = ++activeFileReadRef.current;
     draftGenerationRef.current += 1;
+    setDraft({ task: "IMPORT_FILE", fileName: file.name, payload: null });
     setFileParseState("parsing");
     setFileParseError(null);
     setReviewedIntent(null);
@@ -157,12 +158,14 @@ export function useIntakeWorkflow() {
     try {
       const payload = parseIntakeCsvToBundle(await readFileText(file));
       if (readSequence !== activeFileReadRef.current) return false;
+      draftGenerationRef.current += 1;
       setDraft({ task: "IMPORT_FILE", fileName: file.name, payload });
       setValidationAttempted(false);
       setFileParseState("ready");
       return true;
     } catch (error) {
       if (readSequence !== activeFileReadRef.current) return false;
+      draftGenerationRef.current += 1;
       setDraft({ task: "IMPORT_FILE", fileName: null, payload: null });
       setValidationAttempted(true);
       setFileParseState("error");
