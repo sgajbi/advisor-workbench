@@ -71,9 +71,49 @@ describe("AdvisoryOverviewWorkspace", () => {
     );
     expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
     expect(screen.getByText("Risk officer approval needed")).toBeInTheDocument();
+    expect(screen.getByText("2 items need action")).toBeInTheDocument();
     expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
       "Complete source window"
     );
+  });
+
+  it("starts from the first source window when the selected portfolio changes", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [],
+      next_cursor: "portfolio-a-window-2",
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <AdvisoryOverviewWorkspace portfolioId="portfolio-a" />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenCalledWith({
+        portfolioId: "portfolio-a",
+        cursor: "portfolio-a-window-2",
+        limit: 8,
+      });
+    });
+
+    listProposalsMock.mockClear();
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <AdvisoryOverviewWorkspace portfolioId="portfolio-b" />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenCalledWith({
+        portfolioId: "portfolio-b",
+        cursor: undefined,
+        limit: 8,
+      });
+    });
   });
 
   it("does not show fallback proposals when the advisory queue fails", async () => {

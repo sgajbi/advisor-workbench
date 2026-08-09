@@ -46,6 +46,7 @@ describe("buildAdvisoryOverviewModel", () => {
       ])
     );
     expect(model.recommendedAction).toMatch(/Resolve review blockers/);
+    expect(model.attentionCount).toBe(4);
     expect(model.proposalRows.map((row) => row.proposalId)).toEqual([
       "PRP-RISK",
       "PRP-CONSENT",
@@ -61,6 +62,23 @@ describe("buildAdvisoryOverviewModel", () => {
     );
     expect(model.hasPartialWindow).toBe(false);
     expect(model.sourceWindowLabel).toBe("Complete source window");
+  });
+
+  it("counts an execution-ready proposal as an implementation follow-up", () => {
+    const model = buildAdvisoryOverviewModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      proposals: [
+        {
+          proposal_id: "PRP-READY",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "EXECUTION_READY",
+          title: "Implementation handoff",
+        },
+      ],
+    });
+
+    expect(model.attentionCount).toBe(1);
+    expect(model.recommendedAction).toMatch(/implementation/);
   });
 
   it("keeps lifecycle handoffs portfolio scoped", () => {

@@ -26,7 +26,7 @@ import styles from "./advisory-overview-workspace.module.css";
 const ADVISORY_OVERVIEW_WINDOW_SIZE = 8;
 
 export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId: string }) {
-  const sourceWindow = useProposalSourceWindow();
+  const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQuery = useQuery({
     queryKey: ["advisory-overview", portfolioId, sourceWindow.cursor],
     queryFn: async () =>
