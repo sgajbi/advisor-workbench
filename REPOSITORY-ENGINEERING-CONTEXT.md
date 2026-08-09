@@ -328,10 +328,14 @@ Current repository posture:
     durable-storage posture, policy version, and
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
     can record source-owned review actions, feedback, and bounded conversion intents through the
-    Workbench BFF with server-derived authority and idempotency; a retry reuses the exact failed
-    submission; the canonical browser validator exercises review-action, feedback, and
-    conversion-intent controls and requires source-owned detail and queue refresh after each
-    mutation. Workbench must not synthesize
+    Workbench BFF with server-derived authority and idempotency. Action reason codes use the closed
+    Gateway/Idea vocabulary: the advisor chooses a business-labelled basis drawn from the selected
+    candidate's source reasons, while Workbench adds the matching source-valid audit reason. A retry
+    reuses the exact failed submission. Success requires an accepted or replayed source persistence
+    receipt and completes only after source-owned detail and queue refresh; persistence and refresh
+    failures remain distinct. The canonical browser validator proves those states through stable
+    action test ids and `recorded-and-refreshed`, with product copy as supporting evidence rather
+    than the sole assertion. Workbench must not synthesize
     review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
     opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
     proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a

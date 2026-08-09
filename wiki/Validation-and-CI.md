@@ -169,7 +169,10 @@ concurrency group.
   active portfolio as caller entitlement scope. The panel is not a supported-feature promotion until
   canonical browser validation proves populated Workbench rendering, source-safe candidate detail
   access, review-action, feedback, and bounded conversion-intent controls through Gateway, source
-  refresh after each mutation, and no reranking, no auto-proposal creation, no suitability
+  persistence with an accepted/replayed receipt, and queue/detail refresh after each mutation.
+  Browser proof requires the stable action status test id and `recorded-and-refreshed` state; product
+  copy remains supporting evidence and may evolve without weakening persistence or refresh proof.
+  It also proves no reranking, no auto-proposal creation, no suitability
   authority, no execution authority, and no client-publication claims.
   The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
   duplicating date literals in Workbench startup automation.

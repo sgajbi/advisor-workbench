@@ -457,7 +457,10 @@ client communication, or execution truth.
 For Opportunities and Ideas, the browser proof now goes beyond read-path rendering: it opens
 source-safe Idea candidate detail and records review-action, feedback, and bounded
 conversion-intent controls through the Workbench BFF/Gateway path, verifying source-owned queue and
-detail refresh after each mutation. The machine-readable summary records only action-control
+detail refresh after each mutation. Each mutation must return an accepted/replayed source
+persistence receipt before Workbench can show success. The browser checks a stable action status id
+with `data-action-state=recorded-and-refreshed` and retains business copy as supporting evidence;
+it does not depend on one full sentence. The machine-readable summary records only action-control
 posture and non-claim boundaries; it does not expose conversion-intent identifiers, create
 proposals, grant suitability or execution authority, certify production identity, or promote Lotus
 Idea as a supported feature.
