@@ -21,6 +21,10 @@ mechanical splits that hide ownership or cascade changes.
 model. Its presentation is colocated in
 `src/apps/portfolio/components/portfolio-screen-rail.module.css`; page-specific shells may own
 placement, but they must not repair the rail's colors, spacing, or interaction states globally.
+The module also owns the rail's capacity-driven responsive transition: once the compact header's
+portfolio, workflow, and current-view tracks cannot fit with their gaps and shell gutters, those
+regions stack without clipping or page-level horizontal overflow. Keep boundary-width browser
+proof with that owner instead of adding route-specific overflow suppression.
 
 ## Ratchet gate
 

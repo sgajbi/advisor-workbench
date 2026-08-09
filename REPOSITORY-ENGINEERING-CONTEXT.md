@@ -150,8 +150,12 @@ Current repository posture:
     portfolio switching, the governed portfolio identifier, and the current business view as a
     compact header; the route list remains collapsed until requested, closes on Escape, and
     restores focus. The rail owns its internal spacing and must neutralize generic `Panel` padding
-    rather than accumulating nested insets. Responsive changes require production-browser proof at
-    1440, 1024, 768, and 519 px and must not hide source state or invent mobile-only behavior.
+    rather than accumulating nested insets. Its compact-to-stacked transition follows the minimum
+    width required by portfolio context, advisor-book context, current-view disclosure, gaps, and
+    shell gutters; do not use device labels or clipping as breakpoint policy. Responsive changes
+    require production-browser proof at 1440, 1024, 768, at least one content-capacity boundary
+    width between 561 and 640 px, and 519 px, and must not hide source state or invent mobile-only
+    behavior.
 17. Global CSS ownership is governed by `docs/architecture/css-layer-governance.md`.
     `src/app/globals.css` is a composition entrypoint that imports token, base, Workbench shell,
     and legacy global layers from `src/styles/global/`. `npm run lint` runs the CSS global governance
