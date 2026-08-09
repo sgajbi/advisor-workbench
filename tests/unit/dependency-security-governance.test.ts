@@ -5,6 +5,29 @@ import { describe, expect, it } from "vitest";
 const repositoryRoot = join(__dirname, "..", "..");
 const governedLintCommand =
   "npm run lint:css-global && npm run lint:risk-architecture && npm run lint:eslint";
+const governedTimeoutsByJob = new Map([
+  [
+    "e2e-smoke",
+    {
+      nameSuffix: "Playwright Smoke",
+      timeout: 30,
+    },
+  ],
+  [
+    "docker-build",
+    {
+      nameSuffix: "Docker Build And Security",
+      timeout: 45,
+    },
+  ],
+  [
+    "ci-local-docker",
+    {
+      nameSuffix: "CI Local Docker Parity",
+      timeout: 60,
+    },
+  ],
+]);
 
 function readRepositoryFile(...segments: string[]): string {
   return readFileSync(join(repositoryRoot, ...segments), "utf8");
@@ -15,11 +38,21 @@ function hasExactLine(source: string, expectedLine: string): boolean {
 }
 
 function workflowJobBlock(source: string, jobId: string): string {
-  const match = source.match(
+  const normalizedSource = source.replaceAll("\r\n", "\n");
+  const match = normalizedSource.match(
     new RegExp(`\\n  ${jobId}:\\n(?<block>[\\s\\S]*?)(?=\\n  [a-z0-9-]+:\\n|\\n*$)`),
   );
 
   return match?.groups?.block ?? "";
+}
+
+function expectGovernedJobTimeouts(workflow: string, namePrefix: string): void {
+  for (const [jobId, expectation] of governedTimeoutsByJob) {
+    const jobBlock = workflowJobBlock(workflow, jobId);
+
+    expect(jobBlock).toContain(`name: ${namePrefix} / ${expectation.nameSuffix}`);
+    expect(jobBlock).toContain(`timeout-minutes: ${expectation.timeout}`);
+  }
 }
 
 function collectLocalNodeScripts(
@@ -291,44 +324,35 @@ describe("dependency security governance", () => {
   });
 
   it("bounds critical Docker and browser proof jobs in protected lanes", () => {
-    const governedTimeoutsByJob = new Map([
-      [
-        "e2e-smoke",
-        {
-          nameSuffix: "Playwright Smoke",
-          timeout: 30,
-        },
-      ],
-      [
-        "docker-build",
-        {
-          nameSuffix: "Docker Build And Security",
-          timeout: 45,
-        },
-      ],
-      [
-        "ci-local-docker",
-        {
-          nameSuffix: "CI Local Docker Parity",
-          timeout: 60,
-        },
-      ],
-    ]);
-
     for (const [workflowName, jobNamePrefix] of [
       ["pr-merge-gate.yml", "PR Merge Gate"],
       ["main-releasability.yml", "Main Releasability"],
     ] as const) {
       const workflow = readRepositoryFile(".github", "workflows", workflowName);
 
-      for (const [jobId, expectation] of governedTimeoutsByJob) {
-        const jobBlock = workflowJobBlock(workflow, jobId);
-
-        expect(jobBlock).toContain(
-          `name: ${jobNamePrefix} / ${expectation.nameSuffix}`,
-        );
-        expect(jobBlock).toContain(`timeout-minutes: ${expectation.timeout}`);
-      }
+      expectGovernedJobTimeouts(workflow, jobNamePrefix);
     }
   });
+
+  it.each(["\n", "\r\n"])(
+    "extracts every governed workflow job block with %j newlines",
+    (newline) => {
+      const workflow = [
+        "name: Fixture",
+        "jobs:",
+        ...Array.from(governedTimeoutsByJob, ([jobId, expectation]) => [
+          `  ${jobId}:`,
+          `    name: Fixture / ${expectation.nameSuffix}`,
+          `    timeout-minutes: ${expectation.timeout}`,
+          "    runs-on: ubuntu-latest",
+        ]).flat(),
+        "  unrelated-job:",
+        "    name: Fixture / Unrelated",
+        "    runs-on: ubuntu-latest",
+        "",
+      ].join(newline);
+
+      expectGovernedJobTimeouts(workflow, "Fixture");
+    },
+  );
 });
