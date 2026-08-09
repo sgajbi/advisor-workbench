@@ -170,6 +170,38 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByText("rjob_3")).toBeInTheDocument();
   });
 
+  it("does not steal focus from a new request when the prior history refresh settles", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    await screen.findByRole("table", { name: "Recent portfolio report requests" });
+
+    let resolveHistory: (() => void) | null = null;
+    historyMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveHistory = () => resolve(buildReportJobListResponse());
+        }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submitButton = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submitButton).toBeEnabled());
+    fireEvent.click(submitButton);
+    await screen.findByRole("heading", { name: "Report request accepted" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Create another report" }));
+    const configuration = await screen.findByRole("region", {
+      name: "Report configuration",
+    });
+    await waitFor(() => expect(configuration).toHaveFocus());
+
+    await act(async () => {
+      resolveHistory?.();
+    });
+    await screen.findByRole("table", { name: "Recent portfolio report requests" });
+    await waitFor(() => expect(configuration).toHaveFocus());
+  });
+
   it("keeps recent report requests visible when support correlation is unavailable", async () => {
     const history = buildReportJobListResponse();
     history.items[0].correlationId = "";

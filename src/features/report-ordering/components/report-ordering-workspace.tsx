@@ -37,6 +37,7 @@ export function ReportOrderingWorkspace({
   });
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
+  const focusIntentRef = useRef(0);
   const workspaceState = workflow.screenState.workspace;
 
   function focusReadiness() {
@@ -44,14 +45,18 @@ export function ReportOrderingWorkspace({
   }
 
   async function submitRequest() {
+    const focusIntent = ++focusIntentRef.current;
     await workflow.submitRequest();
-    focusReadiness();
+    if (focusIntentRef.current === focusIntent) {
+      focusReadiness();
+    }
   }
 
   function startAnotherReport() {
     if (!workflow.startAnotherReport()) {
       return;
     }
+    focusIntentRef.current += 1;
     requestAnimationFrame(() => configurationRef.current?.focus());
   }
 
