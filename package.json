@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run quality:portfolio-record-bundles",
+    "build": "node scripts/quality/clean-next-build-artifacts.mjs && next build && npm run quality:portfolio-record-bundles",
     "start": "next start",
     "lint": "npm run lint:css-global && npm run lint:risk-architecture && npm run lint:eslint",
     "lint:eslint": "eslint . --max-warnings=0",
