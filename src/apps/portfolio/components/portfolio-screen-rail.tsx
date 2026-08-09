@@ -69,7 +69,10 @@ export default function PortfolioScreenRail({
         }
       }}
     >
-      <div className={styles.header}>
+      <div
+        className={styles.header}
+        data-testid="portfolio-screen-rail-header"
+      >
         <AdvisorBookContextSwitcher
           pathname={pathname}
           portfolioId={portfolioId}
