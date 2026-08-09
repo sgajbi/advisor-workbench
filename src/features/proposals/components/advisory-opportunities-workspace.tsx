@@ -347,6 +347,7 @@ function IdeaCandidateDetailPanel({
             <IdeaCandidateActionPanel
               key={candidate.candidateId}
               candidateId={candidate.candidateId}
+              candidateReasonCodes={candidate.reasonCodes ?? []}
               portfolioId={portfolioId}
               onRecorded={onActionRecorded}
             />

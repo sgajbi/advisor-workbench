@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Alert } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 
@@ -11,9 +11,15 @@ import {
   recordAdvisorIdeaFeedback,
   recordAdvisorIdeaReviewAction,
 } from "../api";
+import {
+  buildIdeaActionReasonCodes,
+  buildIdeaBusinessReasonOptions,
+  type IdeaBusinessReasonOption,
+} from "../idea-action-reasons";
 import type {
   AdvisorIdeaConversionIntentRequest,
   AdvisorIdeaFeedbackRequest,
+  AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
   AdvisorIdeaReviewActionRequest,
 } from "../types";
@@ -51,10 +57,12 @@ const REVIEW_ACTIONS: Array<{ value: AdvisorIdeaReviewAction; label: string }> =
 
 export default function IdeaCandidateActionPanel({
   candidateId,
+  candidateReasonCodes,
   portfolioId,
   onRecorded,
 }: {
   candidateId: string;
+  candidateReasonCodes: readonly string[];
   portfolioId: string;
   onRecorded: () => Promise<boolean>;
 }) {
@@ -64,19 +72,24 @@ export default function IdeaCandidateActionPanel({
   const [reviewAction, setReviewAction] = useState<AdvisorIdeaReviewAction>(
     "approve_for_conversion",
   );
-  const [reviewReasonCodes, setReviewReasonCodes] = useState("advisor_review");
+  const businessReasonOptions = useMemo(
+    () => buildIdeaBusinessReasonOptions(candidateReasonCodes),
+    [candidateReasonCodes],
+  );
+  const defaultBusinessReason = businessReasonOptions[0].value;
+  const [reviewReason, setReviewReason] =
+    useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
   const [suppressionReason, setSuppressionReason] =
     useState<NonNullable<AdvisorIdeaReviewActionRequest["suppressionReason"]>>(
       "manual_suppression",
     );
   const [snoozedUntil, setSnoozedUntil] = useState("");
   const [feedbackOutcome, setFeedbackOutcome] = useState("useful");
-  const [feedbackReasonCodes, setFeedbackReasonCodes] =
-    useState("advisor_feedback");
+  const [feedbackReason, setFeedbackReason] =
+    useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
   const [conversionTarget, setConversionTarget] = useState("advise_proposal");
-  const [conversionReasonCodes, setConversionReasonCodes] = useState(
-    "advisor_conversion_intent",
-  );
+  const [conversionReason, setConversionReason] =
+    useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
   const [validationMessage, setValidationMessage] = useState<string>();
   const [latestRecordedKind, setLatestRecordedKind] =
     useState<IdeaActionKind>();
@@ -109,12 +122,15 @@ export default function IdeaCandidateActionPanel({
     },
     onSuccess: async (_result, submission) => {
       delete retryableSubmissions.current[submission.kind];
+      const sourceRefreshSucceeded = await onRecorded();
       setLatestRecordedKind(submission.kind);
-      setSourceRefreshFailed(!(await onRecorded()));
+      setSourceRefreshFailed(!sourceRefreshSucceeded);
     },
   });
 
   function recordSubmission(submission: IdeaActionSubmission) {
+    setLatestRecordedKind(undefined);
+    setSourceRefreshFailed(false);
     const retryableSubmission = retryableSubmissions.current[submission.kind];
     if (retryableSubmission) {
       actionMutation.mutate(retryableSubmission);
@@ -135,11 +151,6 @@ export default function IdeaCandidateActionPanel({
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const reasonCodes = parseReasonCodes(reviewReasonCodes);
-    if (!reasonCodes.length) {
-      setValidationMessage("Enter at least one review reason code.");
-      return;
-    }
     if (reviewAction === "snooze" && !snoozedUntil) {
       setValidationMessage(
         "Provide a snooze-until time before recording a snooze.",
@@ -153,7 +164,11 @@ export default function IdeaCandidateActionPanel({
       request: {
         reviewId: `ui-idea-review-${candidateId}-${Date.now()}`,
         action: reviewAction,
-        reasonCodes,
+        reasonCodes: buildIdeaActionReasonCodes({
+          basis: reviewReason,
+          kind: "review",
+          reviewAction,
+        }),
         decidedAtUtc: new Date().toISOString(),
         ...(reviewAction === "suppress" ? { suppressionReason } : {}),
         ...(reviewAction === "snooze"
@@ -165,11 +180,6 @@ export default function IdeaCandidateActionPanel({
 
   function submitFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const reasonCodes = parseReasonCodes(feedbackReasonCodes);
-    if (!reasonCodes.length) {
-      setValidationMessage("Enter at least one feedback reason code.");
-      return;
-    }
     setValidationMessage(undefined);
     recordSubmission({
       kind: "feedback",
@@ -177,7 +187,10 @@ export default function IdeaCandidateActionPanel({
       request: {
         feedbackId: `ui-idea-feedback-${candidateId}-${Date.now()}`,
         outcome: feedbackOutcome as AdvisorIdeaFeedbackRequest["outcome"],
-        reasonCodes,
+        reasonCodes: buildIdeaActionReasonCodes({
+          basis: feedbackReason,
+          kind: "feedback",
+        }),
         recordedAtUtc: new Date().toISOString(),
       },
     });
@@ -185,11 +198,6 @@ export default function IdeaCandidateActionPanel({
 
   function submitConversion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const reasonCodes = parseReasonCodes(conversionReasonCodes);
-    if (!reasonCodes.length) {
-      setValidationMessage("Enter at least one conversion-intent reason code.");
-      return;
-    }
     setValidationMessage(undefined);
     recordSubmission({
       kind: "conversion",
@@ -198,7 +206,10 @@ export default function IdeaCandidateActionPanel({
         conversionIntentId: `ui-idea-conversion-${candidateId}-${Date.now()}`,
         target:
           conversionTarget as AdvisorIdeaConversionIntentRequest["target"],
-        reasonCodes,
+        reasonCodes: buildIdeaActionReasonCodes({
+          basis: conversionReason,
+          kind: "conversion",
+        }),
         requestedAtUtc: new Date().toISOString(),
       },
     });
@@ -235,13 +246,14 @@ export default function IdeaCandidateActionPanel({
               ))}
             </select>
           </label>
-          <label>
-            Reason codes
-            <input
-              value={reviewReasonCodes}
-              onChange={(event) => setReviewReasonCodes(event.target.value)}
-            />
-          </label>
+          <IdeaBusinessReasonSelect
+            id="idea-review-business-reason"
+            label="Review basis"
+            options={businessReasonOptions}
+            value={reviewReason}
+            disabled={actionMutation.isPending}
+            onChange={setReviewReason}
+          />
           {reviewAction === "suppress" ? (
             <label>
               Suppression reason
@@ -303,13 +315,14 @@ export default function IdeaCandidateActionPanel({
               <option value="unsupported_claim">Unsupported claim</option>
             </select>
           </label>
-          <label>
-            Reason codes
-            <input
-              value={feedbackReasonCodes}
-              onChange={(event) => setFeedbackReasonCodes(event.target.value)}
-            />
-          </label>
+          <IdeaBusinessReasonSelect
+            id="idea-feedback-business-reason"
+            label="Feedback basis"
+            options={businessReasonOptions}
+            value={feedbackReason}
+            disabled={actionMutation.isPending}
+            onChange={setFeedbackReason}
+          />
           <ActionButton
             priority="secondary"
             type="submit"
@@ -335,13 +348,14 @@ export default function IdeaCandidateActionPanel({
               <option value="report_evidence">Report evidence review</option>
             </select>
           </label>
-          <label>
-            Reason codes
-            <input
-              value={conversionReasonCodes}
-              onChange={(event) => setConversionReasonCodes(event.target.value)}
-            />
-          </label>
+          <IdeaBusinessReasonSelect
+            id="idea-conversion-business-reason"
+            label="Conversion basis"
+            options={businessReasonOptions}
+            value={conversionReason}
+            disabled={actionMutation.isPending}
+            onChange={setConversionReason}
+          />
           <ActionButton
             priority="primary"
             type="submit"
@@ -355,19 +369,30 @@ export default function IdeaCandidateActionPanel({
         </form>
       </div>
       <Text variant="secondary">
-        Separate multiple reason codes with commas.
+        Business reasons use the source-supported vocabulary, with the selected
+        candidate&apos;s published reasons shown first. Workbench adds the matching
+        audit reason for each action.
       </Text>
       {validationMessage ? (
         <Alert severity="warning">{validationMessage}</Alert>
       ) : null}
       {actionMutation.error ? (
-        <Alert severity="warning">
+        <Alert
+          severity="warning"
+          data-testid="idea-action-error"
+          data-action-state="not-recorded"
+        >
           The advisor action could not be recorded through Gateway. No local
           review or conversion state has been created.
         </Alert>
       ) : null}
       {latestRecordedKind && sourceRefreshFailed ? (
-        <Alert severity="warning" aria-live="polite">
+        <Alert
+          severity="warning"
+          aria-live="polite"
+          data-testid={`idea-action-${latestRecordedKind}-status`}
+          data-action-state="recorded-refresh-failed"
+        >
           {formatActionKind(latestRecordedKind)} was recorded through Gateway,
           but source-owned detail or queue posture could not be refreshed. The
           displayed posture may be stale; retry the page refresh before taking
@@ -375,7 +400,12 @@ export default function IdeaCandidateActionPanel({
         </Alert>
       ) : null}
       {latestRecordedKind && !sourceRefreshFailed ? (
-        <Alert severity="success" aria-live="polite">
+        <Alert
+          severity="success"
+          aria-live="polite"
+          data-testid={`idea-action-${latestRecordedKind}-status`}
+          data-action-state="recorded-and-refreshed"
+        >
           {formatActionKind(latestRecordedKind)} recorded through Gateway.
           Source-owned detail and queue posture have been refreshed.
         </Alert>
@@ -384,15 +414,46 @@ export default function IdeaCandidateActionPanel({
   );
 }
 
-function parseReasonCodes(value: string): string[] {
-  return [
-    ...new Set(
-      value
-        .split(",")
-        .map((reason) => reason.trim())
-        .filter(Boolean),
-    ),
-  ];
+function IdeaBusinessReasonSelect({
+  disabled,
+  id,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  disabled: boolean;
+  id: string;
+  label: string;
+  onChange: (value: AdvisorIdeaReasonCode) => void;
+  options: IdeaBusinessReasonOption[];
+  value: AdvisorIdeaReasonCode;
+}) {
+  const descriptionId = `${id}-description`;
+  return (
+    <div className={styles.actionField}>
+      <label htmlFor={id}>{label}</label>
+      <select
+        id={id}
+        value={value}
+        disabled={disabled}
+        aria-describedby={descriptionId}
+        onChange={(event) =>
+          onChange(event.target.value as AdvisorIdeaReasonCode)
+        }
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <span id={descriptionId} className={styles.fieldHint}>
+        Candidate-backed reason, or the governed review fallback when none is
+        available.
+      </span>
+    </div>
+  );
 }
 
 function formatActionKind(kind: IdeaActionKind): string {
