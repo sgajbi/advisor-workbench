@@ -75,6 +75,28 @@ test.describe('UI smoke checks', () => {
     await expect(getPortfolioFoundationPageHeading(page)).toBeVisible();
   });
 
+  test('legacy Suite entry follows canonical Home without fabricated business state', async ({ page }) => {
+    for (const viewport of [
+      { width: 1366, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/suite', { waitUntil: 'domcontentloaded' });
+
+      await expect(page).toHaveURL(/\/portfolio$/);
+      await expect(getPortfolioFoundationPageHeading(page)).toBeVisible({ timeout: 60000 });
+      await expect(page.getByRole('heading', { name: 'Command Center', exact: true })).toHaveCount(0);
+      await expect(page.getByText('Apex Family Office', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('lotus-core Policy Diagnostics', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('tenant.default.consumers.UI', { exact: true })).toHaveCount(0);
+
+      const hasOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(hasOverflow, `horizontal overflow detected after /suite at ${viewport.width}px`).toBeFalsy();
+    }
+  });
+
   test('portfolio intake tabs are reachable and render expected workspaces', async ({ page }) => {
     await page.goto('/intake', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /Portfolio Intake Operations Console/i })).toBeVisible();

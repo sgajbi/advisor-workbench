@@ -3,6 +3,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 
 import HomeAppPage from "@/apps/home/page";
+import SuitePage from "@/app/suite/page";
 import PerformanceAppPage from "@/apps/performance/page";
 import RecommendationsAppPage from "@/apps/recommendations/page";
 import ProposalsPage from "@/app/proposals/page";
@@ -121,6 +122,12 @@ describe("app route entrypoints", () => {
 
   it("routes home into the portfolio workspace", () => {
     expect(() => HomeAppPage()).toThrowError("REDIRECT:/portfolio");
+    expect(redirectMock).toHaveBeenCalledWith("/portfolio");
+  });
+
+  it("routes the retired Suite alias through the canonical Home entry", () => {
+    expect(() => SuitePage()).toThrowError("REDIRECT:/portfolio");
+    expect(redirectMock).toHaveBeenCalledTimes(1);
     expect(redirectMock).toHaveBeenCalledWith("/portfolio");
   });
 
