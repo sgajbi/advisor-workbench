@@ -184,6 +184,7 @@ describe("useOutcomeReviewHandoffs", () => {
 
     rerender({ primaryReview: reviewItem() });
 
+    expect(result.current.aiNarrativePending).toBe(false);
     expect(result.current.aiNarrativeOutcome).toBeNull();
     expect(result.current.clientCommunicationBoundary).toBeNull();
   });
@@ -261,8 +262,63 @@ describe("useOutcomeReviewHandoffs", () => {
 
     rerender({ primaryReview: reviewItem() });
 
+    expect(result.current.reportJobPending).toBe(false);
     expect(result.current.handoffStatusMessages).toEqual([]);
     expect(result.current.clientCommunicationBoundary).toBeNull();
+  });
+
+  it("does not let an obsolete report completion clear the selected review request", async () => {
+    const firstReportJob = deferred<ReportJobHandleResponse>();
+    const secondReportJob = deferred<ReportJobHandleResponse>();
+    vi.mocked(getDpmOutcomeReviewReportInput)
+      .mockResolvedValueOnce(reportInputResponse())
+      .mockResolvedValueOnce(reportInputResponse("or_2"));
+    vi.mocked(submitDpmOutcomeReviewReportJob)
+      .mockReturnValueOnce(firstReportJob.promise)
+      .mockReturnValueOnce(secondReportJob.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let firstCompletion!: Promise<void>;
+    act(() => {
+      firstCompletion = result.current.requestOutcomeReportJob();
+    });
+    await waitFor(() => {
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledTimes(1);
+    });
+
+    const secondReview = reviewItem({
+      outcomeReviewId: "or_2",
+      portfolioId: "PB_SG_INCOME_002",
+    });
+    rerender({ primaryReview: secondReview });
+
+    let secondCompletion!: Promise<void>;
+    act(() => {
+      secondCompletion = result.current.requestOutcomeReportJob();
+    });
+    await waitFor(() => {
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledTimes(2);
+    });
+
+    await act(async () => {
+      firstReportJob.resolve(reportJobHandle());
+      await firstCompletion;
+    });
+
+    expect(result.current.reportJobPending).toBe(true);
+    expect(result.current.handoffStatusMessages).toEqual([]);
+
+    await act(async () => {
+      secondReportJob.resolve(reportJobHandle());
+      await secondCompletion;
+    });
+
+    expect(result.current.reportJobPending).toBe(false);
+    expect(result.current.handoffStatusMessages).toEqual(["Report request Accepted."]);
   });
 
   it("rejects narrative evidence returned for a different outcome review", async () => {

@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   getDpmOutcomeReviewReportInput,
   requestDpmOutcomeReviewAiNarrative,
@@ -30,9 +38,14 @@ type ContextBoundValue<T> = {
 };
 
 type ContextBoundActionState<T> = {
-  pendingContextKey: string | null;
+  pendingRequest: ContextBoundRequest | null;
   result: ContextBoundValue<T> | null;
   error: ContextBoundValue<string> | null;
+};
+
+type ContextBoundRequest = {
+  contextKey: string;
+  sequence: number;
 };
 
 export type OutcomeReviewHandoffActions = {
@@ -52,10 +65,10 @@ export function useOutcomeReviewHandoffs({
 }: Params): OutcomeReviewHandoffActions {
   const [reportJobState, setReportJobState] = useState<
     ContextBoundActionState<string>
-  >({ pendingContextKey: null, result: null, error: null });
+  >({ pendingRequest: null, result: null, error: null });
   const [aiNarrativeState, setAiNarrativeState] = useState<
     ContextBoundActionState<DpmAiWorkflowOutcome>
-  >({ pendingContextKey: null, result: null, error: null });
+  >({ pendingRequest: null, result: null, error: null });
   const [handoffBoundaries, setHandoffBoundaries] = useState<
     Record<string, OutcomeReviewClientCommunicationBoundaryView>
   >({});
@@ -77,9 +90,11 @@ export function useOutcomeReviewHandoffs({
 
   const reportJobStatus = valueForContext(reportJobState.result, currentContextKey);
   const reportJobError = valueForContext(reportJobState.error, currentContextKey);
-  const reportJobPending = reportJobState.pendingContextKey === currentContextKey;
+  const reportJobPending =
+    reportJobState.pendingRequest?.contextKey === currentContextKey;
   const aiNarrativeError = valueForContext(aiNarrativeState.error, currentContextKey);
-  const aiNarrativePending = aiNarrativeState.pendingContextKey === currentContextKey;
+  const aiNarrativePending =
+    aiNarrativeState.pendingRequest?.contextKey === currentContextKey;
   const aiNarrativeOutcome = valueForContext(aiNarrativeState.result, currentContextKey);
 
   const reportJobAvailable = Boolean(primaryReview && !primaryReview.reportInputBlocked);
@@ -112,9 +127,18 @@ export function useOutcomeReviewHandoffs({
     const requestIsCurrent = () =>
       requestSequence === reportRequestSequenceRef.current &&
       currentContextKey === committedContextKeyRef.current;
+    const clearPendingRequest = () =>
+      clearSupersededPendingRequest(
+        setReportJobState,
+        currentContextKey,
+        requestSequence,
+      );
     const outcomeReviewId = primaryReview.outcomeReviewId;
     setReportJobState({
-      pendingContextKey: currentContextKey,
+      pendingRequest: {
+        contextKey: currentContextKey,
+        sequence: requestSequence,
+      },
       result: null,
       error: null,
     });
@@ -122,6 +146,7 @@ export function useOutcomeReviewHandoffs({
       const reportInput = await getDpmOutcomeReviewReportInput(outcomeReviewId);
       assertOutcomeReviewIdentity(outcomeReviewId, reportInput.data);
       if (!requestIsCurrent()) {
+        clearPendingRequest();
         return;
       }
       const handle = await submitDpmOutcomeReviewReportJob({
@@ -129,6 +154,7 @@ export function useOutcomeReviewHandoffs({
         outcomeReportInput: reportInput.data,
       });
       if (!requestIsCurrent()) {
+        clearPendingRequest();
         return;
       }
       const boundary = buildOutcomeClientCommunicationBoundaryView(reportInput.data);
@@ -139,7 +165,7 @@ export function useOutcomeReviewHandoffs({
         }));
       }
       setReportJobState({
-        pendingContextKey: null,
+        pendingRequest: null,
         result: bindToContext(
           currentContextKey,
           `Report request ${businessStateLabel(handle.status)}.`,
@@ -148,10 +174,11 @@ export function useOutcomeReviewHandoffs({
       });
     } catch (error) {
       if (!requestIsCurrent()) {
+        clearPendingRequest();
         return;
       }
       setReportJobState({
-        pendingContextKey: null,
+        pendingRequest: null,
         result: null,
         error: bindToContext(
           currentContextKey,
@@ -175,9 +202,18 @@ export function useOutcomeReviewHandoffs({
     const requestIsCurrent = () =>
       requestSequence === aiRequestSequenceRef.current &&
       currentContextKey === committedContextKeyRef.current;
+    const clearPendingRequest = () =>
+      clearSupersededPendingRequest(
+        setAiNarrativeState,
+        currentContextKey,
+        requestSequence,
+      );
     const outcomeReviewId = primaryReview.outcomeReviewId;
     setAiNarrativeState({
-      pendingContextKey: currentContextKey,
+      pendingRequest: {
+        contextKey: currentContextKey,
+        sequence: requestSequence,
+      },
       result: null,
       error: null,
     });
@@ -190,6 +226,7 @@ export function useOutcomeReviewHandoffs({
         narrative.ai_evidence_input,
       );
       if (!requestIsCurrent()) {
+        clearPendingRequest();
         return;
       }
       const boundary = buildOutcomeClientCommunicationBoundaryView(
@@ -202,7 +239,7 @@ export function useOutcomeReviewHandoffs({
         }));
       }
       setAiNarrativeState({
-        pendingContextKey: null,
+        pendingRequest: null,
         result: bindToContext(
           currentContextKey,
           buildDpmAiWorkflowOutcome(
@@ -215,10 +252,11 @@ export function useOutcomeReviewHandoffs({
       });
     } catch (error) {
       if (!requestIsCurrent()) {
+        clearPendingRequest();
         return;
       }
       setAiNarrativeState({
-        pendingContextKey: null,
+        pendingRequest: null,
         result: null,
         error: bindToContext(
           currentContextKey,
@@ -263,6 +301,19 @@ function valueForContext<T>(
   contextKey: string | null,
 ): T | null {
   return boundValue?.contextKey === contextKey ? boundValue.value : null;
+}
+
+function clearSupersededPendingRequest<T>(
+  setState: Dispatch<SetStateAction<ContextBoundActionState<T>>>,
+  contextKey: string,
+  sequence: number,
+): void {
+  setState((current) =>
+    current.pendingRequest?.contextKey === contextKey &&
+    current.pendingRequest.sequence === sequence
+      ? { ...current, pendingRequest: null }
+      : current,
+  );
 }
 
 function assertOutcomeReviewIdentity(
