@@ -1227,9 +1227,19 @@ async function postAdvisorIdeaCandidateAction<TRequest>({
     const body = await response.text();
     throw new Error(`${errorLabel} failed (${response.status}): ${body}`);
   }
-  return unwrapGatewayData<AdvisorIdeaCandidateActionData>(
+  const data = unwrapGatewayData<AdvisorIdeaCandidateActionData>(
     await response.json(),
   );
+  const persistenceDecision = data.persistence?.decision;
+  if (
+    persistenceDecision !== "accepted" &&
+    persistenceDecision !== "replayed"
+  ) {
+    throw new Error(
+      `${errorLabel} did not return source-owned persistence proof. No success was recorded in Workbench.`,
+    );
+  }
+  return data;
 }
 
 function unwrapGatewayData<T>(payload: unknown): T {
