@@ -1,5 +1,6 @@
 import type { IntakeEnvelopeResponse } from "./contracts";
 import type { IntakeTask } from "./draft";
+import type { PortfolioBundlePayload } from "./types";
 
 export type IntakeReceipt = {
   title: string;
@@ -18,25 +19,26 @@ const COUNT_LABELS: Record<string, string> = {
   business_dates: "Business dates",
 };
 
-const EXPECTED_COUNT_KEYS: Record<IntakeTask, string[]> = {
-  CREATE_PORTFOLIO: ["portfolios"],
-  ADD_POSITIONS: ["instruments", "transactions", "market_prices"],
-  ADD_TRANSACTIONS: ["transactions"],
-  ADD_INSTRUMENTS: ["instruments"],
-  ADD_MARKET_DATA: ["market_prices"],
-  IMPORT_FILE: [],
+type ExpectedPublishedCount = {
+  key: keyof typeof COUNT_LABELS;
+  expected: number;
 };
 
-export function buildIntakeReceipt(task: IntakeTask, response: IntakeEnvelopeResponse): IntakeReceipt {
+export function buildIntakeReceipt(
+  task: IntakeTask,
+  payload: PortfolioBundlePayload,
+  response: IntakeEnvelopeResponse,
+): IntakeReceipt {
   const entries = Object.entries(response.data.published_counts);
-  const expectedKeys = EXPECTED_COUNT_KEYS[task];
-  const hasTaskEvidence =
-    task === "IMPORT_FILE"
-      ? entries.some(([key]) => key in COUNT_LABELS)
-      : expectedKeys.every((key) => Object.hasOwn(response.data.published_counts, key));
+  const expectedCounts = expectedPublishedCounts(task, payload).filter((count) => count.expected > 0);
+  const hasTaskEvidence = expectedCounts.length > 0 && expectedCounts.every(({ key, expected }) => {
+    return response.data.published_counts[key] === expected;
+  });
 
   if (!hasTaskEvidence) {
-    throw new Error("Portfolio intake confirmation did not include the published record counts for this request.");
+    throw new Error(
+      "Portfolio intake confirmation did not include payload-matching published record counts for this request.",
+    );
   }
 
   const counts = entries
@@ -51,4 +53,31 @@ export function buildIntakeReceipt(task: IntakeTask, response: IntakeEnvelopeRes
     contractVersion: response.contract_version,
     counts,
   };
+}
+
+function expectedPublishedCounts(task: IntakeTask, payload: PortfolioBundlePayload): ExpectedPublishedCount[] {
+  switch (task) {
+    case "CREATE_PORTFOLIO":
+      return [{ key: "portfolios", expected: payload.portfolios.length }];
+    case "ADD_POSITIONS":
+      return [
+        { key: "instruments", expected: payload.instruments.length },
+        { key: "transactions", expected: payload.transactions.length },
+        { key: "market_prices", expected: payload.marketPrices.length },
+      ];
+    case "ADD_TRANSACTIONS":
+      return [{ key: "transactions", expected: payload.transactions.length }];
+    case "ADD_INSTRUMENTS":
+      return [{ key: "instruments", expected: payload.instruments.length }];
+    case "ADD_MARKET_DATA":
+      return [{ key: "market_prices", expected: payload.marketPrices.length }];
+    case "IMPORT_FILE":
+      return [
+        { key: "portfolios", expected: payload.portfolios.length },
+        { key: "instruments", expected: payload.instruments.length },
+        { key: "transactions", expected: payload.transactions.length },
+        { key: "market_prices", expected: payload.marketPrices.length },
+        { key: "fx_rates", expected: payload.fxRates.length },
+      ];
+  }
 }

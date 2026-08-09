@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import IntakePage from "@/app/intake/page";
@@ -113,6 +113,27 @@ describe("IntakePage", () => {
     expect(screen.getByRole("heading", { name: "Reviewed request published" })).toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
+  it("does not confirm publication from zero-count source evidence", async () => {
+    ingestPortfolioBundleMock.mockResolvedValueOnce({
+      correlation_id: "corr-intake-001",
+      contract_version: "v1",
+      data: {
+        published_counts: {
+          portfolios: 0,
+        },
+      },
+    });
+    renderIntakePage();
+    startValidPortfolioRequest();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+
+    expect(await screen.findByText(/payload-matching published record counts/i)).toBeInTheDocument();
+    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry publication" })).toBeInTheDocument();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
+
   it("invalidates review after a material edit", async () => {
     renderIntakePage();
     startValidPortfolioRequest();
@@ -145,6 +166,27 @@ describe("IntakePage", () => {
     expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
+  it("ignores stale source confirmation after a material edit during publication", async () => {
+    const pending = deferred<ReturnType<typeof sourceConfirmation>>();
+    ingestPortfolioBundleMock.mockReturnValueOnce(pending.promise);
+    renderIntakePage();
+    startValidPortfolioRequest();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+
+    await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+    fireEvent.change(screen.getByLabelText("Client reference"), { target: { value: "CIF_002" } });
+
+    await act(async () => {
+      pending.resolve(sourceConfirmation());
+      await pending.promise;
+    });
+
+    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review request" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Reviewed request published" })).not.toBeInTheDocument();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
+
   it("adds a genuinely blank keyed row instead of copying business values", async () => {
     renderIntakePage();
     fireEvent.click(screen.getByRole("button", { name: /Load opening positions/i }));
@@ -171,6 +213,28 @@ describe("IntakePage", () => {
 
     expect(await screen.findByText("intake.csv")).toBeInTheDocument();
     expect(screen.getByText("Ready for review")).toBeInTheDocument();
+    expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
+  });
+
+  it("shows parsed file records before allowing CSV publication", async () => {
+    renderIntakePage();
+    fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
+
+    const input = screen.getByLabelText("Supported CSV intake file");
+    const file = new File([validCsv()], "intake.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: async () => validCsv() });
+    fireEvent.change(input, {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByText("Ready for review")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+
+    expect(screen.getByText("Parsed record preview")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio PORT_001" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Instrument SEC_001" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Transaction TRN_PORT_001_SEC_001_1" })).toBeInTheDocument();
+    expect(screen.getByText("2026-08-08T00:00:00Z")).toBeInTheDocument();
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
 
@@ -207,6 +271,17 @@ function sourceConfirmation() {
       },
     },
   };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, resolve, reject };
 }
 
 function validCsv(): string {

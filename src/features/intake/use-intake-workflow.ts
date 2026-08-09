@@ -42,6 +42,7 @@ export function useIntakeWorkflow() {
   const [fileParseError, setFileParseError] = useState<string | null>(null);
   const [referenceDataRequested, setReferenceDataRequested] = useState(false);
   const activeFileReadRef = useRef(0);
+  const draftGenerationRef = useRef(0);
 
   const portfolioLookupQuery = useQuery({
     queryKey: ["intake-lookups", "portfolios"],
@@ -81,6 +82,7 @@ export function useIntakeWorkflow() {
 
   function selectTask(task: IntakeTask) {
     activeFileReadRef.current += 1;
+    draftGenerationRef.current += 1;
     setDraft(createBlankIntakeDraft(task));
     setValidationAttempted(false);
     setReviewedIntent(null);
@@ -92,6 +94,7 @@ export function useIntakeWorkflow() {
   }
 
   function updateDraft(updater: (current: IntakeDraft) => IntakeDraft) {
+    draftGenerationRef.current += 1;
     setDraft((current) => (current ? updater(current) : current));
     setReviewedIntent(null);
     setReceipt(null);
@@ -121,16 +124,20 @@ export function useIntakeWorkflow() {
       return false;
     }
 
+    const submittedGeneration = draftGenerationRef.current;
+    const submittedIntent = reviewedIntent;
     setSubmissionState("submitting");
     setSubmissionError(null);
     try {
-      const response = await ingestPortfolioBundle(reviewedIntent.projection.payload, {
-        idempotencyKey: reviewedIntent.idempotencyKey,
+      const response = await ingestPortfolioBundle(submittedIntent.projection.payload, {
+        idempotencyKey: submittedIntent.idempotencyKey,
       });
-      setReceipt(buildIntakeReceipt(draft.task, response));
+      if (draftGenerationRef.current !== submittedGeneration) return false;
+      setReceipt(buildIntakeReceipt(draft.task, submittedIntent.projection.payload, response));
       setSubmissionState("accepted");
       return true;
     } catch (error) {
+      if (draftGenerationRef.current !== submittedGeneration) return false;
       setSubmissionState("error");
       setSubmissionError(intakeSubmissionErrorCopy(error));
       return false;
@@ -140,6 +147,7 @@ export function useIntakeWorkflow() {
   async function parseFile(file: File): Promise<boolean> {
     if (draft?.task !== "IMPORT_FILE") return false;
     const readSequence = ++activeFileReadRef.current;
+    draftGenerationRef.current += 1;
     setFileParseState("parsing");
     setFileParseError(null);
     setReviewedIntent(null);
@@ -165,6 +173,7 @@ export function useIntakeWorkflow() {
 
   function startAnotherRequest() {
     activeFileReadRef.current += 1;
+    draftGenerationRef.current += 1;
     setDraft(null);
     setValidationAttempted(false);
     setReviewedIntent(null);

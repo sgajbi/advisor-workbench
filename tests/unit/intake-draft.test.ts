@@ -166,10 +166,51 @@ describe("intake draft", () => {
       sourceSystem: "OPERATIONS_FILE_IMPORT",
       mode: "UPSERT",
       businessDates: [{ businessDate: "2026-08-08" }],
-      portfolios: [],
-      instruments: [],
-      transactions: [],
-      marketPrices: [],
+      portfolios: [
+        {
+          portfolioId: "PORT_001",
+          baseCurrency: "USD",
+          openDate: "2026-08-08",
+          riskExposure: "Balanced",
+          investmentTimeHorizon: "Long term",
+          portfolioType: "Discretionary",
+          bookingCenter: "Singapore",
+          cifId: "CIF_001",
+          status: "Pending activation",
+        },
+      ],
+      instruments: [
+        {
+          securityId: "SEC_001",
+          name: "Global Equity Fund",
+          isin: "US0000000001",
+          instrumentCurrency: "USD",
+          productType: "Fund",
+        },
+      ],
+      transactions: [
+        {
+          transaction_id: "TRN_001",
+          portfolio_id: "PORT_001",
+          instrument_id: "SEC_001",
+          security_id: "SEC_001",
+          transaction_date: "2026-08-08T00:00:00Z",
+          transaction_type: "BUY",
+          quantity: 10,
+          price: 100,
+          gross_transaction_amount: 1_000,
+          trade_currency: "USD",
+          currency: "USD",
+        },
+      ],
+      marketPrices: [
+        {
+          securityId: "SEC_001",
+          priceDate: "2026-08-08",
+          price: 100,
+          currency: "USD",
+        },
+      ],
       fxRates: [],
     };
 
@@ -178,6 +219,17 @@ describe("intake draft", () => {
       expect.objectContaining({
         task: "IMPORT_FILE",
         facts: expect.arrayContaining([{ label: "File", value: "portfolio-bundle.csv" }]),
+        previewSections: expect.arrayContaining([
+          expect.objectContaining({
+            title: "Transaction records",
+            records: expect.arrayContaining([
+              expect.objectContaining({
+                title: "Transaction TRN_001",
+                facts: expect.arrayContaining([{ label: "Quantity", value: "10" }]),
+              }),
+            ]),
+          }),
+        ]),
       }),
     );
   });

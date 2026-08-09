@@ -87,7 +87,18 @@ export type IntakeReviewProjection = {
   title: string;
   description: string;
   facts: IntakeReviewFact[];
+  previewSections?: IntakeReviewPreviewSection[];
   payload: PortfolioBundlePayload;
+};
+
+export type IntakeReviewPreviewSection = {
+  title: string;
+  records: IntakeReviewPreviewRecord[];
+};
+
+export type IntakeReviewPreviewRecord = {
+  title: string;
+  facts: IntakeReviewFact[];
 };
 
 export const INTAKE_TASKS: ReadonlyArray<{
@@ -264,9 +275,9 @@ export function validateIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[]
         ...draft.rows.flatMap((row, index) => validateMarketData(row, index)),
       ];
     case "IMPORT_FILE":
-      return draft.payload && draft.fileName
+      return draft.payload && draft.fileName && hasPublishableRecords(draft.payload)
         ? []
-        : [{ field: "file", message: "Choose a supported CSV intake file to review." }];
+        : [{ field: "file", message: "Choose a supported CSV intake file with at least one publishable record." }];
   }
 }
 
@@ -365,9 +376,79 @@ export function buildIntakeReviewProjection(draft: IntakeDraft): IntakeReviewPro
           { label: "Transactions", value: String(draft.payload.transactions.length) },
           { label: "Price observations", value: String(draft.payload.marketPrices.length) },
         ],
+        previewSections: fileImportPreviewSections(draft.payload),
         payload: draft.payload,
       };
   }
+}
+
+function hasPublishableRecords(payload: PortfolioBundlePayload): boolean {
+  return (
+    payload.portfolios.length +
+      payload.instruments.length +
+      payload.transactions.length +
+      payload.marketPrices.length +
+      payload.fxRates.length >
+    0
+  );
+}
+
+function fileImportPreviewSections(payload: PortfolioBundlePayload): IntakeReviewPreviewSection[] {
+  return [
+    {
+      title: "Portfolio records",
+      records: payload.portfolios.map((portfolio) => ({
+        title: `Portfolio ${portfolio.portfolioId}`,
+        facts: [
+          { label: "Client reference", value: portfolio.cifId },
+          { label: "Advisor", value: portfolio.advisorId ?? "Not provided" },
+          { label: "Base currency", value: portfolio.baseCurrency },
+          { label: "Opening date", value: portfolio.openDate },
+          { label: "Mandate type", value: portfolio.portfolioType },
+          { label: "Status", value: portfolio.status },
+        ],
+      })),
+    },
+    {
+      title: "Instrument records",
+      records: payload.instruments.map((instrument) => ({
+        title: `Instrument ${instrument.securityId}`,
+        facts: [
+          { label: "Name", value: instrument.name },
+          { label: "ISIN", value: instrument.isin },
+          { label: "Currency", value: instrument.instrumentCurrency },
+          { label: "Product type", value: instrument.productType },
+          { label: "Asset class", value: instrument.assetClass ?? "Not provided" },
+        ],
+      })),
+    },
+    {
+      title: "Transaction records",
+      records: payload.transactions.map((transaction) => ({
+        title: `Transaction ${transaction.transaction_id}`,
+        facts: [
+          { label: "Portfolio", value: transaction.portfolio_id },
+          { label: "Security", value: transaction.security_id },
+          { label: "Type", value: transaction.transaction_type },
+          { label: "Quantity", value: String(transaction.quantity) },
+          { label: "Price", value: String(transaction.price) },
+          { label: "Trade date", value: transaction.transaction_date },
+        ],
+      })),
+    },
+    {
+      title: "Price observation records",
+      records: payload.marketPrices.map((price) => ({
+        title: `Price ${price.securityId} ${price.priceDate}`,
+        facts: [
+          { label: "Security", value: price.securityId },
+          { label: "Observation date", value: price.priceDate },
+          { label: "Price", value: String(price.price) },
+          { label: "Currency", value: price.currency },
+        ],
+      })),
+    },
+  ].filter((section) => section.records.length > 0);
 }
 
 function validatePortfolio(input: CreatePortfolioInput): IntakeValidationIssue[] {

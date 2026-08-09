@@ -79,6 +79,34 @@ export function IntakeReviewRail({
                 </div>
               ))}
             </dl>
+            {reviewedProjection.previewSections?.length ? (
+              <div className={styles.recordPreview} aria-label="Parsed record preview">
+                <div className={styles.recordPreviewHeader}>
+                  <strong>Parsed record preview</strong>
+                  <span>Review each parsed source record before publication.</span>
+                </div>
+                {reviewedProjection.previewSections.map((section) => (
+                  <section className={styles.previewSection} key={section.title}>
+                    <h3>{section.title}</h3>
+                    <div className={styles.previewRecords}>
+                      {section.records.map((record) => (
+                        <article className={styles.previewRecord} key={record.title}>
+                          <h4>{record.title}</h4>
+                          <dl className={styles.previewFacts}>
+                            {record.facts.map((fact) => (
+                              <div className={styles.factRow} key={fact.label}>
+                                <dt>{fact.label}</dt>
+                                <dd>{fact.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : null}
             {submissionError ? <Alert severity="error">{submissionError}</Alert> : null}
             <p className={styles.reviewNote}>
               Publishing confirms these details are correct. Any edit invalidates this review.
