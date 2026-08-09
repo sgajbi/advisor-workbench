@@ -61,7 +61,11 @@ Current repository posture:
    one typed domain boundary trims business strings and dates and canonicalizes governed currency,
    ISIN, and transaction-type codes. Review facts, the intent fingerprint, the Gateway payload, and
    receipt-count reconciliation therefore consume the same normalized projection; Workbench does
-   not rely on undocumented source coercion. Workbench generates a bounded
+   not rely on undocumented source coercion. Operational file review is bounded without truncating
+   the source request: record families stay collapsed until requested, each family materializes at
+   most ten source-ordered records per page, and range, total, page, and keyboard navigation remain
+   explicit. The complete normalized payload remains immutable and every source row is still
+   published; pagination is a review projection, never a data limit. Workbench generates a bounded
    `X-Idempotency-Key` at review, reuses the exact reviewed payload and key after a failed identical
    attempt, and requires a valid
    Gateway envelope plus task-relevant `published_counts`, correlation id, and contract version
