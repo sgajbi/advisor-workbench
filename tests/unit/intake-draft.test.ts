@@ -8,6 +8,7 @@ import {
   validateIntakeDraft,
   type PositionsDraft,
 } from "../../src/features/intake/draft";
+import { normalizeIntakeDraft } from "../../src/features/intake/normalization";
 
 describe("intake draft", () => {
   it.each([
@@ -156,6 +157,242 @@ describe("intake draft", () => {
     draft.input.portfolioId = "PORT_001";
 
     expect(intakeDraftFingerprint(draft)).not.toBe(first);
+  });
+
+  it.each([
+    {
+      task: "CREATE_PORTFOLIO" as const,
+      prepare: () => {
+        const draft = createBlankIntakeDraft("CREATE_PORTFOLIO");
+        if (draft.task !== "CREATE_PORTFOLIO") throw new Error("Unexpected draft");
+        draft.input = {
+          portfolioId: " PORT_001 ",
+          baseCurrency: " usd ",
+          openDate: " 2026-08-08 ",
+          riskExposure: " Balanced ",
+          investmentTimeHorizon: " Long term ",
+          portfolioType: " Discretionary ",
+          bookingCenter: " Singapore ",
+          cifId: " CIF_001 ",
+          advisorId: " ADV_001 ",
+          status: " Pending activation ",
+        };
+        return draft;
+      },
+      expected: {
+        fact: { label: "Portfolio", value: "PORT_001" },
+        payloadPath: ["portfolios", 0, "baseCurrency"] as const,
+        payloadValue: "USD",
+      },
+    },
+    {
+      task: "ADD_POSITIONS" as const,
+      prepare: () => {
+        const draft = createBlankIntakeDraft("ADD_POSITIONS");
+        if (draft.task !== "ADD_POSITIONS") throw new Error("Unexpected draft");
+        draft.portfolioId = " PORT_001 ";
+        draft.baseCurrency = " usd ";
+        draft.rows[0].value = {
+          securityId: " SEC_001 ",
+          instrumentName: " Global Equity Fund ",
+          isin: " us0000000001 ",
+          productType: " Fund ",
+          quantity: 12,
+          price: 104.25,
+          effectiveDate: " 2026-08-08 ",
+          transactionType: " buy ",
+        };
+        return draft;
+      },
+      expected: {
+        fact: { label: "Effective date", value: "2026-08-08" },
+        payloadPath: ["instruments", 0, "isin"] as const,
+        payloadValue: "US0000000001",
+      },
+    },
+    {
+      task: "ADD_TRANSACTIONS" as const,
+      prepare: () => {
+        const draft = createBlankIntakeDraft("ADD_TRANSACTIONS");
+        if (draft.task !== "ADD_TRANSACTIONS") throw new Error("Unexpected draft");
+        draft.portfolioId = " PORT_001 ";
+        draft.baseCurrency = " eur ";
+        draft.rows[0].value = {
+          securityId: " SEC_001 ",
+          quantity: 4,
+          price: 99.5,
+          transactionDate: " 2026-08-08 ",
+          transactionType: " sell ",
+        };
+        return draft;
+      },
+      expected: {
+        fact: { label: "Trade currency", value: "EUR" },
+        payloadPath: ["transactions", 0, "transaction_type"] as const,
+        payloadValue: "SELL",
+      },
+    },
+    {
+      task: "ADD_INSTRUMENTS" as const,
+      prepare: () => {
+        const draft = createBlankIntakeDraft("ADD_INSTRUMENTS");
+        if (draft.task !== "ADD_INSTRUMENTS") throw new Error("Unexpected draft");
+        draft.rows[0].value = {
+          securityId: " SEC_001 ",
+          name: " Global Equity Fund ",
+          isin: " us0000000001 ",
+          instrumentCurrency: " gbp ",
+          productType: " Fund ",
+          assetClass: " Equity ",
+        };
+        return draft;
+      },
+      expected: {
+        fact: { label: "Currencies", value: "GBP" },
+        payloadPath: ["instruments", 0, "securityId"] as const,
+        payloadValue: "SEC_001",
+      },
+    },
+    {
+      task: "ADD_MARKET_DATA" as const,
+      prepare: () => {
+        const draft = createBlankIntakeDraft("ADD_MARKET_DATA");
+        if (draft.task !== "ADD_MARKET_DATA") throw new Error("Unexpected draft");
+        draft.rows[0].value = {
+          securityId: " SEC_001 ",
+          priceDate: " 2026-08-08 ",
+          price: 101.25,
+          currency: " chf ",
+        };
+        return draft;
+      },
+      expected: {
+        fact: { label: "Observation date", value: "2026-08-08" },
+        payloadPath: ["marketPrices", 0, "currency"] as const,
+        payloadValue: "CHF",
+      },
+    },
+  ])("normalizes $task once for validation, review, and publication", ({ prepare, expected }) => {
+    vi.spyOn(Date, "now").mockReturnValue(1_000);
+    const draft = prepare();
+
+    expect(validateIntakeDraft(draft)).toEqual([]);
+    const projection = buildIntakeReviewProjection(draft);
+
+    expect(projection.facts).toContainEqual(expected.fact);
+    expect(readPath(projection.payload, expected.payloadPath)).toBe(expected.payloadValue);
+  });
+
+  it("normalizes imported portfolio, instrument, transaction, price, and business-date evidence without mutating the draft", () => {
+    const draft = createBlankIntakeDraft("IMPORT_FILE");
+    if (draft.task !== "IMPORT_FILE") throw new Error("Unexpected draft");
+    draft.fileName = " portfolio-bundle.csv ";
+    draft.payload = {
+      sourceSystem: " OPERATIONS_FILE_IMPORT ",
+      mode: "UPSERT",
+      businessDates: [{ businessDate: " 2026-08-08 " }],
+      portfolios: [{
+        portfolioId: " PORT_001 ",
+        baseCurrency: " usd ",
+        openDate: " 2026-08-08 ",
+        riskExposure: " Balanced ",
+        investmentTimeHorizon: " Long term ",
+        portfolioType: " Discretionary ",
+        bookingCenter: " Singapore ",
+        cifId: " CIF_001 ",
+        advisorId: " ADV_001 ",
+        status: " Pending activation ",
+      }],
+      instruments: [{
+        securityId: " SEC_001 ",
+        name: " Global Equity Fund ",
+        isin: " us0000000001 ",
+        instrumentCurrency: " usd ",
+        productType: " Fund ",
+        assetClass: " Equity ",
+      }],
+      transactions: [{
+        transaction_id: " TRN_001 ",
+        portfolio_id: " PORT_001 ",
+        instrument_id: " SEC_001 ",
+        security_id: " SEC_001 ",
+        transaction_date: " 2026-08-08T00:00:00Z ",
+        transaction_type: " buy ",
+        quantity: 10,
+        price: 100,
+        gross_transaction_amount: 1_000,
+        trade_currency: " usd ",
+        currency: " usd ",
+      }],
+      marketPrices: [{
+        securityId: " SEC_001 ",
+        priceDate: " 2026-08-08 ",
+        price: 100,
+        currency: " usd ",
+      }],
+      fxRates: [],
+    };
+    const rawFingerprint = JSON.stringify(draft);
+
+    expect(validateIntakeDraft(draft)).toEqual([]);
+    const normalized = normalizeIntakeDraft(draft);
+    const projection = buildIntakeReviewProjection(draft);
+
+    expect(JSON.stringify(draft)).toBe(rawFingerprint);
+    expect(intakeDraftFingerprint(draft)).toBe(intakeDraftFingerprint(normalized));
+    expect(projection.facts).toContainEqual({ label: "File", value: "portfolio-bundle.csv" });
+    expect(projection.payload).toEqual(expect.objectContaining({
+      sourceSystem: "OPERATIONS_FILE_IMPORT",
+      businessDates: [{ businessDate: "2026-08-08" }],
+      portfolios: [expect.objectContaining({ portfolioId: "PORT_001", baseCurrency: "USD" })],
+      instruments: [expect.objectContaining({ securityId: "SEC_001", isin: "US0000000001" })],
+      transactions: [expect.objectContaining({
+        transaction_id: "TRN_001",
+        transaction_type: "BUY",
+        currency: "USD",
+      })],
+      marketPrices: [expect.objectContaining({ priceDate: "2026-08-08", currency: "USD" })],
+    }));
+    expect(projection.previewSections).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        title: "Transaction records",
+        records: [expect.objectContaining({ title: "Transaction TRN_001" })],
+      }),
+      expect.objectContaining({
+        title: "Business date records",
+        records: [{
+          title: "Business date 2026-08-08",
+          facts: [{ label: "Date", value: "2026-08-08" }],
+        }],
+      }),
+    ]));
+  });
+
+  it("does not let normalization weaken blank, identifier, date, currency, or positive-number checks", () => {
+    const draft = createBlankIntakeDraft("ADD_POSITIONS");
+    if (draft.task !== "ADD_POSITIONS") throw new Error("Unexpected draft");
+    draft.portfolioId = "   ";
+    draft.baseCurrency = " usd-x ";
+    draft.rows[0].value = {
+      securityId: "   ",
+      instrumentName: " Fund ",
+      isin: " not-an-isin ",
+      productType: " Equity ",
+      quantity: Number.NaN,
+      price: 0,
+      effectiveDate: " 2026-02-31 ",
+      transactionType: " buy ",
+    };
+
+    expect(validateIntakeDraft(draft).map(({ field }) => field)).toEqual([
+      "portfolioId",
+      "baseCurrency",
+      `rows.${draft.rows[0].rowId}.securityId`,
+      `rows.${draft.rows[0].rowId}.isin`,
+      `rows.${draft.rows[0].rowId}.quantity`,
+      `rows.${draft.rows[0].rowId}.price`,
+      `rows.${draft.rows[0].rowId}.effectiveDate`,
+    ]);
   });
 
   it("keeps an imported file in review rather than publishing during parse", () => {
@@ -320,3 +557,10 @@ describe("intake draft", () => {
     expect(() => buildIntakeReviewProjection(draft)).toThrow("unresolved validation issues");
   });
 });
+
+function readPath(value: unknown, path: readonly (string | number)[]): unknown {
+  return path.reduce<unknown>((current, segment) => {
+    if (current === null || typeof current !== "object") return undefined;
+    return (current as Record<string | number, unknown>)[segment];
+  }, value);
+}
