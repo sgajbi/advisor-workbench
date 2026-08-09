@@ -69,6 +69,27 @@ function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: stri
   });
 }
 
+function reexportsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: string): boolean {
+  return sourceFile.statements.some((statement) => {
+    if (
+      !ts.isExportDeclaration(statement) ||
+      !statement.moduleSpecifier ||
+      !ts.isStringLiteral(statement.moduleSpecifier) ||
+      !moduleMatches(statement.moduleSpecifier.text, moduleSuffix)
+    ) {
+      return false;
+    }
+
+    if (statement.exportClause === undefined || ts.isNamespaceExport(statement.exportClause)) {
+      return true;
+    }
+
+    return statement.exportClause.elements.some(
+      (element) => (element.propertyName?.text ?? element.name.text) === name,
+    );
+  });
+}
+
 function accessesMember(sourceFile: ts.SourceFile, namespaceName: string, memberName: string): boolean {
   let found = false;
 
@@ -125,7 +146,7 @@ function callArguments(sourceFile: ts.SourceFile, functionName: string): string[
 describe("Portfolio Intake payload ownership", () => {
   const modules = sourceModules();
 
-  it("recognizes aliased and extension-qualified boundary imports", () => {
+  it("recognizes aliased, namespace, extension-qualified, and re-exported boundaries", () => {
     const sourceFile = ts.createSourceFile(
       "fixture.ts",
       [
@@ -137,9 +158,23 @@ describe("Portfolio Intake payload ownership", () => {
       ts.ScriptTarget.Latest,
       true,
     );
+    const namedReexport = ts.createSourceFile(
+      "named-reexport-fixture.ts",
+      'export { ingestPortfolioBundle as publishReviewedIntent } from "./api.ts";',
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    const namespaceReexport = ts.createSourceFile(
+      "namespace-reexport-fixture.ts",
+      'export * as intakeApi from "./api.js";',
+      ts.ScriptTarget.Latest,
+      true,
+    );
 
     expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(importsModule(sourceFile, "/payload-builder")).toBe(true);
+    expect(reexportsName(namedReexport, "/api", "ingestPortfolioBundle")).toBe(true);
+    expect(reexportsName(namespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
   });
 
   it("keeps payload construction behind the reviewed projection", () => {
@@ -168,16 +203,21 @@ describe("Portfolio Intake payload ownership", () => {
     const publicationConsumers = modules
       .filter(({ sourceFile }) => importsName(sourceFile, "/api", "ingestPortfolioBundle"))
       .map(({ path }) => path);
+    const publicationReexports = modules
+      .filter(({ sourceFile }) => reexportsName(sourceFile, "/api", "ingestPortfolioBundle"))
+      .map(({ path }) => path);
 
     expect(publicationConsumers).toEqual(["src/features/intake/use-intake-workflow.ts"]);
+    expect(publicationReexports).toEqual([]);
 
     const workflow = modules.find(
       ({ path }) => path === "src/features/intake/use-intake-workflow.ts",
     );
     expect(workflow).toBeDefined();
     expect(callArguments(workflow!.sourceFile, "buildIntakeReviewProjection")).toEqual([["draft"]]);
-    const [publicationCall] = callExpressions(workflow!.sourceFile, "ingestPortfolioBundle");
-    expect(publicationCall).toBeDefined();
+    const publicationCalls = callExpressions(workflow!.sourceFile, "ingestPortfolioBundle");
+    expect(publicationCalls).toHaveLength(1);
+    const [publicationCall] = publicationCalls;
     expect(publicationCall.arguments).toHaveLength(2);
     expect(publicationCall.arguments[0].getText(workflow!.sourceFile)).toBe(
       "submittedIntent.projection.payload",
