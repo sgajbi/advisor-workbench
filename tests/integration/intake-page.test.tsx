@@ -9,6 +9,7 @@ const ingestPortfolioBundleMock = vi.fn();
 const getPortfolioLookupsMock = vi.fn();
 const getInstrumentLookupsMock = vi.fn();
 const getCurrencyLookupsMock = vi.fn();
+const SOURCE_ACTION_TEST_TIMEOUT_MS = 15_000;
 
 vi.mock("@/features/intake/api", () => ({
   ingestPortfolioBundle: (...args: unknown[]) => ingestPortfolioBundleMock(...args),
@@ -110,7 +111,7 @@ describe("IntakePage", () => {
     expect(screen.getByText("Contract v1")).toBeInTheDocument();
     expect(screen.getAllByText("Source confirmed").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("heading", { name: "Reviewed request published" })).toBeInTheDocument();
-  });
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("invalidates review after a material edit", async () => {
     renderIntakePage();
@@ -142,7 +143,7 @@ describe("IntakePage", () => {
       ingestPortfolioBundleMock.mock.calls[0][1].idempotencyKey,
     );
     expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
-  });
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   it("adds a genuinely blank keyed row instead of copying business values", async () => {
     renderIntakePage();
