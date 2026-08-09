@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 
@@ -124,5 +124,24 @@ describe("AdvisoryOverviewWorkspace", () => {
       await screen.findByText("Advisory proposal access is not available")
     ).toBeInTheDocument();
     expect(screen.queryByTestId("advisory-priority-worklist")).not.toBeInTheDocument();
+  });
+
+  it("lets the advisor return after a later proposal window fails", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({
+        items: [],
+        next_cursor: "cursor-2",
+      })
+      .mockRejectedValueOnce(new Error("gateway unavailable"));
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
+    expect(await screen.findByText("This proposal window is unavailable")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Return to previous proposals" }));
+    expect(await screen.findByText("No proposals in this source window")).toBeInTheDocument();
+    expect(screen.getByText("Proposal view 1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next proposals" })).toBeEnabled();
   });
 });
