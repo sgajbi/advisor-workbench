@@ -4,6 +4,7 @@ import {
   combineQuerySourcePostures,
   isQuerySourceSettledAndAvailable,
   projectQuerySourcePosture,
+  querySourceAvailability,
 } from "@/features/platform-runtime/query-source-posture";
 
 describe("query source posture", () => {
@@ -92,5 +93,28 @@ describe("query source posture", () => {
       isFetching: false,
       hasError: true,
     }))).toBe(false);
+  });
+
+  it("projects a closed availability state for business-facing source copy", () => {
+    expect(querySourceAvailability(projectQuerySourcePosture({
+      hasData: false,
+      isLoading: true,
+      isFetching: true,
+      hasError: false,
+    }))).toBe("checking");
+
+    expect(querySourceAvailability(projectQuerySourcePosture({
+      hasData: true,
+      isLoading: false,
+      isFetching: false,
+      hasError: false,
+    }))).toBe("ready");
+
+    expect(querySourceAvailability(projectQuerySourcePosture({
+      hasData: true,
+      isLoading: false,
+      isFetching: false,
+      hasError: true,
+    }))).toBe("unavailable");
   });
 });

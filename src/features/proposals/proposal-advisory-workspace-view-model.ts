@@ -9,7 +9,10 @@ import {
   proposalStageDescription,
   proposalStageLabel,
 } from "./proposal-workflow-copy";
-import type { QuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
+import {
+  querySourceAvailability,
+  type QuerySourcePosture,
+} from "@/features/platform-runtime/query-source-posture";
 
 export type ProposalTradeRow = {
   key: string;
@@ -116,18 +119,6 @@ const READY_SOURCE_POSTURE: QuerySourcePosture = {
   hasRefreshFailure: false,
 };
 
-function sourceState(
-  posture: QuerySourcePosture,
-): "checking" | "ready" | "unavailable" {
-  if (posture.isInitialLoading || posture.isRefreshing) {
-    return "checking";
-  }
-  if (posture.isPermissionBlocked || posture.isUnavailable || posture.hasRefreshFailure) {
-    return "unavailable";
-  }
-  return "ready";
-}
-
 function readinessItems(
   data: ProposalDetailData,
   approvals: ProposalApprovalsData | undefined,
@@ -142,7 +133,7 @@ function readinessItems(
     (approval) => approval.approval_type === "COMPLIANCE" && approval.approved
   );
   const hasHashes = Boolean(evidence.hashes || evidence.artifact_hash || currentVersion(data).artifact_hash);
-  const approvalsSourceState = sourceState(approvalsSourcePosture);
+  const approvalsSourceState = querySourceAvailability(approvalsSourcePosture);
 
   return [
     {
@@ -242,9 +233,9 @@ export function buildProposalAdvisoryWorkspaceModel({
   const latestEvent = workflow?.events?.[workflow.events.length - 1];
   const approvalCount = approvals?.approvals?.length ?? 0;
   const versionCount = lineage?.versions?.length ?? 0;
-  const workflowSourceState = sourceState(workflowSourcePosture);
-  const approvalsSourceState = sourceState(approvalsSourcePosture);
-  const lineageSourceState = sourceState(lineageSourcePosture);
+  const workflowSourceState = querySourceAvailability(workflowSourcePosture);
+  const approvalsSourceState = querySourceAvailability(approvalsSourcePosture);
+  const lineageSourceState = querySourceAvailability(lineageSourcePosture);
 
   return {
     title: data.proposal.title ?? `Proposal ${data.proposal.proposal_id}`,

@@ -1,6 +1,10 @@
 import { Alert, Button, Divider, FormControlLabel, Switch } from "@mui/material";
 
 import { SemanticBadge, Text } from "@/design-system";
+import {
+  querySourceAvailability,
+  type QuerySourcePosture,
+} from "@/features/platform-runtime/query-source-posture";
 import type {
   ProposalApprovalRecord,
   ProposalLineageData,
@@ -99,6 +103,7 @@ export function ProposalAdvisorActionsPanel({
 
 export function ProposalEvidenceControlsPanel({
   includeEvidence,
+  includeEvidenceDisabled,
   onIncludeEvidenceChange,
   versionLookupNo,
   onVersionLookupNoChange,
@@ -110,6 +115,7 @@ export function ProposalEvidenceControlsPanel({
   versionActionError,
 }: {
   includeEvidence: boolean;
+  includeEvidenceDisabled: boolean;
   onIncludeEvidenceChange: (value: boolean) => void;
   versionLookupNo: number;
   onVersionLookupNoChange: (value: number) => void;
@@ -130,6 +136,7 @@ export function ProposalEvidenceControlsPanel({
           <Switch
             size="small"
             checked={includeEvidence}
+            disabled={includeEvidenceDisabled}
             onChange={(event) => onIncludeEvidenceChange(event.target.checked)}
           />
         }
@@ -178,13 +185,16 @@ export function ProposalLineageAuditPanel({
   simulationHash,
   generatedAt,
   lineageVersions,
+  sourcePosture,
 }: {
   artifactHash?: string;
   requestHash?: string;
   simulationHash?: string;
   generatedAt?: string;
   lineageVersions: NonNullable<ProposalLineageData["versions"]>;
+  sourcePosture: QuerySourcePosture;
 }) {
+  const sourceAvailability = querySourceAvailability(sourcePosture);
   return (
     <section className={detailStyles.railPanel}>
       <Text variant="panelTitle">Lineage and audit</Text>
@@ -207,7 +217,11 @@ export function ProposalLineageAuditPanel({
           ? `Latest artifact generated at ${generatedAt}.`
           : "Evidence metadata is not available in the current Gateway response."}
       </Text>
-      {lineageVersions.length ? (
+      {sourceAvailability === "checking" ? (
+        <Text variant="secondary">Checking version lineage evidence.</Text>
+      ) : sourceAvailability === "unavailable" ? (
+        <Text variant="secondary">Version lineage evidence is unavailable.</Text>
+      ) : lineageVersions.length ? (
         <div className={detailStyles.timelineList}>
           {lineageVersions.map((version) => (
             <div key={`lineage-${String(version.version_no ?? "na")}`}>
@@ -227,15 +241,25 @@ export function ProposalReviewHistoryPanel({
   workflowEvents,
   hiddenWorkflowEventCount,
   approvals,
+  workflowSourcePosture,
+  approvalsSourcePosture,
 }: {
   workflowEvents: ProposalWorkflowEvent[];
   hiddenWorkflowEventCount: number;
   approvals: ProposalApprovalRecord[];
+  workflowSourcePosture: QuerySourcePosture;
+  approvalsSourcePosture: QuerySourcePosture;
 }) {
+  const workflowSourceAvailability = querySourceAvailability(workflowSourcePosture);
+  const approvalsSourceAvailability = querySourceAvailability(approvalsSourcePosture);
   return (
     <section className={detailStyles.railPanel}>
       <Text variant="panelTitle">Review history</Text>
-      {workflowEvents.length ? (
+      {workflowSourceAvailability === "checking" ? (
+        <Text variant="secondary">Checking workflow history.</Text>
+      ) : workflowSourceAvailability === "unavailable" ? (
+        <Text variant="secondary">Workflow history is unavailable.</Text>
+      ) : workflowEvents.length ? (
         <div className={detailStyles.timelineList}>
           {workflowEvents.map((event) => (
             <div key={event.event_id}>
@@ -256,7 +280,11 @@ export function ProposalReviewHistoryPanel({
         <Text variant="secondary">No workflow events.</Text>
       )}
       <Divider sx={{ my: 1 }} />
-      {approvals.length ? (
+      {approvalsSourceAvailability === "checking" ? (
+        <Text variant="secondary">Checking approval history.</Text>
+      ) : approvalsSourceAvailability === "unavailable" ? (
+        <Text variant="secondary">Approval history is unavailable.</Text>
+      ) : approvals.length ? (
         <div className={detailStyles.timelineList}>
           {approvals.map((approval) => (
             <div key={approval.approval_id}>

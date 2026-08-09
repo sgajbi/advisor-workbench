@@ -224,6 +224,38 @@ describe("ProposalDetailView", () => {
     };
   }
 
+  function approvalsEvidence(state = "DRAFT", proposalId = "pp-1") {
+    return {
+      proposal_id: proposalId,
+      current_state: state,
+      approvals: [],
+    };
+  }
+
+  function lineageEvidence(proposalId = "pp-1") {
+    return {
+      proposal_id: proposalId,
+      versions: [{
+        version_no: 1,
+        request_hash: "rh_1",
+        simulation_hash: "sh_1",
+        artifact_hash: "ah_1",
+      }],
+    };
+  }
+
+  function prepareCoherentActionRefresh(nextState: string) {
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence(nextState));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence(nextState));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+  }
+
   function renderWithQueryClient(proposalId = "pp-1") {
     const queryClient = new QueryClient();
     return render(
@@ -267,6 +299,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("submits draft to risk review", async () => {
+    prepareCoherentActionRefresh("RISK_REVIEW");
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
       .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
@@ -303,7 +336,13 @@ describe("ProposalDetailView", () => {
       () => new Promise((resolve) => {
         completeWorkflowRead = () => resolve(workflowEvidence("DRAFT"));
       })
-    );
+    ).mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
       .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
@@ -326,6 +365,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("prevents duplicate submission while the source action is pending", async () => {
+    prepareCoherentActionRefresh("RISK_REVIEW");
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
@@ -346,6 +386,83 @@ describe("ProposalDetailView", () => {
     await waitFor(() => expect(action).toBeDisabled());
     completeSubmission?.();
     await screen.findByTestId("proposal-action-status");
+  });
+
+  it("does not publish success when refreshed sources disagree on proposal posture", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+
+    renderWithQueryClient();
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
+  });
+
+  it("does not publish success when any refreshed source belongs to another proposal", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence("pp-2"));
+
+    renderWithQueryClient();
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The source action returned evidence for a different proposal. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+  });
+
+  it("fences evidence-mode changes while an action and coherent refresh are pending", async () => {
+    let completeSubmission: (() => void) | undefined;
+    submitProposalMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+      })
+    );
+    prepareCoherentActionRefresh("RISK_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    renderWithQueryClient();
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
+    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+
+    await waitFor(() => expect(evidenceMode).toBeDisabled());
+    fireEvent.click(evidenceMode);
+    expect(evidenceMode).not.toBeChecked();
+
+    completeSubmission?.();
+    await screen.findByTestId("proposal-action-status");
+    expect(evidenceMode).toBeEnabled();
   });
 
   it("keeps mutation failure explicit without exposing the raw downstream response", async () => {
@@ -541,6 +658,17 @@ describe("ProposalDetailView", () => {
     expect(screen.queryByText("Risk review remains required before execution.")).not.toBeInTheDocument();
     expect(screen.getByText("Checking source risk approval evidence.")).toBeInTheDocument();
     expect(screen.getByText("Checking source compliance approval evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Checking version lineage and review history")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
+    expect(screen.getByText("Checking version lineage evidence.")).toBeInTheDocument();
+    expect(screen.getByText("Checking workflow history.")).toBeInTheDocument();
+    expect(screen.getByText("Checking approval history.")).toBeInTheDocument();
+    expect(screen.queryByText("No workflow events.")).not.toBeInTheDocument();
+    expect(screen.queryByText("No approvals recorded.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No lineage metadata returned for this proposal yet.")
+    ).not.toBeInTheDocument();
   });
 
   it("switches between preserved narrative and memo review panels with true tabs", async () => {

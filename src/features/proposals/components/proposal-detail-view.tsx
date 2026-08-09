@@ -25,6 +25,7 @@ import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-
 import {
   isQuerySourceSettledAndAvailable,
   projectQuerySourcePosture,
+  querySourceAvailability,
 } from "@/features/platform-runtime/query-source-posture";
 import {
   ModeTabs,
@@ -70,6 +71,48 @@ function isNotFound(error: unknown): boolean {
     return false;
   }
   return /\(404\)/.test(error.message) || /not found/i.test(error.message);
+}
+
+function confirmRefreshedProposalActionEvidence({
+  approvals,
+  detail,
+  expectedProposalId,
+  lineage,
+  previousState,
+  workflow,
+}: {
+  approvals?: ProposalApprovalsData;
+  detail?: ProposalDetailData;
+  expectedProposalId: string;
+  lineage?: ProposalLineageData;
+  previousState: string;
+  workflow?: ProposalWorkflowEventsData;
+}): string {
+  const refreshedState = detail?.proposal?.current_state;
+  if (
+    detail?.proposal?.proposal_id !== expectedProposalId
+    || workflow?.proposal_id !== expectedProposalId
+    || approvals?.proposal_id !== expectedProposalId
+    || lineage?.proposal_id !== expectedProposalId
+  ) {
+    throw new Error(
+      "The source action returned evidence for a different proposal. Reload the proposal before continuing."
+    );
+  }
+  if (!refreshedState || refreshedState === previousState) {
+    throw new Error(
+      "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing."
+    );
+  }
+  if (
+    workflow.current_state !== refreshedState
+    || approvals.current_state !== refreshedState
+  ) {
+    throw new Error(
+      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
+    );
+  }
+  return refreshedState;
 }
 
 export default function ProposalDetailView({ proposalId }: Props) {
@@ -186,18 +229,14 @@ export default function ProposalDetailView({ proposalId }: Props) {
         "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
       );
     }
-    if (detailResult.data?.proposal?.proposal_id !== expectedProposalId) {
-      throw new Error(
-        "The source action returned evidence for a different proposal. Reload the proposal before continuing."
-      );
-    }
-    const refreshedState = detailResult.data?.proposal?.current_state;
-    if (!refreshedState || refreshedState === previousState) {
-      throw new Error(
-        "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing."
-      );
-    }
-    return refreshedState;
+    return confirmRefreshedProposalActionEvidence({
+      approvals: approvalsResult.data,
+      detail: detailResult.data,
+      expectedProposalId,
+      lineage: lineageResult.data,
+      previousState,
+      workflow: workflowResult.data,
+    });
   }
 
   async function runProposalAction(
@@ -416,6 +455,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
     approvalsQuery.error ? "Approval evidence" : null,
     lineageQuery.error ? "Version lineage" : null,
   ].filter((item): item is string => item !== null);
+  const disclosureSourcesChecking = [
+    workflowSourcePosture,
+    approvalsSourcePosture,
+    lineageSourcePosture,
+  ].some((posture) => querySourceAvailability(posture) === "checking");
 
   return (
     <main className={detailStyles.page} aria-label="Proposal advisory workspace">
@@ -535,16 +579,23 @@ export default function ProposalDetailView({ proposalId }: Props) {
           <span>
             <strong>Evidence, versions and review history</strong>
             <small>
-              {ancillaryFailures.length
-                ? `${ancillaryFailures.length} evidence source${ancillaryFailures.length === 1 ? "" : "s"} unavailable`
-                : `${evidenceModel.lineageVersions.length} version${evidenceModel.lineageVersions.length === 1 ? "" : "s"} · ${evidenceModel.visibleWorkflowEvents.length} recent event${evidenceModel.visibleWorkflowEvents.length === 1 ? "" : "s"}`}
+              {disclosureSourcesChecking
+                ? "Checking version lineage and review history"
+                : ancillaryFailures.length
+                  ? `${ancillaryFailures.length} evidence source${ancillaryFailures.length === 1 ? "" : "s"} unavailable`
+                  : `${evidenceModel.lineageVersions.length} version${evidenceModel.lineageVersions.length === 1 ? "" : "s"} · ${evidenceModel.visibleWorkflowEvents.length} recent event${evidenceModel.visibleWorkflowEvents.length === 1 ? "" : "s"}`}
             </small>
           </span>
         </summary>
         <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
-            onIncludeEvidenceChange={setIncludeEvidence}
+            includeEvidenceDisabled={acting}
+            onIncludeEvidenceChange={(value) => {
+              if (!activeActionRef.current) {
+                setIncludeEvidence(value);
+              }
+            }}
             versionLookupNo={versionLookupNo}
             onVersionLookupNoChange={setVersionLookupNo}
             onLoadVersion={() => void onLoadVersion()}
@@ -560,11 +611,14 @@ export default function ProposalDetailView({ proposalId }: Props) {
             simulationHash={evidenceModel.simulationHash}
             generatedAt={evidenceModel.generatedAt}
             lineageVersions={evidenceModel.lineageVersions}
+            sourcePosture={lineageSourcePosture}
           />
           <ProposalReviewHistoryPanel
             workflowEvents={evidenceModel.visibleWorkflowEvents}
             hiddenWorkflowEventCount={evidenceModel.hiddenWorkflowEventCount}
             approvals={approvals?.approvals ?? []}
+            workflowSourcePosture={workflowSourcePosture}
+            approvalsSourcePosture={approvalsSourcePosture}
           />
         </div>
       </details>
