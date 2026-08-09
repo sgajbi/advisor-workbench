@@ -585,27 +585,30 @@ test.describe('Performance workbench smoke', () => {
     const missingContributionDetail = contributionModule.getByText(
       'Contribution detail is marked available, but no position or segment contribution rows were returned for the current selection.'
     );
-    await expect(
-      contributionModule
-        .getByLabel('Position contribution table')
-        .or(contributionModule.getByLabel(/Asset Class contribution table/i))
-        .or(missingContributionDetail)
-    ).toBeVisible({ timeout: 30000 });
-    if ((await missingContributionDetail.count()) > 0) {
+    const positionContributionTable = contributionModule.getByLabel('Position contribution table');
+    const segmentContributionTable = contributionModule.getByLabel(/Asset Class contribution table/i);
+    await expect.poll(
+      async () =>
+        (await positionContributionTable.isVisible()) ||
+        (await segmentContributionTable.isVisible()) ||
+        (await missingContributionDetail.isVisible()),
+      { timeout: 30000 },
+    ).toBe(true);
+    if (await missingContributionDetail.isVisible()) {
       await expect(missingContributionDetail).toBeVisible();
       return;
     }
-    if ((await contributionModule.getByLabel(/Asset Class contribution table/i).count()) > 0) {
-      await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
+    if (await segmentContributionTable.isVisible()) {
+      await expect(segmentContributionTable).toBeVisible();
       const aggregateFrame = await measureTableFrame(
-        contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
+        segmentContributionTable.locator('..')
       );
       expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
       return;
     }
-    await expect(contributionModule.getByLabel('Position contribution table')).toBeVisible();
+    await expect(positionContributionTable).toBeVisible();
     await expect(contributionModule.getByRole('tab', { name: /^Positions/i })).toBeVisible();
-    await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toHaveCount(0);
+    await expect(segmentContributionTable).not.toBeVisible();
     await expect(
       contributionModule
         .getByRole('tab', { name: /^Positions/i })
@@ -646,15 +649,15 @@ test.describe('Performance workbench smoke', () => {
       await page.keyboard.press('ArrowRight');
       await expect(segmentSummaryTab).toHaveAttribute('aria-selected', 'true');
       await expect(segmentSummaryTab).toBeFocused();
-      await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
-      await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
+      await expect(positionContributionTable).not.toBeVisible();
+      await expect(segmentContributionTable).toBeVisible();
       await expect(contributionModule.getByText('Equity')).toBeVisible();
       await expect(
         contributionModule.locator('table[aria-label*="Asset Class contribution"] tbody tr').first(),
       ).toBeVisible();
 
       const aggregateFrame = await measureTableFrame(
-        contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
+        segmentContributionTable.locator('..')
       );
       expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
     }

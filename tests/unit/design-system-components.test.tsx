@@ -362,6 +362,16 @@ describe("design-system components", () => {
     expect(screen.getByRole("tab", { name: "Summary" })).toHaveFocus();
     expect(onChange).toHaveBeenCalledWith("summary");
 
+    onChange.mockClear();
+    const verticalArrow = new KeyboardEvent("keydown", {
+      key: "ArrowDown",
+      bubbles: true,
+      cancelable: true,
+    });
+    fireEvent(screen.getByRole("tab", { name: "Summary" }), verticalArrow);
+    expect(verticalArrow.defaultPrevented).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+
     fireEvent.click(screen.getByRole("button", { name: "Copy decision note" }));
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
 
