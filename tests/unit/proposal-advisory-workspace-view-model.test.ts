@@ -134,4 +134,28 @@ describe("proposal advisory workspace view model", () => {
       detail: "Checking source risk approval evidence.",
     });
   });
+
+  it("preserves source-owned compliance blockers while approval evidence is unsettled", () => {
+    const model = buildProposalAdvisoryWorkspaceModel({
+      data: {
+        proposal: { proposal_id: "pp_blocked", current_state: "DRAFT" },
+        current_version: {
+          simulate_request: { body: {} },
+          evidence_bundle: { blocking_reasons: [{ code: "SUITABILITY_REVIEW_REQUIRED" }] },
+        },
+      },
+      approvalsSourcePosture: {
+        isInitialLoading: false,
+        isRefreshing: false,
+        isPermissionBlocked: false,
+        isUnavailable: true,
+        hasRefreshFailure: false,
+      },
+    });
+
+    expect(model.readiness.find((item) => item.label === "Compliance Review")).toMatchObject({
+      state: "Blocked",
+      detail: "Source evidence returned blocking issues; approval evidence is not currently settled.",
+    });
+  });
 });

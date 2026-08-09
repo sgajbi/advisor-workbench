@@ -22,7 +22,10 @@ import {
   submitProposal,
 } from "../api";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
-import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
+import {
+  isQuerySourceSettledAndAvailable,
+  projectQuerySourcePosture,
+} from "@/features/platform-runtime/query-source-posture";
 import {
   ModeTabs,
   SectionBlock,
@@ -72,6 +75,7 @@ function isNotFound(error: unknown): boolean {
 export default function ProposalDetailView({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
+  const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState<ProposalReviewMode>("narrative");
@@ -82,6 +86,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
   const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
+  const actionEvidenceBlockedRef = useRef(false);
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
@@ -132,10 +137,31 @@ export default function ProposalDetailView({ proposalId }: Props) {
     isFetching: lineageQuery.isFetching,
     hasError: Boolean(lineageQuery.error),
   });
+  const actionSourcePostures = [
+    workflowSourcePosture,
+    approvalsSourcePosture,
+    lineageSourcePosture,
+  ];
+  const actionSourcesReady = actionSourcePostures.every(isQuerySourceSettledAndAvailable);
+  const actionSourcesChecking = actionSourcePostures.some(
+    (posture) => posture.isInitialLoading || posture.isRefreshing
+  );
+  const actionDisabled = acting || actionEvidenceBlocked || !actionSourcesReady;
+  const actionDisabledReason = actionEvidenceBlocked
+    ? "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+    : acting
+      ? "Recording the source action and refreshing review evidence."
+      : !actionSourcesReady
+        ? actionSourcesChecking
+          ? "Checking current proposal evidence before actions are available."
+          : "Proposal actions are unavailable until all review evidence can be confirmed. Reload the proposal to continue."
+        : undefined;
 
   useEffect(() => {
     activeActionRef.current = null;
+    actionEvidenceBlockedRef.current = false;
     setActing(false);
+    setActionEvidenceBlocked(false);
     setReviewMode("narrative");
     setError(null);
     setActionMessage(null);
@@ -179,19 +205,25 @@ export default function ProposalDetailView({ proposalId }: Props) {
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
-    if (!previousState || activeActionRef.current) return;
+    if (!previousState || activeActionRef.current || actionEvidenceBlockedRef.current || !actionSourcesReady) return;
     const actionContext = { proposalId, token: Symbol("proposal-action") };
     activeActionRef.current = actionContext;
     setActing(true);
     setError(null);
     setActionMessage(null);
+    let sourceActionCompleted = false;
     try {
       await action();
+      sourceActionCompleted = true;
       const refreshedState = await refreshActionEvidence(previousState, actionContext.proposalId);
       if (activeActionRef.current?.token !== actionContext.token) return;
       setActionMessage(`${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`);
     } catch (err) {
       if (activeActionRef.current?.token !== actionContext.token) return;
+      if (sourceActionCompleted) {
+        actionEvidenceBlockedRef.current = true;
+        setActionEvidenceBlocked(true);
+      }
       const message = err instanceof Error ? err.message : "";
       setError(
         message.startsWith("The source action")
@@ -479,7 +511,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
             currentState={data.proposal.current_state}
             stageCopy={stageCopy}
             stageItems={evidenceModel.stageItems}
-            acting={acting}
+            actionDisabled={actionDisabled}
+            actionDisabledReason={actionDisabledReason}
             onSubmitForRiskReview={() => void onSubmitForReview("RISK")}
             onSubmitForComplianceReview={() => void onSubmitForReview("COMPLIANCE")}
             onApproveRisk={() => void onApproveRisk()}

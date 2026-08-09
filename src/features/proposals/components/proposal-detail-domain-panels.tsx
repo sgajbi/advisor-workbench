@@ -16,7 +16,8 @@ export function ProposalAdvisorActionsPanel({
   currentState,
   stageCopy,
   stageItems,
-  acting,
+  actionDisabled,
+  actionDisabledReason,
   onSubmitForRiskReview,
   onSubmitForComplianceReview,
   onApproveRisk,
@@ -26,7 +27,8 @@ export function ProposalAdvisorActionsPanel({
   currentState: string;
   stageCopy: string;
   stageItems: ProposalDetailStageItem[];
-  acting: boolean;
+  actionDisabled: boolean;
+  actionDisabledReason?: string;
   onSubmitForRiskReview: () => void;
   onSubmitForComplianceReview: () => void;
   onApproveRisk: () => void;
@@ -42,6 +44,11 @@ export function ProposalAdvisorActionsPanel({
         </SemanticBadge>
       </div>
       <Text variant="secondary">{stageCopy}</Text>
+      {actionDisabledReason ? (
+        <Alert severity="info" sx={{ py: 0, alignItems: "center" }}>
+          {actionDisabledReason}
+        </Alert>
+      ) : null}
       <div className={detailStyles.stageList}>
         {stageItems.map((stage) => (
           <span key={stage.label} className={stage.reached ? detailStyles.stageDone : detailStyles.stagePending}>
@@ -52,31 +59,31 @@ export function ProposalAdvisorActionsPanel({
       <div className={detailStyles.actionStack}>
         {currentState === "DRAFT" ? (
           <>
-            <Button type="button" variant="contained" onClick={onSubmitForRiskReview} disabled={acting}>
+            <Button type="button" variant="contained" onClick={onSubmitForRiskReview} disabled={actionDisabled}>
               Submit for risk review
             </Button>
             <Button
               type="button"
               variant="outlined"
               onClick={onSubmitForComplianceReview}
-              disabled={acting}
+              disabled={actionDisabled}
             >
               Submit for compliance review
             </Button>
           </>
         ) : null}
         {currentState === "RISK_REVIEW" ? (
-          <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
+          <Button type="button" variant="contained" onClick={onApproveRisk} disabled={actionDisabled}>
             Approve risk review
           </Button>
         ) : null}
         {currentState === "COMPLIANCE_REVIEW" ? (
-          <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
+          <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={actionDisabled}>
             Approve compliance review
           </Button>
         ) : null}
         {currentState === "AWAITING_CLIENT_CONSENT" ? (
-          <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
+          <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={actionDisabled}>
             Record client consent
           </Button>
         ) : null}
