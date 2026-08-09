@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { ActionButton } from "@/design-system";
 
@@ -33,6 +33,7 @@ function IntakeRecordPreviewSection({
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const recordListId = useId();
+  const recordListRef = useRef<HTMLDivElement>(null);
   const pageCount = Math.max(1, Math.ceil(section.recordCount / INTAKE_PREVIEW_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const startIndex = (currentPage - 1) * INTAKE_PREVIEW_PAGE_SIZE;
@@ -40,6 +41,11 @@ function IntakeRecordPreviewSection({
   const visibleRecords = isOpen
     ? projectRecordRange(section, startIndex, endIndex)
     : [];
+
+  function showPage(nextPage: number) {
+    if (recordListRef.current) recordListRef.current.scrollTop = 0;
+    setPage(nextPage);
+  }
 
   return (
     <details
@@ -55,7 +61,7 @@ function IntakeRecordPreviewSection({
       </summary>
       {isOpen ? (
         <>
-          <div className={styles.previewRecords} id={recordListId}>
+          <div className={styles.previewRecords} id={recordListId} ref={recordListRef}>
             {visibleRecords.map((record, recordIndex) => (
               <article
                 className={styles.previewRecord}
@@ -85,7 +91,7 @@ function IntakeRecordPreviewSection({
                 aria-controls={recordListId}
                 aria-label={`Previous ${section.title.toLowerCase()}`}
                 disabled={currentPage === 1}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() => showPage(Math.max(1, currentPage - 1))}
               >
                 Previous
               </ActionButton>
@@ -94,7 +100,7 @@ function IntakeRecordPreviewSection({
                 aria-controls={recordListId}
                 aria-label={`Next ${section.title.toLowerCase()}`}
                 disabled={currentPage === pageCount}
-                onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+                onClick={() => showPage(Math.min(pageCount, currentPage + 1))}
               >
                 Next
               </ActionButton>
