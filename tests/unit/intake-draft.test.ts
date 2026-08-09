@@ -165,7 +165,7 @@ describe("intake draft", () => {
     draft.payload = {
       sourceSystem: "OPERATIONS_FILE_IMPORT",
       mode: "UPSERT",
-      businessDates: [{ businessDate: "2026-02-31" }],
+      businessDates: [{ businessDate: "2026-08-08" }],
       portfolios: [
         {
           portfolioId: "PORT_001",
@@ -250,7 +250,7 @@ describe("intake draft", () => {
     draft.payload = {
       sourceSystem: "OPERATIONS_FILE_IMPORT",
       mode: "UPSERT",
-      businessDates: [{ businessDate: "2026-08-08" }],
+      businessDates: [{ businessDate: "2026-02-31" }],
       portfolios: [
         {
           portfolioId: "",
