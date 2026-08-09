@@ -278,57 +278,6 @@
   background: #f6f9fc;
 }
 
-.portfolio-cashflow-summary-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.portfolio-cashflow-summary-stat {
-  display: grid;
-  gap: var(--space-1);
-  align-content: start;
-  min-height: 6.5rem;
-  padding: var(--space-3);
-  border: 1px solid rgba(217, 224, 231, 0.9);
-  border-radius: var(--radius-sm);
-  background: #fff;
-}
-
-.portfolio-cashflow-summary-stat span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.portfolio-cashflow-summary-stat strong {
-  font-size: 1.35rem;
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.portfolio-cashflow-summary-stat em {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-style: normal;
-  line-height: 1.35;
-}
-
-.portfolio-cashflow-chart {
-  position: relative;
-  min-height: 0;
-  height: 20rem;
-  max-height: 20rem;
-  padding: var(--space-2) 0;
-  border: 1px solid rgba(217, 224, 231, 0.9);
-  border-radius: var(--radius-sm);
-  background: #fff;
-}
-
 .portfolio-timeseries-chart-svg {
   display: block;
   width: 100%;
@@ -352,127 +301,6 @@
   fill: #131b2e;
   stroke: #fff;
   stroke-width: 2;
-}
-
-.portfolio-cashflow-grid-line {
-  stroke: rgba(105, 117, 134, 0.16);
-  stroke-width: 1;
-}
-
-.portfolio-cashflow-zero-line {
-  stroke: rgba(105, 117, 134, 0.32);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
-}
-
-.portfolio-cashflow-flow-bar {
-  opacity: 0.92;
-}
-
-.portfolio-cashflow-flow-bar-positive {
-  fill: rgba(75, 125, 98, 0.68);
-}
-
-.portfolio-cashflow-flow-bar-negative {
-  fill: rgba(161, 90, 63, 0.74);
-}
-
-.portfolio-cashflow-focus-callout rect {
-  fill: #2d3133;
-  stroke: rgba(255, 223, 157, 0.72);
-  stroke-width: 0.75;
-  filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.18));
-}
-
-.portfolio-cashflow-focus-callout circle {
-  fill: #ffdf9d;
-}
-
-.portfolio-cashflow-focus-callout text {
-  fill: #eff1f3;
-  font-size: 5.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.portfolio-cashflow-focus-callout text:first-of-type {
-  fill: rgba(239, 241, 243, 0.78);
-  font-size: 4.8px;
-}
-
-.portfolio-cashflow-forecast-mix {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  line-height: 1.35;
-}
-
-.portfolio-cashflow-forecast-mix span {
-  border: 1px solid rgba(217, 224, 231, 0.9);
-  border-radius: var(--radius-sm);
-  padding: 0.25rem 0.5rem;
-  background: #fff;
-}
-
-.portfolio-cashflow-scope {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-block: 1px solid rgba(217, 224, 231, 0.9);
-  background: rgba(248, 250, 252, 0.72);
-}
-
-.portfolio-cashflow-scope > div {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border-right: 1px solid rgba(217, 224, 231, 0.78);
-}
-
-.portfolio-cashflow-scope > div:last-child {
-  border-right: 0;
-}
-
-.portfolio-cashflow-scope span,
-.portfolio-cashflow-source-note strong {
-  color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.portfolio-cashflow-scope strong {
-  color: var(--text);
-  font-size: 0.8125rem;
-  font-weight: 650;
-  line-height: 1.35;
-  font-variant-numeric: tabular-nums;
-}
-
-.portfolio-cashflow-source-note {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0 var(--space-1);
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  line-height: 1.45;
-}
-
-.portfolio-cashflow-source-note span {
-  min-width: 0;
-}
-
-.portfolio-cashflow-table-note {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  line-height: 1.4;
 }
 
 .portfolio-performance-snapshot-overview {
@@ -591,8 +419,7 @@
 }
 
 .analytics-table-variant-portfolio.analytics-table-frame,
-.portfolio-analytics-table.analytics-table-frame,
-.portfolio-cashflow-table.analytics-table-frame {
+.portfolio-analytics-table.analytics-table-frame {
   width: 100%;
   max-width: 100%;
   border-radius: 0;
@@ -604,28 +431,13 @@
 }
 
 .analytics-table-variant-portfolio.analytics-table-frame .MuiTable-root,
-.portfolio-analytics-table.analytics-table-frame .MuiTable-root,
-.portfolio-cashflow-table.analytics-table-frame .MuiTable-root {
+.portfolio-analytics-table.analytics-table-frame .MuiTable-root {
   min-width: 0;
 }
 
 .analytics-table-variant-portfolio.analytics-table-frame .MuiTableCell-root,
-.portfolio-analytics-table.analytics-table-frame .MuiTableCell-root,
-.portfolio-cashflow-table.analytics-table-frame .MuiTableCell-root {
+.portfolio-analytics-table.analytics-table-frame .MuiTableCell-root {
   white-space: nowrap;
-}
-
-.portfolio-cashflow-card {
-  gap: var(--space-3);
-}
-
-.portfolio-cashflow-card-flat .portfolio-cashflow-chart {
-  height: 14rem;
-  max-height: 14rem;
-}
-
-.portfolio-cashflow-card-flat .portfolio-timeseries-chart-svg {
-  max-height: 13rem;
 }
 
 @media (max-width: 960px) {
@@ -641,10 +453,6 @@
     grid-template-columns: 1fr;
   }
 
-  .portfolio-cashflow-summary-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .portfolio-allocation-ranked {
     border-left: 0;
     border-top: 1px solid rgba(226, 232, 240, 0.9);
@@ -658,21 +466,6 @@
     grid-template-columns: 1fr;
   }
 
-  .portfolio-cashflow-summary-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .portfolio-cashflow-scope {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .portfolio-cashflow-scope > div:nth-child(2) {
-    border-right: 0;
-  }
-
-  .portfolio-cashflow-scope > div:nth-child(-n + 2) {
-    border-bottom: 1px solid rgba(217, 224, 231, 0.78);
-  }
 }
 
 .workspace-tab-nav-link-disabled {
@@ -13479,7 +13272,6 @@
 
 .app-page-shell .analytics-table-frame,
 .app-page-shell .portfolio-analytics-table,
-.app-page-shell .portfolio-cashflow-table,
 .app-page-shell .performance-analysis-table {
   border-color: #c6c6cd;
   border-radius: 6px;

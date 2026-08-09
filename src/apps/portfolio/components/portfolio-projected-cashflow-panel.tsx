@@ -7,6 +7,7 @@ import {
   formatCashflowPointTitle,
 } from "../portfolio-chart-view-model";
 import type { PortfolioWorkspace } from "../types";
+import styles from "./portfolio-projected-cashflow.module.css";
 
 export default function PortfolioProjectedCashflowPanel({
   cashflowOutlook,
@@ -23,20 +24,20 @@ export default function PortfolioProjectedCashflowPanel({
     <div
       className={
         chartModel.flatCashflow
-          ? "portfolio-chart-card portfolio-cashflow-card portfolio-cashflow-card-flat"
-          : "portfolio-chart-card portfolio-cashflow-card"
+          ? `portfolio-chart-card ${styles.card} ${styles.flatCard}`
+          : `portfolio-chart-card ${styles.card}`
       }
     >
-      <div className="portfolio-cashflow-summary-strip" aria-label="Projected cashflow summary">
-        <div className="portfolio-cashflow-summary-stat">
+      <div className={styles.summaryStrip} aria-label="Projected cash movement summary">
+        <div className={styles.summaryStat}>
           <span>Net Projected Movement</span>
           <strong>{formatCurrency(cashflowOutlook.total_net_cashflow_base, baseCurrency)}</strong>
         </div>
-        <div className="portfolio-cashflow-summary-stat">
+        <div className={styles.summaryStat}>
           <span>Horizon</span>
           <strong>{`${cashflowOutlook.projection_days} days`}</strong>
         </div>
-        <div className="portfolio-cashflow-summary-stat">
+        <div className={styles.summaryStat}>
           <span>Largest Inflow</span>
           <strong>
             {chartModel.largestInflow
@@ -49,7 +50,7 @@ export default function PortfolioProjectedCashflowPanel({
             <em>{formatDate(chartModel.largestInflow.projection_date)}</em>
           ) : null}
         </div>
-        <div className="portfolio-cashflow-summary-stat">
+        <div className={styles.summaryStat}>
           <span>Largest Outflow</span>
           <strong>
             {chartModel.largestOutflow
@@ -63,7 +64,7 @@ export default function PortfolioProjectedCashflowPanel({
           ) : null}
         </div>
       </div>
-      <div className="portfolio-cashflow-chart" hidden={!chartModel.chartPoints.length}>
+      <div className={styles.chart} hidden={!chartModel.chartPoints.length}>
         <svg
           viewBox="0 0 320 196"
           className="portfolio-timeseries-chart-svg"
@@ -77,7 +78,7 @@ export default function PortfolioProjectedCashflowPanel({
               x2="296"
               y1={gridY}
               y2={gridY}
-              className="portfolio-cashflow-grid-line"
+              className={styles.gridLine}
             />
           ))}
           {chartModel.zeroLineY == null ? null : (
@@ -86,7 +87,7 @@ export default function PortfolioProjectedCashflowPanel({
               x2="296"
               y1={chartModel.zeroLineY}
               y2={chartModel.zeroLineY}
-              className="portfolio-cashflow-zero-line"
+              className={styles.zeroLine}
             />
           )}
           {chartModel.flowBars.map((bar) => (
@@ -99,8 +100,8 @@ export default function PortfolioProjectedCashflowPanel({
                 rx="4"
                 className={
                   bar.direction === "positive"
-                    ? "portfolio-cashflow-flow-bar portfolio-cashflow-flow-bar-positive"
-                    : "portfolio-cashflow-flow-bar portfolio-cashflow-flow-bar-negative"
+                    ? `${styles.flowBar} ${styles.flowBarPositive}`
+                    : `${styles.flowBar} ${styles.flowBarNegative}`
                 }
               >
                 <title>{formatCashflowNetFlowTitle(bar.point, baseCurrency)}</title>
@@ -117,7 +118,7 @@ export default function PortfolioProjectedCashflowPanel({
             </g>
           ))}
           {chartModel.focusPoint ? (
-            <g className="portfolio-cashflow-focus-callout" aria-hidden="true">
+            <g className={styles.focusCallout} aria-hidden="true">
               <rect x={chartModel.focusX} y={chartModel.focusY} width="86" height="34" rx="2" />
               <circle cx={chartModel.focusX + 76} cy={chartModel.focusY + 8} r="2.4" />
               <text x={chartModel.focusX + 8} y={chartModel.focusY + 12}>
@@ -131,8 +132,8 @@ export default function PortfolioProjectedCashflowPanel({
         </svg>
       </div>
       <div
-        className="portfolio-cashflow-forecast-mix"
-        aria-label="Projected cashflow mix"
+        className={styles.forecastMix}
+        aria-label="Projected cash movement mix"
         hidden={!chartModel.chartPoints.length}
       >
         <span>{`${chartModel.positiveFlowCount} inflow${chartModel.positiveFlowCount === 1 ? "" : "s"}`}</span>

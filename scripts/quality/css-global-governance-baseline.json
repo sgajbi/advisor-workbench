@@ -9,6 +9,7 @@
     "performance-risk-rolling-window-toolbar",
     "performance-risk-window-toolbar",
     "portfolio-primary-view-tabs",
+    "portfolio-cashflow",
     "portfolio-segmented-control",
     "portfolio-screen-rail",
     "journey-",
@@ -62,8 +63,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 14017,
-      "maxBytes": 307983
+      "maxLines": 13809,
+      "maxBytes": 303522
     }
   ]
 }

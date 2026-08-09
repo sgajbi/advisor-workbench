@@ -92,7 +92,7 @@ describe("PortfolioProjectedCashflowModule", () => {
       initialCashflowOutlook: buildOutlook({ totalNetMovement: 500 }),
     });
 
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("500 USD");
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent("500 USD");
     fireEvent.click(screen.getByRole("radio", { name: "30D" }));
 
     expect(await screen.findByText("30-day projection unavailable")).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("PortfolioProjectedCashflowModule", () => {
         "Expected cash movements could not be retrieved for this horizon. No prior-horizon figures are being shown as current."
       )
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Projected cashflow summary")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Projected cash movement summary")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
   });
 
@@ -124,7 +124,7 @@ describe("PortfolioProjectedCashflowModule", () => {
     expect(await screen.findByText("Projection available with limitations")).toBeInTheDocument();
     fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
     expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
-    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cash movement summary")).toBeInTheDocument();
   });
 
   it("shows an unavailable envelope without rendering a fabricated empty projection", async () => {
@@ -167,7 +167,7 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
-    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cash movement summary")).toBeInTheDocument();
     expect(await screen.findByText("Projection evidence refresh unavailable")).toBeInTheDocument();
     fireEvent.mouseOver(screen.getByRole("button", { name: "Support reference" }));
     expect(await screen.findByText("corr-cashflow-001 · Contract v1")).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     renderModule({ initialCashflowOutlook: buildOutlook() });
 
-    expect(screen.getByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(screen.getByLabelText("Projected cash movement summary")).toBeInTheDocument();
     expect(await screen.findByText("Projection evidence refresh unavailable")).toBeInTheDocument();
     expect(screen.queryByText("Refreshing projection evidence")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
@@ -232,7 +232,7 @@ describe("PortfolioProjectedCashflowModule", () => {
     expect(await screen.findByText("10-day projection unavailable")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Retry projection" }));
 
-    expect(await screen.findByLabelText("Projected cashflow summary")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Projected cash movement summary")).toBeInTheDocument();
     expect(getPortfolioProjectedCashflow).toHaveBeenLastCalledWith("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 10,
@@ -291,7 +291,7 @@ describe("PortfolioProjectedCashflowModule", () => {
       }),
     });
 
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent("-750 USD");
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent("-750 USD");
     expect(screen.getAllByText("Dated detail unavailable")).toHaveLength(2);
     expect(screen.queryByText("No outflow")).not.toBeInTheDocument();
     expect(screen.getByText("Dated movement schedule unavailable")).toBeInTheDocument();

@@ -1,0 +1,222 @@
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.summaryStat {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  min-height: 6.5rem;
+  padding: var(--space-3);
+  border: 1px solid rgba(217, 224, 231, 0.9);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.summaryStat span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.summaryStat strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.summaryStat em {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.chart {
+  position: relative;
+  min-height: 0;
+  height: 20rem;
+  max-height: 20rem;
+  padding: var(--space-2) 0;
+  border: 1px solid rgba(217, 224, 231, 0.9);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.gridLine {
+  stroke: rgba(105, 117, 134, 0.16);
+  stroke-width: 1;
+}
+
+.zeroLine {
+  stroke: rgba(105, 117, 134, 0.32);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.flowBar {
+  opacity: 0.92;
+}
+
+.flowBarPositive {
+  fill: rgba(75, 125, 98, 0.68);
+}
+
+.flowBarNegative {
+  fill: rgba(161, 90, 63, 0.74);
+}
+
+.focusCallout rect {
+  fill: #2d3133;
+  stroke: rgba(255, 223, 157, 0.72);
+  stroke-width: 0.75;
+  filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.18));
+}
+
+.focusCallout circle {
+  fill: #ffdf9d;
+}
+
+.focusCallout text {
+  fill: #eff1f3;
+  font-size: 5.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.focusCallout text:first-of-type {
+  fill: rgba(239, 241, 243, 0.78);
+  font-size: 4.8px;
+}
+
+.forecastMix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.forecastMix span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(217, 224, 231, 0.9);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.scope {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid rgba(217, 224, 231, 0.9);
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.scope > div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-right: 1px solid rgba(217, 224, 231, 0.78);
+}
+
+.scope > div:last-child {
+  border-right: 0;
+}
+
+.scope span,
+.sourceNote strong {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.scope strong {
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.sourceNote {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0 var(--space-1);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.sourceNote span {
+  min-width: 0;
+}
+
+.tableNote {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.table:global(.analytics-table-frame) {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+}
+
+.table:global(.analytics-table-frame) :global(.MuiTable-root) {
+  min-width: 0;
+}
+
+.table:global(.analytics-table-frame) :global(.MuiTableCell-root) {
+  white-space: nowrap;
+}
+
+.card {
+  gap: var(--space-3);
+}
+
+.flatCard .chart {
+  height: 14rem;
+  max-height: 14rem;
+}
+
+.flatCard :global(.portfolio-timeseries-chart-svg) {
+  max-height: 13rem;
+}
+
+@media (max-width: 1280px) {
+  .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .summaryStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .scope {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scope > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .scope > div:nth-child(-n + 2) {
+    border-bottom: 1px solid rgba(217, 224, 231, 0.78);
+  }
+}
