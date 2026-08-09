@@ -504,6 +504,9 @@ function validateImportedPayload(payload: PortfolioBundlePayload): IntakeValidat
       ...positive("file", `Imported price ${index + 1}: enter a price greater than zero.`, price.price),
       ...currency("file", `Imported price ${index + 1}: enter a three-letter currency.`, price.currency),
     ]),
+    ...payload.businessDates.flatMap((businessDate, index) =>
+      date("file", `Imported business date ${index + 1}: enter a valid date.`, businessDate.businessDate),
+    ),
   ];
 }
 
@@ -590,7 +593,10 @@ function date(field: string, message: string, value: string): IntakeValidationIs
 }
 
 function dateTime(field: string, message: string, value: string): IntakeValidationIssue[] {
-  return isStrictIsoDate(value.slice(0, 10)) ? [] : [{ field, message }];
+  const match = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  return match && isStrictIsoDate(match[1]) && Number.isFinite(Date.parse(value))
+    ? []
+    : [{ field, message }];
 }
 
 function positive(field: string, message: string, value: number): IntakeValidationIssue[] {

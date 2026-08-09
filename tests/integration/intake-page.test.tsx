@@ -216,6 +216,32 @@ describe("IntakePage", () => {
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
 
+  it("blocks imported CSV review when parsed source fields are invalid", async () => {
+    renderIntakePage();
+    fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
+
+    const input = screen.getByLabelText("Supported CSV intake file");
+    const file = new File([invalidCsv()], "invalid-intake.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: async () => invalidCsv() });
+    fireEvent.change(input, {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByText("Information required")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+
+    expect(screen.getByText("Resolve the following before review")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Imported portfolio 1: enter the portfolio code." })).toHaveAttribute(
+      "href",
+      "#intake-file",
+    );
+    expect(
+      screen.getByRole("link", { name: "Imported instrument 1: enter a valid 12-character ISIN." }),
+    ).toHaveAttribute("href", "#intake-file");
+    expect(screen.queryByRole("button", { name: "Publish reviewed request" })).not.toBeInTheDocument();
+    expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
+  });
+
   it("shows parsed file records before allowing CSV publication", async () => {
     renderIntakePage();
     fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
@@ -289,5 +315,12 @@ function validCsv(): string {
   return [
     "portfolio_id,base_currency,open_date,risk_exposure,investment_time_horizon,portfolio_type,booking_center,cif_id,advisor_id,status,security_id,instrument_name,isin,product_type,transaction_type,quantity,price,transaction_date",
     "PORT_001,USD,2026-08-08,Balanced,Long term,Discretionary,Singapore,CIF_001,ADV_001,Pending activation,SEC_001,Global Equity Fund,US0000000001,Fund,BUY,10,100,2026-08-08T00:00:00Z",
+  ].join("\n");
+}
+
+function invalidCsv(): string {
+  return [
+    "portfolio_id,base_currency,open_date,risk_exposure,investment_time_horizon,portfolio_type,booking_center,cif_id,advisor_id,status,security_id,instrument_name,isin,product_type,transaction_type,quantity,price,transaction_date",
+    ",US,2026-02-31,Balanced,Long term,Discretionary,Singapore,CIF_001,ADV_001,Pending activation,,Global Equity Fund,BAD,Fund,BUY,10,100,not-a-date",
   ].join("\n");
 }
