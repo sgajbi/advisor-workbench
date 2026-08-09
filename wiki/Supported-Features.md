@@ -3,6 +3,15 @@
 This page separates implementation-backed Workbench capability from target-state roadmap language.
 It is intended for developers, business users, operations, sales/pre-sales, and demo preparation.
 
+## Canonical Home Entry
+
+`/suite` is a compatibility alias of the canonical `/` Home entry and does not own a separate
+command-center surface. Both currently resolve to Portfolio Review. The retired Suite prototype's
+hard-coded clients, portfolios, analytics, priorities, role workflows, and technical policy
+diagnostics are not supported features and are not shipped. The future authenticated advisor-first
+Home remains governed by Workbench issue #470 and must use supported source authority; Workbench
+must not reintroduce fabricated fallback business state while that dependency is unavailable.
+
 ## Current Implementation-Backed Surfaces
 
 | Surface                                 | Route                                                               | Backing contract                                                                                                                                                                                                                                                                                                                        | Current support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

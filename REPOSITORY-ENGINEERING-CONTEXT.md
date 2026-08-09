@@ -168,7 +168,12 @@ Current repository posture:
     a forbidden selector-prefix ratchet instead of growing `legacy-global.css`. In particular,
     `PortfolioScreenRail` owns its presentation in a colocated CSS Module; route shells own only its
     placement and must not reintroduce global or page-scoped rail color and spacing repairs.
-18. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
+18. `/suite` is a compatibility alias of the single canonical Home entry and owns no business
+    surface. It must not regain hard-coded clients, portfolios, analytics, priorities, roles,
+    workflow state, or technical policy diagnostics. The canonical Home currently routes to
+    Portfolio Review; authenticated advisor-first Home composition remains governed by blocked
+    issue #470 and must use supported source authority when that dependency is available.
+19. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.
     It also delegates isolated downstream-capacity resource construction and a single report-only
@@ -177,7 +182,7 @@ Current repository posture:
     posture. It must not construct the resource directly, reuse the canonical client portfolio,
     expose resource identifiers or credentials, or interpret this integration proof as load, soak,
     capacity-certification, or supported-feature evidence.
-18. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
+20. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
     model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028
     bank-demo proof, opportunities, proposal builder, suitability, risk impact, approval queue,
@@ -368,20 +373,20 @@ Current repository posture:
     policy queries settle; a failed refresh retains prior evidence with an explicit partial
     posture. Proposal simulation publishes persisted workflow context only after the advisory
     handoff response returns a proposal id.
-19. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
+21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
     Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
     while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be
     excluded from classified net cash movement until the source contract defines their direction.
     Do not infer direction from amount sign, gross-sum activity magnitudes as net cashflow, combine
     income and tax rows into one event count, or infer source readiness from non-zero bookings.
-20. Portfolio Cashflow preserves the full Gateway projected-cashflow envelope and keys loading,
+22. Portfolio Cashflow preserves the full Gateway projected-cashflow envelope and keys loading,
     ready, degraded, unavailable, retry, result, and export state by the explicit 10-, 30-, or
     90-day horizon. Workbench must not relabel one horizon's response as another or describe
     cumulative projected movement as opening cash, available cash, ending cash, liquidity
     sufficiency, funding capacity, or a recommendation. Source-backed zero movement is an explicit
     no-movement result; Gateway warnings, partial failures, correlation, contract version,
     projection dates, reporting currency, and booked/projected basis remain visible evidence.
-21. Portfolio reporting evidence must distinguish source readiness from generated output. Gateway
+23. Portfolio reporting evidence must distinguish source readiness from generated output. Gateway
     reporting `READY` can be derived from reportable book coverage and does not prove that a
     reporting snapshot exists. Workbench may use `generated_at_utc` as generation evidence, but
     must derive timestamp, row explanation, badge, and tone from one typed posture so generated,
