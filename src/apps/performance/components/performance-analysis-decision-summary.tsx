@@ -125,6 +125,7 @@ export default function PerformanceAnalysisDecisionSummary({
 
         {cards.length ? (
           <WorkbenchSummaryMetricStrip
+            layout="custom"
             ariaLabel="Analysis snapshot metrics"
             className="performance-analysis-summary-band-grid"
             itemClassName="performance-analysis-summary-card"

@@ -472,55 +472,6 @@
   min-width: 0;
 }
 
-.workbench-summary-metric-strip {
-  display: grid;
-  gap: var(--workbench-metric-strip-gap);
-}
-
-.workbench-summary-metric-card {
-  min-width: 0;
-}
-
-.workbench-summary-metric-strip > .workbench-summary-metric-card,
-.workbench-summary-metric-strip > .workbench-summary-metric-item > .workbench-summary-metric-card {
-  display: grid;
-  align-content: start;
-  min-height: var(--metric-tile-height-default);
-  gap: var(--space-1);
-  padding: var(--space-4);
-  border: 1px solid rgba(34, 44, 59, 0.07);
-  border-radius: var(--radius-tile);
-  background: var(--surface-secondary);
-}
-
-.workbench-summary-metric-strip > .workbench-summary-metric-item {
-  display: block;
-  min-width: 0;
-}
-
-.workbench-summary-metric-label {
-  font-size: var(--workbench-analytic-support-size);
-  font-weight: 800;
-  line-height: 1.3;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.workbench-summary-metric-value {
-  font-size: 1rem;
-  font-weight: 750;
-  line-height: 1.2;
-  color: var(--brand-strong);
-  font-variant-numeric: var(--type-financial-numeric);
-}
-
-.workbench-summary-metric-support {
-  font-size: var(--workbench-analytic-context-value-size);
-  line-height: 1.42;
-  color: var(--text-muted);
-}
-
 .workbench-summary-visual {
   min-width: 0;
 }

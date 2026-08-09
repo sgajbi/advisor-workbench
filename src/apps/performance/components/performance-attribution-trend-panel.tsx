@@ -327,6 +327,7 @@ export default function PerformanceAttributionTrendPanel({
       metricStrip={
         metricItems.length ? (
           <WorkbenchSummaryMetricStrip
+            layout="custom"
             className="performance-analysis-metric-strip"
             ariaLabel="Attribution trend summary strip"
             items={metricItems}

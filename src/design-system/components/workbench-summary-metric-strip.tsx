@@ -1,6 +1,7 @@
 import { cx } from "../utils/cx";
 import Tooltip from "@mui/material/Tooltip";
 import Text from "./text";
+import styles from "./workbench-summary-metric-strip.module.css";
 
 export type WorkbenchSummaryMetricStripItem = {
   key?: string;
@@ -17,15 +18,21 @@ export default function WorkbenchSummaryMetricStrip({
   className,
   itemClassName,
   ariaLabel,
+  layout = "responsive",
 }: {
   items: WorkbenchSummaryMetricStripItem[];
   className?: string;
   itemClassName?: string;
   ariaLabel?: string;
+  layout?: "responsive" | "custom";
 }) {
   return (
     <div
-      className={cx("workbench-summary-metric-strip", className)}
+      className={cx(
+        "workbench-summary-metric-strip",
+        layout === "responsive" && styles.strip,
+        className,
+      )}
       aria-label={ariaLabel}
     >
       {items.map((item, index) => {
@@ -34,20 +41,30 @@ export default function WorkbenchSummaryMetricStrip({
             key={item.key ?? `${String(item.label)}-${index}`}
             className={cx(
               "workbench-summary-metric-card",
+              styles.card,
               item.unavailable && "workbench-summary-metric-card-unavailable",
               itemClassName,
               item.className
             )}
             title={typeof item.definition === "string" ? item.definition : undefined}
           >
-            <Text variant="dataLabel" className="workbench-summary-metric-label">
+            <Text
+              variant="dataLabel"
+              className={cx("workbench-summary-metric-label", styles.label)}
+            >
               {item.label}
             </Text>
-            <Text variant="metricValueM" className="workbench-summary-metric-value">
+            <Text
+              variant="metricValueM"
+              className={cx("workbench-summary-metric-value", styles.value)}
+            >
               {item.value}
             </Text>
             {item.support ? (
-              <Text variant="bodySmall" className="workbench-summary-metric-support">
+              <Text
+                variant="bodySmall"
+                className={cx("workbench-summary-metric-support", styles.support)}
+              >
                 {item.support}
               </Text>
             ) : null}
@@ -60,7 +77,7 @@ export default function WorkbenchSummaryMetricStrip({
 
         return (
           <Tooltip key={item.key ?? `${String(item.label)}-${index}`} title={item.definition} arrow>
-            <span className="workbench-summary-metric-item">{card}</span>
+            <span className={cx("workbench-summary-metric-item", styles.item)}>{card}</span>
           </Tooltip>
         );
       })}

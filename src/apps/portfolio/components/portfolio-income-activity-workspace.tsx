@@ -75,6 +75,7 @@ function IncomeReviewModule({ income }: { income: PortfolioIncomeReview | null }
       compact
     >
       <WorkbenchSummaryMetricStrip
+        layout="custom"
         className="portfolio-income-activity-metrics"
         ariaLabel="Booked income summary"
         items={[
@@ -190,6 +191,7 @@ function ActivityReviewModule({
       compact
     >
       <WorkbenchSummaryMetricStrip
+        layout="custom"
         className="portfolio-income-activity-metrics"
         ariaLabel="Booked cash movement summary"
         items={[

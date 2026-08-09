@@ -37,8 +37,8 @@
     {
       "path": "src/styles/global/workbench-shell.css",
       "owner": "shared Workbench shell, typography, panel, and navigation primitives",
-      "maxLines": 996,
-      "maxBytes": 21352
+      "maxLines": 947,
+      "maxBytes": 20129
     },
     {
       "path": "src/styles/global/legacy-global.css",
