@@ -63,6 +63,59 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.historyRows[0].statusLabel).toBe("Report data complete");
   });
 
+  it("keeps the newest request history when refreshes complete out of order", async () => {
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+    await waitFor(() => expect(result.current.historyState).toBe("ready"));
+
+    let resolveOlder: ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
+      null;
+    let resolveNewer: ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
+      null;
+    historyMock
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveOlder = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveNewer = resolve;
+          }),
+      );
+
+    let olderRefresh: Promise<void> | null = null;
+    let newerRefresh: Promise<void> | null = null;
+    act(() => {
+      olderRefresh = result.current.refreshHistory();
+      newerRefresh = result.current.refreshHistory();
+    });
+
+    const newerHistory = buildReportJobListResponse();
+    newerHistory.items[0].reportJobId = "rjob_newer";
+    await act(async () => {
+      resolveNewer?.(newerHistory);
+      await newerRefresh;
+    });
+    expect(result.current.history?.items[0].reportJobId).toBe("rjob_newer");
+
+    const olderHistory = buildReportJobListResponse();
+    olderHistory.items[0].reportJobId = "rjob_older";
+    await act(async () => {
+      resolveOlder?.(olderHistory);
+      await olderRefresh;
+    });
+    expect(result.current.history?.items[0].reportJobId).toBe("rjob_newer");
+    expect(result.current.historyState).toBe("ready");
+  });
+
   it("preserves one idempotency intent across a safe retry", async () => {
     submitMock
       .mockRejectedValueOnce(new Error("temporary unavailable"))

@@ -1158,7 +1158,8 @@ Research was reviewed on 2026-08-09 against the accepted and repeat-request work
 
 #### Validation and publication decision
 
-The focused screen-state, workflow, and rendered workspace suites pass 35/35 tests. The owned
+The focused screen-state, workflow, and rendered workspace suites pass 36/36 tests, including
+last-request-wins history refresh sequencing. The owned
 optimized-production Report Centre matrix passes 16/16 browser journeys, including two sequential
 accepted requests at a 720 px constrained/zoom-equivalent viewport, distinct support references,
 review reset, focus restoration, and no horizontal overflow. The wiki supported-feature record is
