@@ -636,7 +636,9 @@ describe("PerformanceAnalyticsPage", () => {
       "aria-selected",
       "false"
     );
-    expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(1);
+    expect(document.querySelectorAll("#performance-drivers .performance-analysis-table").length).toBe(2);
+    expect(screen.getByLabelText("Position contribution table")).toBeVisible();
+    expect(screen.getByLabelText("Asset Class contribution table")).not.toBeVisible();
     expect(screen.queryByLabelText("Attribution summary strip")).not.toBeInTheDocument();
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");
     expect(screen.queryByRole("tab", { name: /^Relative Segment Context/ })).not.toBeInTheDocument();

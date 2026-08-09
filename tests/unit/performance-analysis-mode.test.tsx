@@ -143,12 +143,12 @@ describe("PerformanceAnalysisMode", () => {
     expect(
       screen.getByText("Aggregate contribution remains available even when position-level ranking is absent.")
     ).toBeInTheDocument();
-    expect(screen.queryByText("Position ranking unavailable")).not.toBeInTheDocument();
+    expect(screen.getByText("Position ranking unavailable")).not.toBeVisible();
     expect(
-      screen.queryByText(
+      screen.getByText(
         "Open Segment Contribution to inspect grouped contribution for the selected segment."
       )
-    ).not.toBeInTheDocument();
+    ).not.toBeVisible();
     expect(screen.getByRole("tab", { name: "Segment Summary (1)" })).toHaveAttribute(
       "aria-selected",
       "true"
