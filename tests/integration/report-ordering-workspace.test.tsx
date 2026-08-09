@@ -91,6 +91,11 @@ describe("ReportOrderingWorkspace", () => {
     expect(
       await screen.findByRole("heading", { name: "Report request accepted" }),
     ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("region", { name: "Report request readiness" }),
+      ).toHaveFocus(),
+    );
     expect(
       within(screen.getByRole("status")).getByRole("heading", {
         name: "Report request accepted",
