@@ -5,6 +5,32 @@ import { describe, expect, it } from "vitest";
 import WorkbenchSummaryMetricStrip from "../../src/design-system/components/workbench-summary-metric-strip";
 
 describe("WorkbenchSummaryMetricStrip", () => {
+  it("uses the responsive component layout unless a caller explicitly owns the grid", () => {
+    const items = [{ key: "portfolio", label: "Portfolio Return", value: "5.40%" }];
+    const { rerender } = render(
+      <WorkbenchSummaryMetricStrip ariaLabel="Responsive strip" items={items} />,
+    );
+
+    const responsiveStrip = screen.getByLabelText("Responsive strip");
+    expect(responsiveStrip).toHaveClass("workbench-summary-metric-strip");
+    expect(responsiveStrip.classList).toHaveLength(2);
+
+    rerender(
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Custom strip"
+        className="screen-owned-grid"
+        items={items}
+        layout="custom"
+      />,
+    );
+
+    expect(screen.getByLabelText("Custom strip")).toHaveClass(
+      "workbench-summary-metric-strip",
+      "screen-owned-grid",
+    );
+    expect(screen.getByLabelText("Custom strip").classList).toHaveLength(2);
+  });
+
   it("renders shared summary metrics with support and unavailable treatment", () => {
     render(
       <WorkbenchSummaryMetricStrip

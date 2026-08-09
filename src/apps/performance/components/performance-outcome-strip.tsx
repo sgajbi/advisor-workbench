@@ -18,6 +18,7 @@ export default function PerformanceOutcomeStrip({
 }) {
   return (
     <WorkbenchSummaryMetricStrip
+      layout="custom"
       ariaLabel="Executive return strip"
       className={["performance-outcome-strip", className].filter(Boolean).join(" ")}
       itemClassName="performance-outcome-strip-item"
