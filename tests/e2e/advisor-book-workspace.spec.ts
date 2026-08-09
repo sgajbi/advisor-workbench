@@ -124,6 +124,11 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await expect(page).toHaveURL(/clientId=CIF_SG_GLOBAL_BAL_001/);
   await expect(page).toHaveURL(/sortOrder=desc/);
   await expect(page.getByRole("button", { name: "Clear view" })).toBeVisible();
+  await expect(
+    page.getByText(
+      /Displayed order: Portfolio reference, ascending · Requested order: Portfolio reference, descending/i,
+    ),
+  ).toBeVisible();
 
   await expect(
     page.getByRole("link", { name: "Global Balanced Mandate" }),

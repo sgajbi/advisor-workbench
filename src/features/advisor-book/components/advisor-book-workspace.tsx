@@ -21,14 +21,16 @@ import {
 
 import type { AdvisorBookQuery } from "../api";
 import type {
-  AdvisorBookResponse,
   AdvisorBookSortBy,
   AdvisorBookSortOrder,
 } from "../contracts";
 import { resolveAdvisorBookAsOfDate } from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
 import { useAdvisorBook } from "../use-advisor-book";
-import { buildAdvisorBookWorkspaceModel } from "../view-model";
+import {
+  buildAdvisorBookResultScopeModel,
+  buildAdvisorBookWorkspaceModel,
+} from "../view-model";
 import styles from "../advisor-book-workspace.module.css";
 
 const PAGE_SIZE = 25;
@@ -128,6 +130,7 @@ function AdvisorBookWorkspaceContent({
   }
 
   const model = buildAdvisorBookWorkspaceModel(response);
+  const resultScope = buildAdvisorBookResultScopeModel(query, response.page);
   const lastReturned = response.page.offset + response.page.returned_count;
   const hasCustomView = Boolean(
     query.clientId ||
@@ -236,8 +239,8 @@ function AdvisorBookWorkspaceContent({
         </form>
 
         <div className={styles.resultScope} aria-live="polite">
-          <strong>{bookRangeLabel(response)}</strong>
-          <span>{bookViewLabel(query)}</span>
+          <strong>{resultScope.rangeLabel}</strong>
+          <span>{resultScope.viewLabel}</span>
         </div>
 
         <AnalyticsTable
@@ -347,34 +350,6 @@ function queryFromSearchParams(searchParams: URLSearchParams | Readonly<URLSearc
     offset: nonNegativeInteger(searchParams.get("offset")),
     limit: PAGE_SIZE,
   };
-}
-
-function bookRangeLabel(response: AdvisorBookResponse): string {
-  if (response.page.returned_count === 0) {
-    return `0 of ${response.page.total_count} portfolios`;
-  }
-  const firstReturned = response.page.offset + 1;
-  const lastReturned = response.page.offset + response.page.returned_count;
-  return `${firstReturned}–${lastReturned} of ${response.page.total_count} portfolios`;
-}
-
-function bookViewLabel(query: AdvisorBookQuery): string {
-  const scope = [
-    query.clientId ? `Client reference ${query.clientId}` : "All clients",
-    query.mandateType === "ADVISORY"
-      ? "Advisory mandates"
-      : query.mandateType === "DISCRETIONARY"
-        ? "Discretionary mandates"
-        : "All supported mandates",
-  ];
-  const sortField =
-    query.sortBy === "client_id"
-      ? "Client reference"
-      : query.sortBy === "mandate_type"
-        ? "Mandate"
-        : "Portfolio reference";
-  scope.push(`${sortField}, ${query.sortOrder === "desc" ? "descending" : "ascending"}`);
-  return scope.join(" · ");
 }
 
 function nonNegativeInteger(value: string | null): number {
