@@ -14,6 +14,14 @@ function hasExactLine(source: string, expectedLine: string): boolean {
   return source.split(/\r?\n/).includes(expectedLine);
 }
 
+function workflowJobBlock(source: string, jobId: string): string {
+  const match = source.match(
+    new RegExp(`\\n  ${jobId}:\\n(?<block>[\\s\\S]*?)(?=\\n  [a-z0-9-]+:\\n|\\n*$)`),
+  );
+
+  return match?.groups?.block ?? "";
+}
+
 function collectLocalNodeScripts(
   scripts: Record<string, string>,
   entrypoint: string,
@@ -279,6 +287,48 @@ describe("dependency security governance", () => {
       expect(workflow).toContain("workbench-image.cdx.json");
       expect(workflow).not.toContain("aquasecurity/trivy-action@master");
       expect(workflow).not.toContain("version: latest");
+    }
+  });
+
+  it("bounds critical Docker and browser proof jobs in protected lanes", () => {
+    const governedTimeoutsByJob = new Map([
+      [
+        "e2e-smoke",
+        {
+          nameSuffix: "Playwright Smoke",
+          timeout: 30,
+        },
+      ],
+      [
+        "docker-build",
+        {
+          nameSuffix: "Docker Build And Security",
+          timeout: 45,
+        },
+      ],
+      [
+        "ci-local-docker",
+        {
+          nameSuffix: "CI Local Docker Parity",
+          timeout: 60,
+        },
+      ],
+    ]);
+
+    for (const [workflowName, jobNamePrefix] of [
+      ["pr-merge-gate.yml", "PR Merge Gate"],
+      ["main-releasability.yml", "Main Releasability"],
+    ] as const) {
+      const workflow = readRepositoryFile(".github", "workflows", workflowName);
+
+      for (const [jobId, expectation] of governedTimeoutsByJob) {
+        const jobBlock = workflowJobBlock(workflow, jobId);
+
+        expect(jobBlock).toContain(
+          `name: ${jobNamePrefix} / ${expectation.nameSuffix}`,
+        );
+        expect(jobBlock).toContain(`timeout-minutes: ${expectation.timeout}`);
+      }
     }
   });
 });
