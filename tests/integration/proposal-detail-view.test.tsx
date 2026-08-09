@@ -178,6 +178,42 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 describe("ProposalDetailView", () => {
+  function proposalDetail(state = "DRAFT") {
+    return {
+      proposal: {
+        proposal_id: "pp-1",
+        current_state: state,
+        portfolio_id: "pf_1",
+        current_version_no: 1,
+      },
+      current_version: {
+        artifact_hash: "sha256:artifact-001",
+        evidence_bundle: {
+          hashes: { artifact_hash: "sha256:artifact-001" },
+          allocation_comparison: [],
+        },
+        simulate_request: { body: { proposed_trades: [] } },
+      },
+    };
+  }
+
+  function workflowEvidence(state = "DRAFT") {
+    return {
+      proposal_id: "pp-1",
+      current_state: state,
+      events: [
+        {
+          event_id: `event-${state}`,
+          event_type: state === "DRAFT" ? "CREATED" : "SUBMITTED_FOR_REVIEW",
+          from_state: state === "DRAFT" ? null : "DRAFT",
+          to_state: state,
+          actor_id: "advisor_1",
+          occurred_at: "2026-02-22T00:00:00Z",
+        },
+      ],
+    };
+  }
+
   function renderWithQueryClient() {
     const queryClient = new QueryClient();
     render(
@@ -191,13 +227,13 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByText("Review History")).toBeInTheDocument();
+      expect(screen.getByText("Review history")).toBeInTheDocument();
     });
 
-    expect(screen.getAllByText("DRAFT").length).toBeGreaterThan(0);
-    expect(screen.getByText(/CREATED/)).toBeInTheDocument();
-    expect(screen.getByText("RISK")).toBeInTheDocument();
-    expect(screen.getByText(/risk_1/)).toBeInTheDocument();
+    expect(screen.getAllByText("Draft").length).toBeGreaterThan(0);
+    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getByText("Risk review")).toBeInTheDocument();
+    expect(screen.getByText(/Risk 1/)).toBeInTheDocument();
   });
 
   it("renders a dense advisor proposal workspace from Gateway proposal evidence", async () => {
@@ -207,23 +243,30 @@ describe("ProposalDetailView", () => {
       expect(screen.getByRole("region", { name: "Advisor proposal workspace" })).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Advisor use only - not client ready")).toBeInTheDocument();
+    expect(
+      screen.getByText("Advisor use only. Client release requires source evidence and completed review gates.")
+    ).toBeInTheDocument();
     expect(screen.getByText("VTI")).toBeInTheDocument();
     expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByText("Global Equities")).toBeInTheDocument();
     expect(screen.getByText("65.2% → 60.0%")).toBeInTheDocument();
     expect(screen.getAllByText("sha256:artifact-001").length).toBeGreaterThan(0);
     expect(screen.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-evidence-disclosure")).not.toHaveAttribute("open");
+    expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("submits draft to risk review", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Submit To Risk Review" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Submit To Risk Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
 
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalled();
@@ -237,6 +280,47 @@ describe("ProposalDetailView", () => {
       }),
       expect.stringMatching(/^ui-submit-risk-pp-1-\d+$/)
     );
+    await waitFor(() => {
+      expect(screen.getByTestId("proposal-action-status")).toHaveTextContent(
+        "Proposal submitted for risk review. Current posture: Risk team review is currently pending."
+      );
+    });
+  });
+
+  it("keeps mutation failure explicit without exposing the raw downstream response", async () => {
+    submitProposalMock.mockRejectedValueOnce(
+      new Error("Proposal request failed (500): internal downstream detail")
+    );
+    renderWithQueryClient();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The proposal action could not be completed. Review the current posture and try again."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/internal downstream detail/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+  });
+
+  it("does not publish action success when refreshed review evidence fails", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockRejectedValueOnce(new Error("workflow refresh failed"));
+    renderWithQueryClient();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
   });
 
   it("approves risk when in risk review", async () => {
@@ -270,10 +354,10 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Approve Risk" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Approve risk review" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Approve Risk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve risk review" }));
 
     await waitFor(() => {
       expect(approveRiskMock).toHaveBeenCalled();
@@ -320,11 +404,11 @@ describe("ProposalDetailView", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Record Client Consent" })
+        screen.getByRole("button", { name: "Record client consent" })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Record Client Consent" }));
+    fireEvent.click(screen.getByRole("button", { name: "Record client consent" }));
 
     await waitFor(() => {
       expect(recordClientConsentMock).toHaveBeenCalled();
@@ -343,10 +427,10 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Create Next Version" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Create next version" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Create Next Version" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create next version" }));
 
     await waitFor(() => {
       expect(createProposalVersionMock).toHaveBeenCalled();
@@ -354,5 +438,30 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(screen.getByText("Version created successfully: 2")).toBeInTheDocument();
     });
+  });
+
+  it("keeps the proposal decision visible when ancillary workflow evidence fails", async () => {
+    getWorkflowEventsMock.mockRejectedValueOnce(new Error("workflow unavailable"));
+
+    renderWithQueryClient();
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Advisor proposal workspace" })).toBeInTheDocument();
+    });
+    expect(screen.getByText("Review evidence partially available")).toBeInTheDocument();
+    expect(screen.getByText(/Workflow history could not be refreshed/)).toBeInTheDocument();
+    expect(screen.getByText("Proposed changes")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+  });
+
+  it("switches between preserved narrative and memo review panels with true tabs", async () => {
+    renderWithQueryClient();
+
+    const memoTab = await screen.findByRole("tab", { name: "Memo & evidence pack" });
+    fireEvent.click(memoTab);
+
+    expect(memoTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "false");
+    expect(await screen.findByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
   });
 });

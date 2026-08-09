@@ -19,7 +19,7 @@ export type ProposalTradeRow = {
 
 export type ProposalReadinessItem = {
   label: string;
-  state: "Ready" | "Pending" | "Blocked";
+  state: "Ready" | "Pending" | "Blocked" | "Unavailable";
   detail: string;
 };
 
@@ -107,7 +107,11 @@ function proposalTrades(data: ProposalDetailData): ProposalTradeRow[] {
   }));
 }
 
-function readinessItems(data: ProposalDetailData, approvals?: ProposalApprovalsData): ProposalReadinessItem[] {
+function readinessItems(
+  data: ProposalDetailData,
+  approvals: ProposalApprovalsData | undefined,
+  approvalsAvailable: boolean,
+): ProposalReadinessItem[] {
   const evidence = evidenceBundle(data);
   const blockers = arrayValue(evidence.blockers ?? evidence.blocking_reasons ?? evidence.missing_evidence);
   const riskApproved = approvals?.approvals?.some(
@@ -128,14 +132,26 @@ function readinessItems(data: ProposalDetailData, approvals?: ProposalApprovalsD
     },
     {
       label: "Risk Review",
-      state: riskApproved ? "Ready" : "Pending",
-      detail: riskApproved ? "Risk approval is recorded." : "Risk review remains required before execution.",
+      state: !approvalsAvailable ? "Unavailable" : riskApproved ? "Ready" : "Pending",
+      detail: !approvalsAvailable
+        ? "Risk approval evidence is temporarily unavailable."
+        : riskApproved
+          ? "Risk approval is recorded."
+          : "Risk review remains required before execution.",
     },
     {
       label: "Compliance Review",
-      state: complianceApproved ? "Ready" : blockers.length > 0 ? "Blocked" : "Pending",
+      state: !approvalsAvailable
+        ? "Unavailable"
+        : complianceApproved
+          ? "Ready"
+          : blockers.length > 0
+            ? "Blocked"
+            : "Pending",
       detail:
-        blockers.length > 0
+        !approvalsAvailable
+          ? "Compliance approval evidence is temporarily unavailable."
+          : blockers.length > 0
           ? "Source evidence returned blocking issues."
           : complianceApproved
             ? "Compliance approval is recorded."
@@ -172,6 +188,9 @@ export function buildProposalAdvisoryWorkspaceModel({
   artifactHash,
   requestHash,
   simulationHash,
+  workflowAvailable = true,
+  approvalsAvailable = true,
+  lineageAvailable = true,
 }: {
   data: ProposalDetailData;
   workflow?: ProposalWorkflowEventsData;
@@ -181,6 +200,9 @@ export function buildProposalAdvisoryWorkspaceModel({
   artifactHash?: string;
   requestHash?: string;
   simulationHash?: string;
+  workflowAvailable?: boolean;
+  approvalsAvailable?: boolean;
+  lineageAvailable?: boolean;
 }): ProposalAdvisoryWorkspaceModel {
   const latestEvent = workflow?.events?.[workflow.events.length - 1];
   const approvalCount = approvals?.approvals?.length ?? 0;
@@ -193,15 +215,23 @@ export function buildProposalAdvisoryWorkspaceModel({
     currentStateLabel: proposalStageLabel(data.proposal.current_state),
     nextAction: proposalNextAction(data.proposal.current_state),
     workflowPosture: proposalStageDescription(data.proposal.current_state),
-    approvalCountLabel: `${approvalCount} recorded`,
-    lineageCountLabel: versionCount ? countLabel(versionCount, "version") : "Pending",
-    latestEventLabel: latestEvent ? proposalStageLabel(latestEvent.to_state) : "No events returned",
+    approvalCountLabel: approvalsAvailable ? `${approvalCount} recorded` : "Unavailable",
+    lineageCountLabel: lineageAvailable
+      ? versionCount
+        ? countLabel(versionCount, "version")
+        : "Pending"
+      : "Unavailable",
+    latestEventLabel: !workflowAvailable
+      ? "Unavailable"
+      : latestEvent
+        ? proposalStageLabel(latestEvent.to_state)
+        : "No events returned",
     generatedAtLabel: generatedAt ?? "Timestamp pending",
     artifactHashLabel: artifactHash ?? "Not available",
     requestHashLabel: requestHash ?? "Not available",
     simulationHashLabel: simulationHash ?? "Not available",
     trades: proposalTrades(data),
     allocationRows: allocationImpactRows(data),
-    readiness: readinessItems(data, approvals),
+    readiness: readinessItems(data, approvals, approvalsAvailable),
   };
 }

@@ -8,6 +8,7 @@ import type {
   ProposalWorkflowEvent,
 } from "../types";
 import type { ProposalDetailStageItem } from "../proposal-detail-evidence-view-model";
+import { businessEventLabel, proposalStageLabel } from "../proposal-workflow-copy";
 
 import detailStyles from "./proposal-detail-view.module.css";
 
@@ -35,9 +36,9 @@ export function ProposalAdvisorActionsPanel({
   return (
     <section className={detailStyles.railPanel}>
       <div className={detailStyles.railPanelHeader}>
-        <Text variant="panelTitle">Advisor Actions</Text>
+        <Text variant="panelTitle">Next action</Text>
         <SemanticBadge tone={currentState === "EXECUTION_READY" ? "success" : "warn"}>
-          {currentState}
+          {proposalStageLabel(currentState)}
         </SemanticBadge>
       </div>
       <Text variant="secondary">{stageCopy}</Text>
@@ -52,7 +53,7 @@ export function ProposalAdvisorActionsPanel({
         {currentState === "DRAFT" ? (
           <>
             <Button type="button" variant="contained" onClick={onSubmitForRiskReview} disabled={acting}>
-              Submit To Risk Review
+              Submit for risk review
             </Button>
             <Button
               type="button"
@@ -60,23 +61,23 @@ export function ProposalAdvisorActionsPanel({
               onClick={onSubmitForComplianceReview}
               disabled={acting}
             >
-              Submit To Compliance Review
+              Submit for compliance review
             </Button>
           </>
         ) : null}
         {currentState === "RISK_REVIEW" ? (
           <Button type="button" variant="contained" onClick={onApproveRisk} disabled={acting}>
-            Approve Risk
+            Approve risk review
           </Button>
         ) : null}
         {currentState === "COMPLIANCE_REVIEW" ? (
           <Button type="button" variant="contained" onClick={onApproveCompliance} disabled={acting}>
-            Approve Compliance
+            Approve compliance review
           </Button>
         ) : null}
         {currentState === "AWAITING_CLIENT_CONSENT" ? (
           <Button type="button" variant="contained" onClick={onRecordClientConsent} disabled={acting}>
-            Record Client Consent
+            Record client consent
           </Button>
         ) : null}
         {currentState === "EXECUTION_READY" ? (
@@ -115,7 +116,7 @@ export function ProposalEvidenceControlsPanel({
   return (
     <section className={detailStyles.railPanel}>
       <div className={detailStyles.railPanelHeader}>
-        <Text variant="panelTitle">Evidence Controls</Text>
+        <Text variant="panelTitle">Evidence and versions</Text>
       </div>
       <FormControlLabel
         control={
@@ -125,11 +126,11 @@ export function ProposalEvidenceControlsPanel({
             onChange={(event) => onIncludeEvidenceChange(event.target.checked)}
           />
         }
-        label="Load Full Evidence Bundle"
+        label="Load full evidence bundle"
       />
       <div className={detailStyles.versionControls}>
         <label>
-          <Text variant="label">Version Number</Text>
+          <Text variant="label">Version number</Text>
           <input
             className="input"
             type="number"
@@ -142,10 +143,10 @@ export function ProposalEvidenceControlsPanel({
           />
         </label>
         <Button type="button" variant="outlined" onClick={onLoadVersion}>
-          Load Version
+          Load version
         </Button>
         <Button type="button" variant="outlined" onClick={onCreateNextVersion} disabled={creatingVersion}>
-          {creatingVersion ? "Creating Version..." : "Create Next Version"}
+          {creatingVersion ? "Creating version..." : "Create next version"}
         </Button>
       </div>
       {createdVersionNo ? (
@@ -179,7 +180,7 @@ export function ProposalLineageAuditPanel({
 }) {
   return (
     <section className={detailStyles.railPanel}>
-      <Text variant="panelTitle">Lineage And Audit</Text>
+      <Text variant="panelTitle">Lineage and audit</Text>
       <div className={detailStyles.hashList}>
         <div>
           <span>Artifact Hash</span>
@@ -226,14 +227,15 @@ export function ProposalReviewHistoryPanel({
 }) {
   return (
     <section className={detailStyles.railPanel}>
-      <Text variant="panelTitle">Review History</Text>
+      <Text variant="panelTitle">Review history</Text>
       {workflowEvents.length ? (
         <div className={detailStyles.timelineList}>
           {workflowEvents.map((event) => (
             <div key={event.event_id}>
-              <strong>{event.event_type}</strong>
+              <strong>{businessEventLabel(event.event_type)}</strong>
               <span>
-                {(event.from_state ?? "Start")} to {event.to_state} · {event.actor_id}
+                {event.from_state ? proposalStageLabel(event.from_state) : "Started"} to{" "}
+                {proposalStageLabel(event.to_state)} · {businessEventLabel(event.actor_id)}
               </span>
             </div>
           ))}
@@ -251,9 +253,9 @@ export function ProposalReviewHistoryPanel({
         <div className={detailStyles.timelineList}>
           {approvals.map((approval) => (
             <div key={approval.approval_id}>
-              <strong>{approval.approval_type}</strong>
+              <strong>{businessEventLabel(approval.approval_type)} review</strong>
               <span>
-                {approval.approved ? "Approved" : "Rejected"} by {approval.actor_id}
+                {approval.approved ? "Approved" : "Rejected"} by {businessEventLabel(approval.actor_id)}
               </span>
             </div>
           ))}

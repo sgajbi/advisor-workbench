@@ -16,7 +16,22 @@ export function buildProposalActionIdempotencyKey(
 }
 
 export function proposalStageLabel(state: string): string {
-  return state.replaceAll("_", " ");
+  const labels: Record<string, string> = {
+    DRAFT: "Draft",
+    RISK_REVIEW: "Risk review",
+    COMPLIANCE_REVIEW: "Compliance review",
+    AWAITING_CLIENT_CONSENT: "Awaiting client consent",
+    EXECUTION_READY: "Execution ready",
+  };
+  return labels[state] ?? businessEventLabel(state);
+}
+
+export function businessEventLabel(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 }
 
 export function proposalNextAction(state: string): string {

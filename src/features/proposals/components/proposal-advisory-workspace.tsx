@@ -19,6 +19,9 @@ type Props = {
   artifactHash?: string;
   requestHash?: string;
   simulationHash?: string;
+  workflowAvailable?: boolean;
+  approvalsAvailable?: boolean;
+  lineageAvailable?: boolean;
 };
 
 function statusTone(state: string): string {
@@ -28,7 +31,7 @@ function statusTone(state: string): string {
   if (state === "Blocked") {
     return styles.blocked;
   }
-  return styles.pending;
+  return state === "Unavailable" ? styles.unavailable : styles.pending;
 }
 
 export default function ProposalAdvisoryWorkspace({
@@ -40,6 +43,9 @@ export default function ProposalAdvisoryWorkspace({
   artifactHash,
   requestHash,
   simulationHash,
+  workflowAvailable,
+  approvalsAvailable,
+  lineageAvailable,
 }: Props) {
   const model = buildProposalAdvisoryWorkspaceModel({
     data,
@@ -50,31 +56,20 @@ export default function ProposalAdvisoryWorkspace({
     artifactHash,
     requestHash,
     simulationHash,
+    workflowAvailable,
+    approvalsAvailable,
+    lineageAvailable,
   });
 
   return (
     <section className={styles.workspace} aria-label="Advisor proposal workspace">
-      <div className={styles.guardrail} role="status">
-        Advisor use only - not client ready
-      </div>
-
-      <div className={styles.header}>
+      <div className={styles.decisionStrip} aria-label="Proposal decision summary">
         <div>
-          <p className={styles.eyebrow}>Advisory proposal</p>
-          <h2>{model.title}</h2>
-          <p className={styles.context}>
-            Portfolio {model.portfolioLabel} · Version {model.versionLabel}
-          </p>
-        </div>
-        <div className={styles.primaryStatus}>
-          <span>{model.currentStateLabel}</span>
+          <span>Next action</span>
           <strong>{model.nextAction}</strong>
         </div>
-      </div>
-
-      <div className={styles.decisionStrip}>
         <div>
-          <span>Workflow posture</span>
+          <span>Current posture</span>
           <strong>{model.workflowPosture}</strong>
         </div>
         <div>
@@ -92,9 +87,9 @@ export default function ProposalAdvisoryWorkspace({
       </div>
 
       <div className={styles.grid}>
-        <section className={styles.panel}>
+        <section className={styles.panel} aria-labelledby="proposal-changes-heading">
           <div className={styles.panelHeader}>
-            <h2>Proposed Trades</h2>
+            <h2 id="proposal-changes-heading">Proposed changes</h2>
             <span>
               {model.trades.length
                 ? `${model.trades.length} line item${model.trades.length === 1 ? "" : "s"}`
@@ -127,9 +122,9 @@ export default function ProposalAdvisoryWorkspace({
           )}
         </section>
 
-        <section className={styles.panel}>
+        <section className={styles.panel} aria-labelledby="allocation-impact-heading">
           <div className={styles.panelHeader}>
-            <h2>Allocation Impact</h2>
+            <h2 id="allocation-impact-heading">Portfolio allocation impact</h2>
             <span>Source-owned</span>
           </div>
           {model.allocationRows.length ? (
@@ -150,9 +145,9 @@ export default function ProposalAdvisoryWorkspace({
           )}
         </section>
 
-        <section className={styles.panel}>
+        <section className={styles.panel} aria-labelledby="review-gates-heading">
           <div className={styles.panelHeader}>
-            <h2>Readiness Gates</h2>
+            <h2 id="review-gates-heading">Review gates</h2>
             <span>Advisor workflow</span>
           </div>
           <div className={styles.readinessList}>
@@ -168,26 +163,6 @@ export default function ProposalAdvisoryWorkspace({
           </div>
         </section>
 
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Evidence Bundle</h2>
-            <span>{model.generatedAtLabel}</span>
-          </div>
-          <dl className={styles.evidenceGrid}>
-            <div>
-              <dt>Artifact hash</dt>
-              <dd>{model.artifactHashLabel}</dd>
-            </div>
-            <div>
-              <dt>Request hash</dt>
-              <dd>{model.requestHashLabel}</dd>
-            </div>
-            <div>
-              <dt>Simulation hash</dt>
-              <dd>{model.simulationHashLabel}</dd>
-            </div>
-          </dl>
-        </section>
       </div>
     </section>
   );
