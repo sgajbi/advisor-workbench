@@ -7,7 +7,7 @@ import {
   ActionButton,
   FieldLabel,
   Text,
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
 } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
@@ -21,6 +21,7 @@ import type {
 } from "./performance-chart-panel-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
+import choiceStyles from "./performance-choice-groups.module.css";
 
 type PerformanceAnalysisControlBarProps = {
   period: string;
@@ -112,7 +113,7 @@ export default function PerformanceAnalysisControlBar({
     <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar">
       <ControlCluster className="performance-analysis-control-cluster-selection">
         <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
-          <WorkbenchSegmentedControl
+          <WorkbenchChoiceGroup
             value={period}
             onChange={(value) =>
               onRequestChange({
@@ -122,7 +123,8 @@ export default function PerformanceAnalysisControlBar({
               })
             }
             ariaLabel="Horizon"
-            className="performance-analysis-control-segmented"
+            className={choiceStyles.horizon}
+            density="compact"
             options={PERIOD_OPTIONS.map((option) => ({
               key: option,
               label: option,
@@ -132,7 +134,7 @@ export default function PerformanceAnalysisControlBar({
         </ControlSlot>
 
         <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
-          <WorkbenchSegmentedControl
+          <WorkbenchChoiceGroup
             value={detailBasis}
             onChange={(value) =>
               onRequestChange({
@@ -140,7 +142,8 @@ export default function PerformanceAnalysisControlBar({
               })
             }
             ariaLabel="Basis"
-            className="performance-analysis-control-segmented"
+            className={choiceStyles.horizon}
+            density="compact"
             options={BASIS_OPTIONS.map((option) => ({
               key: option,
               label: option,
@@ -150,9 +153,10 @@ export default function PerformanceAnalysisControlBar({
         </ControlSlot>
 
         <ControlSlot label="View" className="performance-analysis-control-slot-view">
-          <WorkbenchSegmentedControl
+          <WorkbenchChoiceGroup
             ariaLabel="Return view"
-            className="performance-analysis-view-control"
+            className={choiceStyles.horizon}
+            density="compact"
             value={chartViewMode}
             onChange={onChartViewModeChange}
             options={[

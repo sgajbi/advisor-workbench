@@ -13,7 +13,7 @@ import TextField from "@mui/material/TextField";
 import {
   FilterBar,
   PageToolbar,
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
   WorkbenchToolbarGroup,
 } from "@/design-system";
 
@@ -30,6 +30,7 @@ import {
   PORTFOLIO_TIME_WINDOW_OPTIONS,
 } from "../view-model";
 import PortfolioModuleFilterPanel from "./portfolio-module-filter-panel";
+import choiceStyles from "./portfolio-choice-groups.module.css";
 
 export default function PortfolioWorkspaceToolbar({
   controls,
@@ -178,7 +179,7 @@ export default function PortfolioWorkspaceToolbar({
             ariaLabel="Period controls"
           >
               <div className="portfolio-workspace-toolbar-field portfolio-workspace-toolbar-field-grow portfolio-workspace-toolbar-field-presets">
-                <WorkbenchSegmentedControl
+                <WorkbenchChoiceGroup
                   value={controls.timeWindow}
                   onChange={(timeWindow) => onControlsChange({ timeWindow })}
                   options={PORTFOLIO_TIME_WINDOW_OPTIONS.map((option) => ({
@@ -186,7 +187,7 @@ export default function PortfolioWorkspaceToolbar({
                     label: option,
                   }))}
                   ariaLabel="Portfolio period presets"
-                  className="portfolio-workspace-toolbar-period-control"
+                  className={choiceStyles.period}
                 />
               </div>
 

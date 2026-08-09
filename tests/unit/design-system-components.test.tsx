@@ -43,8 +43,8 @@ import {
   WorkspaceSide,
   WorkspaceTabNav,
   WorkbenchDeferredSection,
+  WorkbenchChoiceGroup,
   WorkbenchInlineRefreshNote,
-  WorkbenchSegmentedControl,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
@@ -315,7 +315,7 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready")).toBeInTheDocument();
   });
 
-  it("renders shared semantic badges, action buttons, and mode tabs with the standardized class contract", () => {
+  it("renders shared semantic badges, action buttons, and true mode tabs", () => {
     const onChange = vi.fn();
     const onClick = vi.fn();
 
@@ -328,6 +328,7 @@ describe("design-system components", () => {
           Copy Note
         </ActionButton>
         <ModeTabs
+          idBase="workspace-modes"
           value="advisor"
           onChange={onChange}
           ariaLabel="Workspace modes"
@@ -345,8 +346,15 @@ describe("design-system components", () => {
       "action-button",
       "action-button-primary"
     );
-    expect(screen.getByRole("tablist", { name: "Workspace modes" })).toHaveClass("mode-tabs");
-    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveClass("workbench-segmented-control-button-active");
+    expect(screen.getByRole("tablist", { name: "Workspace modes" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveAttribute(
+      "data-state",
+      "selected"
+    );
+    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveAttribute(
+      "aria-controls",
+      "workspace-modes-panel-advisor"
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Copy decision note" }));
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
@@ -890,11 +898,11 @@ describe("design-system components", () => {
     expect(within(placeholder).getByText("Analysis is loading after first paint.")).toBeInTheDocument();
   });
 
-  it("renders the shared segmented control with tab semantics and active-state classes", () => {
+  it("renders exclusive business choices as a radio group with one keyboard tab stop", () => {
     const onChange = vi.fn();
 
     render(
-      <WorkbenchSegmentedControl
+      <WorkbenchChoiceGroup
         value="summary"
         onChange={onChange}
         ariaLabel="Workbench mode"
@@ -907,39 +915,47 @@ describe("design-system components", () => {
       />
     );
 
-    const tablist = screen.getByRole("tablist", { name: "Workbench mode" });
-    expect(tablist).toHaveClass("workbench-segmented-control", "performance-mode-switch");
-    expect(screen.getByRole("tab", { name: "Summary" })).toHaveClass(
-      "workbench-segmented-control-button",
-      "workbench-segmented-control-button-active"
+    const group = screen.getByRole("radiogroup", { name: "Workbench mode" });
+    expect(group).toHaveClass("performance-mode-switch");
+    expect(screen.getByRole("radio", { name: "Summary" })).toHaveAttribute(
+      "aria-checked",
+      "true"
     );
-    expect(screen.getByRole("tab", { name: "Analysis" })).toHaveClass(
-      "workbench-segmented-control-button"
-    );
+    expect(screen.getByRole("radio", { name: "Summary" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("radio", { name: "Analysis" })).toHaveAttribute("tabindex", "-1");
 
-    fireEvent.click(screen.getByRole("tab", { name: "Evidence" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Evidence" }));
     expect(onChange).toHaveBeenCalledWith("evidence");
   });
 
-  it("supports disabled segmented-control options with shared semantics", () => {
+  it("supports disabled exclusive choices and skips them during arrow-key navigation", () => {
+    const onChange = vi.fn();
     render(
-      <WorkbenchSegmentedControl
+      <WorkbenchChoiceGroup
         value="asset_class"
-        onChange={() => {}}
+        onChange={onChange}
         ariaLabel="Allocation dimensions"
         options={[
           { key: "asset_class", label: "Asset Class" },
           { key: "region", label: "Region", disabled: true, title: "Region pending source support" },
+          { key: "sector", label: "Sector" },
         ]}
       />
     );
 
-    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
-    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Region" })).toHaveAttribute(
+    const assetClass = screen.getByRole("radio", { name: "Asset Class" });
+    expect(assetClass).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute(
       "title",
       "Region pending source support"
     );
+
+    fireEvent.keyDown(assetClass, { key: "ArrowRight" });
+    expect(onChange).toHaveBeenCalledWith("sector");
   });
 
   it("renders the shared workbench toolbar placeholder with generic field widths", () => {

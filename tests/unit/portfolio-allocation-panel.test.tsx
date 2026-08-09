@@ -100,30 +100,32 @@ describe("PortfolioAllocationPanel", () => {
       />
     );
 
-    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
-    expect(screen.getByRole("tab", { name: "Currency" })).toBeEnabled();
-    expect(screen.getByRole("tab", { name: "Sector" })).toBeEnabled();
-    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Region" })).toHaveAttribute(
+    expect(screen.getByRole("radio", { name: "Asset Class" })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Currency" })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Sector" })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute(
       "title",
       "Region allocation coverage unavailable",
     );
     expect(screen.queryByTitle("Region pending source support")).not.toBeInTheDocument();
-    expect(document.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
+    expect(screen.getAllByRole("radiogroup")).toHaveLength(2);
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("tabpanel", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio exposure")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
-    await waitFor(() => expect(screen.getByRole("tab", { name: "Region" })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "Region" })).not.toHaveAttribute("aria-disabled", "true")
+    );
     await waitFor(() => expect(screen.getByRole("button", { name: "Look-through off" })).toBeEnabled());
 
-    fireEvent.click(screen.getByRole("tab", { name: "Currency" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Currency" }));
     expect(screen.getByRole("tabpanel", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Region" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Region" }));
     fireEvent.click(
       screen.getByRole("button", {
         name: "North America: 625,000 USD, 50.00%, 6 positions. Review contributing holdings.",
@@ -232,8 +234,8 @@ describe("PortfolioAllocationPanel", () => {
       ).toBeDisabled()
     );
 
-    expect(screen.getByRole("tab", { name: "Asset Class" })).toBeEnabled();
-    expect(screen.getByRole("tab", { name: "Region" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Asset Class" })).not.toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
     expect(
       screen.getAllByText(
@@ -282,7 +284,7 @@ describe("PortfolioAllocationPanel", () => {
 
     expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
-    expect(container.querySelectorAll(".workbench-segmented-control")).toHaveLength(2);
+    expect(screen.getAllByRole("radiogroup")).toHaveLength(2);
     expect(container.querySelector(".portfolio-analytics-canvas.portfolio-allocation-card")).toBeTruthy();
     expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
     expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();

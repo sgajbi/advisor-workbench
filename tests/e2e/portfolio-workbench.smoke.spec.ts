@@ -260,19 +260,19 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio cashflow upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByRole('heading', { name: /^Projected cash movement$/i })).toBeVisible();
-    await expect(page.getByRole('tab', { name: '10D' })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tab', { name: '30D' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: '90D' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: '10D' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: '30D' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: '90D' })).toBeVisible();
     await expect(page.getByLabel('Projection scope')).toContainText('Projection as of');
     await expect(page.getByLabel('Projection scope')).toContainText('Projection basis');
     await expect(page.getByText('Ending Cumulative')).toHaveCount(0);
     await expect(page.getByText(/liquidity forecast/i)).toHaveCount(0);
 
-    await page.getByRole('tab', { name: '30D' }).click();
+    await page.getByRole('radio', { name: '30D' }).click();
     await expect(
       page.getByText(/30-day projection(?: returned for a 30-day request)? · /i)
     ).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole('tab', { name: '30D' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('radio', { name: '30D' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText(/10-day projection · /i)).toHaveCount(0);
   });
 

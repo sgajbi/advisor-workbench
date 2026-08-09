@@ -1,4 +1,4 @@
-import type { WorkbenchSegmentedControlOption } from "@/design-system";
+import type { WorkbenchChoiceGroupOption } from "@/design-system";
 
 type ContributionDetailView = "positions" | "segments";
 
@@ -14,7 +14,7 @@ export function getContributionDetailOptions({
   positionCount: number;
   segmentCount: number;
   hasSegmentBreakdown: boolean;
-}): Array<WorkbenchSegmentedControlOption<ContributionDetailView>> {
+}): Array<WorkbenchChoiceGroupOption<ContributionDetailView>> {
   return [
     {
       key: "positions",

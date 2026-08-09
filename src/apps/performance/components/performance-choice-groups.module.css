@@ -1,0 +1,13 @@
+.horizon {
+  max-width: 100%;
+}
+
+.riskCompact,
+.riskWindow {
+  max-width: 100%;
+}
+
+.riskCompact > [role="radio"],
+.riskWindow > [role="radio"] {
+  min-width: 4rem;
+}

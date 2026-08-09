@@ -1,4 +1,9 @@
-import { ModeTabs, type WorkbenchSegmentedControlOption } from "@/design-system";
+import {
+  ModeTabs,
+  modePanelId,
+  modeTabId,
+  type WorkbenchChoiceGroupOption,
+} from "@/design-system";
 import { cx } from "@/design-system/utils/cx";
 
 export default function PerformanceAnalysisDetailPane<T extends string>({
@@ -9,7 +14,8 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
   value,
   onChange,
   options,
-  children,
+  panels,
+  idBase,
   className,
 }: {
   title?: string;
@@ -18,8 +24,9 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
   actions?: React.ReactNode;
   value: T;
   onChange: (value: T) => void;
-  options: Array<WorkbenchSegmentedControlOption<T>>;
-  children: React.ReactNode;
+  options: Array<WorkbenchChoiceGroupOption<T>>;
+  panels: Record<T, React.ReactNode>;
+  idBase: string;
   className?: string;
 }) {
   const showTabs = options.length > 1;
@@ -46,13 +53,22 @@ export default function PerformanceAnalysisDetailPane<T extends string>({
               onChange={onChange}
               options={options}
               ariaLabel={title ? `${title} view` : "Detail view"}
-              className="performance-analysis-detail-pane-tabs"
+              idBase={idBase}
+              variant="contained"
             />
           ) : null}
         </div>
       </div>
       {summary ? <div className="performance-analysis-detail-pane-summary">{summary}</div> : null}
-      <div className="performance-analysis-detail-pane-body">{children}</div>
+      <div
+        id={modePanelId(idBase, value)}
+        role="tabpanel"
+        aria-labelledby={modeTabId(idBase, value)}
+        className="performance-analysis-detail-pane-body"
+        tabIndex={0}
+      >
+        {panels[value]}
+      </div>
     </div>
   );
 }

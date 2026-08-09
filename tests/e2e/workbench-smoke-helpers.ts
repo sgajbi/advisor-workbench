@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
 export async function setLocalStorageBeforeNavigation(
   page: Page,
@@ -9,10 +9,6 @@ export async function setLocalStorageBeforeNavigation(
       window.localStorage.setItem(key, value);
     }
   }, entries);
-}
-
-export async function expectActiveTab(page: Page, name: string | RegExp) {
-  await expect(page.getByRole('tab', { name })).toHaveAttribute('aria-selected', 'true');
 }
 
 export async function measureElement(locator: Locator) {

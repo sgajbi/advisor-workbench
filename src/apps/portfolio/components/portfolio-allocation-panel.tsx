@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
   WorkbenchSummaryToolbar,
 } from "@/design-system";
 
@@ -84,7 +84,7 @@ export default function PortfolioAllocationPanel({
       }
     >
       <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
-        <WorkbenchSegmentedControl
+        <WorkbenchChoiceGroup
           value={activeDimension}
           onChange={changeDimension}
           options={ALLOCATION_DIMENSIONS.map((dimension) => {
@@ -102,7 +102,7 @@ export default function PortfolioAllocationPanel({
         />
 
         <div className="portfolio-allocation-toolbar-actions">
-          <WorkbenchSegmentedControl
+          <WorkbenchChoiceGroup
             value={chartType}
             onChange={setChartType}
             options={ALLOCATION_CHART_TYPES.map((option) => ({

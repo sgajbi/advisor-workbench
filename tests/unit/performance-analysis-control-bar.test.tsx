@@ -51,19 +51,19 @@ describe("PerformanceAnalysisControlBar", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "QTD" }));
+    fireEvent.click(screen.getByRole("radio", { name: "QTD" }));
     expect(onRequestChange).toHaveBeenCalledWith({
       period: "QTD",
       reportStartDate: undefined,
       reportEndDate: undefined,
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "GROSS" }));
+    fireEvent.click(screen.getByRole("radio", { name: "GROSS" }));
     expect(onRequestChange).toHaveBeenCalledWith({
       detailBasis: "GROSS",
     });
 
-    fireEvent.click(screen.getByRole("tab", { name: "Relative" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Relative" }));
     expect(onChartViewModeChange).toHaveBeenCalledWith("relative");
 
     fireEvent.change(screen.getByLabelText("Frequency"), {
@@ -121,7 +121,10 @@ describe("PerformanceAnalysisControlBar", () => {
       );
     });
 
-    expect(screen.getByRole("tab", { name: "Relative" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Relative" })).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
     expect(
       screen.getByRole("option", { name: "Quarterly" })
     ).toBeDisabled();

@@ -1,0 +1,21 @@
+.period {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: min(100%, 46rem);
+  overflow: visible;
+}
+
+.period > [role="radio"] {
+  min-width: 0;
+  padding-inline: var(--space-3);
+}
+
+.cashflowHorizon {
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .period {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

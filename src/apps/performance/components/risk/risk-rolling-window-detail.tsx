@@ -1,6 +1,6 @@
 import {
   Text,
-  WorkbenchSegmentedControl,
+  WorkbenchChoiceGroup,
 } from "@/design-system";
 
 import type { PerformanceRiskRollingWindow, PerformanceRiskViewModel } from "../../risk-workspace-view-model";
@@ -8,6 +8,7 @@ import RiskAnalyticalTable from "./risk-analytical-table";
 import RiskDetailSection from "./risk-detail-section";
 import RiskRangeIndicator from "./risk-range-indicator";
 import { riskRollingPanelCopy } from "./risk-secondary-copy";
+import choiceStyles from "../performance-choice-groups.module.css";
 import RiskTableText from "./risk-table-text";
 
 const PRIMARY_ROLLING_MEASURES = new Set(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
@@ -40,7 +41,7 @@ export default function RiskRollingWindowDetail({
               <Text variant="label">{riskRollingPanelCopy.reviewWindowLabel}</Text>
               <Text variant="metadata">{riskRollingPanelCopy.reviewWindowSupport}</Text>
             </div>
-            <WorkbenchSegmentedControl
+            <WorkbenchChoiceGroup
               value={selectedWindow?.key ?? selectedWindowKey}
               onChange={onWindowChange}
               options={viewModel.rollingWindows.map((window) => ({
@@ -49,8 +50,8 @@ export default function RiskRollingWindowDetail({
                 title: `${window.label} rolling window`,
               }))}
               ariaLabel="Rolling risk windows"
-              className="performance-risk-window-toolbar performance-risk-rolling-window-toolbar performance-risk-compact-segmented-control"
-              buttonClassName="performance-risk-rolling-window-button performance-risk-compact-segmented-control-button"
+              className={choiceStyles.riskWindow}
+              density="compact"
             />
           </div>
         ) : null
