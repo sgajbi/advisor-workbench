@@ -355,6 +355,12 @@ describe("design-system components", () => {
       "aria-controls",
       "workspace-modes-panel-advisor"
     );
+    expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveAttribute("tabindex", "-1");
+
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Advisor Brief" }), { key: "Home" });
+    expect(screen.getByRole("tab", { name: "Summary" })).toHaveFocus();
+    expect(onChange).toHaveBeenCalledWith("summary");
 
     fireEvent.click(screen.getByRole("button", { name: "Copy decision note" }));
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
@@ -929,18 +935,24 @@ describe("design-system components", () => {
   });
 
   it("supports disabled exclusive choices and skips them during arrow-key navigation", () => {
-    const onChange = vi.fn();
+    function ChoiceFixture() {
+      const [value, setValue] = React.useState("asset_class");
+      return (
+        <WorkbenchChoiceGroup
+          value={value}
+          onChange={setValue}
+          ariaLabel="Allocation dimensions"
+          options={[
+            { key: "asset_class", label: "Asset Class" },
+            { key: "region", label: "Region", disabled: true, title: "Region pending source support" },
+            { key: "sector", label: "Sector" },
+          ]}
+        />
+      );
+    }
+
     render(
-      <WorkbenchChoiceGroup
-        value="asset_class"
-        onChange={onChange}
-        ariaLabel="Allocation dimensions"
-        options={[
-          { key: "asset_class", label: "Asset Class" },
-          { key: "region", label: "Region", disabled: true, title: "Region pending source support" },
-          { key: "sector", label: "Sector" },
-        ]}
-      />
+      <ChoiceFixture />
     );
 
     const assetClass = screen.getByRole("radio", { name: "Asset Class" });
@@ -955,7 +967,18 @@ describe("design-system components", () => {
     );
 
     fireEvent.keyDown(assetClass, { key: "ArrowRight" });
-    expect(onChange).toHaveBeenCalledWith("sector");
+    const sector = screen.getByRole("radio", { name: "Sector" });
+    expect(sector).toHaveFocus();
+    expect(sector).toHaveAttribute("aria-checked", "true");
+    expect(sector).toHaveAttribute("tabindex", "0");
+
+    fireEvent.keyDown(sector, { key: "Home" });
+    expect(assetClass).toHaveFocus();
+    expect(assetClass).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.keyDown(assetClass, { key: "End" });
+    expect(sector).toHaveFocus();
+    expect(sector).toHaveAttribute("aria-checked", "true");
   });
 
   it("renders the shared workbench toolbar placeholder with generic field widths", () => {
