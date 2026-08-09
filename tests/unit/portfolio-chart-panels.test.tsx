@@ -73,11 +73,11 @@ describe("portfolio chart panels", () => {
     );
 
     expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
-    expect(screen.getByLabelText("Projected cashflow mix")).toHaveTextContent("1 inflow");
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent(
+    expect(screen.getByLabelText("Projected cash movement mix")).toHaveTextContent("1 inflow");
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
       "Net Projected Movement"
     );
-    expect(screen.getByLabelText("Projected cashflow summary")).toHaveTextContent(
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
       "Largest Outflow"
     );
     expect(screen.queryByText("Ending Cumulative")).not.toBeInTheDocument();

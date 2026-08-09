@@ -29,6 +29,7 @@ import type {
 import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
 import PortfolioModuleState from "./portfolio-module-state";
 import choiceStyles from "./portfolio-choice-groups.module.css";
+import styles from "./portfolio-projected-cashflow.module.css";
 import { usePortfolioProjectedCashflow } from "./use-portfolio-projected-cashflow";
 
 export default function PortfolioProjectedCashflowModule({
@@ -155,7 +156,7 @@ export default function PortfolioProjectedCashflowModule({
         />
       ) : snapshot && outlook ? (
         <>
-          <div className="portfolio-cashflow-scope" aria-label="Projection scope">
+          <div className={styles.scope} aria-label="Projection scope">
             {buildCashflowScopeFacts(snapshot, baseCurrency).map((fact) => (
               <div key={fact.label}>
                 <span>{fact.label}</span>
@@ -165,7 +166,7 @@ export default function PortfolioProjectedCashflowModule({
           </div>
 
           {outlook.notes ? (
-            <p className="portfolio-cashflow-source-note">
+            <p className={styles.sourceNote}>
               <strong>Source note</strong>
               <span>{outlook.notes}</span>
             </p>
@@ -226,7 +227,7 @@ export default function PortfolioProjectedCashflowModule({
                 />
               ) : expanded ? (
                 <>
-                  <p className="portfolio-cashflow-table-note">
+                  <p className={styles.tableNote}>
                     Showing {movementRows.length} movement date
                     {movementRows.length === 1 ? "" : "s"} from {outlook.upcoming_points.length}{" "}
                     returned projection points. Export includes every returned point.
@@ -234,7 +235,7 @@ export default function PortfolioProjectedCashflowModule({
                   <AnalyticsTable
                     density="compact"
                     variant="portfolio"
-                    className="portfolio-analytics-table portfolio-cashflow-table"
+                    className={`portfolio-analytics-table ${styles.table}`}
                     ariaLabel="Projected cash movement schedule"
                     columns={[
                       { key: "date", label: "Date" },
