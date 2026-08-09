@@ -46,14 +46,17 @@ concurrency group.
   runs `npm run lint:css-global` and then the maintained ESLint CLI over the repository root with
   the flat configuration. The CSS gate keeps `src/app/globals.css` as a small import-only
   entrypoint, preserves governed global layer order, and blocks global-style budget growth unless
-  the baseline is intentionally updated with issue evidence. Production app source keeps the direct
-  Next, Core Web Vitals, TypeScript, and stable React Hooks correctness rules; tests, live
-  validators, scripts, and configuration files are scanned by the shared TypeScript/JavaScript
-  policy. Deprecated `next lint` and `eslint-config-next` are not part of the governed gate.
+  the baseline is intentionally updated with issue evidence. It also rejects migrated component
+  selector families, including `portfolio-screen-rail`, if they return to a governed global layer.
+  Production app source keeps the direct Next, Core Web Vitals, TypeScript, and stable React Hooks
+  correctness rules; tests, live validators, scripts, and configuration files are scanned by the
+  shared TypeScript/JavaScript policy. Deprecated `next lint` and `eslint-config-next` are not part
+  of the governed gate.
 - `npm run lint:css-global`
   validates `src/app/globals.css`, `src/styles/global/*`, and
   `scripts/quality/css-global-governance-baseline.json` against the documented CSS layer model in
-  `docs/architecture/css-layer-governance.md`.
+  `docs/architecture/css-layer-governance.md`, including exact size ratchets and forbidden migrated
+  selector prefixes.
 - `npm run lint:react-compiler`
   runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
   report-only React Compiler compatibility evaluator. It is not part of `make check`, Feature Lane,

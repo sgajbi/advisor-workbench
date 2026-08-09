@@ -17,6 +17,11 @@ The migration rule is incremental: move selectors only when the owning component
 primitive boundary is clear and validation can prove no behavior regression. Do not perform bulk
 mechanical splits that hide ownership or cascade changes.
 
+`PortfolioScreenRail` is the first shared cross-route component migrated under this ownership
+model. Its presentation is colocated in
+`src/apps/portfolio/components/portfolio-screen-rail.module.css`; page-specific shells may own
+placement, but they must not repair the rail's colors, spacing, or interaction states globally.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.
@@ -26,11 +31,14 @@ containerized local-CI lane. The CSS gate validates:
 - `globals.css` contains only the governed import list;
 - imported global layers remain in the documented cascade order;
 - each global layer stays within its line and byte budget in
-  `scripts/quality/css-global-governance-baseline.json`.
+  `scripts/quality/css-global-governance-baseline.json`;
+- selector families listed in `forbiddenSelectorPrefixes` do not return to any governed global
+  layer after migration to a component owner.
 
 When a migration removes selectors from `legacy-global.css`, lower the corresponding baseline in the
-same PR. Increase a budget only with issue-backed evidence explaining why a selector belongs in a
-global layer instead of a feature module.
+same PR and add the migrated selector family to `forbiddenSelectorPrefixes`. Increase a budget only
+with issue-backed evidence explaining why a selector belongs in a global layer instead of a feature
+module.
 
 ## Ownership expectations
 

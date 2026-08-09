@@ -156,8 +156,10 @@ Current repository posture:
     `src/app/globals.css` is a composition entrypoint that imports token, base, Workbench shell,
     and legacy global layers from `src/styles/global/`. `npm run lint` runs the CSS global governance
     ratchet before `npm run lint:eslint`, and `make lint` delegates to the composed npm lint gate.
-    Feature-specific selectors should migrate beside their
-    React owner with a lowered baseline instead of growing `legacy-global.css`.
+    Feature-specific selectors should migrate beside their React owner with a lowered baseline and
+    a forbidden selector-prefix ratchet instead of growing `legacy-global.css`. In particular,
+    `PortfolioScreenRail` owns its presentation in a colocated CSS Module; route shells own only its
+    placement and must not reintroduce global or page-scoped rail color and spacing repairs.
 18. the governed canonical runtime starts `lotus-core` with `DEMO_DATA_PACK_ENABLED=false` so the
     broad Core app-local demo pack cannot pollute `PB_SG_GLOBAL_BAL_001` evidence, and it starts
     `lotus-idea` by default because the opportunity mode depends on Idea-owned runtime posture.

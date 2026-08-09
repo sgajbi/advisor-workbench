@@ -11,9 +11,10 @@
 - `make lint`
   Runs the CSS global governance ratchet and then `eslint . --max-warnings=0` through the
   repository flat ESLint configuration. The gate keeps `src/app/globals.css` as a composition
-  entrypoint, enforces the governed global-style budgets, and scans application source, tests, live
-  validators, scripts, and configuration files while keeping Next/Core Web Vitals and stable React
-  Hooks correctness rules scoped to production app source.
+  entrypoint, enforces the governed global-style budgets, rejects migrated component selector
+  families that return to global CSS, and scans application source, tests, live validators, scripts,
+  and configuration files while keeping Next/Core Web Vitals and stable React Hooks correctness
+  rules scoped to production app source.
 - `npm run lint:react-compiler`
   Runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
   report-only evaluator for React Compiler compatibility. It is not part of `make check` until the
@@ -31,3 +32,5 @@
 - route runtime and route examples into the wiki
 - keep deep product-architecture and runtime details in `docs/`
 - keep CSS ownership guidance in `docs/architecture/css-layer-governance.md`
+- when a selector family moves to a component-owned CSS Module, lower the global budget and add its
+  prefix to `forbiddenSelectorPrefixes` in the same issue-backed slice
