@@ -4,13 +4,20 @@ import { resolve } from 'node:path';
 
 const scenario = process.argv[2];
 const forwardedArguments = process.argv.slice(3);
-const fixturePort = Number.parseInt(process.env.PORTFOLIO_E2E_FIXTURE_PORT ?? '18120', 10);
+const fixturePort = parseUnprivilegedPort(
+  'PORTFOLIO_E2E_FIXTURE_PORT',
+  process.env.PORTFOLIO_E2E_FIXTURE_PORT ?? '18120',
+);
+const workbenchPort = parseUnprivilegedPort(
+  'PORTFOLIO_E2E_WORKBENCH_PORT',
+  process.env.PORTFOLIO_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? '31020',
+);
 
 if (scenario !== 'cashflow') {
   throw new Error('Portfolio smoke scenario must be cashflow.');
 }
-if (!Number.isInteger(fixturePort) || fixturePort < 1024 || fixturePort > 65535) {
-  throw new Error('PORTFOLIO_E2E_FIXTURE_PORT must be an unprivileged TCP port.');
+if (fixturePort === workbenchPort) {
+  throw new Error('Portfolio fixture and Workbench proof ports must be different.');
 }
 
 const projectRoot = process.cwd();
@@ -37,6 +44,7 @@ const child = spawn(
     env: {
       ...process.env,
       BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`,
+      PLAYWRIGHT_PORT: String(workbenchPort),
       PORTFOLIO_E2E_FIXTURE: scenario,
       PORTFOLIO_E2E_FIXTURE_PORT: String(fixturePort),
       PORTFOLIO_E2E_EVIDENCE_DIR: evidenceDirectory,
@@ -44,6 +52,17 @@ const child = spawn(
     },
   },
 );
+
+function parseUnprivilegedPort(name, value) {
+  if (!/^\d+$/.test(value)) {
+    throw new Error(`${name} must be an unprivileged TCP port.`);
+  }
+  const port = Number.parseInt(value, 10);
+  if (port < 1024 || port > 65535) {
+    throw new Error(`${name} must be an unprivileged TCP port.`);
+  }
+  return port;
+}
 
 const stop = (signal) => {
   if (!child.killed) {
