@@ -190,6 +190,10 @@ Current repository posture:
     semantics, while `ModeTabs` is reserved for controls with associated tab panels. Their shared
     interaction presentation belongs in design-system CSS Modules; consuming features may own only
     bounded layout modules and must not restore retired segmented-control selectors globally.
+    Projected Cashflow summary, chart-specific marks, projection scope, source note, schedule, and
+    responsive rules belong to `portfolio-projected-cashflow.module.css`; shared Portfolio chart
+    geometry and `AnalyticsTable` behavior remain separate owners. Do not restore
+    `portfolio-cashflow*` selectors or app-shell repairs to governed global CSS.
 18. `/suite` is a compatibility alias of the single canonical Home entry and owns no business
     surface. It must not regain hard-coded clients, portfolios, analytics, priorities, roles,
     workflow state, or technical policy diagnostics. The canonical Home currently routes to
