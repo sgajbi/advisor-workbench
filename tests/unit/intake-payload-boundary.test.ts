@@ -52,32 +52,61 @@ function moduleReferenceStatements(
   );
 }
 
+function dynamicModuleReferences(
+  sourceFile: ts.SourceFile,
+  moduleSuffix: string,
+): ts.CallExpression[] {
+  const references: ts.CallExpression[] = [];
+
+  function visit(node: ts.Node) {
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0]) &&
+      moduleMatches(node.arguments[0].text, moduleSuffix)
+    ) {
+      references.push(node);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return references;
+}
+
 function referencesModule(sourceFile: ts.SourceFile, moduleSuffix: string): boolean {
-  return moduleReferenceStatements(sourceFile, moduleSuffix).length > 0;
+  return (
+    moduleReferenceStatements(sourceFile, moduleSuffix).length > 0 ||
+    dynamicModuleReferences(sourceFile, moduleSuffix).length > 0
+  );
 }
 
 function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: string): boolean {
-  return sourceFile.statements.some((statement) => {
-    if (
-      !ts.isImportDeclaration(statement) ||
-      !ts.isStringLiteral(statement.moduleSpecifier) ||
-      !moduleMatches(statement.moduleSpecifier.text, moduleSuffix)
-    ) {
-      return false;
-    }
+  return (
+    dynamicModuleReferences(sourceFile, moduleSuffix).length > 0 ||
+    sourceFile.statements.some((statement) => {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        !moduleMatches(statement.moduleSpecifier.text, moduleSuffix)
+      ) {
+        return false;
+      }
 
-    const bindings = statement.importClause?.namedBindings;
-    if (bindings === undefined) return false;
-    if (ts.isNamedImports(bindings)) {
-      return bindings.elements.some(
-        (element) => (element.propertyName?.text ?? element.name.text) === name,
-      );
-    }
-    // A namespace binding exposes every export from the publication module. Treat the import
-    // itself as boundary access so a barrel cannot re-export the namespace without first using
-    // ingestPortfolioBundle in the importing source file.
-    return true;
-  });
+      const bindings = statement.importClause?.namedBindings;
+      if (bindings === undefined) return false;
+      if (ts.isNamedImports(bindings)) {
+        return bindings.elements.some(
+          (element) => (element.propertyName?.text ?? element.name.text) === name,
+        );
+      }
+      // A namespace binding exposes every export from the publication module. Treat the import
+      // itself as boundary access so a barrel cannot re-export the namespace without first using
+      // ingestPortfolioBundle in the importing source file.
+      return true;
+    })
+  );
 }
 
 function reexportsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: string): boolean {
@@ -235,6 +264,15 @@ describe("Portfolio Intake payload ownership", () => {
       ts.ScriptTarget.Latest,
       true,
     );
+    const dynamicImport = ts.createSourceFile(
+      "dynamic-import-fixture.ts",
+      [
+        'const intakeApi = await import("./api.ts");',
+        'const payloadBuilders = await import("./payload-builder.js");',
+      ].join("\n"),
+      ts.ScriptTarget.Latest,
+      true,
+    );
 
     expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(referencesModule(sourceFile, "/payload-builder")).toBe(true);
@@ -243,6 +281,8 @@ describe("Portfolio Intake payload ownership", () => {
     expect(exportedNames(localReexport)).toEqual(["publishAlias", "publishReviewedIntent"]);
     expect(importsName(localNamespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(referencesModule(payloadBuilderReexport, "/payload-builder")).toBe(true);
+    expect(importsName(dynamicImport, "/api", "ingestPortfolioBundle")).toBe(true);
+    expect(referencesModule(dynamicImport, "/payload-builder")).toBe(true);
   });
 
   it("keeps payload construction behind the reviewed projection", () => {
