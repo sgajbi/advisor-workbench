@@ -20,6 +20,7 @@ const listProposalsMock = vi.fn(async (_filters?: unknown) => ({
       title: "Implementation handoff",
     },
   ],
+  next_cursor: null as string | null,
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
