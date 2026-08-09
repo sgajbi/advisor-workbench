@@ -39,13 +39,21 @@ function moduleMatches(moduleSpecifier: string, moduleSuffix: string): boolean {
   return moduleSpecifier.replace(/\.(?:js|jsx|ts|tsx)$/, "").endsWith(moduleSuffix);
 }
 
-function importsModule(sourceFile: ts.SourceFile, moduleSuffix: string): boolean {
-  return sourceFile.statements.some(
-    (statement) =>
-      ts.isImportDeclaration(statement) &&
+function moduleReferenceStatements(
+  sourceFile: ts.SourceFile,
+  moduleSuffix: string,
+): Array<ts.ImportDeclaration | ts.ExportDeclaration> {
+  return sourceFile.statements.filter(
+    (statement): statement is ts.ImportDeclaration | ts.ExportDeclaration =>
+      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
+      statement.moduleSpecifier !== undefined &&
       ts.isStringLiteral(statement.moduleSpecifier) &&
       moduleMatches(statement.moduleSpecifier.text, moduleSuffix),
   );
+}
+
+function referencesModule(sourceFile: ts.SourceFile, moduleSuffix: string): boolean {
+  return moduleReferenceStatements(sourceFile, moduleSuffix).length > 0;
 }
 
 function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: string): boolean {
@@ -160,6 +168,18 @@ function callExpressions(sourceFile: ts.SourceFile, functionName: string): ts.Ca
   return calls;
 }
 
+function identifierOccurrences(sourceFile: ts.SourceFile, name: string): number {
+  let count = 0;
+
+  function visit(node: ts.Node) {
+    if (ts.isIdentifier(node) && node.text === name) count += 1;
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return count;
+}
+
 function callArguments(sourceFile: ts.SourceFile, functionName: string): string[][] {
   return callExpressions(sourceFile, functionName).map((call) =>
     call.arguments.map((argument) => argument.getText(sourceFile)),
@@ -209,18 +229,25 @@ describe("Portfolio Intake payload ownership", () => {
       ts.ScriptTarget.Latest,
       true,
     );
+    const payloadBuilderReexport = ts.createSourceFile(
+      "payload-builder-reexport-fixture.ts",
+      'export { buildTransactionsPayloadFromList } from "./payload-builder.ts";',
+      ts.ScriptTarget.Latest,
+      true,
+    );
 
     expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
-    expect(importsModule(sourceFile, "/payload-builder")).toBe(true);
+    expect(referencesModule(sourceFile, "/payload-builder")).toBe(true);
     expect(reexportsName(namedReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(reexportsName(namespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(exportedNames(localReexport)).toEqual(["publishAlias", "publishReviewedIntent"]);
     expect(importsName(localNamespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
+    expect(referencesModule(payloadBuilderReexport, "/payload-builder")).toBe(true);
   });
 
   it("keeps payload construction behind the reviewed projection", () => {
     const payloadBuilderConsumers = modules
-      .filter(({ sourceFile }) => importsModule(sourceFile, "/payload-builder"))
+      .filter(({ sourceFile }) => referencesModule(sourceFile, "/payload-builder"))
       .map(({ path }) => path);
 
     expect(payloadBuilderConsumers).toEqual(["src/features/intake/draft.ts"]);
@@ -255,7 +282,11 @@ describe("Portfolio Intake payload ownership", () => {
       ({ path }) => path === "src/features/intake/use-intake-workflow.ts",
     );
     expect(workflow).toBeDefined();
+    const publicationModuleReferences = moduleReferenceStatements(workflow!.sourceFile, "/api");
+    expect(publicationModuleReferences).toHaveLength(1);
+    expect(ts.isImportDeclaration(publicationModuleReferences[0])).toBe(true);
     expect(exportedNames(workflow!.sourceFile)).toEqual(["useIntakeWorkflow"]);
+    expect(identifierOccurrences(workflow!.sourceFile, "ingestPortfolioBundle")).toBe(2);
     expect(callArguments(workflow!.sourceFile, "buildIntakeReviewProjection")).toEqual([["draft"]]);
     const publicationCalls = callExpressions(workflow!.sourceFile, "ingestPortfolioBundle");
     expect(publicationCalls).toHaveLength(1);
