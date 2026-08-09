@@ -202,7 +202,7 @@ export function buildAdvisoryOverviewModel({
     ],
     proposalRows,
     visibleProposalCount: proposals.length,
-    attentionCount: proposalRows.filter((row) => row.readiness !== "Ready").length,
+    attentionCount: proposalRows.length,
     hasPartialWindow,
     sourceWindowLabel: hasPartialWindow
       ? `Proposal window ${windowNumber}`

@@ -50,7 +50,7 @@ export default function ProposalLifecycleWorkspace({
   mode: ProposalLifecycleMode;
 }) {
   const queryClient = useQueryClient();
-  const sourceWindow = useProposalSourceWindow();
+  const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQuery = useQuery({
     queryKey: ["proposal-lifecycle-workspace", portfolioId, mode, sourceWindow.cursor],
     queryFn: async () =>

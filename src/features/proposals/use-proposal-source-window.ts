@@ -2,11 +2,26 @@
 
 import { useCallback, useState } from "react";
 
-export function useProposalSourceWindow() {
-  const [sourceHistory, setSourceHistory] = useState<{
-    cursors: Array<string | undefined>;
-    index: number;
-  }>({ cursors: [undefined], index: 0 });
+type ProposalSourceHistory = {
+  scopeKey: string;
+  cursors: Array<string | undefined>;
+  index: number;
+};
+
+function createInitialHistory(scopeKey: string): ProposalSourceHistory {
+  return { scopeKey, cursors: [undefined], index: 0 };
+}
+
+export function useProposalSourceWindow(scopeKey: string) {
+  const [sourceHistory, setSourceHistory] = useState<ProposalSourceHistory>(() =>
+    createInitialHistory(scopeKey)
+  );
+  const activeHistory =
+    sourceHistory.scopeKey === scopeKey ? sourceHistory : createInitialHistory(scopeKey);
+
+  if (sourceHistory.scopeKey !== scopeKey) {
+    setSourceHistory(activeHistory);
+  }
 
   const showNext = useCallback(
     (nextCursor?: string | null) => {
@@ -14,29 +29,39 @@ export function useProposalSourceWindow() {
         return;
       }
       setSourceHistory((current) => {
-        if (current.cursors[current.index] === nextCursor) {
-          return current;
+        const scopedHistory =
+          current.scopeKey === scopeKey ? current : createInitialHistory(scopeKey);
+        if (scopedHistory.cursors[scopedHistory.index] === nextCursor) {
+          return scopedHistory;
         }
         return {
-          cursors: [...current.cursors.slice(0, current.index + 1), nextCursor],
-          index: current.index + 1,
+          ...scopedHistory,
+          cursors: [
+            ...scopedHistory.cursors.slice(0, scopedHistory.index + 1),
+            nextCursor,
+          ],
+          index: scopedHistory.index + 1,
         };
       });
     },
-    []
+    [scopeKey]
   );
 
   const showPrevious = useCallback(() => {
-    setSourceHistory((current) => ({
-      ...current,
-      index: Math.max(0, current.index - 1),
-    }));
-  }, []);
+    setSourceHistory((current) => {
+      const scopedHistory =
+        current.scopeKey === scopeKey ? current : createInitialHistory(scopeKey);
+      return {
+        ...scopedHistory,
+        index: Math.max(0, scopedHistory.index - 1),
+      };
+    });
+  }, [scopeKey]);
 
   return {
-    cursor: sourceHistory.cursors[sourceHistory.index],
-    windowNumber: sourceHistory.index + 1,
-    hasPrevious: sourceHistory.index > 0,
+    cursor: activeHistory.cursors[activeHistory.index],
+    windowNumber: activeHistory.index + 1,
+    hasPrevious: activeHistory.index > 0,
     showNext,
     showPrevious,
   };
