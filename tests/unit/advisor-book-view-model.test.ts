@@ -67,17 +67,25 @@ describe("advisor-book workspace view model", () => {
     expect(model.stateLabel).toBe("Available with limitations");
     expect(model.metrics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Portfolios", value: "2" }),
-        expect.objectContaining({ label: "Clients on this page", value: "1" }),
-        expect.objectContaining({ label: "Role assignment coverage", value: "1 legacy" }),
+        expect.objectContaining({ label: "Matching portfolios", value: "2" }),
+        expect.objectContaining({ label: "Portfolios shown", value: "2" }),
+        expect.objectContaining({ label: "Clients shown", value: "1" }),
+        expect.objectContaining({ label: "Assignment basis", value: "1 legacy" }),
       ]),
     );
     expect(model.rows[0]).toEqual(
       expect.objectContaining({
-        portfolioLabel: "Portfolio PB_001",
-        clientLabel: "Client CIF_001",
+        portfolioLabel: "PB_001",
+        portfolioReferenceLabel: "Portfolio reference",
+        clientReference: "CIF_001",
         mandateLabel: "Discretionary mandate",
         membershipLabel: "Legacy advisor assignment",
+      }),
+    );
+    expect(model.rows[1]).toEqual(
+      expect.objectContaining({
+        portfolioLabel: "Income mandate",
+        portfolioReferenceLabel: "Portfolio reference PB_002",
       }),
     );
     expect(JSON.stringify(model)).not.toMatch(/AUM|household|team book|attention rank/i);

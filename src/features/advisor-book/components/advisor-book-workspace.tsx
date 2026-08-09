@@ -20,6 +20,11 @@ import {
 } from "@/features/workbench/api-client";
 
 import type { AdvisorBookQuery } from "../api";
+import type {
+  AdvisorBookResponse,
+  AdvisorBookSortBy,
+  AdvisorBookSortOrder,
+} from "../contracts";
 import { resolveAdvisorBookAsOfDate } from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
 import { useAdvisorBook } from "../use-advisor-book";
@@ -49,20 +54,31 @@ function AdvisorBookWorkspaceContent({
   const query = useMemo(() => queryFromSearchParams(searchParams), [searchParams]);
   const queryClientId = query.clientId ?? "";
   const [clientId, setClientId] = useState(queryClientId);
+  const [mandateType, setMandateType] = useState(query.mandateType ?? "");
+  const [sortBy, setSortBy] = useState<AdvisorBookSortBy>(
+    query.sortBy ?? "portfolio_id",
+  );
+  const [sortOrder, setSortOrder] = useState<AdvisorBookSortOrder>(
+    query.sortOrder ?? "asc",
+  );
   const { response, loading, error, reload } = useAdvisorBook(query);
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = new URLSearchParams(searchParams.toString());
     setOptionalQuery(next, "clientId", clientId.trim());
+    setOptionalQuery(next, "mandateType", mandateType);
+    setOptionalQuery(next, "sortBy", sortBy === "portfolio_id" ? "" : sortBy);
+    setOptionalQuery(next, "sortOrder", sortOrder === "asc" ? "" : sortOrder);
     next.set("offset", "0");
     router.replace(`${pathname}?${next.toString()}`);
   }
 
-  function updateSelect(name: "mandateType" | "sortBy", value: string) {
+  function clearView() {
     const next = new URLSearchParams(searchParams.toString());
-    setOptionalQuery(next, name, value);
-    next.set("offset", "0");
+    for (const key of ["clientId", "mandateType", "sortBy", "sortOrder", "offset"]) {
+      next.delete(key);
+    }
     router.replace(`${pathname}?${next.toString()}`);
   }
 
@@ -113,6 +129,12 @@ function AdvisorBookWorkspaceContent({
 
   const model = buildAdvisorBookWorkspaceModel(response);
   const lastReturned = response.page.offset + response.page.returned_count;
+  const hasCustomView = Boolean(
+    query.clientId ||
+      query.mandateType ||
+      query.sortBy !== "portfolio_id" ||
+      query.sortOrder !== "asc",
+  );
 
   return (
     <div className={styles.workspace}>
@@ -136,7 +158,7 @@ function AdvisorBookWorkspaceContent({
       </div>
 
       <WorkbenchSummaryMetricStrip
-        ariaLabel="Book summary"
+        ariaLabel="Current book view"
         items={model.metrics.map((metric) => ({
           key: metric.label,
           label: metric.label,
@@ -146,10 +168,14 @@ function AdvisorBookWorkspaceContent({
       />
 
       <SectionBlock
-        title="Portfolio coverage"
-        subtitle="Search and sort using the available client, mandate, and portfolio fields."
+        title="Assigned portfolios"
+        subtitle="Find a confirmed assignment and continue into its portfolio review."
       >
-        <form className={styles.filterForm} onSubmit={applyFilters}>
+        <form
+          className={styles.filterToolbar}
+          onSubmit={applyFilters}
+          aria-label="Book view controls"
+        >
           <div className={styles.field}>
             <FieldLabel htmlFor="advisor-book-client-reference">Client reference</FieldLabel>
             <input
@@ -158,6 +184,7 @@ function AdvisorBookWorkspaceContent({
               onChange={(event) => setClientId(event.target.value)}
               placeholder="Exact client reference"
               aria-label="Client reference"
+              spellCheck={false}
             />
           </div>
           <div className={styles.field}>
@@ -165,8 +192,8 @@ function AdvisorBookWorkspaceContent({
             <select
               id="advisor-book-mandate"
               aria-label="Mandate"
-              value={query.mandateType ?? ""}
-              onChange={(event) => updateSelect("mandateType", event.target.value)}
+              value={mandateType}
+              onChange={(event) => setMandateType(event.target.value)}
             >
               <option value="">All supported mandates</option>
               <option value="ADVISORY">Advisory</option>
@@ -178,16 +205,40 @@ function AdvisorBookWorkspaceContent({
             <select
               id="advisor-book-sort"
               aria-label="Sort by"
-              value={query.sortBy ?? "portfolio_id"}
-              onChange={(event) => updateSelect("sortBy", event.target.value)}
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as AdvisorBookSortBy)}
             >
               <option value="portfolio_id">Portfolio</option>
               <option value="client_id">Client</option>
               <option value="mandate_type">Mandate</option>
             </select>
           </div>
-          <ActionButton type="submit" priority="primary">Apply client</ActionButton>
+          <div className={styles.field}>
+            <FieldLabel htmlFor="advisor-book-sort-order">Direction</FieldLabel>
+            <select
+              id="advisor-book-sort-order"
+              aria-label="Sort direction"
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value as AdvisorBookSortOrder)}
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+          <div className={styles.filterActions}>
+            <ActionButton type="submit" priority="primary">Apply view</ActionButton>
+            {hasCustomView ? (
+              <ActionButton type="button" priority="quiet" onClick={clearView}>
+                Clear view
+              </ActionButton>
+            ) : null}
+          </div>
         </form>
+
+        <div className={styles.resultScope} aria-live="polite">
+          <strong>{bookRangeLabel(response)}</strong>
+          <span>{bookViewLabel(query)}</span>
+        </div>
 
         <AnalyticsTable
           ariaLabel="Portfolios in my book"
@@ -195,11 +246,11 @@ function AdvisorBookWorkspaceContent({
           variant="portfolio"
           columns={[
             { key: "portfolio", label: "Portfolio" },
-            { key: "client", label: "Client" },
+            { key: "client", label: "Client reference" },
             { key: "mandate", label: "Mandate" },
             { key: "currency", label: "Currency" },
-            { key: "status", label: "Status" },
-            { key: "membership", label: "Membership" },
+            { key: "status", label: "Lifecycle" },
+            { key: "membership", label: "Assignment basis" },
           ]}
           rows={model.rows.map((row) => ({
             key: row.portfolioId,
@@ -214,9 +265,11 @@ function AdvisorBookWorkspaceContent({
                 >
                   {row.portfolioLabel}
                 </Link>
-                <small>Open portfolio review</small>
+                <small>{row.portfolioReferenceLabel} · Open Portfolio Review</small>
               </div>,
-              row.clientLabel,
+              <span key="client" className={styles.referenceValue}>
+                {row.clientReference}
+              </span>,
               row.mandateLabel,
               row.currencyLabel,
               row.statusLabel,
@@ -278,6 +331,7 @@ function AdvisorBookWorkspaceContent({
 function queryFromSearchParams(searchParams: URLSearchParams | Readonly<URLSearchParams>): AdvisorBookQuery {
   const mandateType = searchParams.get("mandateType");
   const sortBy = searchParams.get("sortBy");
+  const sortOrder = searchParams.get("sortOrder");
   return {
     asOfDate: resolveAdvisorBookAsOfDate(searchParams.get("asOfDate")),
     clientId: searchParams.get("clientId") || undefined,
@@ -289,10 +343,38 @@ function queryFromSearchParams(searchParams: URLSearchParams | Readonly<URLSearc
       sortBy === "client_id" || sortBy === "mandate_type" || sortBy === "portfolio_id"
         ? sortBy
         : "portfolio_id",
-    sortOrder: "asc",
+    sortOrder: sortOrder === "desc" ? "desc" : "asc",
     offset: nonNegativeInteger(searchParams.get("offset")),
     limit: PAGE_SIZE,
   };
+}
+
+function bookRangeLabel(response: AdvisorBookResponse): string {
+  if (response.page.returned_count === 0) {
+    return `0 of ${response.page.total_count} portfolios`;
+  }
+  const firstReturned = response.page.offset + 1;
+  const lastReturned = response.page.offset + response.page.returned_count;
+  return `${firstReturned}–${lastReturned} of ${response.page.total_count} portfolios`;
+}
+
+function bookViewLabel(query: AdvisorBookQuery): string {
+  const scope = [
+    query.clientId ? `Client reference ${query.clientId}` : "All clients",
+    query.mandateType === "ADVISORY"
+      ? "Advisory mandates"
+      : query.mandateType === "DISCRETIONARY"
+        ? "Discretionary mandates"
+        : "All supported mandates",
+  ];
+  const sortField =
+    query.sortBy === "client_id"
+      ? "Client reference"
+      : query.sortBy === "mandate_type"
+        ? "Mandate"
+        : "Portfolio reference";
+  scope.push(`${sortField}, ${query.sortOrder === "desc" ? "descending" : "ascending"}`);
+  return scope.join(" · ");
 }
 
 function nonNegativeInteger(value: string | null): number {

@@ -29,11 +29,18 @@
   font-size: 0.875rem;
 }
 
-.filterForm {
+.filterToolbar {
   display: grid;
-  grid-template-columns: minmax(180px, 1.4fr) minmax(150px, 1fr) minmax(150px, 1fr) auto;
+  grid-template-columns:
+    minmax(200px, 1.35fr)
+    minmax(155px, 0.9fr)
+    minmax(145px, 0.85fr)
+    minmax(135px, 0.75fr)
+    auto;
   gap: 12px;
   align-items: end;
+  padding-block: 4px 16px;
+  border-bottom: 1px solid var(--lotus-border-subtle, #dde2e8);
 }
 
 .field {
@@ -43,7 +50,7 @@
 
 .field input,
 .field select {
-  min-height: 38px;
+  min-height: 44px;
   width: 100%;
   border: 1px solid var(--lotus-border-default, #cbd2da);
   border-radius: 7px;
@@ -51,6 +58,33 @@
   background: #fff;
   color: inherit;
   font: inherit;
+}
+
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+}
+
+.resultScope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-block: 12px 8px;
+}
+
+.resultScope strong {
+  color: var(--lotus-text-strong, #152231);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultScope span {
+  color: var(--lotus-text-muted, #66717f);
+  font-size: 0.75rem;
 }
 
 .portfolioCell {
@@ -72,6 +106,13 @@
 .cellDetail {
   color: var(--lotus-text-muted, #66717f);
   font-size: 0.75rem;
+}
+
+.referenceValue {
+  color: var(--lotus-text-default, #303d4c);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .pagination {
@@ -114,8 +155,12 @@
 }
 
 @media (max-width: 960px) {
-  .filterForm {
+  .filterToolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filterActions {
+    grid-column: 1 / -1;
   }
 
   .supportGrid {
@@ -124,8 +169,17 @@
 }
 
 @media (max-width: 640px) {
-  .filterForm {
+  .filterToolbar {
     grid-template-columns: 1fr;
+  }
+
+  .filterActions {
+    grid-column: auto;
+    justify-content: space-between;
+  }
+
+  .resultScope {
+    display: grid;
   }
 
   .pagination {

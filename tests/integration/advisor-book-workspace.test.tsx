@@ -93,9 +93,12 @@ describe("AdvisorBookWorkspace", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Loading your book");
     expect(await screen.findByText("Book available")).toBeInTheDocument();
-    expect(screen.getByLabelText("Book summary")).toHaveTextContent("Portfolios1");
+    expect(screen.getByLabelText("Current book view")).toHaveTextContent(
+      "Matching portfolios1",
+    );
+    expect(screen.getByText("1–1 of 1 portfolios")).toBeInTheDocument();
     const table = screen.getByRole("table", { name: "Portfolios in my book" });
-    expect(within(table).getByText("Client CIF_SG_GLOBAL_BAL_001")).toBeInTheDocument();
+    expect(within(table).getByText("CIF_SG_GLOBAL_BAL_001")).toBeInTheDocument();
     expect(within(table).getByText("Discretionary mandate")).toBeInTheDocument();
     expect(within(table).getByRole("link", { name: "Global Balanced Mandate" })).toHaveAttribute(
       "href",
@@ -103,9 +106,10 @@ describe("AdvisorBookWorkspace", () => {
     );
     expect(screen.getByText("Own book only")).toBeInTheDocument();
     expect(
-      screen.getByText(/Search and sort using the available client, mandate, and portfolio fields/i),
+      screen.getByText(/Find a confirmed assignment and continue into its portfolio review/i),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/source-backed|membership contract/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/source-backed|portfolio membership/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/membership contract/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/team book|household|AUM|attention rank/i)).not.toBeInTheDocument();
   });
 
@@ -123,11 +127,43 @@ describe("AdvisorBookWorkspace", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Client reference" }), {
       target: { value: "CIF_SG_002" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Apply client" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
 
     expect(routerReplaceMock).toHaveBeenCalledWith(
-      "/book?asOfDate=2026-04-10&offset=0&sortBy=portfolio_id&clientId=CIF_SG_002",
+      "/book?asOfDate=2026-04-10&offset=0&clientId=CIF_SG_002",
     );
+  });
+
+  it("applies descending source sorting and clears the custom view without losing the date", async () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "asOfDate=2026-04-10&clientId=CIF_SG_002&mandateType=ADVISORY&sortBy=client_id&sortOrder=desc&offset=25",
+      ),
+    );
+    getAdvisorBookMock.mockResolvedValue({
+      ...readyResponse,
+      page: {
+        ...readyResponse.page,
+        offset: 25,
+        total_count: 26,
+        sort_by: "client_id",
+        sort_order: "desc",
+      },
+    });
+    render(<AdvisorBookWorkspace />);
+    await screen.findByText("Book available");
+
+    expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue("client_id");
+    expect(screen.getByRole("combobox", { name: "Sort direction" })).toHaveValue("desc");
+    expect(screen.getByText(/Client reference CIF_SG_002 · Advisory mandates/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
+    expect(routerReplaceMock).toHaveBeenLastCalledWith(
+      "/book?asOfDate=2026-04-10&clientId=CIF_SG_002&mandateType=ADVISORY&sortBy=client_id&sortOrder=desc&offset=0",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear view" }));
+    expect(routerReplaceMock).toHaveBeenLastCalledWith("/book?asOfDate=2026-04-10");
   });
 
   it("adopts the URL client filter when returning to an earlier query", async () => {
@@ -138,7 +174,7 @@ describe("AdvisorBookWorkspace", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Client reference" }), {
       target: { value: "CIF_SG_002" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Apply client" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
 
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams("asOfDate=2026-04-10&clientId=CIF_SG_002&offset=0"),

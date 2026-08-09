@@ -18,7 +18,8 @@ export type AdvisorBookWorkspaceModel = {
 export type AdvisorBookPortfolioRow = {
   portfolioId: string;
   portfolioLabel: string;
-  clientLabel: string;
+  portfolioReferenceLabel: string;
+  clientReference: string;
   mandateLabel: string;
   currencyLabel: string;
   statusLabel: string;
@@ -29,7 +30,6 @@ export function buildAdvisorBookWorkspaceModel(
   response: AdvisorBookResponse,
 ): AdvisorBookWorkspaceModel {
   const clientCount = new Set(response.items.map((item) => item.client_id)).size;
-  const activeCount = response.items.filter((item) => item.status === "ACTIVE").length;
   const legacyCount = response.items.filter(
     (item) => item.membership_basis === "legacy_advisor_projection",
   ).length;
@@ -47,27 +47,27 @@ export function buildAdvisorBookWorkspaceModel(
     stateDetail: advisorBookStateDetail(response),
     metrics: [
       {
-        label: "Portfolios",
+        label: "Matching portfolios",
         value: String(response.page.total_count),
-        detail: "Portfolio assignments in the current book scope",
+        detail: "Assignments matching the current view",
       },
       {
-        label: "Clients on this page",
+        label: "Portfolios shown",
+        value: String(response.page.returned_count),
+        detail: "Assignments on this page",
+      },
+      {
+        label: "Clients shown",
         value: String(clientCount),
-        detail: "Distinct clients represented on this page",
+        detail: "Distinct client references on this page",
       },
       {
-        label: "Active portfolios",
-        value: String(activeCount),
-        detail: "Returned portfolios with an active lifecycle status",
-      },
-      {
-        label: "Role assignment coverage",
+        label: "Assignment basis",
         value: legacyCount === 0 ? "Governed" : `${legacyCount} legacy`,
         detail:
           legacyCount === 0
-            ? "Returned memberships use governed role assignments"
-            : "Legacy advisor projections require operating awareness",
+            ? "Assignments shown use governed roles"
+            : "Legacy assignments shown require awareness",
       },
     ],
     rows: response.items.map(toPortfolioRow),
@@ -87,13 +87,14 @@ export function buildAdvisorBookWorkspaceModel(
 }
 
 function toPortfolioRow(item: AdvisorBookPortfolio): AdvisorBookPortfolioRow {
+  const hasBusinessLabel = item.display_name !== item.portfolio_id;
   return {
     portfolioId: item.portfolio_id,
-    portfolioLabel:
-      item.display_name === item.portfolio_id
-        ? `Portfolio ${item.portfolio_id}`
-        : item.display_name,
-    clientLabel: `Client ${item.client_id}`,
+    portfolioLabel: item.display_name,
+    portfolioReferenceLabel: hasBusinessLabel
+      ? `Portfolio reference ${item.portfolio_id}`
+      : "Portfolio reference",
+    clientReference: item.client_id,
     mandateLabel: mandateLabel(item.mandate_type),
     currencyLabel: item.base_currency,
     statusLabel: lifecycleLabel(item.status),
@@ -117,9 +118,9 @@ function advisorBookStateDetail(response: AdvisorBookResponse): string {
       : "No portfolio assignments were returned for this own-book scope and date.";
   }
   if (response.supportability.state === "degraded") {
-    return "Portfolio membership is available, with operating limitations shown below.";
+    return "Portfolio assignments are available, with operating limitations shown below.";
   }
-  return "Portfolio membership is confirmed for the current own-book scope.";
+  return "Portfolio assignments are confirmed for the current own-book scope.";
 }
 
 function toLimitation(rawValue: string) {
@@ -130,11 +131,11 @@ function toLimitation(rawValue: string) {
     },
     tenant_scope_not_reported: {
       label: "Operating scope confirmation pending",
-      detail: "The source did not confirm the operating scope for this request.",
+      detail: "The operating scope was not confirmed for this view.",
     },
     legacy_advisor_projection: {
       label: "Legacy assignment evidence",
-      detail: "At least one membership uses the bounded legacy advisor projection.",
+      detail: "At least one portfolio relies on legacy advisor coverage records.",
     },
     source_evidence_not_current: {
       label: "Membership data not confirmed current",

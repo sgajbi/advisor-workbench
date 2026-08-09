@@ -15,7 +15,7 @@ export default function AdvisorBookPage() {
       <WorkbenchPageContainer className="portfolio-page-container">
         <WorkbenchPageFrame
           title="My book"
-          subtitle="Source-backed client and portfolio coverage for the current relationship manager scope."
+          subtitle="Review portfolios assigned to the current relationship-manager coverage."
         >
           <Suspense
             fallback={
