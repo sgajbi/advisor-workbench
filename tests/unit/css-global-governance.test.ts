@@ -12,6 +12,7 @@ interface CssBudget {
 }
 
 interface CssBaseline {
+  forbiddenSelectorPrefixes?: string[];
   entrypoint: CssBudget & {
     imports: string[];
   };
@@ -797,6 +798,55 @@ describe("CSS global governance gate", () => {
           baseline: malformedBaseline,
         }),
       ).toThrow(/finite non-negative integer maxLines/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects migrated component selector families when they return to global CSS", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const baseWithMigratedSelector =
+        "body {\n  margin: 0;\n}\n.portfolio-screen-rail-link {\n  color: white;\n}\n";
+      const updatedBaseBudget = writeFixtureFile(
+        repoRoot,
+        "src/styles/global/base.css",
+        baseWithMigratedSelector,
+      );
+      const baselineWithForbiddenSelector: CssBaseline = {
+        ...baseline,
+        forbiddenSelectorPrefixes: ["portfolio-screen-rail"],
+        modules: baseline.modules.map((moduleBudget) =>
+          moduleBudget.path.endsWith("base.css") ? updatedBaseBudget : moduleBudget,
+        ),
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithForbiddenSelector,
+        }),
+      ).toThrow(/Migrated component selectors must not return/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects malformed migrated selector prefix configuration", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      const malformedBaseline = {
+        ...baseline,
+        forbiddenSelectorPrefixes: [""],
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: malformedBaseline }),
+      ).toThrow(/array of non-empty strings/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }

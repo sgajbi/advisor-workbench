@@ -240,6 +240,37 @@ function assertNoModuleImports(repoRoot, moduleBudget) {
   }
 }
 
+function assertForbiddenSelectorPrefixes(repoRoot, moduleBudgets, prefixes = []) {
+  if (
+    !Array.isArray(prefixes) ||
+    prefixes.some((prefix) => typeof prefix !== "string" || !prefix)
+  ) {
+    throw new Error(
+      "CSS global governance forbiddenSelectorPrefixes must be an array of non-empty strings.",
+    );
+  }
+
+  const findings = [];
+  for (const moduleBudget of moduleBudgets) {
+    const text = fileText(repoRoot, moduleBudget.path);
+    const root = parseCssRoot(text, moduleBudget.path);
+    root.walkRules((rule) => {
+      for (const prefix of prefixes) {
+        if (rule.selector.includes(`.${prefix}`)) {
+          findings.push(`${moduleBudget.path}: ${rule.selector}`);
+        }
+      }
+    });
+  }
+
+  if (findings.length > 0) {
+    throw new Error(
+      "Migrated component selectors must not return to governed global CSS: " +
+        findings.join(", "),
+    );
+  }
+}
+
 function assertLocalImportBudgetCoverage(entrypointPath, localImportPaths, moduleBudgets) {
   for (const moduleBudget of moduleBudgets) {
     assertBudgetShape("module", moduleBudget);
@@ -324,6 +355,12 @@ export function validateCssGlobalGovernance({
     assertNoModuleImports(effectiveRepoRoot, moduleBudget);
     assertWithinBudget(effectiveRepoRoot, moduleBudget);
   }
+
+  assertForbiddenSelectorPrefixes(
+    effectiveRepoRoot,
+    effectiveBaseline.modules,
+    effectiveBaseline.forbiddenSelectorPrefixes,
+  );
 }
 
 if (isMainModule()) {
