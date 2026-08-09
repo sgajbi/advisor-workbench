@@ -65,7 +65,10 @@ function importsName(sourceFile: ts.SourceFile, moduleSuffix: string, name: stri
         (element) => (element.propertyName?.text ?? element.name.text) === name,
       );
     }
-    return accessesMember(sourceFile, bindings.name.text, name);
+    // A namespace binding exposes every export from the publication module. Treat the import
+    // itself as boundary access so a barrel cannot re-export the namespace without first using
+    // ingestPortfolioBundle in the importing source file.
+    return true;
   });
 }
 
@@ -135,31 +138,6 @@ function exportedNames(sourceFile: ts.SourceFile): string[] {
     .sort();
 }
 
-function accessesMember(sourceFile: ts.SourceFile, namespaceName: string, memberName: string): boolean {
-  let found = false;
-
-  function visit(node: ts.Node) {
-    if (
-      (ts.isPropertyAccessExpression(node) &&
-        ts.isIdentifier(node.expression) &&
-        node.expression.text === namespaceName &&
-        node.name.text === memberName) ||
-      (ts.isElementAccessExpression(node) &&
-        ts.isIdentifier(node.expression) &&
-        node.expression.text === namespaceName &&
-        ts.isStringLiteral(node.argumentExpression) &&
-        node.argumentExpression.text === memberName)
-    ) {
-      found = true;
-      return;
-    }
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
-  return found;
-}
-
 function callExpressions(sourceFile: ts.SourceFile, functionName: string): ts.CallExpression[] {
   const calls: ts.CallExpression[] = [];
 
@@ -225,12 +203,19 @@ describe("Portfolio Intake payload ownership", () => {
       ts.ScriptTarget.Latest,
       true,
     );
+    const localNamespaceReexport = ts.createSourceFile(
+      "local-namespace-reexport-fixture.ts",
+      ['import * as intakeApi from "./api";', "export { intakeApi };"].join("\n"),
+      ts.ScriptTarget.Latest,
+      true,
+    );
 
     expect(importsName(sourceFile, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(importsModule(sourceFile, "/payload-builder")).toBe(true);
     expect(reexportsName(namedReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(reexportsName(namespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
     expect(exportedNames(localReexport)).toEqual(["publishAlias", "publishReviewedIntent"]);
+    expect(importsName(localNamespaceReexport, "/api", "ingestPortfolioBundle")).toBe(true);
   });
 
   it("keeps payload construction behind the reviewed projection", () => {
