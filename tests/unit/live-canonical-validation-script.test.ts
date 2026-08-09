@@ -1378,6 +1378,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain('name: "Record feedback"');
     expect(browserWorkflowModule).toContain('name: "Record review"');
     expect(browserWorkflowModule).toContain('name: "Record intent"');
+    expect(browserWorkflowModule).toContain("idea-action-feedback-status");
+    expect(browserWorkflowModule).toContain("idea-action-review-status");
+    expect(browserWorkflowModule).toContain("idea-action-conversion-status");
+    expect(browserWorkflowModule).toContain("recorded-and-refreshed");
     expect(browserWorkflowModule).toContain(
       "sourceRefresh: \"verified_after_each_mutation\"",
     );
