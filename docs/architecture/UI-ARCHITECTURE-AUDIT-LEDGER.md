@@ -507,6 +507,14 @@ hard-coded business state and was retired. `/suite` is now a thin alias of the c
 entry, so it is no longer an independently supported surface or design-system consumer. This does
 not reopen RFC-0021; it removes unsupported product and styling debt.
 
+Post-closure note (issue #575): Intake's earlier shared-component adoption still left the complete
+business workflow, validation, responsive branches, and mutation orchestration inside one route.
+The production screen also protected fabricated defaults, immediate mutation, percentage
+readiness, wizard step copy, and static health. The route is now a thin composition over a bounded
+`features/intake` workspace, blank domain drafts, review-intent workflow, task-specific editors,
+source-confirmed receipt, and route-scoped CSS Module. Shared design-system adoption therefore no
+longer masks route-local workflow and stylesheet ownership debt.
+
 ## Active Surface Audit After Closure
 
 ### Closed in the Active-Surface Audit

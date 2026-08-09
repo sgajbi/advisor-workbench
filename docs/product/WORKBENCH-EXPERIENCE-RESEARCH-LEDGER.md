@@ -2500,3 +2500,64 @@ and production-browser tests must prove `/suite` follows the canonical Home with
 fabricated paint at desktop and narrow widths. Because route and supported-surface truth change,
 the RFC record, repository context, review ledger, and repo-authored wiki are updated and must be
 published from main after merge.
+
+## Review-Controlled Portfolio Intake
+
+### Business job
+
+A portfolio administrator or investment-operations user should prepare one bounded data request,
+understand every validation gap, check the exact information that will be published, and see a
+source-owned receipt only after the Gateway/Core action succeeds.
+
+### Current-product research
+
+Research was refreshed on 2026-08-09 from official guidance:
+
+1. [Salesforce Financial Services client intake and verification](https://trailhead.salesforce.com/content/learn/modules/customer-onboarding-in-financial-services-cloud/configure-onboarding)
+   separates collection from verification, permits prefill only from CRM or integrated source
+   context, and emphasizes traceable responses, documents, and repeatable review work.
+2. [GOV.UK Check answers](https://design-system.service.gov.uk/patterns/check-answers/) requires a
+   review immediately before a small or medium transaction, retained answers when editing, and an
+   action-specific submit control; its stated outcomes are higher confidence and lower error rates.
+3. [GOV.UK validation recovery](https://design-system.service.gov.uk/patterns/validation/) requires
+   errors to say what is wrong and how to fix it while minimizing avoidable rejection through clear
+   questions and tolerant input.
+4. [IBM progressive disclosure](https://www.ibm.com/docs/en/technical-content?topic=practices-progressive-disclosure)
+   recommends exposing only what the current task needs, maintaining a clear trail, and not
+   repeating guidance across layers.
+
+These sources guide task sequencing and control safety. Lotus does not copy their visual identity,
+product data model, compliance decisions, automation, or unsupported source capabilities.
+
+### Adopted decisions
+
+1. Require an explicit task choice and start every manual task blank.
+2. Treat portfolio, position, transaction, instrument, price, and file requests independently.
+3. State every missing or invalid field/row directly; do not compress safety into a percentage.
+4. Hold one exact reviewed payload and idempotency key; invalidate both when material data changes.
+5. Parse a selected file into review state without mutation.
+6. Accept success only from a validated source envelope with task-relevant counts and bounded
+   correlation/contract evidence.
+7. Keep catalog availability secondary to the business form and preserve explicit manual recovery.
+8. Use one responsive semantic DOM and route-scoped CSS rather than duplicated desktop/mobile
+   rendering branches.
+
+### Rejected decisions
+
+1. Production-looking demo defaults, copied rows, first-paint mutation, or automatic submission.
+2. Fake wizard steps for independent commands, arbitrary readiness percentages, and static
+   pipeline-health claims.
+3. Internal UX notes, raw service/catalog posture, or technical response vocabulary as dominant UI.
+4. Success from HTTP status or a TypeScript cast without relevant source publication evidence.
+5. Claims that publication activates a portfolio or completes valuation, reporting, analytics,
+   lineage, or durable ingestion work.
+
+### Validation and publication decision
+
+Workbench #575 owns the UI workflow. #436 continues to own authenticated principal resolution; no
+acting identity is invented here. Gateway/Core retain source validation, persistence, replay,
+duplicates, lineage, and durable-job authority. Focused domain/API/integration proof and isolated
+desktop/narrow browser evidence cover blank first paint, exact validation, review-only submission,
+edit invalidation, same-intent retry, blank row creation, file parse-before-publish, focus movement,
+and no overflow. Repository context, historical RFC truth, review ledgers, and Supported Features
+change in the same issue and must be published from main after merge.
