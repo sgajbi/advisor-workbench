@@ -120,6 +120,38 @@ describe("intake receipt", () => {
       }).title,
     ).toBe("Publication confirmed");
   });
+
+  it("requires source confirmation for published business dates", () => {
+    const payloadWithBusinessDate = payload({
+      businessDates: [{}],
+      transactions: [{}],
+    });
+
+    expect(() =>
+      buildIntakeReceipt("ADD_TRANSACTIONS", payloadWithBusinessDate, {
+        correlation_id: "corr_intake_007",
+        contract_version: "v1",
+        data: {
+          published_counts: {
+            transactions: 1,
+          },
+        },
+      }),
+    ).toThrow("payload-matching published record counts for this request");
+
+    expect(
+      buildIntakeReceipt("ADD_TRANSACTIONS", payloadWithBusinessDate, {
+        correlation_id: "corr_intake_008",
+        contract_version: "v1",
+        data: {
+          published_counts: {
+            business_dates: 1,
+            transactions: 1,
+          },
+        },
+      }).title,
+    ).toBe("Publication confirmed");
+  });
 });
 
 function payload(counts: {

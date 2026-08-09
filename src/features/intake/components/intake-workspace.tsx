@@ -37,6 +37,7 @@ export function IntakeWorkspace() {
   }
 
   function changeTask() {
+    focusIntentRef.current += 1;
     workflow.startAnotherRequest();
     focus(chooserRef);
   }
