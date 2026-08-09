@@ -78,7 +78,7 @@ test("records a source-owned Idea review without creating a proposal", async ({
         json: {
           data: {
             persistence: {
-              decision: "recorded",
+              decision: "accepted",
               reviewPosture: "conversion_review_requested",
             },
             durableStorageBacked: true,
@@ -110,7 +110,7 @@ test("records a source-owned Idea review without creating a proposal", async ({
   expect(recordedRequest?.headers["x-caller-capabilities"]).toBeUndefined();
   expect(recordedRequest?.body).toMatchObject({
     action: "approve_for_conversion",
-    reasonCodes: ["advisor_review"],
+    reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
   });
   await expect(
     page.getByRole("link", { name: /Open Proposal Builder/ }),

@@ -138,6 +138,7 @@ export default function AdvisoryOpportunitiesWorkspace({
           error={candidateDetailError}
           isLoading={isCandidateDetailLoading}
           portfolioId={portfolioId}
+          candidateReasonCodes={selectedQueueItem?.reasonCodes ?? []}
           queueEvaluatedAtUtc={data?.evaluatedAtUtc}
           queuePolicyVersion={data?.policyVersion}
           selectedCandidateId={selectedCandidate}
@@ -243,6 +244,7 @@ export default function AdvisoryOpportunitiesWorkspace({
 }
 
 function IdeaCandidateDetailPanel({
+  candidateReasonCodes,
   detail,
   error,
   isLoading,
@@ -253,6 +255,7 @@ function IdeaCandidateDetailPanel({
   sourceSignalIds,
   onActionRecorded,
 }: {
+  candidateReasonCodes: string[];
   detail?: AdvisorIdeaCandidateDetailData;
   error: Error | null;
   isLoading: boolean;
@@ -347,7 +350,7 @@ function IdeaCandidateDetailPanel({
             <IdeaCandidateActionPanel
               key={candidate.candidateId}
               candidateId={candidate.candidateId}
-              candidateReasonCodes={candidate.reasonCodes ?? []}
+              candidateReasonCodes={candidateReasonCodes}
               portfolioId={portfolioId}
               onRecorded={onActionRecorded}
             />

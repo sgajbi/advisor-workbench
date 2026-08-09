@@ -43,18 +43,18 @@ const getAdvisorIdeaCandidateDetailMock = vi.fn(async (_filters?: unknown) => ({
   supportedFeaturePromoted: false,
 }));
 const recordAdvisorIdeaReviewActionMock = vi.fn(async (_input?: unknown) => ({
-  persistence: { decision: "recorded" },
+  persistence: { decision: "accepted" },
   durableStorageBacked: true,
   supportedFeaturePromoted: false,
 }));
 const recordAdvisorIdeaFeedbackMock = vi.fn(async (_input?: unknown) => ({
-  persistence: { decision: "recorded" },
+  persistence: { decision: "accepted" },
   durableStorageBacked: true,
   supportedFeaturePromoted: false,
 }));
 const recordAdvisorIdeaConversionIntentMock = vi.fn(
   async (_input?: unknown) => ({
-    persistence: { decision: "recorded" },
+    persistence: { decision: "accepted" },
     durableStorageBacked: true,
     supportedFeaturePromoted: false,
   }),
@@ -231,7 +231,10 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
           portfolioId: "PB_SG_GLOBAL_BAL_001",
           request: expect.objectContaining({
             action: "approve_for_conversion",
-            reasonCodes: ["advisor_review"],
+            reasonCodes: [
+              "review_approved_for_conversion",
+              "high_cash_ratio",
+            ],
           }),
         }),
       );
@@ -318,9 +321,6 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     const firstSubmission = recordAdvisorIdeaReviewActionMock.mock.calls[0][0];
     fireEvent.change(reviewControls.getByLabelText("Review action"), {
       target: { value: "reject" },
-    });
-    fireEvent.change(reviewControls.getByLabelText("Reason codes"), {
-      target: { value: "changed_after_failure" },
     });
     fireEvent.click(
       reviewControls.getByRole("button", { name: "Record review" }),

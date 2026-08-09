@@ -275,7 +275,7 @@ describe("BFF proxy route", () => {
             "Idempotency-Key": `idem-${routeSuffix}`,
             "X-Caller-Capabilities": "idea.admin",
           },
-          body: JSON.stringify({ reasonCodes: ["advisor_review"] }),
+          body: JSON.stringify({ reasonCodes: ["review_required"] }),
         },
       );
 
