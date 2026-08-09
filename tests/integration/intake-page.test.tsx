@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import IntakePage from "@/app/intake/page";
 import Providers from "@/app/providers";
+import { INTAKE_PREVIEW_PAGE_SIZE } from "@/features/intake/components/intake-record-preview";
 
 const ingestPortfolioBundleMock = vi.fn();
 const getPortfolioLookupsMock = vi.fn();
@@ -368,16 +369,70 @@ describe("IntakePage", () => {
     expect(screen.getByText("Price observation records")).toBeInTheDocument();
     expect(screen.getByText("Business date records")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Portfolio records"));
+    expect(await screen.findByRole("heading", { name: "Portfolio PORT_001" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("Instrument records"));
+    expect(await screen.findByRole("heading", { name: "Instrument SEC_001" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("Transaction records"));
+    expect(
+      await screen.findByRole("heading", { name: "Transaction TRN_PORT_001_SEC_001_1" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByText("Business date records"));
-    expect(screen.getByRole("heading", { name: "Portfolio PORT_001" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Instrument SEC_001" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Transaction TRN_PORT_001_SEC_001_1" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Business date 2026-08-08" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Business date 2026-08-08" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("2026-08-08T00:00:00Z")).toBeInTheDocument();
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
+
+  it("bounds operational CSV review pages without truncating the published request", async () => {
+    const recordCount = INTAKE_PREVIEW_PAGE_SIZE + 1;
+    const csv = validCsvWithRecords(recordCount);
+    ingestPortfolioBundleMock.mockResolvedValueOnce(bulkSourceConfirmation(recordCount));
+    renderIntakePage();
+    fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
+
+    const input = screen.getByLabelText("Supported CSV intake file");
+    const file = new File([csv], "operational-intake.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: async () => csv });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText("Ready for review")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+    expect(screen.queryAllByTestId("intake-preview-record")).toHaveLength(0);
+
+    const transactionDetails = screen.getByText("Transaction records").closest("details");
+    if (!transactionDetails) throw new Error("Expected transaction preview details");
+    fireEvent.click(within(transactionDetails).getByText("Transaction records"));
+    await waitFor(() => {
+      expect(within(transactionDetails).getAllByTestId("intake-preview-record")).toHaveLength(
+        INTAKE_PREVIEW_PAGE_SIZE,
+      );
+    });
+    expect(within(transactionDetails).getByText(`Records 1–10 of ${recordCount}`)).toBeInTheDocument();
+    expect(within(transactionDetails).queryByRole("heading", {
+      name: "Transaction TRN_PORT_001_SEC_011_11",
+    })).not.toBeInTheDocument();
+
+    fireEvent.click(within(transactionDetails).getByRole("button", { name: "Next transaction records" }));
+    expect(await within(transactionDetails).findByRole("heading", {
+      name: "Transaction TRN_PORT_001_SEC_011_11",
+    })).toBeInTheDocument();
+    expect(within(transactionDetails).getAllByTestId("intake-preview-record")).toHaveLength(1);
+    expect(within(transactionDetails).getByText(`Records 11–11 of ${recordCount}`)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+    await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+    const publishedPayload = ingestPortfolioBundleMock.mock.calls[0][0];
+    expect(publishedPayload.instruments).toHaveLength(recordCount);
+    expect(publishedPayload.transactions).toHaveLength(recordCount);
+    expect(publishedPayload.marketPrices).toHaveLength(recordCount);
+    expect(publishedPayload.transactions.map((transaction: { transaction_id: string }) => transaction.transaction_id)).toEqual(
+      Array.from({ length: recordCount }, (_, index) =>
+        `TRN_PORT_001_SEC_${String(index + 1).padStart(3, "0")}_${index + 1}`,
+      ),
+    );
+    expect(await screen.findByText("Publication confirmed")).toBeInTheDocument();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
   function startValidPortfolioRequest(overrides: Partial<Record<string, string>> = {}) {
     fireEvent.click(screen.getByRole("button", { name: /Create portfolio record/i }));
@@ -431,6 +486,22 @@ function importSourceConfirmation() {
   };
 }
 
+function bulkSourceConfirmation(recordCount: number) {
+  return {
+    correlation_id: "corr-intake-bulk-001",
+    contract_version: "v1",
+    data: {
+      published_counts: {
+        business_dates: 1,
+        portfolios: 1,
+        instruments: recordCount,
+        transactions: recordCount,
+        market_prices: recordCount,
+      },
+    },
+  };
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -447,6 +518,35 @@ function validCsv(): string {
     "portfolio_id,base_currency,open_date,risk_exposure,investment_time_horizon,portfolio_type,booking_center,cif_id,advisor_id,status,security_id,instrument_name,isin,product_type,transaction_type,quantity,price,transaction_date",
     "PORT_001,USD,2026-08-08,Balanced,Long term,Discretionary,Singapore,CIF_001,ADV_001,Pending activation,SEC_001,Global Equity Fund,US0000000001,Fund,BUY,10,100,2026-08-08T00:00:00Z",
   ].join("\n");
+}
+
+function validCsvWithRecords(recordCount: number): string {
+  const header = validCsv().split("\n")[0];
+  const rows = Array.from({ length: recordCount }, (_, index) => {
+    const sequence = String(index + 1).padStart(3, "0");
+    const isin = `US${String(index + 1).padStart(10, "0")}`;
+    return [
+      "PORT_001",
+      "USD",
+      "2026-08-08",
+      "Balanced",
+      "Long term",
+      "Discretionary",
+      "Singapore",
+      "CIF_001",
+      "ADV_001",
+      "Pending activation",
+      `SEC_${sequence}`,
+      `Global Equity Fund ${sequence}`,
+      isin,
+      "Fund",
+      "BUY",
+      String(index + 1),
+      "100",
+      "2026-08-08T00:00:00Z",
+    ].join(",");
+  });
+  return [header, ...rows].join("\n");
 }
 
 function invalidCsv(): string {
