@@ -148,6 +148,7 @@ export function IntakeWorkspace() {
               >
                 <IntakeReviewRail
                   hasDraft={Boolean(workflow.draft)}
+                  isPreparing={workflow.fileParseState === "parsing"}
                   issueCount={workflow.validationIssues.length}
                   reviewedProjection={workflow.reviewedIntent?.projection ?? null}
                   submissionState={workflow.submissionState}

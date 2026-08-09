@@ -8,6 +8,7 @@ import styles from "../intake-workspace.module.css";
 
 export function IntakeReviewRail({
   hasDraft,
+  isPreparing,
   issueCount,
   reviewedProjection,
   submissionState,
@@ -19,6 +20,7 @@ export function IntakeReviewRail({
   onStartAnother,
 }: {
   hasDraft: boolean;
+  isPreparing: boolean;
   issueCount: number;
   reviewedProjection: IntakeReviewProjection | null;
   submissionState: "idle" | "submitting" | "error" | "accepted";
@@ -46,17 +48,22 @@ export function IntakeReviewRail({
         {hasDraft && !reviewedProjection && !receipt ? (
           <>
             <div className={styles.stateBanner}>
-              <strong>{issueCount === 0 ? "Ready for review" : "Information required"}</strong>
+              <strong>
+                {isPreparing ? "Preparing selected file" : issueCount === 0 ? "Ready for review" : "Information required"}
+              </strong>
               <span>
-                {issueCount === 0
+                {isPreparing
+                  ? "The previous file is retired while the replacement is parsed and checked."
+                  : issueCount === 0
                   ? "All required information is present. Review the exact request before publication."
                   : `${issueCount} validation ${issueCount === 1 ? "issue" : "issues"} must be resolved.`}
               </span>
             </div>
             <div className={styles.reviewActions}>
-              <ActionButton priority="primary" onClick={onReview}>
-                Review request
+              <ActionButton priority="primary" onClick={onReview} disabled={isPreparing}>
+                {isPreparing ? "Preparing file" : "Review request"}
               </ActionButton>
+              {isPreparing ? <CircularProgress size={20} aria-label="Preparing selected file" /> : null}
             </div>
           </>
         ) : null}

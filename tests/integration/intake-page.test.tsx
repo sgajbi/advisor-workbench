@@ -238,6 +238,47 @@ describe("IntakePage", () => {
     expect(ingestPortfolioBundleMock).not.toHaveBeenCalled();
   });
 
+  it("retires the previous CSV while a replacement parses and ignores its pending publication", async () => {
+    const pendingPublication = deferred<ReturnType<typeof sourceConfirmation>>();
+    const pendingReplacement = deferred<string>();
+    ingestPortfolioBundleMock.mockReturnValueOnce(pendingPublication.promise);
+    renderIntakePage();
+    fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
+
+    const input = screen.getByLabelText("Supported CSV intake file");
+    const initialFile = new File([validCsv()], "initial.csv", { type: "text/csv" });
+    Object.defineProperty(initialFile, "text", { value: async () => validCsv() });
+    fireEvent.change(input, { target: { files: [initialFile] } });
+    expect(await screen.findByText("Ready for review")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+    await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+
+    const replacementFile = new File([validCsv()], "replacement.csv", { type: "text/csv" });
+    Object.defineProperty(replacementFile, "text", { value: () => pendingReplacement.promise });
+    fireEvent.change(input, { target: { files: [replacementFile] } });
+
+    expect(await screen.findByText("Preparing selected file")).toBeInTheDocument();
+    expect(screen.queryByText("Reviewed request")).not.toBeInTheDocument();
+    expect(screen.queryByText("initial.csv")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preparing file" })).toBeDisabled();
+
+    await act(async () => {
+      pendingReplacement.resolve(validCsv().replace("PORT_001", "PORT_002"));
+      await pendingReplacement.promise;
+    });
+    expect(await screen.findByText("replacement.csv")).toBeInTheDocument();
+    expect(screen.getByText("Ready for review")).toBeInTheDocument();
+
+    await act(async () => {
+      pendingPublication.resolve(sourceConfirmation());
+      await pendingPublication.promise;
+    });
+    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
+    expect(screen.getByText("replacement.csv")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review request" })).toBeEnabled();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
+
   it("blocks imported CSV review when parsed source fields are invalid", async () => {
     renderIntakePage();
     fireEvent.click(screen.getByRole("button", { name: /Import an intake file/i }));
