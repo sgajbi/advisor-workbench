@@ -44,6 +44,7 @@ function IntakeRecordPreviewSection({
   return (
     <details
       className={styles.previewSection}
+      aria-label={`${section.title} preview`}
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
     >
       <summary>
