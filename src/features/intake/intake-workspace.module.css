@@ -396,6 +396,36 @@
   font-size: 0.74rem;
 }
 
+.previewPagination {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid #d9e3ec;
+}
+
+.previewPageStatus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: #52616d;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.previewPageActions {
+  display: flex;
+  gap: 4px;
+}
+
+.previewPageActions button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
 .reviewHeading {
   display: grid;
   gap: 4px;
@@ -522,6 +552,14 @@
   .reviewActions :global(.action-button),
   .sourceActions :global(.action-button) {
     width: 100%;
+  }
+
+  .previewPagination {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .previewPageActions :global(.action-button) {
+    flex: 1 1 0;
   }
 }
 

@@ -5,6 +5,7 @@ import { ActionButton, SectionBlock, SemanticBadge } from "@/design-system";
 import type { IntakeReviewProjection } from "../draft";
 import type { IntakeReceipt } from "../receipt";
 import styles from "../intake-workspace.module.css";
+import { IntakeRecordPreview } from "./intake-record-preview";
 
 export function IntakeReviewRail({
   hasDraft,
@@ -87,37 +88,7 @@ export function IntakeReviewRail({
               ))}
             </dl>
             {reviewedProjection.previewSections?.length ? (
-              <div className={styles.recordPreview} aria-label="Parsed record preview">
-                <div className={styles.recordPreviewHeader}>
-                  <strong>Parsed record preview</strong>
-                  <span>Review each parsed source record before publication.</span>
-                </div>
-                {reviewedProjection.previewSections.map((section) => (
-                  <details className={styles.previewSection} key={section.title}>
-                    <summary>
-                      <span>{section.title}</span>
-                      <span className={styles.previewCount}>
-                        {section.records.length} {section.records.length === 1 ? "record" : "records"}
-                      </span>
-                    </summary>
-                    <div className={styles.previewRecords}>
-                      {section.records.map((record) => (
-                        <article className={styles.previewRecord} key={record.title}>
-                          <h4>{record.title}</h4>
-                          <dl className={styles.previewFacts}>
-                            {record.facts.map((fact) => (
-                              <div className={styles.factRow} key={fact.label}>
-                                <dt>{fact.label}</dt>
-                                <dd>{fact.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </article>
-                      ))}
-                    </div>
-                  </details>
-                ))}
-              </div>
+              <IntakeRecordPreview sections={reviewedProjection.previewSections} />
             ) : null}
             {submissionError ? <Alert severity="error">{submissionError}</Alert> : null}
             <p className={styles.reviewNote}>

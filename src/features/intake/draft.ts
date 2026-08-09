@@ -94,7 +94,8 @@ export type IntakeReviewProjection = {
 
 export type IntakeReviewPreviewSection = {
   title: string;
-  records: IntakeReviewPreviewRecord[];
+  recordCount: number;
+  recordAt: (index: number) => IntakeReviewPreviewRecord | null;
 };
 
 export type IntakeReviewPreviewRecord = {
@@ -414,65 +415,95 @@ function fileImportPreviewSections(payload: PortfolioBundlePayload): IntakeRevie
   return [
     {
       title: "Portfolio records",
-      records: payload.portfolios.map((portfolio) => ({
-        title: `Portfolio ${portfolio.portfolioId}`,
-        facts: [
-          { label: "Client reference", value: portfolio.cifId },
-          { label: "Advisor", value: portfolio.advisorId ?? "Not provided" },
-          { label: "Base currency", value: portfolio.baseCurrency },
-          { label: "Opening date", value: portfolio.openDate },
-          { label: "Mandate type", value: portfolio.portfolioType },
-          { label: "Status", value: portfolio.status },
-        ],
-      })),
+      recordCount: payload.portfolios.length,
+      recordAt: (index: number) => {
+        const portfolio = payload.portfolios[index];
+        return portfolio
+          ? {
+              title: `Portfolio ${portfolio.portfolioId}`,
+              facts: [
+                { label: "Client reference", value: portfolio.cifId },
+                { label: "Advisor", value: portfolio.advisorId ?? "Not provided" },
+                { label: "Base currency", value: portfolio.baseCurrency },
+                { label: "Opening date", value: portfolio.openDate },
+                { label: "Mandate type", value: portfolio.portfolioType },
+                { label: "Status", value: portfolio.status },
+              ],
+            }
+          : null;
+      },
     },
     {
       title: "Instrument records",
-      records: payload.instruments.map((instrument) => ({
-        title: `Instrument ${instrument.securityId}`,
-        facts: [
-          { label: "Name", value: instrument.name },
-          { label: "ISIN", value: instrument.isin },
-          { label: "Currency", value: instrument.instrumentCurrency },
-          { label: "Product type", value: instrument.productType },
-          { label: "Asset class", value: instrument.assetClass ?? "Not provided" },
-        ],
-      })),
+      recordCount: payload.instruments.length,
+      recordAt: (index: number) => {
+        const instrument = payload.instruments[index];
+        return instrument
+          ? {
+              title: `Instrument ${instrument.securityId}`,
+              facts: [
+                { label: "Name", value: instrument.name },
+                { label: "ISIN", value: instrument.isin },
+                { label: "Currency", value: instrument.instrumentCurrency },
+                { label: "Product type", value: instrument.productType },
+                { label: "Asset class", value: instrument.assetClass ?? "Not provided" },
+              ],
+            }
+          : null;
+      },
     },
     {
       title: "Transaction records",
-      records: payload.transactions.map((transaction) => ({
-        title: `Transaction ${transaction.transaction_id}`,
-        facts: [
-          { label: "Portfolio", value: transaction.portfolio_id },
-          { label: "Security", value: transaction.security_id },
-          { label: "Type", value: transaction.transaction_type },
-          { label: "Quantity", value: String(transaction.quantity) },
-          { label: "Price", value: String(transaction.price) },
-          { label: "Trade date", value: transaction.transaction_date },
-        ],
-      })),
+      recordCount: payload.transactions.length,
+      recordAt: (index: number) => {
+        const transaction = payload.transactions[index];
+        return transaction
+          ? {
+              title: `Transaction ${transaction.transaction_id}`,
+              facts: [
+                { label: "Portfolio", value: transaction.portfolio_id },
+                { label: "Security", value: transaction.security_id },
+                { label: "Type", value: transaction.transaction_type },
+                { label: "Quantity", value: String(transaction.quantity) },
+                { label: "Price", value: String(transaction.price) },
+                { label: "Trade date", value: transaction.transaction_date },
+              ],
+            }
+          : null;
+      },
     },
     {
       title: "Price observation records",
-      records: payload.marketPrices.map((price) => ({
-        title: `Price ${price.securityId} ${price.priceDate}`,
-        facts: [
-          { label: "Security", value: price.securityId },
-          { label: "Observation date", value: price.priceDate },
-          { label: "Price", value: String(price.price) },
-          { label: "Currency", value: price.currency },
-        ],
-      })),
+      recordCount: payload.marketPrices.length,
+      recordAt: (index: number) => {
+        const price = payload.marketPrices[index];
+        return price
+          ? {
+              title: `Price ${price.securityId} ${price.priceDate}`,
+              facts: [
+                { label: "Security", value: price.securityId },
+                { label: "Observation date", value: price.priceDate },
+                { label: "Price", value: String(price.price) },
+                { label: "Currency", value: price.currency },
+              ],
+            }
+          : null;
+      },
     },
     {
       title: "Business date records",
-      records: payload.businessDates.map((businessDate) => ({
-        title: `Business date ${businessDate.businessDate}`,
-        facts: [{ label: "Date", value: businessDate.businessDate }],
-      })),
+      recordCount: payload.businessDates.length,
+      recordAt: (index: number) => {
+        const businessDate = payload.businessDates[index];
+        return businessDate
+          ? {
+              title: `Business date ${businessDate.businessDate}`,
+              facts: [{ label: "Date", value: businessDate.businessDate }],
+            }
+          : null;
+      },
     },
-  ].filter((section) => section.records.length > 0);
+  ].filter((section) => section.recordCount > 0);
 }
 
 function validateImportedPayload(payload: PortfolioBundlePayload): IntakeValidationIssue[] {
