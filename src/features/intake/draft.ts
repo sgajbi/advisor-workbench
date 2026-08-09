@@ -11,6 +11,7 @@ import {
   type TransactionInput,
 } from "./payload-builder";
 import type { PortfolioBundlePayload } from "./types";
+import { normalizeIntakeDraft } from "./normalization";
 
 export type IntakeManualTask =
   | "CREATE_PORTFOLIO"
@@ -243,10 +244,14 @@ export function blankMarketData(): MarketDataInput {
 }
 
 export function intakeDraftFingerprint(draft: IntakeDraft): string {
-  return JSON.stringify(draft);
+  return JSON.stringify(normalizeIntakeDraft(draft));
 }
 
 export function validateIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[] {
+  return validateNormalizedIntakeDraft(normalizeIntakeDraft(draft));
+}
+
+function validateNormalizedIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[] {
   switch (draft.task) {
     case "CREATE_PORTFOLIO":
       return validatePortfolio(draft.input);
@@ -283,103 +288,112 @@ export function validateIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[]
 }
 
 export function buildIntakeReviewProjection(draft: IntakeDraft): IntakeReviewProjection {
-  const issues = validateIntakeDraft(draft);
+  const normalizedDraft = normalizeIntakeDraft(draft);
+  const issues = validateNormalizedIntakeDraft(normalizedDraft);
   if (issues.length > 0) {
     throw new Error("The intake request has unresolved validation issues.");
   }
 
-  switch (draft.task) {
+  switch (normalizedDraft.task) {
     case "CREATE_PORTFOLIO":
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review portfolio creation",
         description: "Confirm the portfolio identity, servicing ownership, and opening profile before publication.",
         facts: [
-          { label: "Portfolio", value: draft.input.portfolioId },
-          { label: "Client reference", value: draft.input.cifId },
-          { label: "Responsible advisor", value: draft.input.advisorId },
-          { label: "Opening date", value: draft.input.openDate },
-          { label: "Base currency", value: draft.input.baseCurrency },
-          { label: "Mandate type", value: draft.input.portfolioType },
+          { label: "Portfolio", value: normalizedDraft.input.portfolioId },
+          { label: "Client reference", value: normalizedDraft.input.cifId },
+          { label: "Responsible advisor", value: normalizedDraft.input.advisorId },
+          { label: "Opening date", value: normalizedDraft.input.openDate },
+          { label: "Base currency", value: normalizedDraft.input.baseCurrency },
+          { label: "Mandate type", value: normalizedDraft.input.portfolioType },
         ],
-        payload: buildCreatePortfolioPayload(draft.input),
+        payload: buildCreatePortfolioPayload(normalizedDraft.input),
       };
     case "ADD_POSITIONS":
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review opening positions",
         description: "Confirm the target portfolio and every opening holding before publication.",
         facts: [
-          { label: "Portfolio", value: draft.portfolioId },
-          { label: "Base currency", value: draft.baseCurrency },
-          { label: "Position rows", value: String(draft.rows.length) },
-          { label: "Effective date", value: dateRange(draft.rows.map((row) => row.value.effectiveDate)) },
+          { label: "Portfolio", value: normalizedDraft.portfolioId },
+          { label: "Base currency", value: normalizedDraft.baseCurrency },
+          { label: "Position rows", value: String(normalizedDraft.rows.length) },
+          { label: "Effective date", value: dateRange(normalizedDraft.rows.map((row) => row.value.effectiveDate)) },
         ],
         payload: buildPositionSeedPayloadFromList(
-          draft.portfolioId,
-          draft.baseCurrency,
-          draft.rows.map((row) => ({ ...row.value, portfolioId: draft.portfolioId, baseCurrency: draft.baseCurrency })),
+          normalizedDraft.portfolioId,
+          normalizedDraft.baseCurrency,
+          normalizedDraft.rows.map((row) => ({
+            ...row.value,
+            portfolioId: normalizedDraft.portfolioId,
+            baseCurrency: normalizedDraft.baseCurrency,
+          })),
         ),
       };
     case "ADD_TRANSACTIONS":
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review transactions",
         description: "Confirm the target portfolio, trade dates, quantities, and prices before publication.",
         facts: [
-          { label: "Portfolio", value: draft.portfolioId },
-          { label: "Trade currency", value: draft.baseCurrency },
-          { label: "Transaction rows", value: String(draft.rows.length) },
-          { label: "Trade date", value: dateRange(draft.rows.map((row) => row.value.transactionDate)) },
+          { label: "Portfolio", value: normalizedDraft.portfolioId },
+          { label: "Trade currency", value: normalizedDraft.baseCurrency },
+          { label: "Transaction rows", value: String(normalizedDraft.rows.length) },
+          { label: "Trade date", value: dateRange(normalizedDraft.rows.map((row) => row.value.transactionDate)) },
         ],
         payload: buildTransactionsPayloadFromList(
-          draft.portfolioId,
-          draft.baseCurrency,
-          draft.rows.map((row) => ({ ...row.value, portfolioId: draft.portfolioId, baseCurrency: draft.baseCurrency })),
+          normalizedDraft.portfolioId,
+          normalizedDraft.baseCurrency,
+          normalizedDraft.rows.map((row) => ({
+            ...row.value,
+            portfolioId: normalizedDraft.portfolioId,
+            baseCurrency: normalizedDraft.baseCurrency,
+          })),
         ),
       };
     case "ADD_INSTRUMENTS":
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review instrument reference data",
         description: "Confirm security identifiers and classification before publication.",
         facts: [
-          { label: "Instrument rows", value: String(draft.rows.length) },
-          { label: "Currencies", value: uniqueSummary(draft.rows.map((row) => row.value.instrumentCurrency)) },
-          { label: "Asset classes", value: uniqueSummary(draft.rows.map((row) => row.value.assetClass)) },
+          { label: "Instrument rows", value: String(normalizedDraft.rows.length) },
+          { label: "Currencies", value: uniqueSummary(normalizedDraft.rows.map((row) => row.value.instrumentCurrency)) },
+          { label: "Asset classes", value: uniqueSummary(normalizedDraft.rows.map((row) => row.value.assetClass)) },
         ],
-        payload: buildInstrumentsPayloadFromList(draft.rows.map((row) => row.value)),
+        payload: buildInstrumentsPayloadFromList(normalizedDraft.rows.map((row) => row.value)),
       };
     case "ADD_MARKET_DATA":
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review price observations",
         description: "Confirm the instruments, observation dates, prices, and currencies before publication.",
         facts: [
-          { label: "Price rows", value: String(draft.rows.length) },
-          { label: "Observation date", value: dateRange(draft.rows.map((row) => row.value.priceDate)) },
-          { label: "Currencies", value: uniqueSummary(draft.rows.map((row) => row.value.currency)) },
+          { label: "Price rows", value: String(normalizedDraft.rows.length) },
+          { label: "Observation date", value: dateRange(normalizedDraft.rows.map((row) => row.value.priceDate)) },
+          { label: "Currencies", value: uniqueSummary(normalizedDraft.rows.map((row) => row.value.currency)) },
         ],
-        payload: buildMarketDataPayloadFromList(draft.rows.map((row) => row.value)),
+        payload: buildMarketDataPayloadFromList(normalizedDraft.rows.map((row) => row.value)),
       };
     case "IMPORT_FILE":
-      if (!draft.payload || !draft.fileName) {
+      if (!normalizedDraft.payload || !normalizedDraft.fileName) {
         throw new Error("Choose a supported CSV intake file to review.");
       }
       return {
-        task: draft.task,
+        task: normalizedDraft.task,
         title: "Review imported intake bundle",
         description: "Confirm the parsed file contents before any records are published.",
         facts: [
-          { label: "File", value: draft.fileName },
-          { label: "Portfolios", value: String(draft.payload.portfolios.length) },
-          { label: "Instruments", value: String(draft.payload.instruments.length) },
-          { label: "Transactions", value: String(draft.payload.transactions.length) },
-          { label: "Price observations", value: String(draft.payload.marketPrices.length) },
-          { label: "Business dates", value: String(draft.payload.businessDates.length) },
+          { label: "File", value: normalizedDraft.fileName },
+          { label: "Portfolios", value: String(normalizedDraft.payload.portfolios.length) },
+          { label: "Instruments", value: String(normalizedDraft.payload.instruments.length) },
+          { label: "Transactions", value: String(normalizedDraft.payload.transactions.length) },
+          { label: "Price observations", value: String(normalizedDraft.payload.marketPrices.length) },
+          { label: "Business dates", value: String(normalizedDraft.payload.businessDates.length) },
         ],
-        previewSections: fileImportPreviewSections(draft.payload),
-        payload: draft.payload,
+        previewSections: fileImportPreviewSections(normalizedDraft.payload),
+        payload: normalizedDraft.payload,
       };
   }
 }
