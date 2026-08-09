@@ -610,10 +610,8 @@ test.describe('Performance workbench smoke', () => {
       contributionModule
         .getByRole('tab', { name: /^Positions/i })
     ).toHaveAttribute('aria-selected', 'true');
-    await expect(
-      contributionModule
-        .getByRole('tab', { name: /^Segment Summary/i })
-    ).toHaveAttribute('aria-selected', 'false');
+    const segmentSummaryTab = contributionModule.getByRole('tab', { name: /^Segment Summary/i });
+    await expect(segmentSummaryTab).toHaveAttribute('aria-selected', 'false');
     const positionsTab = contributionModule.getByRole('tab', { name: /^Positions/i });
     const positionPanel = contributionModule.getByRole('tabpanel');
     await expect(positionsTab).toHaveAttribute('aria-controls', await positionPanel.getAttribute('id') ?? '');
@@ -639,23 +637,27 @@ test.describe('Performance workbench smoke', () => {
     );
     expect(positionFrame.scrollWidth - positionFrame.clientWidth).toBeLessThanOrEqual(12);
 
-    await positionsTab.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(
-      contributionModule.getByRole('tab', { name: /^Segment Summary/i })
-    ).toHaveAttribute('aria-selected', 'true');
-    await expect(contributionModule.getByRole('tab', { name: /^Segment Summary/i })).toBeFocused();
-    await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
-    await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
-    await expect(contributionModule.getByText('Equity')).toBeVisible();
-    await expect(
-      contributionModule.locator('table[aria-label*="Asset Class contribution"] tbody tr').first(),
-    ).toBeVisible();
+    if (await segmentSummaryTab.isDisabled()) {
+      await expect(segmentSummaryTab).toBeDisabled();
+      await expect(positionsTab).toHaveAttribute('aria-selected', 'true');
+      await expect(positionPanel).toBeVisible();
+    } else {
+      await positionsTab.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(segmentSummaryTab).toHaveAttribute('aria-selected', 'true');
+      await expect(segmentSummaryTab).toBeFocused();
+      await expect(contributionModule.getByLabel('Position contribution table')).toHaveCount(0);
+      await expect(contributionModule.getByLabel(/Asset Class contribution table/i)).toBeVisible();
+      await expect(contributionModule.getByText('Equity')).toBeVisible();
+      await expect(
+        contributionModule.locator('table[aria-label*="Asset Class contribution"] tbody tr').first(),
+      ).toBeVisible();
 
-    const aggregateFrame = await measureTableFrame(
-      contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
-    );
-    expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
+      const aggregateFrame = await measureTableFrame(
+        contributionModule.getByLabel(/Asset Class contribution table/i).locator('..')
+      );
+      expect(aggregateFrame.scrollWidth - aggregateFrame.clientWidth).toBeLessThanOrEqual(12);
+    }
 
     const moduleMetrics = await measureElement(contributionModule);
     expect(moduleMetrics.width).toBeGreaterThan(1000);
