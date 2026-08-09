@@ -24,7 +24,7 @@
   min-width: 0;
 }
 
-.context span,
+.rail .context span,
 .context > strong,
 .disclosure span,
 .disclosure strong,
@@ -249,7 +249,8 @@
   }
 }
 
-@media (max-width: 560px) {
+/* The three compact header tracks require 582px before shell gutters. */
+@media (max-width: 640px) {
   .header {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:

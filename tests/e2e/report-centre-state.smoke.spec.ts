@@ -171,6 +171,57 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
+for (const width of [640, 620, 600, 580, 561]) {
+  test(`keeps the shared rail within its content capacity at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(
+      `/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`,
+      { waitUntil: "domcontentloaded" },
+    );
+
+    await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+      timeout: 15_000,
+    });
+    const railHeader = page.getByTestId("portfolio-screen-rail-header");
+    await expect(railHeader).toBeVisible();
+    const railHeaderFits = await railHeader.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth + 1,
+    );
+    expect(railHeaderFits).toBe(true);
+    const headerRows = await railHeader.evaluate((element) =>
+      Array.from(element.children, (child) =>
+        Math.round(child.getBoundingClientRect().top),
+      ),
+    );
+    expect(headerRows).toHaveLength(3);
+    expect(headerRows[0]).toBeLessThan(headerRows[1]);
+    expect(headerRows[1]).toBeLessThan(headerRows[2]);
+    const rail = page.getByTestId("portfolio-screen-rail");
+    expect(
+      await computedContrastRatio(
+        page,
+        rail.getByText("Selected portfolio", { exact: true }),
+        rail,
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+
+    const disclosure = page.getByRole("button", { name: /Current view Reports/ });
+    await disclosure.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("navigation", { name: "Workbench screen navigation" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(disclosure).toBeFocused();
+
+    const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(pageWidth).toBeLessThanOrEqual(width);
+    await captureDiagnosticScreenshot(page, `ready-capacity-${width}`);
+  });
+}
+
 test("keeps portfolio context and navigation compact and keyboard-complete on mobile", async ({
   page,
 }) => {
