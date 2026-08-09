@@ -2688,3 +2688,75 @@ one tab stop, disabled-choice behavior, and source consumer updates. Portfolio c
 Performance contribution browser flows carry the representative production proof. This corrects
 interaction semantics and CSS ownership without adding a supported business capability or changing
 an operator procedure; repo-local wiki source is intentionally unchanged.
+
+## Action-first Advisory Overview
+
+### Business job
+
+A relationship manager should open one portfolio, understand which visible proposal needs attention,
+and move that recommendation through review, client discussion, and implementation without scanning
+a second catalogue of every Advisory route. When Gateway returns a paginated source window, the
+advisor must understand that visible counts and ranking are not complete book totals.
+
+### Current-product research
+
+Research was refreshed on 2026-08-10 from official product and accessibility sources:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   organizes advisory proposal work from Identify through Construct and Deliver to Implement, with
+   firm and client criteria, suitability checks, and whole-portfolio analytics embedded in the
+   workflow rather than exposed as a route catalogue.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes Book Insights, Next Best Action, advisor nudges, and flexible proposal generation as
+   connected ways to surface accounts needing timely action and move them toward implementation.
+3. [GOV.UK Complete multiple tasks](https://design-system.service.gov.uk/patterns/complete-multiple-tasks/)
+   recommends simplifying first, grouping related actions, using task-oriented labels, and exposing
+   meaningful status when a journey genuinely spans multiple sessions.
+4. [W3C WCAG 2.2 focus order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html)
+   requires sequential focus to preserve meaning and operability and recommends that focus reinforce
+   the reading order implied by the visual layout.
+
+These sources inform workflow hierarchy and interaction semantics only. Lotus retains its own visual
+system, source contracts, private-banking language, lifecycle authority, and control boundaries.
+
+### Adopted decisions
+
+1. Make the current advisor decision and source-backed worklist the operating centre of the screen.
+2. Keep `PortfolioScreenRail` as the single owner of route navigation; replace the duplicate
+   Advisory Journey catalogue with one compact lifecycle posture.
+3. Use Identify, Construct, Review & discuss, and Implement as business handoffs. Identify links to
+   the source-backed Ideas workspace without inventing a count; the other stages count only mapped
+   proposal states visible in the current Gateway window.
+4. Request eight proposals per source window, rank only within that window, expose explicit
+   previous/next controls, and keep the workflow context partial whenever a continuation or earlier
+   window exists.
+5. Publish loading, permission, unavailable, refreshing, refresh-failure, empty, partial, and ready
+   source posture through existing reusable Workbench state and workflow-context contracts.
+6. Remove the redundant portfolio column from the portfolio-scoped table and convert rows into
+   labelled review cards at compact width while preserving one semantic table DOM.
+7. Keep stable browser evidence contracts on the workspace, lifecycle summary, worklist, and source
+   window rather than coupling validation to one complete sentence.
+
+### Rejected decisions
+
+1. A card for every Advisory destination: the persistent rail already owns navigation, and repeating
+   it consumes the space needed for real work.
+2. A fabricated Identify count, book-wide urgency score, SLA, recommendation, or proposal total:
+   the existing Gateway list publishes proposal records and a continuation cursor, not those claims.
+3. Treating the current page as the full portfolio or automatically traversing every cursor: both
+   hide source scope and can make an incomplete worklist look clear.
+4. A desktop-only wide table or duplicated mobile renderer: one semantic table becomes compact cards
+   through the feature-owned CSS Module without page-level horizontal overflow.
+5. Moving proposal fetching into the shell or silently selecting a row for the context rail: the
+   owning screen publishes queue-level posture, while record-specific evidence remains behind an
+   explicit proposal selection.
+
+### Validation and publication decision
+
+Workbench #591 owns this bounded screen slice. Focused model and integration tests cover priority
+ordering, lifecycle mapping, complete and partial source windows, source failure, and permission
+boundaries. Isolated Playwright proof covers 1440, 1024, and 519 pixel widths, explicit cursor
+navigation, duplicate-catalogue absence, stable evidence ids, and zero page-level horizontal
+overflow, with captures under `output/issue-591/`. The change uses the existing Gateway proposal
+contract and does not change supported capability or operator procedure, so repo-local wiki source
+is intentionally unchanged.

@@ -387,6 +387,14 @@ Current repository posture:
     classifications, blocked client-publication boundaries, and proof-handling rules without
     constructing proof packs, promoting client-ready release, approving sign-off, contacting
     clients, routing orders, or calling `lotus-advise` directly.
+    The default `/recommendations` overview is an action-first queue over the Gateway proposal-list
+    contract. `PortfolioScreenRail` is the single navigation owner; the overview may group visible
+    source states into Identify, Construct, Review & discuss, and Implement handoffs, but it must not
+    invent an Ideas count, book-wide priority, SLA, lifecycle completion, or downstream authority.
+    Identify is an explicit handoff to the source-backed Ideas workspace, not a locally calculated
+    proposal state. Proposal metrics, lifecycle counts, ranking, and workflow context apply only to
+    the current source window. A continuation or earlier window keeps the overview partial and
+    advisors move between windows explicitly before concluding the portfolio is clear.
     `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
     `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
