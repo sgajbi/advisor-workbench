@@ -55,29 +55,13 @@ export function buildIntakeReceipt(
   };
 }
 
-function expectedPublishedCounts(task: IntakeTask, payload: PortfolioBundlePayload): ExpectedPublishedCount[] {
-  switch (task) {
-    case "CREATE_PORTFOLIO":
-      return [{ key: "portfolios", expected: payload.portfolios.length }];
-    case "ADD_POSITIONS":
-      return [
-        { key: "instruments", expected: payload.instruments.length },
-        { key: "transactions", expected: payload.transactions.length },
-        { key: "market_prices", expected: payload.marketPrices.length },
-      ];
-    case "ADD_TRANSACTIONS":
-      return [{ key: "transactions", expected: payload.transactions.length }];
-    case "ADD_INSTRUMENTS":
-      return [{ key: "instruments", expected: payload.instruments.length }];
-    case "ADD_MARKET_DATA":
-      return [{ key: "market_prices", expected: payload.marketPrices.length }];
-    case "IMPORT_FILE":
-      return [
-        { key: "portfolios", expected: payload.portfolios.length },
-        { key: "instruments", expected: payload.instruments.length },
-        { key: "transactions", expected: payload.transactions.length },
-        { key: "market_prices", expected: payload.marketPrices.length },
-        { key: "fx_rates", expected: payload.fxRates.length },
-      ];
-  }
+function expectedPublishedCounts(_task: IntakeTask, payload: PortfolioBundlePayload): ExpectedPublishedCount[] {
+  return [
+    { key: "business_dates", expected: payload.businessDates.length },
+    { key: "portfolios", expected: payload.portfolios.length },
+    { key: "instruments", expected: payload.instruments.length },
+    { key: "transactions", expected: payload.transactions.length },
+    { key: "market_prices", expected: payload.marketPrices.length },
+    { key: "fx_rates", expected: payload.fxRates.length },
+  ];
 }

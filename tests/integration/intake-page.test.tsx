@@ -187,6 +187,28 @@ describe("IntakePage", () => {
     expect(screen.queryByRole("heading", { name: "Reviewed request published" })).not.toBeInTheDocument();
   }, SOURCE_ACTION_TEST_TIMEOUT_MS);
 
+  it("keeps focus on the task chooser after changing request type during publication", async () => {
+    const pending = deferred<ReturnType<typeof sourceConfirmation>>();
+    ingestPortfolioBundleMock.mockReturnValueOnce(pending.promise);
+    renderIntakePage();
+    startValidPortfolioRequest();
+    fireEvent.click(screen.getByRole("button", { name: "Review request" }));
+    fireEvent.click(screen.getByRole("button", { name: "Publish reviewed request" }));
+
+    await waitFor(() => expect(ingestPortfolioBundleMock).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Change request type" }));
+    const chooser = screen.getByRole("region", { name: "Choose an intake request" });
+    await waitFor(() => expect(chooser).toHaveFocus());
+
+    await act(async () => {
+      pending.resolve(sourceConfirmation());
+      await pending.promise;
+    });
+
+    await waitFor(() => expect(chooser).toHaveFocus());
+    expect(screen.queryByText("Publication confirmed")).not.toBeInTheDocument();
+  }, SOURCE_ACTION_TEST_TIMEOUT_MS);
+
   it("adds a genuinely blank keyed row instead of copying business values", async () => {
     renderIntakePage();
     fireEvent.click(screen.getByRole("button", { name: /Load opening positions/i }));
@@ -300,6 +322,7 @@ function sourceConfirmation() {
     contract_version: "v1",
     data: {
       published_counts: {
+        business_dates: 1,
         portfolios: 1,
         instruments: 0,
         transactions: 0,
