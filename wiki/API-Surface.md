@@ -246,6 +246,14 @@ promote dormant labels into product ownership just because historical route file
   Canonical validation creates a Gateway-backed proposal with an advisor-review
   `narrative_request`, records advisor-use review, requests reviewed report packaging, and captures
   `proposal-narrative-posture-live.png` under the governed Workbench proof bundle.
+- Proposal Detail presents one decision-first review workspace over the existing Gateway contracts:
+  identity and lifecycle lead to the next action, proposed changes, allocation impact, and review
+  gates; Narrative and Memo are peer advisor-review modes; and version, lineage, replay, and review
+  history remain available through progressive disclosure. Primary detail settles independently
+  from workflow, approval, and lineage reads so available source evidence remains usable with an
+  explicit partial-state message. A mutation is announced as successful only after Gateway
+  persistence succeeds and the owning proposal reads refresh coherently from source truth. This
+  presentation does not add client-release, approval, communication, or execution authority.
 - RFC-0024 advisor memo and evidence-pack posture is implemented on `/proposals/{proposalId}`
   through Gateway proposal memo endpoints. Workbench can create or replay an advisor-use memo with
   `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo`, record advisor-use review with

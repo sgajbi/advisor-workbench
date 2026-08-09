@@ -352,8 +352,14 @@ Current repository posture:
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
     risk, performance, or execution truth locally. The detail route records advisor-use narrative
-    review and reviewed report-package requests through Gateway proposal endpoints only, renders
-    delivery-summary and delivery-event posture, and does not generate narrative, infer
+    review and reviewed report-package requests through Gateway proposal endpoints only. It settles
+    primary proposal detail independently from workflow, approval, and lineage reads, keeps
+    available decision evidence visible when an ancillary source is unavailable, presents
+    Narrative and Memo as peer advisor-review modes, and keeps technical audit history under
+    progressive disclosure. A proposal action is confirmed only after Gateway persistence succeeds
+    and the owning detail, workflow, approval, and lineage reads refresh coherently from source
+    truth. The route renders delivery-summary and delivery-event posture, and does not generate
+    narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
     renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF strips browser
