@@ -1004,55 +1004,6 @@
   background: transparent;
 }
 
-.suite-hero {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1.2fr 1fr;
-}
-
-.suite-pipeline {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.85rem;
-  background: linear-gradient(145deg, #f7fbff 0%, #eef4fc 100%);
-  display: grid;
-  gap: 0.42rem;
-}
-
-.pipeline-node {
-  border: 1px solid #cbdbdd;
-  background: #fff;
-  border-radius: 10px;
-  padding: 0.5rem 0.66rem;
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.pipeline-arrow {
-  font-size: 0.82rem;
-  color: #52627a;
-}
-
-.suite-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.suite-grid > * {
-  min-width: 0;
-}
-
-.suite-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.72rem;
-}
-
-.suite-panel h3 {
-  margin: 0 0 0.82rem;
-}
-
 .workspace-layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) 260px;
@@ -11338,45 +11289,6 @@
   margin-bottom: 1rem;
 }
 
-.journey-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.journey-card h2 {
-  margin-bottom: 0.5rem;
-}
-
-.journey-steps {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.journey-step {
-  display: block;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.55rem 0.7rem;
-  background: var(--panel-alt);
-  color: #17335f;
-  font-weight: 600;
-}
-
-.journey-step:hover {
-  border-color: #8aacde;
-  background: var(--brand-soft);
-  color: var(--brand-strong);
-}
-
-.journey-step.disabled {
-  color: #7a8da8;
-  border-color: #d7e0ed;
-  background: #f2f5fa;
-  cursor: not-allowed;
-}
-
 .workbench-split {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -12284,10 +12196,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .suite-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .workbench-split {
     grid-template-columns: 1fr;
   }
@@ -12529,14 +12437,6 @@
     grid-template-columns: 1fr;
   }
 
-  .suite-hero {
-    grid-template-columns: 1fr;
-  }
-
-  .suite-grid {
-    grid-template-columns: 1fr;
-  }
-
   .workspace-layout,
   .portfolio-layout {
     grid-template-columns: 1fr;
@@ -12650,10 +12550,6 @@
   }
 
   .workbench-split {
-    grid-template-columns: 1fr;
-  }
-
-  .journey-grid {
     grid-template-columns: 1fr;
   }
 

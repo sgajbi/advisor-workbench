@@ -26,6 +26,12 @@ portfolio, workflow, and current-view tracks cannot fit with their gaps and shel
 regions stack without clipping or page-level horizontal overflow. Keep boundary-width browser
 proof with that owner instead of adding route-specific overflow suppression.
 
+The retired `/suite` prototype has no presentation owner because it no longer owns a product
+surface. Its Suite grid, journey, and pipeline selector families were removed with the fabricated
+business dataset under issue #573. The global CSS ratchet forbids those selector families from
+returning; any future Home presentation must be owned by the canonical Home feature and backed by
+governed business state.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.
