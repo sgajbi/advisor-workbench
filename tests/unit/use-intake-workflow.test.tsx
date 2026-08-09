@@ -63,6 +63,57 @@ describe("useIntakeWorkflow", () => {
     });
     expect(result.current.submissionState).toBe("accepted");
   });
+
+  it("publishes the same normalized intent shown in review only after source acceptance", async () => {
+    ingestPortfolioBundleMock.mockResolvedValue(sourceConfirmation());
+    const { result } = renderHook(() => useIntakeWorkflow(), { wrapper: queryWrapper() });
+
+    act(() => result.current.selectTask("CREATE_PORTFOLIO"));
+    act(() => {
+      result.current.updateDraft((current) =>
+        current.task === "CREATE_PORTFOLIO"
+          ? {
+              ...current,
+              input: {
+                portfolioId: " PORT_001 ",
+                cifId: " CIF_001 ",
+                advisorId: " ADV_001 ",
+                baseCurrency: " usd ",
+                openDate: " 2026-08-08 ",
+                bookingCenter: " Singapore ",
+                portfolioType: " Discretionary ",
+                riskExposure: " Balanced ",
+                investmentTimeHorizon: " Long term ",
+                status: " Pending activation ",
+              },
+            }
+          : current,
+      );
+    });
+    expect(result.current.validationIssues).toHaveLength(0);
+    act(() => expect(result.current.reviewRequest()).toBe(true));
+
+    expect(result.current.reviewedIntent?.projection.facts).toContainEqual({
+      label: "Base currency",
+      value: "USD",
+    });
+    await act(async () => {
+      await expect(result.current.submitReviewedRequest()).resolves.toBe(true);
+    });
+
+    expect(ingestPortfolioBundleMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        businessDates: [{ businessDate: "2026-08-08" }],
+        portfolios: [expect.objectContaining({
+          portfolioId: "PORT_001",
+          baseCurrency: "USD",
+          cifId: "CIF_001",
+        })],
+      }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
+    );
+    expect(result.current.receipt?.title).toBe("Publication confirmed");
+  });
 });
 
 function queryWrapper() {
