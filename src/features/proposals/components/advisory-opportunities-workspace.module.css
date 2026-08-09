@@ -131,6 +131,11 @@
   gap: 4px;
 }
 
+.actionField {
+  display: grid;
+  gap: 4px;
+}
+
 .actionForm input,
 .actionForm select {
   border: 1px solid var(--border);
@@ -139,6 +144,13 @@
   font: inherit;
   min-height: 36px;
   padding: 6px 8px;
+}
+
+.fieldHint {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .tableWrap {
