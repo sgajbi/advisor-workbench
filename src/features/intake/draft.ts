@@ -275,9 +275,10 @@ export function validateIntakeDraft(draft: IntakeDraft): IntakeValidationIssue[]
         ...draft.rows.flatMap((row, index) => validateMarketData(row, index)),
       ];
     case "IMPORT_FILE":
-      return draft.payload && draft.fileName && hasPublishableRecords(draft.payload)
-        ? []
-        : [{ field: "file", message: "Choose a supported CSV intake file with at least one publishable record." }];
+      if (!draft.payload || !draft.fileName || !hasPublishableRecords(draft.payload)) {
+        return [{ field: "file", message: "Choose a supported CSV intake file with at least one publishable record." }];
+      }
+      return validateImportedPayload(draft.payload);
   }
 }
 
@@ -375,6 +376,7 @@ export function buildIntakeReviewProjection(draft: IntakeDraft): IntakeReviewPro
           { label: "Instruments", value: String(draft.payload.instruments.length) },
           { label: "Transactions", value: String(draft.payload.transactions.length) },
           { label: "Price observations", value: String(draft.payload.marketPrices.length) },
+          { label: "Business dates", value: String(draft.payload.businessDates.length) },
         ],
         previewSections: fileImportPreviewSections(draft.payload),
         payload: draft.payload,
@@ -388,7 +390,8 @@ function hasPublishableRecords(payload: PortfolioBundlePayload): boolean {
       payload.instruments.length +
       payload.transactions.length +
       payload.marketPrices.length +
-      payload.fxRates.length >
+      payload.fxRates.length +
+      payload.businessDates.length >
     0
   );
 }
@@ -448,7 +451,60 @@ function fileImportPreviewSections(payload: PortfolioBundlePayload): IntakeRevie
         ],
       })),
     },
+    {
+      title: "Business date records",
+      records: payload.businessDates.map((businessDate) => ({
+        title: `Business date ${businessDate.businessDate}`,
+        facts: [{ label: "Date", value: businessDate.businessDate }],
+      })),
+    },
   ].filter((section) => section.records.length > 0);
+}
+
+function validateImportedPayload(payload: PortfolioBundlePayload): IntakeValidationIssue[] {
+  return [
+    ...payload.portfolios.flatMap((portfolio, index) => [
+      ...required("file", `Imported portfolio ${index + 1}: enter the portfolio code.`, portfolio.portfolioId),
+      ...currency("file", `Imported portfolio ${index + 1}: enter a three-letter base currency.`, portfolio.baseCurrency),
+      ...date("file", `Imported portfolio ${index + 1}: enter a valid opening date.`, portfolio.openDate),
+      ...required("file", `Imported portfolio ${index + 1}: enter the approved risk profile.`, portfolio.riskExposure),
+      ...required(
+        "file",
+        `Imported portfolio ${index + 1}: enter the investment time horizon.`,
+        portfolio.investmentTimeHorizon,
+      ),
+      ...required("file", `Imported portfolio ${index + 1}: enter the mandate type.`, portfolio.portfolioType),
+      ...required("file", `Imported portfolio ${index + 1}: enter the booking centre.`, portfolio.bookingCenter),
+      ...required("file", `Imported portfolio ${index + 1}: enter the client reference.`, portfolio.cifId),
+      ...required("file", `Imported portfolio ${index + 1}: enter the opening portfolio status.`, portfolio.status),
+    ]),
+    ...payload.instruments.flatMap((instrument, index) => [
+      ...required("file", `Imported instrument ${index + 1}: enter the security code.`, instrument.securityId),
+      ...required("file", `Imported instrument ${index + 1}: enter the instrument name.`, instrument.name),
+      ...isin("file", `Imported instrument ${index + 1}: enter a valid 12-character ISIN.`, instrument.isin),
+      ...currency(
+        "file",
+        `Imported instrument ${index + 1}: enter a three-letter currency.`,
+        instrument.instrumentCurrency,
+      ),
+      ...required("file", `Imported instrument ${index + 1}: enter the product type.`, instrument.productType),
+    ]),
+    ...payload.transactions.flatMap((transaction, index) => [
+      ...required("file", `Imported transaction ${index + 1}: enter the portfolio code.`, transaction.portfolio_id),
+      ...required("file", `Imported transaction ${index + 1}: enter the security code.`, transaction.security_id),
+      ...required("file", `Imported transaction ${index + 1}: enter the transaction type.`, transaction.transaction_type),
+      ...positive("file", `Imported transaction ${index + 1}: enter a quantity greater than zero.`, transaction.quantity),
+      ...positive("file", `Imported transaction ${index + 1}: enter a price greater than zero.`, transaction.price),
+      ...dateTime("file", `Imported transaction ${index + 1}: enter a valid trade date.`, transaction.transaction_date),
+      ...currency("file", `Imported transaction ${index + 1}: enter a three-letter trade currency.`, transaction.currency),
+    ]),
+    ...payload.marketPrices.flatMap((price, index) => [
+      ...required("file", `Imported price ${index + 1}: enter the security code.`, price.securityId),
+      ...date("file", `Imported price ${index + 1}: enter a valid observation date.`, price.priceDate),
+      ...positive("file", `Imported price ${index + 1}: enter a price greater than zero.`, price.price),
+      ...currency("file", `Imported price ${index + 1}: enter a three-letter currency.`, price.currency),
+    ]),
+  ];
 }
 
 function validatePortfolio(input: CreatePortfolioInput): IntakeValidationIssue[] {
@@ -531,6 +587,10 @@ function isin(field: string, message: string, value: string): IntakeValidationIs
 
 function date(field: string, message: string, value: string): IntakeValidationIssue[] {
   return isStrictIsoDate(value) ? [] : [{ field, message }];
+}
+
+function dateTime(field: string, message: string, value: string): IntakeValidationIssue[] {
+  return isStrictIsoDate(value.slice(0, 10)) ? [] : [{ field, message }];
 }
 
 function positive(field: string, message: string, value: number): IntakeValidationIssue[] {

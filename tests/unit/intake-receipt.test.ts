@@ -78,6 +78,48 @@ describe("intake receipt", () => {
       ),
     ).toThrow("payload-matching published record counts for this request");
   });
+
+  it("requires payload-matching evidence for every nonempty imported record family", () => {
+    const importedPayload = payload({
+      businessDates: [{}],
+      portfolios: [{}],
+      instruments: [{}],
+      transactions: [{}],
+      marketPrices: [{}],
+    });
+
+    expect(() =>
+      buildIntakeReceipt("IMPORT_FILE", importedPayload, {
+        correlation_id: "corr_intake_005",
+        contract_version: "v1",
+        data: {
+          published_counts: {
+            business_dates: 1,
+            portfolios: 1,
+            instruments: 1,
+            transactions: 1,
+          },
+        },
+      }),
+    ).toThrow("payload-matching published record counts for this request");
+
+    expect(
+      buildIntakeReceipt("IMPORT_FILE", importedPayload, {
+        correlation_id: "corr_intake_006",
+        contract_version: "v1",
+        data: {
+          published_counts: {
+            business_dates: 1,
+            portfolios: 1,
+            instruments: 1,
+            transactions: 1,
+            market_prices: 1,
+            fx_rates: 0,
+          },
+        },
+      }).title,
+    ).toBe("Publication confirmed");
+  });
 });
 
 function payload(counts: {
