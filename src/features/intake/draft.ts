@@ -441,13 +441,27 @@ function isin(field: string, message: string, value: string): IntakeValidationIs
 }
 
 function date(field: string, message: string, value: string): IntakeValidationIssue[] {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
-    ? []
-    : [{ field, message }];
+  return isStrictIsoDate(value) ? [] : [{ field, message }];
 }
 
 function positive(field: string, message: string, value: number): IntakeValidationIssue[] {
   return Number.isFinite(value) && value > 0 ? [] : [{ field, message }];
+}
+
+function isStrictIsoDate(value: string): boolean {
+  const match = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/.exec(value);
+  if (!match?.groups) return false;
+
+  const year = Number(match.groups.year);
+  const month = Number(match.groups.month);
+  const day = Number(match.groups.day);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
 }
 
 function dateRange(values: string[]): string {

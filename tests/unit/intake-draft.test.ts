@@ -45,6 +45,70 @@ describe("intake draft", () => {
     ]);
   });
 
+  it("rejects calendar-impossible ISO dates instead of accepting JavaScript date normalization", () => {
+    const draft = createBlankIntakeDraft("ADD_POSITIONS") as PositionsDraft;
+    draft.portfolioId = "PORT_001";
+    draft.baseCurrency = "USD";
+    draft.rows[0].value = {
+      securityId: "SEC_001",
+      instrumentName: "Global Equity Fund",
+      isin: "US0000000001",
+      productType: "Fund",
+      quantity: 12,
+      price: 104.25,
+      effectiveDate: "2026-02-31",
+      transactionType: "BUY",
+    };
+
+    expect(validateIntakeDraft(draft)).toEqual([
+      {
+        field: `rows.${draft.rows[0].rowId}.effectiveDate`,
+        message: "Position 1: enter a valid effective date.",
+      },
+    ]);
+  });
+
+  it("accepts valid leap-day ISO dates", () => {
+    const draft = createBlankIntakeDraft("ADD_POSITIONS") as PositionsDraft;
+    draft.portfolioId = "PORT_001";
+    draft.baseCurrency = "USD";
+    draft.rows[0].value = {
+      securityId: "SEC_001",
+      instrumentName: "Global Equity Fund",
+      isin: "US0000000001",
+      productType: "Fund",
+      quantity: 12,
+      price: 104.25,
+      effectiveDate: "2028-02-29",
+      transactionType: "BUY",
+    };
+
+    expect(validateIntakeDraft(draft)).toEqual([]);
+  });
+
+  it("rejects leap-day dates in non-leap years", () => {
+    const draft = createBlankIntakeDraft("ADD_POSITIONS") as PositionsDraft;
+    draft.portfolioId = "PORT_001";
+    draft.baseCurrency = "USD";
+    draft.rows[0].value = {
+      securityId: "SEC_001",
+      instrumentName: "Global Equity Fund",
+      isin: "US0000000001",
+      productType: "Fund",
+      quantity: 12,
+      price: 104.25,
+      effectiveDate: "2027-02-29",
+      transactionType: "BUY",
+    };
+
+    expect(validateIntakeDraft(draft)).toEqual([
+      {
+        field: `rows.${draft.rows[0].rowId}.effectiveDate`,
+        message: "Position 1: enter a valid effective date.",
+      },
+    ]);
+  });
+
   it("builds a stable review projection only after validation succeeds", () => {
     vi.spyOn(Date, "now").mockReturnValue(1_000);
     const draft = createBlankIntakeDraft("ADD_POSITIONS") as PositionsDraft;
