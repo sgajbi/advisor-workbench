@@ -26,6 +26,18 @@ export type AdvisorBookPortfolioRow = {
   membershipLabel: string;
 };
 
+export type AdvisorBookResultScopeModel = {
+  rangeLabel: string;
+  viewLabel: string;
+};
+
+type AdvisorBookResultScopeRequest = {
+  clientId?: string;
+  mandateType?: "ADVISORY" | "DISCRETIONARY";
+  sortBy?: AdvisorBookResponse["page"]["sort_by"];
+  sortOrder?: AdvisorBookResponse["page"]["sort_order"];
+};
+
 export function buildAdvisorBookWorkspaceModel(
   response: AdvisorBookResponse,
 ): AdvisorBookWorkspaceModel {
@@ -84,6 +96,56 @@ export function buildAdvisorBookWorkspaceModel(
       },
     ],
   };
+}
+
+export function buildAdvisorBookResultScopeModel(
+  query: AdvisorBookResultScopeRequest,
+  page: AdvisorBookResponse["page"],
+): AdvisorBookResultScopeModel {
+  const requestedSortBy = query.sortBy ?? "portfolio_id";
+  const requestedSortOrder = query.sortOrder ?? "asc";
+  const displayedOrder = orderLabel(page.sort_by, page.sort_order);
+  const requestedOrder = orderLabel(requestedSortBy, requestedSortOrder);
+  const scope = [
+    query.clientId ? `Client reference ${query.clientId}` : "All clients",
+    query.mandateType === "ADVISORY"
+      ? "Advisory mandates"
+      : query.mandateType === "DISCRETIONARY"
+        ? "Discretionary mandates"
+        : "All supported mandates",
+    `Displayed order: ${displayedOrder}`,
+  ];
+
+  if (page.sort_by !== requestedSortBy || page.sort_order !== requestedSortOrder) {
+    scope.push(`Requested order: ${requestedOrder}`);
+  }
+
+  return {
+    rangeLabel: rangeLabel(page),
+    viewLabel: scope.join(" · "),
+  };
+}
+
+function rangeLabel(page: AdvisorBookResponse["page"]): string {
+  if (page.returned_count === 0) {
+    return `0 of ${page.total_count} portfolios`;
+  }
+  const firstReturned = page.offset + 1;
+  const lastReturned = page.offset + page.returned_count;
+  return `${firstReturned}–${lastReturned} of ${page.total_count} portfolios`;
+}
+
+function orderLabel(
+  sortBy: AdvisorBookResponse["page"]["sort_by"],
+  sortOrder: AdvisorBookResponse["page"]["sort_order"],
+): string {
+  const field =
+    sortBy === "client_id"
+      ? "Client reference"
+      : sortBy === "mandate_type"
+        ? "Mandate"
+        : "Portfolio reference";
+  return `${field}, ${sortOrder === "desc" ? "descending" : "ascending"}`;
 }
 
 function toPortfolioRow(item: AdvisorBookPortfolio): AdvisorBookPortfolioRow {

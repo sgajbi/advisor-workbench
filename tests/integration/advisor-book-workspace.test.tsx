@@ -155,7 +155,11 @@ describe("AdvisorBookWorkspace", () => {
 
     expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue("client_id");
     expect(screen.getByRole("combobox", { name: "Sort direction" })).toHaveValue("desc");
-    expect(screen.getByText(/Client reference CIF_SG_002 · Advisory mandates/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Client reference CIF_SG_002 · Advisory mandates · Displayed order: Client reference, descending",
+      ),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
     expect(routerReplaceMock).toHaveBeenLastCalledWith(
@@ -164,6 +168,27 @@ describe("AdvisorBookWorkspace", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Clear view" }));
     expect(routerReplaceMock).toHaveBeenLastCalledWith("/book?asOfDate=2026-04-10");
+  });
+
+  it("keeps requested controls explicit when the source returns a different order", async () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "asOfDate=2026-04-10&sortBy=client_id&sortOrder=desc",
+      ),
+    );
+    getAdvisorBookMock.mockResolvedValue(readyResponse);
+
+    render(<AdvisorBookWorkspace />);
+    await screen.findByText("Book available");
+
+    expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveValue("client_id");
+    expect(screen.getByRole("combobox", { name: "Sort direction" })).toHaveValue("desc");
+    expect(
+      screen.getByText(
+        "All clients · All supported mandates · Displayed order: Portfolio reference, ascending · Requested order: Client reference, descending",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Displayed order: Client reference, descending/i)).not.toBeInTheDocument();
   });
 
   it("adopts the URL client filter when returning to an earlier query", async () => {

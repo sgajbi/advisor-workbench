@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { AdvisorBookResponse } from "@/features/advisor-book/contracts";
-import { buildAdvisorBookWorkspaceModel } from "@/features/advisor-book/view-model";
+import {
+  buildAdvisorBookResultScopeModel,
+  buildAdvisorBookWorkspaceModel,
+} from "@/features/advisor-book/view-model";
 
 const response: AdvisorBookResponse = {
   correlation_id: "corr-1",
@@ -116,5 +119,39 @@ describe("advisor-book workspace view model", () => {
     expect(JSON.stringify(model)).not.toMatch(
       /tenant scope|status code|membership v1|source-backed|source-confirmed|source currency|source limitation/i,
     );
+  });
+
+  it("describes the source-returned order when it matches the requested view", () => {
+    const resultScope = buildAdvisorBookResultScopeModel(
+      {
+        clientId: "CIF_001",
+        mandateType: "ADVISORY",
+        sortBy: "client_id",
+        sortOrder: "desc",
+      },
+      { ...response.page, sort_by: "client_id", sort_order: "desc" },
+    );
+
+    expect(resultScope).toEqual({
+      rangeLabel: "1–2 of 2 portfolios",
+      viewLabel:
+        "Client reference CIF_001 · Advisory mandates · Displayed order: Client reference, descending",
+    });
+  });
+
+  it("distinguishes the requested order when the source returns a different order", () => {
+    const resultScope = buildAdvisorBookResultScopeModel(
+      {
+        sortBy: "client_id",
+        sortOrder: "desc",
+      },
+      response.page,
+    );
+
+    expect(resultScope).toEqual({
+      rangeLabel: "1–2 of 2 portfolios",
+      viewLabel:
+        "All clients · All supported mandates · Displayed order: Portfolio reference, ascending · Requested order: Client reference, descending",
+    });
   });
 });
