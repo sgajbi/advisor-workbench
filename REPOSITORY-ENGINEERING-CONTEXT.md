@@ -57,7 +57,11 @@ Current repository posture:
    boundary without mutating. Once publication starts, the reviewed payload and idempotency intent
    remain immutable until the source outcome returns: publication-affecting controls are natively
    disabled while the exact reviewed details and progress state remain visible. A source failure
-   restores editing and exact retry against the same reviewed intent. Workbench generates a bounded
+   restores editing and exact retry against the same reviewed intent. Before validation and review,
+   one typed domain boundary trims business strings and dates and canonicalizes governed currency,
+   ISIN, and transaction-type codes. Review facts, the intent fingerprint, the Gateway payload, and
+   receipt-count reconciliation therefore consume the same normalized projection; Workbench does
+   not rely on undocumented source coercion. Workbench generates a bounded
    `X-Idempotency-Key` at review, reuses the exact reviewed payload and key after a failed identical
    attempt, and requires a valid
    Gateway envelope plus task-relevant `published_counts`, correlation id, and contract version
