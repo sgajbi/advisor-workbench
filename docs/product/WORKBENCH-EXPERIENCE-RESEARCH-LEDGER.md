@@ -2525,6 +2525,15 @@ Research was refreshed on 2026-08-09 from official guidance:
 4. [IBM progressive disclosure](https://www.ibm.com/docs/en/technical-content?topic=practices-progressive-disclosure)
    recommends exposing only what the current task needs, maintaining a clear trail, and not
    repeating guidance across layers.
+5. [IBM Carbon pagination](https://carbondesignsystem.com/components/pagination/usage/) places
+   pagination below its related content and keeps items-per-page context, visible range and total,
+   current page, total pages, and previous/next navigation explicit; its responsive pattern retains
+   range, total, and navigation when space is constrained.
+6. [W3C ARIA26](https://www.w3.org/WAI/WCAG22/Techniques/aria/ARIA26) identifies `aria-current` as
+   the machine-readable way to expose the current item in a paginated sequence.
+7. [MDN `content-visibility`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/content-visibility)
+   documents browser rendering deferral, but it does not provide a user-visible range, location,
+   navigation model, or bounded DOM contract by itself.
 
 These sources guide task sequencing and control safety. Lotus does not copy their visual identity,
 product data model, compliance decisions, automation, or unsupported source capabilities.
@@ -2549,6 +2558,10 @@ product data model, compliance decisions, automation, or unsupported source capa
 11. Normalize supported manual and file values through one typed domain boundary before validation
     and review. Trim boundary whitespace, canonicalize only governed code forms, and make review,
     idempotency, Gateway publication, and receipt reconciliation consume that same projection.
+12. Keep large record families closed until an operator requests detail, project only ten records
+    at a time in source order, and give every family independent range, page, and previous/next
+    controls. Preserve one complete normalized publication payload: review pagination must never
+    truncate, reorder, or repurpose source data.
 
 ### Rejected decisions
 
@@ -2561,6 +2574,9 @@ product data model, compliance decisions, automation, or unsupported source capa
    lineage, or durable ingestion work.
 6. Validation against a trimmed copy while reviewing or publishing raw input, input-control-only
    cleanup that file import can bypass, or reliance on undocumented Gateway/Core coercion.
+7. Arbitrary file-size limits, infinite scrolling, eager hidden card construction, or
+   `content-visibility` as the sole capacity control. These approaches either discard supported
+   work, hide location and total scope, or retain an unbounded review structure.
 
 ### Validation and publication decision
 
@@ -2573,5 +2589,9 @@ retirement, complete source-count proof, focus movement, compact record drilldow
 Issue #579 additionally proves that draft fields, task changes, row operations, file replacement,
 edit, and duplicate publication remain unavailable while a source write is unresolved, without
 hiding the reviewed request or presenting success before source confirmation.
+Issue #581 proves the operational file path above, at, and below the ten-record page boundary. Its
+isolated production-browser proof covers desktop, tablet, and narrow viewports; keyboard paging;
+bounded rendered-card count; independent family state; exact source order; and one complete
+Gateway-envelope publication containing every imported row.
 Repository context, historical RFC truth, review ledgers, and Supported Features change in the same
 issue and must be published from main after merge.
