@@ -83,9 +83,22 @@ export function useOutcomeReviewHandoffs({
     if (committedContextKeyRef.current === currentContextKey) {
       return;
     }
+    const previousContextKey = committedContextKeyRef.current;
+    const previousReportSequence = reportRequestSequenceRef.current;
+    const previousAiSequence = aiRequestSequenceRef.current;
     committedContextKeyRef.current = currentContextKey;
-    reportRequestSequenceRef.current += 1;
-    aiRequestSequenceRef.current += 1;
+    reportRequestSequenceRef.current = previousReportSequence + 1;
+    aiRequestSequenceRef.current = previousAiSequence + 1;
+    clearSupersededPendingRequest(
+      setReportJobState,
+      previousContextKey,
+      previousReportSequence,
+    );
+    clearSupersededPendingRequest(
+      setAiNarrativeState,
+      previousContextKey,
+      previousAiSequence,
+    );
   }, [currentContextKey]);
 
   const reportJobStatus = valueForContext(reportJobState.result, currentContextKey);
@@ -305,7 +318,7 @@ function valueForContext<T>(
 
 function clearSupersededPendingRequest<T>(
   setState: Dispatch<SetStateAction<ContextBoundActionState<T>>>,
-  contextKey: string,
+  contextKey: string | null,
   sequence: number,
 ): void {
   setState((current) =>

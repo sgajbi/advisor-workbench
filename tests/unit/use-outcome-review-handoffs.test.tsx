@@ -189,6 +189,61 @@ describe("useOutcomeReviewHandoffs", () => {
     expect(result.current.clientCommunicationBoundary).toBeNull();
   });
 
+  it("allows a replacement narrative request after returning to an earlier review", async () => {
+    const obsoleteRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    const replacementRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    vi.mocked(requestDpmOutcomeReviewAiNarrative)
+      .mockReturnValueOnce(obsoleteRequest.promise)
+      .mockReturnValueOnce(replacementRequest.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let obsoleteCompletion!: Promise<void>;
+    act(() => {
+      obsoleteCompletion = result.current.requestOutcomeAiNarrative();
+    });
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+      }),
+    });
+    rerender({ primaryReview: reviewItem() });
+
+    expect(result.current.aiNarrativePending).toBe(false);
+
+    let replacementCompletion!: Promise<void>;
+    act(() => {
+      replacementCompletion = result.current.requestOutcomeAiNarrative();
+    });
+
+    expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledTimes(2);
+    expect(result.current.aiNarrativePending).toBe(true);
+
+    await act(async () => {
+      obsoleteRequest.resolve(aiNarrativeResponse("or_1", "packrun_obsolete"));
+      await obsoleteCompletion;
+    });
+
+    expect(result.current.aiNarrativePending).toBe(true);
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+
+    await act(async () => {
+      replacementRequest.resolve(aiNarrativeResponse("or_1", "packrun_replacement"));
+      await replacementCompletion;
+    });
+
+    expect(result.current.aiNarrativePending).toBe(false);
+    expect(result.current.aiNarrativeOutcome?.disclosure.diagnostics).toContainEqual({
+      label: "Workflow run",
+      value: "packrun_replacement",
+    });
+  });
+
   it("does not attach an earlier report handoff to a different review", async () => {
     const reportInput = deferred<DpmOutcomeReviewHandoffResponse>();
     vi.mocked(getDpmOutcomeReviewReportInput).mockReturnValue(reportInput.promise);
@@ -315,6 +370,64 @@ describe("useOutcomeReviewHandoffs", () => {
     await act(async () => {
       secondReportJob.resolve(reportJobHandle());
       await secondCompletion;
+    });
+
+    expect(result.current.reportJobPending).toBe(false);
+    expect(result.current.handoffStatusMessages).toEqual(["Report request Accepted."]);
+  });
+
+  it("allows a replacement report request after returning to an earlier review", async () => {
+    const obsoleteReportJob = deferred<ReportJobHandleResponse>();
+    const replacementReportJob = deferred<ReportJobHandleResponse>();
+    vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue(reportInputResponse());
+    vi.mocked(submitDpmOutcomeReviewReportJob)
+      .mockReturnValueOnce(obsoleteReportJob.promise)
+      .mockReturnValueOnce(replacementReportJob.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let obsoleteCompletion!: Promise<void>;
+    act(() => {
+      obsoleteCompletion = result.current.requestOutcomeReportJob();
+    });
+    await waitFor(() => {
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledTimes(1);
+    });
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+      }),
+    });
+    rerender({ primaryReview: reviewItem() });
+
+    expect(result.current.reportJobPending).toBe(false);
+
+    let replacementCompletion!: Promise<void>;
+    act(() => {
+      replacementCompletion = result.current.requestOutcomeReportJob();
+    });
+    await waitFor(() => {
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledTimes(2);
+    });
+
+    expect(result.current.reportJobPending).toBe(true);
+
+    await act(async () => {
+      obsoleteReportJob.resolve(reportJobHandle());
+      await obsoleteCompletion;
+    });
+
+    expect(result.current.reportJobPending).toBe(true);
+    expect(result.current.handoffStatusMessages).toEqual([]);
+
+    await act(async () => {
+      replacementReportJob.resolve(reportJobHandle());
+      await replacementCompletion;
     });
 
     expect(result.current.reportJobPending).toBe(false);
