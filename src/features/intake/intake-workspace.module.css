@@ -325,7 +325,6 @@
 }
 
 .recordPreviewHeader strong,
-.previewSection h3,
 .previewRecord h4 {
   margin: 0;
   color: #223542;
@@ -341,12 +340,43 @@
 }
 
 .previewSection {
-  display: grid;
-  gap: 8px;
+  border-top: 1px solid #d9e3ec;
 }
 
-.previewSection h3 {
+.previewSection summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  color: #223542;
   font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.previewSection summary::before {
+  content: "›";
+  color: #526a7a;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 120ms ease;
+}
+
+.previewSection[open] summary {
+  color: #173f5f;
+}
+
+.previewSection[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.previewCount {
+  color: #65727d;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .previewRecords {
@@ -354,7 +384,7 @@
   gap: 8px;
   max-height: 360px;
   overflow: auto;
-  padding-right: 2px;
+  padding: 0 2px 8px 0;
 }
 
 .previewRecord {

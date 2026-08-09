@@ -257,6 +257,15 @@ describe("IntakePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Review request" }));
 
     expect(screen.getByText("Parsed record preview")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio records")).toBeInTheDocument();
+    expect(screen.getByText("Instrument records")).toBeInTheDocument();
+    expect(screen.getByText("Transaction records")).toBeInTheDocument();
+    expect(screen.getByText("Price observation records")).toBeInTheDocument();
+    expect(screen.getByText("Business date records")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Portfolio records"));
+    fireEvent.click(screen.getByText("Instrument records"));
+    fireEvent.click(screen.getByText("Transaction records"));
+    fireEvent.click(screen.getByText("Business date records"));
     expect(screen.getByRole("heading", { name: "Portfolio PORT_001" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Instrument SEC_001" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Transaction TRN_PORT_001_SEC_001_1" })).toBeInTheDocument();

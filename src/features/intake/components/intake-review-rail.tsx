@@ -86,8 +86,13 @@ export function IntakeReviewRail({
                   <span>Review each parsed source record before publication.</span>
                 </div>
                 {reviewedProjection.previewSections.map((section) => (
-                  <section className={styles.previewSection} key={section.title}>
-                    <h3>{section.title}</h3>
+                  <details className={styles.previewSection} key={section.title}>
+                    <summary>
+                      <span>{section.title}</span>
+                      <span className={styles.previewCount}>
+                        {section.records.length} {section.records.length === 1 ? "record" : "records"}
+                      </span>
+                    </summary>
                     <div className={styles.previewRecords}>
                       {section.records.map((record) => (
                         <article className={styles.previewRecord} key={record.title}>
@@ -103,7 +108,7 @@ export function IntakeReviewRail({
                         </article>
                       ))}
                     </div>
-                  </section>
+                  </details>
                 ))}
               </div>
             ) : null}
