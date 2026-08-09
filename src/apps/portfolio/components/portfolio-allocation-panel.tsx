@@ -145,7 +145,7 @@ export default function PortfolioAllocationPanel({
 
       <div
         className="portfolio-analytics-canvas portfolio-allocation-card"
-        role="tabpanel"
+        role="region"
         aria-label={`${activeDimensionLabel} allocation view`}
       >
         <div className="portfolio-analytical-utility-header">
