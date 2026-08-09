@@ -44,8 +44,12 @@ export function useIntakeWorkflow() {
   const activeFileReadRef = useRef(0);
   const draftGenerationRef = useRef(0);
   const submissionStateRef = useRef<SubmissionState>("idle");
-  submissionStateRef.current = submissionState;
   const publicationIsPending = () => submissionStateRef.current === "submitting";
+
+  function setSubmissionPosture(nextState: SubmissionState) {
+    submissionStateRef.current = nextState;
+    setSubmissionState(nextState);
+  }
 
   const portfolioLookupQuery = useQuery({
     queryKey: ["intake-lookups", "portfolios"],
@@ -91,7 +95,7 @@ export function useIntakeWorkflow() {
     setDraft(createBlankIntakeDraft(task));
     setValidationAttempted(false);
     setReviewedIntent(null);
-    setSubmissionState("idle");
+    setSubmissionPosture("idle");
     setSubmissionError(null);
     setReceipt(null);
     setFileParseState("idle");
@@ -104,7 +108,7 @@ export function useIntakeWorkflow() {
     setDraft((current) => (current ? updater(current) : current));
     setReviewedIntent(null);
     setReceipt(null);
-    setSubmissionState("idle");
+    setSubmissionPosture("idle");
     setSubmissionError(null);
   }
 
@@ -134,7 +138,7 @@ export function useIntakeWorkflow() {
 
     const submittedGeneration = draftGenerationRef.current;
     const submittedIntent = reviewedIntent;
-    setSubmissionState("submitting");
+    setSubmissionPosture("submitting");
     setSubmissionError(null);
     try {
       const response = await ingestPortfolioBundle(submittedIntent.projection.payload, {
@@ -142,11 +146,11 @@ export function useIntakeWorkflow() {
       });
       if (draftGenerationRef.current !== submittedGeneration) return false;
       setReceipt(buildIntakeReceipt(draft.task, submittedIntent.projection.payload, response));
-      setSubmissionState("accepted");
+      setSubmissionPosture("accepted");
       return true;
     } catch (error) {
       if (draftGenerationRef.current !== submittedGeneration) return false;
-      setSubmissionState("error");
+      setSubmissionPosture("error");
       setSubmissionError(intakeSubmissionErrorCopy(error));
       return false;
     }
@@ -162,7 +166,7 @@ export function useIntakeWorkflow() {
     setFileParseError(null);
     setReviewedIntent(null);
     setReceipt(null);
-    setSubmissionState("idle");
+    setSubmissionPosture("idle");
     setSubmissionError(null);
     try {
       const payload = parseIntakeCsvToBundle(await readFileText(file));
@@ -190,7 +194,7 @@ export function useIntakeWorkflow() {
     setDraft(null);
     setValidationAttempted(false);
     setReviewedIntent(null);
-    setSubmissionState("idle");
+    setSubmissionPosture("idle");
     setSubmissionError(null);
     setReceipt(null);
     setFileParseState("idle");
