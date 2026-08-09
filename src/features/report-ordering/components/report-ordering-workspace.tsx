@@ -115,6 +115,7 @@ export function ReportOrderingWorkspace({
                     <div
                       ref={configurationRef}
                       tabIndex={-1}
+                      role="region"
                       aria-label="Report configuration"
                       className={styles.focusTarget}
                     >
@@ -133,7 +134,13 @@ export function ReportOrderingWorkspace({
           }
           side={
             <div className={styles.stickyRail}>
-              <div ref={readinessRef} tabIndex={-1} className={styles.focusTarget}>
+              <div
+                ref={readinessRef}
+                tabIndex={-1}
+                role="region"
+                aria-label="Report request readiness"
+                className={styles.focusTarget}
+              >
                 <ReportReadinessRail
                   model={workflow.model}
                   screenState={workflow.screenState.readiness}
