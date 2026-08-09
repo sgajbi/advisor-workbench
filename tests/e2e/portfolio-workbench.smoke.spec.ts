@@ -2,9 +2,37 @@ import { test, expect } from '@playwright/test';
 import {
   measureGrid,
 } from './workbench-smoke-helpers';
+import {
+  startPortfolioFixtureGateway,
+  type PortfolioFixtureGateway,
+} from './portfolio-fixture-gateway';
+
+test.describe.configure({ mode: 'default' });
+
+let fixtureGateway: PortfolioFixtureGateway | null = null;
+
+test.beforeAll(async () => {
+  if (process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow') {
+    return;
+  }
+  const port = Number(process.env.PORTFOLIO_E2E_FIXTURE_PORT ?? '18120');
+  const expectedGateway = `http://127.0.0.1:${port}`;
+  if (
+    process.env.BFF_BASE_URL !== expectedGateway ||
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY !== 'portfolio'
+  ) {
+    throw new Error(`Portfolio fixture proof requires the owned gateway at ${expectedGateway}.`);
+  }
+  fixtureGateway = await startPortfolioFixtureGateway({ port });
+});
+
+test.afterAll(async () => {
+  await fixtureGateway?.close();
+  fixtureGateway = null;
+});
 
 async function resolveSmokePortfolioId(request: import('@playwright/test').APIRequestContext) {
-  const response = await request.get('http://127.0.0.1:3000/api/bff/api/v1/foundation/portfolios', {
+  const response = await request.get('/api/bff/api/v1/foundation/portfolios', {
     timeout: 30000,
   });
   if (!response.ok()) {
@@ -261,6 +289,9 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio cashflow upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByRole('heading', { name: /^Projected cash movement$/i })).toBeVisible();
+    await expect(page.getByLabel('Projected cash movement summary')).toBeVisible();
+    await expect(page.getByLabel('Projected cashflow summary')).toHaveCount(0);
+    await expect(page.getByRole('img', { name: /Projected cashflow chart in USD/i })).toBeVisible();
     await expect(page.getByRole('radio', { name: '10D' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByRole('radio', { name: '30D' })).toBeVisible();
     await expect(page.getByRole('radio', { name: '90D' })).toBeVisible();
@@ -279,15 +310,24 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText(/10-day projection · /i)).toHaveCount(0);
 
     const projectionHorizon = page.getByRole('radiogroup', { name: 'Projection horizon' });
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
     for (const width of [1440, 1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });
       await projectionHorizon.scrollIntoViewIfNeeded();
       await expect(projectionHorizon).toBeVisible();
+      await expect(page.getByLabel('Projected cash movement summary')).toBeVisible();
+      await expect(page.getByRole('table', { name: 'Projected cash movement schedule' })).toBeVisible();
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+      if (evidenceDirectory && (width === 1440 || width === 519)) {
+        await page.screenshot({
+          path: `${evidenceDirectory}/cashflow-${width}px.png`,
+          fullPage: true,
+        });
+      }
     }
   });
 

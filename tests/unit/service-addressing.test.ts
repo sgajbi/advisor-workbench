@@ -14,6 +14,8 @@ describe("service addressing", () => {
   const originalFixturePort = process.env.PERFORMANCE_E2E_FIXTURE_PORT;
   const originalReportCentreFixtureScenario = process.env.REPORT_CENTRE_E2E_FIXTURE;
   const originalReportCentreFixturePort = process.env.REPORT_CENTRE_E2E_FIXTURE_PORT;
+  const originalPortfolioFixtureScenario = process.env.PORTFOLIO_E2E_FIXTURE;
+  const originalPortfolioFixturePort = process.env.PORTFOLIO_E2E_FIXTURE_PORT;
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
@@ -23,6 +25,8 @@ describe("service addressing", () => {
     process.env.PERFORMANCE_E2E_FIXTURE_PORT = originalFixturePort;
     process.env.REPORT_CENTRE_E2E_FIXTURE = originalReportCentreFixtureScenario;
     process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = originalReportCentreFixturePort;
+    process.env.PORTFOLIO_E2E_FIXTURE = originalPortfolioFixtureScenario;
+    process.env.PORTFOLIO_E2E_FIXTURE_PORT = originalPortfolioFixturePort;
   });
 
   it("uses the explicit BFF base URL when configured", () => {
@@ -72,6 +76,26 @@ describe("service addressing", () => {
     process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = "18101";
 
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18101");
+  });
+
+  it("allows only the exact process-owned Portfolio cashflow fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18120/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "portfolio";
+    process.env.PORTFOLIO_E2E_FIXTURE = "cashflow";
+    process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
+  });
+
+  it("rejects a Portfolio fixture URL whose scenario is not governed", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18120/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "portfolio";
+    process.env.PORTFOLIO_E2E_FIXTURE = "overview";
+    process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+    );
   });
 
   it("rejects a Report Centre fixture URL whose port is not owned by the scenario", () => {
