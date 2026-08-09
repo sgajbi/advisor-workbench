@@ -153,6 +153,41 @@ describe("useOutcomeReviewHandoffs", () => {
     );
   });
 
+  it("discards narrative evidence completed after the source review changes", async () => {
+    const narrativeRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    vi.mocked(requestDpmOutcomeReviewAiNarrative).mockReturnValue(narrativeRequest.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let completion!: Promise<void>;
+    act(() => {
+      completion = result.current.requestOutcomeAiNarrative();
+    });
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+      }),
+    });
+
+    await act(async () => {
+      narrativeRequest.resolve(aiNarrativeResponse("or_1", "packrun_or_1"));
+      await completion;
+    });
+
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+
+    rerender({ primaryReview: reviewItem() });
+
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+  });
+
   it("does not attach an earlier report handoff to a different review", async () => {
     const reportInput = deferred<DpmOutcomeReviewHandoffResponse>();
     vi.mocked(getDpmOutcomeReviewReportInput).mockReturnValue(reportInput.promise);
@@ -183,6 +218,49 @@ describe("useOutcomeReviewHandoffs", () => {
     });
 
     expect(submitDpmOutcomeReviewReportJob).not.toHaveBeenCalled();
+    expect(result.current.handoffStatusMessages).toEqual([]);
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+  });
+
+  it("discards a report completion when the source review changes after submission", async () => {
+    const reportJob = deferred<ReportJobHandleResponse>();
+    vi.mocked(getDpmOutcomeReviewReportInput).mockResolvedValue(reportInputResponse());
+    vi.mocked(submitDpmOutcomeReviewReportJob).mockReturnValue(reportJob.promise);
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      { initialProps: { primaryReview: reviewItem() } },
+    );
+
+    let completion!: Promise<void>;
+    act(() => {
+      completion = result.current.requestOutcomeReportJob();
+    });
+
+    await waitFor(() => {
+      expect(submitDpmOutcomeReviewReportJob).toHaveBeenCalledWith({
+        outcomeReviewId: "or_1",
+        outcomeReportInput: reportInputResponse().data,
+      });
+    });
+
+    rerender({
+      primaryReview: reviewItem({
+        outcomeReviewId: "or_2",
+        portfolioId: "PB_SG_INCOME_002",
+      }),
+    });
+
+    await act(async () => {
+      reportJob.resolve(reportJobHandle());
+      await completion;
+    });
+
+    expect(result.current.handoffStatusMessages).toEqual([]);
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+
+    rerender({ primaryReview: reviewItem() });
+
     expect(result.current.handoffStatusMessages).toEqual([]);
     expect(result.current.clientCommunicationBoundary).toBeNull();
   });
