@@ -1,146 +1,210 @@
-.summaryGrid {
+.workspace {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 12px;
 }
 
-.metricTile {
-  min-width: 0;
+.sourceNotice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--panel-alt);
-  padding: 10px 12px;
-}
-
-.metricTile strong {
-  display: block;
-  margin-top: 4px;
-  color: var(--text);
-  font-size: 1.35rem;
-  line-height: 1.2;
-}
-
-.metricTile span:last-child {
-  display: block;
-  margin-top: 4px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.warn {
-  border-left: 4px solid #765a17;
-  background: #fffdf7;
-}
-
-.success {
-  border-left: 4px solid #047857;
-  background: #f7fdf9;
-}
-
-.default {
-  border-left: 4px solid var(--outline, #76777d);
+  padding: 9px 12px;
 }
 
 .decisionPanel {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
+  gap: 20px;
+  border: 1px solid #c8ced6;
+  border-left: 4px solid #725b26;
+  border-radius: 6px;
+  background:
+    linear-gradient(120deg, rgba(247, 244, 234, 0.95), rgba(255, 255, 255, 0.96) 52%),
+    var(--panel);
   padding: 14px 16px;
-  margin-bottom: 12px;
 }
 
 .decisionPanel h2 {
-  margin: 4px 0;
+  margin: 3px 0 4px;
+  max-width: 760px;
 }
 
-.workspaceGrid {
+.summaryGrid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.25fr);
-  gap: 12px;
-  align-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 
-.journeyPanel,
-.priorityPanel {
+.metricTile {
   min-width: 0;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-left-width: 3px;
+  border-radius: 6px;
   background: var(--panel);
+  padding: 10px 12px;
+}
+
+.metricTile strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.metricTile span:last-child {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.warn {
+  border-left-color: #765a17;
+  background: #fffdf7;
+}
+
+.success {
+  border-left-color: #047857;
+  background: #f7fdf9;
+}
+
+.default {
+  border-left-color: var(--outline, #76777d);
+}
+
+.lifecyclePanel,
+.priorityPanel {
+  min-width: 0;
   overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
 }
 
 .panelHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   border-bottom: 1px solid var(--border);
   background: var(--panel-alt);
   padding: 10px 12px;
 }
 
+.panelHeader > div {
+  display: grid;
+  gap: 2px;
+}
+
 .panelHeader a {
+  min-height: 24px;
   color: #5b4300;
   font-size: 0.78rem;
   font-weight: 700;
+  line-height: 24px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .panelHeader a:hover {
   text-decoration: underline;
 }
 
-.journeyGrid {
-  display: grid;
-  gap: 1px;
-  background: var(--border);
+.panelHeader a:focus-visible,
+.lifecycleStage:focus-visible,
+.priorityTable a:focus-visible {
+  border-radius: 3px;
+  outline: 3px solid var(--focus-ring, #005fcc);
+  outline-offset: 2px;
 }
 
-.journeyCard {
+.lifecycleGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.5fr);
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  background: var(--border);
+  list-style: none;
+}
+
+.lifecycleGrid li {
   min-width: 0;
   background: var(--panel);
+}
+
+.lifecycleStage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 5px 9px;
+  min-height: 126px;
   color: var(--text);
-  padding: 12px;
+  padding: 11px 12px 12px;
   text-decoration: none;
   transition:
     background 0.16s ease,
     box-shadow 0.16s ease;
 }
 
-.journeyCard:hover {
+.lifecycleStage:hover {
   background: #fbfcfd;
-  box-shadow: inset 3px 0 0 #765a17;
+  box-shadow: inset 0 -3px 0 #725b26;
 }
 
-.journeyCard strong {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.95rem;
+.stageSequence {
+  grid-row: 1 / -1;
+  color: #725b26;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
 }
 
-.journeyCard span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
-  margin-top: 3px;
-}
-
-.journeyAction {
+.stageContent {
   display: grid;
   align-content: start;
-  justify-items: end;
-  gap: 6px;
-  text-align: right;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stageContent strong {
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.stageContent > span,
+.stagePosture > span:last-child {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.stagePosture {
+  display: flex;
+  align-self: end;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.sourceWindowPosture {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  background: #f7fdf9;
+  padding: 9px 12px;
+}
+
+.partialWindow {
+  background: #fffdf7;
 }
 
 .priorityTableWrap {
@@ -150,16 +214,16 @@
 .priorityTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
 }
 
 .priorityTable th {
-  background: var(--panel-alt);
+  background: #fbfcfd;
   color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 9px 12px;
+  font-size: 0.69rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
   text-align: left;
   text-transform: uppercase;
 }
@@ -168,21 +232,25 @@
   border-top: 1px solid var(--border);
   color: var(--text);
   padding: 10px 12px;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .priorityTable tbody tr:hover {
   background: #fbfcfd;
-  box-shadow: inset 3px 0 0 #765a17;
+  box-shadow: inset 3px 0 0 #725b26;
 }
 
 .priorityTable td:first-child {
-  min-width: 220px;
+  min-width: 240px;
+}
+
+.priorityTable td:last-child {
+  min-width: 190px;
 }
 
 .priorityTable td:first-child a {
-  color: var(--text);
   display: block;
+  color: var(--text);
   font-weight: 700;
   text-decoration: none;
 }
@@ -192,43 +260,113 @@
 }
 
 .priorityTable td:first-child span {
-  color: var(--text-muted);
   display: block;
-  font-size: 0.76rem;
-  margin-top: 3px;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
 
-@media (max-width: 1200px) {
-  .summaryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .workspaceGrid {
-    grid-template-columns: 1fr;
+@media (max-width: 1280px) {
+  .summaryGrid,
+  .lifecycleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 760px) {
-  .summaryGrid {
-    grid-template-columns: 1fr;
-  }
-
   .decisionPanel,
+  .sourceNotice,
+  .sourceWindowPosture,
   .panelHeader {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .journeyCard {
+  .priorityTableWrap {
+    overflow: visible;
+    padding: 10px;
+    background: var(--panel-alt);
+  }
+
+  .priorityTable,
+  .priorityTable tbody,
+  .priorityTable tr,
+  .priorityTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .priorityTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .priorityTable tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .priorityTable tr {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+  }
+
+  .priorityTable td,
+  .priorityTable td:first-child,
+  .priorityTable td:last-child {
+    min-width: 0;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .priorityTable td:first-child {
+    border-top: 0;
+    background: #fbfcfd;
+  }
+
+  .priorityTable td:not(:first-child)::before {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    font-size: 0.66rem;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .priorityTable td:nth-child(2)::before {
+    content: "Stage";
+  }
+
+  .priorityTable td:nth-child(3)::before {
+    content: "Readiness";
+  }
+
+  .priorityTable td:nth-child(4)::before {
+    content: "Next action";
+  }
+}
+
+@media (max-width: 520px) {
+  .summaryGrid,
+  .lifecycleGrid {
     grid-template-columns: 1fr;
   }
 
-  .journeyAction {
-    justify-items: start;
-    text-align: left;
+  .lifecycleStage {
+    min-height: 0;
   }
+}
 
-  .priorityTable {
-    min-width: 780px;
+@media (prefers-reduced-motion: reduce) {
+  .lifecycleStage {
+    transition: none;
   }
 }
