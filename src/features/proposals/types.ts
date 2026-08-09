@@ -1,3 +1,13 @@
+import type {
+  AdvisorIdeaReasonCode,
+  AdvisorIdeaReviewAction,
+} from "./idea-action-reasons";
+
+export type {
+  AdvisorIdeaReasonCode,
+  AdvisorIdeaReviewAction,
+} from "./idea-action-reasons";
+
 export type ProposalSimulateRequest = {
   body: Record<string, unknown>;
 };
@@ -655,19 +665,10 @@ export type AdvisorIdeaCandidateDetailData = {
   [key: string]: unknown;
 };
 
-export type AdvisorIdeaReviewAction =
-  | "approve_for_conversion"
-  | "reject"
-  | "no_action"
-  | "suppress"
-  | "snooze"
-  | "escalate_to_pm"
-  | "escalate_to_compliance";
-
 export type AdvisorIdeaReviewActionRequest = {
   reviewId: string;
   action: AdvisorIdeaReviewAction;
-  reasonCodes: string[];
+  reasonCodes: AdvisorIdeaReasonCode[];
   decidedAtUtc: string;
   suppressionReason?:
     | "duplicate"
@@ -687,14 +688,14 @@ export type AdvisorIdeaFeedbackRequest = {
     | "too_late"
     | "missing_context"
     | "unsupported_claim";
-  reasonCodes: string[];
+  reasonCodes: AdvisorIdeaReasonCode[];
   recordedAtUtc: string;
 };
 
 export type AdvisorIdeaConversionIntentRequest = {
   conversionIntentId: string;
   target: "advise_proposal" | "manage_review" | "report_evidence";
-  reasonCodes: string[];
+  reasonCodes: AdvisorIdeaReasonCode[];
   requestedAtUtc: string;
 };
 

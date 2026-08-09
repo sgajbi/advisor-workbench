@@ -506,7 +506,7 @@ describe("proposal api", () => {
           new Response(
             JSON.stringify({
               data: {
-                persistence: { decision: "recorded" },
+                persistence: { decision: "accepted" },
                 durableStorageBacked: true,
                 supportedFeaturePromoted: false,
               },
@@ -523,7 +523,7 @@ describe("proposal api", () => {
       request: {
         reviewId: "review_001",
         action: "approve_for_conversion",
-        reasonCodes: ["advisor_review"],
+        reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
         decidedAtUtc: "2026-07-17T08:00:00Z",
       },
     });
@@ -544,7 +544,7 @@ describe("proposal api", () => {
       JSON.stringify({
         reviewId: "review_001",
         action: "approve_for_conversion",
-        reasonCodes: ["advisor_review"],
+        reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
         decidedAtUtc: "2026-07-17T08:00:00Z",
       }),
     );
@@ -558,7 +558,7 @@ describe("proposal api", () => {
         async () =>
           new Response(
             JSON.stringify({
-              persistence: { decision: "recorded" },
+              persistence: { decision: "accepted" },
               durableStorageBacked: true,
               supportedFeaturePromoted: false,
             }),
@@ -574,7 +574,7 @@ describe("proposal api", () => {
       request: {
         feedbackId: "feedback_001",
         outcome: "useful",
-        reasonCodes: ["advisor_feedback"],
+        reasonCodes: ["feedback_recorded", "high_cash_ratio"],
         recordedAtUtc: "2026-07-17T08:00:00Z",
       },
     });
@@ -590,6 +590,38 @@ describe("proposal api", () => {
     );
   });
 
+  it("rejects a successful HTTP response without source-owned Idea persistence proof", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              persistence: { decision: "not_recorded" },
+              durableStorageBacked: true,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    await expect(
+      recordAdvisorIdeaFeedback({
+        candidateId: "idea_high_cash_001",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        idempotencyKey: "ui-idea-feedback-no-proof-001",
+        request: {
+          feedbackId: "feedback_no_proof_001",
+          outcome: "useful",
+          reasonCodes: ["feedback_recorded", "high_cash_ratio"],
+          recordedAtUtc: "2026-07-17T08:00:00Z",
+        },
+      }),
+    ).rejects.toThrow(
+      "Advisor idea feedback did not return source-owned persistence proof. No success was recorded in Workbench.",
+    );
+  });
+
   it("records an Idea conversion intent without creating a proposal locally", async () => {
     vi.stubGlobal(
       "fetch",
@@ -597,7 +629,7 @@ describe("proposal api", () => {
         async () =>
           new Response(
             JSON.stringify({
-              persistence: { decision: "recorded" },
+              persistence: { decision: "accepted" },
               durableStorageBacked: true,
               supportedFeaturePromoted: false,
             }),
@@ -613,7 +645,7 @@ describe("proposal api", () => {
       request: {
         conversionIntentId: "conversion_001",
         target: "advise_proposal",
-        reasonCodes: ["advisor_conversion_intent"],
+        reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
         requestedAtUtc: "2026-07-17T08:00:00Z",
       },
     });
@@ -628,7 +660,7 @@ describe("proposal api", () => {
       JSON.stringify({
         conversionIntentId: "conversion_001",
         target: "advise_proposal",
-        reasonCodes: ["advisor_conversion_intent"],
+        reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
         requestedAtUtc: "2026-07-17T08:00:00Z",
       }),
     );
