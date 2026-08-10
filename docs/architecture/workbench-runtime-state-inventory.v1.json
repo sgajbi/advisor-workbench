@@ -1,0 +1,227 @@
+{
+  "contract": "workbench-runtime-state-inventory.v1",
+  "owner": "lotus-workbench",
+  "governedByIssue": 619,
+  "reviewedOn": "2026-08-10",
+  "nextReviewBy": "2026-09-10",
+  "architecturePosture": "scale-proof-in-progress",
+  "durableBusinessStateOwner": "upstream-source-services",
+  "durableSessionStateOwner": "production-identity-platform-not-yet-certified",
+  "stateHolders": [
+    {
+      "id": "performance-rolling-measure-lookup",
+      "file": "src/apps/performance/components/risk/risk-rolling-window-detail.tsx",
+      "symbols": ["PRIMARY_ROLLING_MEASURES"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed presentation vocabulary for rolling risk measures.",
+      "bounds": "Four source-owned measure labels fixed at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "performance-workspace-mode-lookups",
+      "file": "src/apps/performance/performance-workspace-modes.ts",
+      "symbols": ["PERFORMANCE_WORKSPACE_MODE_MAP", "PERFORMANCE_WORKSPACE_MODE_SET"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed route-mode lookup derived from repository-owned definitions.",
+      "bounds": "Fixed by PERFORMANCE_WORKSPACE_MODE_DEFINITIONS at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "portfolio-browser-request-cache",
+      "file": "src/apps/portfolio/api.ts",
+      "symbols": [
+        "portfolioApiResponseCache",
+        "portfolioApiInflightRequests",
+        "portfolioApiRequestTokens"
+      ],
+      "classification": "browser_guarded_cache",
+      "purpose": "Browser request reuse and in-flight request coalescing only.",
+      "bounds": "Browser-session lifetime; server use is prohibited and source refresh can clear matching entries.",
+      "replicaBehavior": "Unused for server rendering; Gateway is contacted independently by every replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "portfolio-browser-inflight-coalescing",
+      "file": "src/apps/portfolio/components/portfolio-workspace-client.tsx",
+      "symbols": ["summaryDetailsInflightRequests", "shellInflightRequests"],
+      "classification": "browser_inflight",
+      "purpose": "Coalesce matching browser requests while a promise is unsettled.",
+      "bounds": "Entries are deleted when each request settles.",
+      "replicaBehavior": "Browser-owned and independent of Workbench server replicas.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "ai-provider-mode-lookups",
+      "file": "src/design-system/ai-provider-posture.ts",
+      "symbols": ["DETERMINISTIC_PROVIDER_MODES", "LIVE_PROVIDER_MODES"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed provider-posture validation vocabulary.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "ag-grid-module-registration",
+      "file": "src/design-system/utils/ag-grid-modules.ts",
+      "symbols": ["agGridModulesRegistered"],
+      "classification": "process_initialization",
+      "purpose": "Idempotent registration of the community grid module.",
+      "bounds": "One boolean for the JavaScript realm lifetime.",
+      "replicaBehavior": "Each realm initializes the same module independently.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "advisor-book-authority-lookup",
+      "file": "src/features/advisor-book/caller-context.ts",
+      "symbols": ["SUPPORTED_ADVISOR_BOOK_ROLES"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed development caller-role validation vocabulary.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "advisor-cockpit-authority-lookups",
+      "file": "src/features/advisor-cockpit/caller-context.ts",
+      "symbols": ["AUTHORITY_QUERY_PARAMETERS", "AUTHORITY_BODY_FIELDS"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed set of browser-supplied authority fields that must be rejected or stripped.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "advisory-copilot-authority-lookup",
+      "file": "src/features/advisory-copilot/caller-context.ts",
+      "symbols": ["AUTHORITY_BODY_FIELDS"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed set of browser-supplied authority fields that must be rejected or stripped.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "analytics-contract-lookups",
+      "file": "src/features/analytics-observability/contract.ts",
+      "symbols": ["ALLOWED_LABEL_SET", "FORBIDDEN_FIELD_SET", "STATE_SET"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed observability label and state validation vocabularies.",
+      "bounds": "Fixed repository contract constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "analytics-instance-telemetry",
+      "file": "src/features/analytics-observability/metrics.ts",
+      "symbols": ["analyticsUiMetricStore", "attentionDedupeKeys", "panelFailureCounts"],
+      "classification": "instance_telemetry",
+      "purpose": "Per-instance UI request, panel-state, and attention instrumentation.",
+      "bounds": "Temporary exception: raw events and attention dedupe keys require deterministic bounds under issue 619.",
+      "replicaBehavior": "Each replica exposes its own scrape state; fleet aggregation belongs to the platform metrics stack.",
+      "businessAuthority": false,
+      "sessionAuthority": false,
+      "temporaryException": {
+        "issue": 619,
+        "expiresOn": "2026-08-24",
+        "requiredRemediation": "Aggregate histogram and counter state, bound diagnostics, and close reason-label cardinality before scale certification."
+      }
+    },
+    {
+      "id": "intake-browser-row-sequence",
+      "file": "src/features/intake/draft.ts",
+      "symbols": ["rowSequence"],
+      "classification": "browser_ephemeral",
+      "purpose": "Unique local row keys inside an unsaved browser draft.",
+      "bounds": "One numeric counter for the browser realm lifetime.",
+      "replicaBehavior": "Never used as persisted identity or source authority.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "platform-capability-browser-snapshot",
+      "file": "src/features/platform-capabilities/use-platform-capabilities.ts",
+      "symbols": ["cachedSnapshot", "cachedAtMs", "inflightSnapshotRequest"],
+      "classification": "browser_ephemeral",
+      "purpose": "One browser capability snapshot plus one in-flight request.",
+      "bounds": "Single snapshot with a five-minute TTL and session-storage persistence.",
+      "replicaBehavior": "Browser-owned; source calls still flow through the Workbench BFF and Gateway.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "service-addressing-lookups",
+      "file": "src/features/platform-runtime/service-addressing.ts",
+      "symbols": ["DISALLOWED_LOCAL_HOSTS", "OWNED_E2E_FIXTURE_GATEWAYS"],
+      "classification": "immutable_configuration",
+      "purpose": "Closed runtime addressing and repository-owned fixture definitions.",
+      "bounds": "Fixed source definitions plus process-start environment reads.",
+      "replicaBehavior": "Identical when replicas receive the same deployment configuration.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "idea-action-reason-lookups",
+      "file": "src/features/proposals/idea-action-reasons.ts",
+      "symbols": ["reasonCodeSet", "decisionBasisCodeSet"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed source-contract reason and decision-basis vocabularies.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "workbench-authority-environment-lookup",
+      "file": "src/features/workbench/authority-mode.ts",
+      "symbols": ["DEVELOPMENT_AUTHORITY_ENVIRONMENTS"],
+      "classification": "immutable_lookup",
+      "purpose": "Closed development-only authority environment vocabulary.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
+      "id": "dpm-ai-contract-lookups",
+      "file": "src/features/workbench/dpm-ai-workflow-normalization.ts",
+      "symbols": [
+        "SUPPORTED_OUTPUT_LABELS",
+        "TRUSTED_SAFETY_DISPOSITIONS",
+        "SUPPORTED_WORKFLOW_SUPPORTABILITY_STATUSES",
+        "REVIEW_STATES"
+      ],
+      "classification": "immutable_lookup",
+      "purpose": "Closed AI workflow supportability, safety, and review vocabularies.",
+      "bounds": "Fixed source constants at module load.",
+      "replicaBehavior": "Identical in every build replica.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    }
+  ],
+  "frameworkFeaturePolicy": {
+    "serverActions": "prohibited-until-reviewed",
+    "nextDataCache": "prohibited-for-source-owned-business-data",
+    "incrementalStaticRegeneration": "not-used",
+    "onDemandRevalidation": "not-used",
+    "businessFetchCacheMode": "no-store",
+    "sharedCacheInfrastructure": "not-required-by-current-feature-usage"
+  },
+  "explicitNonClaims": [
+    "production-high-availability",
+    "disaster-recovery-certification",
+    "bank-capacity-certification",
+    "production-identity-certification"
+  ]
+}
