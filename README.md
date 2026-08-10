@@ -300,8 +300,9 @@ http://workbench.dev.lotus/data-products
 - `npm run lint`
   run the repo-owned governance chain and then `npm run lint:eslint`
 - `npm run quality:dependency-risk`
-  reconcile every direct production dependency to exact manifest/lock versions, stable lifecycle,
-  SPDX license evidence, stewardship/security channel, architecture containment, replacement
+  reconcile every direct production dependency, including optional production installs, to exact
+  manifest/lock sections and resolved versions, complete JSON Schema validation, SPDX license
+  evidence, stable lifecycle, stewardship/security channel, architecture containment, replacement
   posture, review expiry, and issue-backed exceptions
 - `npm run lint:css-global`
   verify `src/app/globals.css` remains a governed composition entrypoint and global CSS layer
