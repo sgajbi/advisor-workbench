@@ -800,6 +800,47 @@ describe("ProposalLifecycleWorkspace", () => {
     });
   });
 
+  it("keeps the automatically selected review stable when the queue reorders", async () => {
+    getAdvisoryPolicyReviewQueueMock
+      .mockResolvedValueOnce({
+        items: [...policyReviewQueueFixture.items, secondPolicyReviewFixture],
+      })
+      .mockResolvedValueOnce({
+        items: [secondPolicyReviewFixture, ...policyReviewQueueFixture.items],
+      });
+    getAdvisoryPolicyEvaluationMock.mockImplementation(async (evaluationId: string) => {
+      const record =
+        evaluationId === "pev_002" ? secondPolicyReviewFixture : policyReviewQueueFixture.items[0];
+      return {
+        ...record,
+        evaluation_hash: `sha256:policy-evaluation-${evaluationId}`,
+      };
+    });
+
+    const { queryClient } = renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    );
+
+    const firstReview = await screen.findByRole("option", { name: /PRP-RISK/i });
+    expect(firstReview).toHaveAttribute("aria-selected", "true");
+
+    await act(async () => {
+      await queryClient.refetchQueries({
+        queryKey: ["advisory-policy-review-queue", "PB_SG_GLOBAL_BAL_001"],
+      });
+    });
+
+    expect(screen.getByRole("option", { name: /PRP-RISK/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("option", { name: /PRP-INCOME/i })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+    expect(getAdvisoryPolicyEvaluationMock).not.toHaveBeenCalledWith("pev_002");
+  });
+
   it("does not publish a completed request against a newly selected review", async () => {
     let resolveFirstRequest:
       | ((value: Awaited<ReturnType<typeof recordAdvisoryPolicySignOffDecisionMock>>) => void)
