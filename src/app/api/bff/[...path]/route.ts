@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { applyAdvisoryCopilotCallerContextHeaders } from "@/features/advisory-copilot/caller-context";
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
 import { applyAdvisorBookCallerContextHeaders } from "@/features/advisor-book/caller-context";
 import { applyAdvisorCockpitCallerContextHeaders } from "@/features/advisor-cockpit/caller-context";
+import {
+  createGatewayRequestSignal,
+  isGatewayRequestTimeout,
+} from "@/features/platform-runtime/gateway-request-policy";
+import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import {
   applyDefaultCallerContextHeaders,
   applyIdeaRouteCallerContextHeaders,
@@ -106,12 +110,28 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   }
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
-  const response = await fetch(url, {
-    method: request.method,
-    headers: upstreamHeaders,
-    body: requestBody,
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: request.method,
+      headers: upstreamHeaders,
+      body: requestBody,
+      cache: "no-store",
+      signal: createGatewayRequestSignal(),
+    });
+  } catch (error) {
+    const timedOut = isGatewayRequestTimeout(error);
+    return NextResponse.json(
+      {
+        code: timedOut ? "gateway_request_timed_out" : "gateway_request_failed",
+        status: "unavailable",
+      },
+      {
+        status: timedOut ? 504 : 502,
+        headers: { "cache-control": "no-store" },
+      },
+    );
+  }
 
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("transfer-encoding");
