@@ -29,6 +29,7 @@ Availability and implementation are deliberately recorded as two separate facts:
 | Posture | Business meaning |
 | --- | --- |
 | Active | Available through the current Workbench navigation or a supported portfolio workflow. |
+| Runtime-gated | Implemented and navigable only when the selected portfolio and as-of context publish the required capability. |
 | Compatibility-only | A maintained route that preserves an established entry path; use the canonical destination for normal work. |
 | Capability-disabled | The screen or mode is implemented for bounded validation, but its top-level shell entry remains unavailable until the capability gate is intentionally enabled. |
 | Alias | A route or mode that takes the user to an existing canonical screen and therefore does not receive a duplicate guide. |
@@ -66,10 +67,10 @@ separate decision contexts and will receive separate guides even though they sha
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
-| Performance Analysis | `/performance?mode=analysis` | Active | Guide planned — #605 | Gateway and Performance |
+| Performance Analysis | `/performance?mode=analysis` | Runtime-gated | Guide planned — #605 | Gateway and Performance |
 | Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway and Performance |
-| Risk Review | `/performance?mode=risk` | Active | Guide planned — #605 | Gateway, Performance, and Risk |
-| Performance Evidence | `/performance?mode=evidence` | Active | Guide planned — #605 | Gateway and Performance |
+| Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
+| Performance Evidence | `/performance?mode=evidence` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 
 The future guides will separate calculated facts from Workbench presentation, state benchmark and
 as-of-date posture, and describe partial, unavailable, stale, and evidence-recovery states without
@@ -108,7 +109,7 @@ describe implemented validation surfaces rather than a promise of unrestricted p
 | Advisory Overview | `/recommendations?mode=overview` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Advisor Cockpit | `/recommendations?mode=cockpit` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Advisory Copilot | `/recommendations?mode=copilot` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Lotus AI |
-| Opportunities And Ideas | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Performance, and Risk |
+| Opportunities And Ideas | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway and Lotus Idea |
 | Bank Demo Proof | `/recommendations?mode=proof` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 
 The guides will distinguish read-only decision support, persisted review actions, and human-owned

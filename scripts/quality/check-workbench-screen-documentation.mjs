@@ -274,6 +274,15 @@ export function validateScreenDocumentation({
     for (const surfaceId of route.canonicalSurfaceIds ?? []) {
       if (!surfaceIds.has(surfaceId)) {
         errors.push(`Route ${route.routePattern} references unknown surface ${surfaceId}.`);
+      } else if (
+        ["active-supported-screen", "active-route-container"].includes(route.routeClassification)
+      ) {
+        const surface = surfaces.find((candidate) => candidate.id === surfaceId);
+        if (surface.routePattern !== route.routePattern) {
+          errors.push(
+            `Active route ${route.routePattern} references ${surfaceId}, whose canonical route is ${surface.routePattern}.`,
+          );
+        }
       }
     }
     for (const evidencePath of route.implementationEvidence ?? []) {
@@ -341,6 +350,17 @@ export function validateScreenDocumentation({
     }
 
     if (!ACTIVE_SURFACE_CLASSIFICATIONS.has(surface.surfaceClassification)) continue;
+
+    const isMappedByCanonicalRoute = routes.some(
+      (route) =>
+        route.routePattern === surface.routePattern &&
+        route.canonicalSurfaceIds?.includes(surface.id),
+    );
+    if (!isMappedByCanonicalRoute) {
+      errors.push(
+        `Active surface ${surface.id} is not mapped by its canonical route ${surface.routePattern}.`,
+      );
+    }
 
     if (!surface.wikiSlug && !surface.coverageException) {
       errors.push(`Active surface ${surface.id} has neither a wiki guide nor a coverage exception.`);
