@@ -5,6 +5,13 @@ import { fileURLToPath } from "node:url";
 const DEFAULT_REGISTRY_PATH = "docs/documentation/workbench-screen-registry.v1.json";
 const ACTIVE_SURFACE_CLASSIFICATIONS = new Set(["active-screen", "active-mode"]);
 const DEFAULT_NEXT_PAGE_EXTENSIONS = ["tsx", "ts", "jsx", "js"];
+const REQUIRED_MODE_AUTHORITY_FAMILIES = new Set([
+  "performance",
+  "performance-aliases",
+  "manage",
+  "advisory-journey",
+  "proposal-lifecycle",
+]);
 
 function toRepositoryPath(value) {
   return value.split(path.sep).join("/");
@@ -198,7 +205,7 @@ function deriveRoutePattern(entrypoint) {
   return routeSource || "/";
 }
 
-function extractAuthorityModes(source, authority) {
+export function extractAuthorityEntries(source, authority) {
   const symbolOffset = source.indexOf(authority.symbol);
   if (symbolOffset === -1) {
     throw new Error(`symbol ${authority.symbol} was not found`);
@@ -211,7 +218,7 @@ function extractAuthorityModes(source, authority) {
       throw new Error(`definition array ${authority.symbol} has no closing bracket`);
     }
     return [...symbolSource.slice(0, closingOffset).matchAll(/\bkey:\s*["']([^"']+)["']/g)].map(
-      (match) => match[1],
+      (match) => ({ mode: match[1], targetMode: null }),
     );
   }
 
@@ -221,22 +228,79 @@ function extractAuthorityModes(source, authority) {
       throw new Error(`type union ${authority.symbol} has no terminator`);
     }
     return [...symbolSource.slice(0, closingOffset).matchAll(/["']([^"']+)["']/g)].map(
-      (match) => match[1],
+      (match) => ({ mode: match[1], targetMode: null }),
     );
   }
 
-  if (authority.extraction === "object-keys") {
+  if (authority.extraction === "object-entries") {
     const openingOffset = symbolSource.indexOf("{");
     const closingOffset = symbolSource.indexOf("\n};", openingOffset);
     if (openingOffset === -1 || closingOffset === -1) {
       throw new Error(`object ${authority.symbol} has no inspectable literal body`);
     }
-    return [...symbolSource.slice(openingOffset + 1, closingOffset).matchAll(/^\s*["']([^"']+)["']\s*:/gm)].map(
-      (match) => match[1],
-    );
+    return [
+      ...symbolSource
+        .slice(openingOffset + 1, closingOffset)
+        .matchAll(/^\s*["']([^"']+)["']\s*:\s*["']([^"']+)["']\s*,?\s*$/gm),
+    ].map((match) => ({ mode: match[1], targetMode: match[2] }));
   }
 
   throw new Error(`unsupported extraction strategy ${authority.extraction}`);
+}
+
+function resolveCanonicalSurface(surface, surfaces) {
+  const visitedSurfaceIds = new Set();
+  let target = surface;
+  while (target?.surfaceClassification === "alias") {
+    if (!target.canonicalSurfaceId || visitedSurfaceIds.has(target.canonicalSurfaceId)) return null;
+    visitedSurfaceIds.add(target.canonicalSurfaceId);
+    target = surfaces.find((candidate) => candidate.id === target.canonicalSurfaceId);
+  }
+  return target ?? null;
+}
+
+export function validateModeAuthority(authority, source, surfaces) {
+  const errors = [];
+  try {
+    const sourceEntries = extractAuthorityEntries(source, authority);
+    const sourceModes = new Set(sourceEntries.map((entry) => entry.mode));
+    const mappedModes = new Set(Object.keys(authority.surfaceMappings ?? {}));
+
+    for (const mode of duplicateValues(sourceEntries.map((entry) => entry.mode))) {
+      errors.push(`Mode authority ${authority.family} has duplicate source mode: ${mode}.`);
+    }
+    for (const mode of setDifference(sourceModes, mappedModes)) {
+      errors.push(`Mode authority ${authority.family} has unmapped source mode: ${mode}.`);
+    }
+    for (const mode of setDifference(mappedModes, sourceModes)) {
+      errors.push(`Mode authority ${authority.family} maps nonexistent source mode: ${mode}.`);
+    }
+    for (const [mode, surfaceId] of Object.entries(authority.surfaceMappings ?? {})) {
+      const surface = surfaces.find((candidate) => candidate.id === surfaceId);
+      if (!surface) {
+        errors.push(`Mode authority ${authority.family} maps ${mode} to unknown surface ${surfaceId}.`);
+        continue;
+      }
+      if (surface.mode !== mode) {
+        errors.push(
+          `Mode authority ${authority.family} maps ${mode} to ${surfaceId}, whose mode is ${surface.mode ?? "missing"}.`,
+        );
+      }
+
+      const targetMode = sourceEntries.find((entry) => entry.mode === mode)?.targetMode;
+      if (targetMode) {
+        const canonicalSurface = resolveCanonicalSurface(surface, surfaces);
+        if (canonicalSurface?.mode !== targetMode) {
+          errors.push(
+            `Mode authority ${authority.family} source alias ${mode} targets ${targetMode}, but ${surfaceId} resolves to canonical mode ${canonicalSurface?.mode ?? "missing"}.`,
+          );
+        }
+      }
+    }
+  } catch (error) {
+    errors.push(`Mode authority ${authority.family} could not be inspected: ${error.message}.`);
+  }
+  return errors;
 }
 
 function wikiLinksToSlug(content, slug) {
@@ -249,12 +313,17 @@ export function hasExactMarkdownHeading(content, expectedHeading) {
 
   for (const line of content.split(/\r?\n/)) {
     const trimmedLine = line.trim();
-    const fenceMatch = trimmedLine.match(/^(`{3,}|~{3,})/);
+    const fenceMatch = trimmedLine.match(/^(`{3,}|~{3,})(.*)$/);
     if (fenceMatch) {
       const marker = fenceMatch[1];
+      const suffix = fenceMatch[2];
       if (fence === null) {
         fence = { character: marker[0], length: marker.length };
-      } else if (marker[0] === fence.character && marker.length >= fence.length) {
+      } else if (
+        marker[0] === fence.character &&
+        marker.length >= fence.length &&
+        suffix.trim() === ""
+      ) {
         fence = null;
       }
       continue;
@@ -371,6 +440,22 @@ export function validateScreenDocumentation({
   }
   for (const duplicate of duplicateValues(surfaces.map((surface) => surface.id))) {
     errors.push(`Duplicate surface id: ${duplicate}.`);
+  }
+  for (const duplicate of duplicateValues(authorities.map((authority) => authority.family))) {
+    errors.push(`Duplicate mode authority family: ${duplicate}.`);
+  }
+  const registeredAuthorityFamilies = new Set(authorities.map((authority) => authority.family));
+  for (const family of setDifference(
+    REQUIRED_MODE_AUTHORITY_FAMILIES,
+    registeredAuthorityFamilies,
+  )) {
+    errors.push(`Required mode authority is missing: ${family}.`);
+  }
+  for (const family of setDifference(
+    registeredAuthorityFamilies,
+    REQUIRED_MODE_AUTHORITY_FAMILIES,
+  )) {
+    errors.push(`Unexpected mode authority family: ${family}.`);
   }
   for (const duplicate of duplicateValues(
     activeSurfaces.map((surface) => surface.wikiSlug).filter(Boolean),
@@ -611,30 +696,13 @@ export function validateScreenDocumentation({
       continue;
     }
 
-    try {
-      const sourceModes = new Set(
-        extractAuthorityModes(fs.readFileSync(sourcePath, "utf8"), authority),
-      );
-      const mappedModes = new Set(Object.keys(authority.surfaceMappings ?? {}));
-      for (const mode of setDifference(sourceModes, mappedModes)) {
-        errors.push(`Mode authority ${authority.family} has unmapped source mode: ${mode}.`);
-      }
-      for (const mode of setDifference(mappedModes, sourceModes)) {
-        errors.push(`Mode authority ${authority.family} maps nonexistent source mode: ${mode}.`);
-      }
-      for (const [mode, surfaceId] of Object.entries(authority.surfaceMappings ?? {})) {
-        const surface = surfaces.find((candidate) => candidate.id === surfaceId);
-        if (!surface) {
-          errors.push(`Mode authority ${authority.family} maps ${mode} to unknown surface ${surfaceId}.`);
-        } else if (surface.mode !== mode) {
-          errors.push(
-            `Mode authority ${authority.family} maps ${mode} to ${surfaceId}, whose mode is ${surface.mode ?? "missing"}.`,
-          );
-        }
-      }
-    } catch (error) {
-      errors.push(`Mode authority ${authority.family} could not be inspected: ${error.message}.`);
-    }
+    errors.push(
+      ...validateModeAuthority(
+        authority,
+        fs.readFileSync(sourcePath, "utf8"),
+        surfaces,
+      ),
+    );
   }
 
   const mappedGuides = activeSurfaces.filter((surface) => Boolean(surface.wikiSlug)).length;

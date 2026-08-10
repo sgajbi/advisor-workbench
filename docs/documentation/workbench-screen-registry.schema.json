@@ -45,6 +45,7 @@
     },
     "modeAuthorities": {
       "type": "array",
+      "minItems": 5,
       "items": { "$ref": "#/$defs/modeAuthority" }
     }
   },
@@ -150,7 +151,7 @@
         "family": { "type": "string", "minLength": 1 },
         "source": { "type": "string", "minLength": 1 },
         "symbol": { "type": "string", "minLength": 1 },
-        "extraction": { "enum": ["definition-keys", "object-keys", "type-union"] },
+        "extraction": { "enum": ["definition-keys", "object-entries", "type-union"] },
         "surfaceMappings": {
           "type": "object",
           "minProperties": 1,

@@ -93,7 +93,7 @@ while the user moves from attention posture into construction, review, and evide
 | Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active | Guide planned — #605 | Gateway and Manage |
 | Portfolio Memory | `/workbench/{portfolioId}?mode=memory` | Active | Guide planned — #605 | Gateway and Manage |
 | PM Copilot | `/workbench/{portfolioId}?mode=copilot` | Active | Guide planned — #605 | Gateway, Manage, and Lotus AI |
-| PM Operating Quality | `/workbench/{portfolioId}?mode=quality` | Active | Guide planned — #605 | Gateway and Manage |
+| PM Operating Quality | `/workbench/{portfolioId}?mode=quality` | Active | Guide planned — #605 | Gateway, Manage, and Lotus AI |
 | Outcome Reviews | `/workbench/{portfolioId}?mode=reviews` | Active | Guide planned — #605 | Gateway and Manage |
 | Evidence Pack | `/workbench/{portfolioId}?mode=proof` | Active | Guide planned — #605 | Gateway, Manage, and Report |
 
