@@ -115,10 +115,26 @@ export function validateRuntimeSupportPolicy({
       : undefined;
   expectEqual(failures, "container base image", declaredImage, expectedImage);
 
+  const ciBaseStages = dockerModel.stages.filter(({ name }) => name === "ci-base");
+  const governedBaseConsumers = dockerModel.stages.filter(
+    ({ base }) => base === "${NODE_BASE_IMAGE}"
+  );
+  if (
+    ciBaseStages.length !== 1 ||
+    dockerModel.stages[0] !== ciBaseStages[0] ||
+    governedBaseConsumers.length !== 1 ||
+    governedBaseConsumers[0] !== ciBaseStages[0]
+  ) {
+    failures.push(
+      "Dockerfile must declare ci-base as the first and only stage that consumes ${NODE_BASE_IMAGE}."
+    );
+  }
+
   const dependencyStages = dockerModel.stages.filter(({ name }) => name === "deps");
   if (dependencyStages.length !== 1) {
     failures.push('Dockerfile must declare exactly one Docker stage named "deps".');
   } else {
+    expectDockerStageBase(failures, dependencyStages[0], "deps", "ci-base");
     const dependencyInstallCommands = dockerModel.stages.flatMap((stage) =>
       stage.instructions
         .filter(
@@ -143,14 +159,18 @@ export function validateRuntimeSupportPolicy({
   if (builderStages.length !== 1) {
     failures.push('Dockerfile must declare exactly one Docker stage named "builder".');
   } else {
+    expectDockerStageBase(failures, builderStages[0], "builder", "ci-base");
     const dependencyCopies = builderStages[0].instructions.filter(
       ({ keyword, argument }) =>
         keyword === "COPY" &&
         normalizeInstruction(argument) === "--from=deps /app/node_modules ./node_modules"
     );
-    if (dependencyCopies.length !== 1) {
+    const crossStageCopies = builderStages[0].instructions.filter(
+      ({ keyword, argument }) => keyword === "COPY" && dockerCopySource(argument)
+    );
+    if (dependencyCopies.length !== 1 || crossStageCopies.length !== 1) {
       failures.push(
-        "The named builder stage must consume the governed deps node_modules exactly once."
+        "The named builder stage must consume the governed deps node_modules through its only cross-stage copy."
       );
     }
   }
@@ -159,6 +179,7 @@ export function validateRuntimeSupportPolicy({
   if (runnerStages.length !== 1) {
     failures.push('Dockerfile must declare exactly one Docker stage named "runner".');
   } else {
+    expectDockerStageBase(failures, runnerStages[0], "runner", "ci-base");
     if (dockerModel.stages.at(-1) !== runnerStages[0]) {
       failures.push(
         'The named runner stage must be the final Docker stage because protected builds publish the default final stage.'
@@ -170,9 +191,23 @@ export function validateRuntimeSupportPolicy({
         normalizeInstruction(argument) ===
           "--chown=node:node --from=builder /app/.next/standalone ./"
     );
-    if (standaloneCopies.length !== 1) {
+    const runnerCrossStageCopies = runnerStages[0].instructions.filter(
+      ({ keyword, argument }) => keyword === "COPY" && dockerCopySource(argument)
+    );
+    const expectedStaticCopies = runnerStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "COPY" &&
+        normalizeInstruction(argument) ===
+          "--chown=node:node --from=builder /app/.next/static ./.next/static"
+    );
+    if (
+      standaloneCopies.length !== 1 ||
+      expectedStaticCopies.length !== 1 ||
+      runnerCrossStageCopies.length !== 2 ||
+      runnerCrossStageCopies.some(({ argument }) => dockerCopySource(argument) !== "builder")
+    ) {
       failures.push(
-        "The final runner stage must consume the builder standalone output exactly once."
+        "The final runner stage must consume only the governed builder standalone and static outputs."
       );
     }
     const userInstructions = runnerStages[0].instructions.filter(
@@ -217,9 +252,10 @@ export function validateRuntimeSupportPolicy({
     if (
       setupNodeSteps.length === 0 ||
       setupNodeSteps.some(
-        ({ step }) =>
-          !isRecord(step.with) ||
-          step.with["node-version"] !== policy.productionContainer?.version
+        (entry) =>
+          !isUnconditionalWorkflowStep(entry) ||
+          !isRecord(entry.step.with) ||
+          entry.step.with["node-version"] !== policy.productionContainer?.version
       )
     ) {
       failures.push(`${path} must use Node ${policy.productionContainer?.version} for every setup-node step.`);
@@ -328,7 +364,54 @@ function escapeRegExp(value) {
 }
 
 function containsNpmDependencyInstall(value) {
+  const execArguments = parseDockerExecArguments(value);
+  if (execArguments) {
+    const npmIndex = execArguments.findIndex((argument) =>
+      /(?:^|\/)npm(?:-cli\.js)?$/i.test(argument)
+    );
+    return (
+      npmIndex >= 0 &&
+      execArguments
+        .slice(npmIndex + 1)
+        .some((argument) => NPM_INSTALL_COMMANDS.includes(argument.toLowerCase()))
+    );
+  }
   return NPM_INSTALL_COMMAND_PATTERN.test(normalizeInstruction(value));
+}
+
+function dockerCopySource(value) {
+  const source = normalizeInstruction(value).match(
+    /(?:^|\s)--from=(?<source>[^\s]+)/i
+  )?.groups?.source;
+  return source?.replace(/^["']|["']$/g, "").toLowerCase();
+}
+
+function expectDockerStageBase(failures, stage, name, expectedBase) {
+  if (stage.base !== expectedBase) {
+    failures.push(
+      `The named ${name} stage must descend directly from ${expectedBase}; received ${JSON.stringify(stage.base)}.`
+    );
+  }
+}
+
+function parseDockerExecArguments(value) {
+  const normalized = value.trim();
+  const arrayStart = normalized.indexOf("[");
+  if (arrayStart < 0) {
+    return undefined;
+  }
+  const prefix = normalized.slice(0, arrayStart).trim();
+  if (prefix && !prefix.split(/\s+/).every((token) => token.startsWith("--"))) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(normalized.slice(arrayStart));
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string")
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function isIsoDate(value) {
