@@ -97,11 +97,13 @@ describe("direct production dependency risk inventory", () => {
 
   it("rejects an ambiguous or unapproved license", () => {
     const evidence = loadEvidence();
+    evidence.inventory.allowedLicenses.push("UNKNOWN");
     dependency(evidence, "echarts").license.spdx = "UNKNOWN";
     dependency(evidence, "echarts").license.evidenceUrl = "registry metadata";
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
+        expect.stringContaining("allowedLicenses must be exactly Apache-2.0, MIT"),
         expect.stringContaining('license.spdx "UNKNOWN" is not allowed'),
         expect.stringContaining("license.evidenceUrl must be an HTTPS evidence URL"),
       ])
@@ -149,7 +151,7 @@ describe("direct production dependency risk inventory", () => {
     zod.exception = {
       issue: "https://example.com/ticket/1",
       owner: "",
-      approvalEvidence: "none",
+      approvalEvidence: "not-a-url",
       rollbackPath: "none",
       expiryDate: "2026-08-09",
       exitCriterion: "none",
@@ -158,8 +160,8 @@ describe("direct production dependency risk inventory", () => {
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
         expect.stringContaining("exception.issue must be a canonical Workbench GitHub issue URL"),
-        expect.stringContaining("exception.owner must contain at least 3"),
-        expect.stringContaining("exception.approvalEvidence must contain at least 12"),
+        expect.stringContaining("exception.owner must match the inventory reviewOwner"),
+        expect.stringContaining("exception.approvalEvidence must be an HTTPS evidence URL"),
         expect.stringContaining("exception expired on 2026-08-09"),
       ])
     );
@@ -194,13 +196,16 @@ describe("direct production dependency risk inventory", () => {
   it("rejects schema drift and mutable platform-policy provenance", () => {
     const evidence = loadEvidence();
     evidence.schema.properties.schemaVersion.const = "lotus-workbench.other.v1";
-    evidence.inventory.platformPolicy.sourceRevision = "main";
+    evidence.inventory.platformPolicy.sourceRevision =
+      "0000000000000000000000000000000000000000";
     evidence.inventory.platformPolicy.lifecycleStatus = "blocking";
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
         expect.stringContaining("schemaVersion must match the executable JSON Schema"),
-        expect.stringContaining("sourceRevision must be an immutable 40-character Git SHA"),
+        expect.stringContaining(
+          'sourceRevision must be "2868348d289fc685ecf5a218b6c73256ac3a7742"'
+        ),
         expect.stringContaining('lifecycleStatus must be "report_only"'),
       ])
     );
