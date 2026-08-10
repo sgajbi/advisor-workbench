@@ -1,0 +1,67 @@
+name: lotus-workbench-scale-proof
+
+x-workbench: &workbench
+  image: ${WORKBENCH_SCALE_IMAGE:-lotus-workbench:scale-proof}
+  environment:
+    BFF_BASE_URL: http://scale-gateway:8080
+    LOTUS_ENVIRONMENT: test
+    WORKBENCH_DEPLOYMENT_ID: scale-proof-issue-619
+    WORKBENCH_GATEWAY_REQUEST_TIMEOUT_MS: "5000"
+  depends_on:
+    scale-gateway:
+      condition: service_healthy
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  scale-gateway:
+    image: node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3
+    user: node
+    working_dir: /proof
+    command: ["node", "gateway-fixture.mjs"]
+    volumes:
+      - ./scripts/scale/gateway-fixture.mjs:/proof/gateway-fixture.mjs:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  workbench-a:
+    <<: *workbench
+
+  workbench-b:
+    <<: *workbench
+
+  scale-balancer:
+    image: nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+    user: "101:101"
+    depends_on:
+      workbench-a:
+        condition: service_healthy
+      workbench-b:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3090:8080"
+    volumes:
+      - ./scripts/scale/nginx.conf:/etc/nginx/nginx.conf:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

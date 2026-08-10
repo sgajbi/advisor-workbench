@@ -32,6 +32,8 @@
     "quality:runtime-state": "node scripts/quality/check-runtime-state-inventory.mjs",
     "quality:dependency-risk": "node scripts/quality/check-dependency-risk-inventory.mjs",
     "quality:portfolio-record-bundles": "node scripts/quality/check-portfolio-record-bundles.mjs",
+    "scale:proof": "node scripts/scale/run-workbench-scale-proof.mjs",
+    "scale:proof:down": "docker compose -f docker-compose.scale-proof.yml down -v --remove-orphans",
     "lint:react-compiler": "eslint src --config eslint.react-compiler.config.mjs --max-warnings=0",
     "security:audit": "npm audit --audit-level=high && npm audit --omit=dev --audit-level=moderate",
     "typecheck": "tsc --noEmit",
