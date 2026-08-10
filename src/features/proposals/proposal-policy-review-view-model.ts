@@ -272,6 +272,11 @@ function sourceIdentityAligned({
     (!portfolioId ||
       (evaluationPortfolioId === portfolioId &&
         (!selectedReview || selectedReview.portfolioId === portfolioId))) &&
+    valuesAgree(evaluationPortfolioId, [
+      packageEvaluation?.portfolio_id,
+      signOffPackage?.lineage?.portfolio_id,
+      workflow?.portfolio_id,
+    ]) &&
     valuesAgree(evaluationId, [
       packageEvaluation?.evaluation_id,
       signOffPackage?.lineage?.evaluation_id,

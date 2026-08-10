@@ -94,11 +94,24 @@ export default function ProposalLifecycleWorkspace({
     () => buildPolicyReviewQueueModel({ records: policyQueueQuery.data?.items ?? [] }),
     [policyQueueQuery.data?.items]
   );
-  const selectedPolicyEvaluationId = resolvePolicyReviewSelection({
+  const resolvedPolicyEvaluationId = resolvePolicyReviewSelection({
     rows: policyReviewModel.rows,
     preferredEvaluationId:
       policySelection?.portfolioId === portfolioId ? policySelection.evaluationId : null,
   });
+  const policySelectionIsCurrent =
+    policySelection?.portfolioId === portfolioId &&
+    policyReviewModel.rows.some((row) => row.evaluationId === policySelection.evaluationId);
+  if (
+    mode === "suitability" &&
+    resolvedPolicyEvaluationId &&
+    !policySelectionIsCurrent
+  ) {
+    setPolicySelection({ portfolioId, evaluationId: resolvedPolicyEvaluationId });
+  }
+  const selectedPolicyEvaluationId = policySelectionIsCurrent
+    ? policySelection.evaluationId
+    : resolvedPolicyEvaluationId;
   const selectedPolicyReview = policyReviewModel.rows.find(
     (row) => row.evaluationId === selectedPolicyEvaluationId
   );
