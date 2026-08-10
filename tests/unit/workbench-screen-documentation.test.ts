@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error The documentation gate is a Node .mjs script without a TypeScript declaration.
-import { hasExactMarkdownHeading, validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+import { hasExactMarkdownHeading, isNextPageEntrypoint, validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
 
 const rootDirectory = process.cwd();
 const registryPath = path.join(
@@ -29,6 +29,15 @@ describe("Workbench screen documentation governance", () => {
     expect(hasExactMarkdownHeading("```md\n## Current Scope\n```\n", "## Current Scope")).toBe(
       false,
     );
+  });
+
+  it("discovers every default Next.js page extension", () => {
+    expect(
+      ["page.tsx", "page.ts", "page.jsx", "page.js"].every((filename) =>
+        isNextPageEntrypoint(filename),
+      ),
+    ).toBe(true);
+    expect(isNextPageEntrypoint("layout.tsx")).toBe(false);
   });
 
   it("covers every route and records the governed guide backlog", () => {
@@ -99,6 +108,30 @@ describe("Workbench screen documentation governance", () => {
 
     expect(validate(registry).errors).toContain(
       "Screen guide catalogue owners for construction-alternatives must be Gateway, Manage, and Risk, not Gateway and Manage.",
+    );
+  });
+
+  it("rejects catalogue business-name drift from the canonical registry", () => {
+    const registry = loadRegistry();
+    const surface = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "construction-alternatives",
+    );
+    surface.businessName = "Construction Scenario";
+
+    expect(validate(registry).errors).toContain(
+      "Screen guide catalogue name for construction-alternatives must be Construction Scenario, not Construction Alternatives.",
+    );
+  });
+
+  it("rejects catalogue guide status that contradicts coverage truth", () => {
+    const registry = loadRegistry();
+    const surface = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "advisor-book",
+    );
+    surface.coverageException = null;
+
+    expect(validate(registry).errors).toContain(
+      "Screen guide catalogue guide status for advisor-book must be Guide available, not Existing guide; complete-standard alignment planned.",
     );
   });
 
