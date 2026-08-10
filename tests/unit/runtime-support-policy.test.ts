@@ -599,6 +599,25 @@ describe("runtime support policy", () => {
   });
 
   it.each([
+    "RUN npx --yes yarn install",
+    "RUN corepack yarn install",
+    "RUN cd /app && yarn install",
+    "RUN pnpm install",
+    'RUN ["npx", "--yes", "yarn", "install"]',
+    'RUN ["/usr/local/bin/pnpm", "install"]',
+  ])("rejects an alternative package-manager entrypoint: %s", (instruction) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      `RUN npm ci --no-audit --no-fund\n${instruction}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
+  it.each([
     "add",
     "i",
     "in",
@@ -628,6 +647,46 @@ describe("runtime support policy", () => {
 
     expect(validateRuntimeSupportPolicy(evidence)).toEqual(
       expect.arrayContaining([expect.stringContaining("final effective user")])
+    );
+  });
+
+  it.each([
+    'CMD ["sleep", "infinity"]',
+    'ENTRYPOINT ["sleep", "infinity"]',
+  ])("requires the runner to launch the standalone server without override: %s", (instruction) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile += `\n${instruction}\n`;
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("launch only the standalone server")])
+    );
+  });
+
+  it("binds the production healthcheck and package-manager removal to effective runner instructions", () => {
+    const healthcheckOverride = loadEvidence();
+    healthcheckOverride.dockerfile += "\nHEALTHCHECK NONE\n";
+    const healthcheckOverwrite = loadEvidence();
+    healthcheckOverwrite.dockerfile = healthcheckOverwrite.dockerfile.replace(
+      "COPY --chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs",
+      [
+        "COPY --chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs",
+        "COPY scripts/quality/clean-next-build-artifacts.mjs ./healthcheck.mjs",
+      ].join("\n")
+    );
+    const retainedPackageManagers = loadEvidence();
+    retainedPackageManagers.dockerfile = retainedPackageManagers.dockerfile.replace(
+      /RUN rm -rf[\s\S]*?\/opt\/yarn-v1\.22\.22/,
+      "RUN true"
+    );
+
+    expect(validateRuntimeSupportPolicy(healthcheckOverride)).toEqual(
+      expect.arrayContaining([expect.stringContaining("dependency-free Node healthcheck")])
+    );
+    expect(validateRuntimeSupportPolicy(healthcheckOverwrite)).toEqual(
+      expect.arrayContaining([expect.stringContaining("dependency-free Node healthcheck")])
+    );
+    expect(validateRuntimeSupportPolicy(retainedPackageManagers)).toEqual(
+      expect.arrayContaining([expect.stringContaining("remove the npm, npx, Corepack, and Yarn")])
     );
   });
 

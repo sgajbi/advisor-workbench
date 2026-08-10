@@ -46,6 +46,19 @@ const NPM_INSTALL_COMMAND_PATTERN = new RegExp(
   )})(?=$|[\\s;&|\\x22\\x27\\x29\\x60]))`,
   "i"
 );
+const ALTERNATIVE_PACKAGE_MANAGER_COMMAND_PATTERN =
+  /(?:^|[;&|('"`]\s*|\b(?:then|do)\s+)(?:(?:command|exec)\s+|env(?:\s+[A-Za-z_][A-Za-z0-9_]*=\S+)*\s+)*(?:(?:\/[A-Za-z0-9._@+-]+)*\/)?(?:npx|corepack|yarn|yarnpkg|pnpm|pnpx)(?=$|[\s;&|)'"`])/i;
+const RUNNER_PACKAGE_MANAGER_REMOVAL = [
+  "rm -rf",
+  "/usr/local/lib/node_modules/npm",
+  "/usr/local/lib/node_modules/corepack",
+  "/usr/local/bin/npm",
+  "/usr/local/bin/npx",
+  "/usr/local/bin/corepack",
+  "/usr/local/bin/yarn",
+  "/usr/local/bin/yarnpkg",
+  "/opt/yarn-v1.22.22",
+].join(" ");
 
 export function validateRuntimeSupportPolicy({
   packageJson,
@@ -140,7 +153,7 @@ export function validateRuntimeSupportPolicy({
       stage.instructions
         .filter(
           ({ keyword, argument }) =>
-            keyword === "RUN" && containsNpmDependencyInstall(argument)
+            keyword === "RUN" && containsCompetingDependencyInstall(argument)
         )
         .map((instruction) => ({ instruction, stage }))
     );
@@ -222,6 +235,51 @@ export function validateRuntimeSupportPolicy({
     ) {
       failures.push(
         `The runner stage final effective user must execute as ${expectedUser}; received ${JSON.stringify(finalUser)}.`
+      );
+    }
+    const runnerCommands = runnerStages[0].instructions.filter(({ keyword }) => keyword === "CMD");
+    const runnerEntrypoints = runnerStages[0].instructions.filter(
+      ({ keyword }) => keyword === "ENTRYPOINT"
+    );
+    const commandArguments = parseDockerExecArguments(runnerCommands[0]?.argument ?? "");
+    if (
+      runnerCommands.length !== 1 ||
+      runnerEntrypoints.length !== 0 ||
+      JSON.stringify(commandArguments) !== JSON.stringify(["node", "server.js"])
+    ) {
+      failures.push(
+        'The final runner must launch only the standalone server through CMD ["node", "server.js"] with no ENTRYPOINT override.'
+      );
+    }
+    const runnerCopies = runnerStages[0].instructions.filter(({ keyword }) => keyword === "COPY");
+    const healthcheckCopies = runnerCopies.filter(
+      ({ argument }) =>
+        normalizeInstruction(argument) ===
+        "--chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs"
+    );
+    const healthchecks = runnerStages[0].instructions.filter(
+      ({ keyword }) => keyword === "HEALTHCHECK"
+    );
+    if (
+      runnerCopies.length !== 3 ||
+      healthcheckCopies.length !== 1 ||
+      healthchecks.length !== 1 ||
+      normalizeInstruction(healthchecks[0]?.argument ?? "") !==
+        '--interval=20s --timeout=5s --start-period=20s --retries=5 CMD ["node", "healthcheck.mjs"]'
+    ) {
+      failures.push(
+        "The final runner must own exactly one dependency-free Node healthcheck copy and one governed healthcheck instruction without competing copies or overrides."
+      );
+    }
+    const runnerRunInstructions = runnerStages[0].instructions.filter(
+      ({ keyword }) => keyword === "RUN"
+    );
+    if (
+      runnerRunInstructions.length !== 1 ||
+      normalizeInstruction(runnerRunInstructions[0].argument) !== RUNNER_PACKAGE_MANAGER_REMOVAL
+    ) {
+      failures.push(
+        "The final runner must remove the npm, npx, Corepack, and Yarn toolchain through its sole RUN instruction."
       );
     }
   }
@@ -388,9 +446,16 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function containsNpmDependencyInstall(value) {
+function containsCompetingDependencyInstall(value) {
   const execArguments = parseDockerExecArguments(value);
   if (execArguments) {
+    if (
+      isAlternativePackageManagerExecutable(execArguments[0]) ||
+      (/^(?:node|\/.*\/node)$/i.test(execArguments[0]) &&
+        isAlternativePackageManagerExecutable(execArguments[1]))
+    ) {
+      return true;
+    }
     const npmIndex = execArguments.findIndex((argument) =>
       /(?:^|\/)npm(?:-cli\.js)?$/i.test(argument)
     );
@@ -401,7 +466,20 @@ function containsNpmDependencyInstall(value) {
         .some((argument) => NPM_INSTALL_COMMANDS.includes(argument.toLowerCase()))
     );
   }
-  return NPM_INSTALL_COMMAND_PATTERN.test(normalizeInstruction(value));
+  const normalized = normalizeInstruction(value);
+  return (
+    NPM_INSTALL_COMMAND_PATTERN.test(normalized) ||
+    ALTERNATIVE_PACKAGE_MANAGER_COMMAND_PATTERN.test(normalized)
+  );
+}
+
+function isAlternativePackageManagerExecutable(value) {
+  return (
+    typeof value === "string" &&
+    /(?:^|\/)(?:npx(?:-cli)?|corepack|yarn|yarnpkg|pnpm|pnpx)(?:\.(?:js|cjs|mjs))?$/i.test(
+      value
+    )
+  );
 }
 
 function executesRepositoryNodeRuntime(value) {
