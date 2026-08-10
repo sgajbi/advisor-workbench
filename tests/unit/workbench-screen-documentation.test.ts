@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error The documentation gate is a Node .mjs script without a TypeScript declaration.
-import { validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+import { hasExactMarkdownHeading, validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
 
 const rootDirectory = process.cwd();
 const registryPath = path.join(
@@ -21,6 +21,16 @@ function validate(registryData: ReturnType<typeof loadRegistry>) {
 }
 
 describe("Workbench screen documentation governance", () => {
+  it("recognizes only complete Markdown heading lines outside code fences", () => {
+    expect(hasExactMarkdownHeading("## Current Scope\n", "## Current Scope")).toBe(true);
+    expect(hasExactMarkdownHeading("See ## Current Scope.\n", "## Current Scope")).toBe(false);
+    expect(hasExactMarkdownHeading("## Current Scope And Limits\n", "## Current Scope")).toBe(false);
+    expect(hasExactMarkdownHeading("    ## Current Scope\n", "## Current Scope")).toBe(false);
+    expect(hasExactMarkdownHeading("```md\n## Current Scope\n```\n", "## Current Scope")).toBe(
+      false,
+    );
+  });
+
   it("covers every route and records the governed guide backlog", () => {
     const result = validate(loadRegistry());
 
@@ -77,6 +87,30 @@ describe("Workbench screen documentation governance", () => {
 
     expect(validate(registry).errors).toContain(
       "Active surface risk-review is not mapped by its canonical route /performance.",
+    );
+  });
+
+  it("rejects catalogue source-owner drift from the canonical registry", () => {
+    const registry = loadRegistry();
+    const surface = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "construction-alternatives",
+    );
+    surface.sourceOwners.push("lotus-risk");
+
+    expect(validate(registry).errors).toContain(
+      "Screen guide catalogue owners for construction-alternatives must be Gateway, Manage, and Risk, not Gateway and Manage.",
+    );
+  });
+
+  it("rejects cyclic alias ownership", () => {
+    const registry = loadRegistry();
+    const alias = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "client-context-alias",
+    );
+    alias.canonicalSurfaceId = "client-context-alias";
+
+    expect(validate(registry).errors).toContain(
+      "Alias client-context-alias must terminate at a non-alias canonical surface; cycle detected at client-context-alias.",
     );
   });
 

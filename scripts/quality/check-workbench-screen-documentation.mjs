@@ -198,6 +198,74 @@ function wikiLinksToSlug(content, slug) {
   return new RegExp(`\\[[^\\]]+\\]\\(${escapedSlug}(?:\\.md)?(?:#[^)]+)?\\)`).test(content);
 }
 
+export function hasExactMarkdownHeading(content, expectedHeading) {
+  let fenceMarker = null;
+
+  for (const line of content.split(/\r?\n/)) {
+    const trimmedLine = line.trim();
+    const fenceMatch = trimmedLine.match(/^(```|~~~)/);
+    if (fenceMatch) {
+      fenceMarker = fenceMarker === null ? fenceMatch[1] : fenceMarker === fenceMatch[1] ? null : fenceMarker;
+      continue;
+    }
+    if (
+      fenceMarker === null &&
+      /^ {0,3}#{1,6}[\t ]+\S/.test(line) &&
+      trimmedLine === expectedHeading
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const CATALOGUE_OWNER_LABELS = new Map([
+  ["lotus-gateway", "Gateway"],
+  ["lotus-core", "Core"],
+  ["lotus-performance", "Performance"],
+  ["lotus-risk", "Risk"],
+  ["lotus-manage", "Manage"],
+  ["lotus-ai", "Lotus AI"],
+  ["lotus-advise", "Advise"],
+  ["lotus-idea", "Lotus Idea"],
+  ["lotus-report", "Report"],
+  ["Lotus domain services", "Lotus domain services"],
+]);
+
+function joinBusinessLabels(labels) {
+  if (labels.length < 2) return labels[0] ?? "";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels.at(-1)}`;
+}
+
+function catalogueRouteLabel(surface) {
+  if (!surface.mode || surface.mode === "proposal-builder") return surface.routePattern;
+  return `${surface.routePattern}?mode=${surface.mode}`;
+}
+
+function cataloguePostureLabel(surface) {
+  return {
+    active: "Active",
+    "runtime-capability-gated": "Runtime-gated",
+    "capability-disabled": "Capability-disabled",
+  }[surface.navigationPosture];
+}
+
+function parseCatalogueRows(content) {
+  return content
+    .split(/\r?\n/)
+    .filter((line) => line.trim().startsWith("|") && line.trim().endsWith("|"))
+    .map((line) => line.trim().slice(1, -1).split("|").map((cell) => cell.trim()))
+    .filter(
+      (cells) =>
+        cells.length === 5 &&
+        cells[1] !== "Route or mode" &&
+        !cells.every((cell) => /^:?-{3,}:?$/.test(cell)),
+    )
+    .map((cells) => cells.map((cell) => cell.replace(/^`([^`]+)`$/, "$1")));
+}
+
 export function validateScreenDocumentation({
   rootDirectory = process.cwd(),
   registryData,
@@ -302,6 +370,52 @@ export function validateScreenDocumentation({
   const cataloguePath = catalogueSlug ? path.join(rootDirectory, "wiki", `${catalogueSlug}.md`) : null;
   if (!cataloguePath || !fs.existsSync(cataloguePath)) {
     errors.push(`Screen guide catalogue does not exist: ${catalogueSlug ?? "missing"}.`);
+  } else {
+    const catalogueRows = parseCatalogueRows(fs.readFileSync(cataloguePath, "utf8"));
+    const rowsByRoute = new Map();
+    for (const row of catalogueRows) {
+      const routeLabel = row[1];
+      if (rowsByRoute.has(routeLabel)) {
+        errors.push(`Screen guide catalogue has duplicate route or mode: ${routeLabel}.`);
+      } else {
+        rowsByRoute.set(routeLabel, row);
+      }
+    }
+
+    const expectedRoutes = new Set();
+    for (const surface of activeSurfaces) {
+      const routeLabel = catalogueRouteLabel(surface);
+      expectedRoutes.add(routeLabel);
+      const row = rowsByRoute.get(routeLabel);
+      if (!row) {
+        errors.push(`Screen guide catalogue is missing active surface ${surface.id}: ${routeLabel}.`);
+        continue;
+      }
+
+      const expectedPosture = cataloguePostureLabel(surface);
+      if (row[2] !== expectedPosture) {
+        errors.push(
+          `Screen guide catalogue posture for ${surface.id} must be ${expectedPosture}, not ${row[2]}.`,
+        );
+      }
+
+      const expectedOwners = joinBusinessLabels(
+        (surface.sourceOwners ?? []).map(
+          (owner) => CATALOGUE_OWNER_LABELS.get(owner) ?? owner,
+        ),
+      );
+      if (row[4] !== expectedOwners) {
+        errors.push(
+          `Screen guide catalogue owners for ${surface.id} must be ${expectedOwners}, not ${row[4]}.`,
+        );
+      }
+    }
+
+    for (const routeLabel of rowsByRoute.keys()) {
+      if (!expectedRoutes.has(routeLabel)) {
+        errors.push(`Screen guide catalogue contains an unregistered route or mode: ${routeLabel}.`);
+      }
+    }
   }
 
   const navigationPaths = ["wiki/Home.md", "wiki/_Sidebar.md"];
@@ -342,6 +456,20 @@ export function validateScreenDocumentation({
     if (surface.surfaceClassification === "alias") {
       if (!surface.canonicalSurfaceId || !surfaceIds.has(surface.canonicalSurfaceId)) {
         errors.push(`Alias ${surface.id} must reference an existing canonicalSurfaceId.`);
+      } else {
+        const visitedSurfaceIds = new Set([surface.id]);
+        let target = surface;
+        while (target.surfaceClassification === "alias") {
+          if (visitedSurfaceIds.has(target.canonicalSurfaceId)) {
+            errors.push(
+              `Alias ${surface.id} must terminate at a non-alias canonical surface; cycle detected at ${target.canonicalSurfaceId}.`,
+            );
+            break;
+          }
+          visitedSurfaceIds.add(target.canonicalSurfaceId);
+          target = surfaces.find((candidate) => candidate.id === target.canonicalSurfaceId);
+          if (!target) break;
+        }
       }
       if (surface.wikiSlug) {
         errors.push(`Alias ${surface.id} must reuse its canonical guide instead of ${surface.wikiSlug}.`);
@@ -385,7 +513,7 @@ export function validateScreenDocumentation({
       if (!surface.coverageException) {
         const guideContent = fs.readFileSync(wikiPath, "utf8");
         for (const heading of requiredHeadings) {
-          if (!guideContent.includes(heading)) {
+          if (!hasExactMarkdownHeading(guideContent, heading)) {
             errors.push(`Surface ${surface.id} guide is missing heading: ${heading}.`);
           }
         }
