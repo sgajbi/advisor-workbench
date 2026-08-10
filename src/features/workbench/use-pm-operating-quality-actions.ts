@@ -55,6 +55,8 @@ import {
 } from "@/features/workbench/pm-operating-quality-command-model";
 import {
   buildPmOperatingQualityPanelModel,
+  hasPmOperatingQualityFairnessAnalysis,
+  hasPmOperatingQualityReviewAction,
   matchesPmOperatingQualitySummaryScoreRun,
   type PmOperatingQualitySelection,
   type PmOperatingQualityPanelModel,
@@ -209,14 +211,15 @@ export function usePmOperatingQualityActions({
     policies,
     scoreRuns,
     fairnessAnalyses,
-    fairnessAnalysisDetail:
-      selectedFairnessDetailResponse ?? createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
+    fairnessAnalysisDetails: [selectedFairnessDetailResponse, fairnessAnalysisDetail],
+    retainedFairnessAnalysis: createdFairnessAnalysisResponse,
     reviewActions,
-    reviewActionDetail:
-      selectedReviewActionDetailResponse ??
-      createdReviewActionResponse ??
-      reviewActionPreviewResponse ??
+    reviewActionDetails: [
+      selectedReviewActionDetailResponse,
+      reviewActionPreviewResponse,
       reviewActionDetail,
+    ],
+    retainedReviewAction: createdReviewActionResponse,
     summaryInvocations,
     summaryInvocationDetail:
       createdSummaryInvocationResponse ??
@@ -236,16 +239,15 @@ export function usePmOperatingQualityActions({
         policies,
         scoreRuns,
         fairnessAnalyses,
-        fairnessAnalysisDetail:
-          selectedFairnessDetailResponse ??
-          createdFairnessAnalysisResponse ??
-          fairnessAnalysisDetail,
+        fairnessAnalysisDetails: [selectedFairnessDetailResponse, fairnessAnalysisDetail],
+        retainedFairnessAnalysis: createdFairnessAnalysisResponse,
         reviewActions,
-        reviewActionDetail:
-          selectedReviewActionDetailResponse ??
-          createdReviewActionResponse ??
-          reviewActionPreviewResponse ??
+        reviewActionDetails: [
+          selectedReviewActionDetailResponse,
+          reviewActionPreviewResponse,
           reviewActionDetail,
+        ],
+        retainedReviewAction: createdReviewActionResponse,
         summaryInvocations,
         summaryInvocationDetail:
           createdSummaryInvocationResponse ??
@@ -268,6 +270,31 @@ export function usePmOperatingQualityActions({
     currentSelectionKeyRef.current = currentSelectionKey;
     currentSelectionRef.current = selection;
   }, [currentSelectionKey, selection]);
+  const createdFairnessAnalysisId = createdFairnessAnalysisResponse
+    ? readPmQualityFairnessAnalysisId(createdFairnessAnalysisResponse)
+    : null;
+  const createdReviewActionId = createdReviewActionResponse
+    ? readPmQualityReviewActionId(createdReviewActionResponse)
+    : null;
+  useEffect(() => {
+    if (
+      createdFairnessAnalysisId &&
+      hasPmOperatingQualityFairnessAnalysis(
+        fairnessAnalyses,
+        createdFairnessAnalysisId,
+      )
+    ) {
+      setCreatedFairnessAnalysisResponse(null);
+    }
+  }, [createdFairnessAnalysisId, fairnessAnalyses]);
+  useEffect(() => {
+    if (
+      createdReviewActionId &&
+      hasPmOperatingQualityReviewAction(reviewActions, createdReviewActionId)
+    ) {
+      setCreatedReviewActionResponse(null);
+    }
+  }, [createdReviewActionId, reviewActions]);
   const pendingSummaryAction = currentSummaryState?.pending ?? false;
   const summaryOutcome = currentSummaryState?.outcome ?? null;
   const summaryActionError = currentSummaryState?.error ?? null;

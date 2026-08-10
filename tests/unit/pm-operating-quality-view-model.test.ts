@@ -556,6 +556,101 @@ describe("PM operating quality view model", () => {
     expect(model.summaryPosture.status).toBe("Not requested");
   });
 
+  it("retains persisted source records until refreshed canonical lists supersede them", () => {
+    const existingFairness = (
+      fairnessAnalyses.data.fairness_analyses as Array<Record<string, unknown>>
+    )[0];
+    const retainedFairnessRecord = {
+      ...existingFairness,
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+    };
+    const retainedFairnessAnalysis = {
+      ...fairnessAnalyses,
+      correlation_id: "corr-fairness-create-002",
+      data: { fairness_analysis: retainedFairnessRecord },
+    };
+    const existingReviewAction = (
+      reviewActions.data.review_actions as Array<Record<string, unknown>>
+    )[0];
+    const retainedReviewActionRecord = {
+      ...existingReviewAction,
+      review_action_id: "pmq_review_002",
+      review_action_ref: "PMQ-RA-002",
+      as_of_date: "2026-05-14",
+    };
+    const retainedReviewAction = {
+      ...reviewActions,
+      correlation_id: "corr-review-action-create-002",
+      data: { review_action: retainedReviewActionRecord },
+    };
+
+    const retainedModel = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessAnalyses,
+      retainedFairnessAnalysis,
+      reviewActions,
+      retainedReviewAction,
+      selection: {
+        fairnessAnalysisId: "pmq_fair_002",
+        reviewActionId: "pmq_review_002",
+      },
+    });
+
+    expect(retainedModel.fairnessAnalysisRows.map((row) => row.fairnessAnalysisId)).toEqual([
+      "pmq_fair_001",
+      "pmq_fair_002",
+    ]);
+    expect(retainedModel.reviewActionRows.map((row) => row.reviewActionId)).toEqual([
+      "pmq_review_001",
+      "pmq_review_002",
+    ]);
+    expect(retainedModel.fairnessDetail.asOfDate).toBe("2026-05-14");
+    expect(retainedModel.reviewActionDetail.reviewActionRef).toBe("PMQ-RA-002");
+
+    const refreshedFairnessRecord = {
+      ...retainedFairnessRecord,
+      as_of_date: "2026-05-15",
+    };
+    const refreshedReviewActionRecord = {
+      ...retainedReviewActionRecord,
+      review_action_ref: "PMQ-RA-002-CANONICAL",
+      as_of_date: "2026-05-15",
+    };
+    const refreshedModel = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessAnalyses: {
+        ...fairnessAnalyses,
+        data: { fairness_analyses: [existingFairness, refreshedFairnessRecord] },
+      },
+      retainedFairnessAnalysis,
+      reviewActions: {
+        ...reviewActions,
+        data: { review_actions: [existingReviewAction, refreshedReviewActionRecord] },
+      },
+      retainedReviewAction,
+      selection: {
+        fairnessAnalysisId: "pmq_fair_001",
+        reviewActionId: "pmq_review_001",
+      },
+    });
+
+    expect(refreshedModel.fairnessAnalysisRows).toHaveLength(2);
+    expect(refreshedModel.reviewActionRows).toHaveLength(2);
+    expect(
+      refreshedModel.fairnessAnalysisRows.find(
+        (row) => row.fairnessAnalysisId === "pmq_fair_002",
+      )?.asOfDate,
+    ).toBe("2026-05-15");
+    expect(
+      refreshedModel.reviewActionRows.find(
+        (row) => row.reviewActionId === "pmq_review_002",
+      )?.reviewActionRef,
+    ).toBe("PMQ-RA-002-CANONICAL");
+  });
+
   it("preserves Manage PM quality policy, score-run, and source-defined segment posture", () => {
     const model = buildPmOperatingQualityPanelModel({ policies, scoreRuns });
 
