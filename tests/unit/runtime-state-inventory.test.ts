@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   scanRuntimeStateHolders,
@@ -10,9 +10,10 @@ import {
 
 const root = join(__dirname, "..", "..");
 
-function loadEvidence() {
+function loadBaselineEvidence() {
+  const discoveredStateHolders = scanRuntimeStateHolders({ root });
   const sourceFiles = Object.fromEntries(
-    scanRuntimeStateHolders({ root })
+    discoveredStateHolders
       .map(({ file }) => file)
       .filter((file, index, files) => files.indexOf(file) === index)
       .map((file) => [file, readFileSync(join(root, file), "utf8")]),
@@ -32,9 +33,19 @@ function loadEvidence() {
     ),
     sourceFiles,
     nextConfig: readFileSync(join(root, "next.config.mjs"), "utf8"),
-    discoveredStateHolders: scanRuntimeStateHolders({ root }),
+    discoveredStateHolders,
     today: "2026-08-10",
   };
+}
+
+let baselineEvidence: ReturnType<typeof loadBaselineEvidence>;
+
+beforeAll(() => {
+  baselineEvidence = loadBaselineEvidence();
+}, 30_000);
+
+function loadEvidence() {
+  return structuredClone(baselineEvidence);
 }
 
 describe("runtime state inventory", () => {
