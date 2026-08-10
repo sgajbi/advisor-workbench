@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import Ajv2020 from "ajv/dist/2020.js";
+
 const INVENTORY_PATH =
   "docs/architecture/workbench-dependency-risk-inventory.v1.json";
 const SCHEMA_PATH =
@@ -96,6 +98,49 @@ function isRecord(value) {
 
 function sorted(values) {
   return [...values].sort((left, right) => left.localeCompare(right));
+}
+
+function own(record, key) {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function dependencySections(failures, owner, source) {
+  const dependencies = owner.dependencies === undefined ? {} : owner.dependencies;
+  const optionalDependencies =
+    owner.optionalDependencies === undefined ? {} : owner.optionalDependencies;
+
+  if (!isRecord(dependencies)) {
+    failures.push(`${source} dependencies must be an object when declared.`);
+  }
+  if (!isRecord(optionalDependencies)) {
+    failures.push(`${source} optionalDependencies must be an object when declared.`);
+  }
+  if (!isRecord(dependencies) || !isRecord(optionalDependencies)) return null;
+
+  const overlaps = Object.keys(optionalDependencies).filter((name) => own(dependencies, name));
+  if (overlaps.length > 0) {
+    failures.push(
+      `${source} must not declare the same production dependency in dependencies and optionalDependencies: ${sorted(overlaps).join(", ")}.`
+    );
+  }
+
+  return { dependencies, optionalDependencies };
+}
+
+function validateAgainstSchema(failures, schema, inventory) {
+  try {
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    if (!validate(inventory)) {
+      for (const error of validate.errors ?? []) {
+        const path = error.instancePath || "inventory";
+        failures.push(`JSON Schema ${path}: ${error.message ?? "validation failed"}.`);
+      }
+    }
+  } catch (error) {
+    failures.push(
+      `Dependency risk inventory JSON Schema could not be compiled: ${error instanceof Error ? error.message : String(error)}.`
+    );
+  }
 }
 
 function pushExactKeyFailures(failures, value, expectedKeys, path) {
@@ -324,9 +369,8 @@ export function validateDependencyRiskInventory({
 
   if (!isRecord(schema) || schema.$id !== "https://lotus-workbench.local/docs/architecture/workbench-dependency-risk-inventory.v1.schema.json") {
     failures.push("Dependency risk inventory JSON Schema is missing or has the wrong canonical $id.");
-  }
-  if (schema?.properties?.schemaVersion?.const !== inventory.schemaVersion) {
-    failures.push("Inventory schemaVersion must match the executable JSON Schema contract.");
+  } else {
+    validateAgainstSchema(failures, schema, inventory);
   }
 
   const allowedLicenses = new Set();
@@ -355,15 +399,14 @@ export function validateDependencyRiskInventory({
     }
   }
 
-  if (!isRecord(packageJson.dependencies)) {
-    failures.push("package.json dependencies must be an object.");
-    return failures;
-  }
   const lockRoot = packageLock?.packages?.[""];
-  if (!isRecord(lockRoot?.dependencies)) {
-    failures.push("package-lock.json root dependencies must be an object.");
+  if (!isRecord(lockRoot)) {
+    failures.push("package-lock.json must contain a root package record.");
     return failures;
   }
+  const manifestSections = dependencySections(failures, packageJson, "package.json");
+  const lockSections = dependencySections(failures, lockRoot, "package-lock.json root");
+  if (!manifestSections || !lockSections) return failures;
   if (!Array.isArray(inventory.dependencies)) {
     failures.push("Inventory dependencies must be an array.");
     return failures;
@@ -380,8 +423,16 @@ export function validateDependencyRiskInventory({
     }
   });
 
-  const manifestNames = sorted(Object.keys(packageJson.dependencies));
-  const lockNames = sorted(Object.keys(lockRoot.dependencies));
+  const manifestDependencies = {
+    ...manifestSections.dependencies,
+    ...manifestSections.optionalDependencies,
+  };
+  const lockDependencies = {
+    ...lockSections.dependencies,
+    ...lockSections.optionalDependencies,
+  };
+  const manifestNames = sorted(Object.keys(manifestDependencies));
+  const lockNames = sorted(Object.keys(lockDependencies));
   const inventoryNames = sorted(inventoryByName.keys());
   for (const name of manifestNames.filter((dependencyName) => !inventoryByName.has(dependencyName))) {
     failures.push(`Direct production dependency ${name} is missing from the risk inventory.`);
@@ -397,14 +448,25 @@ export function validateDependencyRiskInventory({
   }
 
   for (const name of manifestNames) {
-    const manifestVersion = packageJson.dependencies[name];
-    const lockVersion = lockRoot.dependencies[name];
+    const manifestSection = own(manifestSections.optionalDependencies, name)
+      ? "optionalDependencies"
+      : "dependencies";
+    const lockSection = own(lockSections.optionalDependencies, name)
+      ? "optionalDependencies"
+      : "dependencies";
+    const manifestVersion = manifestDependencies[name];
+    const lockVersion = lockDependencies[name];
     const resolvedPackage = packageLock?.packages?.[`node_modules/${name}`];
     const resolvedVersion = resolvedPackage?.version;
     const inventoryEntry = inventoryByName.get(name);
     const inventoryVersion = inventoryEntry?.version;
     if (!EXACT_STABLE_VERSION.test(manifestVersion ?? "")) {
       failures.push(`Direct production dependency ${name} must use an exact stable manifest version.`);
+    }
+    if (lockSection !== manifestSection) {
+      failures.push(
+        `Lockfile root section for ${name} must match package.json (${manifestSection}).`
+      );
     }
     if (lockVersion !== manifestVersion) {
       failures.push(`Lockfile root version for ${name} must match package.json (${manifestVersion}).`);
