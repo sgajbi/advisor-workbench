@@ -527,6 +527,32 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("withholds review actions when required queue and detail identity is missing", async () => {
+    getAdvisoryPolicyReviewQueueMock.mockResolvedValueOnce({
+      items: [
+        {
+          ...policyReviewQueueFixture.items[0],
+          proposal_version_id: undefined,
+        },
+      ],
+    });
+    getAdvisoryPolicyEvaluationMock.mockResolvedValueOnce({
+      ...policyReviewQueueFixture.items[0],
+      proposal_version_id: undefined,
+      evaluation_hash: "sha256:policy-evaluation-1",
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    );
+
+    expect(
+      await screen.findByText("Selected policy evidence is unconfirmed")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
+    expect(recordAdvisoryPolicySignOffDecisionMock).not.toHaveBeenCalled();
+  });
+
   it("validates detail identity against the selected queue record before enabling action", async () => {
     getAdvisoryPolicyEvaluationMock.mockResolvedValueOnce({
       ...policyReviewQueueFixture.items[0],
