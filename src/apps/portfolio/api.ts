@@ -786,7 +786,11 @@ async function fetchPortfolioJson<T>(
     query?: URLSearchParams;
   } = {}
 ): Promise<T | null> {
-  const useCache = options.useCache ?? true;
+  // Server-rendered portfolio truth must be independent of process history so
+  // identical Workbench replicas cannot diverge behind a load balancer. The
+  // module cache is a browser-only request optimisation; Gateway remains the
+  // authority for every server render.
+  const useCache = target === "client" && (options.useCache ?? true);
   const url = buildPortfolioApiUrl(target, path, options.query);
 
   if (useCache && options.forceRefresh) {
