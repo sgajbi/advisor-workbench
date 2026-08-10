@@ -399,8 +399,10 @@ export function validateDependencyRiskInventory({
   for (const name of manifestNames) {
     const manifestVersion = packageJson.dependencies[name];
     const lockVersion = lockRoot.dependencies[name];
-    const resolvedVersion = packageLock?.packages?.[`node_modules/${name}`]?.version;
-    const inventoryVersion = inventoryByName.get(name)?.version;
+    const resolvedPackage = packageLock?.packages?.[`node_modules/${name}`];
+    const resolvedVersion = resolvedPackage?.version;
+    const inventoryEntry = inventoryByName.get(name);
+    const inventoryVersion = inventoryEntry?.version;
     if (!EXACT_STABLE_VERSION.test(manifestVersion ?? "")) {
       failures.push(`Direct production dependency ${name} must use an exact stable manifest version.`);
     }
@@ -412,6 +414,17 @@ export function validateDependencyRiskInventory({
     }
     if (inventoryVersion !== manifestVersion) {
       failures.push(`Risk inventory version for ${name} must match package.json (${manifestVersion}).`);
+    }
+    if (resolvedPackage?.license !== inventoryEntry?.license?.spdx) {
+      failures.push(
+        `Resolved lockfile license for ${name} must match the risk inventory (${inventoryEntry?.license?.spdx ?? "missing"}).`
+      );
+    }
+    const expectedLicenseEvidenceUrl = `https://www.npmjs.com/package/${name}/v/${manifestVersion}`;
+    if (inventoryEntry?.license?.evidenceUrl !== expectedLicenseEvidenceUrl) {
+      failures.push(
+        `License evidence for ${name} must identify the exact package and version (${expectedLicenseEvidenceUrl}).`
+      );
     }
   }
 

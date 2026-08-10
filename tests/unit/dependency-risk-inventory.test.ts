@@ -110,6 +110,22 @@ describe("direct production dependency risk inventory", () => {
     );
   });
 
+  it("rejects lockfile license drift and non-versioned package evidence", () => {
+    const evidence = loadEvidence();
+    evidence.packageLock.packages["node_modules/zod"].license = "Apache-2.0";
+    dependency(evidence, "zod").license.evidenceUrl =
+      "https://www.npmjs.com/package/zod";
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Resolved lockfile license for zod must match"),
+        expect.stringContaining(
+          "License evidence for zod must identify the exact package and version"
+        ),
+      ])
+    );
+  });
+
   it("rejects unsupported lifecycle and expired reviews", () => {
     const evidence = loadEvidence();
     const zod = dependency(evidence, "zod");
