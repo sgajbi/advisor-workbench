@@ -98,17 +98,38 @@ export function validateRuntimeSupportPolicy({
   if (dependencyStages.length !== 1) {
     failures.push('Dockerfile must declare exactly one Docker stage named "deps".');
   } else {
-    const dependencyInstallCommands = dependencyStages[0].instructions.filter(
-      ({ keyword, argument }) =>
-        keyword === "RUN" && /^npm\s+(?:ci|install)\b/.test(normalizeInstruction(argument))
+    const dependencyInstallCommands = dockerModel.stages.flatMap((stage) =>
+      stage.instructions
+        .filter(
+          ({ keyword, argument }) =>
+            keyword === "RUN" && containsNpmDependencyInstall(argument)
+        )
+        .map((instruction) => ({ instruction, stage }))
     );
     if (
       dependencyInstallCommands.length !== 1 ||
-      normalizeInstruction(dependencyInstallCommands[0].argument) !==
+      dependencyInstallCommands[0].stage !== dependencyStages[0] ||
+      normalizeInstruction(dependencyInstallCommands[0].instruction.argument) !==
         "npm ci --no-audit --no-fund"
     ) {
       failures.push(
-        "The named deps stage (container dependency stage) must contain exactly one active immutable install: RUN npm ci --no-audit --no-fund."
+        "Dockerfile must contain exactly one dependency install across all stages, owned by deps as: RUN npm ci --no-audit --no-fund."
+      );
+    }
+  }
+
+  const builderStages = dockerModel.stages.filter(({ name }) => name === "builder");
+  if (builderStages.length !== 1) {
+    failures.push('Dockerfile must declare exactly one Docker stage named "builder".');
+  } else {
+    const dependencyCopies = builderStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "COPY" &&
+        normalizeInstruction(argument) === "--from=deps /app/node_modules ./node_modules"
+    );
+    if (dependencyCopies.length !== 1) {
+      failures.push(
+        "The named builder stage must consume the governed deps node_modules exactly once."
       );
     }
   }
@@ -120,6 +141,17 @@ export function validateRuntimeSupportPolicy({
     if (dockerModel.stages.at(-1) !== runnerStages[0]) {
       failures.push(
         'The named runner stage must be the final Docker stage because protected builds publish the default final stage.'
+      );
+    }
+    const standaloneCopies = runnerStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "COPY" &&
+        normalizeInstruction(argument) ===
+          "--chown=node:node --from=builder /app/.next/standalone ./"
+    );
+    if (standaloneCopies.length !== 1) {
+      failures.push(
+        "The final runner stage must consume the builder standalone output exactly once."
       );
     }
     const userInstructions = runnerStages[0].instructions.filter(
@@ -185,14 +217,23 @@ export function validateRuntimeSupportPolicy({
           normalizeInstruction(step.run)
         )
     );
+    const browserSmokeSteps = collectWorkflowStepEntries(workflow).filter(
+      ({ step }) =>
+        typeof step.run === "string" &&
+        normalizeInstruction(step.run) === "make test-e2e"
+    );
     if (
       browserInstallSteps.length !== 1 ||
+      browserSmokeSteps.length !== 1 ||
       normalizeInstruction(browserInstallSteps[0]?.step.run ?? "") !==
         "node node_modules/playwright/cli.js install chromium" ||
-      !isUnconditionalWorkflowStep(browserInstallSteps[0])
+      !isUnconditionalWorkflowStep(browserInstallSteps[0]) ||
+      !isUnconditionalWorkflowStep(browserSmokeSteps[0]) ||
+      browserInstallSteps[0].job !== browserSmokeSteps[0].job ||
+      browserInstallSteps[0].stepIndex >= browserSmokeSteps[0].stepIndex
     ) {
       failures.push(
-        `${path} must install Chromium exactly once through an unconditional repository-locked Playwright CLI step.`
+        `${path} must install Chromium exactly once through the repository-locked CLI before smoke runs in the same unconditional job.`
       );
     }
   }
@@ -263,6 +304,12 @@ function expectEqual(failures, label, actual, expected) {
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsNpmDependencyInstall(value) {
+  return /(?:^|[\s;&|("'\/])npm\b(?=[^;&|\r\n]{0,200}\b(?:ci|install)\b)/i.test(
+    normalizeInstruction(value)
+  );
 }
 
 function isIsoDate(value) {

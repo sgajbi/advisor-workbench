@@ -15,12 +15,17 @@ export function collectWorkflowStepEntries(workflow) {
     }
     return job.steps
       .filter(isRecord)
-      .map((step) => ({ job, step }));
+      .map((step) => ({ job, step, stepIndex: job.steps.indexOf(step) }));
   });
 }
 
 export function isUnconditionalWorkflowStep({ job, step }) {
-  return !Object.hasOwn(job, "if") && !Object.hasOwn(step, "if");
+  return (
+    !Object.hasOwn(job, "if") &&
+    !Object.hasOwn(job, "continue-on-error") &&
+    !Object.hasOwn(step, "if") &&
+    !Object.hasOwn(step, "continue-on-error")
+  );
 }
 
 export function parseDockerfile(source) {
