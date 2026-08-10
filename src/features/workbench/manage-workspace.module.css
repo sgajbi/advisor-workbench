@@ -1245,13 +1245,13 @@
 
 .manageScope :global(.pm-quality-status-strip) {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1px;
   overflow: hidden;
   margin-top: 12px;
   border: 1px solid #c6c6cd;
   border-radius: 6px;
-  background: #ffffff;
+  background: #e0e3e5;
 }
 
 .manageScope :global(.pm-quality-status-strip .suite-row) {
@@ -1261,11 +1261,7 @@
   min-height: 96px;
   padding: 14px 16px;
   border-top: 0;
-  border-right: 1px solid #e0e3e5;
-}
-
-.manageScope :global(.pm-quality-status-strip .suite-row:last-child) {
-  border-right: 0;
+  background: #ffffff;
 }
 
 .manageScope :global(.pm-quality-status-strip .suite-row span) {
@@ -4029,7 +4025,6 @@
   .manageScope :global(.portfolio-memory-status-strip),
   .manageScope :global(.portfolio-memory-workspace),
   .manageScope :global(.portfolio-memory-detail-grid),
-  .manageScope :global(.pm-quality-status-strip),
   .manageScope :global(.pm-quality-command-readiness),
   .manageScope :global(.pm-quality-action-error),
   .manageScope :global(.pm-quality-operation-evidence),
