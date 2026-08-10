@@ -81,6 +81,40 @@ describe("direct production dependency risk inventory", () => {
     );
   });
 
+  it("governs required peers while excluding explicitly optional peers", () => {
+    const evidence = loadEvidence();
+    evidence.packageJson.peerDependencies = {
+      zod: evidence.packageJson.dependencies.zod,
+      "optional-adapter": "1.0.0",
+    };
+    evidence.packageJson.peerDependenciesMeta = {
+      "optional-adapter": { optional: true },
+    };
+    evidence.packageLock.packages[""].peerDependencies = {
+      zod: evidence.packageLock.packages[""].dependencies.zod,
+      "optional-adapter": "1.0.0",
+    };
+    evidence.packageLock.packages[""].peerDependenciesMeta = {
+      "optional-adapter": { optional: true },
+    };
+    delete evidence.packageJson.dependencies.zod;
+    delete evidence.packageLock.packages[""].dependencies.zod;
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual([]);
+
+    evidence.packageLock.packages[""].dependencies.zod =
+      evidence.packageLock.packages[""].peerDependencies.zod;
+    delete evidence.packageLock.packages[""].peerDependencies.zod;
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "Lockfile root section for zod must match package.json (peerDependencies)"
+        ),
+      ])
+    );
+  });
+
   it("rejects an inventory dependency removed from the manifest", () => {
     const evidence = loadEvidence();
     delete evidence.packageJson.dependencies.zod;
@@ -140,12 +174,16 @@ describe("direct production dependency risk inventory", () => {
     const evidence = loadEvidence();
     const zod = dependency(evidence, "zod");
     zod.stewardship.repositoryUrl = "https://";
+    zod.stewardship.securityChannelUrl = "https://.";
     zod.lifecycle.releaseEvidenceUrl = "https://";
     zod.maturity.adoptionEvidenceUrls = ["https://"];
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
         expect.stringContaining("stewardship.repositoryUrl must be a valid HTTPS evidence URL"),
+        expect.stringContaining(
+          "stewardship.securityChannelUrl must use a syntactically valid DNS name"
+        ),
         expect.stringContaining("lifecycle.releaseEvidenceUrl must be a valid HTTPS evidence URL"),
         expect.stringContaining("maturity.adoptionEvidenceUrls[0] must be a valid HTTPS evidence URL"),
       ])
