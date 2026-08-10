@@ -30,6 +30,126 @@ async function mockProposalQueue(page: Page) {
   });
 }
 
+async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[]) {
+  const reviews = [
+    {
+      evaluation_id: "pev_001",
+      proposal_id: "PRP-RISK-001",
+      proposal_version_id: "ppv_001",
+      policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
+      policy_version: "2026.05",
+      evaluation_status: "PENDING_REVIEW",
+      approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
+      disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+      consent_requirements: [],
+      source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
+    },
+    {
+      evaluation_id: "pev_002",
+      proposal_id: "PRP-INCOME-002",
+      proposal_version_id: "ppv_002",
+      policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
+      policy_version: "2026.06",
+      evaluation_status: "PENDING_REVIEW",
+      approval_dependencies: [],
+      disclosure_requirements: [],
+      consent_requirements: ["client_consent:SG_INCOME_MANDATE"],
+      source_gaps: [],
+    },
+  ];
+
+  await page.route("**/api/bff/api/v1/advisory-policy-evaluations/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/review-queue")) {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-policy-queue",
+          contract_version: "v1",
+          data: { items: reviews },
+        },
+      });
+      return;
+    }
+
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const evaluationId = pathParts.at(-2)?.startsWith("pev_")
+      ? pathParts.at(-2)
+      : pathParts.at(-1);
+    const review = reviews.find((item) => item.evaluation_id === evaluationId) ?? reviews[0];
+
+    if (request.method() === "POST" && url.pathname.endsWith("/sign-off-decisions")) {
+      recordedEvaluationIds.push(evaluationId ?? "unknown");
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-policy-decision",
+          contract_version: "v1",
+          data: {
+            workflow: {
+              evaluation_id: evaluationId,
+              sign_off_status: "PENDING_REVIEW",
+              client_ready_publication: "BLOCKED",
+            },
+          },
+        },
+      });
+      return;
+    }
+
+    if (url.pathname.endsWith("/sign-off-package")) {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-policy-package",
+          contract_version: "v1",
+          data: {
+            package_posture: {
+              sign_off_source_package: "AVAILABLE",
+              client_ready_publication: "BLOCKED",
+            },
+            lineage: {
+              evaluation_id: evaluationId,
+              audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+              lineage_posture: { client_ready_publication: "BLOCKED" },
+            },
+          },
+        },
+      });
+      return;
+    }
+
+    if (url.pathname.endsWith("/workflow")) {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-policy-workflow",
+          contract_version: "v1",
+          data: {
+            evaluation_id: evaluationId,
+            sign_off_status: "PENDING_REVIEW",
+            sign_off_blockers: evaluationId === "pev_002" ? ["CLIENT_CONSENT_REQUIRED"] : [],
+            maker_checker_required: true,
+            sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
+            client_ready_publication: "BLOCKED",
+          },
+        },
+      });
+      return;
+    }
+
+    await route.fulfill({
+      json: {
+        correlation_id: "corr-policy-detail",
+        contract_version: "v1",
+        data: {
+          ...review,
+          evaluation_hash: `sha256:${review.evaluation_id}`,
+          source_refs: ["lotus-core:governed_policy_source"],
+          evaluation_json: { rule_results: [{ rule_id: "MANDATE_ALIGNMENT", status: "READY" }] },
+        },
+      },
+    });
+  });
+}
+
 test("shows source-backed queue posture without invented advisory evidence", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalQueue(page);
@@ -63,6 +183,51 @@ test("keeps workflow context readable without horizontal overflow at stacked-she
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   );
   expect(hasHorizontalOverflow).toBeFalsy();
+});
+
+test("binds the suitability evidence workspace to the advisor-selected review", async ({
+  page,
+}, testInfo) => {
+  const recordedEvaluationIds: string[] = [];
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await mockProposalQueue(page);
+  await mockSuitabilityReviews(page, recordedEvaluationIds);
+  await page.goto(`/proposals?portfolioId=${portfolioId}&mode=suitability`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const firstReview = page.getByRole("option", { name: /PRP-RISK-001/i });
+  const secondReview = page.getByRole("option", { name: /PRP-INCOME-002/i });
+  await expect(firstReview).toHaveAttribute("aria-selected", "true");
+  await firstReview.press("ArrowDown");
+  await expect(secondReview).toHaveAttribute("aria-selected", "true");
+
+  const selectedReview = page.getByRole("region", { name: "Selected suitability review" });
+  await expect(
+    selectedReview.getByRole("heading", { name: "PRP-INCOME-002 · ppv_002" })
+  ).toBeVisible();
+  await expect(selectedReview.getByText("Source evidence complete")).toBeVisible();
+  await selectedReview.getByRole("button", { name: "Request more evidence" }).click();
+  await expect(
+    selectedReview.getByText("Evidence review request recorded through the advisory policy workflow.")
+  ).toBeVisible();
+  expect(recordedEvaluationIds).toEqual(["pev_002"]);
+
+  await testInfo.attach("suitability-selected-review-desktop", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(secondReview).toHaveAttribute("aria-selected", "true");
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(hasHorizontalOverflow).toBeFalsy();
+  await testInfo.attach("suitability-selected-review-mobile", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
 });
 
 test("keeps proposal counts scoped to the current source window", async ({ page }) => {

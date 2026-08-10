@@ -2840,3 +2840,84 @@ evidence, the persistent action path, and zero page-level horizontal overflow, w
 client-release, or execution authority. Repo-local `wiki/API-Surface.md` changes because the
 supported Proposal Detail operating and evidence posture changed; the README remains intentionally
 unchanged because repository role, commands, and navigation are unchanged.
+
+## Explicit Suitability Review Selection And Evidence Binding
+
+### Business job
+
+A client advisor, compliance reviewer, or supervisor works through every suitability policy
+evaluation that needs attention for the selected portfolio. They must be able to choose a proposal,
+confirm exactly which proposal version and evaluation the displayed evidence belongs to, identify
+the current blocker and required next step, and request further evidence without acting on a
+different record. The screen presents source-owned review evidence; it does not perform suitability
+assessment or grant sign-off authority.
+
+### Current-product research
+
+Research was reviewed on 2026-08-10 from official regulatory, product, and design-system sources:
+
+1. [ESMA MiFID II Article 25](https://www.esma.europa.eu/publications-and-data/interactive-single-rulebook/mifid-ii/article-25-assessment-suitability-and)
+   requires suitability to be assessed against the specific client's knowledge and experience,
+   financial situation, ability to bear losses, objectives, and risk tolerance. This makes
+   recommendation-specific record identity material, not decorative metadata.
+2. [FCA COBS 9/9A](https://handbook.fca.org.uk/handbook/COBS/9A.pdf) requires suitability assessment
+   and reporting for the recommendation or portfolio management service. Lotus therefore keeps
+   evidence visibly bound to one proposal version and one source evaluation.
+3. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   places firm and client criteria, suitability and pre-trade checks, and whole-portfolio analytics
+   inside the Identify → Construct → Deliver → Implement proposal workflow.
+4. [Carbon Data Table usage](https://carbondesignsystem.com/components/data-table/usage/) uses
+   explicit single-row selection when a user must act on one record and progressively discloses
+   supporting detail.
+5. [GOV.UK Task List](https://design-system.service.gov.uk/components/task-list/) pairs each
+   actionable task with its status and makes the whole row an operable target, supporting a compact
+   worklist before record detail.
+
+These sources inform record selection, information hierarchy, and interaction only. Gateway and
+Advise remain authoritative for policy evaluation, rules, requirements, workflow, sign-off,
+client-publication posture, and persistence.
+
+### Adopted decisions
+
+1. Use an explicit single-record worklist with visible `Selected` text, selected styling that does
+   not depend on colour alone, pointer selection, and roving Arrow Up/Down/Home/End keyboard focus.
+2. Preserve an explicit evaluation across source reorder; visibly choose the first available record
+   only when no explicit selection exists or the selected record leaves the queue.
+3. Scope selected detail caches and mutation feedback by portfolio plus evaluation so a portfolio
+   switch or late completion cannot publish a superseded record's posture.
+4. Show proposal, proposal version, policy pack, current status, requirements, evidence posture,
+   and next action in the worklist; repeat the selected proposal/version once as the detail-pane
+   identity boundary.
+5. Put the required next step, current policy posture, source evidence, blockers, sign-off package,
+   and review SLA before secondary control and audit detail.
+6. Keep dependencies, source references, and outstanding gaps available through native progressive
+   disclosure.
+7. Use a container-safe full-width worklist and evidence pane because the persistent navigation and
+   context rail make the centre workspace narrower than the browser viewport.
+
+### Rejected decisions
+
+1. Silent first-row detail and action binding: source reorder can change the acting record without
+   advisor intent.
+2. A wide six-column queue table followed by a detached evidence panel: it obscures the selected
+   relationship and relies on horizontal scanning at compact widths.
+3. A two-column master-detail layout chosen only from viewport width: persistent Workbench rails can
+   compress the actual content container even on a large desktop.
+4. Card-per-fact dashboard composition: it gives every evidence field equal weight and delays the
+   business decision.
+5. Browser-owned suitability calculation, approval, waiver, client-ready publication, direct
+   Advise calls, or production identity work.
+
+### Validation and publication decision
+
+Workbench #595 owns the slice. Focused selector, view-model, and integration proof passes 29 tests,
+including selection across reorder and removal, second-record keyboard selection, record-specific
+detail/package/workflow calls, record-specific evidence-request payload, late first-record response
+abandonment, stale mutation-success suppression, and fail-closed mixed-source identity handling.
+TypeScript and focused ESLint pass. An
+isolated production-browser test on a dedicated port passes at 1440 and 390 pixels, proves the
+second-record action, zero page-level overflow, and attaches desktop/mobile evidence under
+`playwright-report/data/`. No Gateway contract changed. `wiki/Supported-Features.md` changes because
+the supported Suitability Review operating behavior now includes explicit multi-record selection
+and stale-completion fencing; README and operator runbooks remain intentionally unchanged because
+repository role, commands, and runtime procedure did not change.
