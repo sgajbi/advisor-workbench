@@ -1,4 +1,5 @@
 ARG NODE_BASE_IMAGE=node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3
+ARG WORKBENCH_DEPLOYMENT_ID=local-development
 
 FROM ${NODE_BASE_IMAGE} AS ci-base
 WORKDIR /app
@@ -9,6 +10,8 @@ RUN npm ci --no-audit --no-fund
 
 FROM ci-base AS builder
 WORKDIR /app
+ARG WORKBENCH_DEPLOYMENT_ID
+ENV WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json next-env.d.ts next.config.mjs tsconfig.json ./
 COPY src ./src
@@ -18,7 +21,9 @@ RUN npm run build
 
 FROM ci-base AS runner
 WORKDIR /app
+ARG WORKBENCH_DEPLOYMENT_ID
 ENV NODE_ENV=production
+ENV WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 COPY --chown=node:node --from=builder /app/.next/standalone ./

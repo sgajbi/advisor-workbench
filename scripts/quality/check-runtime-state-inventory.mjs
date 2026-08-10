@@ -138,6 +138,14 @@ export function validateRuntimeStateInventory({
       failures.push(`unreviewed Next configuration feature ${feature.name}`);
     }
   }
+  if (
+    !/\bdeploymentId\s*[:,]/.test(nextConfig) ||
+    !/WORKBENCH_DEPLOYMENT_ID/.test(nextConfig)
+  ) {
+    failures.push(
+      "Next configuration must bind deploymentId to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
+    );
+  }
 
   return failures;
 }

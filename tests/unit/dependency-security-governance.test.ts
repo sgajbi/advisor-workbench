@@ -294,6 +294,8 @@ describe("dependency security governance", () => {
     expect(dockerfile).toContain(
       'HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=5 CMD ["node", "healthcheck.mjs"]',
     );
+    expect(dockerfile).toContain("ARG WORKBENCH_DEPLOYMENT_ID=local-development");
+    expect(dockerfile.match(/ENV WORKBENCH_DEPLOYMENT_ID=/g)).toHaveLength(2);
     expect(compose).not.toContain("healthcheck:");
     expect(compose).not.toContain("wget");
     expect(compose).not.toContain("curl");

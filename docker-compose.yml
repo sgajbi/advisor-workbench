@@ -3,12 +3,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        WORKBENCH_DEPLOYMENT_ID: ${WORKBENCH_DEPLOYMENT_ID:-local-development}
     image: lotus-workbench:latest
     ports:
       - "3000:3000"
     environment:
       - BFF_BASE_URL=${BFF_BASE_URL:-http://host.docker.internal:8100}
       - LOTUS_ENVIRONMENT=${LOTUS_ENVIRONMENT:-dev}
+      - WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID:-local-development}
       - WORKBENCH_IDEA_AUTH_MODE=${WORKBENCH_IDEA_AUTH_MODE:-development_configured}
       - WORKBENCH_ADVISOR_COCKPIT_AUTH_MODE=${WORKBENCH_ADVISOR_COCKPIT_AUTH_MODE:-development_configured}
       - WORKBENCH_ADVISOR_COCKPIT_ACTOR_ID=${WORKBENCH_ADVISOR_COCKPIT_ACTOR_ID:-advisor_sg_001}

@@ -216,7 +216,8 @@
     "incrementalStaticRegeneration": "not-used",
     "onDemandRevalidation": "not-used",
     "businessFetchCacheMode": "no-store",
-    "sharedCacheInfrastructure": "not-required-by-current-feature-usage"
+    "sharedCacheInfrastructure": "not-required-by-current-feature-usage",
+    "rollingDeploymentProtection": "deployment-id-required-outside-development"
   },
   "explicitNonClaims": [
     "production-high-availability",

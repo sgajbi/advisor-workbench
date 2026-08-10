@@ -44,7 +44,8 @@
         "incrementalStaticRegeneration",
         "onDemandRevalidation",
         "businessFetchCacheMode",
-        "sharedCacheInfrastructure"
+        "sharedCacheInfrastructure",
+        "rollingDeploymentProtection"
       ],
       "properties": {
         "serverActions": { "const": "prohibited-until-reviewed" },
@@ -54,6 +55,9 @@
         "businessFetchCacheMode": { "const": "no-store" },
         "sharedCacheInfrastructure": {
           "const": "not-required-by-current-feature-usage"
+        },
+        "rollingDeploymentProtection": {
+          "const": "deployment-id-required-outside-development"
         }
       }
     },
