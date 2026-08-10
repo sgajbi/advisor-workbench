@@ -2921,3 +2921,79 @@ second-record action, zero page-level overflow, and attaches desktop/mobile evid
 the supported Suitability Review operating behavior now includes explicit multi-record selection
 and stale-completion fencing; README and operator runbooks remain intentionally unchanged because
 repository role, commands, and runtime procedure did not change.
+
+## PM Operating Quality Supervisory Record Context
+
+### Business job
+
+An investment-control supervisor reviews portfolio-manager quality runs, fairness evidence, and
+recorded supervisory actions. They must be able to select the exact source record, compare its
+business posture, inspect its evidence, and know that the support-summary, remediation, and summary
+invocation commands will use that same record. Workbench supports the supervisory workflow; it does
+not calculate PM quality, rank portfolio managers, make conduct or HR decisions, or initiate client
+communication or investment execution.
+
+### Current-product research
+
+Research was reviewed on 2026-08-10 from official product and design-system sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes connected data, centralized risk and oversight, and outlier monitoring across a book
+   of business. Lotus therefore keeps source record identity and supervisory posture together.
+2. [SAP Fiori worklist](https://experience.sap.com/fiori-design-web/worklist-sap-fiori-elements/)
+   separates a task-oriented record worklist from the object page used to inspect and act on one
+   selected business object.
+3. [Microsoft list/details pattern](https://learn.microsoft.com/windows/apps/develop/ui/controls/list-details)
+   keeps selection visible while related detail changes and adapts the composition to narrower
+   content regions.
+4. [IBM Carbon data-table usage](https://carbondesignsystem.com/components/data-table/usage/)
+   requires explicit single selection when an action applies to one row and keeps action scope
+   understandable.
+5. [Fluent list usage](https://fluent2.microsoft.design/components/web/react/core/list/usage) and
+   the [WAI-ARIA listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) provide the
+   selected-state, roving-focus, Arrow, Home, and End interaction model.
+
+These sources inform workflow, information hierarchy, and interaction only. Gateway and Manage
+remain authoritative for quality runs, fairness analyses, review actions, dates, policy posture,
+reason codes, source references, and persistence.
+
+### Adopted decisions
+
+1. Put one compact supervisory record context before detail and command areas, with separate
+   single-selection worklists for quality runs, fairness reviews, and supervisory actions.
+2. Show business identity, status, as-of date, policy or target context, and the action relationship
+   on each selectable record; keep the non-colour `Selected` state explicit.
+3. Preserve an explicit selection across source reorder and fall back to the first available record
+   only when the selected source record leaves the returned collection.
+4. Load selected fairness and review detail through Gateway, fence late responses by request
+   sequence and exact three-record selection, and suppress superseded completion.
+5. Make the selected quality run and review action the only source for support-summary and summary
+   invocation commands; make target type choose between the already-selected quality and fairness
+   records rather than introducing a fourth id selector.
+6. Remove duplicate record ledgers and id dropdowns after the reusable selection surface owns the
+   relationship; retain segment and invocation-history tables because they answer different
+   business questions.
+7. Use a container-safe auto-fitting layout and colocated CSS Module so the centre workspace can
+   reflow independently of the browser viewport and without adding global selector debt.
+
+### Rejected decisions
+
+1. Silent first-record projection, because source ordering can change without supervisor intent.
+2. A disconnected dropdown-only context, because it hides the selected record's posture and next
+   action while separating identity from evidence.
+3. Keeping both the new worklist and the old ledgers/id selectors, because two selection models can
+   disagree and add dead duplication.
+4. A card mosaic or decorative dashboard, because this is a dense oversight workflow with a clear
+   record-to-evidence-to-action sequence.
+5. Browser-side PM scoring, fairness calculation, ranking, HR or conduct decisions, suitability,
+   client contact, orders, OMS, execution, fills, or settlement.
+
+### Validation and publication decision
+
+Workbench #596 owns the slice. Focused selector, command-model, hook, view-model, component, panel,
+and Gateway-create integration proof passes 63 tests, including second-record keyboard and pointer
+selection, reorder and removal, selected-detail fetching, stale-response fencing, source date
+binding, and second-record command payloads. TypeScript, targeted ESLint, CSS governance, and diff
+integrity pass. Isolated production-browser, aggregate, protected-CI, and exact-main evidence remain
+required before closure. Supported source contracts, routes, and operator runtime procedure are
+unchanged; the wiki decision will be confirmed after visual proof.
