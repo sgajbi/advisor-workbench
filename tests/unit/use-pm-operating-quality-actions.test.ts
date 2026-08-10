@@ -630,6 +630,95 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.fairnessCreateEvidence?.fairnessAnalysisId).toBe("pmq_fair_002");
   });
 
+  it("keeps a persisted fairness record selectable until the canonical list refreshes", async () => {
+    const createdFairnessRecord = fairnessAnalysisResponse.data
+      .fairness_analysis as Record<string, unknown>;
+    const existingFairnessRecord = {
+      ...createdFairnessRecord,
+      fairness_analysis_id: "pmq_fair_001",
+      as_of_date: "2026-05-13",
+    };
+    const existingFairnessDetail = {
+      ...fairnessAnalysisResponse,
+      correlation_id: "corr-pmq-fairness-detail-001",
+      data: { fairness_analysis: existingFairnessRecord },
+    };
+    const initialFairnessList = {
+      ...fairnessAnalysisResponse,
+      correlation_id: "corr-pmq-fairness-list-initial",
+      data: { fairness_analyses: [existingFairnessRecord] },
+    };
+    vi.mocked(createDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
+      fairnessAnalysisResponse,
+    );
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockImplementation(
+      async (fairnessAnalysisId) =>
+        fairnessAnalysisId === "pmq_fair_001"
+          ? existingFairnessDetail
+          : fairnessAnalysisResponse,
+    );
+    const { result, rerender } = renderHook(
+      ({ fairnessAnalyses }) =>
+        usePmOperatingQualityActions({
+          policies,
+          scoreRuns,
+          fairnessAnalyses,
+        }),
+      { initialProps: { fairnessAnalyses: initialFairnessList } },
+    );
+
+    await act(async () => {
+      await result.current.createFairnessAnalysis();
+    });
+    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_002");
+    expect(result.current.model.fairnessAnalysisRows).toHaveLength(2);
+    expect(result.current.model.fairnessAnalysisRows.map((row) => row.fairnessAnalysisId)).toEqual(
+      expect.arrayContaining(["pmq_fair_001", "pmq_fair_002"]),
+    );
+
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_001");
+    });
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_002");
+
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_001");
+    });
+    rerender({
+      fairnessAnalyses: {
+        ...initialFairnessList,
+        correlation_id: "corr-pmq-fairness-list-refreshed",
+        data: {
+          fairness_analyses: [
+            existingFairnessRecord,
+            {
+              ...createdFairnessRecord,
+              fairness_analysis_id: "pmq_fair_002",
+              as_of_date: "2026-05-15",
+            },
+          ],
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current.model.fairnessAnalysisRows).toHaveLength(2);
+      expect(
+        result.current.model.fairnessAnalysisRows.find(
+          (row) => row.fairnessAnalysisId === "pmq_fair_002",
+        )?.asOfDate,
+      ).toBe("2026-05-15");
+    });
+
+    rerender({ fairnessAnalyses: initialFairnessList });
+    expect(result.current.model.fairnessAnalysisRows.map((row) => row.fairnessAnalysisId)).toEqual([
+      "pmq_fair_001",
+    ]);
+  });
+
   it("requests support summary through Gateway without constructing prompts", async () => {
     vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue(summaryResponse);
     const { result } = renderActions();
