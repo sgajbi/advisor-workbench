@@ -3063,5 +3063,7 @@ Research was reviewed on 2026-08-10 from official engineering sources:
 
 Workbench #603 owns the slice. The Gateway contract, supported-feature scope, visual composition,
 operator procedure, README, wiki source, central context, and skills do not change. Focused and
-aggregate evidence, protected review/CI, exact-main proof, issue closure, and branch hygiene remain
-required before closure.
+aggregate evidence are green: the retention model and hook pass 31 focused tests, and the
+exact-worktree `make check` passes 343 files and 2,007 tests at 91.58% statement/line coverage plus
+the optimized 25-route build and bundle budgets. Protected review/CI, exact-main proof, issue
+closure, and branch hygiene remain required before closure.
