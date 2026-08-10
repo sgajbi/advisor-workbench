@@ -321,7 +321,7 @@
           "minLength": 3
         },
         "approvalEvidence": {
-          "$ref": "#/$defs/nonEmptyText"
+          "$ref": "#/$defs/httpsUrl"
         },
         "rollbackPath": {
           "$ref": "#/$defs/nonEmptyText"

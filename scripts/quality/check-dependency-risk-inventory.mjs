@@ -83,6 +83,7 @@ const REPLACEMENT_STRATEGIES = new Set([
   "framework_migration",
 ]);
 const SWITCHING_COSTS = new Set(["high", "moderate", "low"]);
+const APPROVED_LICENSES = new Set(["Apache-2.0", "MIT"]);
 const EXACT_STABLE_VERSION = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const INVENTORY_VERSION = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const GITHUB_ISSUE = /^https:\/\/github\.com\/sgajbi\/lotus-workbench\/issues\/[0-9]+$/;
@@ -163,18 +164,16 @@ function validatePlatformPolicy(failures, policy) {
     sourcePath:
       "platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json",
     sourceRepository: "https://github.com/sgajbi/lotus-platform",
+    sourceRevision: "2868348d289fc685ecf5a218b6c73256ac3a7742",
   };
   for (const [field, value] of Object.entries(expected)) {
     if (policy[field] !== value) {
       failures.push(`platformPolicy.${field} must be ${JSON.stringify(value)}.`);
     }
   }
-  if (typeof policy.sourceRevision !== "string" || !/^[0-9a-f]{40}$/.test(policy.sourceRevision)) {
-    failures.push("platformPolicy.sourceRevision must be an immutable 40-character Git SHA.");
-  }
 }
 
-function validateException(failures, dependency, path, today) {
+function validateException(failures, dependency, path, reviewOwner, today) {
   if (dependency.technologyState === "approved_default") {
     if (dependency.exception !== null) {
       failures.push(`${path}.exception must be null for approved_default technology.`);
@@ -191,8 +190,14 @@ function validateException(failures, dependency, path, today) {
   if (!GITHUB_ISSUE.test(dependency.exception.issue ?? "")) {
     failures.push(`${path}.exception.issue must be a canonical Workbench GitHub issue URL.`);
   }
-  requireText(failures, dependency.exception.owner, `${path}.exception.owner`, 3);
-  requireText(failures, dependency.exception.approvalEvidence, `${path}.exception.approvalEvidence`);
+  if (dependency.exception.owner !== reviewOwner) {
+    failures.push(`${path}.exception.owner must match the inventory reviewOwner.`);
+  }
+  requireHttps(
+    failures,
+    dependency.exception.approvalEvidence,
+    `${path}.exception.approvalEvidence`
+  );
   requireText(failures, dependency.exception.rollbackPath, `${path}.exception.rollbackPath`);
   requireText(failures, dependency.exception.exitCriterion, `${path}.exception.exitCriterion`);
   if (!isIsoDate(dependency.exception.expiryDate)) {
@@ -202,7 +207,7 @@ function validateException(failures, dependency, path, today) {
   }
 }
 
-function validateDependency(failures, dependency, index, allowedLicenses, reviewOwner, today) {
+function validateDependency(failures, dependency, index, reviewOwner, today) {
   const path = `dependencies[${index}]`;
   if (!pushExactKeyFailures(failures, dependency, DEPENDENCY_KEYS, path)) return;
   requireText(failures, dependency.name, `${path}.name`, 1);
@@ -233,7 +238,7 @@ function validateDependency(failures, dependency, index, allowedLicenses, review
   }
 
   if (pushExactKeyFailures(failures, dependency.license, LICENSE_KEYS, `${path}.license`)) {
-    if (!allowedLicenses.has(dependency.license.spdx)) {
+    if (!APPROVED_LICENSES.has(dependency.license.spdx)) {
       failures.push(`${path}.license.spdx ${JSON.stringify(dependency.license.spdx)} is not allowed.`);
     }
     requireHttps(failures, dependency.license.evidenceUrl, `${path}.license.evidenceUrl`);
@@ -282,7 +287,7 @@ function validateDependency(failures, dependency, index, allowedLicenses, review
     requireReviewDates(failures, dependency.review, `${path}.review`, today);
   }
 
-  validateException(failures, dependency, path, today);
+  validateException(failures, dependency, path, reviewOwner, today);
 }
 
 export function validateDependencyRiskInventory({
@@ -337,6 +342,17 @@ export function validateDependencyRiskInventory({
     if (allowedLicenses.size !== inventory.allowedLicenses.length) {
       failures.push("Inventory allowedLicenses must be unique.");
     }
+    const unsupportedLicenses = [...allowedLicenses].filter(
+      (license) => !APPROVED_LICENSES.has(license)
+    );
+    const missingLicenses = [...APPROVED_LICENSES].filter(
+      (license) => !allowedLicenses.has(license)
+    );
+    if (unsupportedLicenses.length > 0 || missingLicenses.length > 0) {
+      failures.push(
+        `Inventory allowedLicenses must be exactly ${sorted(APPROVED_LICENSES).join(", ")}.`
+      );
+    }
   }
 
   if (!isRecord(packageJson.dependencies)) {
@@ -355,7 +371,7 @@ export function validateDependencyRiskInventory({
 
   const inventoryByName = new Map();
   inventory.dependencies.forEach((dependency, index) => {
-    validateDependency(failures, dependency, index, allowedLicenses, inventory.reviewOwner, today);
+    validateDependency(failures, dependency, index, inventory.reviewOwner, today);
     if (isRecord(dependency) && typeof dependency.name === "string") {
       if (inventoryByName.has(dependency.name)) {
         failures.push(`Inventory contains duplicate dependency ${dependency.name}.`);
