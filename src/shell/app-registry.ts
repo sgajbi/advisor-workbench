@@ -1,14 +1,22 @@
-export type ShellAppId =
-  | "home"
+import { normalizePerformanceWorkspaceMode } from "@/apps/performance/performance-workspace-modes";
+
+export type ShellWorkspaceId =
   | "portfolio"
   | "performance"
   | "risk"
   | "proposal"
   | "advisory";
 
-const SHELL_APP_MATCHERS: Record<ShellAppId, string[]> = {
-  home: ["/", "/suite"],
+export type ShellRouteScope = "home" | "workspace" | "platform-utility" | "unmatched";
+
+export type ShellRouteContext = {
+  scope: ShellRouteScope;
+  workspaceId: ShellWorkspaceId | null;
+};
+
+const SHELL_WORKSPACE_MATCHERS: Record<ShellWorkspaceId, string[]> = {
   portfolio: [
+    "/allocation",
     "/book",
     "/portfolio",
     "/portfolios",
@@ -27,28 +35,42 @@ const SHELL_APP_MATCHERS: Record<ShellAppId, string[]> = {
   advisory: ["/recommendations"],
 };
 
-export function resolveShellApp(
+export function resolveShellRouteContext(
   pathname: string | null | undefined,
   searchParams?: URLSearchParams | null
-): { id: ShellAppId } {
+): ShellRouteContext {
   const normalizedPath = pathname?.trim() || "/";
 
-  if (normalizedPath.startsWith("/performance")) {
-    if (searchParams?.get("mode") === "advisor") {
-      return { id: "advisory" };
+  if (normalizedPath === "/" || matchesRouteBoundary(normalizedPath, "/suite")) {
+    return { scope: "home", workspaceId: null };
+  }
+
+  if (matchesRouteBoundary(normalizedPath, "/data-products")) {
+    return { scope: "platform-utility", workspaceId: null };
+  }
+
+  if (matchesRouteBoundary(normalizedPath, "/performance")) {
+    const mode = normalizePerformanceWorkspaceMode(searchParams?.get("mode"));
+    if (mode === "advisor") {
+      return { scope: "workspace", workspaceId: "advisory" };
     }
     return {
-      id: searchParams?.get("mode") === "risk" ? "risk" : "performance",
+      scope: "workspace",
+      workspaceId: mode === "risk" ? "risk" : "performance",
     };
   }
 
-  const matched = (Object.entries(SHELL_APP_MATCHERS) as Array<[ShellAppId, string[]]>).find(
-    ([id, matchers]) =>
-      id !== "risk" &&
-      matchers.some((matcher) =>
-        matcher === "/" ? normalizedPath === "/" : normalizedPath.startsWith(matcher)
-      )
+  const matched = (
+    Object.entries(SHELL_WORKSPACE_MATCHERS) as Array<[ShellWorkspaceId, string[]]>
+  ).find(([, matchers]) =>
+    matchers.some((matcher) => matchesRouteBoundary(normalizedPath, matcher))
   );
 
-  return { id: matched?.[0] ?? "home" };
+  return matched
+    ? { scope: "workspace", workspaceId: matched[0] }
+    : { scope: "unmatched", workspaceId: null };
+}
+
+function matchesRouteBoundary(pathname: string, route: string): boolean {
+  return pathname === route || pathname.startsWith(`${route}/`);
 }

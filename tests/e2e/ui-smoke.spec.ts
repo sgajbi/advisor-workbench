@@ -171,6 +171,34 @@ test.describe('UI smoke checks', () => {
     await expect(navigation).toBeVisible();
   });
 
+  test('global workspace orientation remains truthful across supported shell widths', async ({ page }) => {
+    test.setTimeout(120000);
+
+    for (const viewport of [
+      { width: 1366, height: 900 },
+      { width: 1024, height: 768 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/allocation', { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+      const allocationNavigation = page.getByRole('navigation', { name: 'Workspace Navigation' });
+      await expect(allocationNavigation).toBeVisible({ timeout: 60000 });
+      await expect(allocationNavigation.locator('[aria-current="page"]')).toHaveCount(1);
+      await expect(allocationNavigation.getByRole('link', { name: 'Portfolio' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+
+      await page.goto('/data-products', { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+      const dataProductNavigation = page.getByRole('navigation', { name: 'Workspace Navigation' });
+      await expect(dataProductNavigation).toBeVisible({ timeout: 60000 });
+      await expect(dataProductNavigation.locator('[aria-current="page"]')).toHaveCount(0);
+      await expect(dataProductNavigation.getByRole('link', { name: 'Data Products' })).toHaveCount(0);
+    }
+  });
+
   test('mobile layout has no horizontal overflow on key pages', async ({ page }) => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 390, height: 844 });

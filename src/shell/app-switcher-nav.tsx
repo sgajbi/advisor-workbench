@@ -7,7 +7,7 @@ import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities
 import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
 import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
-import { resolveShellApp } from "./app-registry";
+import { resolveShellRouteContext } from "./app-registry";
 import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
@@ -15,7 +15,7 @@ export default function AppSwitcherNav() {
   const fallback = fallbackNormalizedCapabilities();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeApp = resolveShellApp(pathname, searchParams);
+  const routeContext = resolveShellRouteContext(pathname, searchParams);
   const workspaceDescriptors =
     shellBootstrapSource === "contract"
       ? normalized.shellBootstrap.workspaces
@@ -33,7 +33,7 @@ export default function AppSwitcherNav() {
       label: workspace.label,
       href: workspace.enabled ? workspace.href : undefined,
       disabled: !workspace.enabled,
-      active: activeApp.id === workspace.id,
+      active: routeContext.workspaceId === workspace.id,
       title: buildWorkspaceTitle(workspace),
     };
   });
