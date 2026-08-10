@@ -312,6 +312,205 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.actionError).toBeNull();
   });
 
+  it("binds support summaries to the explicitly selected score run across reorder", async () => {
+    const firstScoreRun = (scoreRuns.data.score_runs as Array<Record<string, unknown>>)[0];
+    const secondScoreRun = {
+      ...firstScoreRun,
+      score_run_id: "pmq_run_002",
+      pm_id: "PM_SG_002",
+      book_id: "PM_BOOK_SG_INCOME",
+      as_of_date: "2026-05-14",
+    };
+    const multipleScoreRuns = {
+      ...scoreRuns,
+      data: { ...scoreRuns.data, score_runs: [firstScoreRun, secondScoreRun] },
+    };
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue(
+      replacementSummaryResponse,
+    );
+    const { result, rerender } = renderHook(
+      ({ currentScoreRuns }) =>
+        usePmOperatingQualityActions({ policies, scoreRuns: currentScoreRuns }),
+      { initialProps: { currentScoreRuns: multipleScoreRuns } },
+    );
+
+    act(() => result.current.selectScoreRun("pmq_run_002"));
+
+    expect(result.current.selection.scoreRunId).toBe("pmq_run_002");
+    expect(result.current.model.selectedScoreRun).toMatchObject({
+      scoreRunId: "pmq_run_002",
+      pmId: "PM_SG_002",
+    });
+    expect(result.current.summaryInvocationForm.scoreRunId).toBe("pmq_run_002");
+
+    rerender({
+      currentScoreRuns: {
+        ...multipleScoreRuns,
+        data: { ...multipleScoreRuns.data, score_runs: [secondScoreRun, firstScoreRun] },
+      },
+    });
+    expect(result.current.selection.scoreRunId).toBe("pmq_run_002");
+
+    await act(async () => {
+      await result.current.requestSupportSummary();
+    });
+    expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
+      scoreRunId: "pmq_run_002",
+    });
+    expect(result.current.model.summaryPosture.runId).toBe("packrun_pmq_2");
+  });
+
+  it("loads selected fairness and review-action detail and binds the visible action target", async () => {
+    const firstFairness = {
+      ...(fairnessAnalysisResponse.data.fairness_analysis as Record<string, unknown>),
+      fairness_analysis_id: "pmq_fair_001",
+      as_of_date: "2026-05-13",
+    };
+    const secondFairness = {
+      ...firstFairness,
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+    };
+    const fairnessList = {
+      ...fairnessAnalysisResponse,
+      data: { fairness_analyses: [firstFairness, secondFairness] },
+    };
+    const firstReviewAction = {
+      ...(reviewActionResponse.data.review_action as Record<string, unknown>),
+      review_action_id: "pmq_review_001",
+      review_action_ref: "PMQ-REVIEW-001",
+    };
+    const secondReviewAction = {
+      ...firstReviewAction,
+      review_action_id: "pmq_review_002",
+      review_action_ref: "PMQ-REVIEW-002",
+    };
+    const reviewActionList = {
+      ...reviewActionResponse,
+      data: { review_actions: [firstReviewAction, secondReviewAction] },
+    };
+    const secondFairnessDetail = {
+      ...fairnessAnalysisResponse,
+      data: { fairness_analysis: secondFairness },
+    };
+    const secondReviewActionDetail = {
+      ...reviewActionResponse,
+      data: { review_action: secondReviewAction },
+    };
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
+      secondFairnessDetail,
+    );
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      secondReviewActionDetail,
+    );
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      secondReviewActionDetail,
+    );
+    const { result } = renderActions({
+      fairnessAnalyses: fairnessList,
+      fairnessAnalysisDetail: {
+        ...fairnessAnalysisResponse,
+        data: { fairness_analysis: firstFairness },
+      },
+      reviewActions: reviewActionList,
+      reviewActionDetail: {
+        ...reviewActionResponse,
+        data: { review_action: firstReviewAction },
+      },
+    });
+
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+    await waitFor(() =>
+      expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_002"),
+    );
+    await act(async () => {
+      await result.current.selectReviewAction("pmq_review_002");
+    });
+
+    expect(getDpmPmOperatingQualityFairnessAnalysis).toHaveBeenCalledWith(
+      "pmq_fair_002",
+      "client",
+    );
+    expect(getDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith(
+      "pmq_review_002",
+      "client",
+    );
+    expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-14");
+    expect(result.current.model.reviewActionDetail.reviewActionId).toBe("pmq_review_002");
+    expect(result.current.reviewActionForm).toMatchObject({
+      targetType: "FAIRNESS_ANALYSIS",
+      targetId: "pmq_fair_002",
+      reviewActionRef: "PMQ-REVIEW-pmq_fair_002",
+    });
+    expect(result.current.summaryInvocationForm.reviewActionId).toBe("pmq_review_002");
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+    expect(previewDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        target_type: "FAIRNESS_ANALYSIS",
+        target_id: "pmq_fair_002",
+        as_of_date: "2026-05-14",
+      }),
+      actorId: "workbench-pm-operating-quality-supervisor",
+      correlationId: "corr-workbench-pm-quality-review-action-test",
+    });
+  });
+
+  it("discards late selected-detail completion after the supervisor changes record", async () => {
+    const firstFairness = {
+      ...(fairnessAnalysisResponse.data.fairness_analysis as Record<string, unknown>),
+      fairness_analysis_id: "pmq_fair_001",
+      as_of_date: "2026-05-13",
+    };
+    const secondFairness = {
+      ...firstFairness,
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+    };
+    const fairnessList = {
+      ...fairnessAnalysisResponse,
+      data: { fairness_analyses: [firstFairness, secondFairness] },
+    };
+    let resolveFirstRequest!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    let resolveSecondRequest!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis)
+      .mockReturnValueOnce(new Promise((resolve) => { resolveFirstRequest = resolve; }))
+      .mockReturnValueOnce(new Promise((resolve) => { resolveSecondRequest = resolve; }));
+    const { result } = renderActions({ fairnessAnalyses: fairnessList });
+
+    act(() => {
+      void result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+    await waitFor(() => expect(result.current.pendingFairnessDetail).toBe(true));
+    act(() => {
+      void result.current.selectFairnessAnalysis("pmq_fair_001");
+    });
+
+    await act(async () => {
+      resolveSecondRequest({
+        ...fairnessAnalysisResponse,
+        data: { fairness_analysis: firstFairness },
+      });
+      await Promise.resolve();
+    });
+    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_001");
+    expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-13");
+
+    await act(async () => {
+      resolveFirstRequest({
+        ...fairnessAnalysisResponse,
+        data: { fairness_analysis: secondFairness },
+      });
+      await Promise.resolve();
+    });
+    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_001");
+    expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-13");
+  });
+
   it("previews score-run evidence through Gateway with policy context", async () => {
     vi.mocked(previewDpmPmOperatingQualityScoreRun).mockResolvedValue(scoreRuns);
     const { result } = renderActions();

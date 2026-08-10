@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   buildDpmPmOperatingQualityReviewActionCorrelationId,
@@ -39,6 +39,7 @@ import {
 import {
   buildPmOperatingQualityPanelModel,
   matchesPmOperatingQualitySummaryScoreRun,
+  type PmOperatingQualitySelection,
   type PmOperatingQualityPanelModel,
 } from "@/features/workbench/pm-operating-quality-view-model";
 import {
@@ -63,6 +64,9 @@ type UsePmOperatingQualityActionsInput = {
 
 type UsePmOperatingQualityActionsResult = {
   model: PmOperatingQualityPanelModel;
+  selection: PmOperatingQualitySelection;
+  pendingFairnessDetail: boolean;
+  pendingReviewActionDetail: boolean;
   pendingAction: boolean;
   pendingFairnessAction: boolean;
   pendingFairnessCreateAction: boolean;
@@ -91,6 +95,9 @@ type UsePmOperatingQualityActionsResult = {
     field: keyof PmQualitySummaryInvocationForm,
     value: string
   ) => void;
+  selectScoreRun: (scoreRunId: string) => void;
+  selectFairnessAnalysis: (fairnessAnalysisId: string) => Promise<void>;
+  selectReviewAction: (reviewActionId: string) => Promise<void>;
   previewScoreRun: () => Promise<void>;
   previewFairnessAnalysis: () => Promise<void>;
   createFairnessAnalysis: () => Promise<void>;
@@ -107,6 +114,12 @@ type PmQualitySummaryState = {
   response: DpmPmOperatingQualitySummaryResponse | null;
   outcome: DpmAiWorkflowOutcome | null;
   error: PmQualityActionError | null;
+};
+
+type PmQualitySelectedDetailState = {
+  recordId: string;
+  pending: boolean;
+  response: DpmPmOperatingQualityGatewayResponse | null;
 };
 
 export function usePmOperatingQualityActions({
@@ -127,10 +140,13 @@ export function usePmOperatingQualityActions({
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [reviewActionPreviewResponse, setReviewActionPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [reviewActionPreviewKey, setReviewActionPreviewKey] = useState<string | null>(null);
   const [createdReviewActionResponse, setCreatedReviewActionResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [summaryInvocationPreviewResponse, setSummaryInvocationPreviewResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
+  const [summaryInvocationPreviewKey, setSummaryInvocationPreviewKey] =
+    useState<string | null>(null);
   const [createdSummaryInvocationResponse, setCreatedSummaryInvocationResponse] =
     useState<DpmPmOperatingQualityGatewayResponse | null>(null);
   const [fairnessCreateEvidence, setFairnessCreateEvidence] =
@@ -141,7 +157,18 @@ export function usePmOperatingQualityActions({
     useState<PmQualitySummaryInvocationEvidence | null>(null);
   const [summaryState, setSummaryState] =
     useState<PmQualitySummaryState | null>(null);
+  const [selectionPreference, setSelectionPreference] = useState<PmOperatingQualitySelection>({
+    scoreRunId: null,
+    fairnessAnalysisId: null,
+    reviewActionId: null,
+  });
+  const [selectedFairnessDetail, setSelectedFairnessDetail] =
+    useState<PmQualitySelectedDetailState | null>(null);
+  const [selectedReviewActionDetail, setSelectedReviewActionDetail] =
+    useState<PmQualitySelectedDetailState | null>(null);
   const summaryRequestSequenceRef = useRef(0);
+  const fairnessDetailSequenceRef = useRef(0);
+  const reviewActionDetailSequenceRef = useRef(0);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
@@ -151,13 +178,26 @@ export function usePmOperatingQualityActions({
   const [pendingSummaryInvocationCreate, setPendingSummaryInvocationCreate] = useState(false);
   const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const selectedFairnessDetailResponse =
+    selectedFairnessDetail?.recordId === selectionPreference.fairnessAnalysisId
+      ? selectedFairnessDetail.response
+      : null;
+  const selectedReviewActionDetailResponse =
+    selectedReviewActionDetail?.recordId === selectionPreference.reviewActionId
+      ? selectedReviewActionDetail.response
+      : null;
   const sourceModel = buildPmOperatingQualityPanelModel({
     policies,
     scoreRuns,
     fairnessAnalyses,
-    fairnessAnalysisDetail: createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
+    fairnessAnalysisDetail:
+      selectedFairnessDetailResponse ?? createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
     reviewActions,
-    reviewActionDetail: createdReviewActionResponse ?? reviewActionPreviewResponse ?? reviewActionDetail,
+    reviewActionDetail:
+      selectedReviewActionDetailResponse ??
+      createdReviewActionResponse ??
+      reviewActionPreviewResponse ??
+      reviewActionDetail,
     summaryInvocations,
     summaryInvocationDetail:
       createdSummaryInvocationResponse ??
@@ -166,6 +206,7 @@ export function usePmOperatingQualityActions({
     preview: previewResponse,
     fairnessPreview: fairnessPreviewResponse,
     summary: null,
+    selection: selectionPreference,
   });
   const currentSummaryState =
     summaryState?.scoreRunId === sourceModel.selectedScoreRun?.scoreRunId
@@ -177,9 +218,12 @@ export function usePmOperatingQualityActions({
         scoreRuns,
         fairnessAnalyses,
         fairnessAnalysisDetail:
-          createdFairnessAnalysisResponse ?? fairnessAnalysisDetail,
+          selectedFairnessDetailResponse ??
+          createdFairnessAnalysisResponse ??
+          fairnessAnalysisDetail,
         reviewActions,
         reviewActionDetail:
+          selectedReviewActionDetailResponse ??
           createdReviewActionResponse ??
           reviewActionPreviewResponse ??
           reviewActionDetail,
@@ -191,34 +235,68 @@ export function usePmOperatingQualityActions({
         preview: previewResponse,
         fairnessPreview: fairnessPreviewResponse,
         summary: currentSummaryState.response,
+        selection: selectionPreference,
       })
     : sourceModel;
+  const selection = readPmOperatingQualitySelection(model);
+  if (!pmOperatingQualitySelectionEquals(selectionPreference, selection)) {
+    setSelectionPreference(selection);
+  }
+  const currentSelectionKey = buildPmOperatingQualitySelectionKey(selection);
+  const currentSelectionKeyRef = useRef(currentSelectionKey);
+  useEffect(() => {
+    currentSelectionKeyRef.current = currentSelectionKey;
+  }, [currentSelectionKey]);
   const pendingSummaryAction = currentSummaryState?.pending ?? false;
   const summaryOutcome = currentSummaryState?.outcome ?? null;
   const summaryActionError = currentSummaryState?.error ?? null;
   const defaultReviewTarget = resolveReviewActionTarget(model);
-  const [reviewActionForm, setReviewActionForm] = useState<PmQualityReviewActionForm>(() => ({
-    actorId: "workbench-pm-operating-quality-supervisor",
-    targetType: defaultReviewTarget.targetType,
-    targetId: defaultReviewTarget.targetId,
-    actionType: "REQUEST_EVIDENCE_REMEDIATION",
-    actionState: "REVIEW_REQUIRED",
-    reviewActionRef: defaultReviewTarget.reviewActionRef,
-    boundedRationale:
-      "Record bounded supervisory review for Manage-owned PM operating quality evidence.",
-  }));
+  const [reviewActionFormState, setReviewActionFormState] =
+    useState<PmQualityReviewActionForm>(() => ({
+      actorId: "workbench-pm-operating-quality-supervisor",
+      targetType: defaultReviewTarget.targetType,
+      targetId: defaultReviewTarget.targetId,
+      actionType: "REQUEST_EVIDENCE_REMEDIATION",
+      actionState: "REVIEW_REQUIRED",
+      reviewActionRef: defaultReviewTarget.reviewActionRef,
+      boundedRationale:
+        "Record bounded supervisory review for Manage-owned PM operating quality evidence.",
+    }));
+  const reviewTargetType = resolveReviewTargetType(reviewActionFormState.targetType, model);
+  const reviewTargetId =
+    reviewTargetType === "FAIRNESS_ANALYSIS"
+      ? selection.fairnessAnalysisId ?? ""
+      : selection.scoreRunId ?? "";
+  const reviewActionForm: PmQualityReviewActionForm = {
+    ...reviewActionFormState,
+    targetType: reviewTargetType,
+    targetId: reviewTargetId,
+    reviewActionRef: buildReviewActionRef(
+      reviewTargetId,
+      reviewActionFormState.reviewActionRef,
+    ),
+  };
+  if (
+    reviewActionFormState.targetType !== reviewActionForm.targetType ||
+    reviewActionFormState.targetId !== reviewActionForm.targetId
+  ) {
+    setReviewActionFormState(reviewActionForm);
+  }
   const reviewActionReadiness = resolveReviewActionReadiness({
     form: reviewActionForm,
     policyId: model.policyId,
     policyVersion: model.policyVersion,
     blockedActions: model.blockedActions,
   });
-  const reviewActionPreviewReady = Boolean(reviewActionPreviewResponse);
+  const currentReviewActionPreviewKey = buildReviewActionPreviewKey(reviewActionForm);
+  const reviewActionPreviewReady =
+    Boolean(reviewActionPreviewResponse) &&
+    reviewActionPreviewKey === currentReviewActionPreviewKey;
   const reviewActionTargetOptions = buildReviewActionTargetOptions(model);
   const summaryInvocationScoreRunOptions = buildSummaryInvocationScoreRunOptions(model);
   const summaryInvocationReviewActionOptions = buildSummaryInvocationReviewActionOptions(model);
   const defaultSummaryInvocationTarget = resolveSummaryInvocationTarget(model);
-  const [summaryInvocationForm, setSummaryInvocationForm] =
+  const [summaryInvocationFormState, setSummaryInvocationFormState] =
     useState<PmQualitySummaryInvocationForm>(() => ({
       requestedBy: "workbench-pm-operating-quality-supervisor",
       summaryRef: defaultSummaryInvocationTarget.summaryRef,
@@ -231,35 +309,53 @@ export function usePmOperatingQualityActions({
       artifactRef: "",
       contentHash: "",
     }));
+  const summaryInvocationForm: PmQualitySummaryInvocationForm = {
+    ...summaryInvocationFormState,
+    scoreRunId: selection.scoreRunId ?? "",
+    reviewActionId: selection.reviewActionId ?? "",
+    summaryRef: buildSummaryInvocationRef(
+      selection.scoreRunId ?? "",
+      summaryInvocationFormState.summaryRef,
+    ),
+  };
+  if (
+    summaryInvocationFormState.scoreRunId !== summaryInvocationForm.scoreRunId ||
+    summaryInvocationFormState.reviewActionId !== summaryInvocationForm.reviewActionId
+  ) {
+    setSummaryInvocationFormState(summaryInvocationForm);
+  }
   const summaryInvocationReadiness = resolveSummaryInvocationReadiness({
     form: summaryInvocationForm,
     policyId: model.policyId,
     policyVersion: model.policyVersion,
     blockedActions: model.blockedActions,
   });
-  const summaryInvocationPreviewReady = Boolean(summaryInvocationPreviewResponse);
+  const currentSummaryInvocationPreviewKey =
+    buildSummaryInvocationPreviewKey(summaryInvocationForm);
+  const summaryInvocationPreviewReady =
+    Boolean(summaryInvocationPreviewResponse) &&
+    summaryInvocationPreviewKey === currentSummaryInvocationPreviewKey;
 
   function setReviewActionFormValue(field: keyof PmQualityReviewActionForm, value: string) {
-    setReviewActionForm((current) => {
+    if (field === "targetId") {
+      if (reviewActionForm.targetType === "FAIRNESS_ANALYSIS") {
+        void selectFairnessAnalysis(value);
+      } else {
+        selectScoreRun(value);
+      }
+      return;
+    }
+    setReviewActionFormState((current) => {
       if (field === "targetType") {
-        const targetId = resolveDefaultReviewTargetId(model, value) || current.targetId;
         return {
           ...current,
           targetType: value,
-          targetId,
-          reviewActionRef: buildReviewActionRef(targetId, current.reviewActionRef),
-        };
-      }
-      if (field === "targetId") {
-        return {
-          ...current,
-          targetId: value,
-          reviewActionRef: buildReviewActionRef(value, current.reviewActionRef),
         };
       }
       return { ...current, [field]: value };
     });
     setReviewActionPreviewResponse(null);
+    setReviewActionPreviewKey(null);
     setCreatedReviewActionResponse(null);
     setReviewActionCreateEvidence(null);
   }
@@ -268,19 +364,136 @@ export function usePmOperatingQualityActions({
     field: keyof PmQualitySummaryInvocationForm,
     value: string
   ) {
-    setSummaryInvocationForm((current) => {
-      if (field === "scoreRunId") {
-        return {
-          ...current,
-          scoreRunId: value,
-          summaryRef: buildSummaryInvocationRef(value, current.summaryRef),
-        };
-      }
-      return { ...current, [field]: value };
-    });
+    if (field === "scoreRunId") {
+      selectScoreRun(value);
+      return;
+    }
+    if (field === "reviewActionId") {
+      void selectReviewAction(value);
+      return;
+    }
+    setSummaryInvocationFormState((current) => ({ ...current, [field]: value }));
     setSummaryInvocationPreviewResponse(null);
+    setSummaryInvocationPreviewKey(null);
     setCreatedSummaryInvocationResponse(null);
     setSummaryInvocationCreateEvidence(null);
+  }
+
+  function selectScoreRun(scoreRunId: string) {
+    if (
+      !model.scoreRunRows.some((row) => row.scoreRunId === scoreRunId) ||
+      selection.scoreRunId === scoreRunId
+    ) {
+      return;
+    }
+    beginRecordSelection({ ...selection, scoreRunId });
+  }
+
+  async function selectFairnessAnalysis(fairnessAnalysisId: string) {
+    if (
+      !model.fairnessAnalysisRows.some(
+        (row) => row.fairnessAnalysisId === fairnessAnalysisId
+      ) ||
+      selection.fairnessAnalysisId === fairnessAnalysisId
+    ) {
+      return;
+    }
+    const nextSelection = { ...selection, fairnessAnalysisId };
+    beginRecordSelection(nextSelection);
+    const requestSequence = fairnessDetailSequenceRef.current + 1;
+    fairnessDetailSequenceRef.current = requestSequence;
+    setSelectedFairnessDetail({ recordId: fairnessAnalysisId, pending: true, response: null });
+    try {
+      const response = await getDpmPmOperatingQualityFairnessAnalysis(
+        fairnessAnalysisId,
+        "client",
+      );
+      if (
+        requestSequence !== fairnessDetailSequenceRef.current ||
+        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+      ) {
+        return;
+      }
+      setSelectedFairnessDetail({
+        recordId: fairnessAnalysisId,
+        pending: false,
+        response,
+      });
+    } catch (error) {
+      if (
+        requestSequence !== fairnessDetailSequenceRef.current ||
+        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+      ) {
+        return;
+      }
+      setSelectedFairnessDetail({ recordId: fairnessAnalysisId, pending: false, response: null });
+      setActionError(
+        buildPmQualityActionError(error, "PM operating quality fairness detail load failed"),
+      );
+    }
+  }
+
+  async function selectReviewAction(reviewActionId: string) {
+    if (
+      !model.reviewActionRows.some((row) => row.reviewActionId === reviewActionId) ||
+      selection.reviewActionId === reviewActionId
+    ) {
+      return;
+    }
+    const nextSelection = { ...selection, reviewActionId };
+    beginRecordSelection(nextSelection);
+    const requestSequence = reviewActionDetailSequenceRef.current + 1;
+    reviewActionDetailSequenceRef.current = requestSequence;
+    setSelectedReviewActionDetail({ recordId: reviewActionId, pending: true, response: null });
+    try {
+      const response = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
+      if (
+        requestSequence !== reviewActionDetailSequenceRef.current ||
+        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+      ) {
+        return;
+      }
+      setSelectedReviewActionDetail({
+        recordId: reviewActionId,
+        pending: false,
+        response,
+      });
+    } catch (error) {
+      if (
+        requestSequence !== reviewActionDetailSequenceRef.current ||
+        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+      ) {
+        return;
+      }
+      setSelectedReviewActionDetail({ recordId: reviewActionId, pending: false, response: null });
+      setActionError(
+        buildPmQualityActionError(error, "PM operating quality review-action detail load failed"),
+      );
+    }
+  }
+
+  function beginRecordSelection(nextSelection: PmOperatingQualitySelection) {
+    setSelectionPreference(nextSelection);
+    currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
+    summaryRequestSequenceRef.current += 1;
+    fairnessDetailSequenceRef.current += 1;
+    reviewActionDetailSequenceRef.current += 1;
+    setSummaryState(null);
+    setActionError(null);
+    setActionMessage(null);
+    setReviewActionPreviewResponse(null);
+    setReviewActionPreviewKey(null);
+    setReviewActionCreateEvidence(null);
+    setSummaryInvocationPreviewResponse(null);
+    setSummaryInvocationPreviewKey(null);
+    setSummaryInvocationCreateEvidence(null);
+    setPendingAction(false);
+    setPendingFairnessAction(false);
+    setPendingFairnessCreateAction(false);
+    setPendingReviewActionPreview(false);
+    setPendingReviewActionCreate(false);
+    setPendingSummaryInvocationPreview(false);
+    setPendingSummaryInvocationCreate(false);
   }
 
   async function previewScoreRun() {
@@ -291,6 +504,7 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(model.scoreRunPreviewReadiness));
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
     setPendingAction(true);
     setActionError(null);
     setActionMessage(null);
@@ -299,9 +513,11 @@ export function usePmOperatingQualityActions({
         policyId: model.policyId !== "N/A" ? model.policyId : undefined,
         policyVersion: model.policyVersion !== "N/A" ? model.policyVersion : undefined,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setPreviewResponse(response);
       setActionMessage("Preview returned Manage operating-quality evidence.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(buildPmQualityActionError(error, "PM operating quality preview failed"));
     } finally {
       setPendingAction(false);
@@ -324,6 +540,7 @@ export function usePmOperatingQualityActions({
       );
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
     setPendingFairnessAction(true);
     setActionError(null);
     setActionMessage(null);
@@ -334,9 +551,11 @@ export function usePmOperatingQualityActions({
         asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
         segments: model.fairnessSegmentRequests,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setFairnessPreviewResponse(response);
       setActionMessage("Fairness preview returned Manage segment evidence.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality fairness preview failed")
       );
@@ -361,6 +580,7 @@ export function usePmOperatingQualityActions({
       );
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
     setPendingFairnessCreateAction(true);
     setActionError(null);
     setActionMessage(null);
@@ -371,6 +591,7 @@ export function usePmOperatingQualityActions({
         asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
         segments: model.fairnessSegmentRequests,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedFairnessAnalysisResponse(response);
       setFairnessCreateEvidence(buildPmQualityFairnessCreateEvidence(response));
       const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
@@ -379,10 +600,20 @@ export function usePmOperatingQualityActions({
           fairnessAnalysisId,
           "client"
         );
+        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
+        const nextSelection = { ...selection, fairnessAnalysisId };
+        setSelectionPreference(nextSelection);
+        currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
+        setSelectedFairnessDetail({
+          recordId: fairnessAnalysisId,
+          pending: false,
+          response: detail,
+        });
         setCreatedFairnessAnalysisResponse(detail);
       }
       setActionMessage("Persisted fairness analysis returned Manage evidence.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(
           error,
@@ -404,6 +635,7 @@ export function usePmOperatingQualityActions({
       return;
     }
     const requestSequence = summaryRequestSequenceRef.current + 1;
+    const actionSelectionKey = currentSelectionKey;
     summaryRequestSequenceRef.current = requestSequence;
     setSummaryState({
       scoreRunId,
@@ -418,7 +650,10 @@ export function usePmOperatingQualityActions({
       const response = await requestDpmPmOperatingQualitySummary({
         scoreRunId,
       });
-      if (requestSequence !== summaryRequestSequenceRef.current) {
+      if (
+        requestSequence !== summaryRequestSequenceRef.current ||
+        currentSelectionKeyRef.current !== actionSelectionKey
+      ) {
         return;
       }
       setSummaryState({
@@ -435,7 +670,10 @@ export function usePmOperatingQualityActions({
         error: null,
       });
     } catch (error) {
-      if (requestSequence !== summaryRequestSequenceRef.current) {
+      if (
+        requestSequence !== summaryRequestSequenceRef.current ||
+        currentSelectionKeyRef.current !== actionSelectionKey
+      ) {
         return;
       }
       setSummaryState({
@@ -459,10 +697,13 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(reviewActionReadiness.detail));
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
+    const previewKey = currentReviewActionPreviewKey;
     setPendingReviewActionPreview(true);
     setActionError(null);
     setActionMessage(null);
     setReviewActionPreviewResponse(null);
+    setReviewActionPreviewKey(null);
     setCreatedReviewActionResponse(null);
     setReviewActionCreateEvidence(null);
     try {
@@ -472,9 +713,12 @@ export function usePmOperatingQualityActions({
         actorId: reviewActionForm.actorId,
         correlationId,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setReviewActionPreviewResponse(response);
+      setReviewActionPreviewKey(previewKey);
       setActionMessage("Review-action preview returned Manage supervisory evidence.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality review-action preview failed")
       );
@@ -487,7 +731,7 @@ export function usePmOperatingQualityActions({
     if (pendingReviewActionCreate) {
       return;
     }
-    if (!reviewActionPreviewResponse) {
+    if (!reviewActionPreviewReady) {
       setActionError(
         buildPmQualityBlockedActionError(
           "Preview the supervisory review action before recording it."
@@ -499,6 +743,7 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(reviewActionReadiness.detail));
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
     setPendingReviewActionCreate(true);
     setActionError(null);
     setActionMessage(null);
@@ -509,19 +754,30 @@ export function usePmOperatingQualityActions({
         actorId: reviewActionForm.actorId,
         correlationId,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedReviewActionResponse(response);
       setReviewActionCreateEvidence(buildPmQualityReviewActionEvidence(response));
       const reviewActionId = readPmQualityReviewActionId(response);
       if (reviewActionId) {
         const detail = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
+        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
+        const nextSelection = { ...selection, reviewActionId };
+        setSelectionPreference(nextSelection);
+        currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
+        setSelectedReviewActionDetail({
+          recordId: reviewActionId,
+          pending: false,
+          response: detail,
+        });
         setCreatedReviewActionResponse(detail);
-        setSummaryInvocationForm((current) => ({
+        setSummaryInvocationFormState((current) => ({
           ...current,
-          reviewActionId: current.reviewActionId || reviewActionId,
+          reviewActionId,
         }));
       }
       setActionMessage("Recorded Manage-owned supervisory review action.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality review-action create failed")
       );
@@ -538,10 +794,13 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
+    const previewKey = currentSummaryInvocationPreviewKey;
     setPendingSummaryInvocationPreview(true);
     setActionError(null);
     setActionMessage(null);
     setSummaryInvocationPreviewResponse(null);
+    setSummaryInvocationPreviewKey(null);
     setCreatedSummaryInvocationResponse(null);
     setSummaryInvocationCreateEvidence(null);
     try {
@@ -551,9 +810,12 @@ export function usePmOperatingQualityActions({
         actorId: summaryInvocationForm.requestedBy,
         correlationId,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setSummaryInvocationPreviewResponse(response);
+      setSummaryInvocationPreviewKey(previewKey);
       setActionMessage("Summary-invocation preview returned Manage evidence.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality summary-invocation preview failed")
       );
@@ -566,7 +828,7 @@ export function usePmOperatingQualityActions({
     if (pendingSummaryInvocationCreate) {
       return;
     }
-    if (!summaryInvocationPreviewResponse) {
+    if (!summaryInvocationPreviewReady) {
       setActionError(
         buildPmQualityBlockedActionError(
           "Preview the PM quality summary invocation before recording it."
@@ -578,6 +840,7 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
       return;
     }
+    const actionSelectionKey = currentSelectionKey;
     setPendingSummaryInvocationCreate(true);
     setActionError(null);
     setActionMessage(null);
@@ -588,6 +851,7 @@ export function usePmOperatingQualityActions({
         actorId: summaryInvocationForm.requestedBy,
         correlationId,
       });
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedSummaryInvocationResponse(response);
       setSummaryInvocationCreateEvidence(buildPmQualitySummaryInvocationEvidence(response));
       const summaryInvocationId = readPmQualitySummaryInvocationId(response);
@@ -596,10 +860,12 @@ export function usePmOperatingQualityActions({
           summaryInvocationId,
           "client"
         );
+        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
         setCreatedSummaryInvocationResponse(detail);
       }
       setActionMessage("Recorded Manage-owned PM quality summary invocation.");
     } catch (error) {
+      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality summary-invocation create failed")
       );
@@ -610,6 +876,13 @@ export function usePmOperatingQualityActions({
 
   return {
     model,
+    selection,
+    pendingFairnessDetail:
+      selectedFairnessDetail?.recordId === selection.fairnessAnalysisId &&
+      selectedFairnessDetail.pending,
+    pendingReviewActionDetail:
+      selectedReviewActionDetail?.recordId === selection.reviewActionId &&
+      selectedReviewActionDetail.pending,
     pendingAction,
     pendingFairnessAction,
     pendingFairnessCreateAction,
@@ -635,6 +908,9 @@ export function usePmOperatingQualityActions({
     summaryInvocationPreviewReady,
     setReviewActionFormValue,
     setSummaryInvocationFormValue,
+    selectScoreRun,
+    selectFairnessAnalysis,
+    selectReviewAction,
     previewScoreRun,
     previewFairnessAnalysis,
     createFairnessAnalysis,
@@ -644,6 +920,69 @@ export function usePmOperatingQualityActions({
     previewSummaryInvocation,
     createSummaryInvocation,
   };
+}
+
+function readPmOperatingQualitySelection(
+  model: PmOperatingQualityPanelModel,
+): PmOperatingQualitySelection {
+  return {
+    scoreRunId: model.selectedScoreRun?.scoreRunId ?? null,
+    fairnessAnalysisId: model.selectedFairnessAnalysis?.fairnessAnalysisId ?? null,
+    reviewActionId: model.selectedReviewAction?.reviewActionId ?? null,
+  };
+}
+
+function pmOperatingQualitySelectionEquals(
+  left: PmOperatingQualitySelection,
+  right: PmOperatingQualitySelection,
+): boolean {
+  return (
+    left.scoreRunId === right.scoreRunId &&
+    left.fairnessAnalysisId === right.fairnessAnalysisId &&
+    left.reviewActionId === right.reviewActionId
+  );
+}
+
+function buildPmOperatingQualitySelectionKey(
+  selection: PmOperatingQualitySelection,
+): string {
+  return [
+    selection.scoreRunId ?? "none",
+    selection.fairnessAnalysisId ?? "none",
+    selection.reviewActionId ?? "none",
+  ].join("|");
+}
+
+function resolveReviewTargetType(
+  preferredTargetType: string,
+  model: PmOperatingQualityPanelModel,
+): string {
+  if (preferredTargetType === "FAIRNESS_ANALYSIS" && model.selectedFairnessAnalysis) {
+    return "FAIRNESS_ANALYSIS";
+  }
+  if (preferredTargetType === "SCORE_RUN" && model.selectedScoreRun) {
+    return "SCORE_RUN";
+  }
+  return model.selectedFairnessAnalysis ? "FAIRNESS_ANALYSIS" : "SCORE_RUN";
+}
+
+function buildReviewActionPreviewKey(form: PmQualityReviewActionForm): string {
+  return `${form.targetType}|${form.targetId}|${form.actionType}|${form.actionState}|${form.reviewActionRef}|${form.actorId}|${form.boundedRationale}`;
+}
+
+function buildSummaryInvocationPreviewKey(form: PmQualitySummaryInvocationForm): string {
+  return [
+    form.scoreRunId,
+    form.reviewActionId,
+    form.invocationState,
+    form.summaryRef,
+    form.requestedBy,
+    form.workflowPackName,
+    form.workflowPackVersion,
+    form.workflowRunId,
+    form.artifactRef,
+    form.contentHash,
+  ].join("|");
 }
 
 function resolveReviewActionTarget(model: PmOperatingQualityPanelModel): {
@@ -735,16 +1074,6 @@ function buildSummaryInvocationReviewActionOptions(
       label: row.reviewActionRef,
       detail: `${row.reviewActionId} | ${row.target} | ${row.actionState}`,
     }));
-}
-
-function resolveDefaultReviewTargetId(
-  model: PmOperatingQualityPanelModel,
-  targetType: string
-): string {
-  return (
-    buildReviewActionTargetOptions(model).find((option) => option.targetType === targetType)
-      ?.value ?? ""
-  );
 }
 
 function buildReviewActionRef(targetId: string, currentRef: string): string {
@@ -869,11 +1198,15 @@ function resolveReviewActionAsOfDate(
   form: PmQualityReviewActionForm,
   model: PmOperatingQualityPanelModel
 ): string | undefined {
-  if (form.targetType === "FAIRNESS_ANALYSIS" && model.selectedFairnessAnalysis?.asOfDate) {
-    return model.selectedFairnessAnalysis.asOfDate;
+  if (form.targetType === "FAIRNESS_ANALYSIS") {
+    const analysis = model.fairnessAnalysisRows.find(
+      (row) => row.fairnessAnalysisId === form.targetId,
+    );
+    return analysis?.asOfDate !== "N/A" ? analysis?.asOfDate : undefined;
   }
-  if (form.targetType === "SCORE_RUN" && model.selectedScoreRun?.asOfDate) {
-    return model.selectedScoreRun.asOfDate;
+  if (form.targetType === "SCORE_RUN") {
+    const scoreRun = model.scoreRunRows.find((row) => row.scoreRunId === form.targetId);
+    return scoreRun?.asOfDate !== "N/A" ? scoreRun?.asOfDate : undefined;
   }
   return undefined;
 }
