@@ -3211,3 +3211,68 @@ skill change is required. Existing wiki screen descriptions already classify All
 Portfolio task and Data-Product Discovery as a cross-platform utility; changing them would duplicate
 this architecture record rather than correct product truth. Repository engineering context is
 updated because the reusable shell route boundary changed. Strict wiki parity remains `DiffCount=0`.
+
+## Runtime Support And Bank Technology-Risk Baseline
+
+### Business and engineering job
+
+Bank architecture, cyber, operations, accessibility, and procurement reviewers need one truthful
+runtime baseline that distinguishes implemented supply-chain and deployment controls from future
+browser, licensing, capacity, availability, identity, and approval evidence. Engineers and coding
+agents need the same boundary to prevent a moving toolchain or fashionable dependency from entering
+a production-critical path without review.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-10:
+
+1. [Node.js release lifecycle](https://nodejs.org/en/about/previous-releases) recommends Active or
+   Maintenance LTS for production. Node 22 remains maintained through April 2027.
+2. [The Node 22.23.1 archive](https://nodejs.org/en/download/archive/v22.23.1) records bundled npm
+   `10.9.8`, providing source evidence for CI/container package-manager parity.
+3. [Next.js support policy](https://nextjs.org/support-policy) classifies 15.x as Maintenance LTS,
+   so retention is currently supportable but must be time-bounded.
+4. [npm package metadata guidance](https://docs.npmjs.com/files/package.json/) defines `engines`,
+   `devEngines`, and package-manager metadata. These are defense in depth and need repository checks;
+   `engines` alone is not a fail-closed enterprise control.
+5. [Next.js browser requirements](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
+   provide framework floors. [MDN Baseline](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
+   is useful for web-feature admission but explicitly does not replace accessibility, performance,
+   security, device, or assistive-technology testing.
+
+### Adopted decisions
+
+1. Keep the mature current foundation and govern it; do not rewrite or upgrade merely to appear
+   modern.
+2. Pin protected CI to the same exact Node release as the digest-pinned container and use the npm
+   bundled by that official release.
+3. Preserve a Node 22/npm 10 developer compatibility range while making the protected build runtime
+   exact and machine-checked.
+4. Use immutable lockfile installation, exact Playwright, a repository-local browser CLI, and an
+   explicit Chromium project.
+5. Add an expiring machine-readable support policy to `npm run lint`, backed by tamper tests and
+   buyer-facing documentation.
+6. Describe standalone/service-owned state as replica-compatible architecture only. Keep browser
+   breadth, load, horizontal scale, identity, availability, licensing, and bank approval as explicit
+   non-claims until evidence exists.
+
+### Rejected decisions
+
+1. Moving immediately to Node 24 or Next 16, because current releases remain supported and a major
+   upgrade without its own compatibility and rollback evidence would add risk rather than reduce it.
+2. Treating a major-only CI selector as reproducible, because it can diverge from the container
+   patch and bundled package manager.
+3. Treating `engines`, `packageManager`, MDN Baseline, or framework browser floors as certification
+   on their own.
+4. Claiming a scalable production system from standalone packaging alone; measured multi-replica,
+   failure, and capacity evidence is still required.
+5. Closing #612 after this tranche; dependency inventory, license/admission policy, enterprise
+   browser/accessibility proof, resilience decisions, capacity proof, and cross-functional review
+   remain material.
+
+### Validation and publication decision
+
+Workbench #612 owns the broader certification and remains open. This first tranche is complete only
+after focused tamper tests, TypeScript, lint, full repository gates, protected CI, exact-main proof,
+wiki publication, and strict parity pass. The shared front-office runtime is intentionally untouched;
+this slice changes build and governance controls rather than product or Gateway behavior.

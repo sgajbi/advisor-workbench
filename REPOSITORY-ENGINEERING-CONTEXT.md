@@ -565,6 +565,15 @@ Container runtime rules:
    from `scripts/runtime/workbench-healthcheck.mjs`. Compose must inherit that image health contract;
    do not install `wget`, `curl`, a package manager, or another diagnostic tool solely to make a
    Compose-only probe pass.
+9. `docs/architecture/workbench-runtime-support-policy.v1.json` is the executable runtime and
+   browser-support boundary. `npm run quality:runtime-support` reconciles exact CI/container Node,
+   bundled npm, package and lockfile engines, immutable install paths, exact Playwright, explicit
+   Chromium projects, framework versions, container provenance, and review expiry. Keep developer
+   compatibility ranges distinct from the exact protected build runtime. Do not claim wider browser,
+   horizontal-scale, load/soak, production identity, availability, or bank certification before
+   governed evidence exists. The buyer-facing boundary is documented in
+   `wiki/Technology-Risk-and-Runtime-Support.md` and the architecture decision in
+   `docs/architecture/workbench-production-runtime-decision.md`.
 
 ## Local API Contract Evidence
 
