@@ -313,7 +313,13 @@ describe("dependency security governance", () => {
     for (const workflowName of ["pr-merge-gate.yml", "main-releasability.yml"]) {
       const workflow = readRepositoryFile(".github", "workflows", workflowName);
 
-      expect(workflow.match(new RegExp(trivyActionCommit, "g"))).toHaveLength(2);
+      expect(workflow.match(new RegExp(trivyActionCommit, "g"))).toHaveLength(3);
+      expect(workflow).toContain(
+        "nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236",
+      );
+      expect(workflow).toContain(
+        "Two-replica replacement and capacity regression proof",
+      );
       expect(workflow).toContain("version: v0.69.3");
       expect(workflow).toContain("severity: HIGH,CRITICAL");
       expect(workflow).toContain('exit-code: "1"');
