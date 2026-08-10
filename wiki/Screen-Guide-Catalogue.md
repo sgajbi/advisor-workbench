@@ -1,0 +1,191 @@
+# Workbench Screen Guide Catalogue
+
+This catalogue is the business-facing map of the Lotus Workbench. It helps client advisors,
+portfolio managers, investment specialists, operations teams, product owners, and support teams
+understand which screens exist, where each screen sits in the private-banking workflow, and where
+to find its operating guide.
+
+## Current Scope
+
+The checked-in screen registry currently records **21 route entrypoints, 36 active business
+screens or modes, and two compatibility aliases**. One existing screen guide is linked below and is
+scheduled for alignment to the complete guide standard; the other 35 dedicated guides remain
+explicit work under [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
+The catalogue is therefore an inventory and delivery control as well as a navigation page. A
+screen marked “guide planned” is implemented, but its complete business operating guide has not
+yet passed the documentation gate.
+
+The route-to-guide relationship, implementation evidence, source owners, and governed coverage
+exceptions are governed by
+[`workbench-screen-registry.v1.json`](../docs/documentation/workbench-screen-registry.v1.json).
+The corresponding
+[`screen guide template`](../docs/documentation/workbench-screen-guide-template.md) defines the
+minimum content required before an exception can be removed.
+
+## How To Read Availability
+
+Availability and implementation are deliberately recorded as two separate facts:
+
+| Posture | Business meaning |
+| --- | --- |
+| Active | Available through the current Workbench navigation or a supported portfolio workflow. |
+| Compatibility-only | A maintained route that preserves an established entry path; use the canonical destination for normal work. |
+| Capability-disabled | The screen or mode is implemented for bounded validation, but its top-level shell entry remains unavailable until the capability gate is intentionally enabled. |
+| Alias | A route or mode that takes the user to an existing canonical screen and therefore does not receive a duplicate guide. |
+
+“Capability-disabled” does not mean “roadmap mock-up.” It means implementation exists while the
+ordinary shell entry remains deliberately closed. It must not be used to imply production
+entitlement, identity, approval, publication, order, or execution authority.
+
+## Advisor Book And Portfolio Records
+
+These screens support the daily path from choosing a relationship or portfolio context to
+reviewing holdings, activity, income, liquidity, and source-record detail.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Existing guide; complete-standard alignment planned | Gateway and Core |
+| Portfolio Review | `/portfolio` | Active | Guide planned — #605 | Gateway and Core |
+| Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway, Core, and Performance |
+| Positions | `/positions` | Active | Guide planned — #605 | Gateway and Core |
+| Transactions | `/transactions` | Active | Guide planned — #605 | Gateway and Core |
+| Income And Activity | `/income` | Active | Guide planned — #605 | Gateway and Core |
+| Projected Cash Movement | `/cashflow` | Active | Guide planned — #605 | Gateway and Core |
+| Portfolio Intake | `/intake` | Active | Guide planned — #605 | Gateway and Core |
+
+The `client-context` advisory mode resolves to Portfolio Review. It is an alias, not an additional
+client profile or suitability screen, and it reuses the future Portfolio Review guide.
+
+## Performance And Risk Review
+
+The Performance workspace keeps return interpretation, benchmark-relative analysis, advisor
+preparation, risk review, and supporting evidence in one route with explicit modes. These are
+separate decision contexts and will receive separate guides even though they share the
+`/performance` route.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
+| Performance Analysis | `/performance?mode=analysis` | Active | Guide planned — #605 | Gateway and Performance |
+| Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway and Performance |
+| Risk Review | `/performance?mode=risk` | Active | Guide planned — #605 | Gateway and Risk |
+| Performance Evidence | `/performance?mode=evidence` | Active | Guide planned — #605 | Gateway and Performance |
+
+The future guides will separate calculated facts from Workbench presentation, state benchmark and
+as-of-date posture, and describe partial, unavailable, stale, and evidence-recovery states without
+inventing figures in the browser.
+
+## Portfolio Management
+
+The Manage workspace supports mandate monitoring and portfolio-manager operating workflows for a
+selected portfolio. Its modes share `/workbench/{portfolioId}` and retain the portfolio context
+while the user moves from attention posture into construction, review, and evidence.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| Manage Overview | `mode=overview` | Active | Guide planned — #605 | Gateway and Manage |
+| Mandate Health | `mode=mandate` | Active | Guide planned — #605 | Gateway and Manage |
+| Rebalance Waves | `mode=waves` | Active | Guide planned — #605 | Gateway and Manage |
+| Construction Alternatives | `mode=construction` | Active | Guide planned — #605 | Gateway, Manage, Risk, and Performance |
+| Portfolio Memory | `mode=memory` | Active | Guide planned — #605 | Gateway and Manage |
+| PM Copilot | `mode=copilot` | Active | Guide planned — #605 | Gateway, Manage, and Lotus AI |
+| PM Operating Quality | `mode=quality` | Active | Guide planned — #605 | Gateway and Manage |
+| Outcome Reviews | `mode=reviews` | Active | Guide planned — #605 | Gateway, Manage, and Performance |
+| Evidence Pack | `mode=proof` | Active | Guide planned — #605 | Gateway and Manage |
+
+The presence of an AI-assisted mode does not make generated content authoritative. Its guide must
+identify the source evidence, human review boundary, persistence posture, and prohibited downstream
+uses. Manage remains the authority for portfolio-management workflow state.
+
+## Advisory Journey
+
+The advisory compatibility workspace presents bounded Gateway-backed modes over source-owned
+advisory facts. The top-level Advisory shell entry remains capability-disabled, so these entries
+describe implemented validation surfaces rather than a promise of unrestricted production access.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| Advisory Overview | `/recommendations?mode=overview` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Core |
+| Advisor Cockpit | `/recommendations?mode=cockpit` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| Advisory Copilot | `/recommendations?mode=copilot` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Lotus AI |
+| Opportunities And Ideas | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Performance, and Risk |
+| Bank Demo Proof | `/recommendations?mode=proof` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+
+The guides will distinguish read-only decision support, persisted review actions, and human-owned
+decisions. No guide may claim suitability approval, client publication, or order execution unless
+the supporting service contract and runtime evidence prove that authority.
+
+## Proposals
+
+Proposal screens move from draft construction and impact simulation through suitability, risk,
+discussion preparation, approval posture, and implementation tracking. Their top-level Proposal
+shell entry remains capability-disabled even where bounded direct routes are implemented.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| Proposal Builder, including simulation results | `/proposals/simulate` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Core, Performance, and Risk |
+| Approval Queue | `/proposals?mode=approval-queue` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Risk, and Performance |
+| Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Manage |
+| Proposal Detail | `/proposals/{proposalId}` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+
+Simulation is an in-screen Proposal Builder result state, not a separately addressable mode, so it
+belongs in the Proposal Builder guide. Each proposal guide must explain what is only evaluated,
+what is persisted, which checks remain source-owned,
+and where the workflow stops. A visible readiness label is not itself an approval, instruction, or
+execution event.
+
+## Reporting And Platform Discovery
+
+These screens support document-ordering and data-product discovery without replacing the owning
+reporting or service contracts.
+
+| Business screen | Route or mode | Posture | Guide status | Source authority |
+| --- | --- | --- | --- | --- |
+| Report Centre | `/reports` | Active | Guide planned — #605 | Gateway and Report |
+| Data-Product Discovery | `/data-products` | Active | Guide planned — #605 | Gateway and registered product owners |
+
+The Report Centre guide will cover available report definitions, configuration choices, ordering
+or generation posture, archive state, and failure recovery only where currently implemented. The
+Data-Product Discovery guide will explain ownership, trust posture, and live availability without
+treating catalogue metadata as proof that a downstream business workflow is ready.
+
+## Workflow Use
+
+A business user normally starts with Advisor Book or an established portfolio context, moves into
+Portfolio Review, and opens the specialist screen required by the decision: records, performance,
+risk, portfolio management, advisory, proposals, or reports. Modes within a shared route preserve
+context but represent different jobs; the individual guides will state the expected predecessor,
+decision, action, and next handoff.
+
+Support and product teams should use this catalogue before documenting or changing a route. A new
+entrypoint or source-owned mode must be added to the registry with implementation evidence. A new
+active screen must also have a guide or an explicit issue-backed exception. Aliases link to the
+canonical guide to prevent duplicate, divergent documentation.
+
+## Evidence And Governance
+
+The repository quality gate compares the registry with every `src/app/**/page.tsx` entrypoint and
+the source-owned Performance, Manage, Advisory Journey, and Proposal Lifecycle mode definitions.
+It also checks evidence paths, guide ownership, required headings, wiki navigation, and governed
+exceptions. This means a route or mode can no longer be added silently without a durable
+documentation decision.
+
+Shared contract and operating truth remains in the canonical pages below and should be linked from
+individual guides instead of copied:
+
+- [Supported Features](Supported-Features)
+- [API Surface](API-Surface)
+- [Integrations](Integrations)
+- [Validation and CI](Validation-and-CI)
+- [Operations Runbook](Operations-Runbook)
+- [Troubleshooting](Troubleshooting)
+
+## Delivery Sequence
+
+Issue #605 will remove coverage exceptions in business-workflow slices. Each slice must validate
+the actual screen, update its source and state descriptions, pass the documentation gate, and keep
+wiki source and the published GitHub wiki in parity. Completion means all 36 active screens or
+modes have one canonical, template-complete guide and no unexplained exception remains.

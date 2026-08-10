@@ -14,6 +14,8 @@
   [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
+- Governed business guide inventory for every active screen and mode:
+  [Screen Guide Catalogue](Screen-Guide-Catalogue)
 
 ## Current phase
 
@@ -27,7 +29,7 @@
   mandate command center, rebalance waves, construction alternatives, portfolio memory,
   PM copilot workflow-pack requests, outcome reviews, proof-pack evidence with governed PM memo
   requests, and manage-owned operating evidence
-- recommendations remain compatibility routes; `mode=cockpit` is the RFC-0026 Gateway-backed
+- recommendations provide a compatibility advisory workspace; `mode=cockpit` is the RFC-0026 Gateway-backed
   advisor cockpit over Advise-owned action items, supportability, meeting preparation, tactical
   house-view impact review, and bounded acknowledgements. `mode=copilot` is the RFC-0027
   Gateway-backed advisor-use copilot over Advise-owned proposal-version source projection and
@@ -57,6 +59,7 @@
 - [Overview](Overview)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
+- [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)

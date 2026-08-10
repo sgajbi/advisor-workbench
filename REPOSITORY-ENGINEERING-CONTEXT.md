@@ -478,6 +478,12 @@ Primary areas:
    Unit, integration, and Playwright smoke coverage.
 11. `wiki/`
    canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
+12. `docs/documentation/workbench-screen-registry.v1.json`
+   canonical route, business-screen, mode, navigation-posture, source-owner, evidence, and wiki-guide
+   mapping. `npm run quality:screen-docs` compares it with every Next.js route entrypoint and the
+   source-owned Performance, Manage, Advisory Journey, and Proposal Lifecycle mode definitions.
+   Every active surface needs one canonical guide or an explicit issue-backed coverage exception;
+   aliases reuse the canonical guide instead of creating duplicate prose.
 
 ## Runtime And Integration Boundaries
 
@@ -639,7 +645,9 @@ Important validation expectations:
    routes when the shell bootstrap contract does not treat every historical route as supported,
 7. route-file existence alone is not enough for documentation truth; use shell registry,
    capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
-   as supported.
+   as supported. Keep the Workbench screen registry aligned with source route and mode definitions,
+   use separate implementation and navigation-posture fields, and remove a `coverageException` only
+   after the mapped business guide satisfies the complete heading and evidence standard.
 8. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
    Reporting operator reads is centralized in
    `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
