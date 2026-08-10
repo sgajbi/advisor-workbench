@@ -1032,7 +1032,7 @@ describe("ProposalDetailView", () => {
     });
   });
 
-  it("retains refreshed version evidence after leaving and returning to a proposal", async () => {
+  it("retains refreshed version evidence across proposal and route transitions", async () => {
     let completeVersionCreation: (() => void) | undefined;
     createProposalVersionMock.mockImplementationOnce(
       () => new Promise((resolve) => {
@@ -1095,6 +1095,21 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    expect(screen.getByText(/Portfolio pf_1 · Version 2/)).toBeInTheDocument();
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <div>Proposal queue</div>
+      </QueryClientProvider>
+    );
+    expect(screen.queryByRole("heading", { level: 1, name: "Proposal pp-1" })).not.toBeInTheDocument();
     view.rerender(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-1" />

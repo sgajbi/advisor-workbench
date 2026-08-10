@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   CircularProgress,
@@ -80,6 +80,10 @@ type ProposalActionEvidenceIssue =
 type ProposalActionEvidenceAgreement =
   | { issue: null; currentState: string }
   | { issue: ProposalActionEvidenceIssue; currentState?: string };
+
+function proposalRefreshGenerationKey(proposalId: string) {
+  return ["proposal-detail-refresh-generation", proposalId] as const;
+}
 
 function isNotFound(error: unknown): boolean {
   if (!(error instanceof Error)) {
@@ -177,19 +181,26 @@ function confirmRefreshedProposalActionEvidence({
 }
 
 export default function ProposalDetailView({ proposalId }: Props) {
-  const [revisionByProposal, setRevisionByProposal] = useState<Record<string, number>>({});
+  const queryClient = useQueryClient();
+  const { data: revision = 0 } = useQuery({
+    queryKey: proposalRefreshGenerationKey(proposalId),
+    queryFn: async () => 0,
+    initialData: 0,
+    enabled: false,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
   const advanceRevision = useCallback((refreshedProposalId: string) => {
-    setRevisionByProposal((current) => ({
-      ...current,
-      [refreshedProposalId]: (current[refreshedProposalId] ?? 0) + 1,
-    }));
-  }, []);
+    queryClient.setQueryData<number>(
+      proposalRefreshGenerationKey(refreshedProposalId),
+      (current) => (current ?? 0) + 1
+    );
+  }, [queryClient]);
 
   return (
     <ProposalDetailWorkspace
       key={proposalId}
       proposalId={proposalId}
-      revision={revisionByProposal[proposalId] ?? 0}
+      revision={revision}
       onAdvanceRevision={advanceRevision}
     />
   );
