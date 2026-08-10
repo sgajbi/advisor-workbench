@@ -131,6 +131,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
   const actionEvidenceBlockedRef = useRef(false);
   const activeVersionCreationRef = useRef<{ proposalId: string; token: symbol } | null>(null);
+  const detailContextTransitionRef = useRef(false);
   const currentProposalIdRef = useRef(proposalId);
   currentProposalIdRef.current = proposalId;
 
@@ -183,12 +184,20 @@ export default function ProposalDetailView({ proposalId }: Props) {
     isFetching: lineageQuery.isFetching,
     hasError: Boolean(lineageQuery.error),
   });
+  const detailSourcePosture = projectQuerySourcePosture({
+    hasData: Boolean(detailQuery.data?.proposal),
+    isLoading: detailQuery.isLoading || (!detailQuery.data && !detailQuery.error),
+    isFetching: detailQuery.isFetching,
+    hasError: Boolean(detailQuery.error),
+  });
   const actionSourcePostures = [
+    detailSourcePosture,
     workflowSourcePosture,
     approvalsSourcePosture,
     lineageSourcePosture,
   ];
   const actionSourcesReady = actionSourcePostures.every(isQuerySourceSettledAndAvailable);
+  const detailSourceReady = isQuerySourceSettledAndAvailable(detailSourcePosture);
   const actionSourcesChecking = actionSourcePostures.some(
     (posture) => posture.isInitialLoading || posture.isRefreshing
   );
@@ -209,6 +218,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     activeActionRef.current = null;
     actionEvidenceBlockedRef.current = false;
     activeVersionCreationRef.current = null;
+    detailContextTransitionRef.current = false;
     setActing(false);
     setActionEvidenceBlocked(false);
     setReviewMode("narrative");
@@ -219,6 +229,16 @@ export default function ProposalDetailView({ proposalId }: Props) {
     setVersionActionError(null);
     setCreatedVersionNo(null);
   }, [proposalId]);
+
+  useEffect(() => {
+    if (
+      detailContextTransitionRef.current
+      && detailSourceReady
+      && detailQuery.data?.proposal?.proposal_id === proposalId
+    ) {
+      detailContextTransitionRef.current = false;
+    }
+  }, [detailQuery.data?.proposal?.proposal_id, detailSourceReady, proposalId]);
 
   async function refreshActionEvidence(
     previousState: string,
@@ -254,6 +274,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       !previousState
       || activeActionRef.current
       || activeVersionCreationRef.current
+      || detailContextTransitionRef.current
       || actionEvidenceBlockedRef.current
       || !actionSourcesReady
     ) return;
@@ -358,7 +379,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onLoadVersion() {
-    if (activeActionRef.current || activeVersionCreationRef.current) {
+    if (
+      activeActionRef.current
+      || activeVersionCreationRef.current
+      || detailContextTransitionRef.current
+    ) {
       return;
     }
     const expectedProposalId = proposalId;
@@ -379,7 +404,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onCreateNextVersion() {
-    if (activeActionRef.current || activeVersionCreationRef.current) {
+    if (
+      activeActionRef.current
+      || activeVersionCreationRef.current
+      || detailContextTransitionRef.current
+    ) {
       return;
     }
     const currentVersionData = (detailQuery.data as ProposalDetailData | undefined)?.current_version as
@@ -415,6 +444,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
       const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
+      detailContextTransitionRef.current = true;
       setRevision((value) => value + 1);
     } catch (err) {
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
@@ -626,9 +656,14 @@ export default function ProposalDetailView({ proposalId }: Props) {
         <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
-            controlsDisabled={acting || creatingVersion}
+            controlsDisabled={acting || creatingVersion || !detailSourceReady}
             onIncludeEvidenceChange={(value) => {
-              if (!activeActionRef.current && !activeVersionCreationRef.current) {
+              if (
+                !activeActionRef.current
+                && !activeVersionCreationRef.current
+                && !detailContextTransitionRef.current
+              ) {
+                detailContextTransitionRef.current = true;
                 setIncludeEvidence(value);
               }
             }}
