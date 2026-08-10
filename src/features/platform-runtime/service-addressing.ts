@@ -30,13 +30,17 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
 ] as const;
 
 export type ServiceRequestTarget = "server" | "client";
+export type RuntimeEnvironment = Readonly<Record<string, string | undefined>>;
 
 function normalizeBaseUrl(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
-function isOwnedE2eFixtureGateway(parsed: URL): boolean {
-  const configuredMode = process.env.WORKBENCH_E2E_FIXTURE_GATEWAY?.trim();
+function isOwnedE2eFixtureGateway(
+  parsed: URL,
+  environment: RuntimeEnvironment,
+): boolean {
+  const configuredMode = environment.WORKBENCH_E2E_FIXTURE_GATEWAY?.trim();
   const fixture = OWNED_E2E_FIXTURE_GATEWAYS.find(
     (candidate) => candidate.mode === configuredMode,
   );
@@ -44,8 +48,8 @@ function isOwnedE2eFixtureGateway(parsed: URL): boolean {
     return false;
   }
 
-  const fixturePort = process.env[fixture.portEnvironmentVariable]?.trim();
-  const fixtureScenario = process.env[fixture.scenarioEnvironmentVariable]?.trim() ?? "";
+  const fixturePort = environment[fixture.portEnvironmentVariable]?.trim();
+  const fixtureScenario = environment[fixture.scenarioEnvironmentVariable]?.trim() ?? "";
   return (
     fixture.scenarios.has(fixtureScenario) &&
     parsed.protocol === "http:" &&
@@ -55,12 +59,18 @@ function isOwnedE2eFixtureGateway(parsed: URL): boolean {
   );
 }
 
-function assertCanonicalGatewayBaseUrl(value: string): string {
+function assertCanonicalGatewayBaseUrl(
+  value: string,
+  environment: RuntimeEnvironment,
+): string {
   const normalized = normalizeBaseUrl(value);
   const parsed = new URL(normalized);
   const hostname = parsed.hostname.trim().toLowerCase();
 
-  if (DISALLOWED_LOCAL_HOSTS.has(hostname) && !isOwnedE2eFixtureGateway(parsed)) {
+  if (
+    DISALLOWED_LOCAL_HOSTS.has(hostname) &&
+    !isOwnedE2eFixtureGateway(parsed, environment)
+  ) {
     throw new Error(
       `BFF_BASE_URL must use a canonical Lotus hostname, not local loopback (${hostname}).`
     );
@@ -69,23 +79,27 @@ function assertCanonicalGatewayBaseUrl(value: string): string {
   return normalized;
 }
 
-export function resolveLotusEnvironment(): string {
-  const configured = process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase();
+export function resolveLotusEnvironment(
+  environment: RuntimeEnvironment = process.env,
+): string {
+  const configured = environment.LOTUS_ENVIRONMENT?.trim().toLowerCase();
   return configured && configured.length > 0 ? configured : DEFAULT_LOTUS_ENVIRONMENT;
 }
 
-export function resolveGatewayBaseUrl(): string {
-  const configured = process.env.BFF_BASE_URL?.trim();
+export function resolveGatewayBaseUrl(
+  environment: RuntimeEnvironment = process.env,
+): string {
+  const configured = environment.BFF_BASE_URL?.trim();
   if (configured && configured.length > 0) {
-    return assertCanonicalGatewayBaseUrl(configured);
+    return assertCanonicalGatewayBaseUrl(configured, environment);
   }
 
-  const environment = resolveLotusEnvironment();
-  const protocol = environment === "dev" ? "http" : "https";
-  const host = environment === "prod" || environment === "production"
+  const lotusEnvironment = resolveLotusEnvironment(environment);
+  const protocol = lotusEnvironment === "dev" ? "http" : "https";
+  const host = lotusEnvironment === "prod" || lotusEnvironment === "production"
     ? "gateway.lotus"
-    : `gateway.${environment}.lotus`;
-  return assertCanonicalGatewayBaseUrl(`${protocol}://${host}`);
+    : `gateway.${lotusEnvironment}.lotus`;
+  return assertCanonicalGatewayBaseUrl(`${protocol}://${host}`, environment);
 }
 
 export function resolveBffProxyBaseUrl(): string {

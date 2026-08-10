@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const repositoryRoot = join(__dirname, "..", "..");
 const governedLintCommand =
-  "npm run quality:runtime-support && npm run quality:dependency-risk && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:eslint";
+  "npm run quality:runtime-support && npm run quality:runtime-state && npm run quality:dependency-risk && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:eslint";
 const governedTimeoutsByJob = new Map([
   [
     "e2e-smoke",
@@ -299,6 +299,7 @@ describe("dependency security governance", () => {
     expect(compose).not.toContain("curl");
     expect(healthcheck).toContain('import http from "node:http"');
     expect(healthcheck).toContain('host: "127.0.0.1"');
+    expect(healthcheck).toContain('path: "/api/health/live"');
     expect(healthcheck).toContain("statusCode < 200 || statusCode >= 400");
     expect(healthcheck).not.toContain("fetch(");
   });
