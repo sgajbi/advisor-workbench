@@ -29,6 +29,9 @@ describe("Workbench screen documentation governance", () => {
     expect(hasExactMarkdownHeading("```md\n## Current Scope\n```\n", "## Current Scope")).toBe(
       false,
     );
+    expect(
+      hasExactMarkdownHeading("````md\n```\n## Current Scope\n````\n", "## Current Scope"),
+    ).toBe(false);
   });
 
   it("discovers every default Next.js page extension", () => {
@@ -47,7 +50,7 @@ describe("Workbench screen documentation governance", () => {
     expect(result.summary).toEqual({
       routeEntrypoints: 21,
       activeSurfaces: 36,
-      aliases: 2,
+      aliases: 3,
       mappedGuides: 1,
       coverageExceptions: 36,
       unmappedGuides: 35,
@@ -191,6 +194,17 @@ describe("Workbench screen documentation governance", () => {
 
     expect(validate(registry).errors).toContain(
       "Mode authority performance has unmapped source mode: risk.",
+    );
+  });
+
+  it("rejects drift from supported mode aliases", () => {
+    const registry = loadRegistry();
+    delete registry.modeAuthorities.find(
+      (authority: { family: string }) => authority.family === "performance-aliases",
+    ).surfaceMappings["advisor-brief"];
+
+    expect(validate(registry).errors).toContain(
+      "Mode authority performance-aliases has unmapped source mode: advisor-brief.",
     );
   });
 

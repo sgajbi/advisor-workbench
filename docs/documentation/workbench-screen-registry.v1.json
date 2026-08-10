@@ -565,6 +565,22 @@
       }
     },
     {
+      "id": "performance-advisor-brief-alias",
+      "businessName": "Advisor Brief Compatibility Alias",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "advisor-brief",
+      "fragment": null,
+      "surfaceClassification": "alias",
+      "navigationPosture": "not-applicable",
+      "wikiSlug": null,
+      "canonicalSurfaceId": "performance-advisor-brief",
+      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-ai"],
+      "implementationEvidence": ["src/apps/performance/performance-workspace-modes.ts"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench"
+    },
+    {
       "id": "manage-overview",
       "businessName": "Manage Overview",
       "family": "manage",
@@ -1039,6 +1055,15 @@
         "advisor": "performance-advisor-brief",
         "risk": "risk-review",
         "evidence": "performance-evidence"
+      }
+    },
+    {
+      "family": "performance-aliases",
+      "source": "src/apps/performance/performance-workspace-modes.ts",
+      "symbol": "PERFORMANCE_WORKSPACE_MODE_ALIASES",
+      "extraction": "object-keys",
+      "surfaceMappings": {
+        "advisor-brief": "performance-advisor-brief-alias"
       }
     },
     {
