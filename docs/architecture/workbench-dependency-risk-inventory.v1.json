@@ -1,0 +1,614 @@
+{
+  "$schema": "./workbench-dependency-risk-inventory.v1.schema.json",
+  "schemaVersion": "lotus-workbench.dependency-risk-inventory.v1",
+  "inventoryId": "lotus-workbench-direct-production-dependencies",
+  "inventoryVersion": "1.0.0",
+  "governedByIssue": "https://github.com/sgajbi/lotus-workbench/issues/618",
+  "reviewedOn": "2026-08-10",
+  "nextReviewBy": "2026-11-10",
+  "admissionMode": "blocking",
+  "reviewOwner": "workbench-architecture-maintainers",
+  "platformPolicy": {
+    "contractId": "lotus-platform-technology-governance-policy",
+    "contractVersion": "1.0.0",
+    "sourceRepository": "https://github.com/sgajbi/lotus-platform",
+    "sourceRevision": "2868348d289fc685ecf5a218b6c73256ac3a7742",
+    "sourcePath": "platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json",
+    "lifecycleStatus": "report_only",
+    "localAdoptionDecision": "blocking_direct_production_dependency_admission"
+  },
+  "allowedLicenses": [
+    "Apache-2.0",
+    "MIT"
+  ],
+  "dependencies": [
+    {
+      "name": "@emotion/react",
+      "version": "11.14.0",
+      "technologyState": "approved_default",
+      "purpose": "Provides the React styling runtime required by the governed MUI component foundation.",
+      "ownershipBoundary": "Workbench owns its MUI theme and component usage; Emotion owns the styling engine implementation.",
+      "architecturalRole": "design_system",
+      "criticality": "high",
+      "containmentBoundary": "Consumed as an MUI peer runtime behind the Workbench design-system theme and component boundary.",
+      "replacementPosture": {
+        "strategy": "retain_and_review",
+        "exitPath": "Replace only through an issue-backed MUI styling-engine migration with visual and accessibility regression proof.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@emotion/react/v/11.14.0"
+      },
+      "stewardship": {
+        "steward": "Emotion maintainers",
+        "repositoryUrl": "https://github.com/emotion-js/emotion",
+        "securityChannelUrl": "https://github.com/emotion-js/emotion/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/emotion-js/emotion/releases"
+      },
+      "maturity": {
+        "rationale": "Established styling runtime used by MUI with stable package documentation and an active public maintenance channel.",
+        "adoptionEvidenceUrls": [
+          "https://mui.com/material-ui/integrations/styled-components/",
+          "https://emotion.sh/docs/introduction"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@emotion/styled",
+      "version": "11.14.1",
+      "technologyState": "approved_default",
+      "purpose": "Provides the styled-component primitive required by the governed MUI styling engine.",
+      "ownershipBoundary": "Workbench owns design tokens and composed components; Emotion owns styled-component runtime behavior.",
+      "architecturalRole": "design_system",
+      "criticality": "high",
+      "containmentBoundary": "Consumed as an MUI peer runtime behind the Workbench design-system theme and component boundary.",
+      "replacementPosture": {
+        "strategy": "retain_and_review",
+        "exitPath": "Replace only with the paired Emotion and MUI migration, including theme, rendering, and accessibility proof.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@emotion/styled/v/11.14.1"
+      },
+      "stewardship": {
+        "steward": "Emotion maintainers",
+        "repositoryUrl": "https://github.com/emotion-js/emotion",
+        "securityChannelUrl": "https://github.com/emotion-js/emotion/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/emotion-js/emotion/releases"
+      },
+      "maturity": {
+        "rationale": "Established MUI-compatible styling primitive with stable documentation and a shared active Emotion maintenance channel.",
+        "adoptionEvidenceUrls": [
+          "https://mui.com/material-ui/integrations/styled-components/",
+          "https://emotion.sh/docs/styled"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@hookform/resolvers",
+      "version": "5.2.2",
+      "technologyState": "approved_default",
+      "purpose": "Connects governed Zod validation to React Hook Form in the proposal simulation workflow.",
+      "ownershipBoundary": "Workbench owns form rules and schemas; the adapter owns translation into React Hook Form results.",
+      "architecturalRole": "form_adapter",
+      "criticality": "moderate",
+      "containmentBoundary": "Imported only by the proposal simulation form and paired with repository-owned Zod schemas.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace with a repository-owned resolver adapter or direct validation at the proposal form boundary.",
+        "switchingCost": "low"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@hookform/resolvers/v/5.2.2"
+      },
+      "stewardship": {
+        "steward": "React Hook Form maintainers",
+        "repositoryUrl": "https://github.com/react-hook-form/resolvers",
+        "securityChannelUrl": "https://github.com/react-hook-form/resolvers/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/react-hook-form/resolvers/releases/tag/v5.2.2"
+      },
+      "maturity": {
+        "rationale": "Official React Hook Form resolver collection with stable Zod integration and active public releases.",
+        "adoptionEvidenceUrls": [
+          "https://github.com/react-hook-form/resolvers",
+          "https://react-hook-form.com/get-started#SchemaValidation"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@mui/material",
+      "version": "7.3.4",
+      "technologyState": "approved_default",
+      "purpose": "Provides accessible interaction primitives and theme integration for the Workbench design system.",
+      "ownershipBoundary": "Workbench owns business composition, tokens, density, and interaction policy; MUI owns low-level primitives.",
+      "architecturalRole": "design_system",
+      "criticality": "high",
+      "containmentBoundary": "Business screens consume repository-owned design-system components; direct use is governed and reviewed.",
+      "replacementPosture": {
+        "strategy": "framework_migration",
+        "exitPath": "Migrate through the Workbench design-system facade screen by screen with accessibility and visual-regression proof.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@mui/material/v/7.3.4"
+      },
+      "stewardship": {
+        "steward": "MUI Core maintainers",
+        "repositoryUrl": "https://github.com/mui/material-ui",
+        "securityChannelUrl": "https://github.com/mui/material-ui/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/mui/material-ui/releases/tag/v7.3.4"
+      },
+      "maturity": {
+        "rationale": "Long-lived, documented React component foundation with active releases, accessibility guidance, and enterprise usage patterns.",
+        "adoptionEvidenceUrls": [
+          "https://mui.com/material-ui/getting-started/",
+          "https://mui.com/material-ui/guides/minimizing-bundle-size/"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@tanstack/react-query",
+      "version": "5.90.5",
+      "technologyState": "approved_default",
+      "purpose": "Coordinates bounded server-state retrieval, mutation, invalidation, and source refresh for Workbench workflows.",
+      "ownershipBoundary": "Workbench owns query keys and truth-refresh rules; Gateway and source services own business state and persistence.",
+      "architecturalRole": "server_state",
+      "criticality": "high",
+      "containmentBoundary": "A single provider and feature-owned hooks contain caching and mutation policy away from presentation components.",
+      "replacementPosture": {
+        "strategy": "retain_and_review",
+        "exitPath": "Replace through feature query hooks while retaining Gateway contracts, source refresh, and explicit failure semantics.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@tanstack/react-query/v/5.90.5"
+      },
+      "stewardship": {
+        "steward": "TanStack Query maintainers",
+        "repositoryUrl": "https://github.com/TanStack/query",
+        "securityChannelUrl": "https://github.com/TanStack/query/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/TanStack/query/releases/tag/v5.90.5"
+      },
+      "maturity": {
+        "rationale": "Established server-state library with versioned documentation, active releases, and framework-specific production guidance.",
+        "adoptionEvidenceUrls": [
+          "https://tanstack.com/query/latest/docs/framework/react/overview",
+          "https://github.com/TanStack/query"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "ag-grid-community",
+      "version": "34.3.1",
+      "technologyState": "approved_default",
+      "purpose": "Provides dense, accessible, virtualized portfolio record grids for advisor holdings and transaction workflows.",
+      "ownershipBoundary": "Workbench owns column semantics, formatting, and actions; AG Grid owns grid rendering and interaction mechanics.",
+      "architecturalRole": "data_grid_adapter",
+      "criticality": "high",
+      "containmentBoundary": "Registration and behavior are contained in design-system grid utilities and portfolio record grid frames.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace behind the portfolio data-grid frame while preserving columns, keyboard behavior, density, and record actions.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/ag-grid-community/v/34.3.1"
+      },
+      "stewardship": {
+        "steward": "AG Grid maintainers",
+        "repositoryUrl": "https://github.com/ag-grid/ag-grid",
+        "securityChannelUrl": "https://github.com/ag-grid/ag-grid/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/ag-grid/ag-grid/releases/tag/v34.3.1"
+      },
+      "maturity": {
+        "rationale": "Established data-grid product with a documented community edition, active releases, and mature enterprise interaction patterns.",
+        "adoptionEvidenceUrls": [
+          "https://www.ag-grid.com/react-data-grid/",
+          "https://github.com/ag-grid/ag-grid"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "ag-grid-react",
+      "version": "34.3.1",
+      "technologyState": "approved_default",
+      "purpose": "Provides the React binding for governed AG Grid portfolio record surfaces.",
+      "ownershipBoundary": "Workbench owns React composition and record behavior; the adapter owns React-to-grid lifecycle integration.",
+      "architecturalRole": "data_grid_adapter",
+      "criticality": "high",
+      "containmentBoundary": "Imported only by repository-owned portfolio and positions grid-frame components.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace together with AG Grid Community behind the existing portfolio data-grid frame and module boundary.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/ag-grid-react/v/34.3.1"
+      },
+      "stewardship": {
+        "steward": "AG Grid maintainers",
+        "repositoryUrl": "https://github.com/ag-grid/ag-grid",
+        "securityChannelUrl": "https://github.com/ag-grid/ag-grid/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/ag-grid/ag-grid/releases/tag/v34.3.1"
+      },
+      "maturity": {
+        "rationale": "Official React integration maintained and released with the established AG Grid community runtime.",
+        "adoptionEvidenceUrls": [
+          "https://www.ag-grid.com/react-data-grid/",
+          "https://github.com/ag-grid/ag-grid/tree/latest/packages/ag-grid-react"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "echarts",
+      "version": "6.1.0",
+      "technologyState": "approved_default",
+      "purpose": "Renders dense interactive performance, attribution, and risk visualizations from Workbench-owned chart models.",
+      "ownershipBoundary": "Workbench owns financial labels and chart models; Apache ECharts owns rendering and chart interaction mechanics.",
+      "architecturalRole": "chart_adapter",
+      "criticality": "moderate",
+      "containmentBoundary": "Chart options and rendering are contained by the repository-owned WorkbenchECharts design-system component.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace the renderer behind WorkbenchECharts while retaining source-owned data, chart models, labels, and disclosure rules.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidenceUrl": "https://www.npmjs.com/package/echarts/v/6.1.0"
+      },
+      "stewardship": {
+        "steward": "Apache ECharts project",
+        "repositoryUrl": "https://github.com/apache/echarts",
+        "securityChannelUrl": "https://www.apache.org/security/"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/apache/echarts/releases/tag/6.1.0"
+      },
+      "maturity": {
+        "rationale": "Apache-governed visualization project with stable releases, broad chart coverage, and documented accessibility controls.",
+        "adoptionEvidenceUrls": [
+          "https://echarts.apache.org/en/index.html",
+          "https://echarts.apache.org/handbook/en/best-practices/aria/"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "echarts-for-react",
+      "version": "3.0.6",
+      "technologyState": "approved_default",
+      "purpose": "Provides the React lifecycle adapter used by the repository-owned WorkbenchECharts chart boundary.",
+      "ownershipBoundary": "Workbench owns chart configuration and the facade; the adapter owns React mounting and ECharts lifecycle calls.",
+      "architecturalRole": "chart_adapter",
+      "criticality": "moderate",
+      "containmentBoundary": "Imported only by WorkbenchECharts, preventing chart-adapter behavior from leaking across business screens.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace with a small repository-owned React adapter or another maintained binding behind WorkbenchECharts.",
+        "switchingCost": "low"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/echarts-for-react/v/3.0.6"
+      },
+      "stewardship": {
+        "steward": "echarts-for-react maintainers",
+        "repositoryUrl": "https://github.com/hustcc/echarts-for-react",
+        "securityChannelUrl": "https://github.com/hustcc/echarts-for-react/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/hustcc/echarts-for-react/releases/tag/3.0.6"
+      },
+      "maturity": {
+        "rationale": "Long-lived focused React binding with a stable API, current releases, and narrow containment behind one local facade.",
+        "adoptionEvidenceUrls": [
+          "https://github.com/hustcc/echarts-for-react",
+          "https://www.npmjs.com/package/echarts-for-react"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "next",
+      "version": "15.5.22",
+      "technologyState": "approved_default",
+      "purpose": "Provides the governed application framework, server rendering, routing, BFF endpoints, and standalone runtime packaging.",
+      "ownershipBoundary": "Workbench owns product routes and BFF policy; Next.js owns framework execution, rendering, and packaging behavior.",
+      "architecturalRole": "framework_core",
+      "criticality": "critical",
+      "containmentBoundary": "Framework behavior is governed through App Router entrypoints, BFF routes, runtime policy, and standalone container proof.",
+      "replacementPosture": {
+        "strategy": "framework_migration",
+        "exitPath": "Require an architecture RFC and staged migration preserving Gateway boundaries, routes, server behavior, and browser evidence.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/next/v/15.5.22"
+      },
+      "stewardship": {
+        "steward": "Vercel Next.js maintainers",
+        "repositoryUrl": "https://github.com/vercel/next.js",
+        "securityChannelUrl": "https://github.com/vercel/next.js/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://nextjs.org/support-policy"
+      },
+      "maturity": {
+        "rationale": "Widely deployed React application framework with a published support policy, stable release channel, and mature self-hosting guidance.",
+        "adoptionEvidenceUrls": [
+          "https://nextjs.org/docs/app/getting-started/installation",
+          "https://nextjs.org/docs/app/guides/self-hosting"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-09-15"
+      },
+      "exception": null
+    },
+    {
+      "name": "react",
+      "version": "19.1.0",
+      "technologyState": "approved_default",
+      "purpose": "Provides the component, state, and rendering model for every interactive Workbench business surface.",
+      "ownershipBoundary": "Workbench owns components and business interaction state; React owns component lifecycle and reconciliation behavior.",
+      "architecturalRole": "framework_core",
+      "criticality": "critical",
+      "containmentBoundary": "Use is governed by feature boundaries, repository design-system components, strict TypeScript, and React lint controls.",
+      "replacementPosture": {
+        "strategy": "framework_migration",
+        "exitPath": "Require an architecture RFC and product-wide staged rewrite preserving accessibility, BFF boundaries, and workflow evidence.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/react/v/19.1.0"
+      },
+      "stewardship": {
+        "steward": "React maintainers",
+        "repositoryUrl": "https://github.com/facebook/react",
+        "securityChannelUrl": "https://github.com/facebook/react/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/facebook/react/releases/tag/v19.1.0"
+      },
+      "maturity": {
+        "rationale": "Long-lived, widely deployed UI foundation with stable documentation, active security maintenance, and extensive tooling support.",
+        "adoptionEvidenceUrls": [
+          "https://react.dev/learn",
+          "https://github.com/facebook/react"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "react-dom",
+      "version": "19.1.0",
+      "technologyState": "approved_default",
+      "purpose": "Provides the browser and server DOM renderer paired with the governed React application runtime.",
+      "ownershipBoundary": "Workbench owns application composition; React maintainers own DOM rendering and hydration behavior.",
+      "architecturalRole": "framework_core",
+      "criticality": "critical",
+      "containmentBoundary": "Consumed through the Next.js and React runtime rather than application-owned rendering infrastructure.",
+      "replacementPosture": {
+        "strategy": "framework_migration",
+        "exitPath": "Replace only as part of the coordinated React and Next.js architecture migration path.",
+        "switchingCost": "high"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/react-dom/v/19.1.0"
+      },
+      "stewardship": {
+        "steward": "React maintainers",
+        "repositoryUrl": "https://github.com/facebook/react",
+        "securityChannelUrl": "https://github.com/facebook/react/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/facebook/react/releases/tag/v19.1.0"
+      },
+      "maturity": {
+        "rationale": "Official DOM renderer released and maintained with React, with stable integration through the selected Next.js framework.",
+        "adoptionEvidenceUrls": [
+          "https://react.dev/reference/react-dom",
+          "https://github.com/facebook/react"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "react-hook-form",
+      "version": "7.65.0",
+      "technologyState": "approved_default",
+      "purpose": "Manages accessible form state and validation flow for proposal simulation inputs.",
+      "ownershipBoundary": "Workbench owns fields, business validation, and submission; React Hook Form owns local form-state coordination.",
+      "architecturalRole": "form_adapter",
+      "criticality": "moderate",
+      "containmentBoundary": "Imported only by the proposal simulation form and paired with repository-owned contracts and actions.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace within the proposal form boundary using React state or another reviewed form-state adapter.",
+        "switchingCost": "low"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/react-hook-form/v/7.65.0"
+      },
+      "stewardship": {
+        "steward": "React Hook Form maintainers",
+        "repositoryUrl": "https://github.com/react-hook-form/react-hook-form",
+        "securityChannelUrl": "https://github.com/react-hook-form/react-hook-form/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/react-hook-form/react-hook-form/releases/tag/v7.65.0"
+      },
+      "maturity": {
+        "rationale": "Established React form-state library with stable documentation, active releases, and a focused browser-only responsibility.",
+        "adoptionEvidenceUrls": [
+          "https://react-hook-form.com/get-started",
+          "https://github.com/react-hook-form/react-hook-form"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "zod",
+      "version": "4.1.12",
+      "technologyState": "approved_default",
+      "purpose": "Validates external and form contracts at Workbench boundaries before business UI consumes them.",
+      "ownershipBoundary": "Workbench owns schemas and failure posture; Zod owns deterministic runtime parsing and validation mechanics.",
+      "architecturalRole": "contract_validation",
+      "criticality": "high",
+      "containmentBoundary": "Schemas live in feature contract modules and proposal form validation rather than presentation components.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace contract modules incrementally with generated or repository-owned validators while preserving failure semantics.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/zod/v/4.1.12"
+      },
+      "stewardship": {
+        "steward": "Zod maintainers",
+        "repositoryUrl": "https://github.com/colinhacks/zod",
+        "securityChannelUrl": "https://github.com/colinhacks/zod/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/colinhacks/zod/releases/tag/v4.1.12"
+      },
+      "maturity": {
+        "rationale": "Established TypeScript-first validation library with stable documentation, active releases, and contained contract-boundary usage.",
+        "adoptionEvidenceUrls": [
+          "https://zod.dev/",
+          "https://github.com/colinhacks/zod"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    }
+  ]
+}

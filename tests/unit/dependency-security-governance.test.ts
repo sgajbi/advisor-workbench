@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const repositoryRoot = join(__dirname, "..", "..");
 const governedLintCommand =
-  "npm run quality:runtime-support && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:eslint";
+  "npm run quality:runtime-support && npm run quality:dependency-risk && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:eslint";
 const governedTimeoutsByJob = new Map([
   [
     "e2e-smoke",
