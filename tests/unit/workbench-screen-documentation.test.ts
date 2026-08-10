@@ -66,6 +66,20 @@ describe("Workbench screen documentation governance", () => {
     );
   });
 
+  it("rejects an active mode removed from its canonical route mapping", () => {
+    const registry = loadRegistry();
+    const route = registry.routeEntrypoints.find(
+      (candidate: { routePattern: string }) => candidate.routePattern === "/performance",
+    );
+    route.canonicalSurfaceIds = route.canonicalSurfaceIds.filter(
+      (surfaceId: string) => surfaceId !== "risk-review",
+    );
+
+    expect(validate(registry).errors).toContain(
+      "Active surface risk-review is not mapped by its canonical route /performance.",
+    );
+  });
+
   it("rejects fragment navigation without an implementation-owned target", () => {
     const registry = loadRegistry();
     const surface = registry.surfaces.find(
