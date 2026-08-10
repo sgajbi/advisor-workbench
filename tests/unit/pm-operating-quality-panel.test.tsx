@@ -839,15 +839,17 @@ describe("PmOperatingQualityPanel", () => {
         correlationId: "corr-workbench-pm-quality-summary-invocation-panel-test",
       });
     });
-    expect(getDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith(
-      "pmq_summary_001",
-      "client"
-    );
+    await waitFor(() => {
+      expect(getDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith(
+        "pmq_summary_001",
+        "client"
+      );
+    });
     expect(
-      screen.getByText("Recorded Manage-owned PM quality summary invocation.")
+      await screen.findByText("Recorded Manage-owned PM quality summary invocation.")
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality persisted summary-invocation evidence")
+      await screen.findByLabelText("PM operating quality persisted summary-invocation evidence")
     ).toBeInTheDocument();
     expect(screen.getAllByText("pmq_summary_001").length).toBeGreaterThan(0);
     expect(screen.queryByText("Raw generated PM summary narrative must stay hidden.")).not.toBeInTheDocument();
