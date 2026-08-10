@@ -56,8 +56,10 @@ ownership.
 
 `npm run quality:runtime-support` fails when the repository drifts across package metadata,
 lockfile runtime ranges, exact CI Node versions, container provenance, npm/Playwright declarations,
-canonical install commands, explicit Chromium projects, or the review date. `npm run lint` invokes
-this control, so Feature, PR, Main, and Docker-parity quality lanes inherit it.
+canonical install commands, explicit Chromium projects, or the review date. It reads active
+workflow steps and named Docker stages rather than accepting matching text in comments, unrelated
+stages, or superseded instructions. `npm run lint` invokes this control, so Feature, PR, Main, and
+Docker-parity quality lanes inherit it.
 
 Existing gates also cover dependency vulnerabilities, lint, TypeScript, coverage, production
 builds, bundle budgets, Playwright smoke, Docker parity, container vulnerabilities, and SBOM
@@ -91,3 +93,6 @@ durable execution record.
 4. [npm package metadata controls](https://docs.npmjs.com/files/package.json/)
 5. [Next.js browser floors](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
 6. [MDN Baseline scope](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
+7. [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+8. [Dockerfile reference](https://docs.docker.com/reference/dockerfile)
+9. [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/)

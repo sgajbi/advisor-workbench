@@ -76,7 +76,10 @@ The first #612 tranche enforces:
 4. repository-locked Playwright CLI invocation and an explicit Chromium project;
 5. exact Next, React, and TypeScript reconciliation against the versioned policy;
 6. non-root container execution and exact base-image provenance;
-7. a review-expiry check and explicit browser, capacity, horizontal-scale, and identity non-claims.
+7. parsed active GitHub workflow steps, named Docker-stage ownership, and the runner's final
+   effective user, so comments, wrong-stage commands, and superseded directives cannot satisfy the
+   control; and
+8. a review-expiry check and explicit browser, capacity, horizontal-scale, and identity non-claims.
 
 The existing protected lanes continue to enforce dependency audit, lint, strict TypeScript,
 coverage, production build, browser smoke, Docker parity, production-image vulnerability scanning,
@@ -94,6 +97,27 @@ Node, npm, Next.js, browser floors, and the container digest must be reviewed no
 policy's `nextReviewBy` date. The repository gate fails after that date so lifecycle review cannot
 silently become stale.
 
+## Adopted And Rejected Enforcement Patterns
+
+Adopted under [#616](https://github.com/sgajbi/lotus-workbench/issues/616):
+
+1. parse workflow YAML into jobs and steps, then bind each exact Node selector and Playwright
+   browser-install command to its active step;
+2. declare the parser as an exact, lock-backed, development-only quality dependency rather than
+   relying on its incidental presence below another tool;
+3. read active Dockerfile instructions by named stage and evaluate the final `USER` directive in
+   the production runner stage; and
+4. retain focused mutations for commented, missing, duplicate, wrong-stage, and superseded proof.
+
+Rejected:
+
+1. global regular-expression counts or string-presence checks, because inactive comments and
+   unrelated stages can satisfy them;
+2. adding workflow or Docker parsing to the Workbench runtime bundle, because these controls belong
+   only to development and CI; and
+3. a broad new Docker parsing dependency for the bounded `FROM`, `RUN`, and `USER` invariants, which
+   would enlarge the quality-tool supply chain without improving the governed evidence needed here.
+
 ## Evidence sources
 
 1. [Node.js release lifecycle](https://nodejs.org/en/about/previous-releases)
@@ -102,6 +126,9 @@ silently become stale.
 4. [npm package metadata and `devEngines`](https://docs.npmjs.com/files/package.json/)
 5. [Next.js supported browser floors](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
 6. [MDN Baseline compatibility scope](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
+7. [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+8. [Dockerfile instruction semantics](https://docs.docker.com/reference/dockerfile)
+9. [Docker multi-stage build semantics](https://docs.docker.com/build/building/multi-stage/)
 
 ## Open certification work
 
