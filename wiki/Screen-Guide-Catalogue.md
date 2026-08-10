@@ -68,7 +68,7 @@ separate decision contexts and will receive separate guides even though they sha
 | --- | --- | --- | --- | --- |
 | Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
 | Performance Analysis | `/performance?mode=analysis` | Runtime-gated | Guide planned — #605 | Gateway and Performance |
-| Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway, Performance, and Lotus AI |
+| Performance Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway, Performance, and Lotus AI |
 | Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 | Performance Evidence | `/performance?mode=evidence` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 
@@ -124,7 +124,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Proposal Builder, including simulation results | `/proposals/simulate` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Core |
+| Proposal Builder | `/proposals/simulate` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Core |
 | Approval Queue | `/proposals?mode=approval-queue` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway and Advise |

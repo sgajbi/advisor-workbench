@@ -4,17 +4,52 @@ import { fileURLToPath } from "node:url";
 
 const DEFAULT_REGISTRY_PATH = "docs/documentation/workbench-screen-registry.v1.json";
 const ACTIVE_SURFACE_CLASSIFICATIONS = new Set(["active-screen", "active-mode"]);
+const DEFAULT_NEXT_PAGE_EXTENSIONS = ["tsx", "ts", "jsx", "js"];
 
 function toRepositoryPath(value) {
   return value.split(path.sep).join("/");
 }
 
-function collectPageEntrypoints(directory, rootDirectory, result = []) {
+export function isNextPageEntrypoint(filename, pageExtensions = DEFAULT_NEXT_PAGE_EXTENSIONS) {
+  return pageExtensions.some((extension) => filename === `page.${extension}`);
+}
+
+function configuredNextPageExtensions(rootDirectory) {
+  const configNames = [
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.cjs",
+    "next.config.ts",
+    "next.config.mts",
+    "next.config.cts",
+  ];
+  const configPath = configNames
+    .map((name) => path.join(rootDirectory, name))
+    .find((candidate) => fs.existsSync(candidate));
+  if (!configPath) return DEFAULT_NEXT_PAGE_EXTENSIONS;
+
+  const configSource = fs.readFileSync(configPath, "utf8");
+  const configuredList = configSource.match(/\bpageExtensions\s*:\s*\[([\s\S]*?)\]/)?.[1];
+  if (!configuredList) {
+    if (/\bpageExtensions\b/.test(configSource)) {
+      throw new Error(`${path.basename(configPath)} must declare pageExtensions as a literal array.`);
+    }
+    return DEFAULT_NEXT_PAGE_EXTENSIONS;
+  }
+
+  const extensions = [...configuredList.matchAll(/["']([^"']+)["']/g)].map((match) => match[1]);
+  if (extensions.length === 0) {
+    throw new Error(`${path.basename(configPath)} declares pageExtensions without literal values.`);
+  }
+  return extensions;
+}
+
+function collectPageEntrypoints(directory, rootDirectory, pageExtensions, result = []) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const absolutePath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      collectPageEntrypoints(absolutePath, rootDirectory, result);
-    } else if (entry.isFile() && entry.name === "page.tsx") {
+      collectPageEntrypoints(absolutePath, rootDirectory, pageExtensions, result);
+    } else if (entry.isFile() && isNextPageEntrypoint(entry.name, pageExtensions)) {
       result.push(toRepositoryPath(path.relative(rootDirectory, absolutePath)));
     }
   }
@@ -157,7 +192,7 @@ function validateJsonSchemaValue(value, schema, rootSchema, location, errors) {
 function deriveRoutePattern(entrypoint) {
   const routeSource = entrypoint
     .replace(/^src\/app/, "")
-    .replace(/\/page\.tsx$/, "")
+    .replace(/\/page\.[^/]+$/, "")
     .replace(/\/\([^/]+\)/g, "")
     .replace(/\[([^\]]+)\]/g, "{$1}");
   return routeSource || "/";
@@ -266,6 +301,16 @@ function parseCatalogueRows(content) {
     .map((cells) => cells.map((cell) => cell.replace(/^`([^`]+)`$/, "$1")));
 }
 
+function catalogueBusinessName(cell) {
+  return cell.match(/^\[([^\]]+)\]\([^)]+\)$/)?.[1] ?? cell;
+}
+
+function catalogueGuideStatus(surface, governingIssue) {
+  if (!surface.coverageException) return "Guide available";
+  if (surface.wikiSlug) return "Existing guide; complete-standard alignment planned";
+  return `Guide planned — #${governingIssue}`;
+}
+
 export function validateScreenDocumentation({
   rootDirectory = process.cwd(),
   registryData,
@@ -320,7 +365,11 @@ export function validateScreenDocumentation({
   const appDirectory = path.join(rootDirectory, "src", "app");
   const discoveredEntrypoints = new Set(
     fs.existsSync(appDirectory)
-      ? collectPageEntrypoints(appDirectory, rootDirectory).sort()
+      ? collectPageEntrypoints(
+          appDirectory,
+          rootDirectory,
+          configuredNextPageExtensions(rootDirectory),
+        ).sort()
       : [],
   );
   const registeredEntrypoints = new Set(routes.map((route) => route.entrypoint));
@@ -392,6 +441,13 @@ export function validateScreenDocumentation({
         continue;
       }
 
+      const actualBusinessName = catalogueBusinessName(row[0]);
+      if (actualBusinessName !== surface.businessName) {
+        errors.push(
+          `Screen guide catalogue name for ${surface.id} must be ${surface.businessName}, not ${actualBusinessName}.`,
+        );
+      }
+
       const expectedPosture = cataloguePostureLabel(surface);
       if (row[2] !== expectedPosture) {
         errors.push(
@@ -407,6 +463,14 @@ export function validateScreenDocumentation({
       if (row[4] !== expectedOwners) {
         errors.push(
           `Screen guide catalogue owners for ${surface.id} must be ${expectedOwners}, not ${row[4]}.`,
+        );
+      }
+
+
+      const expectedGuideStatus = catalogueGuideStatus(surface, registry.governingIssue);
+      if (row[3] !== expectedGuideStatus) {
+        errors.push(
+          `Screen guide catalogue guide status for ${surface.id} must be ${expectedGuideStatus}, not ${row[3]}.`,
         );
       }
     }

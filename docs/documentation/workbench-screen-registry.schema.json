@@ -67,7 +67,7 @@
         "implementationEvidence"
       ],
       "properties": {
-        "entrypoint": { "type": "string", "pattern": "^src/app/.*/?page\\.tsx$|^src/app/page\\.tsx$" },
+        "entrypoint": { "type": "string", "pattern": "^src/app/(?:.*/)?page\\.[A-Za-z0-9]+$" },
         "routePattern": { "type": "string", "pattern": "^/" },
         "routeClassification": {
           "enum": [
