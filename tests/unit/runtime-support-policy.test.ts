@@ -674,6 +674,22 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("does not treat COPY heredoc payloads as Docker instructions", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm run build",
+      [
+        "COPY <<'EOF' /tmp/policy-example",
+        'SHELL ["bash"]',
+        "ONBUILD RUN npm install express",
+        "EOF",
+        "RUN npm run build",
+      ].join("\n")
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
+  });
+
   it.each([
     "add",
     "i",

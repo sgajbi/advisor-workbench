@@ -108,8 +108,9 @@ Adopted under [#616](https://github.com/sgajbi/lotus-workbench/issues/616):
 3. read active Dockerfile instructions by named stage and evaluate the final `USER` directive in
    the production runner stage; and
 4. preserve token adjacency when Docker escape continuations remove newlines, require the default
-   backslash parser escape, and reject `ONBUILD` triggers plus `SHELL` overrides throughout the
-   governed stage chain; and
+   backslash parser escape, consume `RUN` and `COPY` heredoc payloads without interpreting their
+   contents as stage instructions, and reject `ONBUILD` triggers plus `SHELL` overrides throughout
+   the governed stage chain; and
 5. retain focused mutations for commented, missing, duplicate, wrong-stage, indirect,
    reinterpreted, and superseded proof.
 

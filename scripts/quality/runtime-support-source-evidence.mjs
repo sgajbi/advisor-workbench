@@ -147,7 +147,9 @@ function collectDockerfileInstructions(source) {
     if (match?.groups) {
       const keyword = match.groups.keyword.toUpperCase();
       let argument = match.groups.argument;
-      const heredocs = keyword === "RUN" ? collectDockerHeredocs(argument) : [];
+      const heredocs = ["COPY", "RUN"].includes(keyword)
+        ? collectDockerHeredocs(argument)
+        : [];
       const heredocBody = [];
       for (const heredoc of heredocs) {
         while (lineIndex + 1 < sourceLines.length) {
