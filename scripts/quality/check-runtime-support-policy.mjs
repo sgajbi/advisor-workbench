@@ -2,6 +2,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import {
+  collectWorkflowSteps,
+  declaresGovernedChromiumProject,
+  isRecord,
+  normalizeInstruction,
+  parseDockerfile,
+  parseWorkflow,
+} from "./runtime-support-source-evidence.mjs";
+
 const POLICY_PATH = "docs/architecture/workbench-runtime-support-policy.v1.json";
 const WORKFLOW_PATHS = [
   ".github/workflows/feature-lane.yml",
@@ -46,6 +55,18 @@ export function validateRuntimeSupportPolicy({
   expectEqual(failures, "React version", packageJson.dependencies?.react, policy.applicationStack?.react?.version);
   expectEqual(failures, "TypeScript version", packageJson.devDependencies?.typescript, policy.applicationStack?.typescript?.version);
   expectEqual(failures, "Playwright version", packageJson.devDependencies?.["@playwright/test"], policy.validationTooling?.playwright?.version);
+  expectEqual(
+    failures,
+    "workflow YAML parser version",
+    packageJson.devDependencies?.yaml,
+    policy.validationTooling?.workflowYamlParser?.version
+  );
+  expectEqual(
+    failures,
+    "lockfile workflow YAML parser version",
+    packageLock.packages?.[""]?.devDependencies?.yaml,
+    policy.validationTooling?.workflowYamlParser?.version
+  );
 
   if (execution.enforceExact) {
     expectEqual(failures, "executing Node version", execution.nodeVersion, policy.productionContainer?.version);
@@ -61,31 +82,86 @@ export function validateRuntimeSupportPolicy({
     policy.productionContainer?.distribution,
     `@${policy.productionContainer?.digest}`,
   ].join("-").replace("-@", "@");
-  const declaredImage = dockerfile.match(/ARG NODE_BASE_IMAGE=(?<image>[^\r\n]+)/)?.groups?.image;
+  const dockerModel = parseDockerfile(dockerfile);
+  const baseImageArguments = dockerModel.globalInstructions.filter(
+    ({ keyword, argument }) =>
+      keyword === "ARG" && argument.startsWith("NODE_BASE_IMAGE=")
+  );
+  const declaredImage =
+    baseImageArguments.length === 1
+      ? baseImageArguments[0].argument.slice("NODE_BASE_IMAGE=".length)
+      : undefined;
   expectEqual(failures, "container base image", declaredImage, expectedImage);
-  if (!dockerfile.includes(`USER ${policy.productionContainer?.executionUser}`)) {
-    failures.push(`Container runtime must execute as ${policy.productionContainer?.executionUser}.`);
+
+  const dependencyStages = dockerModel.stages.filter(({ name }) => name === "deps");
+  if (dependencyStages.length !== 1) {
+    failures.push('Dockerfile must declare exactly one Docker stage named "deps".');
+  } else {
+    const dependencyInstallCommands = dependencyStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "RUN" && /^npm\s+(?:ci|install)\b/.test(normalizeInstruction(argument))
+    );
+    if (
+      dependencyInstallCommands.length !== 1 ||
+      normalizeInstruction(dependencyInstallCommands[0].argument) !==
+        "npm ci --no-audit --no-fund"
+    ) {
+      failures.push(
+        "The named deps stage (container dependency stage) must contain exactly one active immutable install: RUN npm ci --no-audit --no-fund."
+      );
+    }
   }
-  if (!dockerfile.includes("RUN npm ci --no-audit --no-fund")) {
-    failures.push("The container dependency stage must use immutable npm ci without implicit audit traffic.");
+
+  const runnerStages = dockerModel.stages.filter(({ name }) => name === "runner");
+  if (runnerStages.length !== 1) {
+    failures.push('Dockerfile must declare exactly one Docker stage named "runner".');
+  } else {
+    const userInstructions = runnerStages[0].instructions.filter(
+      ({ keyword }) => keyword === "USER"
+    );
+    const finalUser = userInstructions.at(-1)?.argument;
+    const expectedUser = policy.productionContainer?.executionUser;
+    if (
+      typeof finalUser !== "string" ||
+      !new RegExp(`^${escapeRegExp(expectedUser)}(?::[^\\s]+)?$`).test(finalUser)
+    ) {
+      failures.push(
+        `The runner stage final effective user must execute as ${expectedUser}; received ${JSON.stringify(finalUser)}.`
+      );
+    }
   }
 
   for (const [path, source] of Object.entries({
     "playwright.config.ts": playwrightConfig,
     "playwright.live.config.ts": livePlaywrightConfig,
   })) {
-    if (!source.includes('projects: [{ name: "chromium", use: { browserName: "chromium" } }]')) {
+    if (!declaresGovernedChromiumProject(source)) {
       failures.push(`${path} must declare the governed Chromium browser project explicitly.`);
     }
   }
 
+  const parsedWorkflows = new Map();
   for (const [path, source] of Object.entries(workflowSources)) {
-    const setupNodeSteps = collectSetupNodeSteps(source);
+    let workflow;
+    try {
+      workflow = parseWorkflow(source);
+      parsedWorkflows.set(path, workflow);
+    } catch {
+      failures.push(`${path} must be valid YAML before runtime support can be verified.`);
+      continue;
+    }
+    const setupNodeSteps = collectWorkflowSteps(workflow).filter(
+      (step) =>
+        isRecord(step) &&
+        typeof step.uses === "string" &&
+        step.uses.startsWith("actions/setup-node@")
+    );
     if (
       setupNodeSteps.length === 0 ||
       setupNodeSteps.some(
-        ({ versions }) =>
-          versions.length !== 1 || versions[0] !== policy.productionContainer?.version
+        (step) =>
+          !isRecord(step.with) ||
+          step.with["node-version"] !== policy.productionContainer?.version
       )
     ) {
       failures.push(`${path} must use Node ${policy.productionContainer?.version} for every setup-node step.`);
@@ -93,7 +169,18 @@ export function validateRuntimeSupportPolicy({
   }
 
   for (const path of [".github/workflows/pr-merge-gate.yml", ".github/workflows/main-releasability.yml"]) {
-    if (!workflowSources[path]?.includes("node node_modules/playwright/cli.js install chromium")) {
+    const workflow = parsedWorkflows.get(path);
+    if (!workflow) {
+      continue;
+    }
+    const browserInstallSteps = collectWorkflowSteps(workflow).filter(
+      (step) =>
+        isRecord(step) &&
+        typeof step.run === "string" &&
+        normalizeInstruction(step.run) ===
+          "node node_modules/playwright/cli.js install chromium"
+    );
+    if (browserInstallSteps.length !== 1) {
       failures.push(`${path} must install Chromium through the repository-locked Playwright CLI.`);
     }
   }
@@ -162,42 +249,8 @@ function expectEqual(failures, label, actual, expected) {
   }
 }
 
-function collectSetupNodeSteps(source) {
-  const lines = source.split(/\r?\n/);
-  const steps = [];
-
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-    if (!/^\s*(?:-\s*)?uses:\s*actions\/setup-node@/.test(lines[lineIndex])) {
-      continue;
-    }
-
-    const directStepMatch = lines[lineIndex].match(/^(?<indent>\s*)-\s*uses:/);
-    let stepIndent = directStepMatch?.groups?.indent.length;
-    if (stepIndent === undefined) {
-      for (let candidate = lineIndex - 1; candidate >= 0; candidate -= 1) {
-        const stepMatch = lines[candidate].match(/^(?<indent>\s*)-\s+/);
-        if (stepMatch && stepMatch.groups.indent.length < lines[lineIndex].search(/\S/)) {
-          stepIndent = stepMatch.groups.indent.length;
-          break;
-        }
-      }
-    }
-
-    const block = [lines[lineIndex]];
-    for (let candidate = lineIndex + 1; candidate < lines.length; candidate += 1) {
-      const nextStepMatch = lines[candidate].match(/^(?<indent>\s*)-\s+/);
-      if (nextStepMatch && nextStepMatch.groups.indent.length === stepIndent) {
-        break;
-      }
-      block.push(lines[candidate]);
-    }
-    const versions = [...block.join("\n").matchAll(/node-version:\s*(?<version>[^\r\n,}#]+)/g)].map(
-      (match) => match.groups?.version.trim().replace(/^(?<quote>["'])(?<value>.*)\k<quote>$/, "$<value>")
-    );
-    steps.push({ versions });
-  }
-
-  return steps;
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function isIsoDate(value) {
