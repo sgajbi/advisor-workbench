@@ -280,6 +280,33 @@ describe("proposal policy review view model", () => {
     expect(model?.sourceIdentityAligned).toBe(false);
   });
 
+  it("fails closed when sign-off lineage belongs to another proposal version", () => {
+    const model = buildPolicyEvaluationEvidenceModel({
+      evaluation: {
+        evaluation_id: "pev_001",
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        proposal_id: "PRP-ONE",
+        proposal_version_id: "ppv_001",
+      },
+      signOffPackage: {
+        lineage: {
+          evaluation_id: "pev_001",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          proposal_id: "PRP-OTHER",
+          proposal_version_id: "ppv_other",
+        },
+      },
+      workflow: {
+        evaluation_id: "pev_001",
+        proposal_id: "PRP-ONE",
+        proposal_version_id: "ppv_001",
+      },
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    expect(model?.sourceIdentityAligned).toBe(false);
+  });
+
   it("fails closed when detail identity does not match the selected queue record", () => {
     const selectedReview = buildPolicyReviewQueueModel({
       records: [
