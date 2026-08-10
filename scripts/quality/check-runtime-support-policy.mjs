@@ -119,6 +119,11 @@ export function validateRuntimeSupportPolicy({
     `@${policy.productionContainer?.digest}`,
   ].join("-").replace("-@", "@");
   const dockerModel = parseDockerfile(dockerfile);
+  if (dockerModel.escapeCharacter !== "\\") {
+    failures.push(
+      "Dockerfile must retain the default backslash escape character so governed logical-instruction parsing cannot be reinterpreted by a parser directive."
+    );
+  }
   const baseImageArguments = dockerModel.globalInstructions.filter(
     ({ keyword, argument }) =>
       keyword === "ARG" && argument.startsWith("NODE_BASE_IMAGE=")
