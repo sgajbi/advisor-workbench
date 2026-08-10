@@ -58,8 +58,10 @@ ownership.
 lockfile runtime ranges, exact CI Node versions, container provenance, npm/Playwright declarations,
 canonical install commands, explicit Chromium projects, or the review date. It reads active
 workflow steps and named Docker stages rather than accepting matching text in comments, unrelated
-stages, or superseded instructions. `npm run lint` invokes this control, so Feature, PR, Main, and
-Docker-parity quality lanes inherit it.
+stages, or superseded instructions. Docker escape continuations retain token adjacency, while
+governed stages reject inherited `ONBUILD` triggers and `SHELL` overrides that could reinterpret or
+indirectly add commands. `npm run lint` invokes this control, so Feature, PR, Main, and Docker-parity
+quality lanes inherit it.
 
 Existing gates also cover dependency vulnerabilities, lint, TypeScript, coverage, production
 builds, bundle budgets, Playwright smoke, Docker parity, container vulnerabilities, and SBOM
