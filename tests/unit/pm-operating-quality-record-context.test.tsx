@@ -65,6 +65,7 @@ describe("PmOperatingQualityRecordContext", () => {
         selection={selection}
         pendingFairnessDetail={false}
         pendingReviewActionDetail={false}
+        selectionLocked={false}
         onScoreRunSelection={vi.fn()}
         onFairnessAnalysisSelection={vi.fn()}
         onReviewActionSelection={vi.fn()}
@@ -88,6 +89,7 @@ describe("PmOperatingQualityRecordContext", () => {
         selection={selection}
         pendingFairnessDetail={false}
         pendingReviewActionDetail={false}
+        selectionLocked={false}
         onScoreRunSelection={onScoreRunSelection}
         onFairnessAnalysisSelection={vi.fn()}
         onReviewActionSelection={vi.fn()}
@@ -115,6 +117,7 @@ describe("PmOperatingQualityRecordContext", () => {
         selection={{ ...selection, fairnessAnalysisId: null, reviewActionId: null }}
         pendingFairnessDetail
         pendingReviewActionDetail
+        selectionLocked={false}
         onScoreRunSelection={vi.fn()}
         onFairnessAnalysisSelection={vi.fn()}
         onReviewActionSelection={vi.fn()}
@@ -131,5 +134,31 @@ describe("PmOperatingQualityRecordContext", () => {
     expect(pendingStates).toHaveLength(2);
     expect(pendingStates[0]).toHaveTextContent("Loading the selected fairness evidence.");
     expect(pendingStates[1]).toHaveTextContent("Loading the selected supervisory action.");
+  });
+
+  it("holds every record selector while a source-owned action is being recorded", () => {
+    const onScoreRunSelection = vi.fn();
+    render(
+      <PmOperatingQualityRecordContext
+        model={model}
+        selection={selection}
+        pendingFairnessDetail={false}
+        pendingReviewActionDetail={false}
+        selectionLocked
+        onScoreRunSelection={onScoreRunSelection}
+        onFairnessAnalysisSelection={vi.fn()}
+        onReviewActionSelection={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("Record selection is held while Manage records the current control action.")
+    ).toHaveAttribute("role", "status");
+    const options = screen.getAllByRole("option");
+    expect(options).not.toHaveLength(0);
+    options.forEach((option) => expect(option).toHaveAttribute("aria-disabled", "true"));
+
+    fireEvent.click(screen.getByRole("option", { name: /PM_SG_002/i }));
+    expect(onScoreRunSelection).not.toHaveBeenCalled();
   });
 });

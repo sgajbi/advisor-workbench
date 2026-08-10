@@ -77,6 +77,7 @@ export default function PmOperatingQualityPanel({
     pendingReviewActionCreate,
     pendingSummaryInvocationPreview,
     pendingSummaryInvocationCreate,
+    selectionLocked,
     actionError,
     actionMessage,
     summaryOutcome,
@@ -187,6 +188,7 @@ export default function PmOperatingQualityPanel({
         selection={selection}
         pendingFairnessDetail={pendingFairnessDetail}
         pendingReviewActionDetail={pendingReviewActionDetail}
+        selectionLocked={selectionLocked}
         onScoreRunSelection={selectScoreRun}
         onFairnessAnalysisSelection={(fairnessAnalysisId) => {
           void selectFairnessAnalysis(fairnessAnalysisId);

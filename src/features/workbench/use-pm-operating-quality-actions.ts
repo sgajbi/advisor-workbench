@@ -92,6 +92,7 @@ type UsePmOperatingQualityActionsResult = {
   pendingReviewActionCreate: boolean;
   pendingSummaryInvocationPreview: boolean;
   pendingSummaryInvocationCreate: boolean;
+  selectionLocked: boolean;
   actionError: PmQualityActionError | null;
   actionMessage: string | null;
   summaryOutcome: DpmAiWorkflowOutcome | null;
@@ -186,6 +187,7 @@ export function usePmOperatingQualityActions({
   const summaryRequestSequenceRef = useRef(0);
   const fairnessDetailSequenceRef = useRef(0);
   const reviewActionDetailSequenceRef = useRef(0);
+  const persistedActionPendingRef = useRef(false);
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
   const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
@@ -261,9 +263,11 @@ export function usePmOperatingQualityActions({
   }
   const currentSelectionKey = buildPmOperatingQualitySelectionKey(selection);
   const currentSelectionKeyRef = useRef(currentSelectionKey);
+  const currentSelectionRef = useRef(selection);
   useEffect(() => {
     currentSelectionKeyRef.current = currentSelectionKey;
-  }, [currentSelectionKey]);
+    currentSelectionRef.current = selection;
+  }, [currentSelectionKey, selection]);
   const pendingSummaryAction = currentSummaryState?.pending ?? false;
   const summaryOutcome = currentSummaryState?.outcome ?? null;
   const summaryActionError = currentSummaryState?.error ?? null;
@@ -416,7 +420,7 @@ export function usePmOperatingQualityActions({
       return;
     }
     const nextSelection = { ...selection, fairnessAnalysisId };
-    beginRecordSelection(nextSelection);
+    if (!beginRecordSelection(nextSelection)) return;
     const requestSequence = fairnessDetailSequenceRef.current + 1;
     fairnessDetailSequenceRef.current = requestSequence;
     setSelectedFairnessDetail({ recordId: fairnessAnalysisId, pending: true, response: null });
@@ -427,7 +431,7 @@ export function usePmOperatingQualityActions({
       );
       if (
         requestSequence !== fairnessDetailSequenceRef.current ||
-        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+        currentSelectionRef.current.fairnessAnalysisId !== fairnessAnalysisId
       ) {
         return;
       }
@@ -439,7 +443,7 @@ export function usePmOperatingQualityActions({
     } catch (error) {
       if (
         requestSequence !== fairnessDetailSequenceRef.current ||
-        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+        currentSelectionRef.current.fairnessAnalysisId !== fairnessAnalysisId
       ) {
         return;
       }
@@ -458,7 +462,7 @@ export function usePmOperatingQualityActions({
       return;
     }
     const nextSelection = { ...selection, reviewActionId };
-    beginRecordSelection(nextSelection);
+    if (!beginRecordSelection(nextSelection)) return;
     const requestSequence = reviewActionDetailSequenceRef.current + 1;
     reviewActionDetailSequenceRef.current = requestSequence;
     setSelectedReviewActionDetail({ recordId: reviewActionId, pending: true, response: null });
@@ -466,7 +470,7 @@ export function usePmOperatingQualityActions({
       const response = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
       if (
         requestSequence !== reviewActionDetailSequenceRef.current ||
-        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+        currentSelectionRef.current.reviewActionId !== reviewActionId
       ) {
         return;
       }
@@ -478,7 +482,7 @@ export function usePmOperatingQualityActions({
     } catch (error) {
       if (
         requestSequence !== reviewActionDetailSequenceRef.current ||
-        currentSelectionKeyRef.current !== buildPmOperatingQualitySelectionKey(nextSelection)
+        currentSelectionRef.current.reviewActionId !== reviewActionId
       ) {
         return;
       }
@@ -489,12 +493,21 @@ export function usePmOperatingQualityActions({
     }
   }
 
-  function beginRecordSelection(nextSelection: PmOperatingQualitySelection) {
+  function beginRecordSelection(nextSelection: PmOperatingQualitySelection): boolean {
+    if (persistedActionPendingRef.current) return false;
+    const previousSelection = currentSelectionRef.current;
     setSelectionPreference(nextSelection);
+    currentSelectionRef.current = nextSelection;
     currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
-    summaryRequestSequenceRef.current += 1;
-    fairnessDetailSequenceRef.current += 1;
-    reviewActionDetailSequenceRef.current += 1;
+    if (previousSelection.scoreRunId !== nextSelection.scoreRunId) {
+      summaryRequestSequenceRef.current += 1;
+    }
+    if (previousSelection.fairnessAnalysisId !== nextSelection.fairnessAnalysisId) {
+      fairnessDetailSequenceRef.current += 1;
+    }
+    if (previousSelection.reviewActionId !== nextSelection.reviewActionId) {
+      reviewActionDetailSequenceRef.current += 1;
+    }
     setSummaryState(null);
     setActionError(null);
     setActionMessage(null);
@@ -506,11 +519,9 @@ export function usePmOperatingQualityActions({
     setSummaryInvocationCreateEvidence(null);
     setPendingAction(false);
     setPendingFairnessAction(false);
-    setPendingFairnessCreateAction(false);
     setPendingReviewActionPreview(false);
-    setPendingReviewActionCreate(false);
     setPendingSummaryInvocationPreview(false);
-    setPendingSummaryInvocationCreate(false);
+    return true;
   }
 
   async function previewScoreRun() {
@@ -582,7 +593,7 @@ export function usePmOperatingQualityActions({
   }
 
   async function createFairnessAnalysis() {
-    if (pendingFairnessCreateAction) {
+    if (pendingFairnessCreateAction || persistedActionPendingRef.current) {
       return;
     }
     if (model.fairnessPreviewReadinessState !== "READY") {
@@ -597,7 +608,7 @@ export function usePmOperatingQualityActions({
       );
       return;
     }
-    const actionSelectionKey = currentSelectionKey;
+    persistedActionPendingRef.current = true;
     setPendingFairnessCreateAction(true);
     setActionError(null);
     setActionMessage(null);
@@ -608,7 +619,6 @@ export function usePmOperatingQualityActions({
         asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
         segments: model.fairnessSegmentRequests,
       });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedFairnessAnalysisResponse(response);
       setFairnessCreateEvidence(buildPmQualityFairnessCreateEvidence(response));
       const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
@@ -617,9 +627,9 @@ export function usePmOperatingQualityActions({
           fairnessAnalysisId,
           "client"
         );
-        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-        const nextSelection = { ...selection, fairnessAnalysisId };
+        const nextSelection = { ...currentSelectionRef.current, fairnessAnalysisId };
         setSelectionPreference(nextSelection);
+        currentSelectionRef.current = nextSelection;
         currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
         setSelectedFairnessDetail({
           recordId: fairnessAnalysisId,
@@ -630,7 +640,6 @@ export function usePmOperatingQualityActions({
       }
       setActionMessage("Persisted fairness analysis returned Manage evidence.");
     } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(
           error,
@@ -638,6 +647,7 @@ export function usePmOperatingQualityActions({
         )
       );
     } finally {
+      persistedActionPendingRef.current = false;
       setPendingFairnessCreateAction(false);
     }
   }
@@ -652,7 +662,6 @@ export function usePmOperatingQualityActions({
       return;
     }
     const requestSequence = summaryRequestSequenceRef.current + 1;
-    const actionSelectionKey = currentSelectionKey;
     summaryRequestSequenceRef.current = requestSequence;
     setSummaryState({
       scoreRunId,
@@ -669,7 +678,7 @@ export function usePmOperatingQualityActions({
       });
       if (
         requestSequence !== summaryRequestSequenceRef.current ||
-        currentSelectionKeyRef.current !== actionSelectionKey
+        currentSelectionRef.current.scoreRunId !== scoreRunId
       ) {
         return;
       }
@@ -689,7 +698,7 @@ export function usePmOperatingQualityActions({
     } catch (error) {
       if (
         requestSequence !== summaryRequestSequenceRef.current ||
-        currentSelectionKeyRef.current !== actionSelectionKey
+        currentSelectionRef.current.scoreRunId !== scoreRunId
       ) {
         return;
       }
@@ -745,7 +754,7 @@ export function usePmOperatingQualityActions({
   }
 
   async function createReviewAction() {
-    if (pendingReviewActionCreate) {
+    if (pendingReviewActionCreate || persistedActionPendingRef.current) {
       return;
     }
     if (!reviewActionPreviewReady) {
@@ -760,7 +769,7 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(reviewActionReadiness.detail));
       return;
     }
-    const actionSelectionKey = currentSelectionKey;
+    persistedActionPendingRef.current = true;
     setPendingReviewActionCreate(true);
     setActionError(null);
     setActionMessage(null);
@@ -771,15 +780,14 @@ export function usePmOperatingQualityActions({
         actorId: reviewActionForm.actorId,
         correlationId,
       });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedReviewActionResponse(response);
       setReviewActionCreateEvidence(buildPmQualityReviewActionEvidence(response));
       const reviewActionId = readPmQualityReviewActionId(response);
       if (reviewActionId) {
         const detail = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
-        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-        const nextSelection = { ...selection, reviewActionId };
+        const nextSelection = { ...currentSelectionRef.current, reviewActionId };
         setSelectionPreference(nextSelection);
+        currentSelectionRef.current = nextSelection;
         currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
         setSelectedReviewActionDetail({
           recordId: reviewActionId,
@@ -794,11 +802,11 @@ export function usePmOperatingQualityActions({
       }
       setActionMessage("Recorded Manage-owned supervisory review action.");
     } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality review-action create failed")
       );
     } finally {
+      persistedActionPendingRef.current = false;
       setPendingReviewActionCreate(false);
     }
   }
@@ -842,7 +850,7 @@ export function usePmOperatingQualityActions({
   }
 
   async function createSummaryInvocation() {
-    if (pendingSummaryInvocationCreate) {
+    if (pendingSummaryInvocationCreate || persistedActionPendingRef.current) {
       return;
     }
     if (!summaryInvocationPreviewReady) {
@@ -857,7 +865,7 @@ export function usePmOperatingQualityActions({
       setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
       return;
     }
-    const actionSelectionKey = currentSelectionKey;
+    persistedActionPendingRef.current = true;
     setPendingSummaryInvocationCreate(true);
     setActionError(null);
     setActionMessage(null);
@@ -868,7 +876,6 @@ export function usePmOperatingQualityActions({
         actorId: summaryInvocationForm.requestedBy,
         correlationId,
       });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setCreatedSummaryInvocationResponse(response);
       setSummaryInvocationCreateEvidence(buildPmQualitySummaryInvocationEvidence(response));
       const summaryInvocationId = readPmQualitySummaryInvocationId(response);
@@ -877,16 +884,15 @@ export function usePmOperatingQualityActions({
           summaryInvocationId,
           "client"
         );
-        if (currentSelectionKeyRef.current !== actionSelectionKey) return;
         setCreatedSummaryInvocationResponse(detail);
       }
       setActionMessage("Recorded Manage-owned PM quality summary invocation.");
     } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
       setActionError(
         buildPmQualityActionError(error, "PM operating quality summary-invocation create failed")
       );
     } finally {
+      persistedActionPendingRef.current = false;
       setPendingSummaryInvocationCreate(false);
     }
   }
@@ -908,6 +914,10 @@ export function usePmOperatingQualityActions({
     pendingReviewActionCreate,
     pendingSummaryInvocationPreview,
     pendingSummaryInvocationCreate,
+    selectionLocked:
+      pendingFairnessCreateAction ||
+      pendingReviewActionCreate ||
+      pendingSummaryInvocationCreate,
     actionError: summaryActionError ?? actionError,
     actionMessage,
     summaryOutcome,

@@ -16,6 +16,7 @@ type Props = {
   selection: PmOperatingQualitySelection;
   pendingFairnessDetail: boolean;
   pendingReviewActionDetail: boolean;
+  selectionLocked: boolean;
   onScoreRunSelection: (scoreRunId: string) => void;
   onFairnessAnalysisSelection: (fairnessAnalysisId: string) => void;
   onReviewActionSelection: (reviewActionId: string) => void;
@@ -26,6 +27,7 @@ export default function PmOperatingQualityRecordContext({
   selection,
   pendingFairnessDetail,
   pendingReviewActionDetail,
+  selectionLocked,
   onScoreRunSelection,
   onFairnessAnalysisSelection,
   onReviewActionSelection,
@@ -45,6 +47,11 @@ export default function PmOperatingQualityRecordContext({
         The selected quality run, fairness review, and supervisory action stay attached to the
         detail and command evidence below.
       </Text>
+      {selectionLocked ? (
+        <p className={styles.pending} role="status">
+          Record selection is held while Manage records the current control action.
+        </p>
+      ) : null}
 
       <div className={styles.grid}>
         <RecordGroup
@@ -67,6 +74,7 @@ export default function PmOperatingQualityRecordContext({
                 { label: "Policy", value: row.policy },
               ],
               nextAction: "Support summary and invocation use this quality run.",
+              disabled: selectionLocked,
             }))}
           />
         </RecordGroup>
@@ -92,6 +100,7 @@ export default function PmOperatingQualityRecordContext({
                 { label: "Segments", value: row.segmentCount },
               ],
               nextAction: "Detail and supervisory target use this fairness review.",
+              disabled: selectionLocked,
             }))}
           />
         </RecordGroup>
@@ -119,6 +128,7 @@ export default function PmOperatingQualityRecordContext({
                 { label: "Action", value: row.actionType },
               ],
               nextAction: "Summary invocation uses this recorded action.",
+              disabled: selectionLocked,
             }))}
           />
         </RecordGroup>
