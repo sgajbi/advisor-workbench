@@ -207,6 +207,48 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("rejects conditional or competing browser-install evidence", () => {
+    const conditionalEvidence = loadEvidence();
+    conditionalEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      conditionalEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        "        run: node node_modules/playwright/cli.js install chromium",
+        [
+          "        if: false",
+          "        run: node node_modules/playwright/cli.js install chromium",
+        ].join("\n")
+      );
+    const competingEvidence = loadEvidence();
+    competingEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      competingEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        "      - name: Run Playwright Smoke",
+        [
+          "      - name: Mutable browser install",
+          "        run: npx playwright install chromium",
+          "      - name: Run Playwright Smoke",
+        ].join("\n")
+      );
+    const conditionalJobEvidence = loadEvidence();
+    conditionalJobEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      conditionalJobEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        /  e2e-smoke:\r?\n    name: PR Merge Gate \/ Playwright Smoke/,
+        [
+          "  e2e-smoke:",
+          "    if: false",
+          "    name: PR Merge Gate / Playwright Smoke",
+        ].join("\n")
+      );
+
+    expect(validateRuntimeSupportPolicy(conditionalEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+    );
+    expect(validateRuntimeSupportPolicy(competingEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+    );
+    expect(validateRuntimeSupportPolicy(conditionalJobEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+    );
+  });
+
   it("ignores commented container base-image evidence", () => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
