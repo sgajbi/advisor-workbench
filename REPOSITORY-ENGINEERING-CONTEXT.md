@@ -836,6 +836,13 @@ Most relevant current governance:
    acknowledgement truth; banker identity and account commands require the authenticated
    server-side principal contract tracked by Workbench #436 and platform #563. Keep these controls
    absent rather than enabled, hard-coded, or locally simulated until those contracts exist.
+10. Global workspace orientation is owned by the typed route context in
+    `src/shell/app-registry.ts`. Match full route segments, cover every checked-in screen-registry
+    entrypoint, and reuse canonical mode normalization instead of page-local or shell-local aliases.
+    Allocation belongs to the Portfolio workspace. Data-Product Discovery is a cross-platform
+    utility outside the five Gateway `shell-bootstrap.v1` advisor workspaces, so it deliberately
+    renders no current workspace rather than inventing a sixth capability or selecting an unrelated
+    domain. Home, platform utility, workspace, and unmatched route scopes remain distinct.
 
 ## Context Maintenance Rule
 

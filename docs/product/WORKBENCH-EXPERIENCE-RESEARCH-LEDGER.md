@@ -3144,3 +3144,67 @@ browser evidence for Proposal Detail remains representative, while protected CI 
 validation remain required before closure. Existing frontend, review-ledger, and PR governance
 already require identity fencing and outcome-based asynchronous proof, so no skill or context change
 is justified by this bounded correction.
+
+## Global Workspace Orientation
+
+### Business job
+
+A client advisor moving between allocation review, performance analysis, proposal work, and
+cross-platform data-product discovery needs the shell to identify the current business workspace
+without implying that a platform utility belongs to an unrelated advisory domain.
+
+### Current-product research
+
+Research was reviewed on 2026-08-10 from primary design-system and accessibility sources:
+
+1. [W3C ARIA technique ARIA26](https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA26) requires a
+   visually identified current page to expose the same state programmatically with
+   `aria-current="page"`.
+2. [WAI-ARIA 1.3](https://www.w3.org/TR/wai-aria-1.3/#aria-current) defines the current item as one
+   item within a related set; it is not a reason to select an unrelated item when the current page
+   sits outside that set.
+3. [Microsoft Fluent 2 Nav guidance](https://fluent2.microsoft.design/components/web/react/core/nav/usage)
+   recommends brief, goal-oriented navigation labels and a selection indicator for the active
+   destination, with roll-up only to a real containing category.
+4. [Microsoft NavigationView guidance](https://learn.microsoft.com/en-us/windows/apps/develop/ui/controls/navigationview)
+   keeps the selected item synchronized with the current route and permits one selected item or a
+   real visible ancestor, rather than a fabricated neighboring destination.
+
+### Adopted decisions
+
+1. Resolve shell context through one typed route authority and let the existing shared
+   `WorkspaceTabNav` render its accessible current-page state.
+2. Match complete route segments so `/portfolio` may own `/portfolio/...` but cannot claim a
+   sibling such as `/portfolio-old`.
+3. Map Allocation to the Portfolio workspace and normalize the Performance `advisor-brief` alias
+   through the same canonical mode authority used by the screen.
+4. Classify Data-Product Discovery as a platform utility with no active advisor workspace. The
+   Gateway `shell-bootstrap.v1` contract exposes Portfolio, Performance, Risk, Proposal, and
+   Advisory only; the browser must not invent a sixth workspace.
+5. Bind the checked-in screen registry to a table-driven route-context test so every route
+   entrypoint has an explicit decision and new routes cannot silently fall through to Home.
+
+### Rejected decisions
+
+1. Page-local active-state exceptions, because they duplicate global route policy and drift as new
+   routes are added.
+2. Highlighting Portfolio or another visible workspace on Data Products merely to avoid an empty
+   current state, because that misrepresents product ownership.
+3. Adding a Data Products shell descriptor or changing Gateway capability truth without a supported
+   backend product contract.
+4. Plain string-prefix matching, because it accepts unrelated sibling paths and weakens orientation.
+5. A new navigation component or CSS override, because the existing design-system primitive already
+   implements the correct semantic and visual current state.
+
+### Validation and publication decision
+
+Workbench #609 owns the slice. Focused route and component proof covers all 21 checked-in route
+entrypoints, canonical Performance modes and aliases, sibling-prefix rejection, exactly one current
+Allocation workspace, and deliberate no-workspace Data Products posture. Responsive browser proof
+at 1366 px, 1024 px, and 390 px plus aggregate repository gates are required before closure.
+
+No Gateway, OpenAPI, supported-feature, README, wiki-source, operator-runbook, central-context, or
+skill change is required. Existing wiki screen descriptions already classify Allocation as a
+Portfolio task and Data-Product Discovery as a cross-platform utility; changing them would duplicate
+this architecture record rather than correct product truth. Repository engineering context is
+updated because the reusable shell route boundary changed.
