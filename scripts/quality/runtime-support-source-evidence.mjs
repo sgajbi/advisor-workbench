@@ -50,7 +50,8 @@ export function usesGovernedExecutingShell({ workflow, job, step }) {
 }
 
 export function parseDockerfile(source) {
-  const parserDirectives = collectDockerParserDirectives(source);
+  const normalizedSource = source.replace(/^\uFEFF/, "");
+  const parserDirectives = collectDockerParserDirectives(normalizedSource);
   const model = {
     escapeCharacter: parserDirectives.get("escape") ?? "\\",
     globalInstructions: [],
@@ -58,7 +59,7 @@ export function parseDockerfile(source) {
   };
   let currentStage;
 
-  for (const instruction of collectDockerfileInstructions(source)) {
+  for (const instruction of collectDockerfileInstructions(normalizedSource)) {
     if (instruction.keyword === "FROM") {
       const stageDeclaration = instruction.argument.match(
         /^(?:--platform=\S+\s+)?(?<base>\S+)(?:\s+AS\s+(?<name>[A-Za-z0-9._-]+))?\s*$/i

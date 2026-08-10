@@ -635,26 +635,39 @@ describe("runtime support policy", () => {
     expect(validateRuntimeSupportPolicy(validCanonicalInstall)).toEqual([]);
   });
 
-  it("rejects a Docker parser directive that changes the escape character", () => {
-    const evidence = loadEvidence();
-    evidence.dockerfile = [
-      "# escape=`",
-      evidence.dockerfile
-        .replace(/\\(?=\r?$)/gm, "`")
-        .replace(
-          "RUN npm ci --no-audit --no-fund",
-          "RUN npm ci --no-audit --no-fund\nRUN np`\nm install express"
-        ),
-    ].join("\n");
+  it.each([
+    { prefix: "", sourceShape: "plain" },
+    { prefix: "\uFEFF", sourceShape: "UTF-8 BOM-prefixed" },
+  ])(
+    "rejects a $sourceShape Docker parser directive that changes the escape character",
+    ({ prefix }) => {
+      const evidence = loadEvidence();
+      evidence.dockerfile = [
+        `${prefix}# escape=\``,
+        evidence.dockerfile
+          .replace(/\\(?=\r?$)/gm, "`")
+          .replace(
+            "RUN npm ci --no-audit --no-fund",
+            "RUN npm ci --no-audit --no-fund\nRUN np`\nm install express"
+          ),
+      ].join("\n");
 
-    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("default backslash escape character")])
-    );
-  });
+      expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+        expect.arrayContaining([expect.stringContaining("default backslash escape character")])
+      );
+    }
+  );
 
   it("accepts an explicit default Docker escape parser directive", () => {
     const evidence = loadEvidence();
     evidence.dockerfile = `# escape=\\\n${evidence.dockerfile}`;
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
+  });
+
+  it("accepts a UTF-8 BOM under the default Docker escape semantics", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = `\uFEFF${evidence.dockerfile}`;
 
     expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
   });

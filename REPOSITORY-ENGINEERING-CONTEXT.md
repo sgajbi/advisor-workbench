@@ -572,7 +572,8 @@ Container runtime rules:
    evidence is parsed as active YAML through the exact lock-backed development tool; Docker
    evidence is bound to active instructions in the named governed stages, including Docker escape-
    continuation token adjacency and the runner's final effective user. The Dockerfile retains the
-   default backslash escape character; alternate parser directives fail closed. `RUN` and `COPY`
+   default backslash escape character; a leading UTF-8 BOM is normalized before alternate parser
+   directives fail closed. `RUN` and `COPY`
    heredoc payloads are consumed as payload rather than misclassified as stage instructions. Governed
    stages reject `ONBUILD` triggers and `SHELL` overrides so indirect or reinterpreted commands cannot satisfy the
    policy. Comments, instructions in another stage, and earlier superseded directives are not proof.
