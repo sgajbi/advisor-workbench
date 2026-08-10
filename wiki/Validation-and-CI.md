@@ -55,11 +55,12 @@ concurrency group.
   of the governed gate.
 - `npm run quality:dependency-risk`
   fails closed unless every and only direct production dependency is reconciled across
-  `package.json`, the lockfile root and resolved lock entry, and the versioned technology-risk
-  inventory. It rejects mutable or prerelease versions, unapproved or missing SPDX evidence,
-  unsupported lifecycle, missing stewardship/security channels, ownerless architecture or exit
-  posture, expired reviews, prohibited state, and incomplete or expired exceptions. This is a
-  blocking Workbench control; the referenced Lotus platform technology policy remains report-only.
+  regular or optional `package.json` sections, the matching lockfile-root section and resolved lock
+  entry, the complete executable JSON Schema, and the versioned technology-risk inventory. It
+  rejects mutable or prerelease versions, unapproved or missing SPDX evidence, unsupported
+  lifecycle, missing stewardship/security channels, ownerless architecture or exit posture,
+  expired reviews, prohibited state, and incomplete or expired exceptions. This is a blocking
+  Workbench control; the referenced Lotus platform technology policy remains report-only.
 - `npm run lint:css-global`
   validates `src/app/globals.css`, `src/styles/global/*`, and
   `scripts/quality/css-global-governance-baseline.json` against the documented CSS layer model in

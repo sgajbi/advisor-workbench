@@ -43,9 +43,11 @@ rewrite while allowing technology-risk evidence to be made deterministic.
 That observation is not sufficient procurement evidence by itself. The versioned
 [`workbench-dependency-risk-inventory.v1.json`](workbench-dependency-risk-inventory.v1.json) now
 records license, stewardship, security channel, lifecycle, criticality, containment,
-replaceability, and review ownership for every direct production dependency. Its repository-native
-validator blocks unregistered or unsupported dependency changes. #612 remains open for independent
-bank architecture, cyber, legal, procurement, accessibility, operations, and measured-scale review.
+replaceability, and review ownership for every direct production dependency, including optional
+production installs. Its repository-owned validator uses the mature, development-only Ajv engine to
+execute the complete JSON Schema and blocks unregistered, misclassified, or unsupported dependency
+changes. #612 remains open for independent bank architecture, cyber, legal, procurement,
+accessibility, operations, and measured-scale review.
 
 ## Runtime topology and trust boundary
 
