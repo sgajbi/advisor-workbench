@@ -410,6 +410,30 @@ describe("runtime support policy", () => {
     );
   });
 
+  it.each([
+    "add",
+    "i",
+    "in",
+    "ins",
+    "inst",
+    "insta",
+    "instal",
+    "isnt",
+    "isnta",
+    "isntal",
+    "isntall",
+  ])("rejects npm's mutable install alias %s in any Docker stage", (installAlias) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      `RUN npm ci --no-audit --no-fund\nRUN npm --prefix /app ${installAlias}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
   it("requires the final effective runner user to remain governed and non-root", () => {
     const evidence = loadEvidence();
     evidence.dockerfile += "\nUSER root\n";
