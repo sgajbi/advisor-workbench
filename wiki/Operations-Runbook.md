@@ -51,6 +51,32 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001
 http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=risk
 ```
 
+## Runtime health and replica posture
+
+| Endpoint or input | Operational meaning | Do not infer |
+| --- | --- | --- |
+| `/api/health/live` | The Workbench process can serve HTTP | Gateway or source-service readiness |
+| `/api/health/ready` | The build identity, Gateway address, request timeout, and deployment identity are valid | End-to-end product health or source freshness |
+| `WORKBENCH_DEPLOYMENT_ID` | All replicas in one rollout cohort serve the same deterministic deployment identity | A release is approved or production-certified |
+
+Gateway degradation remains visible through bounded BFF failures and panel recovery. Do not remove
+an otherwise healthy Workbench shell replica solely because a downstream dependency is degraded,
+and do not replace a truthful downstream failure with a green readiness response or user success
+message.
+
+For an isolated statelessness and replica-replacement regression, run:
+
+```powershell
+npm run scale:proof
+```
+
+The command uses a separate Compose project, two copies of one immutable Workbench image, a pinned
+stable NGINX validation balancer without affinity, and a non-business source fixture. It writes
+machine-readable and reviewable evidence under `output/scale-proof/` and tears down its own
+containers. The harness is safe to use without disturbing the canonical front-office stack, but it
+is not production topology, load/soak, high-availability, disaster-recovery, identity, or bank
+capacity certification.
+
 ## Analytics UI observability posture
 
 - RFC-0108 analytics UI observability vocabulary is code-owned in
@@ -155,3 +181,4 @@ offline client-demo preparation and operational documentation. It complements
 
 - [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
 - [docs/demo/README.md](../docs/demo/README.md)
+- [docs/architecture/workbench-scalability-and-availability-decision.md](../docs/architecture/workbench-scalability-and-availability-decision.md)
