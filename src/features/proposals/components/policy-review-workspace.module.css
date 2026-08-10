@@ -1,0 +1,252 @@
+.policyReviewPanel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 12px;
+  padding: 14px 16px;
+}
+
+.policyReviewHeader {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.policyReviewHeader h3 {
+  margin: 4px 0 0;
+}
+
+.policyReviewCounts {
+  border: 1px solid var(--border);
+  border-left: 4px solid #765a17;
+  border-radius: 8px;
+  background: #fffdf7;
+  min-width: 132px;
+  padding: 10px 12px;
+  text-align: right;
+}
+
+.policyReviewCounts span,
+.policyReviewCounts strong {
+  display: block;
+}
+
+.policyReviewCounts span {
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.policyReviewCounts strong {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.policyReviewWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.policyWorklist,
+.policyDetail {
+  min-width: 0;
+}
+
+.policyWorklist {
+  display: grid;
+  gap: 8px;
+}
+
+.policyWorklistSelector {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.policyPaneHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.policyPaneHeader h4 {
+  margin: 3px 0 0;
+}
+
+.policyDetail {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-alt);
+  padding: 14px;
+}
+
+.policyEvidencePanel {
+  min-width: 0;
+}
+
+.policyEvidencePanel h4 {
+  margin: 4px 0 0;
+}
+
+.policyEvidenceHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.policyEvidenceHeader a {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.policyDecisionBrief {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--brand-highlight) 42%, var(--border));
+  border-left: 4px solid var(--brand-highlight);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.policyDecisionBrief h5 {
+  margin: 3px 0 0;
+}
+
+.policyEvidenceGrid,
+.policyControlGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.policyEvidenceMetric,
+.policyEvidenceList {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-alt);
+  padding: 10px 12px;
+}
+
+.policyEvidenceColumns {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.policyEvidenceDisclosure {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.policyEvidenceDisclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.policyEvidenceDisclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.policyEvidenceDisclosure summary > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.policyEvidenceDisclosure summary > span:last-child {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.policyEvidenceDisclosure[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.policyEvidenceDisclosure[open] summary > span:last-child {
+  font-size: 0;
+}
+
+.policyEvidenceDisclosure[open] summary > span:last-child::after {
+  content: "Hide detail";
+  font-size: 0.75rem;
+}
+
+.policyEvidenceDisclosure .policyEvidenceColumns {
+  margin: 0;
+  padding: 10px;
+}
+
+.policyEvidenceList ul {
+  color: var(--text);
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.policyEvidenceList li {
+  margin: 3px 0;
+}
+
+.policyEvidenceActions {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfcfd;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 1100px) {
+  .policyEvidenceGrid,
+  .policyControlGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .policyReviewHeader,
+  .policyPaneHeader,
+  .policyEvidenceHeader,
+  .policyDecisionBrief,
+  .policyEvidenceActions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .policyReviewCounts {
+    text-align: left;
+    width: 100%;
+  }
+
+  .policyEvidenceGrid,
+  .policyControlGrid,
+  .policyEvidenceColumns {
+    grid-template-columns: 1fr;
+  }
+}

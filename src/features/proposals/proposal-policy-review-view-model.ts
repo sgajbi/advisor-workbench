@@ -35,6 +35,10 @@ export type PolicyReviewQueueEmptyPresentation = {
 
 export type PolicyEvaluationEvidenceModel = {
   evaluationId: string;
+  proposalId: string;
+  proposalVersion: string;
+  policyPack: string;
+  sourceIdentityAligned: boolean;
   sourceEvaluationHash: string | null;
   policyStatus: string;
   policyStatusTone: SemanticBadgeTone;
@@ -56,6 +60,23 @@ export type PolicyEvaluationEvidenceModel = {
   workflowBlockers: string[];
   nextAction: string;
 };
+
+export function resolvePolicyReviewSelection({
+  rows,
+  preferredEvaluationId,
+}: {
+  rows: PolicyReviewQueueRow[];
+  preferredEvaluationId?: string | null;
+}): string | null {
+  if (
+    preferredEvaluationId &&
+    rows.some((row) => row.evaluationId === preferredEvaluationId)
+  ) {
+    return preferredEvaluationId;
+  }
+
+  return rows[0]?.evaluationId ?? null;
+}
 
 export function buildPolicyReviewQueueModel({
   records,
@@ -165,9 +186,22 @@ export function buildPolicyEvaluationEvidenceModel({
   const consentRequirements = stringArray(evaluation.consent_requirements);
   const workflowBlockers = stringArray(workflow?.sign_off_blockers);
   const sourceEvaluationHash = stringValue(evaluation.evaluation_hash, "");
+  const evaluationId = stringValue(evaluation.evaluation_id, "Evaluation not reported");
+  const proposalId = stringValue(evaluation.proposal_id, "Proposal not reported");
+  const proposalVersion = stringValue(evaluation.proposal_version_id, "Version not reported");
 
   return {
-    evaluationId: stringValue(evaluation.evaluation_id, "Evaluation not reported"),
+    evaluationId,
+    proposalId,
+    proposalVersion,
+    policyPack: policyLabel(evaluation.policy_pack_id, evaluation.policy_version),
+    sourceIdentityAligned: sourceIdentityAligned({
+      evaluationId,
+      proposalId,
+      proposalVersion,
+      signOffPackage,
+      workflow,
+    }),
     sourceEvaluationHash: sourceEvaluationHash || null,
     policyStatus: policyStatusLabel(evaluation.evaluation_status),
     policyStatusTone: policyStatusTone(evaluation.evaluation_status),
@@ -197,6 +231,40 @@ export function buildPolicyEvaluationEvidenceModel({
       consentRequirements,
     }),
   };
+}
+
+function sourceIdentityAligned({
+  evaluationId,
+  proposalId,
+  proposalVersion,
+  signOffPackage,
+  workflow,
+}: {
+  evaluationId: string;
+  proposalId: string;
+  proposalVersion: string;
+  signOffPackage?: AdvisoryPolicySignOffPackageData | null;
+  workflow?: AdvisoryPolicyWorkflowData | null;
+}): boolean {
+  const packageEvaluation = signOffPackage?.evaluation;
+  return (
+    valuesAgree(evaluationId, [
+      packageEvaluation?.evaluation_id,
+      signOffPackage?.lineage?.evaluation_id,
+      workflow?.evaluation_id,
+    ]) &&
+    valuesAgree(proposalId, [packageEvaluation?.proposal_id, workflow?.proposal_id]) &&
+    valuesAgree(proposalVersion, [
+      packageEvaluation?.proposal_version_id,
+      workflow?.proposal_version_id,
+    ])
+  );
+}
+
+function valuesAgree(expected: string, candidates: unknown[]): boolean {
+  return candidates.every(
+    (candidate) => typeof candidate !== "string" || !candidate.trim() || candidate.trim() === expected
+  );
 }
 
 function stringValue(value: unknown, fallback: string): string {

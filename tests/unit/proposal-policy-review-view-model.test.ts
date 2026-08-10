@@ -4,6 +4,7 @@ import {
   buildPolicyEvaluationEvidenceModel,
   buildPolicyReviewQueueEmptyPresentation,
   buildPolicyReviewQueueModel,
+  resolvePolicyReviewSelection,
 } from "../../src/features/proposals/proposal-policy-review-view-model";
 
 describe("proposal policy review view model", () => {
@@ -72,6 +73,30 @@ describe("proposal policy review view model", () => {
     expect(model.rows[0].signOffStatus).toBe("Sign-off recorded");
     expect(model.rows[1].policyStatus).toBe("Blocked");
     expect(model.rows[1].nextAction).toBe("Resolve blocking policy evidence before advisor sign-off.");
+  });
+
+  it("preserves an explicit review selection across source reordering", () => {
+    const rows = buildPolicyReviewQueueModel({
+      records: [
+        { evaluation_id: "pev_002", proposal_id: "PRP-TWO" },
+        { evaluation_id: "pev_001", proposal_id: "PRP-ONE" },
+      ],
+    }).rows;
+
+    expect(
+      resolvePolicyReviewSelection({ rows, preferredEvaluationId: "pev_001" })
+    ).toBe("pev_001");
+  });
+
+  it("falls back visibly to the first available review when a selected record leaves the queue", () => {
+    const rows = buildPolicyReviewQueueModel({
+      records: [{ evaluation_id: "pev_002", proposal_id: "PRP-TWO" }],
+    }).rows;
+
+    expect(
+      resolvePolicyReviewSelection({ rows, preferredEvaluationId: "pev_removed" })
+    ).toBe("pev_002");
+    expect(resolvePolicyReviewSelection({ rows: [], preferredEvaluationId: "pev_002" })).toBeNull();
   });
 
   it("does not confirm an empty policy queue while its source is refreshing", () => {
@@ -159,6 +184,10 @@ describe("proposal policy review view model", () => {
 
     expect(model).toMatchObject({
       evaluationId: "pev_001",
+      proposalId: "Proposal not reported",
+      proposalVersion: "Version not reported",
+      policyPack: "Policy pack not reported",
+      sourceIdentityAligned: true,
       sourceEvaluationHash: "sha256:policy-evaluation-1",
       policyStatus: "Review required",
       sourcePosture: "1 evidence gap",
@@ -179,5 +208,26 @@ describe("proposal policy review view model", () => {
     expect(JSON.stringify(model)).not.toContain("client_consent");
     expect(JSON.stringify(model)).not.toContain("SUPPORTED_BY_RFC0025");
     expect(JSON.stringify(model)).not.toContain("DISCLOSURE_REQUIREMENT_OPEN");
+  });
+
+  it("fails closed when supporting policy evidence belongs to another evaluation", () => {
+    const model = buildPolicyEvaluationEvidenceModel({
+      evaluation: {
+        evaluation_id: "pev_001",
+        proposal_id: "PRP-ONE",
+        proposal_version_id: "ppv_001",
+        evaluation_hash: "sha256:policy-evaluation-1",
+      },
+      signOffPackage: {
+        lineage: { evaluation_id: "pev_002" },
+      },
+      workflow: {
+        evaluation_id: "pev_001",
+        proposal_id: "PRP-OTHER",
+        proposal_version_id: "ppv_001",
+      },
+    });
+
+    expect(model?.sourceIdentityAligned).toBe(false);
   });
 });
