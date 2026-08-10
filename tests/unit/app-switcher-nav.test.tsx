@@ -105,6 +105,45 @@ describe("AppSwitcherNav", () => {
     );
   });
 
+  it("marks Portfolio as the only current workspace on Allocation", () => {
+    usePathnameMock.mockReturnValue("/allocation");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "fallback",
+      normalized: fallbackNormalizedCapabilities(),
+    });
+
+    render(<AppSwitcherNav />);
+
+    const navigation = screen.getByRole("navigation", { name: "Workspace Navigation" });
+    expect(navigation.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+  });
+
+  it("keeps Data Products outside the advisor workspace set", () => {
+    usePathnameMock.mockReturnValue("/data-products");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "fallback",
+      normalized: fallbackNormalizedCapabilities(),
+    });
+
+    render(<AppSwitcherNav />);
+
+    const navigation = screen.getByRole("navigation", { name: "Workspace Navigation" });
+    expect(navigation.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
+    expect(screen.queryByRole("link", { name: "Data Products" })).not.toBeInTheDocument();
+  });
+
   it("keeps unknown source codes out of primary navigation copy", () => {
     usePlatformCapabilitiesMock.mockReturnValue({
       loading: false,
