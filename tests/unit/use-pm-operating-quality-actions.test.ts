@@ -511,6 +511,64 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-13");
   });
 
+  it("lets unchanged fairness detail finish when only the score-run selection changes", async () => {
+    const firstScoreRun = (scoreRuns.data.score_runs as Array<Record<string, unknown>>)[0];
+    const secondScoreRun = {
+      ...firstScoreRun,
+      score_run_id: "pmq_run_002",
+      pm_id: "PM_SG_002",
+      book_id: "PM_BOOK_SG_INCOME",
+    };
+    const multipleScoreRuns = {
+      ...scoreRuns,
+      data: { ...scoreRuns.data, score_runs: [firstScoreRun, secondScoreRun] },
+    };
+    const firstFairness = {
+      ...(fairnessAnalysisResponse.data.fairness_analysis as Record<string, unknown>),
+      fairness_analysis_id: "pmq_fair_001",
+      as_of_date: "2026-05-13",
+    };
+    const secondFairness = {
+      ...firstFairness,
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+    };
+    const fairnessList = {
+      ...fairnessAnalysisResponse,
+      data: { fairness_analyses: [firstFairness, secondFairness] },
+    };
+    let resolveFairness!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockReturnValue(
+      new Promise((resolve) => { resolveFairness = resolve; }),
+    );
+    const { result } = renderActions({
+      scoreRuns: multipleScoreRuns,
+      fairnessAnalyses: fairnessList,
+    });
+
+    act(() => {
+      void result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+    await waitFor(() => expect(result.current.pendingFairnessDetail).toBe(true));
+
+    act(() => result.current.selectScoreRun("pmq_run_002"));
+    expect(result.current.selection).toMatchObject({
+      scoreRunId: "pmq_run_002",
+      fairnessAnalysisId: "pmq_fair_002",
+    });
+    expect(result.current.pendingFairnessDetail).toBe(true);
+
+    await act(async () => {
+      resolveFairness({
+        ...fairnessAnalysisResponse,
+        data: { fairness_analysis: secondFairness },
+      });
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.pendingFairnessDetail).toBe(false));
+    expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-14");
+  });
+
   it("previews score-run evidence through Gateway with policy context", async () => {
     vi.mocked(previewDpmPmOperatingQualityScoreRun).mockResolvedValue(scoreRuns);
     const { result } = renderActions();
@@ -816,6 +874,54 @@ describe("usePmOperatingQualityActions", () => {
     });
     expect(JSON.stringify(result.current.model.reviewActionDetail)).not.toContain(
       "raw rationale from Manage"
+    );
+  });
+
+  it("holds record selection until a persisted review action is acknowledged", async () => {
+    const firstScoreRun = (scoreRuns.data.score_runs as Array<Record<string, unknown>>)[0];
+    const secondScoreRun = {
+      ...firstScoreRun,
+      score_run_id: "pmq_run_002",
+      pm_id: "PM_SG_002",
+      book_id: "PM_BOOK_SG_INCOME",
+    };
+    const multipleScoreRuns = {
+      ...scoreRuns,
+      data: { ...scoreRuns.data, score_runs: [firstScoreRun, secondScoreRun] },
+    };
+    let resolveCreate!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction).mockReturnValue(
+      new Promise((resolve) => { resolveCreate = resolve; }),
+    );
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    const { result } = renderActions({ scoreRuns: multipleScoreRuns });
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+    act(() => {
+      void result.current.createReviewAction();
+    });
+    await waitFor(() => expect(result.current.selectionLocked).toBe(true));
+
+    act(() => result.current.selectScoreRun("pmq_run_002"));
+    expect(result.current.selection.scoreRunId).toBe("pmq_run_001");
+
+    await act(async () => {
+      resolveCreate(reviewActionResponse);
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.selectionLocked).toBe(false));
+    expect(result.current.reviewActionCreateEvidence?.reviewActionId).toBe(
+      "pmq_review_002",
+    );
+    expect(result.current.actionMessage).toBe(
+      "Recorded Manage-owned supervisory review action.",
     );
   });
 
