@@ -66,11 +66,63 @@ type Props = {
 
 type ProposalReviewMode = "narrative" | "memo";
 
+type ProposalActionEvidenceIssue =
+  | "missing-evidence"
+  | "proposal-mismatch"
+  | "state-mismatch"
+  | "active-version-mismatch";
+
+type ProposalActionEvidenceAgreement =
+  | { issue: null; currentState: string }
+  | { issue: ProposalActionEvidenceIssue; currentState?: string };
+
 function isNotFound(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
   }
   return /\(404\)/.test(error.message) || /not found/i.test(error.message);
+}
+
+function evaluateProposalActionEvidence({
+  approvals,
+  detail,
+  expectedProposalId,
+  lineage,
+  workflow,
+}: {
+  approvals?: ProposalApprovalsData;
+  detail?: ProposalDetailData;
+  expectedProposalId: string;
+  lineage?: ProposalLineageData;
+  workflow?: ProposalWorkflowEventsData;
+}): ProposalActionEvidenceAgreement {
+  if (!detail?.proposal || !workflow || !approvals || !lineage) {
+    return { issue: "missing-evidence" };
+  }
+  if (
+    detail.proposal.proposal_id !== expectedProposalId
+    || workflow.proposal_id !== expectedProposalId
+    || approvals.proposal_id !== expectedProposalId
+    || lineage.proposal_id !== expectedProposalId
+  ) {
+    return { issue: "proposal-mismatch" };
+  }
+  const currentState = detail.proposal.current_state;
+  if (
+    !currentState
+    || workflow.current_state !== currentState
+    || approvals.current_state !== currentState
+  ) {
+    return { issue: "state-mismatch", currentState };
+  }
+  const activeVersionNo = detail.proposal.current_version_no;
+  if (
+    !Number.isInteger(activeVersionNo)
+    || !lineage.versions?.some((version) => version.version_no === activeVersionNo)
+  ) {
+    return { issue: "active-version-mismatch", currentState };
+  }
+  return { issue: null, currentState };
 }
 
 function confirmRefreshedProposalActionEvidence({
@@ -88,28 +140,32 @@ function confirmRefreshedProposalActionEvidence({
   previousState: string;
   workflow?: ProposalWorkflowEventsData;
 }): string {
-  const refreshedState = detail?.proposal?.current_state;
-  if (
-    detail?.proposal?.proposal_id !== expectedProposalId
-    || workflow?.proposal_id !== expectedProposalId
-    || approvals?.proposal_id !== expectedProposalId
-    || lineage?.proposal_id !== expectedProposalId
-  ) {
+  const agreement = evaluateProposalActionEvidence({
+    approvals,
+    detail,
+    expectedProposalId,
+    lineage,
+    workflow,
+  });
+  if (agreement.issue === "proposal-mismatch") {
     throw new Error(
       "The source action returned evidence for a different proposal. Reload the proposal before continuing."
     );
   }
+  if (agreement.issue === "state-mismatch" || agreement.issue === "missing-evidence") {
+    throw new Error(
+      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
+    );
+  }
+  if (agreement.issue === "active-version-mismatch") {
+    throw new Error(
+      "The source action returned lineage that does not confirm the active proposal version. Reload the proposal before continuing."
+    );
+  }
+  const refreshedState = agreement.currentState;
   if (!refreshedState || refreshedState === previousState) {
     throw new Error(
       "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing."
-    );
-  }
-  if (
-    workflow.current_state !== refreshedState
-    || approvals.current_state !== refreshedState
-  ) {
-    throw new Error(
-      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
     );
   }
   return refreshedState;
@@ -196,7 +252,15 @@ export default function ProposalDetailView({ proposalId }: Props) {
     approvalsSourcePosture,
     lineageSourcePosture,
   ];
-  const actionSourcesReady = actionSourcePostures.every(isQuerySourceSettledAndAvailable);
+  const actionSourcesTransportReady = actionSourcePostures.every(isQuerySourceSettledAndAvailable);
+  const currentEvidenceAgreement = evaluateProposalActionEvidence({
+    approvals: approvalsQuery.data,
+    detail: detailQuery.data,
+    expectedProposalId: proposalId,
+    lineage: lineageQuery.data,
+    workflow: workflowQuery.data,
+  });
+  const actionSourcesReady = actionSourcesTransportReady && currentEvidenceAgreement.issue === null;
   const detailSourceReady = isQuerySourceSettledAndAvailable(detailSourcePosture);
   const actionSourcesChecking = actionSourcePostures.some(
     (posture) => posture.isInitialLoading || posture.isRefreshing
@@ -208,10 +272,12 @@ export default function ProposalDetailView({ proposalId }: Props) {
       ? "Recording the source action and refreshing review evidence."
       : creatingVersion
         ? "Creating the next proposal version and refreshing review evidence."
-      : !actionSourcesReady
+      : !actionSourcesTransportReady
         ? actionSourcesChecking
           ? "Checking current proposal evidence before actions are available."
           : "Proposal actions are unavailable until all review evidence can be confirmed. Reload the proposal to continue."
+        : currentEvidenceAgreement.issue !== null
+          ? "Proposal actions are unavailable because current detail, workflow, approvals, and version lineage do not agree. Reload the proposal to continue."
         : undefined;
 
   useEffect(() => {

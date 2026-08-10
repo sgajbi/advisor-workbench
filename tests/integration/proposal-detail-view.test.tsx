@@ -244,12 +244,12 @@ describe("ProposalDetailView", () => {
     };
   }
 
-  function prepareCoherentActionRefresh(nextState: string) {
+  function prepareCoherentActionRefresh(nextState: string, initialState = "DRAFT") {
     getWorkflowEventsMock
-      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence(initialState))
       .mockResolvedValueOnce(workflowEvidence(nextState));
     getApprovalsMock
-      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence(initialState))
       .mockResolvedValueOnce(approvalsEvidence(nextState));
     getLineageMock
       .mockResolvedValueOnce(lineageEvidence())
@@ -383,6 +383,44 @@ describe("ProposalDetailView", () => {
     await screen.findByTestId("proposal-action-status");
   });
 
+  it.each([
+    {
+      sourceConflict: "workflow posture",
+      arrange: () => getWorkflowEventsMock.mockResolvedValueOnce(workflowEvidence("RISK_REVIEW")),
+    },
+    {
+      sourceConflict: "approval proposal identity",
+      arrange: () => getApprovalsMock.mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2")),
+    },
+    {
+      sourceConflict: "active version lineage",
+      arrange: () => getLineageMock.mockResolvedValueOnce({
+        ...lineageEvidence(),
+        versions: [{
+          version_no: 2,
+          request_hash: "rh_2",
+          simulation_hash: "sh_2",
+          artifact_hash: "ah_2",
+        }],
+      }),
+    },
+  ])("keeps actions unavailable when initial $sourceConflict does not agree", async ({ arrange }) => {
+    arrange();
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    const previousCallCount = submitProposalMock.mock.calls.length;
+    await waitFor(() => expect(action).toBeDisabled());
+    expect(
+      screen.getByText(
+        "Proposal actions are unavailable because current detail, workflow, approvals, and version lineage do not agree. Reload the proposal to continue."
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(action);
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount);
+  });
+
   it("keeps actions unavailable until the active detail evidence mode settles", async () => {
     let completeDetailRead: (() => void) | undefined;
     getProposalMock
@@ -458,6 +496,40 @@ describe("ProposalDetailView", () => {
     expect(
       await screen.findByText(
         "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
+  });
+
+  it("does not publish success when refreshed lineage omits the active version", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce({
+        ...lineageEvidence(),
+        versions: [{
+          version_no: 2,
+          request_hash: "rh_2",
+          simulation_hash: "sh_2",
+          artifact_hash: "ah_2",
+        }],
+      });
+
+    renderWithQueryClient();
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The source action returned lineage that does not confirm the active proposal version. Reload the proposal before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -645,32 +717,10 @@ describe("ProposalDetailView", () => {
   });
 
   it("approves risk when in risk review", async () => {
-    getProposalMock.mockResolvedValueOnce({
-      proposal: {
-        proposal_id: "pp-1",
-        current_state: "RISK_REVIEW",
-        portfolio_id: "pf_1",
-        current_version_no: 1,
-      },
-      current_version: {
-        artifact_hash: "sha256:artifact-001",
-        evidence_bundle: {
-          generated_at: "2026-02-22T00:02:00Z",
-          hashes: {
-            request_hash: "sha256:request-001",
-            simulation_hash: "sha256:simulation-001",
-            artifact_hash: "sha256:artifact-001",
-          },
-          allocation_comparison: [],
-        },
-        simulate_request: {
-          body: {
-            options: { enable_proposal_simulation: true },
-            proposed_trades: [],
-          },
-        },
-      },
-    });
+    prepareCoherentActionRefresh("AWAITING_CLIENT_CONSENT", "RISK_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"))
+      .mockResolvedValueOnce(proposalDetail("AWAITING_CLIENT_CONSENT"));
 
     renderWithQueryClient();
 
@@ -694,32 +744,10 @@ describe("ProposalDetailView", () => {
   });
 
   it("records client consent when awaiting client consent", async () => {
-    getProposalMock.mockResolvedValueOnce({
-      proposal: {
-        proposal_id: "pp-1",
-        current_state: "AWAITING_CLIENT_CONSENT",
-        portfolio_id: "pf_1",
-        current_version_no: 1,
-      },
-      current_version: {
-        artifact_hash: "sha256:artifact-001",
-        evidence_bundle: {
-          generated_at: "2026-02-22T00:02:00Z",
-          hashes: {
-            request_hash: "sha256:request-001",
-            simulation_hash: "sha256:simulation-001",
-            artifact_hash: "sha256:artifact-001",
-          },
-          allocation_comparison: [],
-        },
-        simulate_request: {
-          body: {
-            options: { enable_proposal_simulation: true },
-            proposed_trades: [],
-          },
-        },
-      },
-    });
+    prepareCoherentActionRefresh("EXECUTION_READY", "AWAITING_CLIENT_CONSENT");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("AWAITING_CLIENT_CONSENT"))
+      .mockResolvedValueOnce(proposalDetail("EXECUTION_READY"));
 
     renderWithQueryClient();
 
