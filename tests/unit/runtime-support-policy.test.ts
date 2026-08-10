@@ -162,7 +162,7 @@ describe("runtime support policy", () => {
         expect.stringContaining("workflow YAML parser version"),
         expect.stringContaining("lockfile workflow YAML parser version"),
         expect.stringContaining("immutable npm ci"),
-        expect.stringContaining("repository-locked Playwright CLI"),
+        expect.stringContaining("repository-locked CLI"),
       ])
     );
   });
@@ -181,7 +181,7 @@ describe("runtime support policy", () => {
     expect(validateRuntimeSupportPolicy(evidence)).toEqual(
       expect.arrayContaining([
         expect.stringContaining("governed Chromium browser project"),
-        expect.stringContaining("container dependency stage"),
+        expect.stringContaining("dependency install across all stages"),
       ])
     );
   });
@@ -245,7 +245,7 @@ describe("runtime support policy", () => {
       expect.arrayContaining([expect.stringContaining("governed Chromium browser project")])
     );
     expect(validateRuntimeSupportPolicy(workflowEvidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("repository-locked Playwright CLI")])
+      expect.arrayContaining([expect.stringContaining("repository-locked CLI")])
     );
   });
 
@@ -279,15 +279,64 @@ describe("runtime support policy", () => {
           "    name: PR Merge Gate / Playwright Smoke",
         ].join("\n")
       );
+    const ignoredFailure = loadEvidence();
+    ignoredFailure.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      ignoredFailure.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        "        run: node node_modules/playwright/cli.js install chromium",
+        [
+          "        continue-on-error: true",
+          "        run: node node_modules/playwright/cli.js install chromium",
+        ].join("\n")
+      );
 
     expect(validateRuntimeSupportPolicy(conditionalEvidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+      expect.arrayContaining([expect.stringContaining("same unconditional job")])
     );
     expect(validateRuntimeSupportPolicy(competingEvidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+      expect.arrayContaining([expect.stringContaining("same unconditional job")])
     );
     expect(validateRuntimeSupportPolicy(conditionalJobEvidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("unconditional repository-locked")])
+      expect.arrayContaining([expect.stringContaining("same unconditional job")])
+    );
+    expect(validateRuntimeSupportPolicy(ignoredFailure)).toEqual(
+      expect.arrayContaining([expect.stringContaining("same unconditional job")])
+    );
+  });
+
+  it("binds the browser install to the smoke job and execution order", () => {
+    const lateInstall = loadEvidence();
+    lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        /      - name: Install Playwright Browsers\r?\n        run: node node_modules\/playwright\/cli\.js install chromium\r?\n      - name: Run Playwright Smoke\r?\n        run: make test-e2e/,
+        [
+          "      - name: Run Playwright Smoke",
+          "        run: make test-e2e",
+          "      - name: Install Playwright Browsers",
+          "        run: node node_modules/playwright/cli.js install chromium",
+        ].join("\n")
+      );
+    const wrongJob = loadEvidence();
+    wrongJob.workflowSources[".github/workflows/pr-merge-gate.yml"] = wrongJob.workflowSources[
+      ".github/workflows/pr-merge-gate.yml"
+    ]
+      .replace(
+        /      - name: Install Playwright Browsers\r?\n        run: node node_modules\/playwright\/cli\.js install chromium\r?\n/,
+        ""
+      )
+      .replace(
+        "      - uses: actions/checkout@v6",
+        [
+          "      - uses: actions/checkout@v6",
+          "      - name: Install Playwright Browsers",
+          "        run: node node_modules/playwright/cli.js install chromium",
+        ].join("\n")
+      );
+
+    expect(validateRuntimeSupportPolicy(lateInstall)).toEqual(
+      expect.arrayContaining([expect.stringContaining("before smoke runs")])
+    );
+    expect(validateRuntimeSupportPolicy(wrongJob)).toEqual(
+      expect.arrayContaining([expect.stringContaining("same unconditional job")])
     );
   });
 
@@ -318,10 +367,46 @@ describe("runtime support policy", () => {
     );
 
     expect(validateRuntimeSupportPolicy(wrongStage)).toEqual(
-      expect.arrayContaining([expect.stringContaining("named deps stage")])
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
     );
     expect(validateRuntimeSupportPolicy(commentedEvidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining("named deps stage")])
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
+  it("rejects competing installs and a builder detached from governed dependencies", () => {
+    const hiddenInstall = loadEvidence();
+    hiddenInstall.dockerfile = hiddenInstall.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      "RUN npm ci --no-audit --no-fund\nRUN cd /app && npm install"
+    );
+    const detachedBuilder = loadEvidence();
+    detachedBuilder.dockerfile = detachedBuilder.dockerfile.replace(
+      "COPY --from=deps /app/node_modules ./node_modules",
+      "COPY --from=ci-base /app/node_modules ./node_modules"
+    );
+    const flaggedInstall = loadEvidence();
+    flaggedInstall.dockerfile = flaggedInstall.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      "RUN npm ci --no-audit --no-fund\nRUN npm --prefix /app install"
+    );
+    const detachedRunner = loadEvidence();
+    detachedRunner.dockerfile = detachedRunner.dockerfile.replace(
+      "COPY --chown=node:node --from=builder /app/.next/standalone ./",
+      "COPY --chown=node:node --from=ci-base /app/.next/standalone ./"
+    );
+
+    expect(validateRuntimeSupportPolicy(hiddenInstall)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+    expect(validateRuntimeSupportPolicy(detachedBuilder)).toEqual(
+      expect.arrayContaining([expect.stringContaining("consume the governed deps")])
+    );
+    expect(validateRuntimeSupportPolicy(flaggedInstall)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+    expect(validateRuntimeSupportPolicy(detachedRunner)).toEqual(
+      expect.arrayContaining([expect.stringContaining("consume the builder standalone output")])
     );
   });
 
