@@ -266,6 +266,23 @@ describe("ProposalDetailView", () => {
   }
 
   it("renders timeline and approvals", async () => {
+    getWorkflowEventsMock.mockResolvedValueOnce({
+      ...workflowEvidence(),
+      events: [{
+        ...workflowEvidence().events[0],
+        actor_id: "svc_RiskOps_A7",
+      }],
+    });
+    getApprovalsMock.mockResolvedValueOnce({
+      ...approvalsEvidence(),
+      approvals: [{
+        approval_id: "pap_case_sensitive",
+        approval_type: "RISK",
+        approved: true,
+        actor_id: "caseSensitive_Review_A7",
+        occurred_at: "2026-02-22T00:00:01Z",
+      }],
+    });
     renderWithQueryClient();
 
     await waitFor(() => {
@@ -275,7 +292,9 @@ describe("ProposalDetailView", () => {
     expect(screen.getAllByText("Draft").length).toBeGreaterThan(0);
     expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("Risk review")).toBeInTheDocument();
-    expect(screen.getByText(/Risk 1/)).toBeInTheDocument();
+    expect(screen.getByText(/svc_RiskOps_A7/)).toBeInTheDocument();
+    expect(screen.getByText(/caseSensitive_Review_A7/)).toBeInTheDocument();
+    expect(screen.queryByText(/Svc Riskops A7/)).not.toBeInTheDocument();
   });
 
   it("renders a dense advisor proposal workspace from Gateway proposal evidence", async () => {
@@ -572,7 +591,11 @@ describe("ProposalDetailView", () => {
       .mockRejectedValueOnce(new Error("workflow refresh failed"));
     renderWithQueryClient();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    const createVersion = screen.getByRole("button", { name: "Create next version" });
+    const previousVersionCount = createProposalVersionMock.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
 
     expect(
       await screen.findByText(
@@ -586,6 +609,39 @@ describe("ProposalDetailView", () => {
         "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
       )
     ).toBeInTheDocument();
+    expect(createVersion).toBeDisabled();
+    fireEvent.click(createVersion);
+    expect(createProposalVersionMock).toHaveBeenCalledTimes(previousVersionCount);
+  });
+
+  it("preserves cached proposal evidence when the confirmation detail refresh fails", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockRejectedValueOnce(new Error("proposal refresh failed: internal downstream detail"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+    renderWithQueryClient();
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Proposal pp-1" })).toBeInTheDocument();
+    expect(screen.getByText("Proposed changes")).toBeInTheDocument();
+    expect(screen.queryByText(/internal downstream detail/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Create next version" })).toBeDisabled();
   });
 
   it("approves risk when in risk review", async () => {
