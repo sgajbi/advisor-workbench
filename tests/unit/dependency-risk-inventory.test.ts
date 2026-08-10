@@ -55,6 +55,32 @@ describe("direct production dependency risk inventory", () => {
     );
   });
 
+  it("governs optional production dependencies and their matching lock section", () => {
+    const evidence = loadEvidence();
+    evidence.packageJson.optionalDependencies = {
+      zod: evidence.packageJson.dependencies.zod,
+    };
+    evidence.packageLock.packages[""].optionalDependencies = {
+      zod: evidence.packageLock.packages[""].dependencies.zod,
+    };
+    delete evidence.packageJson.dependencies.zod;
+    delete evidence.packageLock.packages[""].dependencies.zod;
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual([]);
+
+    evidence.packageLock.packages[""].dependencies.zod =
+      evidence.packageLock.packages[""].optionalDependencies.zod;
+    delete evidence.packageLock.packages[""].optionalDependencies.zod;
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "Lockfile root section for zod must match package.json (optionalDependencies)"
+        ),
+      ])
+    );
+  });
+
   it("rejects an inventory dependency removed from the manifest", () => {
     const evidence = loadEvidence();
     delete evidence.packageJson.dependencies.zod;
@@ -209,16 +235,16 @@ describe("direct production dependency risk inventory", () => {
     );
   });
 
-  it("rejects schema drift and mutable platform-policy provenance", () => {
+  it("executes the complete schema and rejects mutable platform-policy provenance", () => {
     const evidence = loadEvidence();
-    evidence.schema.properties.schemaVersion.const = "lotus-workbench.other.v1";
+    evidence.schema.properties.reviewOwner.minLength = 999;
     evidence.inventory.platformPolicy.sourceRevision =
       "0000000000000000000000000000000000000000";
     evidence.inventory.platformPolicy.lifecycleStatus = "blocking";
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("schemaVersion must match the executable JSON Schema"),
+        expect.stringContaining("JSON Schema /reviewOwner: must NOT have fewer than 999 characters"),
         expect.stringContaining(
           'sourceRevision must be "2868348d289fc685ecf5a218b6c73256ac3a7742"'
         ),
