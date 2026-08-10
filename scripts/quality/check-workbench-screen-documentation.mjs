@@ -225,6 +225,17 @@ function extractAuthorityModes(source, authority) {
     );
   }
 
+  if (authority.extraction === "object-keys") {
+    const openingOffset = symbolSource.indexOf("{");
+    const closingOffset = symbolSource.indexOf("\n};", openingOffset);
+    if (openingOffset === -1 || closingOffset === -1) {
+      throw new Error(`object ${authority.symbol} has no inspectable literal body`);
+    }
+    return [...symbolSource.slice(openingOffset + 1, closingOffset).matchAll(/^\s*["']([^"']+)["']\s*:/gm)].map(
+      (match) => match[1],
+    );
+  }
+
   throw new Error(`unsupported extraction strategy ${authority.extraction}`);
 }
 
@@ -234,17 +245,22 @@ function wikiLinksToSlug(content, slug) {
 }
 
 export function hasExactMarkdownHeading(content, expectedHeading) {
-  let fenceMarker = null;
+  let fence = null;
 
   for (const line of content.split(/\r?\n/)) {
     const trimmedLine = line.trim();
-    const fenceMatch = trimmedLine.match(/^(```|~~~)/);
+    const fenceMatch = trimmedLine.match(/^(`{3,}|~{3,})/);
     if (fenceMatch) {
-      fenceMarker = fenceMarker === null ? fenceMatch[1] : fenceMarker === fenceMatch[1] ? null : fenceMarker;
+      const marker = fenceMatch[1];
+      if (fence === null) {
+        fence = { character: marker[0], length: marker.length };
+      } else if (marker[0] === fence.character && marker.length >= fence.length) {
+        fence = null;
+      }
       continue;
     }
     if (
-      fenceMarker === null &&
+      fence === null &&
       /^ {0,3}#{1,6}[\t ]+\S/.test(line) &&
       trimmedLine === expectedHeading
     ) {
@@ -648,7 +664,8 @@ function runCli() {
   } else {
     console.log(
       `Workbench screen documentation governance passed: ${result.summary.routeEntrypoints} routes, ` +
-        `${result.summary.activeSurfaces} active screens/modes, ${result.summary.mappedGuides} mapped guides, ` +
+        `${result.summary.activeSurfaces} active screens/modes, ${result.summary.aliases} aliases, ` +
+        `${result.summary.mappedGuides} mapped guides, ` +
         `${result.summary.coverageExceptions} governed exceptions.`,
     );
   }

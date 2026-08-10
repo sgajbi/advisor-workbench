@@ -150,7 +150,7 @@
         "family": { "type": "string", "minLength": 1 },
         "source": { "type": "string", "minLength": 1 },
         "symbol": { "type": "string", "minLength": 1 },
-        "extraction": { "enum": ["definition-keys", "type-union"] },
+        "extraction": { "enum": ["definition-keys", "object-keys", "type-union"] },
         "surfaceMappings": {
           "type": "object",
           "minProperties": 1,

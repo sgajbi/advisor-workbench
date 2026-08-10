@@ -8,7 +8,7 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. One existing screen guide is linked below and is
+screens or modes, and three compatibility aliases**. One existing screen guide is linked below and is
 scheduled for alignment to the complete guide standard; the other 35 dedicated guides remain
 explicit work under [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
@@ -63,6 +63,9 @@ The Performance workspace keeps return interpretation, benchmark-relative analys
 preparation, risk review, and supporting evidence in one route with explicit modes. These are
 separate decision contexts and will receive separate guides even though they share the
 `/performance` route.
+
+The supported `advisor-brief` mode value is a compatibility alias of `advisor`; both resolve to the
+single Performance Advisor Brief surface and guide.
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
