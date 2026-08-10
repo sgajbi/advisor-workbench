@@ -3201,10 +3201,13 @@ Research was reviewed on 2026-08-10 from primary design-system and accessibility
 Workbench #609 owns the slice. Focused route and component proof covers all 21 checked-in route
 entrypoints, canonical Performance modes and aliases, sibling-prefix rejection, exactly one current
 Allocation workspace, and deliberate no-workspace Data Products posture. Responsive browser proof
-at 1366 px, 1024 px, and 390 px plus aggregate repository gates are required before closure.
+passes at 1366 px, 1024 px, and 390 px on an isolated production server. Exact-worktree
+`make check` passes zero-vulnerability audits, CSS and architecture governance, the screen-registry
+gate, ESLint, TypeScript, 344 test files and 2,050 tests at 91.6% statement/line coverage, the
+optimized 25-route production build, and every portfolio-record bundle budget.
 
 No Gateway, OpenAPI, supported-feature, README, wiki-source, operator-runbook, central-context, or
 skill change is required. Existing wiki screen descriptions already classify Allocation as a
 Portfolio task and Data-Product Discovery as a cross-platform utility; changing them would duplicate
 this architecture record rather than correct product truth. Repository engineering context is
-updated because the reusable shell route boundary changed.
+updated because the reusable shell route boundary changed. Strict wiki parity remains `DiffCount=0`.
