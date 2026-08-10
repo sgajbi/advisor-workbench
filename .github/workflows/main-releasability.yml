@@ -91,6 +91,9 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.23.1"
       - name: Build image
         run: docker build --build-arg WORKBENCH_DEPLOYMENT_ID="${{ github.sha }}" -t lotus-workbench:ci-test .
       - name: Reject fixable high and critical image vulnerabilities
@@ -104,6 +107,32 @@ jobs:
           scanners: vuln
           vuln-type: os,library
           severity: HIGH,CRITICAL
+      - name: Pull pinned scale-proof load balancer
+        run: docker pull nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+      - name: Reject fixable high and critical load-balancer vulnerabilities
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+          version: v0.69.3
+          skip-setup-trivy: true
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+      - name: Two-replica replacement and capacity regression proof
+        env:
+          SCALE_PROOF_SKIP_BUILD: "1"
+          WORKBENCH_SCALE_IMAGE: lotus-workbench:ci-test
+        run: node scripts/scale/run-workbench-scale-proof.mjs
+      - name: Upload scale-proof evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: workbench-main-scale-proof
+          path: output/scale-proof
+          if-no-files-found: warn
       - name: Generate production image SBOM
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
