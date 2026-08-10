@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { isIP } from "node:net";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -109,6 +110,10 @@ function dependencySections(failures, owner, source) {
   const dependencies = owner.dependencies === undefined ? {} : owner.dependencies;
   const optionalDependencies =
     owner.optionalDependencies === undefined ? {} : owner.optionalDependencies;
+  const peerDependencies =
+    owner.peerDependencies === undefined ? {} : owner.peerDependencies;
+  const peerDependenciesMeta =
+    owner.peerDependenciesMeta === undefined ? {} : owner.peerDependenciesMeta;
 
   if (!isRecord(dependencies)) {
     failures.push(`${source} dependencies must be an object when declared.`);
@@ -116,16 +121,73 @@ function dependencySections(failures, owner, source) {
   if (!isRecord(optionalDependencies)) {
     failures.push(`${source} optionalDependencies must be an object when declared.`);
   }
-  if (!isRecord(dependencies) || !isRecord(optionalDependencies)) return null;
+  if (!isRecord(peerDependencies)) {
+    failures.push(`${source} peerDependencies must be an object when declared.`);
+  }
+  if (!isRecord(peerDependenciesMeta)) {
+    failures.push(`${source} peerDependenciesMeta must be an object when declared.`);
+  }
+  if (
+    !isRecord(dependencies) ||
+    !isRecord(optionalDependencies) ||
+    !isRecord(peerDependencies) ||
+    !isRecord(peerDependenciesMeta)
+  ) {
+    return null;
+  }
 
-  const overlaps = Object.keys(optionalDependencies).filter((name) => own(dependencies, name));
+  const requiredPeerDependencies = {};
+  for (const [name, version] of Object.entries(peerDependencies)) {
+    const metadata = peerDependenciesMeta[name];
+    if (metadata !== undefined) {
+      if (!isRecord(metadata)) {
+        failures.push(`${source} peerDependenciesMeta.${name} must be an object.`);
+      } else {
+        const unsupportedKeys = Object.keys(metadata).filter((key) => key !== "optional");
+        if (unsupportedKeys.length > 0) {
+          failures.push(
+            `${source} peerDependenciesMeta.${name} has unsupported fields: ${sorted(unsupportedKeys).join(", ")}.`
+          );
+        }
+        if (metadata.optional !== undefined && typeof metadata.optional !== "boolean") {
+          failures.push(`${source} peerDependenciesMeta.${name}.optional must be a boolean.`);
+        }
+      }
+    }
+    if (!isRecord(metadata) || metadata.optional !== true) {
+      requiredPeerDependencies[name] = version;
+    }
+  }
+  for (const name of Object.keys(peerDependenciesMeta)) {
+    if (!own(peerDependencies, name)) {
+      failures.push(`${source} peerDependenciesMeta.${name} has no matching peer dependency.`);
+    }
+  }
+
+  const productionSections = [
+    ["dependencies", dependencies],
+    ["optionalDependencies", optionalDependencies],
+    ["peerDependencies", requiredPeerDependencies],
+  ];
+  const sectionsByName = new Map();
+  for (const [section, entries] of productionSections) {
+    for (const name of Object.keys(entries)) {
+      const sections = sectionsByName.get(name) ?? [];
+      sections.push(section);
+      sectionsByName.set(name, sections);
+    }
+  }
+  const overlaps = [...sectionsByName.entries()].filter(([, sections]) => sections.length > 1);
   if (overlaps.length > 0) {
     failures.push(
-      `${source} must not declare the same production dependency in dependencies and optionalDependencies: ${sorted(overlaps).join(", ")}.`
+      `${source} must declare each production dependency in exactly one install section: ${overlaps
+        .map(([name, sections]) => `${name} (${sections.join(", ")})`)
+        .sort()
+        .join("; ")}.`
     );
   }
 
-  return { dependencies, optionalDependencies };
+  return { dependencies, optionalDependencies, peerDependencies: requiredPeerDependencies };
 }
 
 function validateAgainstSchema(failures, schema, inventory) {
@@ -181,8 +243,23 @@ function requireHttps(failures, value, path) {
   }
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:" || url.hostname.trim() === "") {
-      failures.push(`${path} must be an HTTPS evidence URL with a hostname.`);
+    const hostname = url.hostname.endsWith(".")
+      ? url.hostname.slice(0, -1)
+      : url.hostname;
+    const ipCandidate = hostname.startsWith("[") && hostname.endsWith("]")
+      ? hostname.slice(1, -1)
+      : hostname;
+    const isDnsName =
+      hostname.length > 0 &&
+      hostname.length <= 253 &&
+      hostname.split(".").every(
+        (label) =>
+          label.length > 0 &&
+          label.length <= 63 &&
+          /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label)
+      );
+    if (url.protocol !== "https:" || (!isDnsName && isIP(ipCandidate) === 0)) {
+      failures.push(`${path} must use a syntactically valid DNS name or IP address.`);
     }
   } catch {
     failures.push(`${path} must be a valid HTTPS evidence URL with a hostname.`);
@@ -438,10 +515,12 @@ export function validateDependencyRiskInventory({
   const manifestDependencies = {
     ...manifestSections.dependencies,
     ...manifestSections.optionalDependencies,
+    ...manifestSections.peerDependencies,
   };
   const lockDependencies = {
     ...lockSections.dependencies,
     ...lockSections.optionalDependencies,
+    ...lockSections.peerDependencies,
   };
   const manifestNames = sorted(Object.keys(manifestDependencies));
   const lockNames = sorted(Object.keys(lockDependencies));
@@ -462,10 +541,14 @@ export function validateDependencyRiskInventory({
   for (const name of manifestNames) {
     const manifestSection = own(manifestSections.optionalDependencies, name)
       ? "optionalDependencies"
-      : "dependencies";
+      : own(manifestSections.peerDependencies, name)
+        ? "peerDependencies"
+        : "dependencies";
     const lockSection = own(lockSections.optionalDependencies, name)
       ? "optionalDependencies"
-      : "dependencies";
+      : own(lockSections.peerDependencies, name)
+        ? "peerDependencies"
+        : "dependencies";
     const manifestVersion = manifestDependencies[name];
     const lockVersion = lockDependencies[name];
     const resolvedPackage = packageLock?.packages?.[`node_modules/${name}`];
