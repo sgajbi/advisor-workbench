@@ -10,6 +10,7 @@ import {
   normalizeInstruction,
   parseDockerfile,
   parseWorkflow,
+  usesGovernedExecutingShell,
 } from "./runtime-support-source-evidence.mjs";
 
 const POLICY_PATH = "docs/architecture/workbench-runtime-support-policy.v1.json";
@@ -42,7 +43,7 @@ const NPM_INSTALL_COMMANDS = [
 const NPM_INSTALL_COMMAND_PATTERN = new RegExp(
   `(?:^|[\\s;&|(\"'/])npm\\b(?=[^;&|\\r\\n]{0,200}\\s+(?:${NPM_INSTALL_COMMANDS.join(
     "|"
-  )})(?=$|[\\s;&|]))`,
+  )})(?=$|[\\s;&|\\x22\\x27\\x29\\x60]))`,
   "i"
 );
 
@@ -286,11 +287,13 @@ export function validateRuntimeSupportPolicy({
         "node node_modules/playwright/cli.js install chromium" ||
       !isUnconditionalWorkflowStep(browserInstallSteps[0]) ||
       !isUnconditionalWorkflowStep(browserSmokeSteps[0]) ||
+      !usesGovernedExecutingShell(browserInstallSteps[0]) ||
+      !usesGovernedExecutingShell(browserSmokeSteps[0]) ||
       browserInstallSteps[0].job !== browserSmokeSteps[0].job ||
       browserInstallSteps[0].stepIndex >= browserSmokeSteps[0].stepIndex
     ) {
       failures.push(
-        `${path} must install Chromium exactly once through the repository-locked CLI before smoke runs in the same unconditional job.`
+        `${path} must install Chromium exactly once through the repository-locked CLI before smoke runs in the same unconditional job under a governed executing shell.`
       );
     }
   }

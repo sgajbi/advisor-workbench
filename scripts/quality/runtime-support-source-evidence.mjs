@@ -15,7 +15,7 @@ export function collectWorkflowStepEntries(workflow) {
     }
     return job.steps
       .filter(isRecord)
-      .map((step) => ({ job, step, stepIndex: job.steps.indexOf(step) }));
+      .map((step) => ({ workflow, job, step, stepIndex: job.steps.indexOf(step) }));
   });
 }
 
@@ -26,6 +26,27 @@ export function isUnconditionalWorkflowStep({ job, step }) {
     !Object.hasOwn(step, "if") &&
     !Object.hasOwn(step, "continue-on-error")
   );
+}
+
+export function usesGovernedExecutingShell({ workflow, job, step }) {
+  const effectiveShell = [
+    step.shell,
+    isRecord(job.defaults) && isRecord(job.defaults.run)
+      ? job.defaults.run.shell
+      : undefined,
+    isRecord(workflow.defaults) && isRecord(workflow.defaults.run)
+      ? workflow.defaults.run.shell
+      : undefined,
+  ].find((shell) => shell !== undefined);
+
+  if (effectiveShell !== undefined) {
+    return (
+      typeof effectiveShell === "string" &&
+      ["bash", "sh"].includes(normalizeInstruction(effectiveShell).toLowerCase())
+    );
+  }
+
+  return job["runs-on"] === "ubuntu-latest";
 }
 
 export function parseDockerfile(source) {
