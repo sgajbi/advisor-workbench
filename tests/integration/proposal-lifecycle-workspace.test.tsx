@@ -9,6 +9,7 @@ import {
   ProposalWorkflowContextRail,
 } from "../../src/features/proposals/components/proposal-workflow-context";
 import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
+import type { AdvisoryPolicyWorkflowData } from "../../src/features/proposals/types";
 
 const proposalListFixture = {
   items: [
@@ -80,7 +81,7 @@ const getAdvisoryPolicySignOffPackageMock = vi.fn(async (_evaluationId: string) 
     lineage_posture: { client_ready_publication: "BLOCKED" },
   },
 }));
-const getAdvisoryPolicyWorkflowMock = vi.fn(async (_evaluationId: string) => ({
+const policyWorkflowFixture: AdvisoryPolicyWorkflowData = {
   sign_off_status: "PENDING_REVIEW",
   sign_off_blockers: [
     "DISCLOSURE_REQUIREMENT_OPEN:advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
@@ -88,7 +89,11 @@ const getAdvisoryPolicyWorkflowMock = vi.fn(async (_evaluationId: string) => ({
   maker_checker_required: true,
   sla_posture: { status: "WITHIN_SLA", open_requirement_count: 2 },
   client_ready_publication: "BLOCKED",
-}));
+};
+const getAdvisoryPolicyWorkflowMock = vi.fn(
+  async (_evaluationId: string): Promise<AdvisoryPolicyWorkflowData> =>
+    policyWorkflowFixture
+);
 const recordAdvisoryPolicySignOffDecisionMock = vi.fn(
   async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
     workflow: {
@@ -164,15 +169,9 @@ describe("ProposalLifecycleWorkspace", () => {
       },
     }));
     getAdvisoryPolicyWorkflowMock.mockReset();
-    getAdvisoryPolicyWorkflowMock.mockImplementation(async (_evaluationId: string) => ({
-      sign_off_status: "PENDING_REVIEW",
-      sign_off_blockers: [
-        "DISCLOSURE_REQUIREMENT_OPEN:advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
-      ],
-      maker_checker_required: true,
-      sla_posture: { status: "WITHIN_SLA", open_requirement_count: 2 },
-      client_ready_publication: "BLOCKED",
-    }));
+    getAdvisoryPolicyWorkflowMock.mockImplementation(
+      async (_evaluationId: string) => policyWorkflowFixture
+    );
     recordAdvisoryPolicySignOffDecisionMock.mockReset();
     recordAdvisoryPolicySignOffDecisionMock.mockImplementation(
       async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
