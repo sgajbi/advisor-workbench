@@ -245,7 +245,8 @@ export function validateRuntimeSupportPolicy({
       failures.push(`${path} must be valid YAML before runtime support can be verified.`);
       continue;
     }
-    const setupNodeSteps = collectWorkflowStepEntries(workflow).filter(
+    const workflowSteps = collectWorkflowStepEntries(workflow);
+    const setupNodeSteps = workflowSteps.filter(
       ({ step }) =>
         typeof step.uses === "string" &&
         step.uses.startsWith("actions/setup-node@")
@@ -260,6 +261,27 @@ export function validateRuntimeSupportPolicy({
       )
     ) {
       failures.push(`${path} must use Node ${policy.productionContainer?.version} for every setup-node step.`);
+    }
+    const nodeRuntimeSteps = workflowSteps.filter(
+      ({ step }) => typeof step.run === "string" && executesRepositoryNodeRuntime(step.run)
+    );
+    const nodeRuntimeJobs = [...new Set(nodeRuntimeSteps.map(({ job }) => job))];
+    if (
+      nodeRuntimeJobs.some((job) => {
+        const jobSetupSteps = setupNodeSteps.filter((entry) => entry.job === job);
+        const firstNodeRuntimeStep = nodeRuntimeSteps.find((entry) => entry.job === job);
+        return (
+          jobSetupSteps.length !== 1 ||
+          !isUnconditionalWorkflowStep(jobSetupSteps[0]) ||
+          !isRecord(jobSetupSteps[0].step.with) ||
+          jobSetupSteps[0].step.with["node-version"] !== policy.productionContainer?.version ||
+          jobSetupSteps[0].stepIndex >= firstNodeRuntimeStep.stepIndex
+        );
+      })
+    ) {
+      failures.push(
+        `${path} must establish Node ${policy.productionContainer?.version} before repository Node commands in every Node-executing job.`
+      );
     }
   }
 
@@ -380,6 +402,14 @@ function containsNpmDependencyInstall(value) {
     );
   }
   return NPM_INSTALL_COMMAND_PATTERN.test(normalizeInstruction(value));
+}
+
+function executesRepositoryNodeRuntime(value) {
+  const command = normalizeInstruction(value);
+  if (["make ci-local-docker", "make ci-local-docker-down"].includes(command)) {
+    return false;
+  }
+  return /(?:^|[\s;&|()])(?:node|npm|npx|make)(?=$|[\s;&|()])/i.test(command);
 }
 
 function dockerCopySource(value) {

@@ -123,8 +123,10 @@ export function isRecord(value) {
 function collectDockerfileInstructions(source) {
   const instructions = [];
   let logicalLine = "";
+  const sourceLines = source.split(/\r?\n/);
 
-  for (const sourceLine of source.split(/\r?\n/)) {
+  for (let lineIndex = 0; lineIndex < sourceLines.length; lineIndex += 1) {
+    const sourceLine = sourceLines[lineIndex];
     const trimmed = sourceLine.trim();
     if (trimmed === "" || trimmed.startsWith("#")) {
       continue;
@@ -138,15 +140,45 @@ function collectDockerfileInstructions(source) {
 
     const match = logicalLine.match(/^(?<keyword>[A-Za-z]+)\s+(?<argument>.+)$/);
     if (match?.groups) {
+      const keyword = match.groups.keyword.toUpperCase();
+      let argument = match.groups.argument;
+      const heredocs = keyword === "RUN" ? collectDockerHeredocs(argument) : [];
+      const heredocBody = [];
+      for (const heredoc of heredocs) {
+        while (lineIndex + 1 < sourceLines.length) {
+          lineIndex += 1;
+          const bodyLine = sourceLines[lineIndex];
+          heredocBody.push(bodyLine);
+          const terminator = heredoc.stripTabs ? bodyLine.replace(/^\t+/, "") : bodyLine;
+          if (terminator === heredoc.delimiter) {
+            break;
+          }
+        }
+      }
+      if (heredocBody.length > 0) {
+        argument = [argument, ...heredocBody].join("\n");
+      }
       instructions.push({
-        keyword: match.groups.keyword.toUpperCase(),
-        argument: normalizeInstruction(match.groups.argument),
+        keyword,
+        argument: normalizeInstruction(argument),
       });
     }
     logicalLine = "";
   }
 
   return instructions;
+}
+
+function collectDockerHeredocs(argument) {
+  const heredocs = [];
+  const pattern = /<<(?<stripTabs>-)?\s*(?:"(?<double>[^"\r\n]+)"|'(?<single>[^'\r\n]+)'|(?<bare>[A-Za-z_][A-Za-z0-9_]*))/g;
+  for (const match of argument.matchAll(pattern)) {
+    const delimiter = match.groups?.double ?? match.groups?.single ?? match.groups?.bare;
+    if (delimiter) {
+      heredocs.push({ delimiter, stripTabs: match.groups?.stripTabs === "-" });
+    }
+  }
+  return heredocs;
 }
 
 function hasExactChromiumProject(config) {
