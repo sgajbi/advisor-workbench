@@ -74,6 +74,30 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("binds the exact runtime selector to each setup-node step", () => {
+    const evidence = loadEvidence();
+    const workflow = evidence.workflowSources[".github/workflows/feature-lane.yml"];
+    evidence.workflowSources[".github/workflows/feature-lane.yml"] = workflow
+      .replace(
+        "      - uses: actions/checkout@v6",
+        [
+          "      - uses: actions/checkout@v6",
+          "        with:",
+          '          node-version: "22.23.1"',
+        ].join("\n")
+      )
+      .replace(
+        /(- uses: actions\/setup-node@v6\r?\n\s+with:\r?\n)\s+node-version: "22\.23\.1"\r?\n/,
+        "$1"
+      );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("feature-lane.yml must use Node 22.23.1"),
+      ])
+    );
+  });
+
   it("rejects the wrong executing CI toolchain", () => {
     const evidence = loadEvidence();
     evidence.execution = {
@@ -165,6 +189,22 @@ describe("runtime support policy", () => {
     );
     expect(validateRuntimeSupportPolicy(invalidReviewDate)).toEqual(
       expect.arrayContaining([expect.stringContaining("reviewedOn must be a real ISO")])
+    );
+  });
+
+  it("rejects future or inverted lifecycle dates", () => {
+    const futureReview = loadEvidence();
+    futureReview.policy.reviewedOn = "2026-08-11";
+    const invertedReview = loadEvidence();
+    invertedReview.policy.reviewedOn = "2026-09-16";
+
+    expect(validateRuntimeSupportPolicy(futureReview)).toEqual(
+      expect.arrayContaining([expect.stringContaining("cannot be in the future")])
+    );
+    expect(validateRuntimeSupportPolicy(invertedReview)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("reviewedOn must not be later than nextReviewBy"),
+      ])
     );
   });
 });
