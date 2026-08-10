@@ -7,7 +7,13 @@ export type RuntimeSupportPolicyEvidence = {
     devDependencies: Record<string, string>;
   };
   packageLock: {
-    packages: Record<string, { engines?: Record<string, string> }>;
+    packages: Record<
+      string,
+      {
+        devDependencies?: Record<string, string>;
+        engines?: Record<string, string>;
+      }
+    >;
   };
   policy: {
     nextReviewBy: string;

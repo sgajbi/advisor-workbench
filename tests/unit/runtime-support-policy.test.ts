@@ -98,6 +98,30 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("ignores commented workflow selectors", () => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
+      ".github/workflows/feature-lane.yml"
+    ].replace('          node-version: "22.23.1"', '          # node-version: "22.23.1"');
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("feature-lane.yml must use Node 22.23.1"),
+      ])
+    );
+  });
+
+  it("fails closed when a workflow cannot be parsed", () => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/feature-lane.yml"] = "jobs:\n  quality: [";
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("feature-lane.yml must be valid YAML"),
+      ])
+    );
+  });
+
   it("rejects the wrong executing CI toolchain", () => {
     const evidence = loadEvidence();
     evidence.execution = {
@@ -118,6 +142,8 @@ describe("runtime support policy", () => {
     const evidence = loadEvidence();
     evidence.packageLock.packages[""].engines.node = ">=24 <25";
     evidence.packageJson.devDependencies["@playwright/test"] = "^1.58.2";
+    evidence.packageJson.devDependencies.yaml = "^2.9.0";
+    evidence.packageLock.packages[""].devDependencies.yaml = "^2.9.0";
     evidence.makefile = evidence.makefile.replace(
       "\tnpm ci --no-audit --no-fund",
       "\tnpm install"
@@ -133,6 +159,8 @@ describe("runtime support policy", () => {
       expect.arrayContaining([
         expect.stringContaining("lockfile Node engines range"),
         expect.stringContaining("Playwright version"),
+        expect.stringContaining("workflow YAML parser version"),
+        expect.stringContaining("lockfile workflow YAML parser version"),
         expect.stringContaining("immutable npm ci"),
         expect.stringContaining("repository-locked Playwright CLI"),
       ])
@@ -155,6 +183,87 @@ describe("runtime support policy", () => {
         expect.stringContaining("governed Chromium browser project"),
         expect.stringContaining("container dependency stage"),
       ])
+    );
+  });
+
+  it("ignores commented browser-project and browser-install evidence", () => {
+    const configEvidence = loadEvidence();
+    configEvidence.playwrightConfig = configEvidence.playwrightConfig.replace(
+      '  projects: [{ name: "chromium", use: { browserName: "chromium" } }],',
+      '  // projects: [{ name: "chromium", use: { browserName: "chromium" } }],'
+    );
+    const workflowEvidence = loadEvidence();
+    workflowEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"] =
+      workflowEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
+        "        run: node node_modules/playwright/cli.js install chromium",
+        "        # run: node node_modules/playwright/cli.js install chromium"
+      );
+
+    expect(validateRuntimeSupportPolicy(configEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("governed Chromium browser project")])
+    );
+    expect(validateRuntimeSupportPolicy(workflowEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("repository-locked Playwright CLI")])
+    );
+  });
+
+  it("ignores commented container base-image evidence", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "ARG NODE_BASE_IMAGE=",
+      "# ARG NODE_BASE_IMAGE="
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("container base image")])
+    );
+  });
+
+  it("binds immutable installation to the named dependency stage", () => {
+    const wrongStage = loadEvidence();
+    wrongStage.dockerfile = wrongStage.dockerfile
+      .replace("RUN npm ci --no-audit --no-fund", "RUN npm install")
+      .replace(
+        "FROM ci-base AS builder",
+        "FROM ci-base AS builder\nRUN npm ci --no-audit --no-fund"
+      );
+    const commentedEvidence = loadEvidence();
+    commentedEvidence.dockerfile = commentedEvidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      "RUN npm install\n# RUN npm ci --no-audit --no-fund"
+    );
+
+    expect(validateRuntimeSupportPolicy(wrongStage)).toEqual(
+      expect.arrayContaining([expect.stringContaining("named deps stage")])
+    );
+    expect(validateRuntimeSupportPolicy(commentedEvidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("named deps stage")])
+    );
+  });
+
+  it("requires the final effective runner user to remain governed and non-root", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile += "\nUSER root\n";
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("final effective user")])
+    );
+  });
+
+  it("rejects missing or duplicate governed Docker stages", () => {
+    const missingDeps = loadEvidence();
+    missingDeps.dockerfile = missingDeps.dockerfile.replace(
+      "FROM ci-base AS deps",
+      "FROM ci-base AS dependency-cache"
+    );
+    const duplicateRunner = loadEvidence();
+    duplicateRunner.dockerfile += "\nFROM ci-base AS runner\nUSER node\n";
+
+    expect(validateRuntimeSupportPolicy(missingDeps)).toEqual(
+      expect.arrayContaining([expect.stringContaining('exactly one Docker stage named "deps"')])
+    );
+    expect(validateRuntimeSupportPolicy(duplicateRunner)).toEqual(
+      expect.arrayContaining([expect.stringContaining('exactly one Docker stage named "runner"')])
     );
   });
 
