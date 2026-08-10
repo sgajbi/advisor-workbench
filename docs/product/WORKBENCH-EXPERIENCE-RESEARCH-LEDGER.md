@@ -3072,3 +3072,66 @@ tests and React Compiler lint. Two refreshed aggregate runs each passed 2,007 of
 the unrelated load-sensitive DPM-wave timeout tracked by #585; its exact test passes three isolated
 runs. Fresh protected CI, exact-main proof, issue closure, and branch hygiene remain required before
 closure.
+
+## Proposal Detail Identity-Owned Local State
+
+### Business job
+
+When an advisor moves between proposals, every local review mode, disclosure, version lookup,
+mutation message, and pending operation must belong to the selected proposal. Returning to a
+proposal must not expose a completion message from an earlier mounted workspace, even when the
+source operation itself finishes successfully.
+
+### Current-practice research
+
+Research was reviewed on 2026-08-10 from official React guidance:
+
+1. [React `useRef` guidance](https://react.dev/reference/react/useRef) requires components to avoid
+   reading or writing refs during render except for predictable initialization. A ref that tracks
+   the latest proposal id during render is therefore not a safe identity boundary.
+2. [React guidance on avoiding unnecessary Effects](https://react.dev/learn/you-might-not-need-an-effect)
+   recommends resetting all state for a changed conceptual entity by giving the inner component a
+   key, rather than rendering stale local state and resetting it in an Effect.
+3. [React state identity guidance](https://react.dev/learn/preserving-and-resetting-state) explains
+   that a changed key creates a distinct component identity and resets the complete descendant
+   state tree. This matches Proposal Detail's proposal-owned local state model.
+
+### Adopted decisions
+
+1. Keep the exported `ProposalDetailView` as a small proposal-identity boundary and render the
+   stateful workspace with `key={proposalId}`.
+2. Let React discard the complete previous workspace atomically instead of coordinating ten local
+   setters and three operation refs after render.
+3. Preserve the established Gateway query keys and source-owned action confirmation. Keying the
+   presentation workspace does not fabricate success or cancel a persisted source action.
+4. Prove A→B→A transitions for both lifecycle actions and version lookups so an old mounted
+   instance cannot publish success, error, or loaded-version presentation into a new instance.
+5. Synchronize tests to the business-ready control state, not merely the presence of a rendered
+   button, and resolve deferred source completions inside React's observable update boundary.
+
+### Rejected decisions
+
+1. Moving the proposal-id ref write into an Effect, because the ref and local state would still
+   have separate identity ownership and the first render would still carry the previous workspace.
+2. Dispatching one reducer reset from a proposal-id Effect, because it still renders the prior
+   proposal's local state before the reset and adds an avoidable cascading render.
+3. Keeping per-operation expected-proposal checks as the primary fence, because duplicating identity
+   checks across every future local operation is easier to omit than owning identity once at the
+   workspace boundary.
+4. Changing business copy, layout, Gateway contracts, or source confirmation behavior for a
+   compiler/lifecycle correction.
+
+### Validation and publication decision
+
+Workbench #600 owns this slice. Exact-main React Compiler proof reported two errors: a render-time
+ref write and a synchronous multi-state Effect reset. The keyed boundary removes both; focused
+compiler lint and normal touched-file lint pass, and the Proposal Detail integration suite passes
+27/27 with explicit transition, stale-action, stale-version, action-lock, degraded-source, and
+failure proof and no React `act` warnings.
+
+The visual composition, user-facing language, supported feature set, Gateway/OpenAPI contract,
+runtime topology, operator procedure, README, and wiki source are intentionally unchanged. Existing
+browser evidence for Proposal Detail remains representative, while protected CI and exact-main
+validation remain required before closure. Existing frontend, review-ledger, and PR governance
+already require identity fencing and outcome-based asynchronous proof, so no skill or context change
+is justified by this bounded correction.
