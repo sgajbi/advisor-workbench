@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { POST as POST_METRIC_EVENT } from "@/app/api/metrics/events/route";
 import { GET } from "@/app/api/metrics/route";
 import {
+  getAnalyticsUiMetricEvents,
   recordAnalyticsUiPanelState,
   resetAnalyticsUiMetricEvents,
 } from "@/features/analytics-observability/metrics";
@@ -109,6 +110,59 @@ describe("metrics route", () => {
     await expect(response.json()).resolves.toStrictEqual(example.response);
     expect(body).not.toContain("performance-advisor-brief-review-action");
     expect(body).not.toContain("must-not-be-recorded");
+  });
+
+  it.each([
+    ["unregistered surface", { panel: "portfolio-PB_SG_GLOBAL_BAL_001" }],
+    ["unbounded state", { state: "client_12345_requires_attention" }],
+    ["unregistered service", { service: "tenant-specific-proxy" }],
+  ])("rejects %s metric cardinality", async (_case, replacement) => {
+    resetAnalyticsUiMetricEvents();
+    const accepted = structuredClone(responseExample("accepted_bounded_event").request);
+    accepted.labels = { ...(accepted.labels as Record<string, unknown>), ...replacement };
+
+    const response = await POST_METRIC_EVENT(
+      new Request("http://workbench.dev.lotus/api/metrics/events", {
+        method: "POST",
+        body: JSON.stringify(accepted),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ status: "rejected" });
+  });
+
+  it.each([
+    ["mismatched metric family", { metric_name: "lotus_workbench_api_request_duration_seconds" }],
+    ["counter value", { value: 2 }],
+  ])("rejects an event with an invalid %s", async (_case, replacement) => {
+    const accepted = structuredClone(responseExample("accepted_bounded_event").request);
+    const response = await POST_METRIC_EVENT(
+      new Request("http://workbench.dev.lotus/api/metrics/events", {
+        method: "POST",
+        body: JSON.stringify({ ...accepted, ...replacement }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ status: "rejected" });
+  });
+
+  it("rejects an oversized browser metric event before retaining it", async () => {
+    const response = await POST_METRIC_EVENT(
+      new Request("http://workbench.dev.lotus/api/metrics/events", {
+        method: "POST",
+        body: JSON.stringify({ padding: "x".repeat(16_384) }),
+      }),
+    );
+
+    expect(response.status).toBe(413);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "metric_payload_too_large",
+      status: "rejected",
+    });
+    expect(getAnalyticsUiMetricEvents()).toEqual([]);
   });
 
   it("keeps the authored response evidence bound to the intended route", () => {

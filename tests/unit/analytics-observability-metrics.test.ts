@@ -6,9 +6,11 @@ import {
   classifyAnalyticsUiPanelState,
   deriveAnalyticsUiSupportabilityState,
   getAnalyticsUiMetricEvents,
+  getAnalyticsUiMetricSamples,
   renderAnalyticsUiPrometheusMetrics,
   observeWorkbenchAnalyticsRequest,
   recordAnalyticsUiAttentionEvent,
+  recordAnalyticsUiPanelHydration,
   recordAnalyticsUiPanelState,
   resetAnalyticsUiMetricEvents,
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
@@ -785,7 +787,7 @@ describe("analytics UI observability metrics", () => {
           attention_type: "panel_stale",
           severity: "warning",
           state: "stale",
-          reason: "PERFORMANCE_STALE_SOURCE",
+          reason: "source_warning",
           freshness_bucket: "stale",
         }),
       }),
@@ -999,9 +1001,59 @@ describe("analytics UI observability metrics", () => {
     expect(first).toBeDefined();
     expect(duplicate).toBeUndefined();
     expect(getAnalyticsUiMetricEvents()).toHaveLength(1);
-    expect(getAnalyticsUiMetricEvents()[0].labels.reason).toBe(
-      "Performance_source_unavailable_for_private_client"
-    );
+    expect(getAnalyticsUiMetricEvents()[0].labels.reason).toBe("other");
+  });
+
+  it("bounds diagnostic history while preserving lifetime aggregate samples", () => {
+    for (let index = 0; index < 1_100; index += 1) {
+      recordAnalyticsUiPanelState({
+        context,
+        state: "ready",
+        freshnessBucket: "fresh",
+        supportabilityState: "ready",
+      });
+    }
+
+    expect(getAnalyticsUiMetricEvents()).toHaveLength(1_024);
+    expect(getAnalyticsUiMetricSamples()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        metric_type: "counter",
+        value: 1_100,
+        sample_count: 1_100,
+      }),
+    ]);
+  });
+
+  it("aggregates cumulative histogram buckets independently from diagnostic history", () => {
+    recordAnalyticsUiPanelHydration({
+      context,
+      durationMs: 200,
+      state: "ready",
+      freshnessBucket: "fresh",
+      supportabilityState: "ready",
+    });
+    recordAnalyticsUiPanelHydration({
+      context,
+      durationMs: 2_000,
+      state: "ready",
+      freshnessBucket: "fresh",
+      supportabilityState: "ready",
+    });
+
+    expect(getAnalyticsUiMetricSamples()).toEqual([
+      expect.objectContaining({
+        metric_type: "histogram",
+        value: 2.2,
+        sample_count: 2,
+        bucket_counts: [0, 1, 1, 2, 2, 2],
+      }),
+    ]);
+    const rendered = renderAnalyticsUiPrometheusMetrics();
+    expect(rendered).toContain('le="0.5"} 1');
+    expect(rendered).toContain('le="3"} 2');
+    expect(rendered).toContain("_sum");
+    expect(rendered).toContain("_count");
   });
 
   it("emits repeated-failure attention only after repeated selected panel failures", async () => {
