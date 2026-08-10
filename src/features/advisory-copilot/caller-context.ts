@@ -1,3 +1,4 @@
+import { createGatewayRequestSignal } from "@/features/platform-runtime/gateway-request-policy";
 import { resolveConfiguredAuthorityMode } from "@/features/workbench/authority-mode";
 import {
   resolveDefaultCallerContext,
@@ -210,6 +211,7 @@ async function resolveAdvisoryCopilotReviewScope({
         method: "GET",
         headers,
         cache: "no-store",
+        signal: createGatewayRequestSignal(),
       },
     );
     if (!response.ok) {

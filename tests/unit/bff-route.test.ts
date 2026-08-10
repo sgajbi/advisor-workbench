@@ -10,6 +10,7 @@ import {
 describe("BFF proxy route", () => {
   const originalBffBaseUrl = process.env.BFF_BASE_URL;
   const callerContextEnvKeys = [
+    "WORKBENCH_GATEWAY_REQUEST_TIMEOUT_MS",
     "WORKBENCH_BFF_ACTOR_ID",
     "WORKBENCH_BFF_CALLER_APPLICATION",
     "WORKBENCH_BFF_TENANT_ID",
@@ -186,6 +187,52 @@ describe("BFF proxy route", () => {
       })
     );
     expect(response.status).toBe(202);
+  });
+
+  it("returns a truthful non-cacheable timeout without retrying the mutation", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockRejectedValue(new DOMException("Gateway timed out", "TimeoutError"));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/intake/portfolio-bundle",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(504);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "gateway_request_timed_out",
+      status: "unavailable",
+    });
+  });
+
+  it("returns a truthful non-cacheable failure for a Gateway network error", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockRejectedValue(new TypeError("connection refused"));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/lookups/portfolios",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "lookups", "portfolios"] }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(502);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "gateway_request_failed",
+      status: "unavailable",
+    });
   });
 
   it("derives Idea mutation authority at the BFF instead of trusting browser headers", async () => {
