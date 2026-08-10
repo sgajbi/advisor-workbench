@@ -24,6 +24,27 @@ const REQUIRED_NON_CLAIMS = [
   "horizontal-scale-certification",
   "production-identity-certification",
 ];
+const NPM_INSTALL_COMMANDS = [
+  "ci",
+  "install",
+  "add",
+  "i",
+  "in",
+  "ins",
+  "inst",
+  "insta",
+  "instal",
+  "isnt",
+  "isnta",
+  "isntal",
+  "isntall",
+];
+const NPM_INSTALL_COMMAND_PATTERN = new RegExp(
+  `(?:^|[\\s;&|(\"'/])npm\\b(?=[^;&|\\r\\n]{0,200}\\s+(?:${NPM_INSTALL_COMMANDS.join(
+    "|"
+  )})(?=$|[\\s;&|]))`,
+  "i"
+);
 
 export function validateRuntimeSupportPolicy({
   packageJson,
@@ -307,9 +328,7 @@ function escapeRegExp(value) {
 }
 
 function containsNpmDependencyInstall(value) {
-  return /(?:^|[\s;&|("'\/])npm\b(?=[^;&|\r\n]{0,200}\b(?:ci|install)\b)/i.test(
-    normalizeInstruction(value)
-  );
+  return NPM_INSTALL_COMMAND_PATTERN.test(normalizeInstruction(value));
 }
 
 function isIsoDate(value) {
