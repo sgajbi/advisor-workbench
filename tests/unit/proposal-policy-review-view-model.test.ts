@@ -189,7 +189,7 @@ describe("proposal policy review view model", () => {
       proposalId: "Proposal not reported",
       proposalVersion: "Version not reported",
       policyPack: "Policy pack not reported",
-      sourceIdentityAligned: true,
+      sourceIdentityAligned: false,
       sourceEvaluationHash: "sha256:policy-evaluation-1",
       policyStatus: "Review required",
       sourcePosture: "1 evidence gap",
@@ -210,6 +210,20 @@ describe("proposal policy review view model", () => {
     expect(JSON.stringify(model)).not.toContain("client_consent");
     expect(JSON.stringify(model)).not.toContain("SUPPORTED_BY_RFC0025");
     expect(JSON.stringify(model)).not.toContain("DISCLOSURE_REQUIREMENT_OPEN");
+  });
+
+  it("marks a queue record with missing required identity as incomplete", () => {
+    const row = buildPolicyReviewQueueModel({
+      records: [
+        {
+          evaluation_id: "pev_001",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          proposal_id: "PRP-ONE",
+        },
+      ],
+    }).rows[0];
+
+    expect(row.sourceIdentityComplete).toBe(false);
   });
 
   it("fails closed when supporting policy evidence belongs to another evaluation", () => {

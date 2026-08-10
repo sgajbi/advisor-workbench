@@ -11,6 +11,7 @@ export type PolicyReviewQueueRow = {
   portfolioId: string;
   proposalId: string;
   proposalVersion: string;
+  sourceIdentityComplete: boolean;
   policyPack: string;
   policyStatus: string;
   policyStatusTone: SemanticBadgeTone;
@@ -97,6 +98,12 @@ export function buildPolicyReviewQueueModel({
       portfolioId: stringValue(record.portfolio_id, "Portfolio not reported"),
       proposalId,
       proposalVersion: stringValue(record.proposal_version_id, "Version not reported"),
+      sourceIdentityComplete: requiredIdentityPresent([
+        record.evaluation_id,
+        record.portfolio_id,
+        record.proposal_id,
+        record.proposal_version_id,
+      ]),
       policyPack: policyLabel(record.policy_pack_id, record.policy_version),
       policyStatus,
       policyStatusTone: policyStatusTone(record.evaluation_status),
@@ -207,6 +214,12 @@ export function buildPolicyEvaluationEvidenceModel({
       proposalId,
       proposalVersion,
       evaluationPortfolioId,
+      evaluationIdentityComplete: requiredIdentityPresent([
+        evaluation.evaluation_id,
+        evaluation.portfolio_id,
+        evaluation.proposal_id,
+        evaluation.proposal_version_id,
+      ]),
       selectedReview,
       portfolioId,
       signOffPackage,
@@ -248,6 +261,7 @@ function sourceIdentityAligned({
   proposalId,
   proposalVersion,
   evaluationPortfolioId,
+  evaluationIdentityComplete,
   selectedReview,
   portfolioId,
   signOffPackage,
@@ -257,6 +271,7 @@ function sourceIdentityAligned({
   proposalId: string;
   proposalVersion: string;
   evaluationPortfolioId: string;
+  evaluationIdentityComplete: boolean;
   selectedReview?: PolicyReviewQueueRow | null;
   portfolioId?: string | null;
   signOffPackage?: AdvisoryPolicySignOffPackageData | null;
@@ -264,8 +279,10 @@ function sourceIdentityAligned({
 }): boolean {
   const packageEvaluation = signOffPackage?.evaluation;
   return (
+    evaluationIdentityComplete &&
     (!selectedReview ||
-      (evaluationId === selectedReview.evaluationId &&
+      (selectedReview.sourceIdentityComplete &&
+        evaluationId === selectedReview.evaluationId &&
         proposalId === selectedReview.proposalId &&
         proposalVersion === selectedReview.proposalVersion &&
         evaluationPortfolioId === selectedReview.portfolioId)) &&
@@ -292,6 +309,12 @@ function sourceIdentityAligned({
       signOffPackage?.lineage?.proposal_version_id,
       workflow?.proposal_version_id,
     ])
+  );
+}
+
+function requiredIdentityPresent(candidates: unknown[]): boolean {
+  return candidates.every(
+    (candidate) => typeof candidate === "string" && candidate.trim().length > 0
   );
 }
 
