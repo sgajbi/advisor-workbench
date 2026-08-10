@@ -364,6 +364,37 @@ describe("ProposalDetailView", () => {
     await screen.findByTestId("proposal-action-status");
   });
 
+  it("keeps actions unavailable until the active detail evidence mode settles", async () => {
+    let completeDetailRead: (() => void) | undefined;
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockImplementationOnce(
+        () => new Promise((resolve) => {
+          completeDetailRead = () => resolve(proposalDetail("DRAFT"));
+        })
+      );
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
+    const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
+    const previousActionCount = submitProposalMock.mock.calls.length;
+
+    fireEvent.click(evidenceMode);
+    fireEvent.click(action);
+
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount);
+    await waitFor(() => expect(action).toBeDisabled());
+    expect(evidenceMode).toBeDisabled();
+    expect(
+      screen.getByText("Checking current proposal evidence before actions are available.")
+    ).toBeInTheDocument();
+
+    completeDetailRead?.();
+    await waitFor(() => expect(action).toBeEnabled());
+    expect(evidenceMode).toBeEnabled();
+  });
+
   it("prevents duplicate submission while the source action is pending", async () => {
     prepareCoherentActionRefresh("RISK_REVIEW");
     let completeSubmission: (() => void) | undefined;
