@@ -131,14 +131,14 @@ function collectDockerfileInstructions(source) {
     if (trimmed === "" || trimmed.startsWith("#")) {
       continue;
     }
-    const continues = /\\\s*$/.test(trimmed);
-    const segment = trimmed.replace(/\\\s*$/, "").trim();
-    logicalLine = [logicalLine, segment].filter(Boolean).join(" ");
+    const continues = /\\\s*$/.test(sourceLine);
+    const segment = sourceLine.replace(/\\\s*$/, "");
+    logicalLine = logicalLine === "" ? segment.trimStart() : logicalLine + segment;
     if (continues) {
       continue;
     }
 
-    const match = logicalLine.match(/^(?<keyword>[A-Za-z]+)\s+(?<argument>.+)$/);
+    const match = logicalLine.trim().match(/^(?<keyword>[A-Za-z]+)\s+(?<argument>.+)$/);
     if (match?.groups) {
       const keyword = match.groups.keyword.toUpperCase();
       let argument = match.groups.argument;

@@ -143,6 +143,17 @@ export function validateRuntimeSupportPolicy({
       "Dockerfile must declare ci-base as the first and only stage that consumes ${NODE_BASE_IMAGE}."
     );
   }
+  const governedDockerStages = dockerModel.stages.filter(({ name }) =>
+    ["ci-base", "deps", "builder", "runner"].includes(name)
+  );
+  const prohibitedExecutionModifiers = governedDockerStages.flatMap((stage) =>
+    stage.instructions.filter(({ keyword }) => ["ONBUILD", "SHELL"].includes(keyword))
+  );
+  if (prohibitedExecutionModifiers.length > 0) {
+    failures.push(
+      "Governed Docker stages must not declare ONBUILD triggers or SHELL overrides because runtime proof depends on direct instructions under the image default shell."
+    );
+  }
 
   const dependencyStages = dockerModel.stages.filter(({ name }) => name === "deps");
   if (dependencyStages.length !== 1) {
