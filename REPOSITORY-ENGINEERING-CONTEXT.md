@@ -707,6 +707,11 @@ Important validation expectations:
     client messaging, or client-ready release as Workbench-owned capabilities.
 18. Advisor suitability policy review queue reads and bounded evidence-review requests are
     Workbench gateway-only operations backed by Gateway advisory-policy evaluation contracts.
+    Workbench must bind record-specific evidence and actions to an explicitly selected queue
+    evaluation. The selected proposal, version, and evaluation remain visible; pointer and keyboard
+    selection preserve the source record across queue reorder, while portfolio changes, removed
+    records, and stale query or mutation completions cannot publish posture for a superseded
+    selection. Detail-query caches and mutation feedback are scoped by portfolio and evaluation.
     Workbench may display Advise-owned review queue posture, selected evaluation detail,
     sign-off source-package posture, policy workflow posture, client-publication block posture,
     open approval/disclosure/consent requirements, source-evidence completeness, and advisor next
