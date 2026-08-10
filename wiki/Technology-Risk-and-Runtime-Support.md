@@ -46,6 +46,9 @@ All current entries are `approved_default`, use exact stable versions, and carry
 package evidence. There are no dependency exceptions in the current inventory. This is engineering
 and traceability evidence, not an independent legal opinion or procurement approval.
 
+The governed functional review owner is `workbench-architecture-maintainers`. Evidence locations
+must be valid HTTPS URLs with a usable host; prefix-shaped placeholders do not satisfy admission.
+
 ## Why This Reduces Bank Technology Risk
 
 1. The stack uses supported, well-documented technologies with broad engineering ecosystems rather

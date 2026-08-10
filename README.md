@@ -303,7 +303,7 @@ http://workbench.dev.lotus/data-products
   reconcile every direct production dependency, including optional production installs, to exact
   manifest/lock sections and resolved versions, complete JSON Schema validation, SPDX license
   evidence, stable lifecycle, stewardship/security channel, architecture containment, replacement
-  posture, review expiry, and issue-backed exceptions
+  posture, governed review ownership, review expiry, and issue-backed exceptions
 - `npm run lint:css-global`
   verify `src/app/globals.css` remains a governed composition entrypoint and global CSS layer
   budgets do not grow without an intentional baseline update
