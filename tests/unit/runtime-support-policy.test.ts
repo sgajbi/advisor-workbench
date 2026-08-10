@@ -617,6 +617,39 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("preserves token adjacency across Docker escape continuations", () => {
+    const competingInstall = loadEvidence();
+    competingInstall.dockerfile = competingInstall.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      "RUN npm ci --no-audit --no-fund\nRUN np\\\nm install express"
+    );
+    const validCanonicalInstall = loadEvidence();
+    validCanonicalInstall.dockerfile = validCanonicalInstall.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      "RUN npm ci \\\n  --no-audit \\\n  --no-fund"
+    );
+
+    expect(validateRuntimeSupportPolicy(competingInstall)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+    expect(validateRuntimeSupportPolicy(validCanonicalInstall)).toEqual([]);
+  });
+
+  it.each([
+    ['SHELL ["echo"]', "SHELL overrides"],
+    ["ONBUILD RUN npm install express", "ONBUILD triggers"],
+  ])("rejects governed-stage Docker execution modifier: %s", (instruction, expectedFailure) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "FROM ${NODE_BASE_IMAGE} AS ci-base",
+      `FROM \${NODE_BASE_IMAGE} AS ci-base\n${instruction}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining(expectedFailure)])
+    );
+  });
+
   it.each([
     "add",
     "i",
