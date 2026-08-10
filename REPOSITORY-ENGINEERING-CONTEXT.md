@@ -573,8 +573,9 @@ Container runtime rules:
    evidence is bound to active instructions in the named governed stages, including Docker escape-
    continuation token adjacency and the runner's final effective user. The Dockerfile retains the
    default backslash escape character; a leading UTF-8 BOM is normalized before alternate parser
-   directives fail closed. `RUN` and `COPY`
-   heredoc payloads are consumed as payload rather than misclassified as stage instructions. Governed
+   directives fail closed. `RUN` and `COPY` heredoc payloads are consumed as payload rather than
+   misclassified as stage instructions, while JSON-form instruction operands are parsed separately
+   and cannot masquerade as heredoc operators. Governed
    stages reject `ONBUILD` triggers and `SHELL` overrides so indirect or reinterpreted commands cannot satisfy the
    policy. Comments, instructions in another stage, and earlier superseded directives are not proof.
    Keep developer compatibility ranges distinct from the exact protected

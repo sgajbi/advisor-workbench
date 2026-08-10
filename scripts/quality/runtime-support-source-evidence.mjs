@@ -122,6 +122,26 @@ export function normalizeInstruction(value) {
   return value.trim().replace(/\s+/g, " ");
 }
 
+export function parseDockerExecArguments(value) {
+  const normalized = value.trim();
+  const arrayStart = normalized.indexOf("[");
+  if (arrayStart < 0) {
+    return undefined;
+  }
+  const prefix = normalized.slice(0, arrayStart).trim();
+  if (prefix && !prefix.split(/\s+/).every((token) => token.startsWith("--"))) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(normalized.slice(arrayStart));
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string")
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -148,7 +168,8 @@ function collectDockerfileInstructions(source) {
     if (match?.groups) {
       const keyword = match.groups.keyword.toUpperCase();
       let argument = match.groups.argument;
-      const heredocs = ["COPY", "RUN"].includes(keyword)
+      const heredocs =
+        ["COPY", "RUN"].includes(keyword) && !parseDockerExecArguments(argument)
         ? collectDockerHeredocs(argument)
         : [];
       const heredocBody = [];
