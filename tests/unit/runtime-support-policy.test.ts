@@ -130,6 +130,22 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("requires governed Node setup in every job that executes repository Node commands", () => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/pr-merge-gate.yml"] = evidence.workflowSources[
+      ".github/workflows/pr-merge-gate.yml"
+    ].replace(
+      /      - uses: actions\/setup-node@v6\r?\n        with:\r?\n          node-version: "22\.23\.1"\r?\n          cache: "npm"\r?\n/,
+      ""
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("before repository Node commands in every Node-executing job"),
+      ])
+    );
+  });
+
   it("ignores commented workflow selectors", () => {
     const evidence = loadEvidence();
     evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
@@ -555,6 +571,22 @@ describe("runtime support policy", () => {
     'RUN sh -c "npm install"',
     "RUN (npm install)",
   ])("rejects a quoted or grouped shell-form mutable install: %s", (instruction) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      `RUN npm ci --no-audit --no-fund\n${instruction}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
+  it.each([
+    "RUN <<EOF\nnpm install\nEOF",
+    "RUN <<'SETUP'\nnpm --prefix /app install\nSETUP",
+    "RUN <<-EOF\n\tnpm i\n\tEOF",
+  ])("rejects a mutable install inside a Docker RUN heredoc: %s", (instruction) => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
       "RUN npm ci --no-audit --no-fund",
