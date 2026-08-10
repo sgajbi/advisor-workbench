@@ -172,6 +172,10 @@ function confirmRefreshedProposalActionEvidence({
 }
 
 export default function ProposalDetailView({ proposalId }: Props) {
+  return <ProposalDetailWorkspace key={proposalId} proposalId={proposalId} />;
+}
+
+function ProposalDetailWorkspace({ proposalId }: Props) {
   const [revision, setRevision] = useState(0);
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
@@ -188,8 +192,6 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const actionEvidenceBlockedRef = useRef(false);
   const activeVersionCreationRef = useRef<{ proposalId: string; token: symbol } | null>(null);
   const detailContextTransitionRef = useRef(false);
-  const currentProposalIdRef = useRef(proposalId);
-  currentProposalIdRef.current = proposalId;
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
@@ -279,22 +281,6 @@ export default function ProposalDetailView({ proposalId }: Props) {
         : currentEvidenceAgreement.issue !== null
           ? "Proposal actions are unavailable because current detail, workflow, approvals, and version lineage do not agree. Reload the proposal to continue."
         : undefined;
-
-  useEffect(() => {
-    activeActionRef.current = null;
-    actionEvidenceBlockedRef.current = false;
-    activeVersionCreationRef.current = null;
-    detailContextTransitionRef.current = false;
-    setActing(false);
-    setActionEvidenceBlocked(false);
-    setReviewMode("narrative");
-    setError(null);
-    setActionMessage(null);
-    setIncludeEvidence(false);
-    setVersionLookup(null);
-    setVersionActionError(null);
-    setCreatedVersionNo(null);
-  }, [proposalId]);
 
   useEffect(() => {
     if (
@@ -452,18 +438,11 @@ export default function ProposalDetailView({ proposalId }: Props) {
     ) {
       return;
     }
-    const expectedProposalId = proposalId;
     setVersionActionError(null);
     try {
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
-      if (currentProposalIdRef.current !== expectedProposalId) {
-        return;
-      }
       setVersionLookup(data);
     } catch (err) {
-      if (currentProposalIdRef.current !== expectedProposalId) {
-        return;
-      }
       const message = err instanceof Error ? err.message : "Unknown error";
       setVersionActionError(message);
     }
