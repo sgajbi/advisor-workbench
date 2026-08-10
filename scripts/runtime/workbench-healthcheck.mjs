@@ -12,7 +12,7 @@ if (!Number.isInteger(configuredPort) || configuredPort < 1 || configuredPort > 
     {
       host: "127.0.0.1",
       port: configuredPort,
-      path: "/",
+      path: "/api/health/live",
       headers: { "User-Agent": "lotus-workbench-healthcheck" },
     },
     (response) => {
