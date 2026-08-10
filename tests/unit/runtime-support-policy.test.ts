@@ -186,6 +186,48 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("binds browser proof to the Playwright default export", () => {
+    const deadDeclaration = loadEvidence();
+    deadDeclaration.playwrightConfig = [
+      'import { defineConfig } from "@playwright/test";',
+      'const unused = defineConfig({ projects: [{ name: "chromium", use: { browserName: "chromium" } }] });',
+      "export default {};",
+    ].join("\n");
+    const localImpostor = loadEvidence();
+    localImpostor.playwrightConfig = [
+      "const defineConfig = (value: unknown) => value;",
+      'export default defineConfig({ projects: [{ name: "chromium", use: { browserName: "chromium" } }] });',
+    ].join("\n");
+    const overridingSpread = loadEvidence();
+    overridingSpread.playwrightConfig = [
+      'import { defineConfig } from "@playwright/test";',
+      "const replacement = { projects: [] };",
+      "export default defineConfig({",
+      '  projects: [{ name: "chromium", use: { browserName: "chromium" } }],',
+      "  ...replacement,",
+      "});",
+    ].join("\n");
+
+    expect(validateRuntimeSupportPolicy(deadDeclaration)).toEqual(
+      expect.arrayContaining([expect.stringContaining("governed Chromium browser project")])
+    );
+    expect(validateRuntimeSupportPolicy(localImpostor)).toEqual(
+      expect.arrayContaining([expect.stringContaining("governed Chromium browser project")])
+    );
+    expect(validateRuntimeSupportPolicy(overridingSpread)).toEqual(
+      expect.arrayContaining([expect.stringContaining("governed Chromium browser project")])
+    );
+  });
+
+  it("supports a default-exported top-level Playwright configuration declaration", () => {
+    const evidence = loadEvidence();
+    evidence.playwrightConfig = evidence.playwrightConfig
+      .replace("export default defineConfig({", "const config = defineConfig({")
+      .replace(/\}\);\s*$/, "});\n\nexport default config;\n");
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
+  });
+
   it("ignores commented browser-project and browser-install evidence", () => {
     const configEvidence = loadEvidence();
     configEvidence.playwrightConfig = configEvidence.playwrightConfig.replace(
@@ -289,6 +331,15 @@ describe("runtime support policy", () => {
 
     expect(validateRuntimeSupportPolicy(evidence)).toEqual(
       expect.arrayContaining([expect.stringContaining("final effective user")])
+    );
+  });
+
+  it("requires the governed runner to be the image-producing final stage", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile += "\nFROM ci-base AS diagnostic\nUSER root\n";
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("final Docker stage")])
     );
   });
 

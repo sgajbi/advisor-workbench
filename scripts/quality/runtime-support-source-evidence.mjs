@@ -55,21 +55,30 @@ export function declaresGovernedChromiumProject(source) {
     return false;
   }
 
-  const declarations = [];
-  const visit = (node) => {
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === "defineConfig" &&
-      node.arguments.length === 1 &&
-      ts.isObjectLiteralExpression(node.arguments[0])
-    ) {
-      declarations.push(hasExactChromiumProject(node.arguments[0]));
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return declarations.length === 1 && declarations[0] === true;
+  if (!importsPlaywrightDefineConfig(sourceFile)) {
+    return false;
+  }
+
+  const defaultExports = sourceFile.statements.filter(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+  if (defaultExports.length !== 1) {
+    return false;
+  }
+
+  const exportedExpression = resolveTopLevelExpression(
+    sourceFile,
+    defaultExports[0].expression
+  );
+  return (
+    !!exportedExpression &&
+    ts.isCallExpression(exportedExpression) &&
+    ts.isIdentifier(exportedExpression.expression) &&
+    exportedExpression.expression.text === "defineConfig" &&
+    exportedExpression.arguments.length === 1 &&
+    ts.isObjectLiteralExpression(exportedExpression.arguments[0]) &&
+    hasExactChromiumProject(exportedExpression.arguments[0])
+  );
 }
 
 export function normalizeInstruction(value) {
@@ -110,6 +119,9 @@ function collectDockerfileInstructions(source) {
 }
 
 function hasExactChromiumProject(config) {
+  if (config.properties.some(ts.isSpreadAssignment)) {
+    return false;
+  }
   const projects = getObjectProperty(config, "projects")?.initializer;
   if (!projects || !ts.isArrayLiteralExpression(projects) || projects.elements.length !== 1) {
     return false;
@@ -120,11 +132,47 @@ function hasExactChromiumProject(config) {
   }
   const use = getObjectProperty(project, "use")?.initializer;
   return (
+    !project.properties.some(ts.isSpreadAssignment) &&
     getStringProperty(project, "name") === "chromium" &&
     !!use &&
     ts.isObjectLiteralExpression(use) &&
+    !use.properties.some(ts.isSpreadAssignment) &&
     getStringProperty(use, "browserName") === "chromium"
   );
+}
+
+function importsPlaywrightDefineConfig(sourceFile) {
+  return sourceFile.statements.some(
+    (statement) =>
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      statement.moduleSpecifier.text === "@playwright/test" &&
+      !!statement.importClause?.namedBindings &&
+      ts.isNamedImports(statement.importClause.namedBindings) &&
+      statement.importClause.namedBindings.elements.some(
+        (element) =>
+          element.name.text === "defineConfig" &&
+          (!element.propertyName || element.propertyName.text === "defineConfig")
+      )
+  );
+}
+
+function resolveTopLevelExpression(sourceFile, expression) {
+  if (!ts.isIdentifier(expression)) {
+    return expression;
+  }
+  const declarations = sourceFile.statements.flatMap((statement) =>
+    ts.isVariableStatement(statement) &&
+    (statement.declarationList.flags & ts.NodeFlags.Const) !== 0
+      ? statement.declarationList.declarations.filter(
+          (declaration) =>
+            ts.isIdentifier(declaration.name) &&
+            declaration.name.text === expression.text &&
+            !!declaration.initializer
+        )
+      : []
+  );
+  return declarations.length === 1 ? declarations[0].initializer : undefined;
 }
 
 function getStringProperty(object, name) {
@@ -136,10 +184,11 @@ function getStringProperty(object, name) {
 }
 
 function getObjectProperty(object, name) {
-  return object.properties.find(
+  const properties = object.properties.filter(
     (property) =>
       ts.isPropertyAssignment(property) &&
       ((ts.isIdentifier(property.name) && property.name.text === name) ||
         (ts.isStringLiteral(property.name) && property.name.text === name))
   );
+  return properties.length === 1 ? properties[0] : undefined;
 }
