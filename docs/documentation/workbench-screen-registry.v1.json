@@ -1,0 +1,1096 @@
+{
+  "$schema": "./workbench-screen-registry.schema.json",
+  "schemaVersion": "lotus.workbench.screen-registry.v1",
+  "owner": "lotus-workbench",
+  "governingIssue": 605,
+  "guideStandard": {
+    "templatePath": "docs/documentation/workbench-screen-guide-template.md",
+    "catalogueSlug": "Screen-Guide-Catalogue",
+    "requiredHeadings": [
+      "## Current Scope",
+      "## Business Purpose",
+      "## Who Uses This Screen",
+      "## Workflow Position",
+      "## Implemented Capabilities",
+      "## Decisions And Actions",
+      "## Information And Source Authority",
+      "## Screen States And Recovery",
+      "## Workbench Boundaries",
+      "## Adjacent Handoffs",
+      "## Evidence And Validation",
+      "## First Support Step",
+      "## Related Documentation"
+    ]
+  },
+  "routeEntrypoints": [
+    {
+      "entrypoint": "src/app/page.tsx",
+      "routePattern": "/",
+      "routeClassification": "alias-redirect",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["portfolio-review"],
+      "implementationEvidence": ["src/apps/home/page.tsx"],
+      "note": "Canonical Home currently resolves to Portfolio Review. Authenticated advisor-first Home remains roadmap-owned."
+    },
+    {
+      "entrypoint": "src/app/allocation/page.tsx",
+      "routePattern": "/allocation",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["portfolio-allocation"],
+      "implementationEvidence": ["src/app/allocation/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/book/page.tsx",
+      "routePattern": "/book",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["advisor-book"],
+      "implementationEvidence": ["src/app/book/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/cashflow/page.tsx",
+      "routePattern": "/cashflow",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["projected-cash-movement"],
+      "implementationEvidence": ["src/app/cashflow/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/data-products/page.tsx",
+      "routePattern": "/data-products",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["data-product-discovery"],
+      "implementationEvidence": ["src/app/data-products/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/income/page.tsx",
+      "routePattern": "/income",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["income-and-activity"],
+      "implementationEvidence": ["src/app/income/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/intake/page.tsx",
+      "routePattern": "/intake",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["portfolio-intake"],
+      "implementationEvidence": ["src/app/intake/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/manage/page.tsx",
+      "routePattern": "/manage",
+      "routeClassification": "alias-redirect",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["manage-overview"],
+      "implementationEvidence": ["src/app/manage/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/performance/page.tsx",
+      "routePattern": "/performance",
+      "routeClassification": "active-route-container",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": [
+        "performance-summary",
+        "performance-analysis",
+        "performance-advisor-brief",
+        "risk-review",
+        "performance-evidence"
+      ],
+      "implementationEvidence": ["src/apps/performance/performance-workspace-modes.ts"]
+    },
+    {
+      "entrypoint": "src/app/portfolio/page.tsx",
+      "routePattern": "/portfolio",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["portfolio-review"],
+      "implementationEvidence": ["src/app/portfolio/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/portfolios/page.tsx",
+      "routePattern": "/portfolios",
+      "routeClassification": "compatibility-route",
+      "navigationPosture": "compatibility-only",
+      "canonicalSurfaceIds": ["portfolio-review"],
+      "implementationEvidence": ["src/app/portfolios/page.tsx"],
+      "note": "Compatibility render alias of the canonical Portfolio Review screen."
+    },
+    {
+      "entrypoint": "src/app/positions/page.tsx",
+      "routePattern": "/positions",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["positions"],
+      "implementationEvidence": ["src/app/positions/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/proposals/[proposalId]/page.tsx",
+      "routePattern": "/proposals/{proposalId}",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "capability-disabled",
+      "canonicalSurfaceIds": ["proposal-detail"],
+      "implementationEvidence": ["src/app/proposals/[proposalId]/page.tsx"],
+      "note": "Direct supported route; the top-level Proposal shell entry remains capability-disabled."
+    },
+    {
+      "entrypoint": "src/app/proposals/page.tsx",
+      "routePattern": "/proposals",
+      "routeClassification": "active-route-container",
+      "navigationPosture": "capability-disabled",
+      "canonicalSurfaceIds": [
+        "approval-queue",
+        "suitability-review",
+        "risk-and-impact",
+        "discussion-pack-review",
+        "implementation-status"
+      ],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "note": "Direct supported modes; the top-level Proposal shell entry remains capability-disabled."
+    },
+    {
+      "entrypoint": "src/app/proposals/simulate/page.tsx",
+      "routePattern": "/proposals/simulate",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "capability-disabled",
+      "canonicalSurfaceIds": ["proposal-builder"],
+      "implementationEvidence": ["src/app/proposals/simulate/page.tsx"],
+      "note": "Direct supported builder; simulation is an in-screen result state, and the top-level Proposal shell entry remains capability-disabled."
+    },
+    {
+      "entrypoint": "src/app/recommendations/page.tsx",
+      "routePattern": "/recommendations",
+      "routeClassification": "compatibility-route",
+      "navigationPosture": "capability-disabled",
+      "canonicalSurfaceIds": [
+        "advisory-overview",
+        "advisor-cockpit",
+        "advisory-copilot",
+        "opportunities-and-ideas",
+        "bank-demo-proof"
+      ],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "note": "Compatibility advisory workspace with implemented modes; the top-level Advisory shell entry remains capability-disabled."
+    },
+    {
+      "entrypoint": "src/app/reports/page.tsx",
+      "routePattern": "/reports",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["report-centre"],
+      "implementationEvidence": ["src/app/reports/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/suite/page.tsx",
+      "routePattern": "/suite",
+      "routeClassification": "alias-redirect",
+      "navigationPosture": "compatibility-only",
+      "canonicalSurfaceIds": ["portfolio-review"],
+      "implementationEvidence": ["src/app/suite/page.tsx"],
+      "note": "Compatibility alias of canonical Home, which currently resolves to Portfolio Review."
+    },
+    {
+      "entrypoint": "src/app/transactions/page.tsx",
+      "routePattern": "/transactions",
+      "routeClassification": "active-supported-screen",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["transactions"],
+      "implementationEvidence": ["src/app/transactions/page.tsx"]
+    },
+    {
+      "entrypoint": "src/app/workbench/[portfolioId]/page.tsx",
+      "routePattern": "/workbench/{portfolioId}",
+      "routeClassification": "active-route-container",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": [
+        "manage-overview",
+        "mandate-health",
+        "rebalance-waves",
+        "construction-alternatives",
+        "portfolio-memory",
+        "pm-copilot",
+        "pm-operating-quality",
+        "outcome-reviews",
+        "evidence-pack"
+      ],
+      "implementationEvidence": ["src/features/workbench/manage-workspace-navigation.ts"]
+    },
+    {
+      "entrypoint": "src/app/workbench/page.tsx",
+      "routePattern": "/workbench",
+      "routeClassification": "alias-redirect",
+      "navigationPosture": "active",
+      "canonicalSurfaceIds": ["manage-overview"],
+      "implementationEvidence": ["src/app/workbench/page.tsx"],
+      "note": "Resolves a source-backed portfolio before redirecting and otherwise renders an explicit unavailable state."
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "advisor-book",
+      "businessName": "Advisor Book",
+      "family": "advisor-book",
+      "routePattern": "/book",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": "Advisor-Book-Workflow",
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/features/advisor-book/components/advisor-book-workspace.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "book-and-portfolio-entry-guides",
+        "reason": "Existing guide must be aligned to the complete screen-guide heading and state contract."
+      }
+    },
+    {
+      "id": "portfolio-review",
+      "businessName": "Portfolio Review",
+      "family": "portfolio",
+      "routePattern": "/portfolio",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/apps/portfolio/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "book-and-portfolio-entry-guides",
+        "reason": "The current Portfolio Review Workflow is a family overview rather than the canonical screen guide."
+      }
+    },
+    {
+      "id": "portfolio-allocation",
+      "businessName": "Portfolio Allocation",
+      "family": "portfolio",
+      "routePattern": "/allocation",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/allocation/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "book-and-portfolio-entry-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "positions",
+      "businessName": "Positions",
+      "family": "portfolio",
+      "routePattern": "/positions",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/positions/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "portfolio-records-and-intake-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "transactions",
+      "businessName": "Transactions",
+      "family": "portfolio",
+      "routePattern": "/transactions",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/transactions/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "portfolio-records-and-intake-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "income-and-activity",
+      "businessName": "Income And Activity",
+      "family": "portfolio",
+      "routePattern": "/income",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/income/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "portfolio-records-and-intake-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "projected-cash-movement",
+      "businessName": "Projected Cash Movement",
+      "family": "portfolio",
+      "routePattern": "/cashflow",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/cashflow/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "portfolio-records-and-intake-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "portfolio-intake",
+      "businessName": "Portfolio Intake",
+      "family": "portfolio",
+      "routePattern": "/intake",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "implementationEvidence": ["src/app/intake/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "portfolio-records-and-intake-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "data-product-discovery",
+      "businessName": "Data-Product Discovery",
+      "family": "platform",
+      "routePattern": "/data-products",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "Lotus domain services"],
+      "implementationEvidence": ["src/app/data-products/page.tsx"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "reporting-and-data-product-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "report-centre",
+      "businessName": "Report Centre",
+      "family": "reporting",
+      "routePattern": "/reports",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-report"],
+      "implementationEvidence": ["src/app/reports/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "reporting-and-data-product-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "proposal-detail",
+      "businessName": "Proposal Detail",
+      "family": "proposal",
+      "routePattern": "/proposals/{proposalId}",
+      "mode": null,
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
+      "implementationEvidence": ["src/features/proposals/components/proposal-detail-view.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "performance-summary",
+      "businessName": "Performance Summary",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "summary",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-performance"],
+      "implementationEvidence": [
+        "src/apps/performance/performance-workspace-modes.ts",
+        "src/apps/performance/components/performance-workspace-view.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "performance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "performance-analysis",
+      "businessName": "Performance Analysis",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "analysis",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "runtime-capability-gated",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-performance"],
+      "implementationEvidence": [
+        "src/apps/performance/performance-workspace-modes.ts",
+        "src/apps/performance/components/performance-workspace-view.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "performance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "performance-advisor-brief",
+      "businessName": "Performance Advisor Brief",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "advisor",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-ai"],
+      "implementationEvidence": [
+        "src/apps/performance/performance-workspace-modes.ts",
+        "src/apps/performance/components/performance-workspace-view.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "performance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "risk-review",
+      "businessName": "Risk Review",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "risk",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "runtime-capability-gated",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-risk"],
+      "implementationEvidence": [
+        "src/apps/performance/performance-workspace-modes.ts",
+        "src/apps/performance/components/performance-workspace-view.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "performance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "performance-evidence",
+      "businessName": "Performance Evidence",
+      "family": "performance",
+      "routePattern": "/performance",
+      "mode": "evidence",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "runtime-capability-gated",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-risk"],
+      "implementationEvidence": [
+        "src/apps/performance/performance-workspace-modes.ts",
+        "src/apps/performance/components/performance-workspace-view.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "performance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "manage-overview",
+      "businessName": "Manage Overview",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "overview",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-core-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "mandate-health",
+      "businessName": "Mandate Health",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "mandate",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-core-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "rebalance-waves",
+      "businessName": "Rebalance Waves",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "waves",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-core-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "construction-alternatives",
+      "businessName": "Construction Alternatives",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "construction",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-core-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "portfolio-memory",
+      "businessName": "Portfolio Memory",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "memory",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-evidence-and-governance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "pm-copilot",
+      "businessName": "PM Copilot",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "copilot",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-ai"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-evidence-and-governance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "pm-operating-quality",
+      "businessName": "PM Operating Quality",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "quality",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-evidence-and-governance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "outcome-reviews",
+      "businessName": "Outcome Reviews",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "reviews",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-evidence-and-governance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "evidence-pack",
+      "businessName": "Evidence Pack",
+      "family": "manage",
+      "routePattern": "/workbench/{portfolioId}",
+      "mode": "proof",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "active",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-report"],
+      "implementationEvidence": [
+        "src/features/workbench/manage-workspace-navigation.ts",
+        "src/features/workbench/manage-workspace.tsx"
+      ],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "manage-evidence-and-governance-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "advisory-overview",
+      "businessName": "Advisory Overview",
+      "family": "advisory",
+      "routePattern": "/recommendations",
+      "mode": "overview",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "advisory-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "advisor-cockpit",
+      "businessName": "Advisor Cockpit",
+      "family": "advisory",
+      "routePattern": "/recommendations",
+      "mode": "cockpit",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "advisory-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "advisory-copilot",
+      "businessName": "Advisory Copilot",
+      "family": "advisory",
+      "routePattern": "/recommendations",
+      "mode": "copilot",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-ai"],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "advisory-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "opportunities-and-ideas",
+      "businessName": "Opportunities And Ideas",
+      "family": "advisory",
+      "routePattern": "/recommendations",
+      "mode": "opportunities",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-idea"],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "advisory-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "bank-demo-proof",
+      "businessName": "Bank Demo Proof",
+      "family": "advisory",
+      "routePattern": "/recommendations",
+      "mode": "proof",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
+      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "advisory-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "client-context-alias",
+      "businessName": "Client Context",
+      "family": "advisory",
+      "routePattern": "/portfolio",
+      "mode": "client-context",
+      "fragment": null,
+      "surfaceClassification": "alias",
+      "navigationPosture": "not-applicable",
+      "wikiSlug": null,
+      "canonicalSurfaceId": "portfolio-review",
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-manage"],
+      "implementationEvidence": ["src/features/proposals/advisory-journey-navigation.ts"],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench"
+    },
+    {
+      "id": "proposal-builder",
+      "businessName": "Proposal Builder",
+      "family": "proposal",
+      "routePattern": "/proposals/simulate",
+      "mode": "proposal-builder",
+      "fragment": null,
+      "surfaceClassification": "active-screen",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
+      "implementationEvidence": ["src/app/proposals/simulate/page.tsx"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business screen guide is pending."
+      }
+    },
+    {
+      "id": "proposal-simulation",
+      "businessName": "Proposal Simulation",
+      "family": "proposal",
+      "routePattern": "/proposals/simulate",
+      "mode": "simulation",
+      "fragment": null,
+      "surfaceClassification": "alias",
+      "navigationPosture": "not-applicable",
+      "wikiSlug": null,
+      "canonicalSurfaceId": "proposal-builder",
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-performance", "lotus-risk"],
+      "implementationEvidence": [
+        "src/features/proposals/advisory-journey-navigation.ts",
+        "src/features/proposals/components/proposal-simulate-form.tsx"
+      ],
+      "runtimeEvidence": [],
+      "supportOwner": "lotus-workbench"
+    },
+    {
+      "id": "approval-queue",
+      "businessName": "Approval Queue",
+      "family": "proposal",
+      "routePattern": "/proposals",
+      "mode": "approval-queue",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "suitability-review",
+      "businessName": "Suitability Review",
+      "family": "proposal",
+      "routePattern": "/proposals",
+      "mode": "suitability",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "risk-and-impact",
+      "businessName": "Risk And Impact",
+      "family": "proposal",
+      "routePattern": "/proposals",
+      "mode": "risk-impact",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-risk", "lotus-performance"],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "discussion-pack-review",
+      "businessName": "Discussion Pack Review",
+      "family": "proposal",
+      "routePattern": "/proposals",
+      "mode": "discussion-pack",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-report"],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    },
+    {
+      "id": "implementation-status",
+      "businessName": "Implementation Status",
+      "family": "proposal",
+      "routePattern": "/proposals",
+      "mode": "implementation",
+      "fragment": null,
+      "surfaceClassification": "active-mode",
+      "navigationPosture": "capability-disabled",
+      "wikiSlug": null,
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-manage"],
+      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
+      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "supportOwner": "lotus-workbench",
+      "coverageException": {
+        "issue": 605,
+        "plannedSlice": "proposal-guides",
+        "reason": "Dedicated business mode guide is pending."
+      }
+    }
+  ],
+  "modeAuthorities": [
+    {
+      "family": "performance",
+      "source": "src/apps/performance/performance-workspace-modes.ts",
+      "symbol": "PERFORMANCE_WORKSPACE_MODE_DEFINITIONS",
+      "extraction": "definition-keys",
+      "surfaceMappings": {
+        "summary": "performance-summary",
+        "analysis": "performance-analysis",
+        "advisor": "performance-advisor-brief",
+        "risk": "risk-review",
+        "evidence": "performance-evidence"
+      }
+    },
+    {
+      "family": "manage",
+      "source": "src/features/workbench/manage-workspace-navigation.ts",
+      "symbol": "MANAGE_MODE_DEFINITIONS",
+      "extraction": "definition-keys",
+      "surfaceMappings": {
+        "overview": "manage-overview",
+        "mandate": "mandate-health",
+        "waves": "rebalance-waves",
+        "construction": "construction-alternatives",
+        "memory": "portfolio-memory",
+        "copilot": "pm-copilot",
+        "quality": "pm-operating-quality",
+        "reviews": "outcome-reviews",
+        "proof": "evidence-pack"
+      }
+    },
+    {
+      "family": "advisory-journey",
+      "source": "src/features/proposals/advisory-journey-navigation.ts",
+      "symbol": "ADVISORY_JOURNEY_DEFINITIONS",
+      "extraction": "definition-keys",
+      "surfaceMappings": {
+        "overview": "advisory-overview",
+        "cockpit": "advisor-cockpit",
+        "copilot": "advisory-copilot",
+        "client-context": "client-context-alias",
+        "opportunities": "opportunities-and-ideas",
+        "proposal-builder": "proposal-builder",
+        "simulation": "proposal-simulation",
+        "suitability": "suitability-review",
+        "risk-impact": "risk-and-impact",
+        "approval-queue": "approval-queue",
+        "discussion-pack": "discussion-pack-review",
+        "implementation": "implementation-status",
+        "proof": "bank-demo-proof"
+      }
+    },
+    {
+      "family": "proposal-lifecycle",
+      "source": "src/features/proposals/proposal-lifecycle-workspace-view-model.ts",
+      "symbol": "ProposalLifecycleMode",
+      "extraction": "type-union",
+      "surfaceMappings": {
+        "approval-queue": "approval-queue",
+        "suitability": "suitability-review",
+        "risk-impact": "risk-and-impact",
+        "discussion-pack": "discussion-pack-review",
+        "implementation": "implementation-status"
+      }
+    }
+  ]
+}
