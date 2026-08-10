@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lotus-workbench.local/docs/architecture/workbench-dependency-risk-inventory.v1.schema.json",
+  "title": "Lotus Workbench Direct Production Dependency Risk Inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "inventoryId",
+    "inventoryVersion",
+    "governedByIssue",
+    "reviewedOn",
+    "nextReviewBy",
+    "admissionMode",
+    "reviewOwner",
+    "platformPolicy",
+    "allowedLicenses",
+    "dependencies"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./workbench-dependency-risk-inventory.v1.schema.json"
+    },
+    "schemaVersion": {
+      "const": "lotus-workbench.dependency-risk-inventory.v1"
+    },
+    "inventoryId": {
+      "const": "lotus-workbench-direct-production-dependencies"
+    },
+    "inventoryVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "governedByIssue": {
+      "const": "https://github.com/sgajbi/lotus-workbench/issues/618"
+    },
+    "reviewedOn": {
+      "$ref": "#/$defs/isoDate"
+    },
+    "nextReviewBy": {
+      "$ref": "#/$defs/isoDate"
+    },
+    "admissionMode": {
+      "const": "blocking"
+    },
+    "reviewOwner": {
+      "type": "string",
+      "minLength": 3
+    },
+    "platformPolicy": {
+      "$ref": "#/$defs/platformPolicy"
+    },
+    "allowedLicenses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["Apache-2.0", "MIT"]
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/dependency"
+      }
+    }
+  },
+  "$defs": {
+    "isoDate": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "pattern": "^https://"
+    },
+    "nonEmptyText": {
+      "type": "string",
+      "minLength": 12
+    },
+    "platformPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "contractVersion",
+        "sourceRepository",
+        "sourceRevision",
+        "sourcePath",
+        "lifecycleStatus",
+        "localAdoptionDecision"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "lotus-platform-technology-governance-policy"
+        },
+        "contractVersion": {
+          "const": "1.0.0"
+        },
+        "sourceRepository": {
+          "const": "https://github.com/sgajbi/lotus-platform"
+        },
+        "sourceRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "sourcePath": {
+          "const": "platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json"
+        },
+        "lifecycleStatus": {
+          "const": "report_only"
+        },
+        "localAdoptionDecision": {
+          "const": "blocking_direct_production_dependency_admission"
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "technologyState",
+        "purpose",
+        "ownershipBoundary",
+        "architecturalRole",
+        "criticality",
+        "containmentBoundary",
+        "replacementPosture",
+        "license",
+        "stewardship",
+        "lifecycle",
+        "maturity",
+        "review",
+        "exception"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "technologyState": {
+          "enum": ["approved_default", "restricted_exception", "prohibited"]
+        },
+        "purpose": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "ownershipBoundary": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "architecturalRole": {
+          "enum": [
+            "framework_core",
+            "design_system",
+            "server_state",
+            "data_grid_adapter",
+            "chart_adapter",
+            "form_adapter",
+            "contract_validation"
+          ]
+        },
+        "criticality": {
+          "enum": ["critical", "high", "moderate"]
+        },
+        "containmentBoundary": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "replacementPosture": {
+          "$ref": "#/$defs/replacementPosture"
+        },
+        "license": {
+          "$ref": "#/$defs/license"
+        },
+        "stewardship": {
+          "$ref": "#/$defs/stewardship"
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/lifecycle"
+        },
+        "maturity": {
+          "$ref": "#/$defs/maturity"
+        },
+        "review": {
+          "$ref": "#/$defs/review"
+        },
+        "exception": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/exception"
+            }
+          ]
+        }
+      }
+    },
+    "replacementPosture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "exitPath", "switchingCost"],
+      "properties": {
+        "strategy": {
+          "enum": ["retain_and_review", "adapter_contained", "framework_migration"]
+        },
+        "exitPath": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "switchingCost": {
+          "enum": ["high", "moderate", "low"]
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spdx", "evidenceUrl"],
+      "properties": {
+        "spdx": {
+          "enum": ["Apache-2.0", "MIT"]
+        },
+        "evidenceUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        }
+      }
+    },
+    "stewardship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steward", "repositoryUrl", "securityChannelUrl"],
+      "properties": {
+        "steward": {
+          "type": "string",
+          "minLength": 2
+        },
+        "repositoryUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "securityChannelUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["releaseChannel", "maintenanceStatus", "releaseEvidenceUrl"],
+      "properties": {
+        "releaseChannel": {
+          "const": "stable"
+        },
+        "maintenanceStatus": {
+          "const": "active"
+        },
+        "releaseEvidenceUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        }
+      }
+    },
+    "maturity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rationale", "adoptionEvidenceUrls"],
+      "properties": {
+        "rationale": {
+          "type": "string",
+          "minLength": 40
+        },
+        "adoptionEvidenceUrls": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/httpsUrl"
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "reviewedOn", "nextReviewBy"],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        },
+        "reviewedOn": {
+          "$ref": "#/$defs/isoDate"
+        },
+        "nextReviewBy": {
+          "$ref": "#/$defs/isoDate"
+        }
+      }
+    },
+    "exception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue",
+        "owner",
+        "approvalEvidence",
+        "rollbackPath",
+        "expiryDate",
+        "exitCriterion"
+      ],
+      "properties": {
+        "issue": {
+          "type": "string",
+          "pattern": "^https://github.com/sgajbi/lotus-workbench/issues/[0-9]+$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        },
+        "approvalEvidence": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "rollbackPath": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "expiryDate": {
+          "$ref": "#/$defs/isoDate"
+        },
+        "exitCriterion": {
+          "$ref": "#/$defs/nonEmptyText"
+        }
+      }
+    }
+  }
+}
