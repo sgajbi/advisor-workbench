@@ -1,7 +1,7 @@
 .PHONY: install security lint typecheck test test-coverage test-runtime-ownership test-e2e build check ci-local ci-local-docker ci-local-docker-down run clean docker-up docker-down
 
 install:
-	npm install
+	npm ci --no-audit --no-fund
 
 security:
 	npm run security:audit

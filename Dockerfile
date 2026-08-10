@@ -5,7 +5,7 @@ WORKDIR /app
 
 FROM ci-base AS deps
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 FROM ci-base AS builder
 WORKDIR /app
