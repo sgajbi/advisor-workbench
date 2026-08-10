@@ -68,7 +68,7 @@ Boundary rules that matter:
    operations handoff summary, exception summary, outcome narrative, and PM quality support-summary
    workflow-pack requests without browser-owned prompt construction, generated text storage,
    PM ranking, client contact, order, or OMS claims.
-7. Recommendations remain compatibility paths. `mode=cockpit` is now the Gateway-backed RFC-0026
+7. Recommendations provide a compatibility advisory workspace. `mode=cockpit` is the Gateway-backed RFC-0026
    advisor operating cockpit for Advise-owned action items, supportability, meeting preparation,
    and bounded acknowledgements. `mode=opportunities` now renders the Lotus Idea advisor review
    queue through Gateway instead of treating Advise draft proposals as sourced opportunities. Candidate
@@ -118,7 +118,8 @@ Current shell navigation truth:
 Current route posture:
 
 - `/recommendations`
-  redirects to supported active surfaces
+  renders the compatibility advisory overview; its implemented modes remain capability-gated and
+  the top-level Advisory shell entry remains disabled
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit over Advise-owned action items, supportability, meeting
   preparation, tactical house-view impact review, and acknowledgement posture
@@ -146,7 +147,7 @@ Key code areas:
 - `src/apps/performance/`
   performance and risk product surfaces
 - `src/apps/recommendations/`
-  current compatibility redirect behavior for legacy recommendation entry
+  compatibility advisory workspace over Gateway-backed, source-owned modes
 - `src/design-system/`
   shared UI primitives and tokens
 - `src/shell/`

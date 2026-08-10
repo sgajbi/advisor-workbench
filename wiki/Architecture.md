@@ -40,8 +40,9 @@ repositories and must not be inferred from a route or component shown here.
   `/recommendations?mode=copilot` Gateway-backed advisor-use copilot over Advise-owned
   proposal-version source projection, action runs, internal review posture, unsupported evidence,
   and blocked client-publication boundaries
-- legacy compatibility surfaces
-  recommendations redirects only; proposal simulation is a direct Gateway-backed advisory proposal
+- compatibility and capability-gated surfaces
+  recommendations renders implemented Gateway-backed advisory modes while the top-level Advisory
+  shell entry remains disabled; proposal simulation is a direct Gateway-backed advisory proposal
   draft entry backed by `lotus-advise`
 
 ## Boundary notes

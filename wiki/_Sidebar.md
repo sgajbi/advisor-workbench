@@ -6,6 +6,7 @@
 - [Overview](Overview)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
+- [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)
