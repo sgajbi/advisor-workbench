@@ -177,7 +177,11 @@ describe("WorkbenchPage", () => {
     expect(screen.getAllByRole("heading", { name: "PM Operating Quality" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
-    expect(screen.getByLabelText("PM operating quality persisted fairness analyses")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("listbox", {
+        name: "PM operating quality fairness-analysis selection",
+      })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality fairness segments")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality summary-invocation posture")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality summary invocations")).toBeInTheDocument();
