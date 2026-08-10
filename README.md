@@ -519,6 +519,10 @@ Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Sur
   [docs/demo/README.md](docs/demo/README.md)
 - architecture review ledger:
   [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md)
+- production runtime and technology-support decision:
+  [docs/architecture/workbench-production-runtime-decision.md](docs/architecture/workbench-production-runtime-decision.md)
+- bank-facing technology-risk baseline:
+  [wiki/Technology-Risk-and-Runtime-Support.md](wiki/Technology-Risk-and-Runtime-Support.md)
 - RFC inventory:
   [docs/rfcs/README.md](docs/rfcs/README.md)
 - wiki home:

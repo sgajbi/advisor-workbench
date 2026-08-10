@@ -22,6 +22,11 @@ repositories and must not be inferred from a route or component shown here.
 - shell composition under `src/shell/`
 - internal `/api/bff/*` proxy bridge to `lotus-gateway`
 
+The versioned runtime, browser, support-lifecycle, and current scalability boundary is governed by
+[Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support). That page records both
+implemented evidence and explicit non-claims; architecture compatibility must not be presented as
+capacity or bank certification.
+
 ## Product-surface map
 
 - `Portfolio`

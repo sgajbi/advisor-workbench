@@ -114,6 +114,9 @@ concurrency group.
 
 ## What the gates protect
 
+- versioned runtime-support reconciliation across package metadata, lockfile engines, exact CI
+  Node, bundled npm, the digest-pinned container, canonical immutable install commands, exact
+  Playwright, explicit Chromium projects, and the mandatory review date
 - real app-surface coverage across the active product paths
 - browser smoke for supported front-office flows
 - Docker parity for production-like runtime assumptions

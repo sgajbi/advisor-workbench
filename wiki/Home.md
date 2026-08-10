@@ -16,6 +16,8 @@
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Governed business guide inventory for every active screen and mode:
   [Screen Guide Catalogue](Screen-Guide-Catalogue)
+- Bank architecture and procurement evidence for the supported runtime baseline:
+  [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)
 
 ## Current phase
 
@@ -61,6 +63,7 @@
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Architecture](Architecture)
+- [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)
 - [API Surface](API-Surface)
 - [Getting Started](Getting-Started)
 - [Development Workflow](Development-Workflow)
