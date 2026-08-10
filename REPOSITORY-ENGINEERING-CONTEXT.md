@@ -525,7 +525,9 @@ Technology-selection rules:
    resolved version, SPDX license evidence, steward and security channel, stable lifecycle,
    Workbench purpose and owner boundary, maturity rationale, criticality, containment, exit posture,
    and review date aligned. Validate the complete JSON Schema with the exact development-only Ajv
-   tool rather than maintaining a partial schema interpreter,
+   tool rather than maintaining a partial schema interpreter. Keep inventory and dependency review
+   ownership bound to the governed functional identity `workbench-architecture-maintainers`; do not
+   substitute an ad hoc contributor label,
 7. reuse the platform technology states `approved_default`, `restricted_exception`, and
    `prohibited`. A restricted dependency requires an owner-assigned, GitHub-issue-backed,
    time-bounded exception with approval evidence, rollback, and exit criteria; a prohibited
