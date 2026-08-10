@@ -21,6 +21,12 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     scenarioEnvironmentVariable: "PORTFOLIO_E2E_FIXTURE",
     scenarios: new Set(["cashflow"]),
   },
+  {
+    mode: "pm-quality",
+    portEnvironmentVariable: "PM_QUALITY_E2E_FIXTURE_PORT",
+    scenarioEnvironmentVariable: "PM_QUALITY_E2E_FIXTURE",
+    scenarios: new Set(["record-selection"]),
+  },
 ] as const;
 
 export type ServiceRequestTarget = "server" | "client";

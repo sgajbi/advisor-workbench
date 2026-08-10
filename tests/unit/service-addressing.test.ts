@@ -16,6 +16,8 @@ describe("service addressing", () => {
   const originalReportCentreFixturePort = process.env.REPORT_CENTRE_E2E_FIXTURE_PORT;
   const originalPortfolioFixtureScenario = process.env.PORTFOLIO_E2E_FIXTURE;
   const originalPortfolioFixturePort = process.env.PORTFOLIO_E2E_FIXTURE_PORT;
+  const originalPmQualityFixtureScenario = process.env.PM_QUALITY_E2E_FIXTURE;
+  const originalPmQualityFixturePort = process.env.PM_QUALITY_E2E_FIXTURE_PORT;
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
@@ -27,6 +29,8 @@ describe("service addressing", () => {
     process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = originalReportCentreFixturePort;
     process.env.PORTFOLIO_E2E_FIXTURE = originalPortfolioFixtureScenario;
     process.env.PORTFOLIO_E2E_FIXTURE_PORT = originalPortfolioFixturePort;
+    process.env.PM_QUALITY_E2E_FIXTURE = originalPmQualityFixtureScenario;
+    process.env.PM_QUALITY_E2E_FIXTURE_PORT = originalPmQualityFixturePort;
   });
 
   it("uses the explicit BFF base URL when configured", () => {
@@ -85,6 +89,26 @@ describe("service addressing", () => {
     process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
 
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
+  });
+
+  it("allows only the exact process-owned PM quality record-selection fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18140/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "pm-quality";
+    process.env.PM_QUALITY_E2E_FIXTURE = "record-selection";
+    process.env.PM_QUALITY_E2E_FIXTURE_PORT = "18140";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18140");
+  });
+
+  it("rejects a PM quality fixture URL whose scenario is not governed", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18140/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "pm-quality";
+    process.env.PM_QUALITY_E2E_FIXTURE = "summary-generation";
+    process.env.PM_QUALITY_E2E_FIXTURE_PORT = "18140";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+    );
   });
 
   it("rejects a Portfolio fixture URL whose scenario is not governed", () => {
