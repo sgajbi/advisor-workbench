@@ -241,11 +241,11 @@ export function buildPmOperatingQualityPanelModel(params: {
   fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessAnalysisDetails?: ReadonlyArray<DpmPmOperatingQualityGatewayResponse | null | undefined>;
-  retainedFairnessAnalysis?: DpmPmOperatingQualityGatewayResponse | null;
+  retainedFairnessAnalyses?: ReadonlyArray<DpmPmOperatingQualityGatewayResponse | null | undefined>;
   reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
   reviewActionDetails?: ReadonlyArray<DpmPmOperatingQualityGatewayResponse | null | undefined>;
-  retainedReviewAction?: DpmPmOperatingQualityGatewayResponse | null;
+  retainedReviewActions?: ReadonlyArray<DpmPmOperatingQualityGatewayResponse | null | undefined>;
   summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
   summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
   preview?: DpmPmOperatingQualityGatewayResponse | null;
@@ -262,6 +262,12 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...(params.reviewActionDetails ?? []),
     params.reviewActionDetail,
   ]);
+  const retainedFairnessAnalyses = compactGatewayResponses(
+    params.retainedFairnessAnalyses ?? [],
+  );
+  const retainedReviewActions = compactGatewayResponses(
+    params.retainedReviewActions ?? [],
+  );
   const scoreRunRows = [
     ...buildScoreRunRows(params.preview),
     ...buildScoreRunRows(params.scoreRuns),
@@ -270,12 +276,12 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...fairnessAnalysisDetails.flatMap(buildFairnessAnalysisRows),
     ...buildFairnessAnalysisRows(params.fairnessPreview),
     ...buildFairnessAnalysisRows(params.fairnessAnalyses),
-    ...buildFairnessAnalysisRows(params.retainedFairnessAnalysis),
+    ...retainedFairnessAnalyses.flatMap(buildFairnessAnalysisRows),
   ].filter(uniqueByFairnessAnalysisId);
   const reviewActionRows = [
     ...reviewActionDetails.flatMap(buildReviewActionRows),
     ...buildReviewActionRows(params.reviewActions),
-    ...buildReviewActionRows(params.retainedReviewAction),
+    ...retainedReviewActions.flatMap(buildReviewActionRows),
   ].filter(uniqueByReviewActionId);
   const summaryInvocationRows = [
     ...buildSummaryInvocationRows(params.summaryInvocationDetail),
@@ -311,12 +317,10 @@ export function buildPmOperatingQualityPanelModel(params: {
   )
     ? params.fairnessAnalyses
     : null;
-  const selectedRetainedFairnessAnalysis = hasPmOperatingQualityFairnessAnalysis(
-    params.retainedFairnessAnalysis,
-    selection.fairnessAnalysisId,
-  )
-    ? params.retainedFairnessAnalysis
-    : null;
+  const selectedRetainedFairnessAnalysis =
+    retainedFairnessAnalyses.find((response) =>
+      hasPmOperatingQualityFairnessAnalysis(response, selection.fairnessAnalysisId)
+    ) ?? null;
   const fairnessAnalysisResponse =
     selectedFairnessAnalysisDetail ??
     selectedFairnessPreview ??
@@ -336,12 +340,10 @@ export function buildPmOperatingQualityPanelModel(params: {
   )
     ? params.reviewActions
     : null;
-  const selectedRetainedReviewAction = hasPmOperatingQualityReviewAction(
-    params.retainedReviewAction,
-    selection.reviewActionId,
-  )
-    ? params.retainedReviewAction
-    : null;
+  const selectedRetainedReviewAction =
+    retainedReviewActions.find((response) =>
+      hasPmOperatingQualityReviewAction(response, selection.reviewActionId)
+    ) ?? null;
   const reviewActionResponse =
     selectedReviewActionDetail ?? selectedReviewActions ?? selectedRetainedReviewAction;
   const reviewAction = findReviewAction(reviewActionResponse, selection.reviewActionId);
