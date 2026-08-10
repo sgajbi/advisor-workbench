@@ -34,9 +34,14 @@ export function parseDockerfile(source) {
 
   for (const instruction of collectDockerfileInstructions(source)) {
     if (instruction.keyword === "FROM") {
-      const stageName = instruction.argument.match(/\s+AS\s+(?<name>[A-Za-z0-9._-]+)\s*$/i)
-        ?.groups?.name.toLowerCase();
-      currentStage = { name: stageName, instructions: [] };
+      const stageDeclaration = instruction.argument.match(
+        /^(?:--platform=\S+\s+)?(?<base>\S+)(?:\s+AS\s+(?<name>[A-Za-z0-9._-]+))?\s*$/i
+      );
+      currentStage = {
+        base: stageDeclaration?.groups?.base,
+        name: stageDeclaration?.groups?.name?.toLowerCase(),
+        instructions: [],
+      };
       model.stages.push(currentStage);
     } else if (currentStage) {
       currentStage.instructions.push(instruction);

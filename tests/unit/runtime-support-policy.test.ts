@@ -98,6 +98,38 @@ describe("runtime support policy", () => {
     );
   });
 
+  it.each(["if: false", "continue-on-error: true"])(
+    "rejects a setup-node step governed by %s",
+    (control) => {
+      const evidence = loadEvidence();
+      evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
+        ".github/workflows/feature-lane.yml"
+      ].replace(
+        "      - uses: actions/setup-node@v6",
+        `      - uses: actions/setup-node@v6\n        ${control}`
+      );
+
+      expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("feature-lane.yml must use Node 22.23.1"),
+        ])
+      );
+    }
+  );
+
+  it("rejects setup-node inside a conditional job", () => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
+      ".github/workflows/feature-lane.yml"
+    ].replace(/  quality-gate:\r?\n/, "  quality-gate:\n    if: false\n");
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("feature-lane.yml must use Node 22.23.1"),
+      ])
+    );
+  });
+
   it("ignores commented workflow selectors", () => {
     const evidence = loadEvidence();
     evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
@@ -352,6 +384,26 @@ describe("runtime support policy", () => {
     );
   });
 
+  it("binds every governed stage to the actual immutable base stage", () => {
+    const deadArgument = loadEvidence();
+    deadArgument.dockerfile = deadArgument.dockerfile.replace(
+      "FROM ${NODE_BASE_IMAGE} AS ci-base",
+      "FROM node:24.1.0-bookworm-slim AS ci-base"
+    );
+    const detachedBuilder = loadEvidence();
+    detachedBuilder.dockerfile = detachedBuilder.dockerfile.replace(
+      "FROM ci-base AS builder",
+      "FROM node:24.1.0-bookworm-slim AS builder"
+    );
+
+    expect(validateRuntimeSupportPolicy(deadArgument)).toEqual(
+      expect.arrayContaining([expect.stringContaining("consumes ${NODE_BASE_IMAGE}")])
+    );
+    expect(validateRuntimeSupportPolicy(detachedBuilder)).toEqual(
+      expect.arrayContaining([expect.stringContaining("builder stage must descend")])
+    );
+  });
+
   it("binds immutable installation to the named dependency stage", () => {
     const wrongStage = loadEvidence();
     wrongStage.dockerfile = wrongStage.dockerfile
@@ -395,6 +447,22 @@ describe("runtime support policy", () => {
       "COPY --chown=node:node --from=builder /app/.next/standalone ./",
       "COPY --chown=node:node --from=ci-base /app/.next/standalone ./"
     );
+    const overwrittenDependencies = loadEvidence();
+    overwrittenDependencies.dockerfile = overwrittenDependencies.dockerfile.replace(
+      "COPY --from=deps /app/node_modules ./node_modules",
+      [
+        "COPY --from=deps /app/node_modules ./node_modules",
+        "COPY --from=ci-base /app/node_modules ./node_modules",
+      ].join("\n")
+    );
+    const overwrittenRunner = loadEvidence();
+    overwrittenRunner.dockerfile = overwrittenRunner.dockerfile.replace(
+      "COPY --chown=node:node --from=builder /app/.next/standalone ./",
+      [
+        "COPY --chown=node:node --from=builder /app/.next/standalone ./",
+        "COPY --from=deps /app/.next/standalone ./",
+      ].join("\n")
+    );
 
     expect(validateRuntimeSupportPolicy(hiddenInstall)).toEqual(
       expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
@@ -406,7 +474,29 @@ describe("runtime support policy", () => {
       expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
     );
     expect(validateRuntimeSupportPolicy(detachedRunner)).toEqual(
-      expect.arrayContaining([expect.stringContaining("consume the builder standalone output")])
+      expect.arrayContaining([expect.stringContaining("governed builder standalone")])
+    );
+    expect(validateRuntimeSupportPolicy(overwrittenDependencies)).toEqual(
+      expect.arrayContaining([expect.stringContaining("only cross-stage copy")])
+    );
+    expect(validateRuntimeSupportPolicy(overwrittenRunner)).toEqual(
+      expect.arrayContaining([expect.stringContaining("only the governed builder")])
+    );
+  });
+
+  it.each([
+    'RUN ["npm", "install"]',
+    'RUN ["/usr/local/bin/npm", "--prefix", "/app", "i"]',
+    'RUN ["node", "/usr/local/lib/node_modules/npm/bin/npm-cli.js", "install"]',
+  ])("rejects an exec-form mutable install: %s", (instruction) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      `RUN npm ci --no-audit --no-fund\n${instruction}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
     );
   });
 
