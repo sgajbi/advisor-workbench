@@ -261,6 +261,25 @@ describe("proposal policy review view model", () => {
     expect(model?.sourceIdentityAligned).toBe(false);
   });
 
+  it("fails closed when a supporting source reports a malformed identity value", () => {
+    const model = buildPolicyEvaluationEvidenceModel({
+      evaluation: {
+        evaluation_id: "pev_001",
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        proposal_id: "PRP-ONE",
+        proposal_version_id: "ppv_001",
+      },
+      workflow: {
+        evaluation_id: "pev_001",
+        proposal_id: 42 as unknown as string,
+        proposal_version_id: "ppv_001",
+      },
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    expect(model?.sourceIdentityAligned).toBe(false);
+  });
+
   it("fails closed when detail identity does not match the selected queue record", () => {
     const selectedReview = buildPolicyReviewQueueModel({
       records: [
