@@ -272,7 +272,7 @@ export function ProposalReviewHistoryPanel({
               <strong>{businessEventLabel(event.event_type)}</strong>
               <span>
                 {event.from_state ? proposalStageLabel(event.from_state) : "Started"} to{" "}
-                {proposalStageLabel(event.to_state)} · {businessEventLabel(event.actor_id)}
+                {proposalStageLabel(event.to_state)} · {event.actor_id}
               </span>
             </div>
           ))}
@@ -296,7 +296,7 @@ export function ProposalReviewHistoryPanel({
             <div key={approval.approval_id}>
               <strong>{businessEventLabel(approval.approval_type)} review</strong>
               <span>
-                {approval.approved ? "Approved" : "Rejected"} by {businessEventLabel(approval.actor_id)}
+                {approval.approved ? "Approved" : "Rejected"} by {approval.actor_id}
               </span>
             </div>
           ))}

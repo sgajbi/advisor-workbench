@@ -408,6 +408,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
       activeActionRef.current
       || activeVersionCreationRef.current
       || detailContextTransitionRef.current
+      || actionEvidenceBlockedRef.current
+      || !actionSourcesReady
     ) {
       return;
     }
@@ -480,7 +482,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     );
   }
 
-  if (detailQuery.error && isNotFound(detailQuery.error)) {
+  if (!detailQuery.data?.proposal && detailQuery.error && isNotFound(detailQuery.error)) {
     return (
       <SectionBlock title="Proposal Not Found">
         <Text variant="secondary" className="muted">
@@ -498,10 +500,10 @@ export default function ProposalDetailView({ proposalId }: Props) {
     );
   }
 
-  if (queryError) {
+  if (queryError && !detailQuery.data?.proposal) {
     return (
       <Alert severity="error">
-        The proposal could not be loaded. {queryError instanceof Error ? queryError.message : "Try again later."}
+        The proposal could not be loaded. Try again later.
       </Alert>
     );
   }
@@ -656,12 +658,19 @@ export default function ProposalDetailView({ proposalId }: Props) {
         <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
-            controlsDisabled={acting || creatingVersion || !detailSourceReady}
+            controlsDisabled={
+              acting
+              || creatingVersion
+              || actionEvidenceBlocked
+              || !actionSourcesReady
+            }
             onIncludeEvidenceChange={(value) => {
               if (
                 !activeActionRef.current
                 && !activeVersionCreationRef.current
                 && !detailContextTransitionRef.current
+                && !actionEvidenceBlockedRef.current
+                && actionSourcesReady
               ) {
                 detailContextTransitionRef.current = true;
                 setIncludeEvidence(value);
