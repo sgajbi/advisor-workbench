@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPmOperatingQualityPanelModel } from "../../src/features/workbench/pm-operating-quality-view-model";
+import {
+  buildPmOperatingQualityPanelModel,
+  resolvePmOperatingQualitySelection,
+} from "../../src/features/workbench/pm-operating-quality-view-model";
 import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
@@ -416,6 +419,143 @@ const summary: DpmPmOperatingQualitySummaryResponse = {
 };
 
 describe("PM operating quality view model", () => {
+  it("preserves explicit record selections across reorder and falls back on removal", () => {
+    const first = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessAnalyses,
+      reviewActions,
+    });
+    const secondScoreRun = {
+      ...first.scoreRunRows[0],
+      key: "pmq_run_002-1",
+      scoreRunId: "pmq_run_002",
+    };
+    const secondFairnessAnalysis = {
+      ...first.fairnessAnalysisRows[0],
+      key: "pmq_fair_002-1",
+      fairnessAnalysisId: "pmq_fair_002",
+    };
+    const secondReviewAction = {
+      ...first.reviewActionRows[0],
+      key: "pmq_review_002-1",
+      reviewActionId: "pmq_review_002",
+    };
+
+    expect(
+      resolvePmOperatingQualitySelection({
+        scoreRunRows: [secondScoreRun, ...first.scoreRunRows],
+        fairnessAnalysisRows: [secondFairnessAnalysis, ...first.fairnessAnalysisRows],
+        reviewActionRows: [secondReviewAction, ...first.reviewActionRows],
+        preferredSelection: {
+          scoreRunId: "pmq_run_001",
+          fairnessAnalysisId: "pmq_fair_001",
+          reviewActionId: "pmq_review_001",
+        },
+      })
+    ).toEqual({
+      scoreRunId: "pmq_run_001",
+      fairnessAnalysisId: "pmq_fair_001",
+      reviewActionId: "pmq_review_001",
+    });
+
+    expect(
+      resolvePmOperatingQualitySelection({
+        scoreRunRows: [secondScoreRun],
+        fairnessAnalysisRows: [secondFairnessAnalysis],
+        reviewActionRows: [secondReviewAction],
+        preferredSelection: {
+          scoreRunId: "pmq_run_001",
+          fairnessAnalysisId: "pmq_fair_001",
+          reviewActionId: "pmq_review_001",
+        },
+      })
+    ).toEqual({
+      scoreRunId: "pmq_run_002",
+      fairnessAnalysisId: "pmq_fair_002",
+      reviewActionId: "pmq_review_002",
+    });
+  });
+
+  it("projects only the explicitly selected PM quality records", () => {
+    const secondScoreRun = {
+      ...(scoreRuns.data.score_runs as Array<Record<string, unknown>>)[0],
+      score_run_id: "pmq_run_002",
+      pm_id: "PM_SG_002",
+      book_id: "PM_BOOK_SG_INCOME",
+      as_of_date: "2026-05-14",
+    };
+    const secondFairnessAnalysis = {
+      ...(fairnessAnalyses.data.fairness_analyses as Array<Record<string, unknown>>)[0],
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+      observed_average_score_spread: "12.00",
+    };
+    const secondReviewAction = {
+      ...(reviewActions.data.review_actions as Array<Record<string, unknown>>)[0],
+      review_action_id: "pmq_review_002",
+      review_action_ref: "PMQ-RA-002",
+      target_id: "pmq_run_002",
+      as_of_date: "2026-05-14",
+    };
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns: {
+        ...scoreRuns,
+        data: { ...scoreRuns.data, score_runs: [secondScoreRun, ...(scoreRuns.data.score_runs as unknown[])] },
+      },
+      fairnessAnalyses: {
+        ...fairnessAnalyses,
+        data: {
+          fairness_analyses: [
+            secondFairnessAnalysis,
+            ...(fairnessAnalyses.data.fairness_analyses as unknown[]),
+          ],
+        },
+      },
+      fairnessAnalysisDetail: fairnessPreview,
+      reviewActions: {
+        ...reviewActions,
+        data: {
+          review_actions: [
+            secondReviewAction,
+            ...(reviewActions.data.review_actions as unknown[]),
+          ],
+        },
+      },
+      reviewActionDetail,
+      summary,
+      selection: {
+        scoreRunId: "pmq_run_002",
+        fairnessAnalysisId: "pmq_fair_002",
+        reviewActionId: "pmq_review_002",
+      },
+    });
+
+    expect(model.selectedScoreRun).toMatchObject({
+      scoreRunId: "pmq_run_002",
+      pmId: "PM_SG_002",
+      asOfDate: "2026-05-14",
+    });
+    expect(model.selectedFairnessAnalysis).toMatchObject({
+      fairnessAnalysisId: "pmq_fair_002",
+      observedSpread: "12.00",
+    });
+    expect(model.selectedReviewAction).toMatchObject({
+      reviewActionId: "pmq_review_002",
+      reviewActionRef: "PMQ-RA-002",
+    });
+    expect(model.scoreRunId).toBe("pmq_run_002");
+    expect(model.fairnessAnalysisId).toBe("pmq_fair_002");
+    expect(model.fairnessDetail.asOfDate).toBe("2026-05-14");
+    expect(model.reviewActionDetail).toMatchObject({
+      reviewActionId: "pmq_review_002",
+      reviewActionRef: "PMQ-RA-002",
+      asOfDate: "2026-05-14",
+    });
+    expect(model.summaryPosture.status).toBe("Not requested");
+  });
+
   it("preserves Manage PM quality policy, score-run, and source-defined segment posture", () => {
     const model = buildPmOperatingQualityPanelModel({ policies, scoreRuns });
 
