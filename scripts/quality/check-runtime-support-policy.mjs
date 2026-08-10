@@ -80,14 +80,13 @@ export function validateRuntimeSupportPolicy({
   }
 
   for (const [path, source] of Object.entries(workflowSources)) {
-    const setupNodeSteps = [...source.matchAll(/uses:\s*actions\/setup-node@[^\r\n]+/g)];
-    const declaredVersions = [...source.matchAll(/node-version:\s*(?<version>[^\r\n#]+)/g)].map(
-      (match) => match.groups?.version.trim().replace(/^(?<quote>["'])(?<value>.*)\k<quote>$/, "$<value>")
-    );
+    const setupNodeSteps = collectSetupNodeSteps(source);
     if (
       setupNodeSteps.length === 0 ||
-      declaredVersions.length !== setupNodeSteps.length ||
-      declaredVersions.some((version) => version !== policy.productionContainer?.version)
+      setupNodeSteps.some(
+        ({ versions }) =>
+          versions.length !== 1 || versions[0] !== policy.productionContainer?.version
+      )
     ) {
       failures.push(`${path} must use Node ${policy.productionContainer?.version} for every setup-node step.`);
     }
@@ -99,13 +98,20 @@ export function validateRuntimeSupportPolicy({
     }
   }
 
-  if (!isIsoDate(policy.reviewedOn)) {
+  const reviewedOnIsValid = isIsoDate(policy.reviewedOn);
+  const nextReviewByIsValid = isIsoDate(policy.nextReviewBy);
+  if (!reviewedOnIsValid) {
     failures.push("Runtime support policy reviewedOn must be a real ISO YYYY-MM-DD date.");
+  } else if (policy.reviewedOn > today) {
+    failures.push(`Runtime support policy reviewedOn cannot be in the future (${policy.reviewedOn}).`);
   }
-  if (!isIsoDate(policy.nextReviewBy)) {
+  if (!nextReviewByIsValid) {
     failures.push("Runtime support policy nextReviewBy must be a real ISO YYYY-MM-DD date.");
   } else if (policy.nextReviewBy < today) {
     failures.push(`Runtime support policy review expired on ${policy.nextReviewBy}.`);
+  }
+  if (reviewedOnIsValid && nextReviewByIsValid && policy.reviewedOn > policy.nextReviewBy) {
+    failures.push("Runtime support policy reviewedOn must not be later than nextReviewBy.");
   }
   if (policy.browserPolicy?.certificationStatus !== "partial-chromium-proof-only") {
     failures.push("Browser certification must remain explicit until a wider governed matrix passes.");
@@ -154,6 +160,44 @@ function expectEqual(failures, label, actual, expected) {
   if (actual !== expected) {
     failures.push(`${label} must be ${JSON.stringify(expected)}; received ${JSON.stringify(actual)}.`);
   }
+}
+
+function collectSetupNodeSteps(source) {
+  const lines = source.split(/\r?\n/);
+  const steps = [];
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    if (!/^\s*(?:-\s*)?uses:\s*actions\/setup-node@/.test(lines[lineIndex])) {
+      continue;
+    }
+
+    const directStepMatch = lines[lineIndex].match(/^(?<indent>\s*)-\s*uses:/);
+    let stepIndent = directStepMatch?.groups?.indent.length;
+    if (stepIndent === undefined) {
+      for (let candidate = lineIndex - 1; candidate >= 0; candidate -= 1) {
+        const stepMatch = lines[candidate].match(/^(?<indent>\s*)-\s+/);
+        if (stepMatch && stepMatch.groups.indent.length < lines[lineIndex].search(/\S/)) {
+          stepIndent = stepMatch.groups.indent.length;
+          break;
+        }
+      }
+    }
+
+    const block = [lines[lineIndex]];
+    for (let candidate = lineIndex + 1; candidate < lines.length; candidate += 1) {
+      const nextStepMatch = lines[candidate].match(/^(?<indent>\s*)-\s+/);
+      if (nextStepMatch && nextStepMatch.groups.indent.length === stepIndent) {
+        break;
+      }
+      block.push(lines[candidate]);
+    }
+    const versions = [...block.join("\n").matchAll(/node-version:\s*(?<version>[^\r\n,}#]+)/g)].map(
+      (match) => match.groups?.version.trim().replace(/^(?<quote>["'])(?<value>.*)\k<quote>$/, "$<value>")
+    );
+    steps.push({ versions });
+  }
+
+  return steps;
 }
 
 function isIsoDate(value) {
