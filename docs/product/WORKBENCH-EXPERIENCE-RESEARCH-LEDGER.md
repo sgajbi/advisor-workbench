@@ -3102,8 +3102,10 @@ Research was reviewed on 2026-08-10 from official React guidance:
    stateful workspace with `key={proposalId}`.
 2. Let React discard the complete previous workspace atomically instead of coordinating ten local
    setters and three operation refs after render.
-3. Preserve the established Gateway query keys and source-owned action confirmation. Keying the
-   presentation workspace does not fabricate success or cancel a persisted source action.
+3. Preserve the established Gateway query keys and source-owned action confirmation. Keep the
+   proposal-scoped source-refresh generation above the keyed presentation workspace so a version
+   persisted for proposal A remains the authoritative query generation after an A→B→A journey.
+   Keying the presentation workspace does not fabricate success or cancel a persisted source action.
 4. Prove A→B→A transitions for both lifecycle actions and version lookups so an old mounted
    instance cannot publish success, error, or loaded-version presentation into a new instance.
 5. Synchronize tests to the business-ready control state, not merely the presence of a rendered
@@ -3120,14 +3122,19 @@ Research was reviewed on 2026-08-10 from official React guidance:
    workspace boundary.
 4. Changing business copy, layout, Gateway contracts, or source confirmation behavior for a
    compiler/lifecycle correction.
+5. Resetting the query refresh generation with presentation state, because React Query can retain
+   the superseded generation as fresh for 30 seconds and an A→B→A journey could then render the
+   earlier version. Invalidating only the old cache was also rejected because retaining the small
+   proposal-scoped generation makes the current source evidence explicit and avoids an unnecessary
+   return-navigation refetch.
 
 ### Validation and publication decision
 
 Workbench #600 owns this slice. Exact-main React Compiler proof reported two errors: a render-time
 ref write and a synchronous multi-state Effect reset. The keyed boundary removes both; focused
 compiler lint and normal touched-file lint pass, and the Proposal Detail integration suite passes
-27/27 with explicit transition, stale-action, stale-version, action-lock, degraded-source, and
-failure proof and no React `act` warnings.
+28/28 with explicit transition, stale-action, stale-version, refreshed-version continuity,
+action-lock, degraded-source, and failure proof and no React `act` warnings.
 
 The visual composition, user-facing language, supported feature set, Gateway/OpenAPI contract,
 runtime topology, operator procedure, README, and wiki source are intentionally unchanged. Existing

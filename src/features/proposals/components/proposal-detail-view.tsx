@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
@@ -62,6 +62,11 @@ import {
 
 type Props = {
   proposalId: string;
+};
+
+type ProposalDetailWorkspaceProps = Props & {
+  revision: number;
+  onAdvanceRevision: (proposalId: string) => void;
 };
 
 type ProposalReviewMode = "narrative" | "memo";
@@ -172,11 +177,29 @@ function confirmRefreshedProposalActionEvidence({
 }
 
 export default function ProposalDetailView({ proposalId }: Props) {
-  return <ProposalDetailWorkspace key={proposalId} proposalId={proposalId} />;
+  const [revisionByProposal, setRevisionByProposal] = useState<Record<string, number>>({});
+  const advanceRevision = useCallback((refreshedProposalId: string) => {
+    setRevisionByProposal((current) => ({
+      ...current,
+      [refreshedProposalId]: (current[refreshedProposalId] ?? 0) + 1,
+    }));
+  }, []);
+
+  return (
+    <ProposalDetailWorkspace
+      key={proposalId}
+      proposalId={proposalId}
+      revision={revisionByProposal[proposalId] ?? 0}
+      onAdvanceRevision={advanceRevision}
+    />
+  );
 }
 
-function ProposalDetailWorkspace({ proposalId }: Props) {
-  const [revision, setRevision] = useState(0);
+function ProposalDetailWorkspace({
+  proposalId,
+  revision,
+  onAdvanceRevision,
+}: ProposalDetailWorkspaceProps) {
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -492,7 +515,7 @@ function ProposalDetailWorkspace({ proposalId }: Props) {
       const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
       detailContextTransitionRef.current = true;
-      setRevision((value) => value + 1);
+      onAdvanceRevision(proposalId);
     } catch (err) {
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
         return;

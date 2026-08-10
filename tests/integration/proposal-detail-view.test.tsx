@@ -187,13 +187,13 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 describe("ProposalDetailView", () => {
-  function proposalDetail(state = "DRAFT", proposalId = "pp-1") {
+  function proposalDetail(state = "DRAFT", proposalId = "pp-1", currentVersionNo = 1) {
     return {
       proposal: {
         proposal_id: proposalId,
         current_state: state,
         portfolio_id: "pf_1",
-        current_version_no: 1,
+        current_version_no: currentVersionNo,
       },
       current_version: {
         artifact_hash: "sha256:artifact-001",
@@ -241,11 +241,11 @@ describe("ProposalDetailView", () => {
     };
   }
 
-  function lineageEvidence(proposalId = "pp-1") {
+  function lineageEvidence(proposalId = "pp-1", versionNo = 1) {
     return {
       proposal_id: proposalId,
       versions: [{
-        version_no: 1,
+        version_no: versionNo,
         request_hash: "rh_1",
         simulation_hash: "sh_1",
         artifact_hash: "ah_1",
@@ -1030,6 +1030,80 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
     });
+  });
+
+  it("retains refreshed version evidence after leaving and returning to a proposal", async () => {
+    let completeVersionCreation: (() => void) | undefined;
+    createProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionCreation = () => resolve({
+          data: {
+            proposal: {
+              proposal_id: "pp-1",
+              current_state: "DRAFT",
+              current_version_no: 2,
+            },
+            version: {
+              proposal_version_id: "ppv-2",
+              proposal_id: "pp-1",
+              version_no: 2,
+            },
+            latest_workflow_event: {
+              event_id: "pwe_2",
+              event_type: "NEW_VERSION_CREATED",
+              to_state: "DRAFT",
+              actor_id: "advisor_1",
+              occurred_at: "2026-02-22T00:01:00Z",
+            },
+          },
+        });
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 1))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 2))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2", 1));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-2"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 1))
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 2))
+      .mockResolvedValueOnce(lineageEvidence("pp-2", 1));
+    const proposalCallsBeforeTest = getProposalMock.mock.calls.length;
+    const queryClient = new QueryClient();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await clickReadyButton("Create next version");
+    await waitFor(() => expect(createProposalVersionMock).toHaveBeenCalled());
+    await act(async () => completeVersionCreation?.());
+    await screen.findByText("Version created successfully: 2");
+    await screen.findByText(/Portfolio pf_1 · Version 2/);
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    expect(screen.getByText(/Portfolio pf_1 · Version 2/)).toBeInTheDocument();
+    expect(getProposalMock.mock.calls.length - proposalCallsBeforeTest).toBe(3);
   });
 
   it("does not publish an earlier version lookup after leaving and returning to a proposal", async () => {
