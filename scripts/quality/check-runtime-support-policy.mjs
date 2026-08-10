@@ -117,6 +117,11 @@ export function validateRuntimeSupportPolicy({
   if (runnerStages.length !== 1) {
     failures.push('Dockerfile must declare exactly one Docker stage named "runner".');
   } else {
+    if (dockerModel.stages.at(-1) !== runnerStages[0]) {
+      failures.push(
+        'The named runner stage must be the final Docker stage because protected builds publish the default final stage.'
+      );
+    }
     const userInstructions = runnerStages[0].instructions.filter(
       ({ keyword }) => keyword === "USER"
     );
