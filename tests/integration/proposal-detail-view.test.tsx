@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
@@ -8,6 +8,7 @@ import ProposalDetailView from "../../src/features/proposals/components/proposal
 const {
   createProposalVersionMock,
   getProposalMock,
+  getProposalVersionMock,
   submitProposalMock,
   approveRiskMock,
   approveComplianceMock,
@@ -87,6 +88,13 @@ const {
       },
     },
   })),
+  getProposalVersionMock: vi.fn(async () => ({
+    proposal_id: "pp-1",
+    version_no: 1,
+    status_at_creation: "DRAFT",
+    created_at: "2026-02-22T00:00:00Z",
+    artifact_hash: "sha256:artifact-001",
+  })),
   submitProposalMock: vi.fn(async () => ({ data: { current_state: "RISK_REVIEW" } })),
   approveRiskMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
   approveComplianceMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
@@ -160,6 +168,7 @@ const {
 vi.mock("../../src/features/proposals/api", () => ({
   createProposalVersion: createProposalVersionMock,
   getProposal: getProposalMock,
+  getProposalVersion: getProposalVersionMock,
   submitProposal: submitProposalMock,
   approveRisk: approveRiskMock,
   approveCompliance: approveComplianceMock,
@@ -265,6 +274,13 @@ describe("ProposalDetailView", () => {
     );
   }
 
+  async function clickReadyButton(name: string) {
+    const button = await screen.findByRole("button", { name });
+    await waitFor(() => expect(button).toBeEnabled());
+    fireEvent.click(button);
+    return button;
+  }
+
   it("renders timeline and approvals", async () => {
     getWorkflowEventsMock.mockResolvedValueOnce({
       ...workflowEvidence(),
@@ -285,12 +301,9 @@ describe("ProposalDetailView", () => {
     });
     renderWithQueryClient();
 
-    await waitFor(() => {
-      expect(screen.getByText("Review history")).toBeInTheDocument();
-    });
+    await screen.findByText("Created");
 
     expect(screen.getAllByText("Draft").length).toBeGreaterThan(0);
-    expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("Risk review")).toBeInTheDocument();
     expect(screen.getByText(/svc_RiskOps_A7/)).toBeInTheDocument();
     expect(screen.getByText(/caseSensitive_Review_A7/)).toBeInTheDocument();
@@ -324,11 +337,9 @@ describe("ProposalDetailView", () => {
       .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
     renderWithQueryClient();
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    await waitFor(() => expect(action).toBeEnabled());
+    fireEvent.click(action);
 
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalled();
@@ -375,7 +386,7 @@ describe("ProposalDetailView", () => {
     fireEvent.click(action);
     expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount);
 
-    completeWorkflowRead?.();
+    await act(async () => completeWorkflowRead?.());
     await waitFor(() => expect(action).toBeEnabled());
     fireEvent.click(action);
 
@@ -437,17 +448,19 @@ describe("ProposalDetailView", () => {
     const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
     const previousActionCount = submitProposalMock.mock.calls.length;
 
+    await waitFor(() => expect(action).toBeEnabled());
+    await waitFor(() => expect(evidenceMode).toBeEnabled());
     fireEvent.click(evidenceMode);
+    await waitFor(() => expect(evidenceMode).toBeDisabled());
     fireEvent.click(action);
 
     expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount);
     await waitFor(() => expect(action).toBeDisabled());
-    expect(evidenceMode).toBeDisabled();
     expect(
       screen.getByText("Checking current proposal evidence before actions are available.")
     ).toBeInTheDocument();
 
-    completeDetailRead?.();
+    await act(async () => completeDetailRead?.());
     await waitFor(() => expect(action).toBeEnabled());
     expect(evidenceMode).toBeEnabled();
   });
@@ -467,12 +480,13 @@ describe("ProposalDetailView", () => {
 
     const action = await screen.findByRole("button", { name: "Submit for risk review" });
     const previousCallCount = submitProposalMock.mock.calls.length;
+    await waitFor(() => expect(action).toBeEnabled());
     fireEvent.click(action);
     fireEvent.click(action);
 
     expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
     await waitFor(() => expect(action).toBeDisabled());
-    completeSubmission?.();
+    await act(async () => completeSubmission?.());
     await screen.findByTestId("proposal-action-status");
   });
 
@@ -491,7 +505,7 @@ describe("ProposalDetailView", () => {
       .mockResolvedValueOnce(lineageEvidence());
 
     renderWithQueryClient();
-    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -525,7 +539,7 @@ describe("ProposalDetailView", () => {
       });
 
     renderWithQueryClient();
-    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -551,7 +565,7 @@ describe("ProposalDetailView", () => {
       .mockResolvedValueOnce(lineageEvidence("pp-2"));
 
     renderWithQueryClient();
-    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -577,14 +591,14 @@ describe("ProposalDetailView", () => {
     fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
     const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
     const createVersion = screen.getByRole("button", { name: "Create next version" });
-    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     await waitFor(() => expect(evidenceMode).toBeDisabled());
     expect(createVersion).toBeDisabled();
     fireEvent.click(evidenceMode);
     expect(evidenceMode).not.toBeChecked();
 
-    completeSubmission?.();
+    await act(async () => completeSubmission?.());
     await screen.findByTestId("proposal-action-status");
     expect(evidenceMode).toBeEnabled();
   });
@@ -624,6 +638,7 @@ describe("ProposalDetailView", () => {
     const createVersion = screen.getByRole("button", { name: "Create next version" });
     const previousActionCount = submitProposalMock.mock.calls.length;
 
+    await waitFor(() => expect(createVersion).toBeEnabled());
     fireEvent.click(createVersion);
     await waitFor(() => expect(action).toBeDisabled());
     expect(evidenceMode).toBeDisabled();
@@ -631,7 +646,7 @@ describe("ProposalDetailView", () => {
     fireEvent.click(action);
     expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount);
 
-    completeVersionCreation?.();
+    await act(async () => completeVersionCreation?.());
     expect(await screen.findByText("Version created successfully: 2")).toBeInTheDocument();
     await waitFor(() => expect(action).toBeEnabled());
     expect(evidenceMode).toBeEnabled();
@@ -643,7 +658,7 @@ describe("ProposalDetailView", () => {
     );
     renderWithQueryClient();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -667,7 +682,7 @@ describe("ProposalDetailView", () => {
     const createVersion = screen.getByRole("button", { name: "Create next version" });
     const previousVersionCount = createProposalVersionMock.mock.calls.length;
 
-    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -702,7 +717,7 @@ describe("ProposalDetailView", () => {
     renderWithQueryClient();
 
     fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
-    fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
+    await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
@@ -728,7 +743,7 @@ describe("ProposalDetailView", () => {
       expect(screen.getByRole("button", { name: "Approve risk review" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Approve risk review" }));
+    await clickReadyButton("Approve risk review");
 
     await waitFor(() => {
       expect(approveRiskMock).toHaveBeenCalled();
@@ -757,7 +772,7 @@ describe("ProposalDetailView", () => {
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Record client consent" }));
+    await clickReadyButton("Record client consent");
 
     await waitFor(() => {
       expect(recordClientConsentMock).toHaveBeenCalled();
@@ -773,17 +788,44 @@ describe("ProposalDetailView", () => {
   });
 
   it("reads current_version_no from the proposal envelope after creating a new version", async () => {
+    let completeVersionCreation: (() => void) | undefined;
+    createProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionCreation = () => resolve({
+          data: {
+            proposal: {
+              proposal_id: "pp-1",
+              current_state: "DRAFT",
+              current_version_no: 2,
+            },
+            version: {
+              proposal_version_id: "ppv-2",
+              proposal_id: "pp-1",
+              version_no: 2,
+            },
+            latest_workflow_event: {
+              event_id: "pwe_2",
+              event_type: "NEW_VERSION_CREATED",
+              to_state: "DRAFT",
+              actor_id: "advisor_1",
+              occurred_at: "2026-02-22T00:01:00Z",
+            },
+          },
+        });
+      })
+    );
     renderWithQueryClient();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Create next version" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Create next version" }));
+    await clickReadyButton("Create next version");
 
     await waitFor(() => {
       expect(createProposalVersionMock).toHaveBeenCalled();
     });
+    await act(async () => completeVersionCreation?.());
     await waitFor(() => {
       expect(screen.getByText("Version created successfully: 2")).toBeInTheDocument();
     });
@@ -797,7 +839,7 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(screen.getByRole("region", { name: "Advisor proposal workspace" })).toBeInTheDocument();
     });
-    expect(screen.getByText("Review evidence partially available")).toBeInTheDocument();
+    expect(await screen.findByText("Review evidence partially available")).toBeInTheDocument();
     expect(screen.getByText(/Workflow history could not be refreshed/)).toBeInTheDocument();
     expect(screen.getByText("Proposed changes")).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
@@ -885,7 +927,7 @@ describe("ProposalDetailView", () => {
     );
 
     fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
-    fireEvent.click(screen.getByRole("button", { name: "Create next version" }));
+    await clickReadyButton("Create next version");
     await waitFor(() => expect(createProposalVersionMock).toHaveBeenCalled());
 
     view.rerender(
@@ -893,7 +935,7 @@ describe("ProposalDetailView", () => {
         <ProposalDetailView proposalId="pp-2" />
       </QueryClientProvider>
     );
-    completeVersionCreation?.();
+    await act(async () => completeVersionCreation?.());
 
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
     await waitFor(() => {
@@ -913,7 +955,9 @@ describe("ProposalDetailView", () => {
     );
 
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
-    fireEvent.click(screen.getByRole("tab", { name: "Memo & evidence pack" }));
+    const previousMemoTab = screen.getByRole("tab", { name: "Memo & evidence pack" });
+    fireEvent.click(previousMemoTab);
+    previousMemoTab.focus();
     fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
     expect(screen.getByRole("tab", { name: "Memo & evidence pack" })).toHaveAttribute(
       "aria-selected",
@@ -929,10 +973,108 @@ describe("ProposalDetailView", () => {
 
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
     expect(screen.queryByRole("heading", { level: 1, name: "Proposal pp-1" })).not.toBeInTheDocument();
+    expect(previousMemoTab).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute(
       "aria-selected",
       "true"
     );
     expect(screen.getByTestId("proposal-evidence-disclosure")).not.toHaveAttribute("open");
+  });
+
+  it("does not publish an earlier action completion after leaving and returning to a proposal", async () => {
+    let completeSubmission: (() => void) | undefined;
+    submitProposalMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW", "pp-1"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-2"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW", "pp-1"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW", "pp-1"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1"))
+      .mockResolvedValueOnce(lineageEvidence("pp-2"))
+      .mockResolvedValueOnce(lineageEvidence("pp-1"));
+    const queryClient = new QueryClient();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await clickReadyButton("Submit for risk review");
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+
+    await act(async () => completeSubmission?.());
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    });
+  });
+
+  it("does not publish an earlier version lookup after leaving and returning to a proposal", async () => {
+    let completeVersionLookup: (() => void) | undefined;
+    getProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionLookup = () => resolve({
+          proposal_id: "pp-1",
+          version_no: 9,
+          status_at_creation: "DRAFT",
+          created_at: "2026-02-22T00:00:00Z",
+          artifact_hash: "sha256:old-version",
+        });
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
+    const queryClient = new QueryClient();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    await clickReadyButton("Load version");
+    await waitFor(() => expect(getProposalVersionMock).toHaveBeenCalled());
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+
+    await act(async () => completeVersionLookup?.());
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loaded Version 9")).not.toBeInTheDocument();
+    });
   });
 });
