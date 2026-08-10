@@ -56,8 +56,10 @@ describe("PmOperatingQualitySummaryInvocationControl", () => {
       screen.getByLabelText("PM operating quality summary-invocation control")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Requested by")).toHaveValue("supervisor_sg_1");
-    expect(screen.getByLabelText("Score run id")).toHaveValue("pmq_run_001");
-    expect(screen.getByLabelText("Review action id")).toHaveValue("pmq_review_001");
+    expect(screen.queryByLabelText("Score run id")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Review action id")).not.toBeInTheDocument();
+    expect(screen.getByText("Selected Quality Run")).toBeInTheDocument();
+    expect(screen.getByText("Selected Supervisory Action")).toBeInTheDocument();
     expect(screen.getByText("PM_BOOK_SG_BALANCED | READY | 2026-05-13")).toBeInTheDocument();
     expect(
       screen.getByText("pmq_review_001 | Score Run / pmq_run_001 | PENDING_REVIEW")
@@ -70,11 +72,6 @@ describe("PmOperatingQualitySummaryInvocationControl", () => {
       target: { value: "sha256:summary-evidence" },
     });
     expect(onFormChange).toHaveBeenCalledWith("contentHash", "sha256:summary-evidence");
-
-    fireEvent.change(screen.getByLabelText("Score run id"), {
-      target: { value: "pmq_run_001" },
-    });
-    expect(onFormChange).toHaveBeenCalledWith("scoreRunId", "pmq_run_001");
 
     expect(screen.queryByRole("button", { name: /generate summary/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/prompt body/i)).not.toBeInTheDocument();

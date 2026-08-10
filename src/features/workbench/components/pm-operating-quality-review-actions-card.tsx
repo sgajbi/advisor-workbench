@@ -1,6 +1,6 @@
 "use client";
 
-import { AnalyticsTable, MetricRow, Text } from "@/design-system";
+import { MetricRow, Text } from "@/design-system";
 import PmOperatingQualityReviewActionControl from "@/features/workbench/components/pm-operating-quality-review-action-control";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
@@ -99,40 +99,6 @@ export default function PmOperatingQualityReviewActionsCard({
           </div>
         </div>
 
-        <AnalyticsTable
-          ariaLabel="PM operating quality supervisory review actions"
-          variant="analysis"
-          density="compact"
-          columns={[
-            { key: "action", label: "Review Action" },
-            { key: "target", label: "Target" },
-            { key: "type", label: "Action Type" },
-            { key: "state", label: "State" },
-            { key: "actor", label: "Actor" },
-            { key: "asOf", label: "As Of" },
-            { key: "policy", label: "Policy" },
-            { key: "source", label: "Source Refs" },
-            { key: "reason", label: "Reason" },
-          ]}
-          rows={model.reviewActionRows.map((row) => ({
-            key: row.key,
-            cells: [
-              <strong key={`${row.key}-action`}>{row.reviewActionRef}</strong>,
-              row.target,
-              row.actionType,
-              <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.actionState} />,
-              row.actorId,
-              row.asOfDate,
-              row.policy,
-              row.sourceRefs,
-              formatPmQualityReasonCodeList(row.reasonCodes),
-            ],
-          }))}
-          emptyState={{
-            title: "No supervisory review actions returned",
-            body: "Workbench waits for Manage-persisted PM quality review actions through Gateway.",
-          }}
-        />
       </div>
     </>
   );

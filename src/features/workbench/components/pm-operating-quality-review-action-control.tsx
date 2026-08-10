@@ -70,24 +70,6 @@ export default function PmOperatingQualityReviewActionControl({
             <option value="FAIRNESS_ANALYSIS">Fairness analysis</option>
           </select>
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-review-target-id">
-          Target id
-          <select
-            id="pm-quality-review-target-id"
-            className="workbench-input"
-            value={form.targetId}
-            onChange={(event) => onFormChange("targetId", event.target.value)}
-          >
-            {visibleTargetOptions.some((option) => option.value === form.targetId) ? null : (
-              <option value={form.targetId}>{form.targetId || "Select target"}</option>
-            )}
-            {visibleTargetOptions.map((option) => (
-              <option key={`${option.targetType}-${option.value}`} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="workbench-field-label" htmlFor="pm-quality-review-action-type">
           Action type
           <select
@@ -139,6 +121,10 @@ export default function PmOperatingQualityReviewActionControl({
         aria-label="PM operating quality review-action readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
+        <MetricRow
+          label="Selected Record"
+          value={form.targetId || "No Gateway-returned target selected"}
+        />
         <MetricRow
           label="Source Target"
           value={

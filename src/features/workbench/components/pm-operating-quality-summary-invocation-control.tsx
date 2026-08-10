@@ -56,44 +56,6 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("requestedBy", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-score-run">
-          Score run id
-          <select
-            id="pm-quality-summary-score-run"
-            className="workbench-input"
-            value={form.scoreRunId}
-            onChange={(event) => onFormChange("scoreRunId", event.target.value)}
-          >
-            {scoreRunOptions.some((option) => option.value === form.scoreRunId) ? null : (
-              <option value={form.scoreRunId}>{form.scoreRunId || "Select score run"}</option>
-            )}
-            {scoreRunOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-review-action">
-          Review action id
-          <select
-            id="pm-quality-summary-review-action"
-            className="workbench-input"
-            value={form.reviewActionId}
-            onChange={(event) => onFormChange("reviewActionId", event.target.value)}
-          >
-            {reviewActionOptions.some((option) => option.value === form.reviewActionId) ? null : (
-              <option value={form.reviewActionId}>
-                {form.reviewActionId || "Select review action"}
-              </option>
-            )}
-            {reviewActionOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="workbench-field-label" htmlFor="pm-quality-summary-state">
           Invocation state
           <select
@@ -167,6 +129,14 @@ export default function PmOperatingQualitySummaryInvocationControl({
         aria-label="PM operating quality summary-invocation readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
+        <MetricRow
+          label="Selected Quality Run"
+          value={form.scoreRunId || "No Gateway-returned quality run selected"}
+        />
+        <MetricRow
+          label="Selected Supervisory Action"
+          value={form.reviewActionId || "No Gateway-returned supervisory action selected"}
+        />
         <MetricRow
           label="Score-Run Source"
           value={
