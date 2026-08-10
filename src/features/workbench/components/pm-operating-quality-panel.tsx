@@ -10,6 +10,7 @@ import PmOperatingQualityFairnessEvidenceCard from "@/features/workbench/compone
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm-operating-quality-governance-card";
 import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
+import PmOperatingQualityRecordContext from "@/features/workbench/components/pm-operating-quality-record-context";
 import PmOperatingQualityReviewActionsCard from "@/features/workbench/components/pm-operating-quality-review-actions-card";
 import PmOperatingQualityScoreRunCard from "@/features/workbench/components/pm-operating-quality-score-run-card";
 import PmOperatingQualitySummaryInvocationsCard from "@/features/workbench/components/pm-operating-quality-summary-invocations-card";
@@ -65,6 +66,9 @@ export default function PmOperatingQualityPanel({
 }: Props) {
   const {
     model,
+    selection,
+    pendingFairnessDetail,
+    pendingReviewActionDetail,
     pendingAction,
     pendingFairnessAction,
     pendingFairnessCreateAction,
@@ -90,6 +94,9 @@ export default function PmOperatingQualityPanel({
     summaryInvocationPreviewReady,
     setReviewActionFormValue,
     setSummaryInvocationFormValue,
+    selectScoreRun,
+    selectFairnessAnalysis,
+    selectReviewAction,
     previewScoreRun,
     previewFairnessAnalysis,
     createFairnessAnalysis,
@@ -156,8 +163,8 @@ export default function PmOperatingQualityPanel({
 
       <div className="pm-quality-status-strip">
         <MetricRow label="Policy" value={`${model.policyId} / ${model.policyVersion}`} />
-        <MetricRow label="Latest Score Run" value={model.scoreRunId} />
-        <MetricRow label="Fairness Analysis" value={model.fairnessAnalysisId} />
+        <MetricRow label="Selected Quality Run" value={model.scoreRunId} />
+        <MetricRow label="Selected Fairness Review" value={model.fairnessAnalysisId} />
         <MetricRow label="Summary Invocation" value={model.summaryInvocationId} />
         <MetricRow label="Returned Rows" value={model.count} />
         <MetricRow label="Authority" value={model.authority} />
@@ -174,6 +181,20 @@ export default function PmOperatingQualityPanel({
           <SemanticBadge>No reason codes returned</SemanticBadge>
         )}
       </div>
+
+      <PmOperatingQualityRecordContext
+        model={model}
+        selection={selection}
+        pendingFairnessDetail={pendingFairnessDetail}
+        pendingReviewActionDetail={pendingReviewActionDetail}
+        onScoreRunSelection={selectScoreRun}
+        onFairnessAnalysisSelection={(fairnessAnalysisId) => {
+          void selectFairnessAnalysis(fairnessAnalysisId);
+        }}
+        onReviewActionSelection={(reviewActionId) => {
+          void selectReviewAction(reviewActionId);
+        }}
+      />
 
       <div className="pm-quality-workspace">
         <PmOperatingQualityScoreRunCard

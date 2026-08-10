@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityScoreRunCard from "../../src/features/workbench/components/pm-operating-quality-score-run-card";
@@ -160,11 +160,10 @@ describe("PmOperatingQualityScoreRunCard", () => {
     );
     expect(screen.getByLabelText("PM operating quality support summary posture")).toHaveTextContent("Not requested");
 
-    const table = screen.getByRole("table", { name: "PM operating quality score runs" });
-    expect(within(table).getByText("pmq_run_001")).toBeInTheDocument();
-    expect(within(table).getByText("PM_SG_001 / PM_BOOK_SG_BALANCED")).toBeInTheDocument();
-    expect(within(table).getByText("Ready")).toBeInTheDocument();
-    expect(within(table).queryByText("sha256:hidden")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: "PM operating quality score runs" })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("sha256:hidden")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Preview Score Run" }));
     fireEvent.click(screen.getByRole("button", { name: "Request Support Summary" }));

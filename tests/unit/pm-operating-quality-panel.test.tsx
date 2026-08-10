@@ -392,7 +392,10 @@ describe("PmOperatingQualityPanel", () => {
       screen.getByLabelText("PM operating quality supervisory review-action posture")
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality supervisory review actions")
+      screen.getByLabelText("PM operating quality score-run selection")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("PM operating quality review-action selection")
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("PM operating quality summary-invocation posture")
@@ -415,16 +418,8 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText("As Of").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2026-05-13").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Forbidden Uses").length).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(
-        "Protected Class Inference (protected_class_inference), Autonomous PM Ranking (autonomous_pm_ranking)"
-      ).length
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText("PM Quality Ready (PM_QUALITY_READY)").length).toBeGreaterThan(0);
+    expect(screen.getByText(/no browser prompt, scoring, ranking, trade approval/i)).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
-    expect(
-      screen.getByText("System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001")
-    ).toBeInTheDocument();
     expect(
       screen.getByText("System: lotus-core | Product: MandateTypeSegment | ID: balanced")
     ).toBeInTheDocument();
@@ -434,8 +429,11 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
-    expect(screen.getByLabelText("Target id")).toHaveValue("pmq_run_001");
-    expect(screen.getAllByText("pmq_run_001 / PM_SG_001").length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Target id")).not.toBeInTheDocument();
+    expect(screen.getByText("Selected Record")).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: /PM_SG_001.*PM_BOOK_SG_BALANCED/i })
+    ).toHaveAttribute("aria-selected", "true");
     expect(
       screen.getByLabelText("PM operating quality summary-invocation control")
     ).toBeInTheDocument();
@@ -444,8 +442,8 @@ describe("PmOperatingQualityPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Summary Invocation" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record Summary Invocation" })).toBeDisabled();
-    expect(screen.getByLabelText("Score run id")).toHaveValue("pmq_run_001");
-    expect(screen.getByLabelText("Review action id")).toHaveValue("pmq_review_001");
+    expect(screen.queryByLabelText("Score run id")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Review action id")).not.toBeInTheDocument();
     expect(
       screen.getByText("pmq_review_001 | Score Run / pmq_run_001 | PENDING_REVIEW")
     ).toBeInTheDocument();
@@ -782,6 +780,150 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(previewDpmPmOperatingQualityScoreRun).not.toHaveBeenCalled();
     expect(previewDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+  });
+
+  it("binds support and summary commands to records selected in the supervisory context", async () => {
+    const secondScoreRun = {
+      score_run_id: "pmq_run_002",
+      pm_id: "PM_SG_002",
+      book_id: "PM_BOOK_SG_INCOME",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      state: "REVIEW_REQUIRED",
+      score: "74.00",
+      as_of_date: "2026-05-13",
+      content_hash: "sha256:pm-quality-second",
+      reason_codes: ["PM_QUALITY_REVIEW_REQUIRED"],
+      forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityScoreRun",
+          source_id: "pmq_run_002",
+        },
+      ],
+    };
+    const secondReviewAction = {
+      review_action_id: "pmq_review_002",
+      review_action_ref: "PMQ-RA-002",
+      target_type: "SCORE_RUN",
+      target_id: "pmq_run_002",
+      action_type: "REQUEST_EVIDENCE_REMEDIATION",
+      action_state: "REVIEW_REQUIRED",
+      actor_id: "supervisor_sg_2",
+      as_of_date: "2026-05-13",
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      reason_codes: ["PM_QUALITY_REVIEW_ACTION_READY"],
+      operating_boundaries: ["NO_CLIENT_COMMUNICATION", "NO_TRADE_OR_EXECUTION"],
+      source_refs: [
+        {
+          source_system: "lotus-manage",
+          source_product: "PmOperatingQualityReviewAction",
+          source_id: "pmq_review_002",
+        },
+      ],
+    };
+    const multiScoreRuns: DpmPmOperatingQualityGatewayResponse = {
+      ...scoreRuns,
+      supportability: { ...scoreRuns.supportability, count: 2 },
+      data: {
+        ...scoreRuns.data,
+        score_runs: [
+          ...((scoreRuns.data.score_runs as Array<Record<string, unknown>> | undefined) ?? []),
+          secondScoreRun,
+        ],
+      },
+    };
+    const multiReviewActions: DpmPmOperatingQualityGatewayResponse = {
+      ...reviewActions,
+      supportability: { ...reviewActions.supportability, count: 2 },
+      data: {
+        review_actions: [
+          ...((reviewActions.data.review_actions as
+            | Array<Record<string, unknown>>
+            | undefined) ?? []),
+          secondReviewAction,
+        ],
+      },
+    };
+    const secondReviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
+      ...reviewActionDetail,
+      supportability: {
+        ...reviewActionDetail.supportability,
+        review_action_id: "pmq_review_002",
+      },
+      data: {
+        review_action: {
+          ...secondReviewAction,
+          bounded_review_rationale: "Request source-owned evidence remediation.",
+          forbidden_uses: ["client_contact", "oms_routing", "trade_execution"],
+        },
+      },
+    };
+
+    vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue({
+      ...summaryResponse,
+      supportability: {
+        ...summaryResponse.supportability,
+        score_run_id: "pmq_run_002",
+      },
+      score_run: {
+        score_run_id: "pmq_run_002",
+        content_hash: "sha256:pm-quality-second",
+      },
+    });
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      secondReviewActionDetail
+    );
+    vi.mocked(previewDpmPmOperatingQualitySummaryInvocation).mockResolvedValue(
+      summaryInvocationDetail
+    );
+
+    render(
+      <PmOperatingQualityPanel
+        policies={policies}
+        scoreRuns={multiScoreRuns}
+        reviewActions={multiReviewActions}
+        reviewActionDetail={reviewActionDetail}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("option", { name: /PM_SG_002.*PM_BOOK_SG_INCOME/i }));
+    expect(
+      screen.getByRole("option", { name: /PM_SG_002.*PM_BOOK_SG_INCOME/i })
+    ).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Request Support Summary" }));
+    await waitFor(() => {
+      expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
+        scoreRunId: "pmq_run_002",
+      });
+    });
+
+    fireEvent.click(screen.getByRole("option", { name: /PMQ-RA-002/i }));
+    await waitFor(() => {
+      expect(getDpmPmOperatingQualityReviewAction).toHaveBeenCalledWith(
+        "pmq_review_002",
+        "client"
+      );
+    });
+    expect(screen.getByRole("option", { name: /PMQ-RA-002/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview Summary Invocation" }));
+    await waitFor(() => {
+      expect(previewDpmPmOperatingQualitySummaryInvocation).toHaveBeenCalledWith({
+        request: expect.objectContaining({
+          score_run_id: "pmq_run_002",
+          review_action_id: "pmq_review_002",
+          summary_ref: "PMQ-SUMMARY-pmq_run_002",
+        }),
+        actorId: "workbench-pm-operating-quality-supervisor",
+        correlationId: "corr-workbench-pm-quality-summary-invocation-panel-test",
+      });
+    });
   });
 
   it("previews and records summary invocations through Gateway after review evidence", async () => {

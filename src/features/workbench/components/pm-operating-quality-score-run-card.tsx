@@ -2,12 +2,9 @@
 
 import {
   ActionButton,
-  AnalyticsTable,
   MetricRow,
   Text,
 } from "@/design-system";
-import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
-import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
 import type {
   PmQualityActionError,
@@ -127,40 +124,6 @@ export default function PmOperatingQualityScoreRunCard({
         <MetricRow label="Summary Supportability" value={model.summaryPosture.supportability} />
         <MetricRow label="Support Boundary" value={model.summaryPosture.boundary} />
       </div>
-      <AnalyticsTable
-        ariaLabel="PM operating quality score runs"
-        variant="analysis"
-        density="compact"
-        columns={[
-          { key: "scoreRun", label: "Score Run" },
-          { key: "pm", label: "PM / Book" },
-          { key: "policy", label: "Policy" },
-          { key: "asOf", label: "As Of" },
-          { key: "state", label: "State" },
-          { key: "score", label: "Score" },
-          { key: "forbiddenUses", label: "Forbidden Uses" },
-          { key: "source", label: "Source Refs" },
-          { key: "reason", label: "Reason" },
-        ]}
-        rows={model.scoreRunRows.map((row) => ({
-          key: row.key,
-          cells: [
-            <strong key={`${row.key}-id`}>{row.scoreRunId}</strong>,
-            `${row.pmId} / ${row.bookId}`,
-            row.policy,
-            row.asOfDate,
-            <PmOperatingQualityStateBadge key={`${row.key}-state`} state={row.state} />,
-            row.score,
-            row.forbiddenUses,
-            row.sourceRefs,
-            formatPmQualityReasonCodeList(row.reasonCodes),
-          ],
-        }))}
-        emptyState={{
-          title: "No score runs returned",
-          body: "Load or preview Manage score-run evidence before using score-run posture.",
-        }}
-      />
     </div>
   );
 }

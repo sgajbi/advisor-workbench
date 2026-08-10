@@ -106,7 +106,7 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
 };
 
 describe("PmOperatingQualityReviewActionsCard", () => {
-  it("renders review-action ledger and detail without unsupported workflow controls", () => {
+  it("renders selected review-action detail without a duplicate record ledger", () => {
     const model = buildPmOperatingQualityPanelModel({
       policies: null,
       scoreRuns,
@@ -131,8 +131,8 @@ describe("PmOperatingQualityReviewActionsCard", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality supervisory review actions")
-    ).toBeInTheDocument();
+      screen.queryByLabelText("PM operating quality supervisory review actions")
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:pm-quality")).not.toBeInTheDocument();
     expect(screen.queryByText("raw rationale from Manage must not render")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
@@ -191,12 +191,9 @@ describe("PmOperatingQualityReviewActionsCard", () => {
 
     expect(screen.getByText("No detail")).toBeInTheDocument();
     expect(screen.getByText("Awaiting Manage review-action detail")).toBeInTheDocument();
-    expect(screen.getByText("No supervisory review actions returned")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Workbench waits for Manage-persisted PM quality review actions through Gateway."
-      )
-    ).toBeInTheDocument();
+      screen.queryByLabelText("PM operating quality supervisory review actions")
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

@@ -51,7 +51,9 @@ describe("PmOperatingQualityReviewActionControl", () => {
       screen.getByLabelText("PM operating quality supervisory review-action control")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Supervisor actor")).toHaveValue("supervisor_sg_1");
-    expect(screen.getByLabelText("Target id")).toHaveValue("pmq_run_001");
+    expect(screen.queryByLabelText("Target id")).not.toBeInTheDocument();
+    expect(screen.getByText("Selected Record")).toBeInTheDocument();
+    expect(screen.getByText("pmq_run_001")).toBeInTheDocument();
     expect(screen.getByText("PM_BOOK_SG_BALANCED | READY | 2026-05-13")).toBeInTheDocument();
     expect(screen.getByText("Preview required before create")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview Review Action" })).toBeEnabled();
@@ -65,10 +67,10 @@ describe("PmOperatingQualityReviewActionControl", () => {
       "boundedRationale",
       "Updated bounded rationale."
     );
-    fireEvent.change(screen.getByLabelText("Target id"), {
-      target: { value: "pmq_run_001" },
+    fireEvent.change(screen.getByLabelText("Target type"), {
+      target: { value: "FAIRNESS_ANALYSIS" },
     });
-    expect(onFormChange).toHaveBeenCalledWith("targetId", "pmq_run_001");
+    expect(onFormChange).toHaveBeenCalledWith("targetType", "FAIRNESS_ANALYSIS");
     expect(screen.queryByRole("button", { name: /message client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /approve trade/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();

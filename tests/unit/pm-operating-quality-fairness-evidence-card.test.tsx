@@ -136,7 +136,6 @@ describe("PmOperatingQualityFairnessEvidenceCard", () => {
     expect(screen.getByText("Fairness Analysis Detail")).toBeInTheDocument();
     expect(screen.getByText("Fairness analysis returned by Gateway")).toBeInTheDocument();
     expect(screen.getByText("PmOperatingQualityFairnessAnalysis / v1")).toBeInTheDocument();
-    expect(screen.getAllByText("pmq_fair_001").length).toBeGreaterThan(0);
     expect(screen.getByText("15.00")).toBeInTheDocument();
     expect(screen.getAllByText("18.00").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Balanced DPM Mandates").length).toBeGreaterThan(0);
@@ -165,7 +164,9 @@ describe("PmOperatingQualityFairnessEvidenceCard", () => {
 
     expect(screen.getByText("No detail")).toBeInTheDocument();
     expect(screen.getByText("Awaiting persisted analysis detail or preview")).toBeInTheDocument();
-    expect(screen.getByText("No persisted fairness analyses returned")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: "PM operating quality fairness analyses" })
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality source segments")).toBeInTheDocument();
     expect(screen.getByText("Balanced DPM Mandates")).toBeInTheDocument();
     expect(screen.getByText("Run a Manage fairness preview to inspect source-defined segment posture."))
