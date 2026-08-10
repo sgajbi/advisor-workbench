@@ -19,6 +19,7 @@ services:
       - BFF_BASE_URL=http://host.docker.internal:8100
       - LOTUS_ENVIRONMENT=test
       - WORKBENCH_IDEA_AUTH_MODE=development_configured
+      - WORKBENCH_DEPLOYMENT_ID=local-ci-parity
 
 volumes:
   ci-local-node-modules:

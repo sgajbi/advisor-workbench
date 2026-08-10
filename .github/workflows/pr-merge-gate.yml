@@ -23,6 +23,8 @@ jobs:
     name: PR Merge Gate / Lint Typecheck Coverage Build
     needs: [workflow-lint]
     runs-on: ubuntu-latest
+    env:
+      WORKBENCH_DEPLOYMENT_ID: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -57,6 +59,8 @@ jobs:
     needs: [quality-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      WORKBENCH_DEPLOYMENT_ID: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -87,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Build image
-        run: docker build -t lotus-workbench:ci-test .
+        run: docker build --build-arg WORKBENCH_DEPLOYMENT_ID="${{ github.event.pull_request.head.sha || github.sha }}" -t lotus-workbench:ci-test .
       - name: Reject fixable high and critical image vulnerabilities
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:

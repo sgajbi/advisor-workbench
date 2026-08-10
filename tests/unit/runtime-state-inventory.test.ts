@@ -90,6 +90,17 @@ describe("runtime state inventory", () => {
     );
   });
 
+  it("rejects removal of rolling deployment identity protection", () => {
+    const evidence = loadEvidence();
+    evidence.nextConfig = evidence.nextConfig
+      .replace(/const deploymentId =[\s\S]*?;\r?\n\r?\n/, "")
+      .replace(/^\s*deploymentId,\r?\n/m, "");
+
+    expect(validateRuntimeStateInventory(evidence)).toContain(
+      "Next configuration must bind deploymentId to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
+    );
+  });
+
   it("rejects expired state review and remediation exceptions", () => {
     const evidence = loadEvidence();
     evidence.today = "2026-10-01";
