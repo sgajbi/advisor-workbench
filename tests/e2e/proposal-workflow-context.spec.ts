@@ -34,6 +34,7 @@ async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[
   const reviews = [
     {
       evaluation_id: "pev_001",
+      portfolio_id: portfolioId,
       proposal_id: "PRP-RISK-001",
       proposal_version_id: "ppv_001",
       policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
@@ -46,6 +47,7 @@ async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[
     },
     {
       evaluation_id: "pev_002",
+      portfolio_id: portfolioId,
       proposal_id: "PRP-INCOME-002",
       proposal_version_id: "ppv_002",
       policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",

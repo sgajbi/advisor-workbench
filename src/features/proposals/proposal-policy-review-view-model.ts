@@ -8,6 +8,7 @@ import type {
 
 export type PolicyReviewQueueRow = {
   evaluationId: string;
+  portfolioId: string;
   proposalId: string;
   proposalVersion: string;
   policyPack: string;
@@ -93,6 +94,7 @@ export function buildPolicyReviewQueueModel({
 
     return {
       evaluationId: stringValue(record.evaluation_id, "Evaluation not reported"),
+      portfolioId: stringValue(record.portfolio_id, "Portfolio not reported"),
       proposalId,
       proposalVersion: stringValue(record.proposal_version_id, "Version not reported"),
       policyPack: policyLabel(record.policy_pack_id, record.policy_version),
@@ -165,10 +167,14 @@ export function buildPolicyEvaluationEvidenceModel({
   evaluation,
   signOffPackage,
   workflow,
+  selectedReview,
+  portfolioId,
 }: {
   evaluation?: AdvisoryPolicyEvaluationRecord | null;
   signOffPackage?: AdvisoryPolicySignOffPackageData | null;
   workflow?: AdvisoryPolicyWorkflowData | null;
+  selectedReview?: PolicyReviewQueueRow | null;
+  portfolioId?: string | null;
 }): PolicyEvaluationEvidenceModel | null {
   if (!evaluation) {
     return null;
@@ -187,6 +193,7 @@ export function buildPolicyEvaluationEvidenceModel({
   const workflowBlockers = stringArray(workflow?.sign_off_blockers);
   const sourceEvaluationHash = stringValue(evaluation.evaluation_hash, "");
   const evaluationId = stringValue(evaluation.evaluation_id, "Evaluation not reported");
+  const evaluationPortfolioId = stringValue(evaluation.portfolio_id, "Portfolio not reported");
   const proposalId = stringValue(evaluation.proposal_id, "Proposal not reported");
   const proposalVersion = stringValue(evaluation.proposal_version_id, "Version not reported");
 
@@ -199,6 +206,9 @@ export function buildPolicyEvaluationEvidenceModel({
       evaluationId,
       proposalId,
       proposalVersion,
+      evaluationPortfolioId,
+      selectedReview,
+      portfolioId,
       signOffPackage,
       workflow,
     }),
@@ -237,17 +247,31 @@ function sourceIdentityAligned({
   evaluationId,
   proposalId,
   proposalVersion,
+  evaluationPortfolioId,
+  selectedReview,
+  portfolioId,
   signOffPackage,
   workflow,
 }: {
   evaluationId: string;
   proposalId: string;
   proposalVersion: string;
+  evaluationPortfolioId: string;
+  selectedReview?: PolicyReviewQueueRow | null;
+  portfolioId?: string | null;
   signOffPackage?: AdvisoryPolicySignOffPackageData | null;
   workflow?: AdvisoryPolicyWorkflowData | null;
 }): boolean {
   const packageEvaluation = signOffPackage?.evaluation;
   return (
+    (!selectedReview ||
+      (evaluationId === selectedReview.evaluationId &&
+        proposalId === selectedReview.proposalId &&
+        proposalVersion === selectedReview.proposalVersion &&
+        evaluationPortfolioId === selectedReview.portfolioId)) &&
+    (!portfolioId ||
+      (evaluationPortfolioId === portfolioId &&
+        (!selectedReview || selectedReview.portfolioId === portfolioId))) &&
     valuesAgree(evaluationId, [
       packageEvaluation?.evaluation_id,
       signOffPackage?.lineage?.evaluation_id,

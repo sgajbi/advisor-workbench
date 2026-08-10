@@ -13,6 +13,7 @@ describe("proposal policy review view model", () => {
       records: [
         {
           evaluation_id: "pev_001",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
           proposal_id: "PRP-SUITABILITY",
           proposal_version_id: "ppv_001",
           policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
@@ -30,6 +31,7 @@ describe("proposal policy review view model", () => {
     expect(model.actionCount).toBe(1);
     expect(model.rows[0]).toMatchObject({
       evaluationId: "pev_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
       proposalId: "PRP-SUITABILITY",
       proposalVersion: "ppv_001",
       policyPack: "SG Private Banking Reference / 2026.05",
@@ -226,6 +228,43 @@ describe("proposal policy review view model", () => {
         proposal_id: "PRP-OTHER",
         proposal_version_id: "ppv_001",
       },
+    });
+
+    expect(model?.sourceIdentityAligned).toBe(false);
+  });
+
+  it("fails closed when detail identity does not match the selected queue record", () => {
+    const selectedReview = buildPolicyReviewQueueModel({
+      records: [
+        {
+          evaluation_id: "pev_001",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          proposal_id: "PRP-ONE",
+          proposal_version_id: "ppv_001",
+        },
+      ],
+    }).rows[0];
+    const model = buildPolicyEvaluationEvidenceModel({
+      evaluation: {
+        evaluation_id: "pev_001",
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        proposal_id: "PRP-OTHER",
+        proposal_version_id: "ppv_other",
+      },
+      signOffPackage: {
+        evaluation: {
+          evaluation_id: "pev_001",
+          proposal_id: "PRP-OTHER",
+          proposal_version_id: "ppv_other",
+        },
+      },
+      workflow: {
+        evaluation_id: "pev_001",
+        proposal_id: "PRP-OTHER",
+        proposal_version_id: "ppv_other",
+      },
+      selectedReview,
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
     });
 
     expect(model?.sourceIdentityAligned).toBe(false);

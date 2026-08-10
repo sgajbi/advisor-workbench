@@ -99,6 +99,9 @@ export default function ProposalLifecycleWorkspace({
     preferredEvaluationId:
       policySelection?.portfolioId === portfolioId ? policySelection.evaluationId : null,
   });
+  const selectedPolicyReview = policyReviewModel.rows.find(
+    (row) => row.evaluationId === selectedPolicyEvaluationId
+  );
   const policyEvaluationQuery = useQuery({
     queryKey: ["advisory-policy-evaluation", portfolioId, selectedPolicyEvaluationId],
     queryFn: async () => await getAdvisoryPolicyEvaluation(selectedPolicyEvaluationId ?? ""),
@@ -168,13 +171,16 @@ export default function ProposalLifecycleWorkspace({
         evaluation: policyEvaluationQuery.data,
         signOffPackage: policySignOffPackageQuery.data,
         workflow: policyWorkflowQuery.data,
+        selectedReview: selectedPolicyReview,
+        portfolioId,
       });
-    return evidenceModel?.evaluationId === selectedPolicyEvaluationId ? evidenceModel : null;
+    return evidenceModel;
   }, [
     policyEvaluationQuery.data,
     policySignOffPackageQuery.data,
     policyWorkflowQuery.data,
-    selectedPolicyEvaluationId,
+    portfolioId,
+    selectedPolicyReview,
   ]);
   const requestMoreEvidenceMutation = useMutation({
     mutationFn: async ({
