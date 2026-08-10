@@ -1420,15 +1420,36 @@ describe("portfolio api", () => {
     vi.stubEnv("BFF_BASE_URL", "http://gateway.dev.lotus");
     const originalWindow = global.window;
     vi.stubGlobal("window", undefined);
-    const fetchSpy = vi.fn(async () => jsonResponse({ items: [] }));
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ items: [] }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          items: [
+            {
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+              display_name: "Global Balanced Mandate",
+              base_currency: "USD",
+              client_id: "CIF_001",
+              booking_center_code: "Singapore",
+            },
+          ],
+        }),
+      );
     vi.stubGlobal("fetch", fetchSpy);
 
     try {
-      await getPortfolioCatalog();
+      const firstCatalog = await getPortfolioCatalog();
+      const refreshedCatalog = await getPortfolioCatalog();
 
       expect(String((fetchSpy.mock as { lastCall?: unknown[] }).lastCall?.[0] ?? "")).toBe(
         "http://gateway.dev.lotus/api/v1/portfolio/portfolios"
       );
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(firstCatalog).toEqual([]);
+      expect(refreshedCatalog).toEqual([
+        expect.objectContaining({ portfolio_id: "PB_SG_GLOBAL_BAL_001" }),
+      ]);
     } finally {
       if (originalWindow) {
         vi.stubGlobal("window", originalWindow);
