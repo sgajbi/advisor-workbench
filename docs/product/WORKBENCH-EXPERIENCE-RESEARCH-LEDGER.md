@@ -3014,3 +3014,54 @@ cross-repository ownership, and governed delivery rules did not change. The exac
 TypeScript, 343 files and 2,002 tests at 91.57% statement/line coverage, the optimized 25-route
 production build, and all portfolio-record bundle budgets. Protected CI, merge, exact-main, and
 wiki-publication evidence remain required before closure.
+
+## PM Operating Quality Post-Persistence Record Continuity
+
+### Business job
+
+After recording a fairness review or supervisory action, an investment-control supervisor may need
+to compare it with another source record and return to it immediately. The confirmed record must
+remain available during the short interval before Manage's canonical list refresh includes it.
+
+### Current-product research
+
+Research was reviewed on 2026-08-10 from official engineering sources:
+
+1. [React state structure](https://react.dev/learn/choosing-the-state-structure) recommends avoiding
+   duplicated state that must be synchronized. Workbench therefore keeps the returned source
+   response and derives the combined selector projection rather than copying fields into a second
+   browser-owned record.
+2. [Apollo Client mutation guidance](https://www.apollographql.com/docs/react/data/mutations)
+   documents the broader create-mutation problem: a returned entity is not automatically present
+   in an already-loaded list. Workbench adopts the identity-based projection principle without
+   introducing Apollo or a new cache dependency.
+
+### Adopted decisions
+
+1. Retain only the successful Gateway/Manage response; never create an optimistic or synthetic PM
+   quality record.
+2. Compose selected detail, preview, canonical list, and retained persisted response at the shared
+   view-model boundary so both fairness and review-action selectors use one rule.
+3. Deduplicate by Manage-owned fairness-analysis or review-action identity.
+4. Put the retained projection after the canonical list so refreshed source facts supersede it
+   without a duplicate, then retire the temporary response once that source identity is present;
+   preserve exact selected detail when the supervisor is actively inspecting that record.
+5. Prove persist, select-away, reselect, canonical refresh, and source supersession below the browser
+   layer so the lifecycle cannot regress behind a visually plausible selector.
+
+### Rejected decisions
+
+1. Fabricating a browser record from the create request, because source persistence and returned
+   facts must be confirmed first.
+2. Mutating the parent response object, because it blurs source ownership and creates synchronization
+   debt.
+3. Adding Apollo, TanStack Query, or another cache framework for this bounded state-composition gap.
+4. Clearing the retained response merely because another record is selected, because that recreates
+   the observed workflow break.
+
+### Validation and publication decision
+
+Workbench #603 owns the slice. The Gateway contract, supported-feature scope, visual composition,
+operator procedure, README, wiki source, central context, and skills do not change. Focused and
+aggregate evidence, protected review/CI, exact-main proof, issue closure, and branch hygiene remain
+required before closure.
