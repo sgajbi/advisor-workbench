@@ -570,6 +570,16 @@ describe("PM operating quality view model", () => {
       correlation_id: "corr-fairness-create-002",
       data: { fairness_analysis: retainedFairnessRecord },
     };
+    const anotherRetainedFairnessRecord = {
+      ...retainedFairnessRecord,
+      fairness_analysis_id: "pmq_fair_003",
+      as_of_date: "2026-05-15",
+    };
+    const anotherRetainedFairnessAnalysis = {
+      ...retainedFairnessAnalysis,
+      correlation_id: "corr-fairness-create-003",
+      data: { fairness_analysis: anotherRetainedFairnessRecord },
+    };
     const existingReviewAction = (
       reviewActions.data.review_actions as Array<Record<string, unknown>>
     )[0];
@@ -584,30 +594,46 @@ describe("PM operating quality view model", () => {
       correlation_id: "corr-review-action-create-002",
       data: { review_action: retainedReviewActionRecord },
     };
+    const anotherRetainedReviewActionRecord = {
+      ...retainedReviewActionRecord,
+      review_action_id: "pmq_review_003",
+      review_action_ref: "PMQ-RA-003",
+      as_of_date: "2026-05-15",
+    };
+    const anotherRetainedReviewAction = {
+      ...retainedReviewAction,
+      correlation_id: "corr-review-action-create-003",
+      data: { review_action: anotherRetainedReviewActionRecord },
+    };
 
     const retainedModel = buildPmOperatingQualityPanelModel({
       policies,
       scoreRuns,
       fairnessAnalyses,
-      retainedFairnessAnalysis,
+      retainedFairnessAnalyses: [
+        retainedFairnessAnalysis,
+        anotherRetainedFairnessAnalysis,
+      ],
       reviewActions,
-      retainedReviewAction,
+      retainedReviewActions: [retainedReviewAction, anotherRetainedReviewAction],
       selection: {
-        fairnessAnalysisId: "pmq_fair_002",
-        reviewActionId: "pmq_review_002",
+        fairnessAnalysisId: "pmq_fair_003",
+        reviewActionId: "pmq_review_003",
       },
     });
 
     expect(retainedModel.fairnessAnalysisRows.map((row) => row.fairnessAnalysisId)).toEqual([
       "pmq_fair_001",
       "pmq_fair_002",
+      "pmq_fair_003",
     ]);
     expect(retainedModel.reviewActionRows.map((row) => row.reviewActionId)).toEqual([
       "pmq_review_001",
       "pmq_review_002",
+      "pmq_review_003",
     ]);
-    expect(retainedModel.fairnessDetail.asOfDate).toBe("2026-05-14");
-    expect(retainedModel.reviewActionDetail.reviewActionRef).toBe("PMQ-RA-002");
+    expect(retainedModel.fairnessDetail.asOfDate).toBe("2026-05-15");
+    expect(retainedModel.reviewActionDetail.reviewActionRef).toBe("PMQ-RA-003");
 
     const refreshedFairnessRecord = {
       ...retainedFairnessRecord,
@@ -623,22 +649,37 @@ describe("PM operating quality view model", () => {
       scoreRuns,
       fairnessAnalyses: {
         ...fairnessAnalyses,
-        data: { fairness_analyses: [existingFairness, refreshedFairnessRecord] },
+        data: {
+          fairness_analyses: [
+            existingFairness,
+            refreshedFairnessRecord,
+            anotherRetainedFairnessRecord,
+          ],
+        },
       },
-      retainedFairnessAnalysis,
+      retainedFairnessAnalyses: [
+        retainedFairnessAnalysis,
+        anotherRetainedFairnessAnalysis,
+      ],
       reviewActions: {
         ...reviewActions,
-        data: { review_actions: [existingReviewAction, refreshedReviewActionRecord] },
+        data: {
+          review_actions: [
+            existingReviewAction,
+            refreshedReviewActionRecord,
+            anotherRetainedReviewActionRecord,
+          ],
+        },
       },
-      retainedReviewAction,
+      retainedReviewActions: [retainedReviewAction, anotherRetainedReviewAction],
       selection: {
         fairnessAnalysisId: "pmq_fair_001",
         reviewActionId: "pmq_review_001",
       },
     });
 
-    expect(refreshedModel.fairnessAnalysisRows).toHaveLength(2);
-    expect(refreshedModel.reviewActionRows).toHaveLength(2);
+    expect(refreshedModel.fairnessAnalysisRows).toHaveLength(3);
+    expect(refreshedModel.reviewActionRows).toHaveLength(3);
     expect(
       refreshedModel.fairnessAnalysisRows.find(
         (row) => row.fairnessAnalysisId === "pmq_fair_002",

@@ -3038,16 +3038,16 @@ Research was reviewed on 2026-08-10 from official engineering sources:
 
 ### Adopted decisions
 
-1. Retain only the successful Gateway/Manage response; never create an optimistic or synthetic PM
-   quality record.
+1. Retain every successful Gateway/Manage response by source identity until the owning list carries
+   it; never create an optimistic or synthetic PM quality record.
 2. Compose selected detail, preview, canonical list, and retained persisted response at the shared
    view-model boundary so both fairness and review-action selectors use one rule.
 3. Deduplicate by Manage-owned fairness-analysis or review-action identity.
-4. Put the retained projection after the canonical list so refreshed source facts supersede it
-   without a duplicate, then retire the temporary response once that source identity is present;
+4. Put retained projections after the canonical list so refreshed source facts supersede them
+   without duplicates, then retire every temporary response whose source identity is present;
    preserve exact selected detail when the supervisor is actively inspecting that record.
-5. Prove persist, select-away, reselect, canonical refresh, and source supersession below the browser
-   layer so the lifecycle cannot regress behind a visually plausible selector.
+5. Prove two consecutive persists, select-away, reselect, canonical refresh, and source supersession
+   below the browser layer so the lifecycle cannot regress behind a visually plausible selector.
 
 ### Rejected decisions
 
@@ -3063,7 +3063,12 @@ Research was reviewed on 2026-08-10 from official engineering sources:
 
 Workbench #603 owns the slice. The Gateway contract, supported-feature scope, visual composition,
 operator procedure, README, wiki source, central context, and skills do not change. Focused and
-aggregate evidence are green: the retention model and hook pass 31 focused tests, and the
+aggregate evidence were green before exact-head review: the retention model and hook passed 31
+focused tests, and the
 exact-worktree `make check` passes 343 files and 2,007 tests at 91.58% statement/line coverage plus
-the optimized 25-route build and bundle budgets. Protected review/CI, exact-main proof, issue
-closure, and branch hygiene remain required before closure.
+the optimized 25-route build and bundle budgets. Exact-head review then strengthened the model from
+one retained response per family to identity-keyed collections. Revised proof passes 32 focused
+tests and React Compiler lint. Two refreshed aggregate runs each passed 2,007 of 2,008 tests but hit
+the unrelated load-sensitive DPM-wave timeout tracked by #585; its exact test passes three isolated
+runs. Fresh protected CI, exact-main proof, issue closure, and branch hygiene remain required before
+closure.

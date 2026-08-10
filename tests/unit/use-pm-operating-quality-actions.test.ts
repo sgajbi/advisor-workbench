@@ -630,7 +630,7 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.fairnessCreateEvidence?.fairnessAnalysisId).toBe("pmq_fair_002");
   });
 
-  it("keeps a persisted fairness record selectable until the canonical list refreshes", async () => {
+  it("keeps every persisted fairness record selectable until the canonical list refreshes", async () => {
     const createdFairnessRecord = fairnessAnalysisResponse.data
       .fairness_analysis as Record<string, unknown>;
     const existingFairnessRecord = {
@@ -648,14 +648,29 @@ describe("usePmOperatingQualityActions", () => {
       correlation_id: "corr-pmq-fairness-list-initial",
       data: { fairness_analyses: [existingFairnessRecord] },
     };
-    vi.mocked(createDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
-      fairnessAnalysisResponse,
-    );
+    const thirdFairnessRecord = {
+      ...createdFairnessRecord,
+      fairness_analysis_id: "pmq_fair_003",
+      as_of_date: "2026-05-15",
+    };
+    const thirdFairnessResponse = {
+      ...fairnessAnalysisResponse,
+      correlation_id: "corr-pmq-fairness-create-003",
+      supportability: {
+        ...fairnessAnalysisResponse.supportability,
+        fairness_analysis_id: "pmq_fair_003",
+      },
+      data: { fairness_analysis: thirdFairnessRecord },
+    };
+    vi.mocked(createDpmPmOperatingQualityFairnessAnalysis)
+      .mockResolvedValueOnce(fairnessAnalysisResponse)
+      .mockResolvedValueOnce(thirdFairnessResponse);
     vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockImplementation(
-      async (fairnessAnalysisId) =>
-        fairnessAnalysisId === "pmq_fair_001"
-          ? existingFairnessDetail
-          : fairnessAnalysisResponse,
+      async (fairnessAnalysisId) => {
+        if (fairnessAnalysisId === "pmq_fair_001") return existingFairnessDetail;
+        if (fairnessAnalysisId === "pmq_fair_003") return thirdFairnessResponse;
+        return fairnessAnalysisResponse;
+      },
     );
     const { result, rerender } = renderHook(
       ({ fairnessAnalyses }) =>
@@ -670,15 +685,15 @@ describe("usePmOperatingQualityActions", () => {
     await act(async () => {
       await result.current.createFairnessAnalysis();
     });
-    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_002");
-    expect(result.current.model.fairnessAnalysisRows).toHaveLength(2);
+    await act(async () => {
+      await result.current.createFairnessAnalysis();
+    });
+    expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_003");
+    expect(result.current.model.fairnessAnalysisRows).toHaveLength(3);
     expect(result.current.model.fairnessAnalysisRows.map((row) => row.fairnessAnalysisId)).toEqual(
-      expect.arrayContaining(["pmq_fair_001", "pmq_fair_002"]),
+      expect.arrayContaining(["pmq_fair_001", "pmq_fair_002", "pmq_fair_003"]),
     );
 
-    await act(async () => {
-      await result.current.selectFairnessAnalysis("pmq_fair_001");
-    });
     await act(async () => {
       await result.current.selectFairnessAnalysis("pmq_fair_002");
     });
@@ -697,20 +712,21 @@ describe("usePmOperatingQualityActions", () => {
             {
               ...createdFairnessRecord,
               fairness_analysis_id: "pmq_fair_002",
-              as_of_date: "2026-05-15",
+              as_of_date: "2026-05-16",
             },
+            { ...thirdFairnessRecord, as_of_date: "2026-05-17" },
           ],
         },
       },
     });
 
     await waitFor(() => {
-      expect(result.current.model.fairnessAnalysisRows).toHaveLength(2);
+      expect(result.current.model.fairnessAnalysisRows).toHaveLength(3);
       expect(
         result.current.model.fairnessAnalysisRows.find(
           (row) => row.fairnessAnalysisId === "pmq_fair_002",
         )?.asOfDate,
-      ).toBe("2026-05-15");
+      ).toBe("2026-05-16");
     });
 
     rerender({ fairnessAnalyses: initialFairnessList });
@@ -964,6 +980,79 @@ describe("usePmOperatingQualityActions", () => {
     expect(JSON.stringify(result.current.model.reviewActionDetail)).not.toContain(
       "raw rationale from Manage"
     );
+  });
+
+  it("keeps every persisted review action selectable until the canonical list refreshes", async () => {
+    const createdReviewActionRecord = reviewActionResponse.data
+      .review_action as Record<string, unknown>;
+    const existingReviewActionRecord = {
+      ...createdReviewActionRecord,
+      review_action_id: "pmq_review_001",
+      review_action_ref: "PMQ-REVIEW-001",
+    };
+    const existingReviewActionDetail = {
+      ...reviewActionResponse,
+      correlation_id: "corr-pmq-review-action-detail-001",
+      supportability: {
+        ...reviewActionResponse.supportability,
+        review_action_id: "pmq_review_001",
+      },
+      data: { review_action: existingReviewActionRecord },
+    };
+    const initialReviewActionList = {
+      ...reviewActionResponse,
+      correlation_id: "corr-pmq-review-action-list-initial",
+      data: { review_actions: [existingReviewActionRecord] },
+    };
+    const thirdReviewActionRecord = {
+      ...createdReviewActionRecord,
+      review_action_id: "pmq_review_003",
+      review_action_ref: "PMQ-REVIEW-003",
+    };
+    const thirdReviewActionResponse = {
+      ...reviewActionResponse,
+      correlation_id: "corr-pmq-review-action-create-003",
+      supportability: {
+        ...reviewActionResponse.supportability,
+        review_action_id: "pmq_review_003",
+      },
+      data: { review_action: thirdReviewActionRecord },
+    };
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction)
+      .mockResolvedValueOnce(reviewActionResponse)
+      .mockResolvedValueOnce(thirdReviewActionResponse);
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockImplementation(
+      async (reviewActionId) => {
+        if (reviewActionId === "pmq_review_001") return existingReviewActionDetail;
+        if (reviewActionId === "pmq_review_003") return thirdReviewActionResponse;
+        return reviewActionResponse;
+      },
+    );
+    const { result } = renderActions({ reviewActions: initialReviewActionList });
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+    await act(async () => {
+      await result.current.createReviewAction();
+    });
+    await act(async () => {
+      await result.current.createReviewAction();
+    });
+
+    expect(result.current.selection.reviewActionId).toBe("pmq_review_003");
+    expect(result.current.model.reviewActionRows).toHaveLength(3);
+    expect(result.current.model.reviewActionRows.map((row) => row.reviewActionId)).toEqual(
+      expect.arrayContaining(["pmq_review_001", "pmq_review_002", "pmq_review_003"]),
+    );
+
+    await act(async () => {
+      await result.current.selectReviewAction("pmq_review_002");
+    });
+    expect(result.current.selection.reviewActionId).toBe("pmq_review_002");
   });
 
   it("holds record selection until a persisted review action is acknowledged", async () => {
