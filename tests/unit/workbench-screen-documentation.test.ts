@@ -46,6 +46,38 @@ describe("Workbench screen documentation governance", () => {
     );
   });
 
+  it("executes the registry schema instead of accepting unknown fields", () => {
+    const registry = loadRegistry();
+    registry.unexpectedField = true;
+
+    expect(validate(registry).errors).toContain(
+      "Schema $: unexpected property unexpectedField.",
+    );
+  });
+
+  it("rejects route patterns that drift from their Next.js entrypoint", () => {
+    const registry = loadRegistry();
+    registry.routeEntrypoints.find(
+      (route: { entrypoint: string }) => route.entrypoint === "src/app/proposals/[proposalId]/page.tsx",
+    ).routePattern = "/proposals/:proposalId";
+
+    expect(validate(registry).errors).toContain(
+      "Route src/app/proposals/[proposalId]/page.tsx must use derived pattern /proposals/{proposalId}, not /proposals/:proposalId.",
+    );
+  });
+
+  it("rejects fragment navigation without an implementation-owned target", () => {
+    const registry = loadRegistry();
+    const surface = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "proposal-simulation",
+    );
+    surface.fragment = "simulation";
+
+    expect(validate(registry).errors).toContain(
+      "Surface proposal-simulation fragment target does not exist: #simulation.",
+    );
+  });
+
   it("rejects an active screen without a guide or governed exception", () => {
     const registry = loadRegistry();
     const surface = registry.surfaces.find(

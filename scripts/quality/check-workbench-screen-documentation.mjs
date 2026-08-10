@@ -35,6 +35,134 @@ function setDifference(left, right) {
   return [...left].filter((value) => !right.has(value)).sort();
 }
 
+function resolveSchemaReference(rootSchema, reference) {
+  if (!reference.startsWith("#/")) {
+    throw new Error(`unsupported schema reference ${reference}`);
+  }
+  return reference
+    .slice(2)
+    .split("/")
+    .map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"))
+    .reduce((current, part) => current?.[part], rootSchema);
+}
+
+function matchesSchemaType(value, type) {
+  if (type === "array") return Array.isArray(value);
+  if (type === "integer") return Number.isInteger(value);
+  if (type === "null") return value === null;
+  if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value);
+  return typeof value === type;
+}
+
+function validateJsonSchemaValue(value, schema, rootSchema, location, errors) {
+  if (schema.$ref) {
+    const referencedSchema = resolveSchemaReference(rootSchema, schema.$ref);
+    if (!referencedSchema) {
+      errors.push(`Schema ${location}: unresolved reference ${schema.$ref}.`);
+      return;
+    }
+    validateJsonSchemaValue(value, referencedSchema, rootSchema, location, errors);
+    return;
+  }
+
+  if (schema.oneOf) {
+    const branchErrors = schema.oneOf.map((branch) => {
+      const candidateErrors = [];
+      validateJsonSchemaValue(value, branch, rootSchema, location, candidateErrors);
+      return candidateErrors;
+    });
+    if (branchErrors.filter((candidateErrors) => candidateErrors.length === 0).length !== 1) {
+      errors.push(`Schema ${location}: value does not match exactly one allowed shape.`);
+    }
+    return;
+  }
+
+  if (Object.hasOwn(schema, "const") && value !== schema.const) {
+    errors.push(`Schema ${location}: expected constant ${JSON.stringify(schema.const)}.`);
+  }
+  if (schema.enum && !schema.enum.includes(value)) {
+    errors.push(`Schema ${location}: value ${JSON.stringify(value)} is not allowed.`);
+  }
+
+  const allowedTypes = Array.isArray(schema.type) ? schema.type : schema.type ? [schema.type] : [];
+  if (allowedTypes.length > 0 && !allowedTypes.some((type) => matchesSchemaType(value, type))) {
+    errors.push(`Schema ${location}: expected ${allowedTypes.join(" or ")}.`);
+    return;
+  }
+
+  if (typeof value === "string") {
+    if (schema.minLength !== undefined && value.length < schema.minLength) {
+      errors.push(`Schema ${location}: string is shorter than ${schema.minLength}.`);
+    }
+    if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
+      errors.push(`Schema ${location}: value does not match ${schema.pattern}.`);
+    }
+  }
+
+  if (typeof value === "number" && schema.minimum !== undefined && value < schema.minimum) {
+    errors.push(`Schema ${location}: value is below ${schema.minimum}.`);
+  }
+
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) {
+      errors.push(`Schema ${location}: requires at least ${schema.minItems} items.`);
+    }
+    if (schema.uniqueItems) {
+      const serialized = value.map((item) => JSON.stringify(item));
+      if (new Set(serialized).size !== serialized.length) {
+        errors.push(`Schema ${location}: items must be unique.`);
+      }
+    }
+    if (schema.items) {
+      value.forEach((item, index) =>
+        validateJsonSchemaValue(item, schema.items, rootSchema, `${location}[${index}]`, errors),
+      );
+    }
+  }
+
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    const properties = schema.properties ?? {};
+    for (const requiredProperty of schema.required ?? []) {
+      if (!Object.hasOwn(value, requiredProperty)) {
+        errors.push(`Schema ${location}: missing required property ${requiredProperty}.`);
+      }
+    }
+    if (schema.minProperties !== undefined && Object.keys(value).length < schema.minProperties) {
+      errors.push(`Schema ${location}: requires at least ${schema.minProperties} properties.`);
+    }
+    for (const [property, propertyValue] of Object.entries(value)) {
+      if (properties[property]) {
+        validateJsonSchemaValue(
+          propertyValue,
+          properties[property],
+          rootSchema,
+          `${location}.${property}`,
+          errors,
+        );
+      } else if (schema.additionalProperties === false) {
+        errors.push(`Schema ${location}: unexpected property ${property}.`);
+      } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+        validateJsonSchemaValue(
+          propertyValue,
+          schema.additionalProperties,
+          rootSchema,
+          `${location}.${property}`,
+          errors,
+        );
+      }
+    }
+  }
+}
+
+function deriveRoutePattern(entrypoint) {
+  const routeSource = entrypoint
+    .replace(/^src\/app/, "")
+    .replace(/\/page\.tsx$/, "")
+    .replace(/\/\([^/]+\)/g, "")
+    .replace(/\[([^\]]+)\]/g, "{$1}");
+  return routeSource || "/";
+}
+
 function extractAuthorityModes(source, authority) {
   const symbolOffset = source.indexOf(authority.symbol);
   if (symbolOffset === -1) {
@@ -79,6 +207,17 @@ export function validateScreenDocumentation({
   const registry =
     registryData ?? JSON.parse(fs.readFileSync(absoluteRegistryPath, "utf8"));
   const errors = [];
+
+  const schemaReference = registry?.$schema;
+  const schemaPath = schemaReference
+    ? path.resolve(path.dirname(absoluteRegistryPath), schemaReference)
+    : null;
+  if (!schemaPath || !fs.existsSync(schemaPath)) {
+    errors.push(`Registry schema does not exist: ${schemaReference ?? "missing"}.`);
+  } else {
+    const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+    validateJsonSchemaValue(registry, schema, schema, "$", errors);
+  }
 
   if (registry.schemaVersion !== "lotus.workbench.screen-registry.v1") {
     errors.push(`Unsupported schemaVersion: ${registry.schemaVersion ?? "missing"}.`);
@@ -126,6 +265,12 @@ export function validateScreenDocumentation({
 
   const surfaceIds = new Set(surfaces.map((surface) => surface.id));
   for (const route of routes) {
+    const derivedRoutePattern = deriveRoutePattern(route.entrypoint);
+    if (route.routePattern !== derivedRoutePattern) {
+      errors.push(
+        `Route ${route.entrypoint} must use derived pattern ${derivedRoutePattern}, not ${route.routePattern}.`,
+      );
+    }
     for (const surfaceId of route.canonicalSurfaceIds ?? []) {
       if (!surfaceIds.has(surfaceId)) {
         errors.push(`Route ${route.routePattern} references unknown surface ${surfaceId}.`);
@@ -165,6 +310,23 @@ export function validateScreenDocumentation({
     ]) {
       if (!fs.existsSync(path.resolve(rootDirectory, evidencePath))) {
         errors.push(`Surface ${surface.id} evidence does not exist: ${evidencePath}.`);
+      }
+    }
+
+    if (surface.fragment) {
+      const escapedFragment = surface.fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const fragmentPattern = new RegExp(
+        `\\bid\\s*=\\s*(?:["']${escapedFragment}["']|\\{\\s*["']${escapedFragment}["']\\s*\\})`,
+      );
+      const ownsFragment = (surface.implementationEvidence ?? []).some((evidencePath) => {
+        const absoluteEvidencePath = path.resolve(rootDirectory, evidencePath);
+        return (
+          fs.existsSync(absoluteEvidencePath) &&
+          fragmentPattern.test(fs.readFileSync(absoluteEvidencePath, "utf8"))
+        );
+      });
+      if (!ownsFragment) {
+        errors.push(`Surface ${surface.id} fragment target does not exist: #${surface.fragment}.`);
       }
     }
 
