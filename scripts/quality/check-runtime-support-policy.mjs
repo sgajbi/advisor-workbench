@@ -8,6 +8,7 @@ import {
   isRecord,
   isUnconditionalWorkflowStep,
   normalizeInstruction,
+  parseDockerExecArguments,
   parseDockerfile,
   parseWorkflow,
   usesGovernedExecutingShell,
@@ -518,26 +519,6 @@ function expectDockerStageBase(failures, stage, name, expectedBase) {
     failures.push(
       `The named ${name} stage must descend directly from ${expectedBase}; received ${JSON.stringify(stage.base)}.`
     );
-  }
-}
-
-function parseDockerExecArguments(value) {
-  const normalized = value.trim();
-  const arrayStart = normalized.indexOf("[");
-  if (arrayStart < 0) {
-    return undefined;
-  }
-  const prefix = normalized.slice(0, arrayStart).trim();
-  if (prefix && !prefix.split(/\s+/).every((token) => token.startsWith("--"))) {
-    return undefined;
-  }
-  try {
-    const parsed = JSON.parse(normalized.slice(arrayStart));
-    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string")
-      ? parsed
-      : undefined;
-  } catch {
-    return undefined;
   }
 }
 

@@ -109,7 +109,8 @@ Adopted under [#616](https://github.com/sgajbi/lotus-workbench/issues/616):
    the production runner stage; and
 4. preserve token adjacency when Docker escape continuations remove newlines, require the default
    backslash parser escape after normalizing Docker's supported leading UTF-8 BOM, consume `RUN` and
-   `COPY` heredoc payloads without interpreting their contents as stage instructions, and reject
+   `COPY` heredoc payloads without interpreting their contents as stage instructions, distinguish
+   JSON-form operands from heredoc syntax through one shared parser, and reject
    `ONBUILD` triggers plus `SHELL` overrides throughout
    the governed stage chain; and
 5. retain focused mutations for commented, missing, duplicate, wrong-stage, indirect,

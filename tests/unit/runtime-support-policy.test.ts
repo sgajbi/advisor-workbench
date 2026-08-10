@@ -703,6 +703,22 @@ describe("runtime support policy", () => {
     expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
   });
 
+  it("does not treat a JSON COPY filename as a heredoc operator", () => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm run build",
+      [
+        `COPY ["<<'RUN npm run build'", "/tmp/policy-example"]`,
+        "RUN npm install express",
+        "RUN npm run build",
+      ].join("\n")
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
   it.each([
     "add",
     "i",
