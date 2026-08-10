@@ -50,7 +50,12 @@ export function usesGovernedExecutingShell({ workflow, job, step }) {
 }
 
 export function parseDockerfile(source) {
-  const model = { globalInstructions: [], stages: [] };
+  const parserDirectives = collectDockerParserDirectives(source);
+  const model = {
+    escapeCharacter: parserDirectives.get("escape") ?? "\\",
+    globalInstructions: [],
+    stages: [],
+  };
   let currentStage;
 
   for (const instruction of collectDockerfileInstructions(source)) {
@@ -167,6 +172,22 @@ function collectDockerfileInstructions(source) {
   }
 
   return instructions;
+}
+
+function collectDockerParserDirectives(source) {
+  const directives = new Map();
+
+  for (const sourceLine of source.split(/\r?\n/)) {
+    const match = sourceLine.match(
+      /^\s*#\s*(?<name>[A-Za-z]+)\s*=\s*(?<value>\S.*?)\s*$/
+    );
+    if (!match?.groups) {
+      break;
+    }
+    directives.set(match.groups.name.toLowerCase(), match.groups.value);
+  }
+
+  return directives;
 }
 
 function collectDockerHeredocs(argument) {
