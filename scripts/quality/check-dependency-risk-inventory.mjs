@@ -86,6 +86,7 @@ const REPLACEMENT_STRATEGIES = new Set([
 ]);
 const SWITCHING_COSTS = new Set(["high", "moderate", "low"]);
 const APPROVED_LICENSES = new Set(["Apache-2.0", "MIT"]);
+const REVIEW_OWNER = "workbench-architecture-maintainers";
 const EXACT_STABLE_VERSION = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const INVENTORY_VERSION = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const GITHUB_ISSUE = /^https:\/\/github\.com\/sgajbi\/lotus-workbench\/issues\/[0-9]+$/;
@@ -176,6 +177,15 @@ function requireText(failures, value, path, minimumLength = 12) {
 function requireHttps(failures, value, path) {
   if (typeof value !== "string" || !HTTPS_URL.test(value)) {
     failures.push(`${path} must be an HTTPS evidence URL.`);
+    return;
+  }
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.hostname.trim() === "") {
+      failures.push(`${path} must be an HTTPS evidence URL with a hostname.`);
+    }
+  } catch {
+    failures.push(`${path} must be a valid HTTPS evidence URL with a hostname.`);
   }
 }
 
@@ -363,7 +373,9 @@ export function validateDependencyRiskInventory({
   if (inventory.admissionMode !== "blocking") {
     failures.push("Inventory admissionMode must be blocking.");
   }
-  requireText(failures, inventory.reviewOwner, "inventory.reviewOwner", 3);
+  if (inventory.reviewOwner !== REVIEW_OWNER) {
+    failures.push(`Inventory reviewOwner must be ${JSON.stringify(REVIEW_OWNER)}.`);
+  }
   requireReviewDates(failures, inventory, "inventory", today);
   validatePlatformPolicy(failures, inventory.platformPolicy);
 

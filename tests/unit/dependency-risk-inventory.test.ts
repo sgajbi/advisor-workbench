@@ -136,6 +136,22 @@ describe("direct production dependency risk inventory", () => {
     );
   });
 
+  it("rejects HTTPS-shaped evidence without a usable hostname", () => {
+    const evidence = loadEvidence();
+    const zod = dependency(evidence, "zod");
+    zod.stewardship.repositoryUrl = "https://";
+    zod.lifecycle.releaseEvidenceUrl = "https://";
+    zod.maturity.adoptionEvidenceUrls = ["https://"];
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("stewardship.repositoryUrl must be a valid HTTPS evidence URL"),
+        expect.stringContaining("lifecycle.releaseEvidenceUrl must be a valid HTTPS evidence URL"),
+        expect.stringContaining("maturity.adoptionEvidenceUrls[0] must be a valid HTTPS evidence URL"),
+      ])
+    );
+  });
+
   it("rejects lockfile license drift and non-versioned package evidence", () => {
     const evidence = loadEvidence();
     evidence.packageLock.packages["node_modules/zod"].license = "Apache-2.0";
@@ -182,6 +198,24 @@ describe("direct production dependency risk inventory", () => {
         expect.stringContaining("maturity.rationale must contain at least 40"),
         expect.stringContaining("containmentBoundary must contain at least 12"),
         expect.stringContaining("replacementPosture is missing required fields: exitPath"),
+      ])
+    );
+  });
+
+  it("binds review ownership to the governed maintainer identity", () => {
+    const evidence = loadEvidence();
+    evidence.inventory.reviewOwner = "abc";
+    evidence.inventory.dependencies.forEach(
+      (entry: { review: { owner: string } }) => {
+        entry.review.owner = "abc";
+      }
+    );
+
+    expect(validateDependencyRiskInventory(evidence)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          'Inventory reviewOwner must be "workbench-architecture-maintainers"'
+        ),
       ])
     );
   });
@@ -237,14 +271,16 @@ describe("direct production dependency risk inventory", () => {
 
   it("executes the complete schema and rejects mutable platform-policy provenance", () => {
     const evidence = loadEvidence();
-    evidence.schema.properties.reviewOwner.minLength = 999;
+    evidence.schema.properties.inventoryVersion.minLength = 999;
     evidence.inventory.platformPolicy.sourceRevision =
       "0000000000000000000000000000000000000000";
     evidence.inventory.platformPolicy.lifecycleStatus = "blocking";
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("JSON Schema /reviewOwner: must NOT have fewer than 999 characters"),
+        expect.stringContaining(
+          "JSON Schema /inventoryVersion: must NOT have fewer than 999 characters"
+        ),
         expect.stringContaining(
           'sourceRevision must be "2868348d289fc685ecf5a218b6c73256ac3a7742"'
         ),

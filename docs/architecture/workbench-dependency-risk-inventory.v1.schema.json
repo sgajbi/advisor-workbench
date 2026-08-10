@@ -45,8 +45,7 @@
       "const": "blocking"
     },
     "reviewOwner": {
-      "type": "string",
-      "minLength": 3
+      "const": "workbench-architecture-maintainers"
     },
     "platformPolicy": {
       "$ref": "#/$defs/platformPolicy"
