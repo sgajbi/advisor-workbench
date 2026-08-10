@@ -712,6 +712,11 @@ Important validation expectations:
     selection preserve the source record across queue reorder, while portfolio changes, removed
     records, and stale query or mutation completions cannot publish posture for a superseded
     selection. Detail-query caches and mutation feedback are scoped by portfolio and evaluation.
+    Action availability requires exact portfolio, evaluation, proposal, and proposal-version
+    agreement between the active route, selected queue record, evaluation detail, sign-off package,
+    and workflow wherever each source reports that identity. A successful but mismatched detail
+    response remains an explicit partial evidence state; it must not collapse to an empty pane or
+    let supporting sources agree with the wrong detail record.
     Workbench may display Advise-owned review queue posture, selected evaluation detail,
     sign-off source-package posture, policy workflow posture, client-publication block posture,
     open approval/disclosure/consent requirements, source-evidence completeness, and advisor next

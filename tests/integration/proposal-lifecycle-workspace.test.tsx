@@ -9,7 +9,11 @@ import {
   ProposalWorkflowContextRail,
 } from "../../src/features/proposals/components/proposal-workflow-context";
 import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
-import type { AdvisoryPolicyWorkflowData } from "../../src/features/proposals/types";
+import type {
+  AdvisoryPolicyEvaluationData,
+  AdvisoryPolicySignOffPackageData,
+  AdvisoryPolicyWorkflowData,
+} from "../../src/features/proposals/types";
 
 const proposalListFixture = {
   items: [
@@ -32,6 +36,7 @@ const policyReviewQueueFixture = {
   items: [
     {
       evaluation_id: "pev_001",
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
       proposal_id: "PRP-RISK",
       proposal_version_id: "ppv_001",
       policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
@@ -45,6 +50,7 @@ const policyReviewQueueFixture = {
 };
 const secondPolicyReviewFixture = {
   evaluation_id: "pev_002",
+  portfolio_id: "PB_SG_GLOBAL_BAL_001",
   proposal_id: "PRP-INCOME",
   proposal_version_id: "ppv_002",
   policy_pack_id: "SG_PRIVATE_BANKING_REFERENCE",
@@ -60,27 +66,31 @@ const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
     policyReviewQueueFixture
 );
-const getAdvisoryPolicyEvaluationMock = vi.fn(async (_evaluationId: string) => ({
-  ...policyReviewQueueFixture.items[0],
-  evaluation_hash: "sha256:policy-evaluation-1",
-  source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
-  evaluation_json: {
-    rule_results: [
-      { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
-      { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
-    ],
-  },
-}));
-const getAdvisoryPolicySignOffPackageMock = vi.fn(async (_evaluationId: string) => ({
-  package_posture: {
-    sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
-    client_ready_publication: "BLOCKED",
-  },
-  lineage: {
-    audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
-    lineage_posture: { client_ready_publication: "BLOCKED" },
-  },
-}));
+const getAdvisoryPolicyEvaluationMock = vi.fn(
+  async (_evaluationId: string): Promise<AdvisoryPolicyEvaluationData> => ({
+    ...policyReviewQueueFixture.items[0],
+    evaluation_hash: "sha256:policy-evaluation-1",
+    source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+    evaluation_json: {
+      rule_results: [
+        { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+        { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+      ],
+    },
+  })
+);
+const getAdvisoryPolicySignOffPackageMock = vi.fn(
+  async (_evaluationId: string): Promise<AdvisoryPolicySignOffPackageData> => ({
+    package_posture: {
+      sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+      client_ready_publication: "BLOCKED",
+    },
+    lineage: {
+      audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+      lineage_posture: { client_ready_publication: "BLOCKED" },
+    },
+  })
+);
 const policyWorkflowFixture: AdvisoryPolicyWorkflowData = {
   sign_off_status: "PENDING_REVIEW",
   sign_off_blockers: [
@@ -487,6 +497,72 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
     ).toBeInTheDocument();
+  });
+
+  it("keeps a mismatched evaluation detail explicit and fail closed", async () => {
+    getAdvisoryPolicyEvaluationMock.mockResolvedValueOnce({
+      ...policyReviewQueueFixture.items[0],
+      evaluation_id: "pev_other",
+      evaluation_hash: "sha256:wrong-evaluation",
+    });
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(
+      await screen.findByText("Selected policy evidence is unconfirmed")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
+    ).toBeInTheDocument();
+  });
+
+  it("validates detail identity against the selected queue record before enabling action", async () => {
+    getAdvisoryPolicyEvaluationMock.mockResolvedValueOnce({
+      ...policyReviewQueueFixture.items[0],
+      proposal_id: "PRP-OTHER",
+      proposal_version_id: "ppv_other",
+      evaluation_hash: "sha256:wrong-proposal",
+    });
+    getAdvisoryPolicySignOffPackageMock.mockResolvedValueOnce({
+      evaluation: {
+        evaluation_id: "pev_001",
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        proposal_id: "PRP-OTHER",
+        proposal_version_id: "ppv_other",
+      },
+      lineage: { evaluation_id: "pev_001" },
+    });
+    getAdvisoryPolicyWorkflowMock.mockResolvedValueOnce({
+      evaluation_id: "pev_001",
+      proposal_id: "PRP-OTHER",
+      proposal_version_id: "ppv_other",
+      sign_off_status: "PENDING_REVIEW",
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    );
+
+    expect(
+      await screen.findByText("Selected policy evidence is unconfirmed")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /PRP-RISK/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
+    expect(recordAdvisoryPolicySignOffDecisionMock).not.toHaveBeenCalled();
   });
 
   it("navigates bounded proposal source windows without claiming queue completeness", async () => {
