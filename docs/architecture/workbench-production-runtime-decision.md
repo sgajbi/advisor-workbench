@@ -107,7 +107,10 @@ Adopted under [#616](https://github.com/sgajbi/lotus-workbench/issues/616):
    relying on its incidental presence below another tool;
 3. read active Dockerfile instructions by named stage and evaluate the final `USER` directive in
    the production runner stage; and
-4. retain focused mutations for commented, missing, duplicate, wrong-stage, and superseded proof.
+4. preserve token adjacency when Docker escape continuations remove newlines, and reject `ONBUILD`
+   triggers plus `SHELL` overrides throughout the governed stage chain; and
+5. retain focused mutations for commented, missing, duplicate, wrong-stage, indirect,
+   reinterpreted, and superseded proof.
 
 Rejected:
 
@@ -115,8 +118,9 @@ Rejected:
    unrelated stages can satisfy them;
 2. adding workflow or Docker parsing to the Workbench runtime bundle, because these controls belong
    only to development and CI; and
-3. a broad new Docker parsing dependency for the bounded `FROM`, `RUN`, and `USER` invariants, which
-   would enlarge the quality-tool supply chain without improving the governed evidence needed here.
+3. a broad new Docker parsing dependency for the bounded `FROM`, `RUN`, `USER`, `ONBUILD`, `SHELL`,
+   and continuation invariants, which would enlarge the quality-tool supply chain without improving
+   the governed evidence needed here.
 
 ## Evidence sources
 

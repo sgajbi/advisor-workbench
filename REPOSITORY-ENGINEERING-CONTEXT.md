@@ -570,9 +570,11 @@ Container runtime rules:
    bundled npm, package and lockfile engines, immutable install paths, exact Playwright, explicit
    Chromium projects, framework versions, container provenance, and review expiry. Workflow
    evidence is parsed as active YAML through the exact lock-backed development tool; Docker
-   evidence is bound to active instructions in the named `deps` and `runner` stages, including the
-   runner's final effective user. Comments, instructions in another stage, and earlier superseded
-   directives are not proof. Keep developer compatibility ranges distinct from the exact protected
+   evidence is bound to active instructions in the named governed stages, including Docker escape-
+   continuation token adjacency and the runner's final effective user. Governed stages reject
+   `ONBUILD` triggers and `SHELL` overrides so indirect or reinterpreted commands cannot satisfy the
+   policy. Comments, instructions in another stage, and earlier superseded directives are not proof.
+   Keep developer compatibility ranges distinct from the exact protected
    build runtime. Do not claim wider browser, horizontal-scale, load/soak, production identity,
    availability, or bank certification before governed evidence exists. The buyer-facing boundary is documented in
    `wiki/Technology-Risk-and-Runtime-Support.md` and the architecture decision in
