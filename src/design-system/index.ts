@@ -38,6 +38,11 @@ export { default as DisclosureToggleButton } from "./components/disclosure-toggl
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
 export { default as WorkbenchChoiceGroup } from "./components/workbench-choice-group";
 export type { WorkbenchChoiceGroupOption } from "./components/workbench-choice-group";
+export { default as WorkbenchRecordSelector } from "./components/workbench-record-selector";
+export type {
+  WorkbenchRecordSelectorFact,
+  WorkbenchRecordSelectorItem,
+} from "./components/workbench-record-selector";
 export { default as WorkbenchChartContextRow } from "./components/workbench-chart-context-row";
 export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-context-row";
 export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";
