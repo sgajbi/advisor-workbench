@@ -103,7 +103,7 @@ export function ProposalAdvisorActionsPanel({
 
 export function ProposalEvidenceControlsPanel({
   includeEvidence,
-  includeEvidenceDisabled,
+  controlsDisabled,
   onIncludeEvidenceChange,
   versionLookupNo,
   onVersionLookupNoChange,
@@ -115,7 +115,7 @@ export function ProposalEvidenceControlsPanel({
   versionActionError,
 }: {
   includeEvidence: boolean;
-  includeEvidenceDisabled: boolean;
+  controlsDisabled: boolean;
   onIncludeEvidenceChange: (value: boolean) => void;
   versionLookupNo: number;
   onVersionLookupNoChange: (value: number) => void;
@@ -136,7 +136,7 @@ export function ProposalEvidenceControlsPanel({
           <Switch
             size="small"
             checked={includeEvidence}
-            disabled={includeEvidenceDisabled}
+            disabled={controlsDisabled}
             onChange={(event) => onIncludeEvidenceChange(event.target.checked)}
           />
         }
@@ -150,16 +150,22 @@ export function ProposalEvidenceControlsPanel({
             type="number"
             min={1}
             value={versionLookupNo}
+            disabled={controlsDisabled}
             onChange={(event) => {
               const next = Number.parseInt(event.target.value, 10);
               onVersionLookupNoChange(Number.isNaN(next) ? 1 : next);
             }}
           />
         </label>
-        <Button type="button" variant="outlined" onClick={onLoadVersion}>
+        <Button type="button" variant="outlined" onClick={onLoadVersion} disabled={controlsDisabled}>
           Load version
         </Button>
-        <Button type="button" variant="outlined" onClick={onCreateNextVersion} disabled={creatingVersion}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onCreateNextVersion}
+          disabled={creatingVersion || controlsDisabled}
+        >
           {creatingVersion ? "Creating version..." : "Create next version"}
         </Button>
       </div>

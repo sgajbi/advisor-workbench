@@ -130,6 +130,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
   const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
   const actionEvidenceBlockedRef = useRef(false);
+  const versionCreationRef = useRef(false);
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
@@ -189,11 +190,13 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const actionSourcesChecking = actionSourcePostures.some(
     (posture) => posture.isInitialLoading || posture.isRefreshing
   );
-  const actionDisabled = acting || actionEvidenceBlocked || !actionSourcesReady;
+  const actionDisabled = acting || creatingVersion || actionEvidenceBlocked || !actionSourcesReady;
   const actionDisabledReason = actionEvidenceBlocked
     ? "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
     : acting
       ? "Recording the source action and refreshing review evidence."
+      : creatingVersion
+        ? "Creating the next proposal version and refreshing review evidence."
       : !actionSourcesReady
         ? actionSourcesChecking
           ? "Checking current proposal evidence before actions are available."
@@ -203,6 +206,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   useEffect(() => {
     activeActionRef.current = null;
     actionEvidenceBlockedRef.current = false;
+    versionCreationRef.current = false;
     setActing(false);
     setActionEvidenceBlocked(false);
     setReviewMode("narrative");
@@ -244,7 +248,13 @@ export default function ProposalDetailView({ proposalId }: Props) {
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
-    if (!previousState || activeActionRef.current || actionEvidenceBlockedRef.current || !actionSourcesReady) return;
+    if (
+      !previousState
+      || activeActionRef.current
+      || versionCreationRef.current
+      || actionEvidenceBlockedRef.current
+      || !actionSourcesReady
+    ) return;
     const actionContext = { proposalId, token: Symbol("proposal-action") };
     activeActionRef.current = actionContext;
     setActing(true);
@@ -346,6 +356,9 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onLoadVersion() {
+    if (activeActionRef.current || versionCreationRef.current) {
+      return;
+    }
     setVersionActionError(null);
     try {
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
@@ -357,6 +370,9 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onCreateNextVersion() {
+    if (activeActionRef.current || versionCreationRef.current) {
+      return;
+    }
     const currentVersionData = (detailQuery.data as ProposalDetailData | undefined)?.current_version as
       | Record<string, unknown>
       | undefined;
@@ -367,6 +383,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       );
       return;
     }
+    versionCreationRef.current = true;
     setVersionActionError(null);
     setCreatingVersion(true);
     setCreatedVersionNo(null);
@@ -390,6 +407,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setVersionActionError(message);
     } finally {
+      versionCreationRef.current = false;
       setCreatingVersion(false);
     }
   }
@@ -590,9 +608,9 @@ export default function ProposalDetailView({ proposalId }: Props) {
         <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
-            includeEvidenceDisabled={acting}
+            controlsDisabled={acting || creatingVersion}
             onIncludeEvidenceChange={(value) => {
-              if (!activeActionRef.current) {
+              if (!activeActionRef.current && !versionCreationRef.current) {
                 setIncludeEvidence(value);
               }
             }}

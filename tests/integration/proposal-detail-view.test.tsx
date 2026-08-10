@@ -454,14 +454,64 @@ describe("ProposalDetailView", () => {
 
     fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
     const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
+    const createVersion = screen.getByRole("button", { name: "Create next version" });
     fireEvent.click(screen.getByRole("button", { name: "Submit for risk review" }));
 
     await waitFor(() => expect(evidenceMode).toBeDisabled());
+    expect(createVersion).toBeDisabled();
     fireEvent.click(evidenceMode);
     expect(evidenceMode).not.toBeChecked();
 
     completeSubmission?.();
     await screen.findByTestId("proposal-action-status");
+    expect(evidenceMode).toBeEnabled();
+  });
+
+  it("fences proposal actions and detail-context controls during version creation", async () => {
+    let completeVersionCreation: (() => void) | undefined;
+    createProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionCreation = () => resolve({
+          data: {
+            proposal: {
+              proposal_id: "pp-1",
+              current_state: "DRAFT",
+              current_version_no: 2,
+            },
+            version: {
+              proposal_version_id: "ppv-2",
+              proposal_id: "pp-1",
+              version_no: 2,
+            },
+            latest_workflow_event: {
+              event_id: "pwe_2",
+              event_type: "NEW_VERSION_CREATED",
+              to_state: "DRAFT",
+              actor_id: "advisor_1",
+              occurred_at: "2026-02-22T00:01:00Z",
+            },
+          },
+        });
+      })
+    );
+    renderWithQueryClient();
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    const action = screen.getByRole("button", { name: "Submit for risk review" });
+    const evidenceMode = screen.getByRole("switch", { name: "Load full evidence bundle" });
+    const createVersion = screen.getByRole("button", { name: "Create next version" });
+    const previousActionCount = submitProposalMock.mock.calls.length;
+
+    fireEvent.click(createVersion);
+    await waitFor(() => expect(action).toBeDisabled());
+    expect(evidenceMode).toBeDisabled();
+    expect(createVersion).toBeDisabled();
+    fireEvent.click(action);
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount);
+
+    completeVersionCreation?.();
+    expect(await screen.findByText("Version created successfully: 2")).toBeInTheDocument();
+    await waitFor(() => expect(action).toBeEnabled());
     expect(evidenceMode).toBeEnabled();
   });
 
