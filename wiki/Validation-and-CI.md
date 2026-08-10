@@ -14,6 +14,7 @@ while integrated product support requires canonical runtime evidence and green r
 | Local route or serializer | Focused behavioral test plus lint/typecheck | Does not certify an upstream or whole-product contract |
 | Product UI behavior | Unit/integration coverage, build, and relevant browser smoke | Must remain Gateway-backed and capability-truthful |
 | Canonical front-office support | `live:validate` evidence for the governed seed and affected panels | Screenshots alone cannot promote support |
+| Stateless multi-replica regression | `npm run scale:proof` against the exact production image | Engineering evidence only; does not certify production HA, DR, or bank capacity |
 | Merge readiness | Feature Lane and PR Merge Gate | Mainline is not proven until Main Releasability passes |
 | Demo evidence | Passing canonical validation plus same-run evidence pack | Diagnostic captures stay separate |
 
@@ -97,6 +98,13 @@ concurrency group.
   the production image; Vitest is capped at two workers so the lane remains deterministic while the
   governed canonical stack shares the developer workstation, and workstation `.env.local` is masked
   by a tracked empty read-only fixture
+- `npm run scale:proof`
+  hermetic engineering regression with two identical production-image replicas behind a
+  digest-pinned stable NGINX least-connections balancer. It requires no affinity, records distribution
+  across both replicas, persists and re-reads source-owned state across replicas, stops and recovers
+  one replica, enforces error and p95 thresholds, captures p99 and resource evidence, and writes JSON
+  plus Markdown under `output/scale-proof/`. It is not production topology, load/soak, HA, DR,
+  multi-region, identity, or bank-capacity certification.
 - `npm run live:validate`
   canonical integrated product validation
 - `npm run live:stack:up:validate`
@@ -144,6 +152,9 @@ concurrency group.
   are prohibited because the Trivy ecosystem was compromised in March 2026
 - GitHub Actions JavaScript action runtime posture, using Node 24-capable action majors for
   checkout, setup-node, and artifact upload so CI warnings do not hide product-surface failures
+- the exact Workbench production image and digest-pinned validation-only NGINX image are separately
+  scanned for fixable high/critical findings before the protected Docker lane runs the scale proof;
+  the resulting machine-readable proof is retained as a PR or exact-main artifact
 
 ## Evidence posture
 
@@ -217,6 +228,10 @@ concurrency group.
   approval, client communication, order, fill, settlement, or OMS claims.
 - observability evidence capture writes local non-functional proof packs under
   `output/observability-live/<timestamp>/`
+- scale proof writes non-certifying JSON and Markdown evidence under `output/scale-proof/`; accept
+  it only when `result=passed`, `certification_posture=engineering_regression_non_certifying`, both
+  replicas served baseline and recovery traffic, source persistence survived replica loss, and the
+  explicit non-claims remain present
 - final visual review should use canonical validated captures, not pre-validation diagnostics
 
 ## Canonical live validation coverage

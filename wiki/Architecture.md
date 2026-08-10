@@ -21,6 +21,8 @@ repositories and must not be inferred from a route or component shown here.
 - shared primitives under `src/design-system/`
 - shell composition under `src/shell/`
 - internal `/api/bff/*` proxy bridge to `lotus-gateway`
+- disposable production-image replicas with no process-local business or session authority
+- deterministic deployment identity for rolling-version protection
 
 The versioned runtime, browser, support-lifecycle, and current scalability boundary is governed by
 [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support). That page records both
@@ -91,15 +93,28 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Browser[Browser interaction] --> MetricsEvents[/api/metrics/events]
-  Workbench[Workbench server routes] --> Metrics[/api/metrics]
-  MetricsEvents --> Metrics
-  Metrics --> Prometheus[Prometheus scrape]
+  Browser[Browser interaction] --> Balancer[Environment-owned load balancer]
+  Balancer --> ReplicaA[Workbench replica A]
+  Balancer --> ReplicaB[Workbench replica B]
+  ReplicaA --> Gateway[lotus-gateway]
+  ReplicaB --> Gateway
+  ReplicaA --> MetricsA[/api/metrics per instance]
+  ReplicaB --> MetricsB[/api/metrics per instance]
+  MetricsA --> Prometheus[Prometheus fleet aggregation]
+  MetricsB --> Prometheus
   Prometheus --> Grafana[Grafana dashboards]
-  Workbench --> Logs[structured route and BFF logs]
+  ReplicaA --> Logs[structured route and BFF logs]
+  ReplicaB --> Logs
   Gateway[Gateway] --> Logs
   Services[Core, Performance, Risk, AI, Report, Archive, Render, Manage] --> Logs
 ```
+
+The diagram is an application requirement, not a committed production topology. Platform owners
+must provide environment-specific replicas, readiness removal, termination grace, resource limits,
+scrape discovery, rollback, and disruption controls. Workbench neither requires sticky sessions nor
+owns durable business state. The repository scale harness proves this boundary as a bounded
+engineering regression; it does not certify production HA, DR, capacity, identity, or multi-region
+operation.
 
 Observability labels are bounded by the analytics UI contract. Metric labels may describe route,
 panel, operation, freshness, supportability, and status class, but must not include portfolio id,

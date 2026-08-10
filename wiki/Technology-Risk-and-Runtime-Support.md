@@ -22,6 +22,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
 | Direct dependency admission | 14 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
+| Scale validation dependency | Official NGINX stable `1.28.3` Alpine `3.23` image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
 
 The versioned source is
 [`workbench-runtime-support-policy.v1.json`](../docs/architecture/workbench-runtime-support-policy.v1.json).
@@ -69,14 +70,23 @@ must be valid HTTPS URLs with a usable host; prefix-shaped placeholders do not s
 
 ## Production And Scaling Posture
 
-Next standalone output and service-owned durable business state make the Workbench container
-compatible with a replicated application tier. Each replica can be health-checked, and the browser
-continues to use the same Gateway product boundary.
+Next standalone output, source-owned durable business state, closed runtime-state governance, and
+deterministic deployment identity make the Workbench container suitable for a replicated
+application tier. `/api/health/live` is process-only; `/api/health/ready` validates build and runtime
+configuration without turning a downstream outage into fabricated application success.
 
-This architecture compatibility is not capacity certification. Workbench does not yet claim
-multi-replica behavior, load or soak capacity, high availability, disaster recovery, or production
-identity. #612 remains open until those claims have measured evidence or explicit accepted-risk
-ownership.
+The hermetic `npm run scale:proof` regression has now demonstrated two identical production-image
+replicas behind a no-affinity, least-connections balancer; cross-replica source persistence; bounded
+operation while one replica is stopped; and distribution after recovery. It records latency, errors,
+upstream distribution, image identity, and resource snapshots under `output/scale-proof/`. Protected
+PR and main lanes run the proof against the same image they scan and upload its machine-readable
+evidence.
+
+This is an engineering regression, not capacity or availability certification. Workbench does not
+claim production load or soak capacity, high availability, disaster recovery, multi-region
+operation, production identity, or a bank-approved deployment topology. The NGINX container is a
+validation dependency, not a production orchestration prescription. #612 remains open until those
+claims have measured evidence or explicit accepted-risk ownership.
 
 ## Deterministic Controls
 
@@ -90,6 +100,13 @@ payloads remain payload rather than stage instructions, JSON-form operands canno
 heredoc operators, and governed stages reject inherited `ONBUILD` triggers and `SHELL` overrides that could reinterpret or
 indirectly add commands. `npm run lint` invokes this control, so Feature, PR, Main, and Docker-parity
 quality lanes inherit it.
+
+`npm run quality:runtime-state` inventories every detected module-scope mutable holder and fails on
+unreviewed server cache, Server Action, Next data-cache, ISR, revalidation, forced-cache, or rolling
+deployment identity behavior. The inventory permits only bounded, non-authoritative browser state,
+immutable lookup state, idempotent initialization, and per-instance telemetry. Workbench analytics
+telemetry has explicit series and diagnostic bounds; fleet aggregation belongs to the platform
+metrics stack.
 
 Existing gates also cover dependency vulnerabilities, lint, TypeScript, coverage, production
 builds, bundle budgets, Playwright smoke, Docker parity, container vulnerabilities, and SBOM
@@ -111,7 +128,8 @@ SBOM rather than duplicated as hand-maintained inventory rows.
 This baseline does not certify:
 
 1. Firefox, Safari/WebKit, Edge, older managed browsers, or assistive-technology combinations;
-2. load, soak, horizontal-scale capacity, high availability, or disaster recovery;
+2. production load, soak, saturation capacity, high availability, disaster recovery, or
+   multi-region operation;
 3. production identity, IdP, session, or token-claim integration;
 4. independent legal approval of license compatibility or third-party contractual terms;
 5. bank architecture, cyber, accessibility, operations, or procurement approval.
@@ -142,3 +160,5 @@ durable execution record.
 10. [Lotus platform technology-governance policy](https://github.com/sgajbi/lotus-platform/blob/2868348d289fc685ecf5a218b6c73256ac3a7742/platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json)
 11. [OpenSSF dependency selection guidance](https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software)
 12. [SPDX license expressions](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/)
+13. [NGINX HTTP load-balancing guidance](https://nginx.org/en/docs/http/load_balancing.html)
+14. [Official NGINX container image](https://hub.docker.com/_/nginx)

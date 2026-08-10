@@ -52,4 +52,22 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain("engineering_regression_non_certifying");
     expect(runner).toContain("explicit_non_claims");
   });
+
+  it("keeps buyer and operator documentation aligned to the non-certifying proof", () => {
+    const readme = read("README.md");
+    const context = read("REPOSITORY-ENGINEERING-CONTEXT.md");
+    const technologyRisk = read("wiki", "Technology-Risk-and-Runtime-Support.md");
+    const validation = read("wiki", "Validation-and-CI.md");
+    const operations = read("wiki", "Operations-Runbook.md");
+    const architecture = read("wiki", "Architecture.md");
+
+    for (const document of [readme, context, technologyRisk, validation, operations]) {
+      expect(document).toContain("npm run scale:proof");
+    }
+    expect(readme).toContain("/api/health/live");
+    expect(operations).toContain("/api/health/ready");
+    expect(technologyRisk).toContain("validation dependency, not a production orchestration");
+    expect(validation).toContain("engineering_regression_non_certifying");
+    expect(architecture).toContain("neither requires sticky sessions nor");
+  });
 });
