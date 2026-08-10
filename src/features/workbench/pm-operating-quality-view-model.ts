@@ -11,6 +11,12 @@ export type PmOperatingQualityPanelState =
   | "empty"
   | "unavailable";
 
+export type PmOperatingQualitySelection = {
+  scoreRunId: string | null;
+  fairnessAnalysisId: string | null;
+  reviewActionId: string | null;
+};
+
 export type PmOperatingQualityPolicyRow = {
   key: string;
   policyId: string;
@@ -233,33 +239,13 @@ export function buildPmOperatingQualityPanelModel(params: {
   preview?: DpmPmOperatingQualityGatewayResponse | null;
   fairnessPreview?: DpmPmOperatingQualityGatewayResponse | null;
   summary?: DpmPmOperatingQualitySummaryResponse | null;
+  selection?: Partial<PmOperatingQualitySelection> | null;
 }): PmOperatingQualityPanelModel {
   const policyRows = buildPolicyRows(params.policies);
   const scoreRunRows = [
     ...buildScoreRunRows(params.preview),
     ...buildScoreRunRows(params.scoreRuns),
   ].filter(uniqueByScoreRunId);
-  const selectedScoreRun = scoreRunRows[0] ?? null;
-  const summary = matchesPmOperatingQualitySummaryScoreRun(
-    params.summary,
-    selectedScoreRun?.scoreRunId ?? null,
-  )
-    ? params.summary
-    : null;
-  const primary =
-    summary ??
-    params.summaryInvocationDetail ??
-    params.summaryInvocations ??
-    params.fairnessPreview ??
-    params.reviewActionDetail ??
-    params.reviewActions ??
-    params.fairnessAnalysisDetail ??
-    params.fairnessAnalyses ??
-    params.preview ??
-    params.scoreRuns ??
-    params.policies;
-  const supportability = primary?.supportability;
-  const supportabilityState = normalizeState(supportability?.state);
   const fairnessAnalysisRows = [
     ...buildFairnessAnalysisRows(params.fairnessAnalysisDetail),
     ...buildFairnessAnalysisRows(params.fairnessPreview),
@@ -273,13 +259,77 @@ export function buildPmOperatingQualityPanelModel(params: {
     ...buildSummaryInvocationRows(params.summaryInvocationDetail),
     ...buildSummaryInvocationRows(params.summaryInvocations),
   ].filter(uniqueBySummaryInvocationId);
-  const fairnessAnalysis = readFairnessAnalysis(
-    params.fairnessPreview ?? params.fairnessAnalysisDetail ?? params.fairnessAnalyses
+  const selection = resolvePmOperatingQualitySelection({
+    scoreRunRows,
+    fairnessAnalysisRows,
+    reviewActionRows,
+    preferredSelection: params.selection,
+  });
+  const selectedScoreRun =
+    scoreRunRows.find((row) => row.scoreRunId === selection.scoreRunId) ?? null;
+  const selectedFairnessAnalysis =
+    fairnessAnalysisRows.find(
+      (row) => row.fairnessAnalysisId === selection.fairnessAnalysisId
+    ) ?? null;
+  const selectedReviewAction =
+    reviewActionRows.find((row) => row.reviewActionId === selection.reviewActionId) ?? null;
+  const selectedFairnessAnalysisDetail = responseContainsFairnessAnalysis(
+    params.fairnessAnalysisDetail,
+    selection.fairnessAnalysisId,
+  )
+    ? params.fairnessAnalysisDetail
+    : null;
+  const selectedFairnessPreview = responseContainsFairnessAnalysis(
+    params.fairnessPreview,
+    selection.fairnessAnalysisId,
+  )
+    ? params.fairnessPreview
+    : null;
+  const selectedFairnessAnalyses = responseContainsFairnessAnalysis(
+    params.fairnessAnalyses,
+    selection.fairnessAnalysisId,
+  )
+    ? params.fairnessAnalyses
+    : null;
+  const fairnessAnalysisResponse =
+    selectedFairnessAnalysisDetail ?? selectedFairnessPreview ?? selectedFairnessAnalyses;
+  const fairnessAnalysis = findFairnessAnalysis(
+    fairnessAnalysisResponse,
+    selection.fairnessAnalysisId,
   );
+  const selectedReviewActionDetail = responseContainsReviewAction(
+    params.reviewActionDetail,
+    selection.reviewActionId,
+  )
+    ? params.reviewActionDetail
+    : null;
+  const selectedReviewActions = responseContainsReviewAction(
+    params.reviewActions,
+    selection.reviewActionId,
+  )
+    ? params.reviewActions
+    : null;
+  const reviewActionResponse = selectedReviewActionDetail ?? selectedReviewActions;
+  const reviewAction = findReviewAction(reviewActionResponse, selection.reviewActionId);
+  const summary = matchesPmOperatingQualitySummaryScoreRun(
+    params.summary,
+    selectedScoreRun?.scoreRunId ?? null,
+  )
+    ? params.summary
+    : null;
+  const primary =
+    summary ??
+    params.summaryInvocationDetail ??
+    params.summaryInvocations ??
+    fairnessAnalysisResponse ??
+    reviewActionResponse ??
+    params.preview ??
+    params.scoreRuns ??
+    params.policies;
+  const supportability = primary?.supportability;
+  const supportabilityState = normalizeState(supportability?.state);
   const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
   const fairnessSegmentRequests = extractFairnessSegmentRequests(params.scoreRuns);
-  const selectedFairnessAnalysis = fairnessAnalysisRows[0] ?? null;
-  const selectedReviewAction = reviewActionRows[0] ?? null;
   const reasonCodes = [
     ...(supportability?.reason_codes ?? []),
     ...scoreRunRows.flatMap((row) => splitList(row.reasonCodes)),
@@ -321,11 +371,11 @@ export function buildPmOperatingQualityPanelModel(params: {
     authority: supportability?.authority ?? "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
     policyId,
     policyVersion,
-    scoreRunId: firstNonEmpty(supportability?.score_run_id, selectedScoreRun?.scoreRunId),
+    scoreRunId: firstNonEmpty(selectedScoreRun?.scoreRunId, supportability?.score_run_id),
     fairnessAnalysisId: firstNonEmpty(
-      supportability?.fairness_analysis_id,
-      readString(fairnessAnalysis, "fairness_analysis_id"),
       selectedFairnessAnalysis?.fairnessAnalysisId,
+      readString(fairnessAnalysis, "fairness_analysis_id"),
+      supportability?.fairness_analysis_id,
     ),
     summaryInvocationId: firstNonEmpty(
       supportability?.summary_invocation_id,
@@ -359,21 +409,21 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessState: normalizeState(readString(fairnessAnalysis, "state")),
     fairnessSpread: readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
     fairnessDetail: buildFairnessDetail(fairnessAnalysis),
-    reviewActionDetail: buildReviewActionDetail(readReviewAction(params.reviewActionDetail)),
+    reviewActionDetail: buildReviewActionDetail(reviewAction),
     summaryInvocationDetail: buildSummaryInvocationDetail(
       readSummaryInvocation(params.summaryInvocationDetail)
     ),
     operationEvidence: buildOperationEvidence({
       policies: params.policies,
       scoreRuns: params.scoreRuns,
-      fairnessAnalyses: params.fairnessAnalyses,
-      fairnessAnalysisDetail: params.fairnessAnalysisDetail,
-      reviewActions: params.reviewActions,
-      reviewActionDetail: params.reviewActionDetail,
+      fairnessAnalyses: selectedFairnessAnalyses,
+      fairnessAnalysisDetail: selectedFairnessAnalysisDetail,
+      reviewActions: selectedReviewActions,
+      reviewActionDetail: selectedReviewActionDetail,
       summaryInvocations: params.summaryInvocations,
       summaryInvocationDetail: params.summaryInvocationDetail,
       preview: params.preview,
-      fairnessPreview: params.fairnessPreview,
+      fairnessPreview: selectedFairnessPreview,
       summary,
     }),
     summaryPosture: buildSummaryPosture(summary),
@@ -384,6 +434,47 @@ export function buildPmOperatingQualityPanelModel(params: {
     fairnessPreviewReadinessState: fairnessPreviewReadiness.state,
     fairnessPreviewReadiness: fairnessPreviewReadiness.detail,
   };
+}
+
+export function resolvePmOperatingQualitySelection({
+  scoreRunRows,
+  fairnessAnalysisRows,
+  reviewActionRows,
+  preferredSelection,
+}: {
+  scoreRunRows: PmOperatingQualityScoreRunRow[];
+  fairnessAnalysisRows: PmOperatingQualityFairnessAnalysisRow[];
+  reviewActionRows: PmOperatingQualityReviewActionRow[];
+  preferredSelection?: Partial<PmOperatingQualitySelection> | null;
+}): PmOperatingQualitySelection {
+  return {
+    scoreRunId: resolveSelectedRecordId(
+      scoreRunRows,
+      preferredSelection?.scoreRunId,
+      (row) => row.scoreRunId,
+    ),
+    fairnessAnalysisId: resolveSelectedRecordId(
+      fairnessAnalysisRows,
+      preferredSelection?.fairnessAnalysisId,
+      (row) => row.fairnessAnalysisId,
+    ),
+    reviewActionId: resolveSelectedRecordId(
+      reviewActionRows,
+      preferredSelection?.reviewActionId,
+      (row) => row.reviewActionId,
+    ),
+  };
+}
+
+function resolveSelectedRecordId<T>(
+  rows: T[],
+  preferredId: string | null | undefined,
+  readId: (row: T) => string,
+): string | null {
+  if (preferredId && rows.some((row) => readId(row) === preferredId)) {
+    return preferredId;
+  }
+  return rows[0] ? readId(rows[0]) : null;
 }
 
 export function matchesPmOperatingQualitySummaryScoreRun(
@@ -690,10 +781,26 @@ function buildReviewActionRows(
   });
 }
 
-function readReviewAction(
-  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+function responseContainsReviewAction(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined,
+  reviewActionId: string | null,
+): boolean {
+  return Object.keys(findReviewAction(response, reviewActionId)).length > 0;
+}
+
+function findReviewAction(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined,
+  reviewActionId: string | null,
 ): Record<string, unknown> {
-  return asRecord(asRecord(response?.data).review_action);
+  if (!response || !reviewActionId) return {};
+  const data = asRecord(response.data);
+  return (
+    [
+      asRecord(data.review_action),
+      ...extractRecords(data.review_actions),
+      ...extractRecords(data.items),
+    ].find((record) => readString(record, "review_action_id") === reviewActionId) ?? {}
+  );
 }
 
 function buildReviewActionDetail(
@@ -898,10 +1005,28 @@ function extractFairnessSegmentRequests(
   );
 }
 
-function readFairnessAnalysis(
-  response: DpmPmOperatingQualityGatewayResponse | null | undefined
+function responseContainsFairnessAnalysis(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined,
+  fairnessAnalysisId: string | null,
+): boolean {
+  return Object.keys(findFairnessAnalysis(response, fairnessAnalysisId)).length > 0;
+}
+
+function findFairnessAnalysis(
+  response: DpmPmOperatingQualityGatewayResponse | null | undefined,
+  fairnessAnalysisId: string | null,
 ): Record<string, unknown> {
-  return asRecord(asRecord(response?.data).fairness_analysis);
+  if (!response || !fairnessAnalysisId) return {};
+  const data = asRecord(response.data);
+  return (
+    [
+      asRecord(data.fairness_analysis),
+      ...extractRecords(data.fairness_analyses),
+      ...extractRecords(data.items),
+    ].find(
+      (record) => readString(record, "fairness_analysis_id") === fairnessAnalysisId
+    ) ?? {}
+  );
 }
 
 function buildFairnessSegmentRows(
