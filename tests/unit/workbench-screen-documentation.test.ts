@@ -4,7 +4,12 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error The documentation gate is a Node .mjs script without a TypeScript declaration.
-import { hasExactMarkdownHeading, isNextPageEntrypoint, validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+import {
+  hasExactMarkdownHeading,
+  isNextPageEntrypoint,
+  validateModeAuthority,
+  validateScreenDocumentation,
+} from "../../scripts/quality/check-workbench-screen-documentation.mjs";
 
 const rootDirectory = process.cwd();
 const registryPath = path.join(
@@ -32,6 +37,12 @@ describe("Workbench screen documentation governance", () => {
     expect(
       hasExactMarkdownHeading("````md\n```\n## Current Scope\n````\n", "## Current Scope"),
     ).toBe(false);
+    expect(
+      hasExactMarkdownHeading("~~~md\n~~~js\n## Current Scope\n~~~\n", "## Current Scope"),
+    ).toBe(false);
+    expect(
+      hasExactMarkdownHeading("~~~md\nexample\n~~~   \n## Current Scope\n", "## Current Scope"),
+    ).toBe(true);
   });
 
   it("discovers every default Next.js page extension", () => {
@@ -197,6 +208,54 @@ describe("Workbench screen documentation governance", () => {
     );
   });
 
+  it("keeps PM Operating Quality ownership aligned to its AI workflow evidence", () => {
+    const registry = loadRegistry();
+    const surface = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "pm-operating-quality",
+    );
+
+    expect(surface.sourceOwners).toEqual(["lotus-gateway", "lotus-manage", "lotus-ai"]);
+    expect(surface.implementationEvidence).toEqual(
+      expect.arrayContaining([
+        "src/features/workbench/pm-operating-quality-api.ts",
+        "src/features/workbench/components/pm-operating-quality-summary-invocations-card.tsx",
+      ]),
+    );
+  });
+
+  it.each([
+    "performance",
+    "performance-aliases",
+    "manage",
+    "advisory-journey",
+    "proposal-lifecycle",
+  ])("rejects removal of the required %s mode authority", (family) => {
+    const registry = loadRegistry();
+    registry.modeAuthorities = registry.modeAuthorities.filter(
+      (authority: { family: string }) => authority.family !== family,
+    );
+
+    expect(validate(registry).errors).toContain(`Required mode authority is missing: ${family}.`);
+  });
+
+  it("rejects duplicate mode-authority families", () => {
+    const registry = loadRegistry();
+    registry.modeAuthorities.push(structuredClone(registry.modeAuthorities[0]));
+
+    expect(validate(registry).errors).toContain(
+      "Duplicate mode authority family: performance.",
+    );
+  });
+
+  it("rejects unexpected mode-authority families", () => {
+    const registry = loadRegistry();
+    registry.modeAuthorities[0].family = "performance-copy";
+
+    expect(validate(registry).errors).toContain(
+      "Unexpected mode authority family: performance-copy.",
+    );
+  });
+
   it("rejects drift from supported mode aliases", () => {
     const registry = loadRegistry();
     delete registry.modeAuthorities.find(
@@ -205,6 +264,20 @@ describe("Workbench screen documentation governance", () => {
 
     expect(validate(registry).errors).toContain(
       "Mode authority performance-aliases has unmapped source mode: advisor-brief.",
+    );
+  });
+
+  it("rejects a source alias target that differs from its canonical registry target", () => {
+    const registry = loadRegistry();
+    const authority = registry.modeAuthorities.find(
+      (candidate: { family: string }) => candidate.family === "performance-aliases",
+    );
+    const source = fs
+      .readFileSync(path.join(rootDirectory, authority.source), "utf8")
+      .replace('"advisor-brief": "advisor"', '"advisor-brief": "risk"');
+
+    expect(validateModeAuthority(authority, source, registry.surfaces)).toContain(
+      "Mode authority performance-aliases source alias advisor-brief targets risk, but performance-advisor-brief-alias resolves to canonical mode advisor.",
     );
   });
 
