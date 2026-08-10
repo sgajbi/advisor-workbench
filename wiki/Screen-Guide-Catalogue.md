@@ -68,7 +68,7 @@ separate decision contexts and will receive separate guides even though they sha
 | Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
 | Performance Analysis | `/performance?mode=analysis` | Active | Guide planned — #605 | Gateway and Performance |
 | Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway and Performance |
-| Risk Review | `/performance?mode=risk` | Active | Guide planned — #605 | Gateway and Risk |
+| Risk Review | `/performance?mode=risk` | Active | Guide planned — #605 | Gateway, Performance, and Risk |
 | Performance Evidence | `/performance?mode=evidence` | Active | Guide planned — #605 | Gateway and Performance |
 
 The future guides will separate calculated facts from Workbench presentation, state benchmark and
@@ -105,7 +105,7 @@ describe implemented validation surfaces rather than a promise of unrestricted p
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Advisory Overview | `/recommendations?mode=overview` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Core |
+| Advisory Overview | `/recommendations?mode=overview` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Advisor Cockpit | `/recommendations?mode=cockpit` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Advisory Copilot | `/recommendations?mode=copilot` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Lotus AI |
 | Opportunities And Ideas | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Performance, and Risk |
@@ -123,12 +123,12 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Proposal Builder, including simulation results | `/proposals/simulate` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Core, Performance, and Risk |
+| Proposal Builder, including simulation results | `/proposals/simulate` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Core |
 | Approval Queue | `/proposals?mode=approval-queue` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
-| Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway, Advise, Risk, and Performance |
+| Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
-| Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Manage |
+| Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Proposal Detail | `/proposals/{proposalId}` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 
 Simulation is an in-screen Proposal Builder result state, not a separately addressable mode, so it

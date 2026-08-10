@@ -528,7 +528,7 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "runtime-capability-gated",
       "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-risk"],
+      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-risk"],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
         "src/apps/performance/components/performance-workspace-view.tsx"
@@ -781,7 +781,7 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
       "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": ["src/apps/recommendations/page.tsx"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
@@ -882,7 +882,7 @@
       "navigationPosture": "not-applicable",
       "wikiSlug": null,
       "canonicalSurfaceId": "portfolio-review",
-      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-manage"],
+      "sourceOwners": ["lotus-gateway", "lotus-core"],
       "implementationEvidence": ["src/features/proposals/advisory-journey-navigation.ts"],
       "runtimeEvidence": [],
       "supportOwner": "lotus-workbench"
@@ -918,7 +918,7 @@
       "navigationPosture": "not-applicable",
       "wikiSlug": null,
       "canonicalSurfaceId": "proposal-builder",
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-performance", "lotus-risk"],
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
       "implementationEvidence": [
         "src/features/proposals/advisory-journey-navigation.ts",
         "src/features/proposals/components/proposal-simulate-form.tsx"
@@ -976,7 +976,7 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
       "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-risk", "lotus-performance"],
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
@@ -996,7 +996,7 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
       "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-report"],
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
@@ -1016,7 +1016,7 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
       "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-manage"],
+      "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
