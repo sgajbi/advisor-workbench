@@ -8,6 +8,14 @@ export const PROPOSAL_STAGES = [
 
 export type ProposalStage = (typeof PROPOSAL_STAGES)[number];
 
+const PROPOSAL_STAGE_LABELS = {
+  DRAFT: "Draft",
+  RISK_REVIEW: "Risk review",
+  COMPLIANCE_REVIEW: "Compliance review",
+  AWAITING_CLIENT_CONSENT: "Awaiting client consent",
+  EXECUTION_READY: "Execution ready",
+} satisfies Record<ProposalStage, string>;
+
 export function buildProposalActionIdempotencyKey(
   proposalId: string,
   action: string,
@@ -16,14 +24,7 @@ export function buildProposalActionIdempotencyKey(
 }
 
 export function proposalStageLabel(state: string): string {
-  const labels: Record<string, string> = {
-    DRAFT: "Draft",
-    RISK_REVIEW: "Risk review",
-    COMPLIANCE_REVIEW: "Compliance review",
-    AWAITING_CLIENT_CONSENT: "Awaiting client consent",
-    EXECUTION_READY: "Execution ready",
-  };
-  return labels[state] ?? businessEventLabel(state);
+  return (PROPOSAL_STAGE_LABELS as Record<string, string>)[state] ?? "Not reported";
 }
 
 export function businessEventLabel(value: string): string {
