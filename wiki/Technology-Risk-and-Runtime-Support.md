@@ -59,7 +59,7 @@ lockfile runtime ranges, exact CI Node versions, container provenance, npm/Playw
 canonical install commands, explicit Chromium projects, or the review date. It reads active
 workflow steps and named Docker stages rather than accepting matching text in comments, unrelated
 stages, or superseded instructions. Docker escape continuations retain token adjacency, alternate
-parser escape directives fail closed, `RUN` and `COPY` heredoc payloads remain payload rather than
+parser escape directives fail closed after leading UTF-8 BOM normalization, `RUN` and `COPY` heredoc payloads remain payload rather than
 stage instructions, and governed stages reject inherited `ONBUILD` triggers and `SHELL` overrides that could reinterpret or
 indirectly add commands. `npm run lint` invokes this control, so Feature, PR, Main, and Docker-parity
 quality lanes inherit it.
