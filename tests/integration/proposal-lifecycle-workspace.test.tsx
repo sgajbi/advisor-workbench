@@ -532,7 +532,7 @@ describe("ProposalLifecycleWorkspace", () => {
       items: [
         {
           ...policyReviewQueueFixture.items[0],
-          proposal_version_id: undefined,
+          proposal_version_id: undefined as unknown as string,
         },
       ],
     });
