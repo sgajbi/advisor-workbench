@@ -3,9 +3,10 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
-  collectWorkflowSteps,
+  collectWorkflowStepEntries,
   declaresGovernedChromiumProject,
   isRecord,
+  isUnconditionalWorkflowStep,
   normalizeInstruction,
   parseDockerfile,
   parseWorkflow,
@@ -150,16 +151,15 @@ export function validateRuntimeSupportPolicy({
       failures.push(`${path} must be valid YAML before runtime support can be verified.`);
       continue;
     }
-    const setupNodeSteps = collectWorkflowSteps(workflow).filter(
-      (step) =>
-        isRecord(step) &&
+    const setupNodeSteps = collectWorkflowStepEntries(workflow).filter(
+      ({ step }) =>
         typeof step.uses === "string" &&
         step.uses.startsWith("actions/setup-node@")
     );
     if (
       setupNodeSteps.length === 0 ||
       setupNodeSteps.some(
-        (step) =>
+        ({ step }) =>
           !isRecord(step.with) ||
           step.with["node-version"] !== policy.productionContainer?.version
       )
@@ -173,15 +173,22 @@ export function validateRuntimeSupportPolicy({
     if (!workflow) {
       continue;
     }
-    const browserInstallSteps = collectWorkflowSteps(workflow).filter(
-      (step) =>
-        isRecord(step) &&
+    const browserInstallSteps = collectWorkflowStepEntries(workflow).filter(
+      ({ step }) =>
         typeof step.run === "string" &&
-        normalizeInstruction(step.run) ===
-          "node node_modules/playwright/cli.js install chromium"
+        /\bplaywright(?:\/cli\.js)?\b.*\binstall\b.*\bchromium\b/i.test(
+          normalizeInstruction(step.run)
+        )
     );
-    if (browserInstallSteps.length !== 1) {
-      failures.push(`${path} must install Chromium through the repository-locked Playwright CLI.`);
+    if (
+      browserInstallSteps.length !== 1 ||
+      normalizeInstruction(browserInstallSteps[0]?.step.run ?? "") !==
+        "node node_modules/playwright/cli.js install chromium" ||
+      !isUnconditionalWorkflowStep(browserInstallSteps[0])
+    ) {
+      failures.push(
+        `${path} must install Chromium exactly once through an unconditional repository-locked Playwright CLI step.`
+      );
     }
   }
 

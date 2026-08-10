@@ -5,13 +5,22 @@ export function parseWorkflow(source) {
   return parseYaml(source);
 }
 
-export function collectWorkflowSteps(workflow) {
+export function collectWorkflowStepEntries(workflow) {
   if (!isRecord(workflow) || !isRecord(workflow.jobs)) {
     return [];
   }
-  return Object.values(workflow.jobs).flatMap((job) =>
-    isRecord(job) && Array.isArray(job.steps) ? job.steps : []
-  );
+  return Object.values(workflow.jobs).flatMap((job) => {
+    if (!isRecord(job) || !Array.isArray(job.steps)) {
+      return [];
+    }
+    return job.steps
+      .filter(isRecord)
+      .map((step) => ({ job, step }));
+  });
+}
+
+export function isUnconditionalWorkflowStep({ job, step }) {
+  return !Object.hasOwn(job, "if") && !Object.hasOwn(step, "if");
 }
 
 export function parseDockerfile(source) {
