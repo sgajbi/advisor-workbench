@@ -7,6 +7,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: [["list"], ["html", { open: "never", outputFolder: "output/playwright/live-report" }]],
+  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   use: {
     baseURL: process.env.LOTUS_WORKBENCH_LIVE_BASE_URL ?? "http://workbench.dev.lotus",
     trace: "retain-on-failure",

@@ -32,6 +32,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   reporter: [["list"], ["html", { open: "never" }]],
+  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   use: {
     baseURL: playwrightBaseUrl,
     trace: "retain-on-failure",
