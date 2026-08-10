@@ -55,8 +55,8 @@ concurrency group.
   of the governed gate.
 - `npm run quality:dependency-risk`
   fails closed unless every and only direct production dependency is reconciled across
-  regular or optional `package.json` sections, the matching lockfile-root section and resolved lock
-  entry, the complete executable JSON Schema, and the versioned technology-risk inventory. It
+  regular, optional, or required-peer `package.json` sections, the matching lockfile-root section
+  and resolved lock entry, the complete executable JSON Schema, and the versioned technology-risk inventory. It
   rejects mutable or prerelease versions, unapproved or missing SPDX evidence, unsupported
   lifecycle, malformed HTTPS evidence, missing stewardship/security channels, ungoverned review
   ownership, ownerless architecture or exit posture, expired reviews, prohibited state, and

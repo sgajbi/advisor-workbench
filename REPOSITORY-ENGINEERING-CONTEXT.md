@@ -520,9 +520,10 @@ Technology-selection rules:
 5. prefer boring, explicit, repository-native patterns that are easy for engineers and coding agents
    to review over clever framework-specific indirection,
 6. `docs/architecture/workbench-dependency-risk-inventory.v1.json` is the canonical admission
-   record for every direct production dependency, including packages declared as optional but
-   installed by the production `npm ci`. Keep each manifest and matching lockfile section, exact
-   resolved version, SPDX license evidence, steward and security channel, stable lifecycle,
+   record for every direct production dependency, including packages declared as optional and
+   non-optional peers installed by the production `npm ci`; peers explicitly marked optional in
+   `peerDependenciesMeta` remain outside this direct-install set. Keep each manifest and matching
+   lockfile section, exact resolved version, SPDX license evidence, steward and security channel, stable lifecycle,
    Workbench purpose and owner boundary, maturity rationale, criticality, containment, exit posture,
    and review date aligned. Validate the complete JSON Schema with the exact development-only Ajv
    tool rather than maintaining a partial schema interpreter. Keep inventory and dependency review
