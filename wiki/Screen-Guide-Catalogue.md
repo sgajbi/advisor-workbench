@@ -47,7 +47,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | --- | --- | --- | --- | --- |
 | [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Existing guide; complete-standard alignment planned | Gateway and Core |
 | Portfolio Review | `/portfolio` | Active | Guide planned — #605 | Gateway and Core |
-| Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway, Core, and Performance |
+| Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway and Core |
 | Positions | `/positions` | Active | Guide planned — #605 | Gateway and Core |
 | Transactions | `/transactions` | Active | Guide planned — #605 | Gateway and Core |
 | Income And Activity | `/income` | Active | Guide planned — #605 | Gateway and Core |
@@ -68,7 +68,7 @@ separate decision contexts and will receive separate guides even though they sha
 | --- | --- | --- | --- | --- |
 | Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
 | Performance Analysis | `/performance?mode=analysis` | Runtime-gated | Guide planned — #605 | Gateway and Performance |
-| Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway and Performance |
+| Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway, Performance, and Lotus AI |
 | Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 | Performance Evidence | `/performance?mode=evidence` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 
@@ -84,15 +84,15 @@ while the user moves from attention posture into construction, review, and evide
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Manage Overview | `mode=overview` | Active | Guide planned — #605 | Gateway and Manage |
-| Mandate Health | `mode=mandate` | Active | Guide planned — #605 | Gateway and Manage |
-| Rebalance Waves | `mode=waves` | Active | Guide planned — #605 | Gateway and Manage |
-| Construction Alternatives | `mode=construction` | Active | Guide planned — #605 | Gateway, Manage, Risk, and Performance |
-| Portfolio Memory | `mode=memory` | Active | Guide planned — #605 | Gateway and Manage |
-| PM Copilot | `mode=copilot` | Active | Guide planned — #605 | Gateway, Manage, and Lotus AI |
-| PM Operating Quality | `mode=quality` | Active | Guide planned — #605 | Gateway and Manage |
-| Outcome Reviews | `mode=reviews` | Active | Guide planned — #605 | Gateway, Manage, and Performance |
-| Evidence Pack | `mode=proof` | Active | Guide planned — #605 | Gateway and Manage |
+| Manage Overview | `/workbench/{portfolioId}?mode=overview` | Active | Guide planned — #605 | Gateway and Manage |
+| Mandate Health | `/workbench/{portfolioId}?mode=mandate` | Active | Guide planned — #605 | Gateway and Manage |
+| Rebalance Waves | `/workbench/{portfolioId}?mode=waves` | Active | Guide planned — #605 | Gateway and Manage |
+| Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active | Guide planned — #605 | Gateway and Manage |
+| Portfolio Memory | `/workbench/{portfolioId}?mode=memory` | Active | Guide planned — #605 | Gateway and Manage |
+| PM Copilot | `/workbench/{portfolioId}?mode=copilot` | Active | Guide planned — #605 | Gateway, Manage, and Lotus AI |
+| PM Operating Quality | `/workbench/{portfolioId}?mode=quality` | Active | Guide planned — #605 | Gateway and Manage |
+| Outcome Reviews | `/workbench/{portfolioId}?mode=reviews` | Active | Guide planned — #605 | Gateway and Manage |
+| Evidence Pack | `/workbench/{portfolioId}?mode=proof` | Active | Guide planned — #605 | Gateway, Manage, and Report |
 
 The presence of an AI-assisted mode does not make generated content authoritative. Its guide must
 identify the source evidence, human review boundary, persistence posture, and prohibited downstream
@@ -146,7 +146,7 @@ reporting or service contracts.
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | Report Centre | `/reports` | Active | Guide planned — #605 | Gateway and Report |
-| Data-Product Discovery | `/data-products` | Active | Guide planned — #605 | Gateway and registered product owners |
+| Data-Product Discovery | `/data-products` | Active | Guide planned — #605 | Gateway and Lotus domain services |
 
 The Report Centre guide will cover available report definitions, configuration choices, ordering
 or generation posture, archive state, and failure recovery only where currently implemented. The
