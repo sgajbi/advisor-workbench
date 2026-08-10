@@ -2993,7 +2993,21 @@ reason codes, source references, and persistence.
 Workbench #596 owns the slice. Focused selector, command-model, hook, view-model, component, panel,
 and Gateway-create integration proof passes 63 tests, including second-record keyboard and pointer
 selection, reorder and removal, selected-detail fetching, stale-response fencing, source date
-binding, and second-record command payloads. TypeScript, targeted ESLint, CSS governance, and diff
-integrity pass. Isolated production-browser, aggregate, protected-CI, and exact-main evidence remain
-required before closure. Supported source contracts, routes, and operator runtime procedure are
-unchanged; the wiki decision will be confirmed after visual proof.
+binding, and second-record command payloads. TypeScript, targeted ESLint, CSS governance, diff
+integrity, the optimized production build, all 25 routes, and portfolio-record bundle budgets pass.
+
+Isolated production-browser proof against the process-owned PM-quality fixture confirms all three
+second records can be selected independently, exactly three listbox options expose selected state,
+Arrow Down moves focus and selection together, selected fairness and review detail reads return 200,
+review readiness follows `pmq_fair_002`, summary readiness follows `pmq_run_002` and
+`pmq_review_002`, and page-level horizontal overflow remains absent at 1440, 1024, and 390 pixels.
+The only fixture console error is the deliberately unsupported platform-capabilities preload; the
+touched PM-quality requests and React runtime remain successful. Evidence is recorded under
+`output/playwright/issue-596-pm-quality/`, including desktop, compact-desktop, and mobile captures.
+
+The supported route and source contracts are unchanged. `wiki/Supported-Features.md` is updated
+because the supported operating behavior now includes explicit multi-record supervisory selection,
+record-bound detail and commands, and stale-completion fencing. README, runtime runbooks, central
+context, and skills remain intentionally unchanged because repository role, startup procedure,
+cross-repository ownership, and governed delivery rules did not change. Aggregate, protected-CI,
+merge, exact-main, and wiki-publication evidence remain required before closure.
