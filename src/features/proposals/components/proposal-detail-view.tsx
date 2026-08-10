@@ -130,7 +130,9 @@ export default function ProposalDetailView({ proposalId }: Props) {
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
   const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
   const actionEvidenceBlockedRef = useRef(false);
-  const versionCreationRef = useRef(false);
+  const activeVersionCreationRef = useRef<{ proposalId: string; token: symbol } | null>(null);
+  const currentProposalIdRef = useRef(proposalId);
+  currentProposalIdRef.current = proposalId;
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
@@ -206,7 +208,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
   useEffect(() => {
     activeActionRef.current = null;
     actionEvidenceBlockedRef.current = false;
-    versionCreationRef.current = false;
+    activeVersionCreationRef.current = null;
     setActing(false);
     setActionEvidenceBlocked(false);
     setReviewMode("narrative");
@@ -251,7 +253,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
     if (
       !previousState
       || activeActionRef.current
-      || versionCreationRef.current
+      || activeVersionCreationRef.current
       || actionEvidenceBlockedRef.current
       || !actionSourcesReady
     ) return;
@@ -356,21 +358,28 @@ export default function ProposalDetailView({ proposalId }: Props) {
   }
 
   async function onLoadVersion() {
-    if (activeActionRef.current || versionCreationRef.current) {
+    if (activeActionRef.current || activeVersionCreationRef.current) {
       return;
     }
+    const expectedProposalId = proposalId;
     setVersionActionError(null);
     try {
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
+      if (currentProposalIdRef.current !== expectedProposalId) {
+        return;
+      }
       setVersionLookup(data);
     } catch (err) {
+      if (currentProposalIdRef.current !== expectedProposalId) {
+        return;
+      }
       const message = err instanceof Error ? err.message : "Unknown error";
       setVersionActionError(message);
     }
   }
 
   async function onCreateNextVersion() {
-    if (activeActionRef.current || versionCreationRef.current) {
+    if (activeActionRef.current || activeVersionCreationRef.current) {
       return;
     }
     const currentVersionData = (detailQuery.data as ProposalDetailData | undefined)?.current_version as
@@ -383,7 +392,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
       );
       return;
     }
-    versionCreationRef.current = true;
+    const versionContext = { proposalId, token: Symbol("proposal-version") };
+    activeVersionCreationRef.current = versionContext;
     setVersionActionError(null);
     setCreatingVersion(true);
     setCreatedVersionNo(null);
@@ -399,16 +409,24 @@ export default function ProposalDetailView({ proposalId }: Props) {
         },
         idempotencyKey
       );
+      if (activeVersionCreationRef.current?.token !== versionContext.token) {
+        return;
+      }
       const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
       const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
       setRevision((value) => value + 1);
     } catch (err) {
+      if (activeVersionCreationRef.current?.token !== versionContext.token) {
+        return;
+      }
       const message = err instanceof Error ? err.message : "Unknown error";
       setVersionActionError(message);
     } finally {
-      versionCreationRef.current = false;
-      setCreatingVersion(false);
+      if (activeVersionCreationRef.current?.token === versionContext.token) {
+        activeVersionCreationRef.current = null;
+        setCreatingVersion(false);
+      }
     }
   }
 
@@ -610,7 +628,7 @@ export default function ProposalDetailView({ proposalId }: Props) {
             includeEvidence={includeEvidence}
             controlsDisabled={acting || creatingVersion}
             onIncludeEvidenceChange={(value) => {
-              if (!activeActionRef.current && !versionCreationRef.current) {
+              if (!activeActionRef.current && !activeVersionCreationRef.current) {
                 setIncludeEvidence(value);
               }
             }}

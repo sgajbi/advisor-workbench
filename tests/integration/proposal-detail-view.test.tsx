@@ -732,6 +732,60 @@ describe("ProposalDetailView", () => {
     expect(await screen.findByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
   });
 
+  it("abandons a version-creation completion after proposal identity changes", async () => {
+    let completeVersionCreation: (() => void) | undefined;
+    createProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionCreation = () => resolve({
+          data: {
+            proposal: {
+              proposal_id: "pp-1",
+              current_state: "DRAFT",
+              current_version_no: 2,
+            },
+            version: {
+              proposal_version_id: "ppv-2",
+              proposal_id: "pp-1",
+              version_no: 2,
+            },
+            latest_workflow_event: {
+              event_id: "pwe_2",
+              event_type: "NEW_VERSION_CREATED",
+              to_state: "DRAFT",
+              actor_id: "advisor_1",
+              occurred_at: "2026-02-22T00:01:00Z",
+            },
+          },
+        });
+      })
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
+    const queryClient = new QueryClient();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    fireEvent.click(screen.getByRole("button", { name: "Create next version" }));
+    await waitFor(() => expect(createProposalVersionMock).toHaveBeenCalled());
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    completeVersionCreation?.();
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    await waitFor(() => {
+      expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
+    });
+  });
+
   it("resets review state and does not retain prior proposal detail when identity changes", async () => {
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
