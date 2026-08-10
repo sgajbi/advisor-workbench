@@ -1,6 +1,6 @@
 # Workbench Scalability And Availability Decision
 
-- Status: in progress
+- Status: implemented engineering proof; protected PR and exact-main evidence pending
 - Owner: Workbench architecture maintainers
 - GitHub issue: #619
 - Decision date: 2026-08-10
@@ -50,13 +50,13 @@ A deterministic source gate will reject unreviewed introduction of those feature
 
 Next.js recommends a consistent build, a deployment identifier for rolling-version protection, and
 shared cache coordination only when the application uses cache features that require it. Workbench
-will add deterministic build/deployment identity and prove rolling replacement without inventing a
-shared-cache dependency.
+now requires deterministic `WORKBENCH_DEPLOYMENT_ID` input outside development and proves replica
+replacement without inventing a shared-cache dependency.
 
 ## Health, Readiness, And Downstream Failure
 
-Liveness will prove that the Workbench process can serve HTTP. Readiness will prove that the exact
-build and required runtime configuration are valid. Gateway degradation must not fabricate success;
+`/api/health/live` proves that the Workbench process can serve HTTP. `/api/health/ready` proves that
+the exact build and required runtime configuration are valid. Gateway degradation must not fabricate success;
 it should remain visible through bounded BFF failure and panel-level recovery. A Gateway outage does
 not automatically make the static Workbench shell unsafe to serve, so dependency health will be
 observable separately instead of removing every otherwise healthy replica by default.
@@ -73,10 +73,25 @@ Grafana aggregation, alert routing, and fleet dashboards remain `lotus-platform`
 Metric labels use closed business-safe vocabularies; source warning prose, portfolio identifiers,
 client identifiers, actor identifiers, and correlation values are not metric dimensions.
 
-Capacity proof will record workload, warm-up, duration, concurrency or arrival rate, representative
+The repository-owned scale proof records workload, duration, concurrency, representative
 journeys, test data, p95/p99, error rate, Workbench/Gateway/downstream attribution, target resources,
-and load-generator resources. A developer or GitHub-hosted run is regression evidence, not a bank
-production capacity claim.
+and load-generator resources. Its bounded regression uses 240 requests per phase at concurrency 12,
+including baseline, one-replica-unavailable, and recovered phases. A developer or GitHub-hosted run
+is regression evidence, not a bank production capacity claim.
+
+## Implemented Engineering Proof
+
+`npm run scale:proof` runs two replicas of the same hardened production image behind the
+digest-pinned stable NGINX validation balancer. The harness requires no session affinity, proves
+both replicas receive requests, persists a mutation in the source fixture, reads it through the
+other replica, stops one replica, verifies the source record remains available, restarts the
+replica, and proves traffic distribution recovers. It fails on image-identity drift, missing
+distribution, lost persistence, excessive errors, or p95 latency above the governed threshold.
+
+The proof emits JSON and Markdown under `output/scale-proof/`, includes resource snapshots, and
+labels itself `engineering_regression_non_certifying`. The NGINX image is a mature, official,
+digest-pinned validation dependency, scanned separately in protected CI; it is not a Workbench
+production orchestration decision.
 
 ## Deployment And Rollback Inputs
 
@@ -93,16 +108,16 @@ The deployment owner must supply:
 Environment-specific orchestration manifests belong in their owning platform repository. This
 Workbench decision defines application requirements and test evidence only.
 
-## Required Proof Before Certification
+## Required Proof Before Production Certification
 
-1. the state inventory and framework-feature gate pass;
-2. two identical production images distribute Gateway-backed reads without affinity;
-3. one persisted action remains truthful across source refresh and replica replacement;
-4. loss and replacement of one instance remain inside the agreed error and interruption thresholds;
-5. BFF timeout and partial failure paths remain explicit;
-6. workload thresholds fail automation when breached and retain resource evidence;
-7. full security, SBOM, browser, Docker parity, PR, and exact-main lanes pass;
-8. merged documentation and wiki truth are published with strict parity.
+1. the implemented engineering proof must remain green on the exact PR and exact-main image;
+2. platform-owned production manifests must provide replica, rollout, resource, scrape-discovery,
+   termination, rollback, and disruption controls without adding sticky sessions;
+3. representative production-like load, soak, saturation, dependency-degradation, and recovery
+   exercises must establish environment-specific service objectives and scaling thresholds;
+4. production identity, secret, network, observability, backup, disaster-recovery, and operational
+   ownership evidence must pass their separate controls;
+5. merged documentation and wiki truth must remain published with strict parity.
 
 ## Explicit Non-Claims
 

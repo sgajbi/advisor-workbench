@@ -319,6 +319,9 @@ http://workbench.dev.lotus/data-products
   local feature-lane parity: lint, typecheck, coverage, build
 - `make ci-local-docker`
   Docker parity check
+- `npm run scale:proof`
+  non-certifying two-replica production-image regression proof with source persistence and
+  replacement recovery
 - `npm run live:stack:up`
   canonical front-office stack bring-up
 - `npm run live:validate`
@@ -349,6 +352,9 @@ Repo-native gate mapping:
   Playwright smoke
 - `make ci-local-docker`
   Docker parity
+- `npm run scale:proof`
+  hermetic two-replica proof for immutable-image identity, no-affinity distribution, source-owned
+  mutation continuity, one-replica interruption, recovery, latency, error, and resource evidence
 - `npm run live:validate`
   canonical integrated product validation when cross-app flows change
 - `npm run live:validate:construction`
@@ -512,6 +518,12 @@ Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Sur
 - canonical live validation artifacts are written under `output/playwright/live-canonical/`
 - use `output/playwright/live-canonical/live-validation-summary.json` as the structured evidence
   record for review and troubleshooting
+- use `npm run scale:proof` for the isolated engineering-scale regression; evidence is written to
+  `output/scale-proof/` and does not certify production high availability, disaster recovery,
+  bank capacity, multi-region operation, or production identity
+- production replicas must share the same immutable image and `WORKBENCH_DEPLOYMENT_ID`; liveness
+  is served by `/api/health/live`, while `/api/health/ready` validates the build and runtime
+  configuration without hiding Gateway degradation
 
 ## Documentation Map
 
@@ -525,6 +537,8 @@ Copy-paste route and runtime examples live in [wiki/API-Surface.md](wiki/API-Sur
   [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md)
 - production runtime and technology-support decision:
   [docs/architecture/workbench-production-runtime-decision.md](docs/architecture/workbench-production-runtime-decision.md)
+- stateless scaling and availability decision:
+  [docs/architecture/workbench-scalability-and-availability-decision.md](docs/architecture/workbench-scalability-and-availability-decision.md)
 - bank-facing technology-risk baseline:
   [wiki/Technology-Risk-and-Runtime-Support.md](wiki/Technology-Risk-and-Runtime-Support.md)
 - RFC inventory:

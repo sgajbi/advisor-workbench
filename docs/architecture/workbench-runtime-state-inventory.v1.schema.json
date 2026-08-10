@@ -24,7 +24,7 @@
     "reviewedOn": { "$ref": "#/$defs/date" },
     "nextReviewBy": { "$ref": "#/$defs/date" },
     "architecturePosture": {
-      "enum": ["scale-proof-in-progress", "multi-instance-certified"]
+      "enum": ["scale-proof-in-progress", "engineering-scale-proof-passed", "multi-instance-certified"]
     },
     "durableBusinessStateOwner": {
       "const": "upstream-source-services"

@@ -4,7 +4,7 @@
   "governedByIssue": 619,
   "reviewedOn": "2026-08-10",
   "nextReviewBy": "2026-09-10",
-  "architecturePosture": "scale-proof-in-progress",
+  "architecturePosture": "engineering-scale-proof-passed",
   "durableBusinessStateOwner": "upstream-source-services",
   "durableSessionStateOwner": "production-identity-platform-not-yet-certified",
   "stateHolders": [

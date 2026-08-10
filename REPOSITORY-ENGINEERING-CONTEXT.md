@@ -604,10 +604,19 @@ Container runtime rules:
    stages reject `ONBUILD` triggers and `SHELL` overrides so indirect or reinterpreted commands cannot satisfy the
    policy. Comments, instructions in another stage, and earlier superseded directives are not proof.
    Keep developer compatibility ranges distinct from the exact protected
-   build runtime. Do not claim wider browser, horizontal-scale, load/soak, production identity,
-   availability, or bank certification before governed evidence exists. The buyer-facing boundary is documented in
+   build runtime. Do not promote the bounded two-replica engineering regression into load/soak,
+   production identity, high-availability, disaster-recovery, multi-region, bank-capacity, or bank
+   certification claims. The buyer-facing boundary is documented in
    `wiki/Technology-Risk-and-Runtime-Support.md` and the architecture decision in
    `docs/architecture/workbench-production-runtime-decision.md`.
+10. `docs/architecture/workbench-runtime-state-inventory.v1.json` is the executable statelessness
+    boundary. `npm run quality:runtime-state` reconciles every detected module-scope state holder,
+    rejects unreviewed framework caching and Server Actions, prohibits server use of browser caches,
+    and requires rolling deployment identity outside development. `npm run scale:proof` uses two
+    identical production-image replicas, a pinned and separately scanned stable NGINX validation
+    balancer without affinity, and a bounded source fixture to prove cross-replica persistence,
+    one-replica interruption, recovery, thresholds, and resource evidence. This harness is an
+    engineering regression and must not be described as the production deployment topology.
 
 ## Local API Contract Evidence
 
@@ -648,6 +657,8 @@ Use these commands as the primary local contract:
    `npm run live:stack:up`
    `npm run live:stack:up:workbench-local`
    `npm run live:validate`
+10. hermetic stateless scale regression
+    `npm run scale:proof`
 
 ## Validation And CI Expectations
 
@@ -678,6 +689,9 @@ Important validation expectations:
    readiness probe, and browser base URL to the same listener and must disable existing-server
    reuse so current-worktree proof cannot silently exercise stale code,
 4. Docker and build validation remain part of the merge gate,
+4. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
+   validation-only NGINX image, run the two-replica scale proof against that same Workbench image,
+   and upload the machine-readable evidence,
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
    `-LocalApps` runs are useful branch-local development evidence, not certification evidence,
