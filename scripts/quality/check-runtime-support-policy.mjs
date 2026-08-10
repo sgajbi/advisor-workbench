@@ -74,10 +74,15 @@ export function validateRuntimeSupportPolicy({
   }
 
   for (const [path, source] of Object.entries(workflowSources)) {
-    const declaredLines = [...source.matchAll(/node-version:\s*["']?(?<version>\d+\.\d+\.\d+)["']?/g)].map(
-      (match) => match.groups?.version
+    const setupNodeSteps = [...source.matchAll(/uses:\s*actions\/setup-node@[^\r\n]+/g)];
+    const declaredVersions = [...source.matchAll(/node-version:\s*(?<version>[^\r\n#]+)/g)].map(
+      (match) => match.groups?.version.trim().replace(/^(?<quote>["'])(?<value>.*)\k<quote>$/, "$<value>")
     );
-    if (declaredLines.length === 0 || declaredLines.some((version) => version !== policy.productionContainer?.version)) {
+    if (
+      setupNodeSteps.length === 0 ||
+      declaredVersions.length !== setupNodeSteps.length ||
+      declaredVersions.some((version) => version !== policy.productionContainer?.version)
+    ) {
       failures.push(`${path} must use Node ${policy.productionContainer?.version} for every setup-node step.`);
     }
   }

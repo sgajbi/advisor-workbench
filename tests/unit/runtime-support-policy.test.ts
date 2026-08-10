@@ -56,9 +56,14 @@ describe("runtime support policy", () => {
 
   it("rejects CI runtime and non-root container drift", () => {
     const evidence = loadEvidence();
-    evidence.workflowSources[".github/workflows/feature-lane.yml"] = evidence.workflowSources[
-      ".github/workflows/feature-lane.yml"
-    ].replace('node-version: "22.23.1"', 'node-version: "24.1.0"');
+    evidence.workflowSources[".github/workflows/feature-lane.yml"] += [
+      "",
+      "  unsupported-runtime-proof:",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - uses: actions/setup-node@v6",
+      '        with: { node-version: "22" }',
+    ].join("\n");
     evidence.dockerfile = evidence.dockerfile.replace("USER node", "USER root");
 
     expect(validateRuntimeSupportPolicy(evidence)).toEqual(
