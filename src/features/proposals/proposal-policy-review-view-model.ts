@@ -292,7 +292,10 @@ function sourceIdentityAligned({
 
 function valuesAgree(expected: string, candidates: unknown[]): boolean {
   return candidates.every(
-    (candidate) => typeof candidate !== "string" || !candidate.trim() || candidate.trim() === expected
+    (candidate) =>
+      candidate == null ||
+      (typeof candidate === "string" &&
+        (!candidate.trim() || candidate.trim() === expected))
   );
 }
 
