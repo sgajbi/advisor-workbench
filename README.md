@@ -300,8 +300,8 @@ http://workbench.dev.lotus/data-products
 - `npm run lint`
   run the repo-owned governance chain and then `npm run lint:eslint`
 - `npm run quality:dependency-risk`
-  reconcile every direct production dependency, including optional production installs, to exact
-  manifest/lock sections and resolved versions, complete JSON Schema validation, SPDX license
+  reconcile every direct production dependency, including optional installs and required peers, to
+  exact manifest/lock sections and resolved versions, complete JSON Schema validation, SPDX license
   evidence, stable lifecycle, stewardship/security channel, architecture containment, replacement
   posture, governed review ownership, review expiry, and issue-backed exceptions
 - `npm run lint:css-global`

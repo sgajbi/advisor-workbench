@@ -21,7 +21,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | Production container | Official Debian Bookworm slim Node image | Immutable digest, standalone output, non-root runtime |
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
-| Direct dependency admission | 14 exact stable production dependencies | Blocking regular/optional manifest and matching lock-section reconciliation; no current exceptions |
+| Direct dependency admission | 14 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
 
 The versioned source is
 [`workbench-runtime-support-policy.v1.json`](../docs/architecture/workbench-runtime-support-policy.v1.json).
@@ -62,10 +62,10 @@ must be valid HTTPS URLs with a usable host; prefix-shaped placeholders do not s
    server coupling.
 6. The policy expires on a fixed date, preventing Maintenance-LTS software from remaining accepted
    by inertia.
-7. A new direct production library, including an optional package installed by the production
-   `npm ci`, cannot pass protected lanes until its license, stewardship, stable lifecycle, business
-   purpose, architecture containment, exit path, owner, and review date are recorded in the same
-   issue-backed change.
+7. A new direct production library, including an optional package or non-optional peer installed by
+   the production `npm ci`, cannot pass protected lanes until its license, stewardship, stable
+   lifecycle, business purpose, architecture containment, exit path, owner, and review date are
+   recorded in the same issue-backed change.
 
 ## Production And Scaling Posture
 
@@ -96,8 +96,9 @@ builds, bundle budgets, Playwright smoke, Docker parity, container vulnerabiliti
 publication. See [Validation and CI](Validation-and-CI) for the lane evidence map.
 
 `npm run quality:dependency-risk` is the blocking admission control for direct production
-dependencies. It reconciles regular and optional manifest declarations to the same lockfile-root
-section, resolved lock entry, executable JSON Schema, and inventory. The exact development-only Ajv
+dependencies. It reconciles regular, optional, and required-peer manifest declarations to the same
+lockfile-root section, resolved lock entry, executable JSON Schema, and inventory; peers explicitly
+marked optional remain outside the direct-install set. The exact development-only Ajv
 tool executes the complete schema rather than a partial local interpretation. The control rejects
 missing or extra entries, duplicate or drifted versions, prerelease status, license ambiguity,
 unsupported lifecycle, missing stewardship or security channels, ownerless
