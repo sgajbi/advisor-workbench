@@ -482,6 +482,10 @@ Primary areas:
    canonical route, business-screen, mode, navigation-posture, source-owner, evidence, and wiki-guide
    mapping. `npm run quality:screen-docs` compares it with every Next.js route entrypoint and the
    source-owned Performance, Manage, Advisory Journey, and Proposal Lifecycle mode definitions.
+   The gate owns the required authority-family set independently from the registry, rejects missing,
+   duplicate, and unexpected families, and compares literal source alias targets with their resolved
+   canonical surface modes. Required guide headings must be complete Markdown headings outside
+   properly closed fenced blocks; an opening-style delimiter with an info suffix is not a close.
    Every active surface needs one canonical guide or an explicit issue-backed coverage exception;
    aliases reuse the canonical guide instead of creating duplicate prose.
 
