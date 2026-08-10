@@ -3009,5 +3009,8 @@ The supported route and source contracts are unchanged. `wiki/Supported-Features
 because the supported operating behavior now includes explicit multi-record supervisory selection,
 record-bound detail and commands, and stale-completion fencing. README, runtime runbooks, central
 context, and skills remain intentionally unchanged because repository role, startup procedure,
-cross-repository ownership, and governed delivery rules did not change. Aggregate, protected-CI,
-merge, exact-main, and wiki-publication evidence remain required before closure.
+cross-repository ownership, and governed delivery rules did not change. The exact-worktree
+`make check` gate passes zero-vulnerability audits, CSS and architecture governance, ESLint,
+TypeScript, 343 files and 2,002 tests at 91.57% statement/line coverage, the optimized 25-route
+production build, and all portfolio-record bundle budgets. Protected CI, merge, exact-main, and
+wiki-publication evidence remain required before closure.
