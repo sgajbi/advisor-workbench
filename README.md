@@ -295,11 +295,14 @@ http://workbench.dev.lotus/data-products
 - `make install`
   install dependencies
 - `make lint`
-  run `npm run lint`, which composes the CSS global governance ratchet and the flat ESLint gate
-  across the repository, including Next/Core Web Vitals and stable React Hooks correctness rules for
-  production app source
+  run `npm run lint`, which composes runtime support, direct-production-dependency admission, CSS,
+  architecture, screen-documentation, and flat ESLint governance across the repository
 - `npm run lint`
-  run the CSS global governance ratchet and then `npm run lint:eslint`
+  run the repo-owned governance chain and then `npm run lint:eslint`
+- `npm run quality:dependency-risk`
+  reconcile every direct production dependency to exact manifest/lock versions, stable lifecycle,
+  SPDX license evidence, stewardship/security channel, architecture containment, replacement
+  posture, review expiry, and issue-backed exceptions
 - `npm run lint:css-global`
   verify `src/app/globals.css` remains a governed composition entrypoint and global CSS layer
   budgets do not grow without an intentional baseline update
