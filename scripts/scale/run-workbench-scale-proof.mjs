@@ -119,7 +119,7 @@ async function runLoadPhase(name) {
       try {
         const response = await fetch(
           `${baseUrl}/api/bff/api/v1/scale-proof/state`,
-          { cache: "no-store" },
+          { cache: "no-store", signal: globalThis.AbortSignal.timeout(5_000) },
         );
         await response.arrayBuffer();
         results.push({
@@ -178,7 +178,11 @@ function assertPhase(phase, maxErrorRate, requireTwoReplicas) {
 }
 
 async function requestJson(path, init) {
-  const response = await fetch(`${baseUrl}${path}`, { ...init, cache: "no-store" });
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...init,
+    cache: "no-store",
+    signal: globalThis.AbortSignal.timeout(5_000),
+  });
   return {
     status: response.status,
     upstream: response.headers.get("x-workbench-upstream") ?? "unknown",
@@ -204,7 +208,10 @@ async function waitForHttp(url, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(url, { cache: "no-store" });
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal: globalThis.AbortSignal.timeout(2_000),
+      });
       if (response.ok) {
         return;
       }
