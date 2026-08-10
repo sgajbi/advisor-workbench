@@ -43,8 +43,9 @@ concurrency group.
   time-bounded and documented against a GitHub issue; do not weaken the severity thresholds or use
   `npm audit fix --force` as an unreviewed dependency migration.
 - `make lint`
-  runs `npm run lint:css-global` and then the maintained ESLint CLI over the repository root with
-  the flat configuration. The CSS gate keeps `src/app/globals.css` as a small import-only
+  runs runtime-support and direct-dependency-admission governance, CSS and architecture controls,
+  screen-documentation governance, and then the maintained ESLint CLI over the repository root
+  with the flat configuration. The CSS gate keeps `src/app/globals.css` as a small import-only
   entrypoint, preserves governed global layer order, and blocks global-style budget growth unless
   the baseline is intentionally updated with issue evidence. It also rejects migrated component
   selector families, including `portfolio-screen-rail`, if they return to a governed global layer.
@@ -52,6 +53,13 @@ concurrency group.
   correctness rules; tests, live validators, scripts, and configuration files are scanned by the
   shared TypeScript/JavaScript policy. Deprecated `next lint` and `eslint-config-next` are not part
   of the governed gate.
+- `npm run quality:dependency-risk`
+  fails closed unless every and only direct production dependency is reconciled across
+  `package.json`, the lockfile root and resolved lock entry, and the versioned technology-risk
+  inventory. It rejects mutable or prerelease versions, unapproved or missing SPDX evidence,
+  unsupported lifecycle, missing stewardship/security channels, ownerless architecture or exit
+  posture, expired reviews, prohibited state, and incomplete or expired exceptions. This is a
+  blocking Workbench control; the referenced Lotus platform technology policy remains report-only.
 - `npm run lint:css-global`
   validates `src/app/globals.css`, `src/styles/global/*`, and
   `scripts/quality/css-global-governance-baseline.json` against the documented CSS layer model in

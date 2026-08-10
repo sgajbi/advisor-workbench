@@ -518,7 +518,20 @@ Technology-selection rules:
 4. when the only security-fixed version is a newer major, contain changed behavior behind a reusable
    adapter or compatibility layer and avoid adopting unrelated new features in the same slice, and
 5. prefer boring, explicit, repository-native patterns that are easy for engineers and coding agents
-   to review over clever framework-specific indirection.
+   to review over clever framework-specific indirection,
+6. `docs/architecture/workbench-dependency-risk-inventory.v1.json` is the canonical admission
+   record for every direct production dependency. Keep each exact manifest and lockfile version
+   aligned with current SPDX license evidence, steward and security channel, stable lifecycle,
+   Workbench purpose and owner boundary, maturity rationale, criticality, containment, exit posture,
+   and review date,
+7. reuse the platform technology states `approved_default`, `restricted_exception`, and
+   `prohibited`. A restricted dependency requires an owner-assigned, GitHub-issue-backed,
+   time-bounded exception with approval evidence, rollback, and exit criteria; a prohibited
+   dependency cannot enter a production build, and
+8. the platform technology-governance contract remains `report_only` at revision
+   `2868348d289fc685ecf5a218b6c73256ac3a7742`. Workbench deliberately adopts a blocking local
+   direct-production-dependency gate without claiming that the platform-wide contract has been
+   promoted or that a bank, procurement, architecture, or legal reviewer has approved the stack.
 
 Dependency-security and lint-governance rules:
 
@@ -540,6 +553,13 @@ Dependency-security and lint-governance rules:
    `security -> lint -> typecheck -> coverage -> build`; the production build may skip Next's
    duplicate build-time ESLint integration because the repository-owned root ESLint gate has already
    run.
+6. `npm run quality:dependency-risk` reconciles every and only direct `package.json` production
+   dependency to the lockfile root, resolved lock entry, executable inventory schema, immutable
+   platform-policy provenance, stable lifecycle, allowed SPDX license, steward/security channel,
+   architecture boundary, replacement posture, review expiry, and issue-backed exception shape.
+   `npm run lint` executes it before CSS and ESLint, so Feature, PR, Main, and Docker-parity lanes
+   fail closed when a dependency is added, removed, version-drifted, prerelease, license-ambiguous,
+   unsupported, ownerless, stale, prohibited, or incompletely excepted.
 
 Container runtime rules:
 
@@ -607,8 +627,8 @@ Use these commands as the primary local contract:
    `make security`
 3. lint
    `make lint`
-   (`npm run lint`, which runs CSS global governance before `npm run lint:eslint` / the flat ESLint
-   CLI configuration)
+   (`npm run lint`, which runs runtime and dependency-risk governance, CSS global governance, and
+   screen/architecture controls before `npm run lint:eslint` / the flat ESLint CLI configuration)
 4. typecheck
    `make typecheck`
 5. coverage-backed test gate
@@ -642,7 +662,7 @@ Important validation expectations:
 1. unit and integration behavior is validated through Vitest coverage,
 2. dependency security rejects high/critical findings across the complete graph and
    moderate-or-higher findings in browser-delivered production dependencies,
-3. `npm run lint` runs CSS global governance before the flat ESLint CLI gate
+3. `npm run lint` runs runtime/dependency-risk governance and CSS global governance before the flat ESLint CLI gate
    (`npm run lint:eslint`) with stable React Hooks correctness rules (`rules-of-hooks` and
    `exhaustive-deps`) for source files. `npm run lint:react-compiler` is a
    separate report-only evaluator for the broader `eslint-plugin-react-hooks` recommended rule set,

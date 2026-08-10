@@ -40,9 +40,12 @@ The current foundation is composed of mature, documented technologies with large
 ecosystems and supported release channels. Retaining it avoids novelty risk and an unnecessary
 rewrite while allowing technology-risk evidence to be made deterministic.
 
-That observation is not sufficient procurement evidence by itself. #612 remains open for the
-versioned dependency inventory covering license, stewardship, support channel, criticality,
-replaceability, and review ownership for every direct production dependency.
+That observation is not sufficient procurement evidence by itself. The versioned
+[`workbench-dependency-risk-inventory.v1.json`](workbench-dependency-risk-inventory.v1.json) now
+records license, stewardship, security channel, lifecycle, criticality, containment,
+replaceability, and review ownership for every direct production dependency. Its repository-native
+validator blocks unregistered or unsupported dependency changes. #612 remains open for independent
+bank architecture, cyber, legal, procurement, accessibility, operations, and measured-scale review.
 
 ## Runtime topology and trust boundary
 
@@ -142,9 +145,8 @@ Rejected:
 
 The following remain open under #612 and must not be inferred from this decision:
 
-1. direct-production-dependency license, stewardship, support, and replaceability inventory;
-2. deterministic admission and exception control for new runtime dependencies;
-3. enterprise Edge, Firefox, Safari/WebKit, assistive-technology, and managed-browser evidence;
-4. documented timeout, retry, cache, graceful-degradation, rollback, and observability decisions;
-5. measured Workbench/Gateway load, soak, multi-replica, and failure-isolation evidence;
-6. production identity, availability, disaster recovery, and bank architecture/procurement approval.
+1. independent legal and procurement approval of dependency licenses and third-party terms;
+2. enterprise Edge, Firefox, Safari/WebKit, assistive-technology, and managed-browser evidence;
+3. documented timeout, retry, cache, graceful-degradation, rollback, and observability decisions;
+4. measured Workbench/Gateway load, soak, multi-replica, and failure-isolation evidence;
+5. production identity, availability, disaster recovery, and bank architecture/procurement approval.
