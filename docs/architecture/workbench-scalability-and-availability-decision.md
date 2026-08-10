@@ -36,9 +36,10 @@ Server-rendered portfolio reads now bypass the module response cache. Each rende
 so two replicas cannot disagree because one process retained an older URL response. Client-side reuse
 remains a presentation optimization and cannot create source truth.
 
-The current raw analytics event and attention-deduplication stores are recorded as a short-lived
-issue #619 exception. Scale certification cannot close until histogram/counter state is aggregated,
-diagnostic history is bounded, and label cardinality is closed.
+Analytics counters and histograms retain bounded aggregate series independently from a 1,024-event
+diagnostic ring. Attention deduplication and panel-failure tracking are bounded, metric contexts come
+from the reviewed surface registry, and source prose is reduced to a closed reason vocabulary. A
+separate dropped-series counter makes budget exhaustion visible without disrupting business flows.
 
 ## Framework Cache And Version-Skew Posture
 

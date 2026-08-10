@@ -103,12 +103,17 @@ describe("runtime state inventory", () => {
 
   it("rejects expired state review and remediation exceptions", () => {
     const evidence = loadEvidence();
+    evidence.inventory.stateHolders[0].temporaryException = {
+      issue: 619,
+      expiresOn: "2026-09-15",
+      requiredRemediation: "Remove the test exception.",
+    };
     evidence.today = "2026-10-01";
 
     expect(validateRuntimeStateInventory(evidence)).toEqual(
       expect.arrayContaining([
         expect.stringContaining("inventory review expired"),
-        expect.stringContaining("analytics-instance-telemetry expired"),
+        expect.stringContaining("performance-rolling-measure-lookup expired"),
       ]),
     );
   });

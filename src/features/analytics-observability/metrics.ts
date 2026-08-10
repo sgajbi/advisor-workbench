@@ -5,12 +5,36 @@ import {
   type AnalyticsUiState,
   type WorkbenchAnalyticsUiBrowserEvent,
   type WorkbenchAnalyticsUiMetricFamily,
+  ANALYTICS_UI_ATTENTION_EVENT_TYPES,
+  ANALYTICS_UI_SEVERITY_LEVELS,
   WORKBENCH_ANALYTICS_UI_BROWSER_EVENTS,
   WORKBENCH_ANALYTICS_UI_METRIC_FAMILIES,
   assertAnalyticsUiLabels,
   buildAnalyticsUiLabels,
   isAnalyticsUiState,
 } from "./contract";
+import {
+  ANALYTICS_UI_HISTOGRAM_BUCKETS,
+  MAX_ANALYTICS_UI_DURATION_SECONDS,
+  appendAnalyticsUiMetricEvent,
+  clearAnalyticsUiPanelFailure,
+  getAnalyticsUiDroppedSeriesCount,
+  getAnalyticsUiMetricSamples,
+  incrementAnalyticsUiPanelFailure,
+  rememberAnalyticsUiAttentionKey,
+  type WorkbenchAnalyticsUiMetricEvent,
+  type WorkbenchAnalyticsUiMetricSample,
+} from "./metric-store";
+
+export {
+  getAnalyticsUiMetricEvents,
+  getAnalyticsUiMetricSamples,
+  resetAnalyticsUiMetricEvents,
+} from "./metric-store";
+export type {
+  WorkbenchAnalyticsUiMetricEvent,
+  WorkbenchAnalyticsUiMetricSample,
+} from "./metric-store";
 
 export type AnalyticsUiFreshnessBucket = "fresh" | "stale" | "unknown";
 export type AnalyticsUiStatusClass = "2xx" | "3xx" | "4xx" | "5xx" | "network";
@@ -30,22 +54,6 @@ export interface AnalyticsUiPanelClassificationInput {
   empty?: boolean;
   partial?: boolean;
   degraded?: boolean;
-}
-
-export interface WorkbenchAnalyticsUiMetricEvent {
-  event_name: WorkbenchAnalyticsUiBrowserEvent;
-  metric_name: WorkbenchAnalyticsUiMetricFamily;
-  value: number;
-  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>;
-  recorded_at: string;
-}
-
-export interface WorkbenchAnalyticsUiMetricSample {
-  metric_name: WorkbenchAnalyticsUiMetricFamily;
-  metric_type: "counter" | "histogram";
-  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>;
-  value: number;
-  sample_count: number;
 }
 
 export interface WorkbenchAnalyticsUiObservationContext {
@@ -697,22 +705,17 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
 ] as const satisfies readonly WorkbenchAnalyticsUiObservationContext[];
 
-const analyticsUiMetricStore = globalThis as typeof globalThis & {
-  __lotusAnalyticsUiMetricEvents?: WorkbenchAnalyticsUiMetricEvent[];
-  __lotusAnalyticsUiAttentionDedupeKeys?: Set<string>;
-  __lotusAnalyticsUiPanelFailureCounts?: Map<string, number>;
-};
-
-const metricEvents = (analyticsUiMetricStore.__lotusAnalyticsUiMetricEvents ??=
-  []);
-const attentionDedupeKeys =
-  (analyticsUiMetricStore.__lotusAnalyticsUiAttentionDedupeKeys ??=
-    new Set<string>());
-const panelFailureCounts =
-  (analyticsUiMetricStore.__lotusAnalyticsUiPanelFailureCounts ??= new Map<
-    string,
-    number
-  >());
+const METRIC_BY_EVENT = {
+  "workbench.analytics.panel_hydration":
+    "lotus_workbench_panel_hydration_duration_seconds",
+  "workbench.analytics.panel_state": "lotus_workbench_panel_state_total",
+  "workbench.analytics.api_request":
+    "lotus_workbench_api_request_duration_seconds",
+  "workbench.analytics.attention": "lotus_analytics_ui_attention_events_total",
+} as const satisfies Record<
+  WorkbenchAnalyticsUiBrowserEvent,
+  WorkbenchAnalyticsUiMetricFamily
+>;
 
 export function classifyAnalyticsUiPanelState(
   input: AnalyticsUiPanelClassificationInput,
@@ -1001,10 +1004,9 @@ export function recordAnalyticsUiAttentionEvent(params: {
 }): WorkbenchAnalyticsUiMetricEvent | undefined {
   const labels = buildAttentionLabels(params);
   const dedupeKey = JSON.stringify(labels);
-  if (attentionDedupeKeys.has(dedupeKey)) {
+  if (!rememberAnalyticsUiAttentionKey(dedupeKey)) {
     return undefined;
   }
-  attentionDedupeKeys.add(dedupeKey);
   return recordMetricEvent({
     eventName: "workbench.analytics.attention",
     metricName: "lotus_analytics_ui_attention_events_total",
@@ -1095,44 +1097,12 @@ export async function observeWorkbenchAnalyticsRequest<T>(
   }
 }
 
-export function getAnalyticsUiMetricEvents(): readonly WorkbenchAnalyticsUiMetricEvent[] {
-  return metricEvents;
-}
-
 export function recordAnalyticsUiExternalMetricEvent(
   input: unknown,
 ): WorkbenchAnalyticsUiMetricEvent {
   const event = parseExternalMetricEvent(input);
-  metricEvents.push(event);
+  appendAnalyticsUiMetricEvent(event);
   return event;
-}
-
-export function getAnalyticsUiMetricSamples(): WorkbenchAnalyticsUiMetricSample[] {
-  const samples = new Map<string, WorkbenchAnalyticsUiMetricSample>();
-  for (const event of metricEvents) {
-    const sampleKey = JSON.stringify({
-      metric_name: event.metric_name,
-      labels: event.labels,
-    });
-    const existing = samples.get(sampleKey);
-    if (existing) {
-      existing.value += event.value;
-      existing.sample_count += 1;
-    } else {
-      samples.set(sampleKey, {
-        metric_name: event.metric_name,
-        metric_type:
-          event.metric_name === "lotus_workbench_panel_state_total" ||
-          event.metric_name === "lotus_analytics_ui_attention_events_total"
-            ? "counter"
-            : "histogram",
-        labels: event.labels,
-        value: event.value,
-        sample_count: 1,
-      });
-    }
-  }
-  return [...samples.values()];
 }
 
 export function renderAnalyticsUiPrometheusMetrics(): string {
@@ -1146,12 +1116,15 @@ export function renderAnalyticsUiPrometheusMetrics(): string {
     "# TYPE lotus_workbench_api_request_duration_seconds histogram",
     "# HELP lotus_analytics_ui_attention_events_total Bounded analytics UI attention events for selected Workbench panels.",
     "# TYPE lotus_analytics_ui_attention_events_total counter",
+    "# HELP lotus_workbench_metrics_dropped_series_total Metric series rejected after the per-instance series budget was exhausted.",
+    "# TYPE lotus_workbench_metrics_dropped_series_total counter",
   ];
   for (const sample of samples) {
-    lines.push(
-      `${sample.metric_name}${formatPrometheusLabels(sample.labels)} ${sample.value}`,
-    );
-    if (sample.metric_type === "histogram") {
+    if (sample.metric_type === "counter") {
+      lines.push(
+        `${sample.metric_name}${formatPrometheusLabels(sample.labels)} ${sample.value}`,
+      );
+    } else {
       lines.push(...renderHistogramBucketLines(sample));
       lines.push(
         `${sample.metric_name}_sum${formatPrometheusLabels(sample.labels)} ${sample.value}`,
@@ -1161,13 +1134,26 @@ export function renderAnalyticsUiPrometheusMetrics(): string {
       );
     }
   }
+  lines.push(
+    `lotus_workbench_metrics_dropped_series_total ${getAnalyticsUiDroppedSeriesCount()}`,
+  );
   return `${lines.join("\n")}\n`;
 }
 
-export function resetAnalyticsUiMetricEvents(): void {
-  metricEvents.length = 0;
-  attentionDedupeKeys.clear();
-  panelFailureCounts.clear();
+function assertObservedSurface(
+  context: WorkbenchAnalyticsUiObservationContext,
+): void {
+  const supported = WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES.some(
+    (surface) =>
+      surface.route === context.route &&
+      surface.panel === context.panel &&
+      surface.operation === context.operation,
+  );
+  if (!supported) {
+    throw new Error(
+      `Analytics UI metric context is not registered: ${context.route}/${context.panel}/${context.operation}.`,
+    );
+  }
 }
 
 function recordAttentionForObservation(params: {
@@ -1180,15 +1166,14 @@ function recordAttentionForObservation(params: {
 }): void {
   const panelKey = `${params.context.route}:${params.context.panel}`;
   if (params.state === "error") {
-    const nextFailureCount = (panelFailureCounts.get(panelKey) ?? 0) + 1;
-    panelFailureCounts.set(panelKey, nextFailureCount);
+    const nextFailureCount = incrementAnalyticsUiPanelFailure(panelKey);
     if (nextFailureCount >= 3) {
       recordAnalyticsUiAttentionEvent({
         context: params.context,
         attentionType: "panel_repeated_failure",
         severity: "action_required",
         state: params.state,
-        reason: sanitizeAttentionReason(params.reason ?? "repeated_failure"),
+        reason: normalizeAttentionReason(params.reason ?? "repeated_failure"),
         freshnessBucket: params.freshnessBucket,
         supportabilityState: params.supportabilityState,
       });
@@ -1196,7 +1181,7 @@ function recordAttentionForObservation(params: {
     return;
   }
 
-  panelFailureCounts.delete(panelKey);
+  clearAnalyticsUiPanelFailure(panelKey);
   const reason = resolveAttentionReason(params.response, params.reason);
   if (params.state === "stale") {
     recordAnalyticsUiAttentionEvent({
@@ -1250,7 +1235,7 @@ function buildAttentionLabels(params: {
     attention_type: params.attentionType,
     severity: params.severity,
     state: params.state,
-    reason: sanitizeAttentionReason(params.reason),
+    reason: normalizeAttentionReason(params.reason),
     freshness_bucket: params.freshnessBucket ?? "unknown",
     supportability_state: params.supportabilityState ?? "unknown",
   });
@@ -1259,7 +1244,7 @@ function buildAttentionLabels(params: {
 function resolveAttentionReason(response: unknown, fallback?: string): string {
   const warning = readFirstString(response, "warnings");
   if (warning) {
-    return sanitizeAttentionReason(warning);
+    return "source_warning";
   }
   const partialFailureReason = readFirstObjectString(
     response,
@@ -1267,18 +1252,82 @@ function resolveAttentionReason(response: unknown, fallback?: string): string {
     ["error_code", "reason", "source_service"],
   );
   if (partialFailureReason) {
-    return sanitizeAttentionReason(partialFailureReason);
+    return "source_partial_failure";
   }
-  return sanitizeAttentionReason(fallback ?? "source_state");
+  return normalizeAttentionReason(fallback ?? "source_state");
 }
 
-function sanitizeAttentionReason(reason: string): string {
-  const normalized = reason
-    .trim()
-    .replace(/[^A-Za-z0-9_.:-]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 80);
-  return normalized || "unknown";
+function normalizeAttentionReason(reason: string): string {
+  const normalized = reason.trim().toLowerCase();
+  return [
+    "client",
+    "server",
+    "network",
+    "none",
+    "repeated_failure",
+    "source_warning",
+    "source_partial_failure",
+    "source_state",
+  ].includes(normalized)
+    ? normalized
+    : "other";
+}
+
+function normalizeErrorCategory(category: string): string {
+  const normalized = category.trim().toLowerCase();
+  return ["client", "server", "network", "none"].includes(normalized)
+    ? normalized
+    : "other";
+}
+
+function assertMetricLabelVocabulary(
+  labels: Partial<Record<AnalyticsUiAllowedLabel, string>>,
+): void {
+  const allowedValues: Partial<Record<AnalyticsUiAllowedLabel, readonly string[]>> = {
+    service: ["lotus-gateway"],
+    state: [
+      "loading",
+      "ready",
+      "empty",
+      "partial",
+      "stale",
+      "degraded",
+      "error",
+      "permission_blocked",
+      "unsupported",
+    ],
+    reason: [
+      "client",
+      "server",
+      "network",
+      "none",
+      "repeated_failure",
+      "source_warning",
+      "source_partial_failure",
+      "source_state",
+      "other",
+    ],
+    freshness_bucket: ["fresh", "stale", "unknown"],
+    supportability_state: [
+      "ready",
+      "partial",
+      "action_required",
+      "unsupported",
+      "unknown",
+    ],
+    attention_type: ANALYTICS_UI_ATTENTION_EVENT_TYPES,
+    severity: ANALYTICS_UI_SEVERITY_LEVELS,
+    status_class: ["2xx", "3xx", "4xx", "5xx", "network"],
+    error_category: ["client", "server", "network", "none", "other"],
+    region: ["APAC", "EMEA", "AMERICAS", "GLOBAL"],
+    environment: ["dev", "test", "uat", "prod", "production"],
+  };
+  for (const [label, allowed] of Object.entries(allowedValues)) {
+    const value = labels[label as AnalyticsUiAllowedLabel];
+    if (value !== undefined && !allowed?.includes(value)) {
+      throw new Error(`Analytics UI metric label ${label} has unsupported value.`);
+    }
+  }
 }
 
 function recordMetricEvent(params: {
@@ -1288,22 +1337,37 @@ function recordMetricEvent(params: {
   context: WorkbenchAnalyticsUiObservationContext;
   labels: Partial<Record<AnalyticsUiAllowedLabel, string | undefined>>;
 }): WorkbenchAnalyticsUiMetricEvent {
+  assertObservedSurface(params.context);
   const labels = buildAnalyticsUiLabels({
     route: params.context.route,
     panel: params.context.panel,
     service: params.context.service ?? "lotus-gateway",
     operation: params.context.operation,
     ...params.labels,
+    reason: params.labels.reason
+      ? normalizeAttentionReason(params.labels.reason)
+      : undefined,
+    error_category: params.labels.error_category
+      ? normalizeErrorCategory(params.labels.error_category)
+      : undefined,
   });
   assertAnalyticsUiLabels(labels);
+  assertMetricLabelVocabulary(labels);
   const event: WorkbenchAnalyticsUiMetricEvent = {
     event_name: params.eventName,
     metric_name: params.metricName,
-    value: params.value,
+    value:
+      params.metricName === "lotus_workbench_panel_state_total" ||
+      params.metricName === "lotus_analytics_ui_attention_events_total"
+        ? 1
+        : Math.min(
+            MAX_ANALYTICS_UI_DURATION_SECONDS,
+            Math.max(0, params.value),
+          ),
     labels,
     recorded_at: new Date().toISOString(),
   };
-  metricEvents.push(event);
+  appendAnalyticsUiMetricEvent(event);
   publishBrowserMetricEvent(event);
   return event;
 }
@@ -1354,6 +1418,18 @@ function parseExternalMetricEvent(
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error("Analytics UI metric event has invalid value.");
   }
+  if (METRIC_BY_EVENT[eventName as WorkbenchAnalyticsUiBrowserEvent] !== metricName) {
+    throw new Error("Analytics UI metric event does not match its metric family.");
+  }
+  const counterMetric =
+    metricName === "lotus_workbench_panel_state_total" ||
+    metricName === "lotus_analytics_ui_attention_events_total";
+  if (
+    (counterMetric && value !== 1) ||
+    (!counterMetric && value > MAX_ANALYTICS_UI_DURATION_SECONDS)
+  ) {
+    throw new Error("Analytics UI metric event value exceeds its governed bounds.");
+  }
   if (!labels || typeof labels !== "object" || Array.isArray(labels)) {
     throw new Error("Analytics UI metric event must include labels.");
   }
@@ -1375,6 +1451,24 @@ function parseExternalMetricEvent(
       "Analytics UI metric event must include route, panel, and operation labels.",
     );
   }
+  assertObservedSurface({
+    route: normalizedLabels.route,
+    panel: normalizedLabels.panel,
+    operation: normalizedLabels.operation,
+    service: normalizedLabels.service,
+  });
+  if (normalizedLabels.service && normalizedLabels.service !== "lotus-gateway") {
+    throw new Error("Analytics UI metric event has unsupported service label.");
+  }
+  if (normalizedLabels.reason) {
+    normalizedLabels.reason = normalizeAttentionReason(normalizedLabels.reason);
+  }
+  if (normalizedLabels.error_category) {
+    normalizedLabels.error_category = normalizeErrorCategory(
+      normalizedLabels.error_category,
+    );
+  }
+  assertMetricLabelVocabulary(normalizedLabels);
   return {
     event_name: eventName as WorkbenchAnalyticsUiBrowserEvent,
     metric_name: metricName as WorkbenchAnalyticsUiMetricFamily,
@@ -1615,14 +1709,8 @@ function formatPrometheusLabels(
 function renderHistogramBucketLines(
   sample: WorkbenchAnalyticsUiMetricSample,
 ): string[] {
-  const buckets = [0.1, 0.5, 1, 3, 5, 10];
-  const sourceEvents = metricEvents.filter(
-    (event) =>
-      event.metric_name === sample.metric_name &&
-      JSON.stringify(event.labels) === JSON.stringify(sample.labels),
-  );
-  const lines = buckets.map((bucket) => {
-    const count = sourceEvents.filter((event) => event.value <= bucket).length;
+  const lines = ANALYTICS_UI_HISTOGRAM_BUCKETS.map((bucket, index) => {
+    const count = sample.bucket_counts?.[index] ?? 0;
     return `${sample.metric_name}_bucket${formatPrometheusLabels({
       ...sample.labels,
       // Prometheus requires le on histogram buckets; the contract validator keeps

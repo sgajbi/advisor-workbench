@@ -124,19 +124,20 @@
     },
     {
       "id": "analytics-instance-telemetry",
-      "file": "src/features/analytics-observability/metrics.ts",
-      "symbols": ["analyticsUiMetricStore", "attentionDedupeKeys", "panelFailureCounts"],
+      "file": "src/features/analytics-observability/metric-store.ts",
+      "symbols": [
+        "analyticsUiMetricStore",
+        "metricEvents",
+        "metricSamples",
+        "attentionDedupeKeys",
+        "panelFailureCounts"
+      ],
       "classification": "instance_telemetry",
       "purpose": "Per-instance UI request, panel-state, and attention instrumentation.",
-      "bounds": "Temporary exception: raw events and attention dedupe keys require deterministic bounds under issue 619.",
+      "bounds": "At most 1,024 diagnostic events, 4,096 aggregate series, 512 attention dedupe keys, and 512 panel failure keys per instance; new series beyond the budget are counted and rejected.",
       "replicaBehavior": "Each replica exposes its own scrape state; fleet aggregation belongs to the platform metrics stack.",
       "businessAuthority": false,
-      "sessionAuthority": false,
-      "temporaryException": {
-        "issue": 619,
-        "expiresOn": "2026-08-24",
-        "requiredRemediation": "Aggregate histogram and counter state, bound diagnostics, and close reason-label cardinality before scale certification."
-      }
+      "sessionAuthority": false
     },
     {
       "id": "intake-browser-row-sequence",

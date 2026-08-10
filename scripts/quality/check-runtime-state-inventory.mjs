@@ -10,7 +10,8 @@ const INVENTORY_PATH =
 const SCHEMA_PATH =
   "docs/architecture/workbench-runtime-state-inventory.v1.schema.json";
 const NEXT_CONFIG_PATH = "next.config.mjs";
-const MUTABLE_COLLECTION_PATTERN = /\bnew\s+(?:Map|Set|WeakMap|WeakSet)\b|\bglobalThis\b/;
+const MUTABLE_COLLECTION_PATTERN =
+  /\bnew\s+(?:Map|Set|WeakMap|WeakSet)\b|\bglobalThis\b|\b[A-Za-z_$][A-Za-z0-9_$]*\.__[A-Za-z0-9_$]+/;
 const PROHIBITED_SOURCE_FEATURES = [
   { name: "Server Action directive", pattern: /["']use server["']/ },
   { name: "Cache Component directive", pattern: /["']use cache(?::\s*remote)?["']/ },
