@@ -372,6 +372,56 @@ describe("runtime support policy", () => {
     );
   });
 
+  it.each([
+    [
+      "step",
+      "        run: node node_modules/playwright/cli.js install chromium",
+      [
+        "        shell: cat {0}",
+        "        run: node node_modules/playwright/cli.js install chromium",
+      ].join("\n"),
+    ],
+    [
+      "job",
+      /(  e2e-smoke:\r?\n    name: PR Merge Gate \/ Playwright Smoke\r?\n    needs: \[quality-gate\]\r?\n    runs-on: ubuntu-latest\r?\n    timeout-minutes: 30)/,
+      [
+        "$1",
+        "    defaults:",
+        "      run:",
+        "        shell: cat {0}",
+      ].join("\n"),
+    ],
+    [
+      "workflow",
+      "jobs:",
+      ["defaults:", "  run:", "    shell: cat {0}", "jobs:"].join("\n"),
+    ],
+  ])("rejects a non-executing %s-level smoke shell", (_scope, target, replacement) => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/pr-merge-gate.yml"] = evidence.workflowSources[
+      ".github/workflows/pr-merge-gate.yml"
+    ].replace(target, replacement);
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("governed executing shell")])
+    );
+  });
+
+  it.each(["bash", "sh"])("accepts the governed explicit %s smoke shell", (shell) => {
+    const evidence = loadEvidence();
+    evidence.workflowSources[".github/workflows/pr-merge-gate.yml"] = evidence.workflowSources[
+      ".github/workflows/pr-merge-gate.yml"
+    ].replace(
+      "        run: node node_modules/playwright/cli.js install chromium",
+      [
+        `        shell: ${shell}`,
+        "        run: node node_modules/playwright/cli.js install chromium",
+      ].join("\n")
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual([]);
+  });
+
   it("ignores commented container base-image evidence", () => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
@@ -489,6 +539,22 @@ describe("runtime support policy", () => {
     'RUN ["/usr/local/bin/npm", "--prefix", "/app", "i"]',
     'RUN ["node", "/usr/local/lib/node_modules/npm/bin/npm-cli.js", "install"]',
   ])("rejects an exec-form mutable install: %s", (instruction) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = evidence.dockerfile.replace(
+      "RUN npm ci --no-audit --no-fund",
+      `RUN npm ci --no-audit --no-fund\n${instruction}`
+    );
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one dependency install")])
+    );
+  });
+
+  it.each([
+    `RUN sh -c 'npm install'`,
+    'RUN sh -c "npm install"',
+    "RUN (npm install)",
+  ])("rejects a quoted or grouped shell-form mutable install: %s", (instruction) => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
       "RUN npm ci --no-audit --no-fund",
