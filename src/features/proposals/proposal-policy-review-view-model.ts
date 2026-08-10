@@ -282,9 +282,14 @@ function sourceIdentityAligned({
       signOffPackage?.lineage?.evaluation_id,
       workflow?.evaluation_id,
     ]) &&
-    valuesAgree(proposalId, [packageEvaluation?.proposal_id, workflow?.proposal_id]) &&
+    valuesAgree(proposalId, [
+      packageEvaluation?.proposal_id,
+      signOffPackage?.lineage?.proposal_id,
+      workflow?.proposal_id,
+    ]) &&
     valuesAgree(proposalVersion, [
       packageEvaluation?.proposal_version_id,
+      signOffPackage?.lineage?.proposal_version_id,
       workflow?.proposal_version_id,
     ])
   );
