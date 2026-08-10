@@ -146,8 +146,25 @@ describe("runtime support policy", () => {
         expect.stringContaining("review expired"),
         expect.stringContaining("Browser certification"),
         expect.stringContaining("Scaling certification"),
-        expect.stringContaining("load or soak certification"),
+        expect.stringContaining("cross-browser-bank-certification"),
+        expect.stringContaining("load-or-soak-certification"),
+        expect.stringContaining("horizontal-scale-certification"),
+        expect.stringContaining("production-identity-certification"),
       ])
+    );
+  });
+
+  it("rejects missing or malformed lifecycle dates", () => {
+    const missingDeadline = loadEvidence();
+    Reflect.deleteProperty(missingDeadline.policy, "nextReviewBy");
+    const invalidReviewDate = loadEvidence();
+    invalidReviewDate.policy.reviewedOn = "2026-02-30";
+
+    expect(validateRuntimeSupportPolicy(missingDeadline)).toEqual(
+      expect.arrayContaining([expect.stringContaining("nextReviewBy must be a real ISO")])
+    );
+    expect(validateRuntimeSupportPolicy(invalidReviewDate)).toEqual(
+      expect.arrayContaining([expect.stringContaining("reviewedOn must be a real ISO")])
     );
   });
 });

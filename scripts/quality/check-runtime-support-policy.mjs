@@ -8,6 +8,12 @@ const WORKFLOW_PATHS = [
   ".github/workflows/pr-merge-gate.yml",
   ".github/workflows/main-releasability.yml",
 ];
+const REQUIRED_NON_CLAIMS = [
+  "cross-browser-bank-certification",
+  "load-or-soak-certification",
+  "horizontal-scale-certification",
+  "production-identity-certification",
+];
 
 export function validateRuntimeSupportPolicy({
   packageJson,
@@ -93,7 +99,12 @@ export function validateRuntimeSupportPolicy({
     }
   }
 
-  if (policy.nextReviewBy < today) {
+  if (!isIsoDate(policy.reviewedOn)) {
+    failures.push("Runtime support policy reviewedOn must be a real ISO YYYY-MM-DD date.");
+  }
+  if (!isIsoDate(policy.nextReviewBy)) {
+    failures.push("Runtime support policy nextReviewBy must be a real ISO YYYY-MM-DD date.");
+  } else if (policy.nextReviewBy < today) {
     failures.push(`Runtime support policy review expired on ${policy.nextReviewBy}.`);
   }
   if (policy.browserPolicy?.certificationStatus !== "partial-chromium-proof-only") {
@@ -102,8 +113,10 @@ export function validateRuntimeSupportPolicy({
   if (policy.scalingPolicy?.certificationStatus !== "not-capacity-certified") {
     failures.push("Scaling certification must remain explicit until measured load and capacity proof passes.");
   }
-  if (!policy.explicitNonClaims?.includes("load-or-soak-certification")) {
-    failures.push("The policy must not imply load or soak certification before measured proof exists.");
+  for (const nonClaim of REQUIRED_NON_CLAIMS) {
+    if (!policy.explicitNonClaims?.includes(nonClaim)) {
+      failures.push(`Runtime support policy must retain explicit non-claim ${nonClaim}.`);
+    }
   }
 
   return failures;
@@ -141,6 +154,14 @@ function expectEqual(failures, label, actual, expected) {
   if (actual !== expected) {
     failures.push(`${label} must be ${JSON.stringify(expected)}; received ${JSON.stringify(actual)}.`);
   }
+}
+
+function isIsoDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
