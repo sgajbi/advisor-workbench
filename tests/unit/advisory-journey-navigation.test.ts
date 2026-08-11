@@ -67,7 +67,7 @@ describe("advisory journey navigation", () => {
       },
     );
     expect(items.some((item) => item.key === "simulation")).toBe(false);
-    expect(items.every((item) => !item.href.includes("#simulation"))).toBe(true);
+    expect(items.every((item) => item.href?.includes("#simulation") !== true)).toBe(true);
   });
 
   it("keeps each journey definition anchored to advisor decisions and source-owned data", () => {
