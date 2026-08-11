@@ -198,7 +198,7 @@ describe("analytics UI observability metrics", () => {
 
     const renderedMetrics = renderAnalyticsUiPrometheusMetrics();
     expect(renderedMetrics).toContain(
-      "lotus_workbench_panel_state_total{route=\"workbench.performance\""
+      "lotus_workbench_panel_state_total{freshness_bucket=\"fresh\",operation=\"performance.workspace.summary\",panel=\"performance-summary\",route=\"workbench.performance\""
     );
     expect(renderedMetrics).toContain(
       "lotus_workbench_api_request_duration_seconds_sum"

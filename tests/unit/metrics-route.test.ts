@@ -74,7 +74,7 @@ describe("metrics route", () => {
     expect(body).toContain("# TYPE lotus_workbench_panel_state_total counter");
     expect(body).toContain("# TYPE lotus_analytics_ui_attention_events_total counter");
     expect(body).toContain(
-      'lotus_workbench_panel_state_total{route="workbench.risk",panel="risk-summary"'
+      'lotus_workbench_panel_state_total{freshness_bucket="unknown",operation="risk.summary",panel="risk-summary",reason="other",route="workbench.risk"'
     );
     expect(body).not.toContain("portfolio_id");
     expect(body).not.toContain("client_name");
