@@ -84,3 +84,8 @@ Link to the canonical shared owners instead of repeating their content:
 - [Integrations](../../wiki/Integrations.md)
 - [Validation and CI](../../wiki/Validation-and-CI.md)
 - [Operations Runbook](../../wiki/Operations-Runbook.md)
+- [Technology Risk and Runtime Support](../../wiki/Technology-Risk-and-Runtime-Support.md)
+
+Keep technology certification, dependency support, scalability evidence, resilience posture, and
+explicit non-claims in the shared runtime page. A screen guide should state only its source
+dependency, user-visible degraded behavior, recovery path, and screen-specific evidence.
