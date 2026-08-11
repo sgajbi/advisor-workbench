@@ -8,9 +8,9 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. One existing screen guide is linked below and is
-scheduled for alignment to the complete guide standard; the other 35 dedicated guides remain
-explicit work under [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
+screens or modes, and two compatibility aliases**. The Advisor Book guide has passed the complete
+guide standard; the remaining 35 dedicated guides are explicit work under
+[lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
 yet passed the documentation gate.
