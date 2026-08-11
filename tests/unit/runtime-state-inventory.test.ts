@@ -370,6 +370,9 @@ describe("runtime state inventory", () => {
     ["Next data cache", "unstable_cache(() => sourceRead())"],
     ["on-demand revalidation", 'revalidateTag("portfolio")'],
     ["explicit fetch cache", 'fetch(url, { cache: "force-cache" })'],
+    ["route segment revalidation", "export const revalidate = 60;"],
+    ["static route segment", 'export const dynamic = "force-static";'],
+    ["route segment fetch cache", 'export const fetchCache = "force-cache";'],
   ])("rejects unreviewed %s", (_name, addition) => {
     const evidence = loadEvidence();
     evidence.sourceFiles["src/apps/portfolio/api.ts"] += `\n${addition}\n`;

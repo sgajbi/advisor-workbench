@@ -52,6 +52,19 @@ const PROHIBITED_SOURCE_FEATURES = [
     name: "Next fetch revalidation",
     pattern: /next\s*:\s*\{[^}]*\b(?:revalidate|tags)\s*:/s,
   },
+  {
+    name: "route segment revalidation",
+    pattern: /\bexport\s+const\s+revalidate\s*=/,
+  },
+  {
+    name: "static route segment",
+    pattern: /\bexport\s+const\s+dynamic\s*=\s*["'](?:force-static|error)["']/,
+  },
+  {
+    name: "route segment fetch cache",
+    pattern:
+      /\bexport\s+const\s+fetchCache\s*=\s*["'](?:force-cache|default-cache|only-cache)["']/,
+  },
 ];
 const PROHIBITED_NEXT_CONFIG_FEATURES = [
   { name: "cacheComponents", pattern: /\bcacheComponents\s*:/ },
