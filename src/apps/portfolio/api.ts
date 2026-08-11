@@ -170,7 +170,8 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "exception_summaries"
   | "insights"
   | "workflow_actions"
->;
+> &
+  Partial<Pick<PortfolioWorkspace, "as_of_date" | "summary">>;
 
 type PortfolioPerformanceSnapshotResponse = {
   period: string;
@@ -409,8 +410,10 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const allocationView =
       bookPayload.allocation_views.find((view) => view.dimension === "asset_class") ??
       bookPayload.allocation_views[0];
+    const datedSummary = mapPortfolioBookSummary(bookPayload);
 
     return {
+      ...datedSummary,
       allocations: (allocationView?.buckets ?? []).map((bucket) => ({
         asset_class: bucket.bucket,
         position_count: bucket.position_count,
@@ -430,6 +433,29 @@ export async function getPortfolioWorkspaceSummaryDetails(
   } catch {
     return null;
   }
+}
+
+function mapPortfolioBookSummary(
+  payload: PortfolioBookResponse
+): Pick<PortfolioWorkspace, "as_of_date" | "summary"> | Record<string, never> {
+  // Do not combine dated holdings with undated totals. Older tolerant fixtures and
+  // transitional Gateway responses may omit either field; the existing shell
+  // summary then remains visibly qualified by its own valuation date.
+  if (!payload.as_of_date || !payload.summary) {
+    return {};
+  }
+
+  return {
+    as_of_date: payload.as_of_date,
+    summary: {
+      market_value_base: payload.summary.assets_under_management_base,
+      invested_market_value_base: payload.summary.invested_market_value_base,
+      total_cash_base: payload.summary.cash_market_value_base,
+      cash_weight_pct: payload.summary.cash_weight_pct,
+      position_count: payload.summary.position_count,
+      cash_balance_count: payload.summary.cash_balance_count,
+    },
+  };
 }
 
 export async function getPortfolioWorkspaceDetailedDetails(
