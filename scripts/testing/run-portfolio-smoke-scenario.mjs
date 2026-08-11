@@ -13,8 +13,8 @@ const workbenchPort = parseUnprivilegedPort(
   process.env.PORTFOLIO_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? '31020',
 );
 
-if (scenario !== 'cashflow') {
-  throw new Error('Portfolio smoke scenario must be cashflow.');
+if (scenario !== 'cashflow' && scenario !== 'shell-unavailable') {
+  throw new Error('Portfolio smoke scenario must be cashflow or shell-unavailable.');
 }
 if (fixturePort === workbenchPort) {
   throw new Error('Portfolio fixture and Workbench proof ports must be different.');
@@ -23,7 +23,10 @@ if (fixturePort === workbenchPort) {
 const projectRoot = process.cwd();
 const evidenceDirectory = resolve(
   projectRoot,
-  process.env.PORTFOLIO_E2E_EVIDENCE_DIR ?? 'output/playwright/issue-492-cashflow',
+  process.env.PORTFOLIO_E2E_EVIDENCE_DIR ??
+    (scenario === 'shell-unavailable'
+      ? 'output/playwright/issue-651-shell-recovery'
+      : 'output/playwright/issue-492-cashflow'),
 );
 mkdirSync(evidenceDirectory, { recursive: true });
 const playwrightCli = resolve(projectRoot, 'node_modules', '@playwright', 'test', 'cli.js');
@@ -34,7 +37,9 @@ const child = spawn(
     'test',
     'tests/e2e/portfolio-workbench.smoke.spec.ts',
     '--grep',
-    'cashflow route keeps projection identity and movement semantics explicit',
+    scenario === 'shell-unavailable'
+      ? 'selected shell failure reaches one truthful terminal recovery state'
+      : 'cashflow route keeps projection identity and movement semantics explicit',
     ...forwardedArguments,
   ],
   {

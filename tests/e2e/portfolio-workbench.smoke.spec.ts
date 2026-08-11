@@ -4,6 +4,7 @@ import {
 } from './workbench-smoke-helpers';
 import {
   startPortfolioFixtureGateway,
+  type PortfolioFixtureScenario,
   type PortfolioFixtureGateway,
 } from './portfolio-fixture-gateway';
 
@@ -12,7 +13,8 @@ test.describe.configure({ mode: 'default' });
 let fixtureGateway: PortfolioFixtureGateway | null = null;
 
 test.beforeAll(async () => {
-  if (process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow') {
+  const scenario = process.env.PORTFOLIO_E2E_FIXTURE;
+  if (scenario !== 'cashflow' && scenario !== 'shell-unavailable') {
     return;
   }
   const port = Number(process.env.PORTFOLIO_E2E_FIXTURE_PORT ?? '18120');
@@ -23,7 +25,10 @@ test.beforeAll(async () => {
   ) {
     throw new Error(`Portfolio fixture proof requires the owned gateway at ${expectedGateway}.`);
   }
-  fixtureGateway = await startPortfolioFixtureGateway({ port });
+  fixtureGateway = await startPortfolioFixtureGateway({
+    port,
+    scenario: scenario as PortfolioFixtureScenario,
+  });
 });
 
 test.afterAll(async () => {
@@ -196,6 +201,46 @@ async function openCashflowPortfolio(
 }
 
 test.describe('Portfolio workbench smoke', () => {
+  test('selected shell failure reaches one truthful terminal recovery state', async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'shell-unavailable',
+      'Selected-shell failure proof requires the owned unavailable fixture.'
+    );
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.goto(`/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001`, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await expect(page.getByTestId('portfolio-shell-unavailable')).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('heading', { name: 'Selected portfolio unavailable' })).toBeVisible();
+    await expect(page.getByText(/no other portfolio has been substituted/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open My book' }).first()).toHaveAttribute(
+      'href',
+      '/book'
+    );
+    await expect(page.getByText('Preparing portfolio review')).toHaveCount(0);
+
+    await expect
+      .poll(() => fixtureGateway?.getWorkspaceRequestCount(), {
+        message: 'one server read and one bounded client recovery read should reach the fixture',
+      })
+      .toBe(2);
+    await page.waitForTimeout(300);
+    expect(fixtureGateway?.getWorkspaceRequestCount()).toBe(2);
+
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await page.screenshot({
+        path: `${evidenceDirectory}/selected-shell-unavailable.png`,
+        fullPage: true,
+      });
+    }
+  });
+
   test('record navigation preserves one selected portfolio across all five business tasks', async ({
     page,
     request,

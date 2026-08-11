@@ -19,7 +19,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     mode: "portfolio",
     portEnvironmentVariable: "PORTFOLIO_E2E_FIXTURE_PORT",
     scenarioEnvironmentVariable: "PORTFOLIO_E2E_FIXTURE",
-    scenarios: new Set(["cashflow"]),
+    scenarios: new Set(["cashflow", "shell-unavailable"]),
   },
   {
     mode: "pm-quality",

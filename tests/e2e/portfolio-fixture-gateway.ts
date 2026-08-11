@@ -5,16 +5,22 @@ const AS_OF_DATE = '2026-04-10';
 const MISSING_HISTORICAL_SUMMARY_DATE = '2026-04-01';
 const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
+export type PortfolioFixtureScenario = 'cashflow' | 'shell-unavailable';
+
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
+  getWorkspaceRequestCount: () => number;
   port: number;
 };
 
 export async function startPortfolioFixtureGateway({
   port,
+  scenario,
 }: {
   port: number;
+  scenario: PortfolioFixtureScenario;
 }): Promise<PortfolioFixtureGateway> {
+  let workspaceRequestCount = 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
 
@@ -43,6 +49,11 @@ export async function startPortfolioFixtureGateway({
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/workspace`) {
+      workspaceRequestCount += 1;
+      if (scenario === 'shell-unavailable') {
+        sendJson(response, { code: 'portfolio_workspace_unavailable' }, 503);
+        return;
+      }
       sendJson(response, buildWorkspaceResponse());
       return;
     }
@@ -90,6 +101,7 @@ export async function startPortfolioFixtureGateway({
   return {
     port,
     close: () => close(server),
+    getWorkspaceRequestCount: () => workspaceRequestCount,
   };
 }
 
