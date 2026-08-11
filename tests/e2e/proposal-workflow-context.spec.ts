@@ -279,7 +279,7 @@ test("keeps proposal counts scoped to the current source window", async ({ page 
   await expect(page.getByRole("button", { name: "Next proposals" })).toBeDisabled();
 });
 
-test("labels simulation as construction without persisted workflow authority", async ({ page }) => {
+test("keeps proposal evaluation inside construction without persisted workflow authority", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
     waitUntil: "domcontentloaded",
@@ -294,4 +294,5 @@ test("labels simulation as construction without persisted workflow authority", a
   ).toBeVisible();
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
+  await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
 });
