@@ -142,6 +142,9 @@ describe("proposal portfolio evidence", () => {
       status: "context_mismatch",
       canEvaluateAndHandoff: false,
       title: "Portfolio context does not match",
+      positions: {
+        status: "context_mismatch",
+      },
     });
   });
 
