@@ -6,12 +6,17 @@ import {
   parseUpstreamAttemptChain,
   resolveSuccessfulTerminalUpstream,
 } from "./upstream-evidence.mjs";
+import { resolveScaleProofDeploymentId } from "./scale-proof-configuration.mjs";
 
 const composeFile = "docker-compose.scale-proof.yml";
 const baseUrl = "http://127.0.0.1:3090";
 const image = process.env.WORKBENCH_SCALE_IMAGE ?? "lotus-workbench:scale-proof";
 const skipBuild = process.env.SCALE_PROOF_SKIP_BUILD === "1";
 const keepStack = process.env.SCALE_PROOF_KEEP_STACK === "1";
+const deploymentId = resolveScaleProofDeploymentId({
+  value: process.env.WORKBENCH_DEPLOYMENT_ID,
+  skipBuild,
+});
 const thresholds = {
   requestCount: 240,
   concurrency: 12,
@@ -27,7 +32,7 @@ try {
     run("docker", [
       "build",
       "--build-arg",
-      "WORKBENCH_DEPLOYMENT_ID=scale-proof-issue-619",
+      `WORKBENCH_DEPLOYMENT_ID=${deploymentId}`,
       "-t",
       image,
       ".",
@@ -333,7 +338,11 @@ function compose(args, options) {
 function run(command, args, { allowFailure = false, capture = false } = {}) {
   const result = spawnSync(command, args, {
     cwd: process.cwd(),
-    env: { ...process.env, WORKBENCH_SCALE_IMAGE: image },
+    env: {
+      ...process.env,
+      WORKBENCH_DEPLOYMENT_ID: deploymentId,
+      WORKBENCH_SCALE_IMAGE: image,
+    },
     encoding: "utf8",
     stdio: capture ? "pipe" : "inherit",
     shell: false,

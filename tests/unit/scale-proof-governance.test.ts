@@ -19,6 +19,9 @@ describe("Workbench scale-proof governance", () => {
     expect(nginx).toContain("least_conn;");
     expect(nginx).toContain("proxy_next_upstream_tries 2;");
     expect(nginx).not.toMatch(/ip_hash|sticky|hash\s+\$cookie/i);
+    expect(compose).toContain(
+      "WORKBENCH_DEPLOYMENT_ID: ${WORKBENCH_DEPLOYMENT_ID:?WORKBENCH_DEPLOYMENT_ID is required}",
+    );
   });
 
   it("pins mature official images and isolates the non-certifying source fixture", () => {
@@ -53,6 +56,15 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain("explicit_non_claims");
     expect(runner).toContain("resolveSuccessfulTerminalUpstream");
     expect(runner).toContain("successfulResults");
+    expect(runner).toContain("resolveScaleProofDeploymentId");
+
+    for (const workflow of [
+      read(".github", "workflows", "pr-merge-gate.yml"),
+      read(".github", "workflows", "main-releasability.yml"),
+    ]) {
+      expect(workflow).toContain("SCALE_PROOF_SKIP_BUILD: \"1\"");
+      expect(workflow).toContain("WORKBENCH_DEPLOYMENT_ID: ${{ github.");
+    }
   });
 
   it("keeps buyer and operator documentation aligned to the non-certifying proof", () => {
