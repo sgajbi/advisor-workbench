@@ -40,6 +40,12 @@ export function scanRuntimeStateHolders(input?: {
   sourceRoot?: string;
 }): RuntimeStateHolderReference[];
 
+export function scanRuntimeStateSource(input: {
+  source: string;
+  file?: string;
+  scriptKind?: number;
+}): RuntimeStateHolderReference[];
+
 export function validateRuntimeStateInventory(
   input: RuntimeStateInventoryValidationInput,
 ): string[];

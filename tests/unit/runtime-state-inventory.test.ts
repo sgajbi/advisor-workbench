@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   scanRuntimeStateHolders,
+  scanRuntimeStateSource,
   validateRuntimeStateInventory,
 } from "../../scripts/quality/check-runtime-state-inventory.mjs";
 
@@ -63,6 +64,28 @@ describe("runtime state inventory", () => {
     expect(validateRuntimeStateInventory(evidence)).toContain(
       "unreviewed module-scope runtime state src/features/example.ts:businessCache",
     );
+  });
+
+  it.each([
+    ["property assignment", "const cache = {}; cache.portfolio = result;", "cache"],
+    ["element assignment", "const cache = {}; cache[key] = result;", "cache"],
+    ["array mutation", "const entries = []; entries.push(result);", "entries"],
+    ["custom cache mutation", "const cache = createCache(); cache.set(key, result);", "cache"],
+    ["Object mutation", "const cache = {}; Object.assign(cache, result);", "cache"],
+    ["nested property increment", "const metrics = { counts: {} }; metrics.counts[key]++;", "metrics"],
+  ])("discovers const-backed runtime state through %s", (_name, source, symbol) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol });
+  });
+
+  it("does not classify read-only const objects and arrays as mutable state", () => {
+    expect(
+      scanRuntimeStateSource({
+        source: "const labels = ['Ready']; const copy = labels.map((label) => label);",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
   });
 
   it("rejects a stale declaration that could hide dead state guidance", () => {
