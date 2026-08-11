@@ -366,7 +366,7 @@ describe("portfolio api", () => {
     expect(shell?.control_capabilities).toBeNull();
   });
 
-  it("loads summary detail modules without fetching detailed ledger and liquidity slices", async () => {
+  it("loads summary evidence and source workflow actions without detailed ledger or liquidity slices", async () => {
     const fetchSpy = vi.fn(async (input: string | URL) => {
       const url = input.toString();
 
@@ -445,6 +445,22 @@ describe("portfolio api", () => {
           window_start_date: "2026-03-01",
           window_end_date: "2026-03-28",
           buckets: [],
+        });
+      }
+
+      if (url.includes("/workflow")) {
+        return jsonResponse({
+          actions: [
+            {
+              sequence: 1,
+              title: "Review performance evidence",
+              impact: "Confirm incomplete valuation history before client use.",
+              target: "Performance review",
+              href: "/performance?portfolioId=MANUAL_PB_USD_001",
+              cta_label: "Open Performance",
+              recommended: true,
+            },
+          ],
         });
       }
 
@@ -558,14 +574,24 @@ describe("portfolio api", () => {
     expect(details?.readiness_indicators).toBeUndefined();
     expect(details?.insights).toBeUndefined();
     expect(details?.exception_summaries).toBeUndefined();
-    expect(details?.workflow_actions).toBeUndefined();
+    expect(details?.workflow_actions?.[0]).toMatchObject({
+      title: "Review performance evidence",
+      cta_label: "Open Performance",
+      recommended: true,
+    });
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/transactions"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/readiness"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/insights"))).toBe(false);
-    expect(requestedUrls.some((url) => url.includes("/workflow"))).toBe(false);
+    expect(
+      requestedUrls.some(
+        (url) =>
+          url.includes("/portfolio/portfolios/MANUAL_PB_USD_001/workflow?") &&
+          url.includes("as_of_date=2026-03-28")
+      )
+    ).toBe(true);
     expect(
       requestedUrls.some(
         (url) =>

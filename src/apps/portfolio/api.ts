@@ -363,6 +363,10 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
     const bookQuery = buildPortfolioBookQuery(params);
     const summaryQuery = buildPortfolioSummaryWindowQuery(params);
+    const workflowQuery = new URLSearchParams();
+    if (params.asOfDate) {
+      workflowQuery.set("as_of_date", params.asOfDate);
+    }
     const performancePeriods = ["MTD", "QTD", "YTD"] as const;
     const performancePeriodQueries = performancePeriods.map((timeWindow) =>
       buildPortfolioPerformanceSnapshotQuery({
@@ -390,6 +394,34 @@ export async function getPortfolioWorkspaceSummaryDetails(
           performancePath,
           { query: performanceQuery }
         );
+    const [summaryResults, workflowResults] = await Promise.all([
+      Promise.allSettled([
+        fetchPortfolioJson<PortfolioBookResponse>(
+          resolvePortfolioRequestTarget(),
+          `${portfolioPath}/book`,
+          { query: bookQuery }
+        ),
+        fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
+          resolvePortfolioRequestTarget(),
+          `${portfolioPath}/income-summary`,
+          { query: summaryQuery }
+        ),
+        fetchPortfolioJson<PortfolioActivitySummaryResponse>(
+          resolvePortfolioRequestTarget(),
+          `${portfolioPath}/activity-summary`,
+          { query: summaryQuery }
+        ),
+        selectedPerformanceRequest,
+        ...standardPerformanceRequests,
+      ]),
+      Promise.allSettled([
+        fetchPortfolioJson<PortfolioWorkflowResponse>(
+          resolvePortfolioRequestTarget(),
+          `${portfolioPath}/workflow`,
+          { query: workflowQuery }
+        ),
+      ]),
+    ]);
     const [
       bookResult,
       incomeResult,
@@ -398,25 +430,8 @@ export async function getPortfolioWorkspaceSummaryDetails(
       mtdPerformanceResult,
       qtdPerformanceResult,
       ytdPerformanceResult,
-    ] = await Promise.allSettled([
-      fetchPortfolioJson<PortfolioBookResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/book`,
-        { query: bookQuery }
-      ),
-      fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/income-summary`,
-        { query: summaryQuery }
-      ),
-      fetchPortfolioJson<PortfolioActivitySummaryResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/activity-summary`,
-        { query: summaryQuery }
-      ),
-      selectedPerformanceRequest,
-      ...standardPerformanceRequests,
-    ]);
+    ] = summaryResults;
+    const [workflowResult] = workflowResults;
 
     const bookPayload = settledPortfolioPayload(bookResult);
 
@@ -431,6 +446,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       settledPortfolioPayload(qtdPerformanceResult),
       settledPortfolioPayload(ytdPerformanceResult),
     ];
+    const workflowPayload = settledPortfolioPayload(workflowResult);
     const supportingEvidenceFailures = [
       buildSupportingEvidenceFailure(incomePayload, "income_summary"),
       buildSupportingEvidenceFailure(activityPayload, "activity_summary"),
@@ -467,6 +483,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       performance_period_returns: periodPerformancePayloads.map((payload, index) =>
         mapPortfolioPerformancePeriodReturn(performancePeriods[index], payload)
       ),
+      ...(workflowPayload ? { workflow_actions: workflowPayload.actions } : {}),
       supporting_evidence_failures: supportingEvidenceFailures,
     };
   } catch {
