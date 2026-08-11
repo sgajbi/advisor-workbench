@@ -92,7 +92,7 @@ export function parseDockerStatsLines(lines) {
 }
 
 export async function stopMonitoredProcess(child) {
-  if (child.exitCode !== null) {
+  if (child.exitCode !== null || child.signalCode !== null) {
     return;
   }
   const closed = once(child, "close");

@@ -27,6 +27,7 @@ describe("scale phase resource evidence", () => {
   it("subscribes for process close before sending termination", async () => {
     const child = Object.assign(new EventEmitter(), {
       exitCode: null as number | null,
+      signalCode: null as NodeJS.Signals | null,
       kill: vi.fn(),
     });
     child.kill.mockImplementation(() => {
@@ -44,6 +45,18 @@ describe("scale phase resource evidence", () => {
   it("does not signal a resource monitor that already exited", async () => {
     const child = Object.assign(new EventEmitter(), {
       exitCode: 0,
+      signalCode: null as NodeJS.Signals | null,
+      kill: vi.fn(),
+    });
+
+    await stopMonitoredProcess(child as unknown as ChildProcess);
+    expect(child.kill).not.toHaveBeenCalled();
+  });
+
+  it("does not await a monitor that already closed through a signal", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: null as number | null,
+      signalCode: "SIGTERM" as NodeJS.Signals,
       kill: vi.fn(),
     });
 
