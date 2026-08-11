@@ -636,6 +636,74 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(false);
   });
 
+  it("clears prior dated workflow actions when the selected-date source read fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        const summaryResponse = portfolioSummaryEvidenceResponse(url);
+        if (summaryResponse) {
+          return summaryResponse;
+        }
+        if (url.includes("/workflow")) {
+          return new Response("workflow unavailable", { status: 503 });
+        }
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-29",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-02",
+      reportEndDate: "2026-03-29",
+    });
+    const priorWorkspace = {
+      ...buildPortfolioWorkspace(),
+      workflow_actions: [
+        {
+          sequence: 1,
+          title: "Review prior-date evidence",
+          impact: "Action belongs to the prior review date.",
+          target: "Prior date",
+          href: "/performance",
+          cta_label: "Open Performance",
+          recommended: true,
+        },
+      ],
+    };
+
+    expect(details?.workflow_actions).toEqual([]);
+    expect(mergePortfolioWorkspace(priorWorkspace, details ?? {}).workflow_actions).toEqual([]);
+  });
+
+  it("omits the summary workflow read when another record-screen loader owns it", async () => {
+    const fetchSpy = vi.fn(async (input: string | URL) => {
+      const url = input.toString();
+      const summaryResponse = portfolioSummaryEvidenceResponse(url);
+      if (summaryResponse) {
+        return summaryResponse;
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+      includeWorkflowActions: false,
+    });
+
+    expect(details?.workflow_actions).toBeUndefined();
+    expect(fetchSpy.mock.calls.some(([input]) => String(input).includes("/workflow"))).toBe(false);
+  });
+
   it.each([
     { positionCount: 0, expectedHasPositions: false },
     { positionCount: 3, expectedHasPositions: true },
@@ -2088,4 +2156,43 @@ function jsonResponse(payload: unknown): Response {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function portfolioSummaryEvidenceResponse(url: string): Response | null {
+  if (url.includes("/book")) {
+    return jsonResponse({
+      as_of_date: "2026-03-28",
+      summary: {
+        assets_under_management_base: 1_000_000,
+        invested_market_value_base: 900_000,
+        cash_market_value_base: 100_000,
+        cash_weight_pct: 10,
+        position_count: 1,
+        cash_balance_count: 1,
+      },
+      allocation_views: [{ dimension: "asset_class", buckets: [] }],
+      top_positions: [],
+      positions: [],
+    });
+  }
+  if (url.includes("/income-summary")) {
+    return jsonResponse({ reporting_currency: "USD" });
+  }
+  if (url.includes("/activity-summary")) {
+    return jsonResponse({ reporting_currency: "USD", buckets: [] });
+  }
+  if (url.includes("/performance-snapshot")) {
+    return jsonResponse({
+      period: "EXPLICIT",
+      as_of_date: "2026-03-28",
+      benchmark_code: null,
+      portfolio_return_pct: 1,
+      benchmark_return_pct: null,
+      excess_return_pct: null,
+      warnings: [],
+      partial_failures: [],
+      sparkline: [],
+    });
+  }
+  return null;
 }

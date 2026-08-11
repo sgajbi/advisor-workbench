@@ -357,6 +357,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
     reportStartDate: string;
     reportEndDate: string;
     usesCustomDateRange?: boolean;
+    includeWorkflowActions?: boolean;
   }
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
@@ -394,6 +395,14 @@ export async function getPortfolioWorkspaceSummaryDetails(
           performancePath,
           { query: performanceQuery }
         );
+    const includeWorkflowActions = params.includeWorkflowActions !== false;
+    const workflowRequest = includeWorkflowActions
+      ? fetchPortfolioJson<PortfolioWorkflowResponse>(
+          resolvePortfolioRequestTarget(),
+          `${portfolioPath}/workflow`,
+          { query: workflowQuery }
+        )
+      : Promise.resolve(null);
     const [summaryResults, workflowResults] = await Promise.all([
       Promise.allSettled([
         fetchPortfolioJson<PortfolioBookResponse>(
@@ -414,13 +423,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
         selectedPerformanceRequest,
         ...standardPerformanceRequests,
       ]),
-      Promise.allSettled([
-        fetchPortfolioJson<PortfolioWorkflowResponse>(
-          resolvePortfolioRequestTarget(),
-          `${portfolioPath}/workflow`,
-          { query: workflowQuery }
-        ),
-      ]),
+      Promise.allSettled([workflowRequest]),
     ]);
     const [
       bookResult,
@@ -483,7 +486,9 @@ export async function getPortfolioWorkspaceSummaryDetails(
       performance_period_returns: periodPerformancePayloads.map((payload, index) =>
         mapPortfolioPerformancePeriodReturn(performancePeriods[index], payload)
       ),
-      ...(workflowPayload ? { workflow_actions: workflowPayload.actions } : {}),
+      ...(includeWorkflowActions
+        ? { workflow_actions: workflowPayload?.actions ?? [] }
+        : {}),
       supporting_evidence_failures: supportingEvidenceFailures,
     };
   } catch {
@@ -655,7 +660,7 @@ export async function getPortfolioWorkspaceDetailedDetails(
             insights: insightsPayload.insights,
           }
         : {}),
-      ...(workflowPayload ? { workflow_actions: workflowPayload.actions } : {}),
+      workflow_actions: workflowPayload?.actions ?? [],
       record_data_availability: {
         liquidity: liquidityPayload ? "ready" : "unavailable",
         transactions: transactionsPayload ? "ready" : "unavailable",
