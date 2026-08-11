@@ -3484,9 +3484,9 @@ one-snapshot source-authority rule without duplicating that technical detail int
 
 An advisor must be able to distinguish a coherent proposed-portfolio projection from a collection
 of individually valid monetary inputs that use different currencies. A source book in SGD, a
-proposal requested in USD, and an advisor-entered USD cash movement must not be added together or
-labelled as though an FX translation occurred. The workstation can preserve those inputs for
-drafting and recovery without presenting a false whole-portfolio impact.
+proposal requested in USD, an advisor-entered USD cash movement, or a draft order priced in EUR
+must not be added together or labelled as though an FX translation occurred. The workstation can
+preserve those inputs for drafting and recovery without presenting a false whole-portfolio impact.
 
 ### Primary-source research
 
@@ -3511,8 +3511,10 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 ### Adopted decisions
 
 1. Project one pure, typed currency-admission model before building any combined monetary preview.
-2. Keep the source book currency, requested proposal currency, and each active cash-movement
-   currency explicit and machine-testable.
+2. Keep the source book currency, requested proposal currency, each active cash-movement currency,
+   and every active draft-order price currency explicit and machine-testable. A held-position
+   reference price is derived from source-owned base-currency market value and quantity; an
+   off-book reference price carries an advisor-visible currency field.
 3. Render the current indicative totals and allocation table only when every included monetary
    context shares one confirmed ISO-style currency code.
 4. When currency contexts differ or are incomplete, keep the source holdings, source cash, manual
@@ -3535,8 +3537,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 ### Validation and publication decision
 
 Workbench #642 owns implementation. Focused proof covers matched source evidence, source/request
-mismatch, a conflicting cash-movement currency, incomplete currency identity, manual-only drafting,
-partial evidence, cached refresh failure, and source recovery. The Proposal Builder browser proof
-uses stable preview-currency attributes plus visible business copy. No wiki source change is
-required: the screen's purpose, route, source owners, and supported actions remain unchanged, and
-#605 continues to own the dedicated Proposal Builder business guide.
+mismatch, conflicting cash-movement and priced-order currencies, missing or malformed source and
+draft currency identity, base-currency price derivation, manual-only drafting, partial evidence,
+cached refresh failure, and source recovery. The Proposal Builder browser proof uses stable
+preview-currency attributes plus visible business copy. No wiki source change is required: the
+screen's purpose, route, source owners, and supported actions remain unchanged, and #605 continues
+to own the dedicated Proposal Builder business guide.
