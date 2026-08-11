@@ -227,8 +227,21 @@ describe("proposal portfolio evidence", () => {
       cash: {
         amount: 10_000,
         authority: "manual_scenario",
-        label: "Manual scenario cash",
+        label: "Additional cash assumption",
       },
+    });
+  });
+
+  it("does not publish a zero manual assumption when the entered value is invalid", () => {
+    const evidence = buildEvidence({
+      bookQuery: failedQuery(),
+      manualCashAmount: null,
+    });
+
+    expect(evidence.cash).toEqual({
+      amount: null,
+      authority: "manual_scenario",
+      label: "Additional cash assumption needs correction",
     });
   });
 

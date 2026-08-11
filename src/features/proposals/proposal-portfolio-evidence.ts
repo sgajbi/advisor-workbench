@@ -55,7 +55,7 @@ export type ProposalPortfolioEvidenceModel = {
     items: PortfolioPositionView[];
   };
   cash: {
-    amount: number;
+    amount: number | null;
     authority: ProposalCashAuthority;
     label: string;
   };
@@ -72,7 +72,7 @@ export function buildProposalPortfolioEvidence({
   asOfDate: string;
   reportingCurrency: string;
   bookQuery: QueryEvidence<ProposalBookEvidence>;
-  manualCashAmount: number;
+  manualCashAmount: number | null;
 }): ProposalPortfolioEvidenceModel {
   const normalizedPortfolioId = portfolioId.trim();
   const normalizedAsOfDate = asOfDate.trim();
@@ -140,9 +140,12 @@ export function buildProposalPortfolioEvidence({
     cash:
       sourceCash === null
         ? {
-            amount: finiteNumberOrFallback(manualCashAmount, 0),
+            amount: finiteNumberOrNull(manualCashAmount),
             authority: "manual_scenario",
-            label: "Manual scenario cash",
+            label:
+              manualCashAmount === null
+                ? "Additional cash assumption needs correction"
+                : "Additional cash assumption",
           }
         : {
             amount: sourceCash,
@@ -290,10 +293,6 @@ function isCashPosition(position: PortfolioPositionView): boolean {
 
 function finiteNumberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function finiteNumberOrFallback(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 function nonEmptyStringOrNull(value: unknown): string | null {

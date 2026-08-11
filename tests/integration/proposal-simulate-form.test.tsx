@@ -179,6 +179,101 @@ describe("ProposalSimulateForm", () => {
       "USD"
     );
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+    expect(screen.getByLabelText("Additional Cash Assumption")).toHaveValue("10000");
+  });
+
+  it("evaluates a source-authorized proposal with zero additional cash", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption");
+    fireEvent.change(cashInput, { target: { value: "0" } });
+    fireEvent.blur(cashInput);
+
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
+    expect(
+      screen.getByText(
+        "Evaluation uses the source-confirmed portfolio snapshot; the additional cash assumption changes indicative impact only."
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    await waitFor(() => expect(advisoryApiMocks.createAdvisoryWorkspace).toHaveBeenCalled());
+    expect(advisoryApiMocks.createAdvisoryWorkspace.mock.calls[0][0].body).not.toHaveProperty(
+      "cash_amount"
+    );
+    expect(advisoryApiMocks.createAdvisoryWorkspace.mock.calls[0][0].body.stateful_input).not.toHaveProperty(
+      "cash_amount"
+    );
+  });
+
+  it("saves a source-authorized proposal when the optional cash assumption is blank", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption");
+    fireEvent.change(cashInput, { target: { value: "" } });
+    fireEvent.blur(cashInput);
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    await waitFor(() => expect(advisoryApiMocks.handoffAdvisoryWorkspace).toHaveBeenCalled());
+    expect(advisoryApiMocks.createAdvisoryWorkspace.mock.calls[0][0].body.stateful_input).toEqual({
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
+      as_of: "2026-04-10",
+      mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+    });
+  });
+
+  it("blocks both workflow actions and identifies a negative cash assumption", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption");
+    fireEvent.change(cashInput, { target: { value: "-250" } });
+    fireEvent.blur(cashInput);
+
+    await waitFor(() => expect(cashInput).toHaveAttribute("aria-invalid", "true"));
+    expect(
+      screen.getAllByText(
+        "Additional cash assumption cannot be negative. Enter 0 or a positive amount."
+      )
+    ).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-blocked-by",
+      "additional_cash"
+    );
+    expect(screen.getByText("Additional cash needs correction")).toBeInTheDocument();
+    expect(screen.queryByText("Current Value")).not.toBeInTheDocument();
+    expect(advisoryApiMocks.createAdvisoryWorkspace).not.toHaveBeenCalled();
+  });
+
+  it("preserves malformed cash text for correction and recovers on blank input", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption") as HTMLInputElement;
+    fireEvent.change(cashInput, { target: { value: "1,000" } });
+    fireEvent.blur(cashInput);
+
+    expect(cashInput.value).toBe("1,000");
+    await waitFor(() => expect(cashInput).toHaveAttribute("aria-invalid", "true"));
+    expect(
+      screen.getAllByText(
+        "Enter additional cash as a number without currency symbols or separators, or leave it blank."
+      )
+    ).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+
+    fireEvent.change(cashInput, { target: { value: "" } });
+
+    await waitFor(() => expect(cashInput).toHaveAttribute("aria-invalid", "false"));
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   });
 
   it("uses provided initial portfolio id", () => {
@@ -499,7 +594,7 @@ describe("ProposalSimulateForm", () => {
     await waitForPortfolioEvidence("partial");
     expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
     expect(screen.getByText("Portfolio evidence is incomplete")).toBeInTheDocument();
-    expect(screen.getByText("Manual scenario cash")).toBeInTheDocument();
+    expect(screen.getByText("Additional cash assumption")).toBeInTheDocument();
     const positionsPanel = screen.getByRole("heading", { name: "Current Positions" }).closest("section");
     expect(positionsPanel).not.toBeNull();
     expect(
@@ -561,6 +656,10 @@ describe("ProposalSimulateForm", () => {
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence("unavailable");
+    const cashInput = screen.getByLabelText("Additional Cash Assumption");
+    fireEvent.change(cashInput, { target: { value: "0" } });
+    fireEvent.blur(cashInput);
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
 
     await waitForPortfolioEvidence();
@@ -662,7 +761,7 @@ describe("ProposalSimulateForm", () => {
 
       const evidencePanel = await screen.findByTestId("proposal-portfolio-evidence");
       const setupSummary = screen.getByLabelText("Proposal setup summary");
-      const sourceCashSummary = within(setupSummary).getByText("Source Cash").closest("div");
+      const sourceCashSummary = within(setupSummary).getByText("Cash Context").closest("div");
       const positionsPanel = screen
         .getByRole("heading", { name: "Current Positions" })
         .closest("section");
