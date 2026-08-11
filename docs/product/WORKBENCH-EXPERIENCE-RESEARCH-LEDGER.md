@@ -3543,3 +3543,74 @@ cached refresh failure, and source recovery. The Proposal Builder browser proof 
 preview-currency attributes plus visible business copy. No wiki source change is required: the
 screen's purpose, route, source owners, and supported actions remain unchanged, and #605 continues
 to own the dedicated Proposal Builder business guide.
+
+## Proposal Builder Additional-Cash Admission
+
+### Business and engineering job
+
+An advisor may want to test how a prospective contribution changes an indicative proposal, but the
+assumption must remain distinct from source-owned portfolio cash. Blank and zero are valid business
+choices: they mean the proposal uses no additional cash. A negative or malformed amount must remain
+visible for correction, block evaluation and draft handoff, and never be silently coerced into a
+different value.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-11:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   places whole-portfolio analysis inside proposal construction while retaining robust calculation
+   and firm-input authority outside the visual shell. This supports treating additional cash as an
+   explicit draft assumption rather than replacing the confirmed portfolio cash balance.
+2. [BlackRock Aladdin Wealth market-driven scenarios](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/making-of-a-market-driven-scenario)
+   separates scenario assumptions from the portfolio being analysed. The relevant control pattern
+   is the distinction between a modelling input and current source truth.
+3. [W3C WCAG 2.2 error identification](https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html)
+   requires detected input errors to be identified and described in text.
+4. [W3C form validation guidance](https://www.w3.org/WAI/tutorials/forms/validation/) and the
+   [GOV.UK validation pattern](https://design-system.service.gov.uk/patterns/validation/) support
+   preserving the entered value, showing a specific recovery message, and associating the error
+   with the field.
+5. [MUI Text Field guidance](https://mui.com/material-ui/react-text-field/) provides the existing
+   accessible error and helper-text mechanism used by Workbench; no replacement component or
+   dependency is required.
+
+These sources inform the interaction and authority boundary only. Lotus does not copy another
+product's layout, visual identity, wording, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Use one pure, typed admission model for blank, zero, positive, negative, malformed, and
+   out-of-range inputs; the Zod schema, field recovery, and workflow-action gate consume the same
+   model.
+2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
+   cash authoritative.
+3. Preserve malformed text for correction, provide a specific business recovery message, and keep
+   both evaluation and draft handoff unavailable until the value is valid. Withhold the indicative
+   projection as well; an invalid assumption must never be modelled or displayed as zero.
+4. Use a text input with decimal input mode so wheel events do not change money and the browser does
+   not discard malformed advisor input before Workbench can explain it.
+5. Retain the governed React, Next.js, TypeScript, MUI, React Hook Form, and Zod boundaries. The
+   correction adds no dependency, experimental framework feature, global CSS, Gateway route,
+   runtime service, or deployment topology.
+
+### Rejected decisions
+
+1. Requiring a strictly positive amount, because a source-backed proposal does not require a new
+   contribution.
+2. Converting blank, negative, or malformed text to zero, because that hides operator intent and
+   can enable an action with a value the advisor did not enter.
+3. Using native `type="number"` as the business validator, because it can discard invalid text and
+   permits wheel-driven value changes.
+4. Sending the assumption as portfolio cash or adding it to Gateway stateful input; the Gateway
+   request continues to carry only the source-backed portfolio, date, and mandate identity.
+5. Adding a form or money-input dependency for a bounded validation correction that the governed
+   stack already supports.
+
+### Validation and publication decision
+
+Workbench #639 owns implementation. Focused proof covers all admission states, aligned button
+availability, explicit errors, recovery, unchanged Gateway payload, successful source-backed
+evaluation, and desktop/narrow browser behavior. No wiki source change is required: the route,
+screen purpose, source owners, supported actions, and operator procedure remain unchanged, while
+#605 owns the dedicated Proposal Builder business guide.

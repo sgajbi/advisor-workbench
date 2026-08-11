@@ -369,6 +369,12 @@ Current repository posture:
     currencies differ or identity is incomplete, preserve the underlying source and draft records
     but withhold the combined projection until an approved source contract supplies conversion
     evidence. Workbench must not translate, relabel, or infer authoritative FX in the browser.
+    Additional cash is an optional draft assumption, not a replacement for source portfolio cash.
+    Blank and zero mean no additional cash. Negative, malformed, and out-of-range values remain
+    visible for correction and block both evaluation and draft handoff. Keep one pure admission
+    model shared by schema validation, field recovery, and workflow-action availability; do not
+    coerce invalid advisor input to zero, publish a zero-based indicative projection for it, or
+    send this assumption as source-owned cash.
     Evaluation is an in-screen Proposal Builder
     result after Gateway/Advise success, not a separate journey mode or fragment destination. A
     created workspace must not be described as evaluated until the evaluation call succeeds and
