@@ -333,6 +333,12 @@ Current repository posture:
     complete after the reset. When a read precedes a side-effecting command, revalidate both the
     request sequence and current source-context key immediately before the mutation; filtering the
     eventual UI result cannot undo an artifact created for a superseded business object.
+    A bounded automatic recovery lifecycle must also drive truthful rendered state: show loading
+    while the real request is pending, publish a terminal unavailable state only after the current
+    mounted source key settles, and expose a retry action only when that action deliberately
+    re-contacts source authority. A ref-only guard can prevent a request loop but cannot by itself
+    justify terminal copy. Emit lifecycle telemetry only for the actual deduplicated attempt and
+    its still-attached outcome, using static bounded labels without business-object identity.
     Every DPM workflow-output boundary must also receive the business-object reference requested by
     its caller and compare it with the family-specific source input published by Gateway. Workflow
     pack, surface, and authority identity do not prove that a result belongs to the requested proof

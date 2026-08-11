@@ -97,7 +97,9 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("Manage failures carried in `partial_failures` are rendered");
     expect(guide).toContain("the affected analytical scope is named");
     expect(guide).toContain("Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping");
-    expect(guide).toContain("a terminal unavailable response is not re-requested");
+    expect(guide).toContain("Preparing portfolio review");
+    expect(guide).toContain("there is no background request loop or unimplemented page-local Retry");
+    expect(guide).toContain("without carrying portfolio or client identity");
     expect(guide).toContain("only the Performance, Cashflow, or Reporting evidence actually present");
     expect(guide).toContain("not calculation lineage or supportability certification");
     expect(guide).toContain("Portfolio Review deliberately excludes record-oriented filters");
