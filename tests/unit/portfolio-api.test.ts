@@ -716,6 +716,84 @@ describe("portfolio api", () => {
     expect(recoveredDetails?.supporting_evidence_failures).toEqual([]);
   });
 
+  it("reuses a selected standard-period request and reports one limitation", async () => {
+    const performanceRequests: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/book")) {
+          return jsonResponse({
+            as_of_date: "2026-03-28",
+            summary: {
+              assets_under_management_base: 982500,
+              invested_market_value_base: 900000,
+              cash_market_value_base: 82500,
+              cash_weight_pct: 8.3969,
+              position_count: 3,
+              cash_balance_count: 1,
+            },
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
+            top_positions: [],
+            positions: [],
+          });
+        }
+        if (url.includes("/income-summary")) {
+          return jsonResponse({ reporting_currency: "USD" });
+        }
+        if (url.includes("/activity-summary")) {
+          return jsonResponse({ reporting_currency: "USD", buckets: [] });
+        }
+        if (url.includes("/performance-snapshot")) {
+          performanceRequests.push(url);
+          if (url.includes("period=MTD")) {
+            throw new Error("Gateway connection interrupted");
+          }
+          const period = url.includes("period=QTD") ? "QTD" : "YTD";
+          return jsonResponse({
+            period,
+            as_of_date: "2026-03-28",
+            benchmark_code: null,
+            portfolio_return_pct: period === "QTD" ? 1.2 : 4.5,
+            benchmark_return_pct: null,
+            excess_return_pct: null,
+            warnings: [],
+            partial_failures: [],
+            sparkline: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "MTD",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+      usesCustomDateRange: false,
+    });
+
+    expect(performanceRequests).toHaveLength(3);
+    expect(details?.performance).toBeNull();
+    expect(details?.performance_period_returns).toEqual([
+      expect.objectContaining({ period: "MTD", return_pct: null }),
+      expect.objectContaining({ period: "QTD", return_pct: 1.2 }),
+      expect.objectContaining({ period: "YTD", return_pct: 4.5 }),
+    ]);
+    expect(details?.supporting_evidence_failures).toEqual([
+      expect.objectContaining({
+        evidence_scope: "standard_period_performance",
+        period: "MTD",
+        title: "MTD performance unavailable",
+      }),
+    ]);
+  });
+
   it("names unavailable income, activity, and selected-period evidence independently", async () => {
     vi.stubGlobal(
       "fetch",

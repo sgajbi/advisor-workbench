@@ -363,14 +363,33 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
     const bookQuery = buildPortfolioBookQuery(params);
     const summaryQuery = buildPortfolioSummaryWindowQuery(params);
-    const performancePeriodQueries = ["MTD", "QTD", "YTD"].map((timeWindow) =>
+    const performancePeriods = ["MTD", "QTD", "YTD"] as const;
+    const performancePeriodQueries = performancePeriods.map((timeWindow) =>
       buildPortfolioPerformanceSnapshotQuery({
         ...params,
-        timeWindow: timeWindow as PortfolioTimeWindow,
+        timeWindow,
         usesCustomDateRange: false,
       })
     );
     const portfolioPath = `/portfolio/portfolios/${encodeURIComponent(portfolioId)}`;
+    const performancePath = `${portfolioPath}/performance-snapshot`;
+    const standardPerformanceRequests = performancePeriodQueries.map((query) =>
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+        resolvePortfolioRequestTarget(),
+        performancePath,
+        { query }
+      )
+    );
+    const selectedStandardPeriodIndex = params.usesCustomDateRange
+      ? -1
+      : performancePeriods.indexOf(params.timeWindow as (typeof performancePeriods)[number]);
+    const selectedPerformanceRequest = selectedStandardPeriodIndex >= 0
+      ? standardPerformanceRequests[selectedStandardPeriodIndex]
+      : fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+          resolvePortfolioRequestTarget(),
+          performancePath,
+          { query: performanceQuery }
+        );
     const [
       bookResult,
       incomeResult,
@@ -395,26 +414,8 @@ export async function getPortfolioWorkspaceSummaryDetails(
         `${portfolioPath}/activity-summary`,
         { query: summaryQuery }
       ),
-      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/performance-snapshot`,
-        { query: performanceQuery }
-      ),
-      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/performance-snapshot`,
-        { query: performancePeriodQueries[0] }
-      ),
-      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/performance-snapshot`,
-        { query: performancePeriodQueries[1] }
-      ),
-      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
-        resolvePortfolioRequestTarget(),
-        `${portfolioPath}/performance-snapshot`,
-        { query: performancePeriodQueries[2] }
-      ),
+      selectedPerformanceRequest,
+      ...standardPerformanceRequests,
     ]);
 
     const bookPayload = settledPortfolioPayload(bookResult);
@@ -433,12 +434,14 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const supportingEvidenceFailures = [
       buildSupportingEvidenceFailure(incomePayload, "income_summary"),
       buildSupportingEvidenceFailure(activityPayload, "activity_summary"),
-      buildSupportingEvidenceFailure(performancePayload, "selected_period_performance"),
+      selectedStandardPeriodIndex < 0
+        ? buildSupportingEvidenceFailure(performancePayload, "selected_period_performance")
+        : null,
       ...periodPerformancePayloads.map((payload, index) =>
         buildSupportingEvidenceFailure(
           payload,
           "standard_period_performance",
-          ["MTD", "QTD", "YTD"][index] as "MTD" | "QTD" | "YTD"
+          performancePeriods[index]
         )
       ),
     ].filter((failure): failure is PortfolioSupportingEvidenceFailure => failure !== null);
@@ -462,7 +465,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       activity_summary: activityPayload,
       performance: mapPortfolioPerformanceSnapshot(performancePayload),
       performance_period_returns: periodPerformancePayloads.map((payload, index) =>
-        mapPortfolioPerformancePeriodReturn(["MTD", "QTD", "YTD"][index] as "MTD" | "QTD" | "YTD", payload)
+        mapPortfolioPerformancePeriodReturn(performancePeriods[index], payload)
       ),
       supporting_evidence_failures: supportingEvidenceFailures,
     };
