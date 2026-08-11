@@ -51,7 +51,9 @@ A deterministic source gate will reject unreviewed introduction of those feature
 Next.js recommends a consistent build, a deployment identifier for rolling-version protection, and
 shared cache coordination only when the application uses cache features that require it. Workbench
 now requires deterministic `WORKBENCH_DEPLOYMENT_ID` input outside development and proves replica
-replacement without inventing a shared-cache dependency.
+replacement without inventing a shared-cache dependency. Production-image builds fail without that
+input, and readiness compares the runtime value with the identity embedded by the Next build so an
+operator override cannot present a mismatched rollout cohort as ready.
 
 ## Health, Readiness, And Downstream Failure
 
@@ -85,8 +87,10 @@ is regression evidence, not a bank production capacity claim.
 digest-pinned stable NGINX validation balancer. The harness requires no session affinity, proves
 both replicas receive requests, persists a mutation in the source fixture, reads it through the
 other replica, stops one replica, verifies the source record remains available, restarts the
-replica, and proves traffic distribution recovers. It fails on image-identity drift, missing
-distribution, lost persistence, excessive errors, or p95 latency above the governed threshold.
+replica, and proves traffic distribution recovers. Successful distribution counts the terminal
+replica in each NGINX attempt chain, so retrying a failed replica through one healthy process cannot
+masquerade as two serving replicas. The harness fails on image-identity drift, missing distribution,
+lost persistence, excessive errors, or p95 latency above the governed threshold.
 
 The proof emits JSON and Markdown under `output/scale-proof/`, includes resource snapshots, and
 labels itself `engineering_regression_non_certifying`. The NGINX image is a mature, official,
