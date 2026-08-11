@@ -3410,3 +3410,69 @@ workflow and draft order blotter remain contained within their centre-workspace 
 context, research, and the review ledger change in this slice. No wiki source changes: #605 already
 owns the dedicated Proposal Builder screen guide, and this correction does not change the screen's
 business purpose, navigation, source authority, or supported action set.
+
+## Proposal Builder Date-Consistent Portfolio Evidence
+
+### Business and engineering job
+
+An advisor must construct, evaluate, and retain a proposal against one identifiable portfolio
+snapshot. Holdings and available cash can be individually valid yet collectively unsuitable when
+they represent different dates, portfolios, or currency bases. Proposal Builder therefore needs to
+show the requested advisory date beside the effective source date and withhold decision actions
+until the source response matches the selected context.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-11:
+
+1. [TanStack Query query-key guidance](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys)
+   requires every variable used by a query function to be included in its query key so differently
+   parameterized results are cached independently and changes refetch the correct source data.
+2. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   positions whole-portfolio views, portfolio calculations, suitability checks, and detailed
+   analytics inside the proposal-construction journey from identification through implementation.
+3. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes a connected advisor experience built on a common portfolio language and whole-
+   portfolio evidence rather than disconnected product-level interpretations.
+4. The current Gateway `PortfolioBookResponse` is the internal primary contract: one request accepts
+   `as_of_date` and `reporting_currency` and returns portfolio identity, resolved `as_of_date`,
+   summary cash, cash balances, allocations, and positions as one aligned book snapshot.
+
+These sources inform query identity, evidence grouping, and workflow admission. Lotus does not copy
+another product's layout, visual identity, wording, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Request one combined Gateway portfolio-book snapshot for holdings and cash instead of merging a
+   dated book with the undated workspace shell in the browser.
+2. Include portfolio id, advisory as-of date, and selected currency in the query identity and the
+   Gateway request.
+3. Admit evaluation and handoff only when the returned portfolio id, effective as-of date, and
+   portfolio currency match the selected context and both positions and summary cash are usable.
+4. Display requested and effective dates as compact business evidence, with a stable machine-
+   readable status for browser proof.
+5. Keep previously confirmed evidence visible but non-authoritative during refresh or refresh
+   failure; isolate differently dated responses by query identity so an older completion cannot
+   replace the currently selected evidence.
+6. Keep advisor-entered cash available only for indicative drafting when source evidence is
+   unavailable; it never authorizes evaluation or handoff.
+
+### Rejected decisions
+
+1. Continuing the workspace-shell cash query, because it cannot be parameterized by the selected
+   advisory date and creates two temporal authorities for one decision.
+2. Comparing only request parameters while discarding response identity and effective date, because
+   transport success does not prove that the resolved source snapshot matches the advisor's choice.
+3. Inferring a missing effective date, portfolio id, currency, or cash total in the browser.
+4. Clearing cached evidence or showing a blank screen during refresh; qualified evidence is more
+   useful while actions remain paused.
+5. Adding a new dependency, global state store, or Gateway endpoint when the mature Workbench stack
+   and existing combined-book contract already support the required boundary.
+
+### Validation and publication decision
+
+Workbench #638 owns implementation. Focused proof must cover matching context, missing or mismatched
+effective context, date changes, older completion ordering, cached refresh failure, source recovery,
+and action admission. The dedicated Proposal Builder screen guide remains owned by #605; this slice
+will update repository context and the codebase review ledger, then record whether its source-
+authority correction requires an interim wiki catalogue change before merge.
