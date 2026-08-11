@@ -5,10 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import PortfolioWorkspaceToolbar from "@/apps/portfolio/components/portfolio-workspace-toolbar";
 
 describe("PortfolioWorkspaceToolbar", () => {
-  it("renders context, exposes filter chips, and emits control changes through the active menus", () => {
+  it("renders only controls that change visible review evidence and exposes source-backed actions", () => {
     const onControlsChange = vi.fn();
-    const onFilterReset = vi.fn();
-    const onFilterChipRemove = vi.fn();
     const onExport = vi.fn();
 
     render(
@@ -21,14 +19,6 @@ describe("PortfolioWorkspaceToolbar", () => {
           customStartDate: "2026-03-01",
           customEndDate: "2026-03-29",
           columnMode: "essential",
-          includeCash: true,
-          assetClass: "ALL",
-          sector: "ALL",
-          region: "ALL",
-          positionStatus: "ALL",
-          transactionType: "ALL",
-          showOnlyNonZeroRows: true,
-          showOnlyExceptions: false,
           hideEmptyModules: false,
           focusExceptions: false,
         }}
@@ -54,20 +44,7 @@ describe("PortfolioWorkspaceToolbar", () => {
             "Book-style holdings honor reporting currency, but performance snapshot does not.",
           supportsReportingCurrencyRestatement: false,
         }}
-        filterOptions={{
-          assetClasses: ["Equity"],
-          sectors: ["Technology"],
-          regions: ["North America"],
-          positionStatuses: ["ALL", "OPEN"],
-          transactionTypes: ["BUY", "SELL"],
-        }}
-        activeFilterChips={[
-          { key: "showOnlyNonZeroRows", label: "Rows", value: "Non-zero only" },
-          { key: "timeWindow", label: "Period", value: "30D" },
-        ]}
         onControlsChange={onControlsChange}
-        onFilterReset={onFilterReset}
-        onFilterChipRemove={onFilterChipRemove}
         onExport={onExport}
         quickActions={[
           { key: "review", label: "Review performance", href: "/performance?portfolioId=PORT_1001" },
@@ -103,24 +80,13 @@ describe("PortfolioWorkspaceToolbar", () => {
     fireEvent.click(screen.getByRole("button", { name: /Export portfolio data/i }));
     expect(onExport).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole("button", { name: /Filters, 2 active/i }));
-    const filtersMenu = screen.getByRole("menu");
-    fireEvent.click(within(filtersMenu).getByLabelText("Include Cash"));
-    expect(onControlsChange).toHaveBeenCalledWith({ includeCash: false });
-    fireEvent.click(within(filtersMenu).getByRole("button", { name: /Reset to default/i }));
-    expect(onFilterReset).toHaveBeenCalledTimes(1);
-
-    fireEvent.keyDown(document, { key: "Escape" });
-    fireEvent.click(screen.getByRole("button", { name: "More actions", hidden: true }));
+    expect(screen.queryByRole("button", { name: /Filters/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
     const actionsMenu = screen.getByRole("menu");
     expect(within(actionsMenu).getByRole("link", { name: "Review performance" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PORT_1001"
     );
-
-    fireEvent.keyDown(document, { key: "Escape" });
-    expect(screen.getByText("Rows: Non-zero only")).toBeInTheDocument();
-    expect(screen.getByText("Period: 30D")).toBeInTheDocument();
   });
 
   it("renders gateway historical and reporting capability reasons when controls are not fully supported", () => {
@@ -134,14 +100,6 @@ describe("PortfolioWorkspaceToolbar", () => {
           customStartDate: "",
           customEndDate: "",
           columnMode: "essential",
-          includeCash: true,
-          assetClass: "ALL",
-          sector: "ALL",
-          region: "ALL",
-          positionStatus: "ALL",
-          transactionType: "ALL",
-          showOnlyNonZeroRows: false,
-          showOnlyExceptions: false,
           hideEmptyModules: false,
           focusExceptions: false,
         }}
@@ -168,17 +126,7 @@ describe("PortfolioWorkspaceToolbar", () => {
             "Workflow, readiness, and performance snapshot do not yet share reporting currency.",
           supportsReportingCurrencyRestatement: false,
         }}
-        filterOptions={{
-          assetClasses: [],
-          sectors: [],
-          regions: [],
-          positionStatuses: [],
-          transactionTypes: [],
-        }}
-        activeFilterChips={[]}
         onControlsChange={vi.fn()}
-        onFilterReset={vi.fn()}
-        onFilterChipRemove={vi.fn()}
         onExport={vi.fn()}
         quickActions={[]}
       />

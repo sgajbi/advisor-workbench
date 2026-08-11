@@ -3922,13 +3922,6 @@
   background: rgba(23, 32, 43, 0.03);
 }
 
-.portfolio-filter-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
 @media (max-width: 1180px) {
   .workbench-toolbar-placeholder-row {
     flex-wrap: wrap;
@@ -3968,39 +3961,6 @@
     justify-content: flex-start;
   }
 
-}
-
-.portfolio-filter-panel {
-  min-width: 320px;
-  max-width: 380px;
-  padding: 16px;
-}
-
-.portfolio-filter-field {
-  display: grid;
-  gap: 6px;
-}
-
-.portfolio-filter-field-label {
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.portfolio-filter-native-input {
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
-  color: var(--text);
-  font: inherit;
-}
-
-.portfolio-filter-panel-footer {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .portfolio-workspace-nav {

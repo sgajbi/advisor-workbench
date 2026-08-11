@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import {
-  buildPortfolioActiveFilterChips,
-  buildPortfolioFilterOptions,
   buildPortfolioReadinessIndicators,
   filterTransactionsByDrilldown,
   getPositionsNeedingPricing,
@@ -288,91 +286,6 @@ describe("portfolio view model", () => {
     expect(derived?.cashflow_outlook?.upcoming_points[0].projection_date).toBe("2026-02-25");
   });
 
-  it("builds filter options and applies business filters to positions and transactions", () => {
-    const workspace = buildOperationalWorkspace();
-    workspace.positions = [
-      {
-        security_id: "EQ_1",
-        instrument_name: "Apple Inc",
-        asset_class: "Equities",
-        sector: "Technology",
-        country_of_risk: "United States",
-        quantity: 10,
-        market_value_base: 1800,
-        weight_pct: 0.14,
-      },
-      {
-        security_id: "FI_1",
-        instrument_name: "Gov Bond",
-        asset_class: "Fixed Income",
-        sector: "Government",
-        country_of_risk: "United States",
-        quantity: 4,
-        market_value_base: 0,
-        weight_pct: 0,
-      },
-    ];
-    workspace.top_positions = [
-      {
-        security_id: "EQ_1",
-        instrument_name: "Apple Inc",
-        asset_class: "Equities",
-        quantity: 10,
-        market_value_base: 1800,
-        weight_pct: 0.14,
-      },
-      {
-        security_id: "FI_1",
-        instrument_name: "Gov Bond",
-        asset_class: "Fixed Income",
-        quantity: 4,
-        market_value_base: 0,
-        weight_pct: 0,
-      },
-    ];
-    workspace.recent_transactions = [
-      {
-        transaction_id: "TX_BUY",
-        transaction_date: "2026-02-20T08:30:00Z",
-        transaction_type: "BUY",
-        security_id: "EQ_1",
-        instrument_id: "AAPL",
-        quantity: 10,
-        net_cost_base: 1800,
-      },
-      {
-        transaction_id: "TX_DIV",
-        transaction_date: "2026-02-21T08:30:00Z",
-        transaction_type: "DIVIDEND",
-        security_id: "EQ_1",
-        instrument_id: "AAPL",
-        quantity: 0,
-        gross_amount: 0,
-      },
-    ];
-
-    expect(buildPortfolioFilterOptions(workspace)).toEqual({
-      assetClasses: ["Equities", "Fixed Income"],
-      sectors: ["Government", "Technology"],
-      regions: ["United States"],
-      positionStatuses: ["ALL", "Active", "Unpriced", "Needs Attention"],
-      transactionTypes: ["BUY", "DIVIDEND"],
-    });
-
-    const derived = derivePortfolioWorkspace(workspace, {
-      ...buildInitialPortfolioControls(workspace),
-      assetClass: "Equities",
-      positionStatus: "Active",
-      transactionType: "BUY",
-      showOnlyNonZeroRows: true,
-    });
-
-    expect(derived?.positions).toHaveLength(1);
-    expect(derived?.positions[0].instrument_name).toBe("Apple Inc");
-    expect(derived?.recent_transactions).toHaveLength(1);
-    expect(derived?.recent_transactions[0].transaction_id).toBe("TX_BUY");
-  });
-
   it("supports transaction drill-down filters and pricing review", () => {
     const workspace = buildOperationalWorkspace();
     workspace.positions = [
@@ -633,29 +546,6 @@ describe("portfolio view model", () => {
     workspace.operations.publish_allowed = null;
     workspace.readiness.has_positions = true;
     expect(getBookReadinessSupport(workspace)).toBe("Latest booking 20 Feb 2026");
-  });
-
-  it("builds active filter chips for removable business filters", () => {
-    const workspace = buildOperationalWorkspace();
-
-    expect(
-      buildPortfolioActiveFilterChips({
-        ...buildInitialPortfolioControls(workspace),
-        includeCash: false,
-        assetClass: "Equities",
-        transactionType: "BUY",
-        customStartDate: "2026-02-01",
-        customEndDate: "2026-02-20",
-        timeWindow: "YTD",
-        showOnlyExceptions: true,
-      })
-    ).toEqual([
-      { key: "includeCash", label: "Include Cash", value: "No" },
-      { key: "assetClass", label: "Asset Class", value: "Equities" },
-      { key: "transactionType", label: "Transaction Type", value: "BUY" },
-      { key: "showOnlyExceptions", label: "Focus", value: "Exceptions only" },
-      { key: "timeWindow", label: "Period", value: "2026-02-01 to 2026-02-20" },
-    ]);
   });
 
 });
