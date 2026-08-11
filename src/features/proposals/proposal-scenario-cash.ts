@@ -1,8 +1,8 @@
 import { z } from "zod";
 
+import { PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT } from "./proposal-money";
+
 const PLAIN_DECIMAL_PATTERN = /^(?:(\d+)(?:\.(\d*))?|\.(\d+))$/;
-// Keep admitted values below 2^46 major units, where IEEE-754 spacing remains below one cent.
-export const PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT = 7_036_874_417_766_400n;
 
 export const PROPOSAL_SCENARIO_CASH_HELP =
   "Optional draft assumption. Blank or 0 means no additional cash. Use up to 2 decimal places; source cash remains authoritative.";

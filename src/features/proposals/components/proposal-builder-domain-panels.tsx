@@ -7,7 +7,12 @@ import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import { SemanticBadge, Text, type SemanticBadgeTone } from "@/design-system";
 import type { ProposalDraftImpactModel } from "../proposal-draft-currency-authority";
 import type { ProposalDraftCashFlowIntent, ProposalDraftTradeIntent } from "../proposal-draft-preview";
-import { formatCurrencyValue, formatPercentValue, formatUnitValue } from "../proposal-draft-preview";
+import {
+  formatCurrencyValue,
+  formatPercentValue,
+  formatUnitValue,
+} from "../proposal-draft-preview";
+import { proposalMoneyToMinorUnits } from "../proposal-money";
 import type {
   ProposalPortfolioEvidenceModel,
   ProposalPortfolioEvidenceStatus,
@@ -306,7 +311,9 @@ export function CashMovementsPanel({
         <span>Net {netCashImpact}</span>
       </div>
       <div className={styles.intentRows}>
-        {cashFlows.map((item) => (
+        {cashFlows.map((item) => {
+          const amountNeedsCorrection = proposalMoneyToMinorUnits(item.amount) === null;
+          return (
           <div key={item.id} className={styles.cashRow}>
             <TextField
               label="Movement"
@@ -331,6 +338,13 @@ export function CashMovementsPanel({
               size="small"
               type="number"
               value={item.amount}
+              error={amountNeedsCorrection}
+              helperText={
+                amountNeedsCorrection
+                  ? "Use no more than 2 decimal places and remain within the reliable draft range."
+                  : undefined
+              }
+              inputProps={{ step: "0.01" }}
               onChange={(event) => {
                 const next = (event.target as HTMLInputElement).valueAsNumber;
                 onUpdateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
@@ -353,7 +367,8 @@ export function CashMovementsPanel({
               Remove
             </Button>
           </div>
-        ))}
+          );
+        })}
       </div>
       <Button type="button" variant="outlined" onClick={onAddCashFlow}>
         Add Cash Movement

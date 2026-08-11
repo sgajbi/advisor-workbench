@@ -3587,7 +3587,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    source cash, positions, cash movements, or draft orders cannot push an individually admitted
    assumption into an unreliable aggregate. Preserve monetary inputs and cumulative arithmetic as
    integer minor units through the complete preview, then convert only final range-admitted values
-   for presentation. The Zod schema, field recovery, and
+   for presentation. Use the same proposal-money boundary for cash-movement field recovery, net
+   cash display, preview arithmetic, and submitted decimal strings so no path applies a different
+   rounding rule. The Zod schema, field recovery, and
    workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio
@@ -3619,6 +3621,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    request continues to carry only the source-backed portfolio, date, and mandate identity.
 6. Adding a form or money-input dependency for a bounded validation correction that the governed
    stack already supports.
+7. Formatting submitted cash movements independently with `toFixed(2)`, because binary rounding
+   can disagree with the preview's minor-unit admission and show an advisor a different amount from
+   the value sent to the source workflow.
 
 ### Validation and publication decision
 

@@ -337,6 +337,34 @@ describe("ProposalSimulateForm", () => {
     );
   });
 
+  it("uses one cent-precision boundary for cash-movement preview and submission", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const movementAmount = screen.getByLabelText("Amount");
+    fireEvent.change(movementAmount, { target: { value: "2.675" } });
+
+    expect(
+      screen.getByText(
+        "Use no more than 2 decimal places and remain within the reliable draft range."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Net Needs correction")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+
+    fireEvent.change(movementAmount, { target: { value: "2.68" } });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled()
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    await waitFor(() => expect(advisoryApiMocks.applyAdvisoryWorkspaceDraftAction).toHaveBeenCalled());
+    expect(advisoryApiMocks.applyAdvisoryWorkspaceDraftAction.mock.calls[0][1]).toMatchObject({
+      body: { cash_flow: { amount: "2.68" } },
+    });
+  });
+
   it("uses provided initial portfolio id", () => {
     renderForm("PORT_UI_1001");
     const portfolioInput = screen.getByLabelText("Portfolio ID") as HTMLInputElement;

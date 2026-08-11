@@ -1,7 +1,11 @@
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 
 import type { CashFlowIntentInput, TradeIntentInput } from "./simulation-payload";
-import { PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT } from "./proposal-scenario-cash";
+import {
+  isProposalMoneyCentDistinguishable,
+  proposalMoneyFromMinorUnits,
+  proposalMoneyToMinorUnits,
+} from "./proposal-money";
 
 export type ProposalDraftCashFlowIntent = CashFlowIntentInput & {
   id: string;
@@ -313,7 +317,7 @@ export function buildProposalDraftPreview(
   ];
   monetaryPrecisionReliable =
     monetaryPrecisionReliable &&
-    [...monetaryInputs, ...aggregateMinorUnits].every(isCentDistinguishableMinorUnits);
+    [...monetaryInputs, ...aggregateMinorUnits].every(isProposalMoneyCentDistinguishable);
 
   const currentPortfolioValue = proposalMoneyFromMinorUnits(
     currentPortfolioValueMinorUnits
@@ -365,23 +369,6 @@ export function buildProposalDraftPreview(
     proposedLargestWeight,
     monetaryPrecisionReliable,
   };
-}
-
-function proposalMoneyToMinorUnits(value: number): bigint | null {
-  if (!Number.isFinite(value)) {
-    return null;
-  }
-  const roundedMinorUnits = Math.round(value * 100);
-  return Number.isSafeInteger(roundedMinorUnits) ? BigInt(roundedMinorUnits) : null;
-}
-
-function proposalMoneyFromMinorUnits(value: bigint): number {
-  return Number(value) / 100;
-}
-
-function isCentDistinguishableMinorUnits(value: bigint): boolean {
-  const magnitude = value < 0n ? -value : value;
-  return magnitude < PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT;
 }
 
 function maxBigInt(left: bigint, right: bigint): bigint {

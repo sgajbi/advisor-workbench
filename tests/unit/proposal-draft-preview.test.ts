@@ -116,6 +116,15 @@ describe("proposal draft preview", () => {
     expect(preview.proposedPortfolioValue.toFixed(2)).toBe("59999999999999.83");
   });
 
+  it("withholds a preview for a cash movement beyond submitted cent precision", () => {
+    const overPrecision = createCashFlowIntent(1, "USD");
+    overPrecision.amount = 2.675;
+
+    const preview = buildProposalDraftPreview([], 1_000, [overPrecision], []);
+
+    expect(preview.monetaryPrecisionReliable).toBe(false);
+  });
+
   it("adds an off-book instrument and reports unpriced draft lines", () => {
     const offBookTrade: ProposalDraftTradeIntent = {
       id: "trade_1",
