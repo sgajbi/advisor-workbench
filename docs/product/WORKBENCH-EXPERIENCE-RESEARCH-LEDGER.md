@@ -3595,7 +3595,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    submitted cash-flow amount before creating a server-side workspace. Apply a documented
    nearest-minor-unit rounding rule only to derived indicative notionals from source-implied prices;
    quantity actions must not be rejected merely because an indicative multiplication produces a
-   fractional cent. The Zod schema, field recovery, and
+   fractional cent. Reconcile cash from the rounded before/after position-value delta rather than
+   rounding the position and trade independently, preserving the self-financing accounting identity
+   across successive draft trades. The Zod schema, field recovery, and
    workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio

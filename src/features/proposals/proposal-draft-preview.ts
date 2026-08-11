@@ -253,6 +253,7 @@ export function buildProposalDraftPreview(
     const executableQuantity =
       trade.side === "SELL" ? Math.min(trade.quantity, Math.max(0, row.proposedQuantity)) : trade.quantity;
     const quantityDelta = trade.side === "SELL" ? -executableQuantity : executableQuantity;
+    const previousProposedValueMinorUnits = toMinorUnits(row.proposedValue);
     row.proposedQuantity = Math.max(0, row.proposedQuantity + quantityDelta);
     const proposedValueMinorUnits = toDerivedMinorUnits(
       Math.max(0, row.proposedQuantity * price)
@@ -263,8 +264,8 @@ export function buildProposalDraftPreview(
       proposedValueMinorUnits - currentValueMinorUnits
     );
     rowMap.set(instrumentId, row);
-    const tradeNotional = toDerivedMinorUnits(executableQuantity * price);
-    tradeNotionalMinorUnits += trade.side === "SELL" ? -tradeNotional : tradeNotional;
+    tradeNotionalMinorUnits +=
+      proposedValueMinorUnits - previousProposedValueMinorUnits;
   });
 
   const cashFlowDeltaMinorUnits = cashFlows.reduce((sum, item) => {
