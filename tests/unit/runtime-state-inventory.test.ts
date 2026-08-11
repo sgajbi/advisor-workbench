@@ -259,6 +259,31 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol });
   });
 
+  it.each([
+    [
+      "object destructuring",
+      "const cache = Object.freeze({ entries: [] }); function update() { const { entries } = cache; entries.push('value'); }",
+    ],
+    [
+      "array destructuring",
+      "const cache = Object.freeze({ entries: [[]] }); function update() { const [entries] = cache.entries; entries.push('value'); }",
+    ],
+  ])("traces a local alias created through %s", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
+  it("does not trace a destructured local value to a shadowed module binding", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({}); function update() { const local = { entries: [] }; const { entries } = local; entries.push('value'); }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
   it("does not classify a static method or readonly primitive as mutable state", () => {
     expect(
       scanRuntimeStateSource({
