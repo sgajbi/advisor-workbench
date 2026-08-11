@@ -1406,9 +1406,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "advisory-proposal-builder-live.png",
     );
-    expect(browserWorkflowModule).toContain(
+    expect(browserWorkflowModule).not.toContain(
       "advisory-proposal-simulation-live.png",
     );
+    expect(browserWorkflowModule).not.toContain("#simulation");
     expect(browserWorkflowModule).toContain(
       "advisory-suitability-review-live.png",
     );
@@ -1422,7 +1423,7 @@ describe("canonical live validation script", () => {
       "advisory-implementation-status-live.png",
     );
     expect(browserWorkflowModule).toContain(
-      "workspace-evaluation-through-gateway",
+      "portfolio-book-and-workspace-evaluation-through-gateway",
     );
     expect(browserWorkflowModule).toContain(
       "advisor-cockpit-actions-through-gateway",

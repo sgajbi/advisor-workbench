@@ -604,7 +604,7 @@ export async function validateAdvisoryJourneyScreens(
     screenshotName: "advisory-proposal-builder-live.png",
     panel: "advisory.proposal_builder",
     owner: "lotus-advise",
-    sourcePosture: "portfolio-book-and-workspace-through-gateway",
+    sourcePosture: "portfolio-book-and-workspace-evaluation-through-gateway",
     screenshotAdvisoryJourney,
     validate: async () => {
       await expect(page.getByText("Create Advisory Proposal")).toBeVisible({
@@ -621,40 +621,15 @@ export async function validateAdvisoryJourneyScreens(
       ).toBeVisible({
         timeout: timeoutMs,
       });
+      await page
+        .getByRole("button", { name: "Evaluate Workspace" })
+        .click({ timeout: timeoutMs });
+      await expect(
+        page.getByRole("status", { name: "Proposal evaluation summary" }),
+      ).toContainText("Advise Evaluation Summary", {
+        timeout: timeoutMs,
+      });
     },
-  });
-
-  await page.goto(`${proposalBuilderRoute}#simulation`, {
-    waitUntil: "networkidle",
-    timeout: timeoutMs,
-  });
-  await expect(
-    page.getByRole("heading", { name: "Proposal Workspace", exact: true }),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await page
-    .getByRole("button", { name: "Evaluate Workspace" })
-    .click({ timeout: timeoutMs });
-  await expect(page.getByText("Advise Evaluation Summary")).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await screenshotAdvisoryJourney(
-    page,
-    "advisory-proposal-simulation-live.png",
-    {
-      route: `/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}#simulation`,
-      panel: "advisory.proposal_simulation",
-      state: "demo_ready",
-    },
-  );
-  recordAdvisoryJourneyCheck(summary, {
-    key: "simulation",
-    title: "Proposal Simulation",
-    route: `/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}#simulation`,
-    panel: "advisory.proposal_simulation",
-    owner: "lotus-advise",
-    sourcePosture: "workspace-evaluation-through-gateway",
   });
 
   for (const lifecycle of [
