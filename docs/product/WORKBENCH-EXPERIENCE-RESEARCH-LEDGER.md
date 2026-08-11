@@ -3477,3 +3477,66 @@ and action admission. No wiki source change is required for this slice: the scre
 records the Proposal Builder route and its Gateway/Core/Advise ownership, while #605 owns the
 dedicated business screen guide. Repository context and the codebase review ledger carry the new
 one-snapshot source-authority rule without duplicating that technical detail into the catalogue.
+
+## Proposal Builder Indicative Impact Currency Authority
+
+### Business and engineering job
+
+An advisor must be able to distinguish a coherent proposed-portfolio projection from a collection
+of individually valid monetary inputs that use different currencies. A source book in SGD, a
+proposal requested in USD, and an advisor-entered USD cash movement must not be added together or
+labelled as though an FX translation occurred. The workstation can preserve those inputs for
+drafting and recovery without presenting a false whole-portfolio impact.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-11:
+
+1. [ISO 4217](https://www.iso.org/standard/64758.html) defines the three-letter alphabetic currency
+   identity used in banking, trade, and automated systems. A currency label is therefore data
+   identity, not visual decoration.
+2. [IAS 21](https://www.ifrs.org/issued-standards/list-of-standards/ias-21-the-effects-of-changes-in-foreign-exchange-rates/)
+   distinguishes functional, foreign, and presentation currencies and identifies the exchange rate
+   and translation effects as substantive accounting concerns. Workbench does not apply that
+   reporting standard directly, but adopts the relevant control principle: presentation in another
+   currency requires an identified translation basis rather than relabelling.
+3. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   places whole-portfolio analytics and checks inside proposal construction and describes a robust
+   calculation engine using firm-supplied inputs. This supports keeping source and calculation
+   authority behind the approved service boundary.
+
+These sources inform evidence identity and workflow presentation only. Lotus does not copy another
+product's layout, visual identity, wording, calculations, or unsupported capabilities.
+
+### Adopted decisions
+
+1. Project one pure, typed currency-admission model before building any combined monetary preview.
+2. Keep the source book currency, requested proposal currency, and each active cash-movement
+   currency explicit and machine-testable.
+3. Render the current indicative totals and allocation table only when every included monetary
+   context shares one confirmed ISO-style currency code.
+4. When currency contexts differ or are incomplete, keep the source holdings, source cash, manual
+   scenario cash, movements, and draft orders visible in their own declared context, but replace the
+   combined projection with a business-facing unavailable posture.
+5. Preserve evaluation and save admission independently; a read-only display correction cannot
+   weaken the source-context gate.
+6. Reuse the existing React, TypeScript, MUI, React Query, Zod, and CSS-module architecture. This
+   correctness slice requires no dependency, global CSS, Gateway route, runtime, or topology change.
+
+### Rejected decisions
+
+1. Relabelling SGD source values as USD because the advisor selected USD in the form.
+2. Applying a browser-owned spot rate, cached rate, static rate, or inferred rate/date/method.
+3. Showing mixed monetary totals with a disclaimer; the number remains mathematically incoherent.
+4. Clearing source evidence or draft inputs solely because the combined projection is unavailable.
+5. Adding a new FX library or service call without a Gateway contract that owns conversion rate,
+   date, method, source, and lineage.
+
+### Validation and publication decision
+
+Workbench #642 owns implementation. Focused proof covers matched source evidence, source/request
+mismatch, a conflicting cash-movement currency, incomplete currency identity, manual-only drafting,
+partial evidence, cached refresh failure, and source recovery. The Proposal Builder browser proof
+uses stable preview-currency attributes plus visible business copy. No wiki source change is
+required: the screen's purpose, route, source owners, and supported actions remain unchanged, and
+#605 continues to own the dedicated Proposal Builder business guide.
