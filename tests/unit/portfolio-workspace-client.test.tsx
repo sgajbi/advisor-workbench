@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfolio-workspace-client";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 const getSummaryDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
@@ -38,12 +42,15 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
   default: ({
     toolbar,
     workspace,
+    workspaceStatus,
   }: {
     toolbar?: React.ReactNode;
     workspace: PortfolioWorkspace | null;
+    workspaceStatus?: "loading" | "ready" | "unavailable";
   }) => (
     <div>
       {toolbar}
+      <div data-testid="shell-status">{workspaceStatus}</div>
       <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
       <div data-testid="market-value">{workspace?.summary?.market_value_base ?? "none"}</div>
       <div data-testid="insight-key">{workspace?.insights?.[0]?.key ?? "none"}</div>
@@ -53,13 +60,13 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
   ),
 }));
 
-function buildWorkspace(): PortfolioWorkspace {
+function buildWorkspace(portfolioId = "MANUAL_PB_USD_001"): PortfolioWorkspace {
   return {
     as_of_date: "2026-03-28",
     portfolio: {
-      portfolio_id: "MANUAL_PB_USD_001",
-      display_name: "MANUAL_PB_USD_001",
-      client_id: "MANUAL_CIF_001",
+      portfolio_id: portfolioId,
+      display_name: portfolioId,
+      client_id: `CLIENT_${portfolioId}`,
       base_currency: "USD",
       booking_center_code: "Singapore",
     },
@@ -109,6 +116,7 @@ describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
     getShellWorkspaceMock.mockReset();
     getSummaryDetailsMock.mockReset();
+    resetAnalyticsUiMetricEvents();
     window.localStorage.clear();
   });
 
@@ -310,7 +318,12 @@ describe("PortfolioWorkspaceClient", () => {
   });
 
   it("stops after one unavailable shell request instead of retrying continuously", async () => {
-    getShellWorkspaceMock.mockResolvedValue(null);
+    let resolveShell: ((value: PortfolioWorkspace | null) => void) | undefined;
+    getShellWorkspaceMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveShell = resolve;
+      }),
+    );
     getSummaryDetailsMock.mockResolvedValue(null);
 
     render(
@@ -334,12 +347,150 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => {
       expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
     });
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+
     await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 25));
+      resolveShell?.(null);
     });
 
+    await waitFor(() => {
+      expect(screen.getByTestId("shell-status")).toHaveTextContent("unavailable");
+    });
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
     expect(getSummaryDetailsMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
+    expect(getShellRecoveryStates()).toEqual(["loading", "error"]);
+  });
+
+  it("permits one fresh automatic attempt when the selected portfolio source key changes", async () => {
+    const shellResolvers = new Map<
+      string,
+      (value: PortfolioWorkspace | null) => void
+    >();
+    getShellWorkspaceMock.mockImplementation(
+      (portfolioId: string) =>
+        new Promise<PortfolioWorkspace | null>((resolve) => {
+          shellResolvers.set(portfolioId, resolve);
+        }),
+    );
+    getSummaryDetailsMock.mockResolvedValue({
+      positions: [],
+      top_positions: [],
+      allocations: [],
+      allocation_views: [],
+      income_summary: null,
+      activity_summary: null,
+    });
+
+    const { rerender } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("PORTFOLIO_A")}
+        selectedPortfolioId="PORTFOLIO_A"
+        initialWorkspace={null}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledWith("PORTFOLIO_A");
+    });
+
+    rerender(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("PORTFOLIO_B")}
+        selectedPortfolioId="PORTFOLIO_B"
+        initialWorkspace={null}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledWith("PORTFOLIO_B");
+    });
+    expect(getShellWorkspaceMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+
+    await act(async () => {
+      shellResolvers.get("PORTFOLIO_A")?.(buildWorkspace("PORTFOLIO_A"));
+    });
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      shellResolvers.get("PORTFOLIO_B")?.(buildWorkspace("PORTFOLIO_B"));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("PORTFOLIO_B");
+    });
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    });
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith(
+      "PORTFOLIO_B",
+      expect.any(Object),
+    );
+    expect(getShellRecoveryStates()).toEqual(["loading", "loading", "ready"]);
+  });
+
+  it("does not publish terminal state or details after an in-flight recovery is unmounted", async () => {
+    let resolveShell: ((value: PortfolioWorkspace | null) => void) | undefined;
+    getShellWorkspaceMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveShell = resolve;
+      }),
+    );
+
+    const { unmount } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("PORTFOLIO_A")}
+        selectedPortfolioId="PORTFOLIO_A"
+        initialWorkspace={null}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    });
+    unmount();
+
+    await act(async () => {
+      resolveShell?.(buildWorkspace("PORTFOLIO_A"));
+    });
+
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
+    expect(getShellRecoveryStates()).toEqual(["loading"]);
+  });
+
+  it("does not leave the workspace loading when no selected portfolio can be resolved", () => {
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("PORTFOLIO_A")}
+        selectedPortfolioId={null}
+        initialWorkspace={null}
+      />,
+    );
+
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("unavailable");
+    expect(getShellWorkspaceMock).not.toHaveBeenCalled();
+    expect(getShellRecoveryStates()).toEqual([]);
   });
 });
+
+function buildPortfolioCatalog(portfolioId: string) {
+  return [
+    {
+      portfolio_id: portfolioId,
+      display_name: portfolioId,
+      base_currency: "USD",
+      client_id: `CLIENT_${portfolioId}`,
+      booking_center_code: "Singapore",
+    },
+  ];
+}
+
+function getShellRecoveryStates() {
+  return getAnalyticsUiMetricEvents()
+    .filter(
+      (event) =>
+        event.labels.operation === "portfolio.workspace.shell.recovery",
+    )
+    .map((event) => event.labels.state);
+}

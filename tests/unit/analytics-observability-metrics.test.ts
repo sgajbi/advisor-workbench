@@ -744,6 +744,11 @@ describe("analytics UI observability metrics", () => {
       ],
       ["workbench.portfolio", "portfolio-catalog", "portfolio.catalog"],
       ["workbench.portfolio", "portfolio-workspace-shell", "portfolio.workspace.shell"],
+      [
+        "workbench.portfolio",
+        "portfolio-workspace-shell-recovery",
+        "portfolio.workspace.shell.recovery",
+      ],
       ["workbench.portfolio", "portfolio-book", "portfolio.book"],
       ["workbench.portfolio", "portfolio-income-summary", "portfolio.income-summary"],
       ["workbench.portfolio", "portfolio-activity-summary", "portfolio.activity-summary"],

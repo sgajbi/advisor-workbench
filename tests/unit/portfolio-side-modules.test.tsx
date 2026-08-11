@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import PortfolioContextModule from "../../src/apps/portfolio/modules/portfolio-context/portfolio-context-module";
 import PortfolioReadinessModule from "../../src/apps/portfolio/modules/portfolio-readiness/portfolio-readiness-module";
-import PortfolioWorkspaceSideRail from "../../src/apps/portfolio/components/portfolio-workspace-side-rail";
+import PortfolioWorkspaceSideRail, {
+  PortfolioWorkspaceStateSideRail,
+} from "../../src/apps/portfolio/components/portfolio-workspace-side-rail";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import {
   buildPortfolioWorkspace,
@@ -204,31 +206,18 @@ describe("portfolio side rail modules", () => {
     expect(onOpenException).toHaveBeenCalledWith(expect.objectContaining({ key: "pricing" }));
   });
 
-  it("renders adjacent work areas when portfolio context is unavailable", () => {
-    render(
-      <PortfolioWorkspaceSideRail
-        workspace={null}
-        context={buildPortfolioWorkspaceContext()}
-        exceptions={[]}
-        actions={[]}
-        showDetailFootnote={false}
-        onOpenException={vi.fn()}
-      />
-    );
+  it("keeps loading and terminal side guidance informative without duplicating recovery actions", () => {
+    const { rerender } = render(<PortfolioWorkspaceStateSideRail status="loading" />);
 
-    expect(screen.getByText("Available Work Areas")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Return to My Book" })).toHaveAttribute(
-      "href",
-      "/book"
-    );
-    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
-      "href",
-      "/performance"
-    );
-    expect(screen.getByRole("link", { name: "Open Operations" })).toHaveAttribute(
-      "href",
-      "/workbench"
-    );
+    expect(screen.getByText("Portfolio selection")).toBeInTheDocument();
+    expect(screen.getByText(/before review evidence is shown/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+
+    rerender(<PortfolioWorkspaceStateSideRail status="unavailable" />);
+
+    expect(screen.getByText("If this remains unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/review date and work area—not client data/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("replaces and cancels copy-status timers before unmount", async () => {
