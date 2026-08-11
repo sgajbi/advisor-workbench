@@ -4,21 +4,84 @@ import Link from "next/link";
 import { Alert, Button, MenuItem, TextField } from "@mui/material";
 
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
-import { Text } from "@/design-system";
+import { SemanticBadge, Text, type SemanticBadgeTone } from "@/design-system";
 import type { ProposalDraftCashFlowIntent, ProposalDraftPreview, ProposalDraftTradeIntent } from "../proposal-draft-preview";
 import { formatCurrencyValue, formatPercentValue, formatUnitValue } from "../proposal-draft-preview";
+import type {
+  ProposalPortfolioEvidenceModel,
+  ProposalPortfolioEvidenceStatus,
+  ProposalPositionsEvidenceStatus,
+} from "../proposal-portfolio-evidence";
 import type { ProposalSimulateResponse } from "../types";
 
 import styles from "./proposal-simulate-form.module.css";
 
+export function ProposalPortfolioEvidencePanel({
+  evidence,
+  baseCurrency,
+  onRefresh,
+}: {
+  evidence: ProposalPortfolioEvidenceModel;
+  baseCurrency: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const refreshPending = evidence.status === "checking" || evidence.status === "refreshing";
+  const refreshDisabled = evidence.status === "not_selected" || refreshPending;
+
+  return (
+    <section
+      className={`${styles.panel} ${styles.evidencePanel}`}
+      aria-labelledby="proposal-evidence-heading"
+      aria-busy={refreshPending}
+      data-testid="proposal-portfolio-evidence"
+      data-evidence-status={evidence.status}
+    >
+      <div className={styles.panelHeader}>
+        <div role="status" aria-live="polite" aria-atomic="true">
+          <h3 id="proposal-evidence-heading">{evidence.title}</h3>
+          <p>{evidence.body}</p>
+        </div>
+        <SemanticBadge tone={portfolioEvidenceTone(evidence.status)} emphasis="strong">
+          {portfolioEvidenceLabel(evidence.status)}
+        </SemanticBadge>
+      </div>
+      <div className={styles.evidenceGrid} aria-label="Portfolio evidence sources">
+        <div className={styles.evidenceFact}>
+          <Text variant="microLabel">Holdings Evidence</Text>
+          <strong>
+            {positionsEvidenceLabel(evidence.positions.status, evidence.positions.items.length)}
+          </strong>
+        </div>
+        <div className={styles.evidenceFact}>
+          <Text variant="microLabel">Cash Evidence</Text>
+          <strong>{formatCurrencyValue(evidence.cash.amount, baseCurrency)}</strong>
+          <Text variant="metadata">{evidence.cash.label}</Text>
+        </div>
+      </div>
+      <div className={styles.evidenceFooter}>
+        {evidence.hint ? <Text variant="secondary">{evidence.hint}</Text> : null}
+        <Button
+          type="button"
+          variant="outlined"
+          size="small"
+          disabled={refreshDisabled}
+          onClick={() => void onRefresh()}
+        >
+          {refreshPending ? "Refreshing..." : "Refresh Portfolio Evidence"}
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 export function CurrentPositionsPanel({
   positions,
-  positionsLoading,
+  evidenceStatus,
   baseCurrency,
   onAddPositionTrade,
 }: {
   positions: PortfolioPositionView[];
-  positionsLoading: boolean;
+  evidenceStatus: ProposalPositionsEvidenceStatus;
   baseCurrency: string;
   onAddPositionTrade: (position: PortfolioPositionView, side: "BUY" | "SELL") => void;
 }) {
@@ -32,7 +95,7 @@ export function CurrentPositionsPanel({
             advisor-use draft.
           </p>
         </div>
-        <span>{positionsLoading ? "Loading" : `${positions.length} positions`}</span>
+        <span>{positionsEvidenceLabel(evidenceStatus, positions.length)}</span>
       </div>
       {positions.length ? (
         <div className={styles.positionsTableWrap}>
@@ -92,13 +155,80 @@ export function CurrentPositionsPanel({
         </div>
       ) : (
         <div className={styles.emptyBookNotice}>
-          {positionsLoading
-            ? "Loading current holdings from the portfolio book."
-            : "No current positions are available. Add cash or an off-book instrument to begin the draft."}
+          {positionsEmptyStateCopy(evidenceStatus)}
         </div>
       )}
     </section>
   );
+}
+
+function portfolioEvidenceLabel(status: ProposalPortfolioEvidenceStatus): string {
+  switch (status) {
+    case "ready":
+      return "Confirmed";
+    case "refreshing":
+      return "Refreshing";
+    case "checking":
+      return "Checking";
+    case "partial":
+      return "Partial";
+    case "refresh_failed":
+      return "Refresh failed";
+    case "unavailable":
+      return "Unavailable";
+    case "not_selected":
+      return "Portfolio required";
+  }
+}
+
+function portfolioEvidenceTone(status: ProposalPortfolioEvidenceStatus): SemanticBadgeTone {
+  if (status === "ready") {
+    return "success";
+  }
+  if (status === "unavailable") {
+    return "danger";
+  }
+  if (status === "partial" || status === "refresh_failed") {
+    return "warn";
+  }
+  return "default";
+}
+
+function positionsEvidenceLabel(
+  status: ProposalPositionsEvidenceStatus,
+  count: number
+): string {
+  switch (status) {
+    case "loading":
+      return "Loading";
+    case "refreshing":
+      return `${count} ${count === 1 ? "position" : "positions"} · refreshing`;
+    case "cached":
+      return `${count} ${count === 1 ? "position" : "positions"} · previously loaded`;
+    case "unavailable":
+      return "Unavailable";
+    case "empty":
+      return "Confirmed empty";
+    case "ready":
+      return `${count} ${count === 1 ? "position" : "positions"}`;
+  }
+}
+
+function positionsEmptyStateCopy(status: ProposalPositionsEvidenceStatus): string {
+  switch (status) {
+    case "loading":
+      return "Loading current holdings from the portfolio book.";
+    case "unavailable":
+      return "Current holdings could not be loaded. No empty-book fallback is shown.";
+    case "empty":
+      return "The portfolio book is confirmed with no current investment positions. Add cash or an off-book instrument to begin the draft.";
+    case "cached":
+      return "The previously confirmed empty book remains visible, but its latest refresh did not complete.";
+    case "refreshing":
+      return "The confirmed empty book remains visible while its source refreshes.";
+    case "ready":
+      return "No current investment positions were returned by the confirmed portfolio book.";
+  }
 }
 
 export function CashMovementsPanel({

@@ -107,6 +107,46 @@
   line-height: 15px;
 }
 
+.evidencePanel {
+  border-left: 3px solid var(--brand);
+  background: linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.evidenceFact {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--surface-primary);
+}
+
+.evidenceFact strong {
+  overflow-wrap: anywhere;
+  color: var(--brand-strong);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+}
+
+.evidenceFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.evidenceFooter :global(.MuiButton-root) {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .inputGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -252,6 +292,13 @@
   min-width: 0;
 }
 
+.actionReason {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--type-helper-text-size);
+  line-height: var(--type-helper-text-line-height);
+}
+
 .message {
   margin-top: 12px;
 }
@@ -305,5 +352,18 @@
   .cashRow,
   .tradeRow {
     grid-template-columns: 1fr;
+  }
+
+  .evidenceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .evidenceFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .evidenceFooter :global(.MuiButton-root) {
+    margin-left: 0;
   }
 }

@@ -76,7 +76,7 @@ export function buildProposalPortfolioEvidence({
   const bookPositions = Array.isArray(bookQuery.data?.positions)
     ? bookQuery.data.positions
     : null;
-  const workspaceCash = finiteNumber(workspaceQuery.data?.summary?.total_cash_base);
+  const workspaceCash = finiteNumberOrNull(workspaceQuery.data?.summary?.total_cash_base);
   const hasBookContractFailure = bookQuery.data !== undefined && bookPositions === null;
   const hasWorkspaceContractFailure =
     workspaceQuery.data !== undefined && workspaceCash === null;
@@ -107,7 +107,7 @@ export function buildProposalPortfolioEvidence({
   const tradablePositions = positions.filter((position) => !isCashPosition(position));
   const bookCashPositions = positions.filter(isCashPosition);
   const bookCashAmount = bookCashPositions.reduce(
-    (sum, position) => sum + finiteNumber(position.market_value_base, 0),
+    (sum, position) => sum + finiteNumberOrFallback(position.market_value_base, 0),
     0
   );
   const cash = resolveCashEvidence({
@@ -234,7 +234,7 @@ function resolveCashEvidence({
     };
   }
   return {
-    amount: finiteNumber(manualCashAmount, 0),
+    amount: finiteNumberOrFallback(manualCashAmount, 0),
     authority: "manual_scenario",
     label: "Manual scenario cash",
   };
@@ -296,8 +296,10 @@ function isCashPosition(position: PortfolioPositionView): boolean {
   return assetClass === "cash" || position.security_id.toUpperCase().startsWith("CASH_");
 }
 
-function finiteNumber(value: unknown): number | null;
-function finiteNumber(value: unknown, fallback: number): number;
-function finiteNumber(value: unknown, fallback: number | null = null): number | null {
+function finiteNumberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function finiteNumberOrFallback(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
