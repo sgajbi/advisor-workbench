@@ -52,6 +52,9 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain("p95Ms: 1_500");
     expect(runner).toContain("replacementMaxErrorRate: 0.02");
     expect(runner).toContain('compose(["stop", "workbench-a"])');
+    expect(runner).toContain('compose(["rm", "-f", "workbench-a"])');
+    expect(runner).toContain("assertContainerReplacement");
+    expect(runner).toContain("replica_replacement: replicaReplacement");
     expect(runner).toContain("engineering_regression_non_certifying");
     expect(runner).toContain("explicit_non_claims");
     expect(runner).toContain("resolveSuccessfulTerminalUpstream");
