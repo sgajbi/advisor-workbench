@@ -73,8 +73,8 @@ describe("proposal scenario cash admission", () => {
     }
   );
 
-  it.each(["90071992547409.92", "99999999999999.99", "9007199254740992"])(
-    "rejects %s beyond the reliable scaled monetary range",
+  it.each(["70368744177664", "90071992547409.91", "99999999999999.99"])(
+    "rejects %s when cent identity would not remain reliable after conversion",
     (input) => {
       expect(assessProposalScenarioCashInput(input)).toEqual({
         status: "invalid",
@@ -84,11 +84,22 @@ describe("proposal scenario cash admission", () => {
     }
   );
 
-  it("admits the maximum amount representable as safe minor units", () => {
-    expect(assessProposalScenarioCashInput("90071992547409.91")).toEqual({
+  it("keeps adjacent cents distinct at the admitted upper boundary", () => {
+    const penultimateCent = assessProposalScenarioCashInput("70368744177663.98");
+    const finalCent = assessProposalScenarioCashInput("70368744177663.99");
+
+    expect(penultimateCent).toEqual({
       status: "ready",
       inputState: "positive",
-      amount: 90071992547409.9,
+      amount: 70368744177663.98,
     });
+    expect(finalCent).toEqual({
+      status: "ready",
+      inputState: "positive",
+      amount: 70368744177663.99,
+    });
+    expect(penultimateCent.status === "ready" ? penultimateCent.amount : null).not.toBe(
+      finalCent.status === "ready" ? finalCent.amount : null
+    );
   });
 });
