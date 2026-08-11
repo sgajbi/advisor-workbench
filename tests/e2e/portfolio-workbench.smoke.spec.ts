@@ -244,6 +244,9 @@ test.describe('Portfolio workbench smoke', () => {
       ).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Source Limitations' })).toBeVisible();
       await expect(page.getByText('MTD performance unavailable')).toBeVisible();
+      await expect(
+        page.getByText('MTD valuation history is incomplete; no return is shown.')
+      ).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);
     }
 

@@ -910,6 +910,8 @@ function mapPortfolioPerformancePeriodReturn(
     benchmark_return_pct: payload?.benchmark_return_pct ?? null,
     excess_return_pct: payload?.excess_return_pct ?? null,
     unavailable: payload?.unavailable ?? null,
+    warnings: payload?.warnings ?? [],
+    partial_failures: payload?.partial_failures ?? [],
   };
 }
 

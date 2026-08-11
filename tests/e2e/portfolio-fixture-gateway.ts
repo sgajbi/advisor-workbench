@@ -65,10 +65,6 @@ export async function startPortfolioFixtureGateway({
       `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/performance-snapshot`
     ) {
       const period = requestUrl.searchParams.get('period') ?? 'EXPLICIT';
-      if (period === 'MTD') {
-        sendJson(response, { code: 'fixture_mtd_performance_unavailable' }, 503);
-        return;
-      }
       sendJson(response, buildPerformanceResponse(period));
       return;
     }
@@ -164,11 +160,19 @@ function buildPerformanceResponse(period: string) {
     period,
     as_of_date: AS_OF_DATE,
     benchmark_code: 'BMK_GLOBAL_BALANCED_60_40',
-    portfolio_return_pct: period === 'QTD' ? 1.8 : period === 'YTD' ? 4.6 : 2.4,
+    portfolio_return_pct:
+      period === 'MTD' ? null : period === 'QTD' ? 1.8 : period === 'YTD' ? 4.6 : 2.4,
     benchmark_return_pct: null,
     excess_return_pct: null,
     sparkline: [],
-    unavailable: null,
+    unavailable:
+      period === 'MTD'
+        ? {
+            title: 'MTD performance unavailable',
+            detail: 'MTD valuation history is incomplete; no return is shown.',
+            requirements: ['Daily valuations through the review date'],
+          }
+        : null,
     warnings:
       period === 'EXPLICIT'
         ? ['Benchmark history contains one delayed market close.']

@@ -393,6 +393,8 @@ export type PortfolioWorkspace = {
       detail: string;
       requirements: string[];
     } | null;
+    warnings?: string[];
+    partial_failures?: PortfolioPartialFailure[];
   }>;
   supporting_evidence_failures?: PortfolioSupportingEvidenceFailure[];
   rebalance: {

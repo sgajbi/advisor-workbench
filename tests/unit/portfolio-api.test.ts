@@ -794,6 +794,110 @@ describe("portfolio api", () => {
     ]);
   });
 
+  it("preserves source-owned standard-period unavailable, warning, and partial evidence", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/book")) {
+          return jsonResponse({
+            as_of_date: "2026-03-28",
+            summary: {
+              assets_under_management_base: 982500,
+              invested_market_value_base: 900000,
+              cash_market_value_base: 82500,
+              cash_weight_pct: 8.3969,
+              position_count: 3,
+              cash_balance_count: 1,
+            },
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
+            top_positions: [],
+            positions: [],
+          });
+        }
+        if (url.includes("/income-summary")) {
+          return jsonResponse({ reporting_currency: "USD" });
+        }
+        if (url.includes("/activity-summary")) {
+          return jsonResponse({ reporting_currency: "USD", buckets: [] });
+        }
+        if (url.includes("/performance-snapshot")) {
+          const period = url.includes("period=MTD")
+            ? "MTD"
+            : url.includes("period=QTD")
+              ? "QTD"
+              : url.includes("period=YTD")
+                ? "YTD"
+                : "EXPLICIT";
+          return jsonResponse({
+            period,
+            as_of_date: "2026-03-28",
+            benchmark_code: null,
+            portfolio_return_pct: period === "MTD" ? null : 1,
+            benchmark_return_pct: null,
+            excess_return_pct: null,
+            unavailable:
+              period === "MTD"
+                ? {
+                    title: "Performance history incomplete",
+                    detail: "MTD valuation history is incomplete.",
+                    requirements: ["Daily valuations"],
+                  }
+                : null,
+            warnings: period === "QTD" ? ["One benchmark close is delayed."] : [],
+            partial_failures:
+              period === "YTD"
+                ? [
+                    {
+                      source_service: "lotus-performance",
+                      error_code: "BENCHMARK_PARTIAL",
+                      detail: "Benchmark-relative return is partial.",
+                    },
+                  ]
+                : [],
+            sparkline: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      })
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(details?.performance_period_returns).toEqual([
+      expect.objectContaining({
+        period: "MTD",
+        return_pct: null,
+        unavailable: expect.objectContaining({ detail: "MTD valuation history is incomplete." }),
+      }),
+      expect.objectContaining({
+        period: "QTD",
+        return_pct: 1,
+        warnings: ["One benchmark close is delayed."],
+      }),
+      expect.objectContaining({
+        period: "YTD",
+        return_pct: 1,
+        partial_failures: [
+          expect.objectContaining({
+            source_service: "lotus-performance",
+            error_code: "BENCHMARK_PARTIAL",
+          }),
+        ],
+      }),
+    ]);
+    expect(details?.supporting_evidence_failures).toEqual([]);
+  });
+
   it("names unavailable income, activity, and selected-period evidence independently", async () => {
     vi.stubGlobal(
       "fetch",
