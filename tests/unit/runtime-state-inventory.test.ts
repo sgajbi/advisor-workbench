@@ -121,6 +121,31 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
   });
 
+  it.each([
+    [
+      "direct local alias",
+      "const cache = Object.freeze({}); function update() { const ref = cache; ref.value = 1; }",
+    ],
+    [
+      "chained property alias",
+      "const cache = Object.freeze({ entries: [] }); function update() { const entries = cache.entries; const ref = entries; ref.push('module'); }",
+    ],
+  ])("detects a module mutation through a %s", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
+  it("does not follow a shadowed local alias to a same-named module binding", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({}); function update() { const cache = {}; const ref = cache; ref.value = 1; }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
   it("rejects a stale declaration that could hide dead state guidance", () => {
     const evidence = loadEvidence();
     evidence.discoveredStateHolders = evidence.discoveredStateHolders.filter(
