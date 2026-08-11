@@ -75,9 +75,10 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
   **Complete portfolio review** next step, and **Ready**, **Partial**, or **Not Ready** label are
   Workbench presentation projections over loaded source facts, not source-owned actions, approvals,
   recommendations, or mandate decisions.
-- Keeps partial failures visible instead of treating missing evidence as zero or clear. A Gateway
-  warning without a partial-failure entry is retained in the workspace/export but has no dedicated
-  visible region on this screen today; that gap is tracked by #649.
+- Keeps top-level workspace-shell partial failures visible instead of treating them as zero or
+  clear. Period-specific performance snapshot failures remain nested and are not promoted into the
+  current decision/exception posture; a Gateway warning without a top-level partial failure is also
+  retained without a dedicated visible region. Those evidence gaps are tracked by #649.
 - Exposes period, as-of, reporting-currency, filter, export, and additional-workflow controls only
   within current source capability. Unsupported historical review or currency restatement is
   disabled and explained.
@@ -139,8 +140,8 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Initial load | Server-backed page loading, followed by a bounded toolbar placeholder until client controls mount | Wait for portfolio and workspace evidence; no fabricated summary is shown |
 | Ready | Identity, metrics, review focus, controls, exceptions/readiness, evidence, and handoffs | Use the review focus and source evidence before continuing |
 | No selectable portfolio | **Portfolio context unavailable** and **Selection unavailable**; no global portfolio list is substituted | Open **My book** to re-establish source-backed portfolio membership |
-| Selected workspace unavailable | An automatic bounded client fetch attempts to recover the selected shell; persistent failure leaves the explicit unavailable workspace | Return through **My book** or follow the first support step |
-| Partial or degraded | Available facts remain visible with partial-failure, readiness, or exception detail | Use only evidenced facts and continue to the owning workflow or support path |
+| Selected workspace unavailable | The client reattempts the selected shell, but the current effect has no terminal attempt/backoff bound | Return through **My book**; bounded retry and terminal recovery are tracked by [#651](https://github.com/sgajbi/lotus-workbench/issues/651) |
+| Partial or degraded | Available facts remain visible with top-level shell partial-failure and readiness detail; nested performance snapshot failures are not currently elevated | Use only evidenced facts; period-specific failure visibility is tracked by #649 |
 | Warning without partial failure | No dedicated warning region is rendered; the warning remains in the local projection/export | Do not infer an all-clear source posture from the absence of visible warnings; follow #649 |
 | Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope | Keep the effective current scope; do not relabel latest evidence as historical or restated |
 | Empty supporting detail | Source-backed zero or unavailable supporting detail remains distinct from the portfolio headline | Open the owning record screen before concluding that activity or exposure is absent |
@@ -200,6 +201,8 @@ Compatibility routes and aliases reuse this guide and must not fork the business
   readiness, production, or bank-certification proof.
 - The repeated all-clear hierarchy, record-filter scope, and desktop rail utilisation found in the
   screen audit remain explicitly open under #649; this guide does not mark that UI work complete.
+- The unbounded selected-shell reattempt path remains explicitly open under #651; this guide does
+  not describe that recovery as bounded or production-resilient.
 
 Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
 governed commands and evidence locations.
