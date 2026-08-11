@@ -730,7 +730,7 @@ function getReportingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRe
   return "Missing";
 }
 
-function isReportingReady(status: string): boolean {
+export function isReportingReady(status: string): boolean {
   const normalized = status.toUpperCase();
   return normalized === "READY" || normalized === "COMPLETE";
 }

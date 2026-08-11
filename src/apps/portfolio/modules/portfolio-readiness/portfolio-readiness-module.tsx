@@ -9,6 +9,7 @@ import {
 
 import { formatDate } from "../../formatters";
 import type { PortfolioExceptionSummary, PortfolioWorkspace } from "../../types";
+import { isReportingReady } from "../../view-model";
 
 type PortfolioDetailDrawerState = {
   kicker: string;
@@ -38,8 +39,9 @@ export default function PortfolioReadinessModule({
   showDetailFootnote: boolean;
   onOpenException: (exception: PortfolioExceptionSummary) => void;
 }) {
-  const reportingNeedsAttention =
-    workspace.readiness.reporting.status.toUpperCase() !== "READY";
+  const reportingNeedsAttention = !isReportingReady(
+    workspace.readiness.reporting.status
+  );
 
   if (!exceptions.length && !reportingNeedsAttention) {
     return null;
