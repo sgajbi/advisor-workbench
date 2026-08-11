@@ -450,8 +450,10 @@ validator treats the returned acknowledgement state as replay evidence and skips
 acknowledgement write rather than forcing a conflicting idempotency key.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
-Proposal Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review,
-and Implementation Status. These journey checks are route-level evidence over existing
+Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
+Status. The Proposal Builder check evaluates its draft through Gateway and Advise before capturing
+the same screen; evaluation is a source-backed result state, not a separately addressable screen.
+These journey checks are route-level evidence over existing
 Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
 client communication, or execution truth.
 For Opportunities and Ideas, the browser proof now goes beyond read-path rendering: it opens

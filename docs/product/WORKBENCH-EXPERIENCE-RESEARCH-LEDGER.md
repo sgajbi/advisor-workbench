@@ -3276,3 +3276,54 @@ Workbench #612 owns the broader certification and remains open. This first tranc
 after focused tamper tests, TypeScript, lint, full repository gates, protected CI, exact-main proof,
 wiki publication, and strict parity pass. The shared front-office runtime is intentionally untouched;
 this slice changes build and governance controls rather than product or Gateway behavior.
+
+## Proposal Builder Evaluation Navigation
+
+### Business and engineering job
+
+Client advisors need one coherent proposal-construction workspace: compose draft movements, request
+source evaluation, inspect the result, then save a governed draft for downstream review. Navigation
+must not imply that an unevaluated draft already has a separate portfolio-impact result.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-11:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   presents one guided journey from identification through construction, delivery, and
+   implementation, with analytics and real-time checks inside construction.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   integrates proposal generation, portfolio analytics, and suitability checks within the advisor
+   workflow rather than treating an unavailable result as a destination.
+3. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) requires predictable navigation and meaningful
+   keyboard/focus behavior.
+4. [W3C status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages)
+   supports announcing a successful asynchronous result without moving focus unexpectedly.
+
+### Adopted decisions
+
+1. Keep draft composition and Gateway/Advise evaluation in one Proposal Builder screen.
+2. Render evaluation evidence only after the source call succeeds and announce it as a polite
+   status update.
+3. Describe a workspace as evaluated only after evaluation succeeds, not merely after creation.
+4. Keep saving a governed draft dependent on a returned source proposal identity.
+5. Record one canonical Proposal Builder browser check that includes source evaluation instead of
+   counting the same route as two screens.
+
+### Rejected decisions
+
+1. A separate `#simulation` destination, because it had no route state, fragment owner, persisted
+   run identity, or pre-result business content.
+2. A fabricated empty simulation panel, because it would visually imply evidence before Gateway and
+   Advise return it.
+3. A Gateway or Advise change, because the existing contract already owns the required stateful
+   workspace evaluation and handoff truth.
+
+### Validation and publication decision
+
+Workbench #608 owns this bounded correction. Focused proof must cover route taxonomy, evaluation
+success and failure, result announcement, screen-registry reconciliation, canonical browser logic,
+and desktop/narrow production-browser behavior. Repository context, the runtime runbook, the
+business-facing screen catalogue, and the codebase review ledger change in the same slice. The wiki
+source therefore requires post-merge publication and strict parity. Workbench #631 separately owns
+portfolio-book and workspace-shell unavailable-versus-empty evidence and action gating.

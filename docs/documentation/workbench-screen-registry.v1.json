@@ -926,25 +926,6 @@
       }
     },
     {
-      "id": "proposal-simulation",
-      "businessName": "Proposal Simulation",
-      "family": "proposal",
-      "routePattern": "/proposals/simulate",
-      "mode": "simulation",
-      "fragment": null,
-      "surfaceClassification": "alias",
-      "navigationPosture": "not-applicable",
-      "wikiSlug": null,
-      "canonicalSurfaceId": "proposal-builder",
-      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
-      "implementationEvidence": [
-        "src/features/proposals/advisory-journey-navigation.ts",
-        "src/features/proposals/components/proposal-simulate-form.tsx"
-      ],
-      "runtimeEvidence": [],
-      "supportOwner": "lotus-workbench"
-    },
-    {
       "id": "approval-queue",
       "businessName": "Approval Queue",
       "family": "proposal",
@@ -1097,7 +1078,6 @@
         "client-context": "client-context-alias",
         "opportunities": "opportunities-and-ideas",
         "proposal-builder": "proposal-builder",
-        "simulation": "proposal-simulation",
         "suitability": "suitability-review",
         "risk-impact": "risk-and-impact",
         "approval-queue": "approval-queue",
