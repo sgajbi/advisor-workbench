@@ -1,6 +1,7 @@
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 
 import type { CashFlowIntentInput, TradeIntentInput } from "./simulation-payload";
+import { PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT } from "./proposal-scenario-cash";
 
 export type ProposalDraftCashFlowIntent = CashFlowIntentInput & {
   id: string;
@@ -52,6 +53,7 @@ export type ProposalDraftPreview = {
   unpricedTradeCount: number;
   currentLargestWeight: number;
   proposedLargestWeight: number;
+  monetaryPrecisionReliable: boolean;
 };
 
 export function createCashFlowIntent(
@@ -174,9 +176,22 @@ export function buildProposalDraftPreview(
   trades: ProposalDraftTradeIntent[],
   additionalCashAmount = 0
 ): ProposalDraftPreview {
+  let monetaryPrecisionReliable = true;
+  const monetaryInputs: bigint[] = [];
+  const toMinorUnits = (value: number): bigint => {
+    const minorUnits = proposalMoneyToMinorUnits(value);
+    if (minorUnits === null) {
+      monetaryPrecisionReliable = false;
+      return 0n;
+    }
+    monetaryInputs.push(minorUnits);
+    return minorUnits;
+  };
   const rowMap = new Map<string, DraftPositionPreviewRow>();
   positions.forEach((position) => {
-    const currentValue = position.market_value_base ?? 0;
+    const currentValue = proposalMoneyFromMinorUnits(
+      toMinorUnits(position.market_value_base ?? 0)
+    );
     rowMap.set(position.security_id, {
       key: position.security_id,
       instrumentId: position.security_id,
@@ -190,7 +205,7 @@ export function buildProposalDraftPreview(
     });
   });
 
-  let tradeNotional = 0;
+  let tradeNotionalMinorUnits = 0n;
   let unpricedTradeCount = 0;
   trades.forEach((trade) => {
     if (!trade.instrumentId.trim() || trade.quantity <= 0) {
@@ -223,46 +238,108 @@ export function buildProposalDraftPreview(
       trade.side === "SELL" ? Math.min(trade.quantity, Math.max(0, row.proposedQuantity)) : trade.quantity;
     const quantityDelta = trade.side === "SELL" ? -executableQuantity : executableQuantity;
     row.proposedQuantity = Math.max(0, row.proposedQuantity + quantityDelta);
-    row.proposedValue = Math.max(0, row.proposedQuantity * price);
-    row.deltaValue = row.proposedValue - row.currentValue;
+    const proposedValueMinorUnits = toMinorUnits(
+      Math.max(0, row.proposedQuantity * price)
+    );
+    const currentValueMinorUnits = toMinorUnits(row.currentValue);
+    row.proposedValue = proposalMoneyFromMinorUnits(proposedValueMinorUnits);
+    row.deltaValue = proposalMoneyFromMinorUnits(
+      proposedValueMinorUnits - currentValueMinorUnits
+    );
     rowMap.set(instrumentId, row);
-    tradeNotional += trade.side === "SELL" ? -(executableQuantity * price) : executableQuantity * price;
+    const tradeNotional = toMinorUnits(executableQuantity * price);
+    tradeNotionalMinorUnits += trade.side === "SELL" ? -tradeNotional : tradeNotional;
   });
 
-  const cashFlowDelta = cashFlows.reduce((sum, item) => {
-    const amount = Math.abs(item.amount || 0);
+  const cashFlowDeltaMinorUnits = cashFlows.reduce((sum, item) => {
+    const amount = toMinorUnits(
+      Number.isFinite(item.amount) ? Math.abs(item.amount) : Number.NaN
+    );
     return item.direction === "OUT" ? sum - amount : sum + amount;
-  }, 0);
-  const cashDelta = additionalCashAmount + cashFlowDelta;
+  }, 0n);
+  const cashAmountMinorUnits = toMinorUnits(cashAmount);
+  const additionalCashMinorUnits = toMinorUnits(additionalCashAmount);
+  const cashDeltaMinorUnits = additionalCashMinorUnits + cashFlowDeltaMinorUnits;
   const rows = Array.from(rowMap.values()).sort(
     (left, right) => right.proposedValue - left.proposedValue
   );
-  const currentPositionValue = rows.reduce((sum, row) => sum + row.currentValue, 0);
-  const proposedPositionValue = rows.reduce((sum, row) => sum + row.proposedValue, 0);
-  const currentPortfolioValue = currentPositionValue + cashAmount;
-  const proposedCash = Math.max(0, cashAmount + cashDelta - tradeNotional);
-  const proposedPortfolioValue = proposedPositionValue + proposedCash;
+  const currentPositionValueMinorUnits = rows.reduce(
+    (sum, row) => sum + toMinorUnits(row.currentValue),
+    0n
+  );
+  const proposedPositionValueMinorUnits = rows.reduce(
+    (sum, row) => sum + toMinorUnits(row.proposedValue),
+    0n
+  );
+  const currentPortfolioValueMinorUnits =
+    currentPositionValueMinorUnits + cashAmountMinorUnits;
+  const proposedCashMinorUnits = maxBigInt(
+    0n,
+    cashAmountMinorUnits + cashDeltaMinorUnits - tradeNotionalMinorUnits
+  );
+  const proposedPortfolioValueMinorUnits =
+    proposedPositionValueMinorUnits + proposedCashMinorUnits;
 
-  const allocationMap = new Map<string, { currentValue: number; proposedValue: number }>();
+  const allocationMap = new Map<
+    string,
+    { currentValueMinorUnits: bigint; proposedValueMinorUnits: bigint }
+  >();
   rows.forEach((row) => {
-    const current = allocationMap.get(row.assetClass) ?? { currentValue: 0, proposedValue: 0 };
-    current.currentValue += row.currentValue;
-    current.proposedValue += row.proposedValue;
+    const current = allocationMap.get(row.assetClass) ?? {
+      currentValueMinorUnits: 0n,
+      proposedValueMinorUnits: 0n,
+    };
+    current.currentValueMinorUnits += toMinorUnits(row.currentValue);
+    current.proposedValueMinorUnits += toMinorUnits(row.proposedValue);
     allocationMap.set(row.assetClass, current);
   });
   allocationMap.set("Cash", {
-    currentValue: cashAmount,
-    proposedValue: proposedCash,
+    currentValueMinorUnits: cashAmountMinorUnits,
+    proposedValueMinorUnits: proposedCashMinorUnits,
   });
+
+  const aggregateMinorUnits = [
+    tradeNotionalMinorUnits,
+    cashDeltaMinorUnits,
+    currentPositionValueMinorUnits,
+    proposedPositionValueMinorUnits,
+    currentPortfolioValueMinorUnits,
+    proposedCashMinorUnits,
+    proposedPortfolioValueMinorUnits,
+    ...Array.from(allocationMap.values()).flatMap((values) => [
+      values.currentValueMinorUnits,
+      values.proposedValueMinorUnits,
+    ]),
+  ];
+  monetaryPrecisionReliable =
+    monetaryPrecisionReliable &&
+    [...monetaryInputs, ...aggregateMinorUnits].every(isCentDistinguishableMinorUnits);
+
+  const currentPortfolioValue = proposalMoneyFromMinorUnits(
+    currentPortfolioValueMinorUnits
+  );
+  const proposedPortfolioValue = proposalMoneyFromMinorUnits(
+    proposedPortfolioValueMinorUnits
+  );
+  const proposedCash = proposalMoneyFromMinorUnits(proposedCashMinorUnits);
 
   const allocationRows = Array.from(allocationMap.entries())
     .map(([assetClass, values]) => ({
       assetClass,
-      currentValue: values.currentValue,
-      proposedValue: values.proposedValue,
-      currentWeight: currentPortfolioValue > 0 ? (values.currentValue / currentPortfolioValue) * 100 : 0,
+      currentValue: proposalMoneyFromMinorUnits(values.currentValueMinorUnits),
+      proposedValue: proposalMoneyFromMinorUnits(values.proposedValueMinorUnits),
+      currentWeight:
+        currentPortfolioValue > 0
+          ? (proposalMoneyFromMinorUnits(values.currentValueMinorUnits) /
+              currentPortfolioValue) *
+            100
+          : 0,
       proposedWeight:
-        proposedPortfolioValue > 0 ? (values.proposedValue / proposedPortfolioValue) * 100 : 0,
+        proposedPortfolioValue > 0
+          ? (proposalMoneyFromMinorUnits(values.proposedValueMinorUnits) /
+              proposedPortfolioValue) *
+            100
+          : 0,
     }))
     .sort((left, right) => right.proposedValue - left.proposedValue);
 
@@ -281,10 +358,32 @@ export function buildProposalDraftPreview(
     currentPortfolioValue,
     proposedPortfolioValue,
     proposedCash,
-    cashDelta,
-    tradeNotional,
+    cashDelta: proposalMoneyFromMinorUnits(cashDeltaMinorUnits),
+    tradeNotional: proposalMoneyFromMinorUnits(tradeNotionalMinorUnits),
     unpricedTradeCount,
     currentLargestWeight,
     proposedLargestWeight,
+    monetaryPrecisionReliable,
   };
+}
+
+function proposalMoneyToMinorUnits(value: number): bigint | null {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  const roundedMinorUnits = Math.round(value * 100);
+  return Number.isSafeInteger(roundedMinorUnits) ? BigInt(roundedMinorUnits) : null;
+}
+
+function proposalMoneyFromMinorUnits(value: bigint): number {
+  return Number(value) / 100;
+}
+
+function isCentDistinguishableMinorUnits(value: bigint): boolean {
+  const magnitude = value < 0n ? -value : value;
+  return magnitude < PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT;
+}
+
+function maxBigInt(left: bigint, right: bigint): bigint {
+  return left > right ? left : right;
 }

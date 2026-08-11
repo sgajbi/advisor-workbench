@@ -375,7 +375,8 @@ Current repository posture:
     Admit no more than two decimal places, validate scaled minor units before numeric conversion,
     and cap the range below the point where adjacent cent values stop being distinguishable;
     apply the same boundary to the completed current/proposed projection so source and draft
-    aggregation cannot reintroduce rounding;
+    aggregation cannot reintroduce rounding; preserve monetary arithmetic as integer minor units
+    through the complete preview and convert only final range-admitted values for presentation;
     negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not

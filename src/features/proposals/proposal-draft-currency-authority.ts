@@ -6,10 +6,7 @@ import {
   type ProposalDraftTradeIntent,
 } from "./proposal-draft-preview";
 import type { ProposalPortfolioEvidenceModel } from "./proposal-portfolio-evidence";
-import {
-  PROPOSAL_CENT_DISTINGUISHABLE_MAJOR_LIMIT,
-  type ProposalScenarioCashAdmission,
-} from "./proposal-scenario-cash";
+import type { ProposalScenarioCashAdmission } from "./proposal-scenario-cash";
 
 type ProposalDraftCurrencyAuthorityBase = {
   requestedCurrency: string | null;
@@ -112,21 +109,7 @@ export function buildProposalDraftImpactModel({
 }
 
 function hasReliableProposalDraftMonetaryPrecision(preview: ProposalDraftPreview): boolean {
-  const monetaryValues = [
-    preview.currentPortfolioValue,
-    preview.proposedPortfolioValue,
-    preview.proposedCash,
-    preview.cashDelta,
-    preview.tradeNotional,
-    ...preview.rows.flatMap((row) => [row.currentValue, row.proposedValue, row.deltaValue]),
-    ...preview.allocationRows.flatMap((row) => [row.currentValue, row.proposedValue]),
-  ];
-
-  return monetaryValues.every(
-    (value) =>
-      Number.isFinite(value) &&
-      Math.abs(value) < PROPOSAL_CENT_DISTINGUISHABLE_MAJOR_LIMIT
-  );
+  return preview.monetaryPrecisionReliable;
 }
 
 export function buildProposalDraftCurrencyAuthority({

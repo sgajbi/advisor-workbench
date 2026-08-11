@@ -3585,7 +3585,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    cap the range below the floating-point spacing boundary where adjacent cents stop being
    distinguishable. Recheck the completed current/proposed preview against the same boundary so
    source cash, positions, cash movements, or draft orders cannot push an individually admitted
-   assumption into an unreliable aggregate. The Zod schema, field recovery, and
+   assumption into an unreliable aggregate. Preserve monetary inputs and cumulative arithmetic as
+   integer minor units through the complete preview, then convert only final range-admitted values
+   for presentation. The Zod schema, field recovery, and
    workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio
@@ -3609,7 +3611,8 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    amount may already have rounded before that check and even safe minor units can collapse when
    converted back to a large floating-point major-unit value. Admission preserves scaled units
    through the range decision, caps conversion where every adjacent cent remains distinct, and
-   withholds any completed aggregate that crosses that boundary.
+   withholds any completed aggregate that crosses that boundary. The projection also retains minor
+   units during addition and subtraction so cumulative rounding cannot pass a later range check.
 4. Using native `type="number"` as the business validator, because it can discard invalid text and
    permits wheel-driven value changes.
 5. Sending the assumption as portfolio cash or adding it to Gateway stateful input; the Gateway

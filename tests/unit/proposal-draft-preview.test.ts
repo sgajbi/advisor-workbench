@@ -86,6 +86,36 @@ describe("proposal draft preview", () => {
     });
   });
 
+  it("preserves exact cents while aggregating large cash movements and a priced draft order", () => {
+    const outflowOne = createCashFlowIntent(1, "USD");
+    outflowOne.amount = 0.09;
+    outflowOne.direction = "OUT";
+    const outflowTwo = createCashFlowIntent(2, "USD");
+    outflowTwo.amount = 0.08;
+    outflowTwo.direction = "OUT";
+    const pricedBuy: ProposalDraftTradeIntent = {
+      id: "trade-cent-proof",
+      source: "NEW_INSTRUMENT",
+      side: "BUY",
+      instrumentId: "CENT-PROOF",
+      quantity: 1,
+      referencePrice: 0.02,
+    };
+
+    const preview = buildProposalDraftPreview(
+      [],
+      60_000_000_000_000,
+      [outflowOne, outflowTwo],
+      [pricedBuy]
+    );
+
+    expect(preview.monetaryPrecisionReliable).toBe(true);
+    expect(preview.cashDelta).toBe(-0.17);
+    expect(preview.tradeNotional).toBe(0.02);
+    expect(preview.proposedCash.toFixed(2)).toBe("59999999999999.81");
+    expect(preview.proposedPortfolioValue.toFixed(2)).toBe("59999999999999.83");
+  });
+
   it("adds an off-book instrument and reports unpriced draft lines", () => {
     const offBookTrade: ProposalDraftTradeIntent = {
       id: "trade_1",
