@@ -1,5 +1,7 @@
 import { cpus, freemem, loadavg } from "node:os";
-import { once } from "node:events";
+
+const DEFAULT_GRACEFUL_CLOSE_TIMEOUT_MS = 5_000;
+const DEFAULT_FORCED_CLOSE_TIMEOUT_MS = 5_000;
 
 const MEMORY_UNITS = new Map([
   ["B", 1],
@@ -91,13 +93,79 @@ export function parseDockerStatsLines(lines) {
   });
 }
 
-export async function stopMonitoredProcess(child) {
-  if (child.exitCode !== null || child.signalCode !== null) {
+export async function stopMonitoredProcess(
+  child,
+  {
+    gracefulTimeoutMs = DEFAULT_GRACEFUL_CLOSE_TIMEOUT_MS,
+    forceTimeoutMs = DEFAULT_FORCED_CLOSE_TIMEOUT_MS,
+  } = {},
+) {
+  if (hasProcessClosed(child)) {
     return;
   }
-  const closed = once(child, "close");
-  child.kill();
-  await closed;
+  assertPositiveTimeout(gracefulTimeoutMs, "gracefulTimeoutMs");
+  assertPositiveTimeout(forceTimeoutMs, "forceTimeoutMs");
+
+  if (await signalAndWaitForClose(child, undefined, gracefulTimeoutMs)) {
+    return;
+  }
+  if (hasProcessClosed(child)) {
+    return;
+  }
+  if (await signalAndWaitForClose(child, "SIGKILL", forceTimeoutMs)) {
+    return;
+  }
+  throw new Error(
+    `resource monitor did not close within ${gracefulTimeoutMs}ms after SIGTERM or ${forceTimeoutMs}ms after SIGKILL`,
+  );
+}
+
+function signalAndWaitForClose(child, signal, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      child.off("close", onClose);
+      child.off("error", onError);
+    };
+    const finish = (callback, value) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      callback(value);
+    };
+    const onClose = () => finish(resolve, true);
+    const onError = (error) => finish(reject, error);
+    const timer = setTimeout(() => finish(resolve, false), timeoutMs);
+
+    child.once("close", onClose);
+    child.once("error", onError);
+    if (hasProcessClosed(child)) {
+      onClose();
+      return;
+    }
+    try {
+      if (signal) {
+        child.kill(signal);
+      } else {
+        child.kill();
+      }
+    } catch (error) {
+      finish(reject, error);
+    }
+  });
+}
+
+function hasProcessClosed(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function assertPositiveTimeout(value, name) {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${name} must be a positive finite duration.`);
+  }
 }
 
 function parsePercentage(value) {

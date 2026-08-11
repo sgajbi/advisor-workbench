@@ -64,6 +64,68 @@ describe("scale phase resource evidence", () => {
     expect(child.kill).not.toHaveBeenCalled();
   });
 
+  it("force terminates a resource monitor that ignores graceful shutdown", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: null as number | null,
+      signalCode: null as NodeJS.Signals | null,
+      kill: vi.fn(),
+    });
+    child.kill.mockImplementation((signal?: NodeJS.Signals) => {
+      if (signal === "SIGKILL") {
+        child.signalCode = signal;
+        child.emit("close", null, signal);
+      }
+      return true;
+    });
+
+    await expect(
+      stopMonitoredProcess(child as unknown as ChildProcess, {
+        gracefulTimeoutMs: 1,
+        forceTimeoutMs: 10,
+      }),
+    ).resolves.toBeUndefined();
+    expect(child.kill).toHaveBeenNthCalledWith(1);
+    expect(child.kill).toHaveBeenNthCalledWith(2, "SIGKILL");
+    expect(child.listenerCount("close")).toBe(0);
+    expect(child.listenerCount("error")).toBe(0);
+  });
+
+  it("fails within a bounded time when a resource monitor ignores both signals", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: null as number | null,
+      signalCode: null as NodeJS.Signals | null,
+      kill: vi.fn(() => true),
+    });
+
+    await expect(
+      stopMonitoredProcess(child as unknown as ChildProcess, {
+        gracefulTimeoutMs: 1,
+        forceTimeoutMs: 1,
+      }),
+    ).rejects.toThrow(
+      "resource monitor did not close within 1ms after SIGTERM or 1ms after SIGKILL",
+    );
+    expect(child.kill).toHaveBeenNthCalledWith(1);
+    expect(child.kill).toHaveBeenNthCalledWith(2, "SIGKILL");
+    expect(child.listenerCount("close")).toBe(0);
+    expect(child.listenerCount("error")).toBe(0);
+  });
+
+  it("rejects invalid shutdown bounds before signalling the monitor", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: null as number | null,
+      signalCode: null as NodeJS.Signals | null,
+      kill: vi.fn(),
+    });
+
+    await expect(
+      stopMonitoredProcess(child as unknown as ChildProcess, {
+        gracefulTimeoutMs: 0,
+      }),
+    ).rejects.toThrow("gracefulTimeoutMs must be a positive finite duration");
+    expect(child.kill).not.toHaveBeenCalled();
+  });
+
   it("retains per-container CPU and memory peaks from concurrent samples", () => {
     expect(
       summarizeContainerResourceSamples([
