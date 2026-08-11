@@ -35,6 +35,9 @@ export function ProposalPortfolioEvidencePanel({
       aria-busy={refreshPending}
       data-testid="proposal-portfolio-evidence"
       data-evidence-status={evidence.status}
+      data-requested-as-of-date={evidence.context.requestedAsOfDate || undefined}
+      data-effective-as-of-date={evidence.context.effectiveAsOfDate ?? undefined}
+      data-evidence-currency={evidence.context.effectiveCurrency ?? undefined}
     >
       <div className={styles.panelHeader}>
         <div role="status" aria-live="polite" aria-atomic="true">
@@ -56,6 +59,20 @@ export function ProposalPortfolioEvidencePanel({
           <Text variant="microLabel">Cash Evidence</Text>
           <strong>{formatCurrencyValue(evidence.cash.amount, baseCurrency)}</strong>
           <Text variant="metadata">{evidence.cash.label}</Text>
+        </div>
+        <div className={styles.evidenceFact}>
+          <Text variant="microLabel">Advisory As-of</Text>
+          <strong>{evidence.context.requestedAsOfDate || "Not selected"}</strong>
+          <Text variant="metadata">Requested proposal context</Text>
+        </div>
+        <div className={styles.evidenceFact}>
+          <Text variant="microLabel">Source As-of</Text>
+          <strong>{evidence.context.effectiveAsOfDate ?? "Not confirmed"}</strong>
+          <Text variant="metadata">
+            {evidence.context.effectiveCurrency
+              ? `${evidence.context.effectiveCurrency} portfolio book`
+              : "Source context unavailable"}
+          </Text>
         </div>
       </div>
       <div className={styles.evidenceFooter}>
@@ -172,6 +189,8 @@ function portfolioEvidenceLabel(status: ProposalPortfolioEvidenceStatus): string
       return "Checking";
     case "partial":
       return "Partial";
+    case "context_mismatch":
+      return "Context mismatch";
     case "refresh_failed":
       return "Refresh failed";
     case "unavailable":
@@ -188,7 +207,11 @@ function portfolioEvidenceTone(status: ProposalPortfolioEvidenceStatus): Semanti
   if (status === "unavailable") {
     return "danger";
   }
-  if (status === "partial" || status === "refresh_failed") {
+  if (
+    status === "partial" ||
+    status === "context_mismatch" ||
+    status === "refresh_failed"
+  ) {
     return "warn";
   }
   return "default";

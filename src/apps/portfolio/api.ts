@@ -101,7 +101,18 @@ type PortfolioWorkspaceSummaryResponse = {
   partial_failures: PortfolioWorkspace["partial_failures"];
 };
 
-type PortfolioBookResponse = {
+export type PortfolioBookResponse = {
+  as_of_date: string;
+  portfolio: PortfolioWorkspace["portfolio"];
+  summary: {
+    assets_under_management_base: number;
+    invested_market_value_base: number;
+    cash_market_value_base: number;
+    cash_weight_pct: number;
+    position_count: number;
+    cash_balance_count: number;
+  };
+  cash_balances: NonNullable<PortfolioWorkspace["cash_balances"]>;
   allocation_views: NonNullable<PortfolioWorkspace["allocation_views"]>;
   top_positions: PortfolioWorkspace["top_positions"];
   positions: PortfolioWorkspace["positions"];
@@ -228,16 +239,6 @@ export async function getPortfolioWorkspaceShell(
   } catch {
     return null;
   }
-}
-
-export async function getRequiredPortfolioWorkspaceShell(
-  portfolioId: string
-): Promise<PortfolioWorkspace> {
-  const workspace = await fetchPortfolioWorkspaceShell(portfolioId);
-  if (!workspace) {
-    throw new Error("Portfolio workspace evidence is unavailable.");
-  }
-  return workspace;
 }
 
 export async function getPortfolioBook(

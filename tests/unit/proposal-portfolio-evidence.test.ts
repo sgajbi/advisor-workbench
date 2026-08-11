@@ -22,6 +22,29 @@ const positions: PortfolioPositionView[] = [
   },
 ];
 
+function portfolioBook(overrides: Record<string, unknown> = {}) {
+  return {
+    as_of_date: "2026-04-10",
+    portfolio: {
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
+      display_name: "Global Balanced Portfolio",
+      client_id: "CIF_001",
+      base_currency: "USD",
+      booking_center_code: "SGPB",
+    },
+    summary: {
+      assets_under_management_base: 44_000,
+      invested_market_value_base: 19_000,
+      cash_market_value_base: 25_000,
+      cash_weight_pct: 56.8,
+      position_count: positions.length,
+      cash_balance_count: 1,
+    },
+    positions,
+    ...overrides,
+  };
+}
+
 function readyQuery<T>(data: T) {
   return {
     data,
@@ -45,8 +68,9 @@ type BuildEvidenceInput = Parameters<typeof buildProposalPortfolioEvidence>[0];
 function buildEvidence(overrides: Partial<BuildEvidenceInput> = {}) {
   const input: BuildEvidenceInput = {
     portfolioId: "PB_SG_GLOBAL_BAL_001",
-    bookQuery: readyQuery({ positions }),
-    workspaceQuery: readyQuery({ summary: { total_cash_base: 25_000 } }),
+    asOfDate: "2026-04-10",
+    reportingCurrency: "USD",
+    bookQuery: readyQuery(portfolioBook()),
     manualCashAmount: 10_000,
     ...overrides,
   };
@@ -54,28 +78,34 @@ function buildEvidence(overrides: Partial<BuildEvidenceInput> = {}) {
 }
 
 describe("proposal portfolio evidence", () => {
-  it("admits evaluation only after the book and workspace cash are both usable", () => {
+  it("admits evaluation only from one complete book matching the selected context", () => {
     const evidence = buildEvidence();
 
     expect(evidence).toMatchObject({
       status: "ready",
       canEvaluateAndHandoff: true,
       title: "Portfolio evidence confirmed",
+      context: {
+        requestedAsOfDate: "2026-04-10",
+        effectiveAsOfDate: "2026-04-10",
+        requestedCurrency: "USD",
+        effectiveCurrency: "USD",
+      },
       positions: {
         status: "ready",
         items: [expect.objectContaining({ security_id: "AAPL" })],
       },
       cash: {
         amount: 25_000,
-        authority: "workspace",
-        label: "Portfolio cash confirmed",
+        authority: "portfolio_book",
+        label: "Portfolio book cash confirmed",
       },
     });
   });
 
   it("distinguishes a confirmed empty book from unavailable evidence", () => {
     const evidence = buildEvidence({
-      bookQuery: readyQuery({ positions: [] }),
+      bookQuery: readyQuery(portfolioBook({ positions: [] })),
     });
 
     expect(evidence.status).toBe("ready");
@@ -83,30 +113,55 @@ describe("proposal portfolio evidence", () => {
     expect(evidence.positions).toEqual({ status: "empty", items: [] });
   });
 
-  it("keeps partial book evidence visible without authorizing evaluation", () => {
+  it.each([
+    ["date", { as_of_date: "2026-04-09" }],
+    [
+      "portfolio",
+      {
+        portfolio: {
+          ...portfolioBook().portfolio,
+          portfolio_id: "PB_OTHER_001",
+        },
+      },
+    ],
+    [
+      "currency",
+      {
+        portfolio: {
+          ...portfolioBook().portfolio,
+          base_currency: "SGD",
+        },
+      },
+    ],
+  ])("fails closed when source %s does not match the selected context", (_name, mismatch) => {
     const evidence = buildEvidence({
-      workspaceQuery: failedQuery<{ summary: { total_cash_base: number } }>(),
+      bookQuery: readyQuery(portfolioBook(mismatch)),
     });
 
     expect(evidence).toMatchObject({
-      status: "partial",
+      status: "context_mismatch",
       canEvaluateAndHandoff: false,
-      title: "Portfolio evidence is incomplete",
-      positions: {
-        status: "ready",
-        items: [expect.objectContaining({ security_id: "AAPL" })],
-      },
-      cash: {
-        amount: 4_000,
-        authority: "portfolio_book",
-      },
+      title: "Portfolio context does not match",
     });
   });
 
-  it("does not convert failed source reads into an empty book or confirmed manual cash", () => {
+  it.each([
+    ["date", { as_of_date: undefined }],
+    ["portfolio", { portfolio: undefined }],
+    ["cash", { summary: { cash_market_value_base: undefined } }],
+    ["positions", { positions: undefined }],
+  ])("treats a response with missing %s evidence as incomplete", (_name, malformed) => {
     const evidence = buildEvidence({
-      bookQuery: failedQuery<{ positions: typeof positions }>(),
-      workspaceQuery: failedQuery<{ summary: { total_cash_base: number } }>(),
+      bookQuery: readyQuery(portfolioBook(malformed)),
+    });
+
+    expect(evidence.canEvaluateAndHandoff).toBe(false);
+    expect(["partial", "unavailable"]).toContain(evidence.status);
+  });
+
+  it("does not convert a failed source read into an empty book or confirmed manual cash", () => {
+    const evidence = buildEvidence({
+      bookQuery: failedQuery(),
     });
 
     expect(evidence).toMatchObject({
@@ -125,12 +180,8 @@ describe("proposal portfolio evidence", () => {
   it("preserves cached evidence but fails closed after a refresh error", () => {
     const evidence = buildEvidence({
       bookQuery: {
-        ...readyQuery({ positions }),
+        ...readyQuery(portfolioBook()),
         error: new Error("book refresh failed"),
-      },
-      workspaceQuery: {
-        ...readyQuery({ summary: { total_cash_base: 25_000 } }),
-        error: new Error("workspace refresh failed"),
       },
     });
 
@@ -141,17 +192,13 @@ describe("proposal portfolio evidence", () => {
         status: "cached",
         items: [expect.objectContaining({ security_id: "AAPL" })],
       },
-      cash: { amount: 25_000, authority: "workspace" },
+      cash: { amount: 25_000, authority: "portfolio_book" },
     });
   });
 
   it("pauses evaluation while cached evidence refreshes", () => {
     const evidence = buildEvidence({
-      bookQuery: { ...readyQuery({ positions }), isFetching: true },
-      workspaceQuery: {
-        ...readyQuery({ summary: { total_cash_base: 25_000 } }),
-        isFetching: true,
-      },
+      bookQuery: { ...readyQuery(portfolioBook()), isFetching: true },
     });
 
     expect(evidence.status).toBe("refreshing");
@@ -159,27 +206,10 @@ describe("proposal portfolio evidence", () => {
     expect(evidence.positions.status).toBe("refreshing");
   });
 
-  it("treats malformed 2xx evidence as unavailable", () => {
+  it("does not classify an incomplete context as ready or start with fabricated evidence", () => {
     const evidence = buildEvidence({
-      bookQuery: readyQuery({}),
-      workspaceQuery: readyQuery({ summary: {} }),
-    });
-
-    expect(evidence.status).toBe("unavailable");
-    expect(evidence.canEvaluateAndHandoff).toBe(false);
-    expect(evidence.positions.status).toBe("unavailable");
-  });
-
-  it("does not classify a disabled query as ready before a portfolio is selected", () => {
-    const evidence = buildEvidence({
-      portfolioId: "  ",
+      asOfDate: "",
       bookQuery: {
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        error: null,
-      },
-      workspaceQuery: {
         data: undefined,
         isLoading: false,
         isFetching: false,

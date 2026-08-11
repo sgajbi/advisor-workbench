@@ -6,7 +6,6 @@ import {
   getPortfolioBook,
   getPortfolioProjectedCashflow,
   getRequiredPortfolioBook,
-  getRequiredPortfolioWorkspaceShell,
   getPortfolioTransactionLedger,
   getPortfolioWorkspaceDetailedDetails,
   getPortfolioWorkspaceShell,
@@ -223,13 +222,50 @@ describe("portfolio api", () => {
     );
 
     await expect(getPortfolioWorkspaceShell("PB_SG_GLOBAL_BAL_001")).resolves.toBeNull();
-    await expect(
-      getRequiredPortfolioWorkspaceShell("PB_SG_GLOBAL_BAL_001")
-    ).rejects.toThrow("Portfolio workspace evidence is unavailable.");
     await expect(getPortfolioBook("PB_SG_GLOBAL_BAL_001")).resolves.toBeNull();
     await expect(getRequiredPortfolioBook("PB_SG_GLOBAL_BAL_001")).rejects.toThrow(
       "Portfolio book evidence is unavailable."
     );
+  });
+
+  it("sends every date-sensitive proposal-book dimension to Gateway", async () => {
+    const fetchSpy = vi.fn(async (_input: string | URL) =>
+      jsonResponse({
+        as_of_date: "2026-04-10",
+        portfolio: {
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          display_name: "Global Balanced Portfolio",
+          client_id: "CIF_001",
+          base_currency: "USD",
+          booking_center_code: "SGPB",
+        },
+        summary: {
+          assets_under_management_base: 1000,
+          invested_market_value_base: 900,
+          cash_market_value_base: 100,
+          cash_weight_pct: 10,
+          position_count: 1,
+          cash_balance_count: 1,
+        },
+        cash_balances: [],
+        allocation_views: [],
+        top_positions: [],
+        positions: [],
+      })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await getRequiredPortfolioBook("PB_SG_GLOBAL_BAL_001", {
+      asOfDate: "2026-04-10",
+      reportingCurrency: "USD",
+    });
+
+    const requestedUrl = fetchSpy.mock.calls[0]?.[0]?.toString() ?? "";
+    expect(requestedUrl).toContain(
+      "/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/book?"
+    );
+    expect(requestedUrl).toContain("as_of_date=2026-04-10");
+    expect(requestedUrl).toContain("reporting_currency=USD");
   });
 
   it("forces required book evidence past cache without allowing an older read to replace it", async () => {
@@ -260,7 +296,7 @@ describe("portfolio api", () => {
           })
       );
     vi.stubGlobal("fetch", fetchSpy);
-    const params = { reportingCurrency: "USD" };
+    const params = { asOfDate: "2026-04-10", reportingCurrency: "USD" };
 
     const staleRequest = getPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
     const currentRequest = getRequiredPortfolioBook("PB_SG_GLOBAL_BAL_001", params);

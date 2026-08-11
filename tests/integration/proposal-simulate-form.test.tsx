@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
@@ -19,40 +19,64 @@ const advisoryApiMocks = vi.hoisted(() => ({
 
 const portfolioApiMocks = vi.hoisted(() => ({
   getRequiredPortfolioBook: vi.fn(),
-  getRequiredPortfolioWorkspaceShell: vi.fn(),
 }));
 
 vi.mock("../../src/apps/portfolio/api", () => portfolioApiMocks);
 
-function portfolioBook(positions = [
-  {
-    security_id: "AAPL",
-    instrument_name: "Apple Inc.",
-    asset_class: "Equities",
-    quantity: 100,
-    market_price: 190,
-    market_value_base: 19000,
-    weight_pct: 19,
-  },
-]) {
+function portfolioBook(
+  positions = [
+    {
+      security_id: "AAPL",
+      instrument_name: "Apple Inc.",
+      asset_class: "Equities",
+      quantity: 100,
+      market_price: 190,
+      market_value_base: 19000,
+      weight_pct: 19,
+    },
+  ],
+  context: {
+    portfolioId?: string;
+    asOfDate?: string;
+    currency?: string;
+  } = {}
+) {
   return {
+    as_of_date: context.asOfDate ?? "2026-04-10",
+    portfolio: {
+      portfolio_id: context.portfolioId ?? "PB_SG_GLOBAL_BAL_001",
+      display_name: "Global Balanced Portfolio",
+      client_id: "CIF_001",
+      base_currency: context.currency ?? "USD",
+      booking_center_code: "SGPB",
+    },
+    summary: {
+      assets_under_management_base: 44000,
+      invested_market_value_base: 19000,
+      cash_market_value_base: 25000,
+      cash_weight_pct: 56.8,
+      position_count: positions.length,
+      cash_balance_count: 1,
+    },
+    cash_balances: [],
     positions,
     top_positions: [],
     allocation_views: [],
   };
 }
 
-function portfolioWorkspace(totalCashBase = 25000) {
-  return {
-    summary: {
-      total_cash_base: totalCashBase,
-    },
-  };
-}
-
 function resetPortfolioEvidenceMocks() {
-  portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValue(portfolioBook());
-  portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockResolvedValue(portfolioWorkspace());
+  portfolioApiMocks.getRequiredPortfolioBook.mockImplementation(
+    async (
+      portfolioId: string,
+      params: { asOfDate?: string; reportingCurrency?: string } = {}
+    ) =>
+      portfolioBook(undefined, {
+        portfolioId,
+        asOfDate: params.asOfDate,
+        currency: params.reportingCurrency,
+      })
+  );
 }
 
 async function waitForPortfolioEvidence(status = "ready") {
@@ -401,9 +425,6 @@ describe("ProposalSimulateForm", () => {
     portfolioApiMocks.getRequiredPortfolioBook.mockRejectedValueOnce(
       new Error("portfolio book unavailable")
     );
-    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
-      new Error("portfolio workspace unavailable")
-    );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence("unavailable");
@@ -419,10 +440,14 @@ describe("ProposalSimulateForm", () => {
     expect(advisoryApiMocks.createAdvisoryWorkspace).not.toHaveBeenCalled();
   });
 
-  it("keeps available holdings visible but blocks actions when cash evidence is unavailable", async () => {
-    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
-      new Error("portfolio workspace unavailable")
-    );
+  it("keeps available holdings visible but blocks actions when combined-book cash is malformed", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce({
+      ...portfolioBook(),
+      summary: {
+        ...portfolioBook().summary,
+        cash_market_value_base: undefined,
+      },
+    });
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence("partial");
@@ -449,9 +474,6 @@ describe("ProposalSimulateForm", () => {
     portfolioApiMocks.getRequiredPortfolioBook
       .mockRejectedValueOnce(new Error("portfolio book unavailable"))
       .mockResolvedValueOnce(portfolioBook());
-    portfolioApiMocks.getRequiredPortfolioWorkspaceShell
-      .mockRejectedValueOnce(new Error("portfolio workspace unavailable"))
-      .mockResolvedValueOnce(portfolioWorkspace());
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence("unavailable");
@@ -468,9 +490,6 @@ describe("ProposalSimulateForm", () => {
     portfolioApiMocks.getRequiredPortfolioBook.mockRejectedValueOnce(
       new Error("portfolio book refresh unavailable")
     );
-    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
-      new Error("portfolio workspace refresh unavailable")
-    );
 
     fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
 
@@ -479,5 +498,103 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByText("Latest portfolio evidence is not confirmed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("requests and confirms a new combined book when the advisory date changes", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2026-04-10", reportingCurrency: "USD" }
+    );
+
+    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
+      target: { value: "2026-04-11" },
+    });
+
+    const panel = await waitForPortfolioEvidence();
+    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-11");
+    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-11");
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenLastCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2026-04-11", reportingCurrency: "USD" }
+    );
+  });
+
+  it("fails closed and shows requested versus effective dates when source context mismatches", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce(
+      portfolioBook(undefined, { asOfDate: "2026-04-09" })
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    const panel = await waitForPortfolioEvidence("context_mismatch");
+    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-10");
+    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-09");
+    expect(screen.getByText("Portfolio context does not match")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("does not let an older date request replace the currently selected evidence", async () => {
+    let resolveOlder: ((value: ReturnType<typeof portfolioBook>) => void) | undefined;
+    let resolveCurrent: ((value: ReturnType<typeof portfolioBook>) => void) | undefined;
+    portfolioApiMocks.getRequiredPortfolioBook.mockImplementation(
+      async (
+        portfolioId: string,
+        params: { asOfDate?: string; reportingCurrency?: string } = {}
+      ) => {
+        if (params.asOfDate === "2026-04-11") {
+          return await new Promise<ReturnType<typeof portfolioBook>>((resolve) => {
+            resolveOlder = resolve;
+          });
+        }
+        if (params.asOfDate === "2026-04-12") {
+          return await new Promise<ReturnType<typeof portfolioBook>>((resolve) => {
+            resolveCurrent = resolve;
+          });
+        }
+        return portfolioBook(undefined, {
+          portfolioId,
+          asOfDate: params.asOfDate,
+          currency: params.reportingCurrency,
+        });
+      }
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
+      target: { value: "2026-04-11" },
+    });
+    await waitFor(() => expect(resolveOlder).toBeDefined());
+    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
+      target: { value: "2026-04-12" },
+    });
+    await waitFor(() => expect(resolveCurrent).toBeDefined());
+
+    await act(async () => {
+      resolveCurrent?.(
+        portfolioBook(undefined, {
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-12",
+          currency: "USD",
+        })
+      );
+    });
+    const panel = await waitForPortfolioEvidence();
+    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-12");
+
+    await act(async () => {
+      resolveOlder?.(
+        portfolioBook(undefined, {
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-11",
+          currency: "USD",
+        })
+      );
+    });
+    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-12");
+    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-12");
   });
 });
