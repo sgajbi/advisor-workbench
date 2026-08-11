@@ -3640,3 +3640,71 @@ availability, explicit errors, recovery, positive-assumption impact, unchanged G
 successful source-backed evaluation, and desktop/narrow browser behavior. No wiki source change is required: the route,
 screen purpose, source owners, supported actions, and operator procedure remain unchanged, while
 #605 owns the dedicated Proposal Builder business guide.
+
+## Portfolio Review Selected-Portfolio Recovery
+
+### Business and engineering job
+
+An advisor opening Portfolio Review must be able to tell whether the selected portfolio is still
+being confirmed, is ready for review, or is unavailable. A temporary source failure must not create
+repeated background traffic, display a terminal failure while confirmation is still running, switch
+to another portfolio silently, or offer a Retry control that does not actually contact portfolio
+authority.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-12:
+
+1. [W3C status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important loading, outcome, and error changes that do not take focus to be available to
+   assistive technology. The relevant pattern is an announced state transition without disrupting
+   the advisor's current context.
+2. [W3C user-notification guidance](https://www.w3.org/WAI/tutorials/forms/notifications/) calls for
+   concise, clear feedback and simple instructions that explain how an error can be resolved.
+3. [GOV.UK error-message guidance](https://design-system.service.gov.uk/components/error-message/)
+   distinguishes user-correctable input errors from service problems the user cannot fix and directs
+   the latter to an explanatory state with useful next-step information.
+4. [IBM Carbon notification guidance](https://v10.carbondesignsystem.com/components/notification/usage/)
+   recommends concise, in-context, persistent feedback for task or system failures, with an action
+   that clearly communicates the available next step.
+
+These sources inform state semantics, accessibility, and recovery copy only. Lotus does not copy
+another product's visual identity, layout, wording, or unsupported recovery behavior.
+
+### Adopted decisions
+
+1. Represent automatic selected-shell recovery as a visible loading state and show terminal
+   unavailability only after the single request settles.
+2. Keep one automatic request per selected portfolio source key. A changed key permits one fresh
+   request; an obsolete or unmounted completion cannot publish workspace state or terminal metrics.
+3. Keep terminal recovery persistent and in context. **Open My book** is the only action because it
+   is the implemented path that re-establishes portfolio selection; no other portfolio is silently
+   substituted.
+4. Use a stable UI test id plus fixture-owned request count for browser proof. Product copy remains
+   supporting evidence rather than the only automation contract.
+5. Emit bounded panel-state events for the real automatic attempt and its attached ready or terminal
+   outcome. Labels use static route/panel/operation/state vocabulary and never include portfolio,
+   client, request, response, or screen content.
+6. Reuse `ScreenStatePanel` and the existing Workbench observability contract. The correction adds
+   no CSS, dependency, experimental framework feature, Gateway route, runtime service, or topology.
+
+### Rejected decisions
+
+1. Repeated timer or exponential-backoff retries during a persistent source outage.
+2. A page-local Retry button without an explicitly implemented source-authority request.
+3. Showing the unavailable workspace while the automatic request is still pending.
+4. A transient toast as the only failure evidence, or moving focus merely to announce the state.
+5. Duplicating the primary recovery action in the side rail or showing unrelated Performance and
+   Operations links before the selected portfolio has been confirmed. The side rail may carry
+   concise selection or support guidance without competing with the main action.
+6. Putting portfolio ids, client ids, response payloads, or other high-cardinality context in metric
+   labels.
+
+### Validation and publication decision
+
+Workbench #651 owns implementation. Deterministic promise tests cover the single-attempt limit,
+source-key reset, stale completion, unmount, visible loading/terminal states, and lifecycle metrics.
+The isolated production-browser fixture proves exactly one server read plus one bounded client
+recovery read, stable terminal UI evidence, business copy, and the My-book handoff. The canonical
+Portfolio Review screen guide changes because its state/recovery and validation truth changes; no
+Gateway, API, OpenAPI, central platform context, or technology-stack claim changes.

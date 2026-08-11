@@ -146,7 +146,8 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Initial load | Server-backed page loading, followed by a bounded toolbar placeholder until client controls mount | Wait for portfolio and workspace evidence; no fabricated summary is shown |
 | Ready | Identity, metrics, one review focus, controls, evidence, and handoffs without repeated all-clear panels | Use the review focus and source evidence before continuing |
 | No selectable portfolio | **Portfolio context unavailable** and **Selection unavailable**; no global portfolio list is substituted | Open **My book** to re-establish source-backed portfolio membership |
-| Selected workspace unavailable | One automatic shell request is made for the selected portfolio; a terminal unavailable response is not re-requested in a render loop | Return through the visible **My book** action; broader recovery telemetry remains tracked by [#651](https://github.com/sgajbi/lotus-workbench/issues/651) |
+| Selected portfolio confirmation | **Preparing portfolio review** remains visible while one automatic request confirms the selected portfolio and current review evidence | Wait for the bounded request; recovery actions are not shown before the outcome is known |
+| Selected portfolio unavailable | After the single automatic request settles without a confirmed portfolio review, **Selected portfolio unavailable** explains that no other portfolio was substituted | Open **My book** to choose an available portfolio; there is no background request loop or unimplemented page-local Retry |
 | Partial or degraded | Available book facts remain visible with the affected source or supporting analytical scope in **Source Limitations**; a ready book is qualified to **Partial** when a selected or standard-period response is unavailable, warned, partial, or not retrievable | Use the dated book evidence that remains visible; do not use an unavailable return and open the owning specialist screen if the analytical scope is required |
 | Warning without partial failure | The source warning is visible as qualified performance evidence and prevents an unqualified ready posture | Review the exact warning and use only the evidenced return/benchmark scope |
 | Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope. While dated details load, existing totals and holdings readiness retain their actual valuation scope; a complete dated book summary replaces totals, valuation date, and position-coverage readiness together. A dated zero-position summary cannot inherit current holdings readiness | Keep the effective source scope; do not relabel latest evidence as historical or restated |
@@ -155,7 +156,8 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Error | Catalogue or workspace failures fail closed to unavailable context; partial source failures remain visible within an otherwise usable review | Re-enter through **My book** or retry the owning specialist screen; escalate if the same scope persists |
 
 The screen does not promise a universal Retry button. Recovery text names only controls that
-currently re-contact source authority.
+currently re-contact source authority. Bounded operational events distinguish the automatic
+attempt from its attached ready or terminal outcome without carrying portfolio or client identity.
 
 ## Workbench Boundaries
 
@@ -196,7 +198,7 @@ Compatibility routes and aliases reuse this guide and must not fork the business
 
 - Component and view-model tests cover portfolio identity/KPIs, decision-brief readiness and
   attention, exceptions, evidence/benchmark handoffs, toolbar capability behavior, API fan-out,
-  source-key request ordering, and automatic selected-shell recovery.
+  one attempt per source key, stale completion/unmount safety, and bounded recovery telemetry.
 - `tests/e2e/portfolio-workbench.smoke.spec.ts` covers populated Portfolio behavior and record-screen
   handoffs; `scripts/live/validation/browser-workflows.mjs` owns canonical browser proof.
 - Canonical validation selects `PB_SG_GLOBAL_BAL_001`, verifies the exact Portfolio Review heading
@@ -207,7 +209,9 @@ Compatibility routes and aliases reuse this guide and must not fork the business
   readiness, production, or bank-certification proof.
 - Focused tests prove the single healthy decision hierarchy, conditional source limitations,
   conditional evidence sources, absent-benchmark language, visible-date integrity, removal of
-  misleading summary filters, and finite selected-shell request lifecycle.
+  misleading summary filters, visible loading-to-terminal transitions, and the finite selected-shell
+  request lifecycle. An isolated production-browser fixture proves one server read plus one client
+  recovery read, the stable terminal state, non-substitution copy, and the **Open My book** handoff.
 - Focused mixed-success tests prove a failed standard-period request leaves dated book, income,
   selected-period, and other standard-period evidence usable; the failed return remains blank,
   recovery clears the limitation, and source-owned performance warnings qualify the review.
