@@ -87,6 +87,8 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("Workbench presentation classification");
     expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
+    expect(guide).toContain("it does not request\n  the detailed workflow or insight endpoints");
+    expect(guide).toContain("not a persisted or source-recommended action");
     expect(validate(registry).errors).toEqual([]);
   });
 
