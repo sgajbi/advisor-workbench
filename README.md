@@ -354,7 +354,8 @@ Repo-native gate mapping:
   Docker parity
 - `npm run scale:proof`
   hermetic two-replica proof for immutable-image identity, no-affinity distribution, source-owned
-  mutation continuity, one-replica interruption, recovery, latency, error, and resource evidence
+  mutation continuity, one-replica interruption, recovery, latency, error, concurrent per-phase
+  container resources, and host load-generator resources
 - `npm run live:validate`
   canonical integrated product validation when cross-app flows change
 - `npm run live:validate:construction`
