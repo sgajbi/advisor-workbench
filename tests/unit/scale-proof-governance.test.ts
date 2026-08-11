@@ -51,6 +51,8 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain('compose(["stop", "workbench-a"])');
     expect(runner).toContain("engineering_regression_non_certifying");
     expect(runner).toContain("explicit_non_claims");
+    expect(runner).toContain("resolveSuccessfulTerminalUpstream");
+    expect(runner).toContain("successfulResults");
   });
 
   it("keeps buyer and operator documentation aligned to the non-certifying proof", () => {
