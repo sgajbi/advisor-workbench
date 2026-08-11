@@ -15,13 +15,10 @@ import {
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
-  buildPortfolioActiveFilterChips,
-  buildPortfolioFilterOptions,
   buildInitialPortfolioControls,
   buildPortfolioExportPayload,
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
-  getPortfolioDefaultFilterValue,
   getOrderedWorkflowCues,
   type PortfolioTimeWindow,
   type PortfolioWorkspaceControls,
@@ -45,6 +42,11 @@ type WorkspaceStateDraft = {
   workspace: PortfolioWorkspace | null;
 };
 
+type ShellRequestState = {
+  sourceKey: string;
+  status: "idle" | "loading" | "loaded" | "unavailable";
+};
+
 export default function PortfolioWorkspaceClient({
   portfolios,
   selectedPortfolioId,
@@ -64,6 +66,10 @@ export default function PortfolioWorkspaceClient({
   const [workspaceDraft, setWorkspaceDraft] = useState<WorkspaceStateDraft>({
     sourceKey: initialWorkspaceSourceKey,
     workspace: initialWorkspace,
+  });
+  const shellRequestRef = useRef<ShellRequestState>({
+    sourceKey: initialWorkspaceSourceKey,
+    status: initialWorkspace ? "loaded" : "idle",
   });
   const workspaceState =
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
@@ -101,10 +107,25 @@ export default function PortfolioWorkspaceClient({
     let cancelled = false;
 
     async function loadShellWorkspace() {
-      if (!selectedPortfolioId || workspaceState || initialWorkspace) {
+      if (shellRequestRef.current.sourceKey !== initialWorkspaceSourceKey) {
+        shellRequestRef.current = {
+          sourceKey: initialWorkspaceSourceKey,
+          status: initialWorkspace ? "loaded" : "idle",
+        };
+      }
+      if (
+        !selectedPortfolioId ||
+        workspaceState ||
+        initialWorkspace ||
+        shellRequestRef.current.status !== "idle"
+      ) {
         return;
       }
 
+      shellRequestRef.current = {
+        sourceKey: initialWorkspaceSourceKey,
+        status: "loading",
+      };
       const shellWorkspace = await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
       if (cancelled) {
         return;
@@ -118,16 +139,40 @@ export default function PortfolioWorkspaceClient({
             timeWindow: current.timeWindow,
           };
         });
+        setWorkspaceState(shellWorkspace);
+        shellRequestRef.current = {
+          sourceKey: initialWorkspaceSourceKey,
+          status: "loaded",
+        };
+        return;
       }
-      setWorkspaceState(shellWorkspace);
+      shellRequestRef.current = {
+        sourceKey: initialWorkspaceSourceKey,
+        status: "unavailable",
+      };
     }
 
     void loadShellWorkspace();
 
     return () => {
       cancelled = true;
+      if (
+        shellRequestRef.current.sourceKey === initialWorkspaceSourceKey &&
+        shellRequestRef.current.status === "loading"
+      ) {
+        shellRequestRef.current = {
+          sourceKey: initialWorkspaceSourceKey,
+          status: "idle",
+        };
+      }
     };
-  }, [initialWorkspace, selectedPortfolioId, setWorkspaceState, workspaceState]);
+  }, [
+    initialWorkspace,
+    initialWorkspaceSourceKey,
+    selectedPortfolioId,
+    setWorkspaceState,
+    workspaceState,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,15 +223,6 @@ export default function PortfolioWorkspaceClient({
     () => derivePortfolioWorkspace(workspaceState, controls),
     [controls, workspaceState]
   );
-  const filterOptions = useMemo(
-    () => buildPortfolioFilterOptions(workspaceState),
-    [workspaceState]
-  );
-  const activeFilterChips = useMemo(
-    () => buildPortfolioActiveFilterChips(controls),
-    [controls]
-  );
-
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
     setControls((current) => applyPortfolioControlPatch(current, patch));
   }
@@ -206,35 +242,6 @@ export default function PortfolioWorkspaceClient({
     anchor.download = `${workspace.portfolio.portfolio_id}-${context.selectedAsOfDate}.json`;
     anchor.click();
     URL.revokeObjectURL(downloadUrl);
-  }
-
-  function handleFilterReset() {
-    const defaults = buildInitialPortfolioControls(workspaceState);
-    setControls((current) => ({
-      ...current,
-      includeCash: defaults.includeCash,
-      assetClass: defaults.assetClass,
-      sector: defaults.sector,
-      region: defaults.region,
-      positionStatus: defaults.positionStatus,
-      transactionType: defaults.transactionType,
-      timeWindow: defaults.timeWindow,
-      customStartDate: defaults.customStartDate,
-      customEndDate: defaults.customEndDate,
-      showOnlyNonZeroRows: defaults.showOnlyNonZeroRows,
-      showOnlyExceptions: defaults.showOnlyExceptions,
-      hideEmptyModules: defaults.hideEmptyModules,
-      focusExceptions: defaults.focusExceptions,
-    }));
-  }
-
-  function handleFilterChipRemove(key: Parameters<typeof getPortfolioDefaultFilterValue>[0]) {
-    const defaults = buildInitialPortfolioControls(workspaceState);
-    setControls((current) =>
-      applyPortfolioControlPatch(current, {
-        [key]: getPortfolioDefaultFilterValue(key, defaults),
-      } as Partial<PortfolioWorkspaceControls>)
-    );
   }
 
   return (
@@ -262,11 +269,7 @@ export default function PortfolioWorkspaceClient({
               <PortfolioWorkspaceToolbar
                 controls={controls}
                 context={context}
-                filterOptions={filterOptions}
-                activeFilterChips={activeFilterChips}
                 onControlsChange={handleControlsChange}
-                onFilterReset={handleFilterReset}
-                onFilterChipRemove={handleFilterChipRemove}
                 onExport={handleExport}
                 quickActions={workspaceState ? getOrderedWorkflowCues(workspaceState) : []}
               />
@@ -290,10 +293,6 @@ function applyPortfolioControlPatch(
   if (patch.timeWindow !== undefined && patch.customStartDate === undefined && patch.customEndDate === undefined) {
     next.customStartDate = "";
     next.customEndDate = "";
-  }
-
-  if (patch.showOnlyExceptions !== undefined) {
-    next.focusExceptions = patch.showOnlyExceptions;
   }
 
   return next;

@@ -104,6 +104,7 @@ export default function PortfolioWorkspaceView({
                     title="Portfolio context unavailable"
                     status="Workspace unavailable"
                     actions={[
+                      { href: "/book", label: "Return to My Book" },
                       { href: "/performance", label: "Performance" },
                       { href: "/workbench", label: "Open Operations" },
                     ]}

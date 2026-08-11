@@ -111,6 +111,7 @@ function PortfolioUnavailableSideRail() {
         </Text>
       </div>
       <div className="toolbar">
+        <ActionLink href="/book">Return to My Book</ActionLink>
         <ActionLink href="/performance">Performance</ActionLink>
         <ActionLink href="/workbench">Open Operations</ActionLink>
       </div>

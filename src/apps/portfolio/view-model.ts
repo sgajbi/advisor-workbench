@@ -27,14 +27,6 @@ export type PortfolioWorkspaceControls = {
   customStartDate: string;
   customEndDate: string;
   columnMode: PortfolioColumnMode;
-  includeCash: boolean;
-  assetClass: string;
-  sector: string;
-  region: string;
-  positionStatus: string;
-  transactionType: string;
-  showOnlyNonZeroRows: boolean;
-  showOnlyExceptions: boolean;
   hideEmptyModules: boolean;
   focusExceptions: boolean;
 };
@@ -63,33 +55,6 @@ export type PortfolioWorkspaceContext = {
 
 export type PortfolioUiTone = "neutral" | "success" | "warn" | "danger";
 
-export type PortfolioFilterKey =
-  | "asOfDate"
-  | "reportingCurrency"
-  | "includeCash"
-  | "assetClass"
-  | "sector"
-  | "region"
-  | "positionStatus"
-  | "transactionType"
-  | "timeWindow"
-  | "showOnlyNonZeroRows"
-  | "showOnlyExceptions";
-
-export type PortfolioFilterChip = {
-  key: PortfolioFilterKey;
-  label: string;
-  value: string;
-};
-
-export type PortfolioFilterOptions = {
-  assetClasses: string[];
-  sectors: string[];
-  regions: string[];
-  positionStatuses: string[];
-  transactionTypes: string[];
-};
-
 const DEFAULT_PORTFOLIO_AS_OF_DATE = "2000-01-01";
 
 export function buildInitialPortfolioControls(
@@ -103,14 +68,6 @@ export function buildInitialPortfolioControls(
     customStartDate: "",
     customEndDate: "",
     columnMode: "essential",
-    includeCash: true,
-    assetClass: "ALL",
-    sector: "ALL",
-    region: "ALL",
-    positionStatus: "ALL",
-    transactionType: "ALL",
-    showOnlyNonZeroRows: false,
-    showOnlyExceptions: false,
     hideEmptyModules: false,
     focusExceptions: false,
   };
@@ -219,19 +176,13 @@ export function derivePortfolioWorkspace(
 
   return {
     ...workspace,
-    top_positions: workspace.top_positions.filter((position) =>
-      includePosition(position, controls)
-    ),
-    positions: workspace.positions.filter((position) => includePosition(position, controls)),
     recent_transactions: workspace.recent_transactions.filter((transaction) => {
       const transactionDate = transaction.transaction_date.slice(0, 10);
       return (
         transactionDate >= effectivePeriod.startDate &&
-        transactionDate <= effectivePeriod.endDate &&
-        includeTransaction(transaction, controls)
+        transactionDate <= effectivePeriod.endDate
       );
     }),
-    cash_balances: controls.includeCash ? workspace.cash_balances : [],
     cashflow_outlook: workspace.cashflow_outlook
       ? {
           ...workspace.cashflow_outlook,
@@ -241,87 +192,6 @@ export function derivePortfolioWorkspace(
         }
       : null,
   };
-}
-
-export function buildPortfolioFilterOptions(
-  workspace: PortfolioWorkspace | null
-): PortfolioFilterOptions {
-  if (!workspace) {
-    return {
-      assetClasses: [],
-      sectors: [],
-      regions: [],
-      positionStatuses: ["ALL", "Active", "Unpriced", "Needs Attention"],
-      transactionTypes: [],
-    };
-  }
-
-  return {
-    assetClasses: uniqueSorted(workspace.positions.map((position) => position.asset_class)),
-    sectors: uniqueSorted(workspace.positions.map((position) => position.sector)),
-    regions: uniqueSorted(workspace.positions.map((position) => position.country_of_risk)),
-    positionStatuses: ["ALL", "Active", "Unpriced", "Needs Attention"],
-    transactionTypes: uniqueSorted(
-      workspace.recent_transactions.map((transaction) => transaction.transaction_type)
-    ),
-  };
-}
-
-export function buildPortfolioActiveFilterChips(
-  controls: PortfolioWorkspaceControls
-): PortfolioFilterChip[] {
-  const chips: PortfolioFilterChip[] = [];
-
-  if (!controls.includeCash) {
-    chips.push({ key: "includeCash", label: "Include Cash", value: "No" });
-  }
-  if (controls.assetClass !== "ALL") {
-    chips.push({ key: "assetClass", label: "Asset Class", value: controls.assetClass });
-  }
-  if (controls.sector !== "ALL") {
-    chips.push({ key: "sector", label: "Sector", value: controls.sector });
-  }
-  if (controls.region !== "ALL") {
-    chips.push({ key: "region", label: "Region", value: controls.region });
-  }
-  if (controls.positionStatus !== "ALL") {
-    chips.push({ key: "positionStatus", label: "Position Status", value: controls.positionStatus });
-  }
-  if (controls.transactionType !== "ALL") {
-    chips.push({ key: "transactionType", label: "Transaction Type", value: controls.transactionType });
-  }
-  if (controls.showOnlyNonZeroRows) {
-    chips.push({ key: "showOnlyNonZeroRows", label: "Rows", value: "Non-zero only" });
-  }
-  if (controls.showOnlyExceptions) {
-    chips.push({ key: "showOnlyExceptions", label: "Focus", value: "Exceptions only" });
-  }
-  if (controls.timeWindow !== "30D" || controls.customStartDate || controls.customEndDate) {
-    const periodValue =
-      controls.customStartDate || controls.customEndDate
-        ? `${controls.customStartDate || "Open"} to ${controls.customEndDate || "As of"}`
-        : controls.timeWindow;
-    chips.push({
-      key: "timeWindow",
-      label: "Period",
-      value: periodValue,
-    });
-  }
-
-  return chips;
-}
-
-export function getActivePortfolioFilterCount(
-  controls: PortfolioWorkspaceControls
-): number {
-  return buildPortfolioActiveFilterChips(controls).length;
-}
-
-export function getPortfolioDefaultFilterValue(
-  key: PortfolioFilterKey,
-  defaults: PortfolioWorkspaceControls
-): string | boolean {
-  return defaults[key];
 }
 
 export function resolveTimeWindowStartDate(
@@ -863,91 +733,6 @@ function getReportingReadinessStatus(workspace: PortfolioWorkspace): PortfolioRe
 function isReportingReady(status: string): boolean {
   const normalized = status.toUpperCase();
   return normalized === "READY" || normalized === "COMPLETE";
-}
-
-function includePosition(
-  position:
-    | PortfolioWorkspace["positions"][number]
-    | PortfolioWorkspace["top_positions"][number],
-  controls: PortfolioWorkspaceControls
-): boolean {
-  if (
-    controls.assetClass !== "ALL" &&
-    normalizeFilterValue(position.asset_class) !== normalizeFilterValue(controls.assetClass)
-  ) {
-    return false;
-  }
-
-  if (
-    "sector" in position &&
-    controls.sector !== "ALL" &&
-    normalizeFilterValue(position.sector) !== normalizeFilterValue(controls.sector)
-  ) {
-    return false;
-  }
-
-  if (
-    "country_of_risk" in position &&
-    controls.region !== "ALL" &&
-    normalizeFilterValue(position.country_of_risk) !== normalizeFilterValue(controls.region)
-  ) {
-    return false;
-  }
-
-  if (
-    controls.positionStatus !== "ALL" &&
-    getPositionStatus(position) !== controls.positionStatus
-  ) {
-    return false;
-  }
-
-  if (controls.showOnlyNonZeroRows) {
-    return (position.market_value_base ?? 0) !== 0 || (position.quantity ?? 0) !== 0;
-  }
-
-  return true;
-}
-
-function includeTransaction(
-  transaction: PortfolioWorkspace["recent_transactions"][number],
-  controls: PortfolioWorkspaceControls
-): boolean {
-  if (
-    controls.transactionType !== "ALL" &&
-    normalizeFilterValue(transaction.transaction_type) !==
-      normalizeFilterValue(controls.transactionType)
-  ) {
-    return false;
-  }
-
-  if (controls.showOnlyNonZeroRows) {
-    return (
-      (transaction.net_cost_base ?? transaction.gross_amount ?? 0) !== 0 ||
-      transaction.quantity !== 0
-    );
-  }
-
-  return true;
-}
-
-function getPositionStatus(
-  position:
-    | PortfolioWorkspace["positions"][number]
-    | PortfolioWorkspace["top_positions"][number]
-): string {
-  if ("reprocessing_status" in position && position.reprocessing_status) {
-    return "Needs Attention";
-  }
-
-  if ((position.market_value_base ?? 0) <= 0) {
-    return "Unpriced";
-  }
-
-  return "Active";
-}
-
-function uniqueSorted(values: Array<string | null | undefined>): string[] {
-  return [...new Set(values.map((value) => (value ?? "").trim()).filter(Boolean))].sort();
 }
 
 function normalizeFilterValue(value: string | null | undefined): string {

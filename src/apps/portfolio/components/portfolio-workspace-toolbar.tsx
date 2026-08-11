@@ -5,13 +5,11 @@ import { useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
 import Menu from "@mui/material/Menu";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 
 import {
-  FilterBar,
   PageToolbar,
   WorkbenchChoiceGroup,
   WorkbenchToolbarGroup,
@@ -19,41 +17,25 @@ import {
 
 import { formatDate } from "../formatters";
 import type {
-  PortfolioFilterChip,
-  PortfolioFilterKey,
-  PortfolioFilterOptions,
   PortfolioWorkspaceContext,
   PortfolioWorkspaceControls,
 } from "../view-model";
-import {
-  getActivePortfolioFilterCount,
-  PORTFOLIO_TIME_WINDOW_OPTIONS,
-} from "../view-model";
-import PortfolioModuleFilterPanel from "./portfolio-module-filter-panel";
+import { PORTFOLIO_TIME_WINDOW_OPTIONS } from "../view-model";
 import choiceStyles from "./portfolio-choice-groups.module.css";
 
 export default function PortfolioWorkspaceToolbar({
   controls,
   context,
-  filterOptions,
-  activeFilterChips,
   onControlsChange,
-  onFilterReset,
-  onFilterChipRemove,
   onExport,
   quickActions,
 }: {
   controls: PortfolioWorkspaceControls;
   context: PortfolioWorkspaceContext;
-  filterOptions: PortfolioFilterOptions;
-  activeFilterChips: PortfolioFilterChip[];
   onControlsChange: (patch: Partial<PortfolioWorkspaceControls>) => void;
-  onFilterReset: () => void;
-  onFilterChipRemove: (key: PortfolioFilterKey) => void;
   onExport: () => void;
   quickActions: Array<{ key: string; label: string; href: string }>;
 }) {
-  const [filtersAnchor, setFiltersAnchor] = useState<HTMLElement | null>(null);
   const [actionsAnchor, setActionsAnchor] = useState<HTMLElement | null>(null);
 
   const historicalContextCopy = useMemo(() => {
@@ -71,7 +53,6 @@ export default function PortfolioWorkspaceToolbar({
 
     return `As of ${formatDate(context.selectedAsOfDate)}. Some work areas use the latest available book state.`;
   }, [context.hasHistoricalGap, context.historicalSnapshotState, context.selectedAsOfDate]);
-  const activeFilterCount = getActivePortfolioFilterCount(controls);
   const historicalControlTitle = !context.supportsHistoricalSnapshots
     ? "Historical review is not available for every adjacent workflow yet."
     : undefined;
@@ -144,17 +125,6 @@ export default function PortfolioWorkspaceToolbar({
               variant="outlined"
               size="small"
               className="portfolio-workspace-toolbar-action"
-              aria-haspopup="menu"
-              aria-expanded={Boolean(filtersAnchor)}
-              aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : "Filters"}
-              onClick={(e) => setFiltersAnchor(e.currentTarget)}
-            >
-              {activeFilterCount ? `Filters (${activeFilterCount})` : "Filters"}
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              className="portfolio-workspace-toolbar-action"
               aria-label="Export portfolio data"
               onClick={onExport}
             >
@@ -200,51 +170,6 @@ export default function PortfolioWorkspaceToolbar({
           <span key={segment}>{segment}</span>
         ))}
       </div>
-
-      {activeFilterChips.length ? (
-        <FilterBar className="portfolio-filter-chip-row">
-          {activeFilterChips.map((chip) => (
-            <Chip
-              key={chip.key}
-              label={`${chip.label}: ${chip.value}`}
-              size="small"
-              onDelete={() => onFilterChipRemove(chip.key)}
-            />
-          ))}
-          <Button size="small" variant="text" onClick={onFilterReset}>
-            Reset to default
-          </Button>
-        </FilterBar>
-      ) : null}
-
-      <Menu
-        anchorEl={filtersAnchor}
-        open={Boolean(filtersAnchor)}
-        onClose={() => setFiltersAnchor(null)}
-      >
-        <PortfolioModuleFilterPanel
-          controls={controls}
-          filterOptions={filterOptions}
-          availableFilters={[
-            "asOfDate",
-            "reportingCurrency",
-            "includeCash",
-            "assetClass",
-            "sector",
-            "region",
-            "positionStatus",
-            "transactionType",
-            "timeWindow",
-            "showOnlyNonZeroRows",
-            "showOnlyExceptions",
-          ]}
-          reportingCurrencies={context.currencyOptions}
-          onControlsChange={onControlsChange}
-          onReset={() => {
-            onFilterReset();
-          }}
-        />
-      </Menu>
 
       <Menu
         anchorEl={actionsAnchor}

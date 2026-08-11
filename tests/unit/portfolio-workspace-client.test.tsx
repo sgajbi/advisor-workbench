@@ -272,19 +272,21 @@ describe("PortfolioWorkspaceClient", () => {
       activity_summary: null,
     });
     render(
-      <PortfolioWorkspaceClient
-        portfolios={[
-          {
-            portfolio_id: "MANUAL_PB_USD_001",
-            display_name: "MANUAL_PB_USD_001",
-            base_currency: "USD",
-            client_id: "MANUAL_CIF_001",
-            booking_center_code: "Singapore",
-          },
-        ]}
-        selectedPortfolioId="MANUAL_PB_USD_001"
-        initialWorkspace={null}
-      />
+      <StrictMode>
+        <PortfolioWorkspaceClient
+          portfolios={[
+            {
+              portfolio_id: "MANUAL_PB_USD_001",
+              display_name: "MANUAL_PB_USD_001",
+              base_currency: "USD",
+              client_id: "MANUAL_CIF_001",
+              booking_center_code: "Singapore",
+            },
+          ]}
+          selectedPortfolioId="MANUAL_PB_USD_001"
+          initialWorkspace={null}
+        />
+      </StrictMode>
     );
 
     await waitFor(() => {
@@ -305,5 +307,39 @@ describe("PortfolioWorkspaceClient", () => {
       reportEndDate: "2026-03-28",
       usesCustomDateRange: false,
     });
+  });
+
+  it("stops after one unavailable shell request instead of retrying continuously", async () => {
+    getShellWorkspaceMock.mockResolvedValue(null);
+    getSummaryDetailsMock.mockResolvedValue(null);
+
+    render(
+      <StrictMode>
+        <PortfolioWorkspaceClient
+          portfolios={[
+            {
+              portfolio_id: "MANUAL_PB_USD_001",
+              display_name: "MANUAL_PB_USD_001",
+              base_currency: "USD",
+              client_id: "MANUAL_CIF_001",
+              booking_center_code: "Singapore",
+            },
+          ]}
+          selectedPortfolioId="MANUAL_PB_USD_001"
+          initialWorkspace={null}
+        />
+      </StrictMode>
+    );
+
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    });
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 25));
+    });
+
+    expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
   });
 });
