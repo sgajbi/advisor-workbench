@@ -138,6 +138,10 @@ describe("portfolio summary view model", () => {
 
   it("qualifies a ready book when source-owned performance evidence is partial", () => {
     const workspace = buildWorkspace({
+      operations: {
+        publish_allowed: true,
+        controls_blocking: false,
+      },
       performance: {
         period: "YTD",
         return_pct: 4.2,
@@ -169,6 +173,35 @@ describe("portfolio summary view model", () => {
         }),
       ])
     );
+  });
+
+  it("preserves the core-book explanation when supporting evidence is also limited", () => {
+    const workspace = buildWorkspace({
+      readiness: {
+        has_positions: false,
+        reporting: {
+          status: "NOT_READY",
+          generated_at_utc: null,
+          row_count: 0,
+        },
+      },
+      operations: {
+        publish_allowed: false,
+        controls_blocking: false,
+      },
+      performance: {
+        period: "MTD",
+        return_pct: null,
+        warnings: ["Performance evidence is delayed."],
+        partial_failures: [],
+      },
+    });
+
+    expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
+      statusLabel: "Not Ready",
+      support: "Publication currently blocked",
+      tone: "danger",
+    });
   });
 
   it("scales cashflow point heights against the largest projected movement", () => {

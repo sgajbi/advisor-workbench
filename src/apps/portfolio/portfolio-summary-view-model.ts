@@ -192,7 +192,7 @@ export function buildPortfolioSummaryReadiness(
 
   return {
     statusLabel: qualifiedStatus,
-    support: hasSupportingLimitations
+    support: readinessStatus === "Ready" && hasSupportingLimitations
       ? "Book evidence is available; supporting review evidence needs attention."
       : getBookReadinessSupport(workspace),
     tone: qualifiedStatus === "Ready" ? "success" : qualifiedStatus === "Partial" ? "warn" : "danger",
