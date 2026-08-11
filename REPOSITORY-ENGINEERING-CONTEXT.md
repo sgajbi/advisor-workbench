@@ -352,8 +352,11 @@ Current repository posture:
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
     risk, performance, or execution truth locally. Evaluation is an in-screen Proposal Builder
-    result after Gateway/Advise success, not a separate journey mode or fragment destination; a
-    created workspace must not be described as evaluated until the evaluation call succeeds. The
+    result after Gateway/Advise success, not a separate journey mode or fragment destination. A
+    created workspace must not be described as evaluated until the evaluation call succeeds and
+    its response carries a non-empty source-owned `status` and `proposal_run_id`; a 2xx response
+    without that usable evidence is an explicit, retryable evaluation failure and cannot authorize
+    proposal handoff. Every fresh evaluation attempt clears prior result evidence first. The
     detail route records advisor-use narrative
     review and reviewed report-package requests through Gateway proposal endpoints only. It settles
     primary proposal detail independently from workflow, approval, and lineage reads, keeps
