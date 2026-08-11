@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  ActionLink,
-  Text,
-  WorkbenchRailCard,
-} from "@/design-system";
+import { Text, WorkbenchRailCard } from "@/design-system";
 
 import type {
   PortfolioExceptionSummary,
@@ -27,7 +23,7 @@ export default function PortfolioWorkspaceSideRail({
   showDetailFootnote,
   onOpenException,
 }: {
-  workspace: PortfolioWorkspace | null;
+  workspace: PortfolioWorkspace;
   context: PortfolioWorkspaceContext;
   exceptions: PortfolioExceptionSummary[];
   actions: PortfolioWorkflowAction[];
@@ -75,10 +71,6 @@ export default function PortfolioWorkspaceSideRail({
     }
   };
 
-  if (!workspace) {
-    return <PortfolioUnavailableSideRail />;
-  }
-
   return (
     <>
       <PortfolioActionsModule actions={actions} />
@@ -101,19 +93,22 @@ export default function PortfolioWorkspaceSideRail({
   );
 }
 
-function PortfolioUnavailableSideRail() {
+export function PortfolioWorkspaceStateSideRail({
+  status,
+}: {
+  status: "loading" | "unavailable";
+}) {
   return (
     <WorkbenchRailCard className="portfolio-side-card">
       <div className="portfolio-card-header">
-        <Text variant="cardTitle">Available Work Areas</Text>
-        <Text variant="secondary">
-          Open adjacent portfolio workflows while the main briefing is unavailable.
+        <Text variant="cardTitle">
+          {status === "loading" ? "Portfolio selection" : "If this remains unavailable"}
         </Text>
-      </div>
-      <div className="toolbar">
-        <ActionLink href="/book">Return to My Book</ActionLink>
-        <ActionLink href="/performance">Performance</ActionLink>
-        <ActionLink href="/workbench">Open Operations</ActionLink>
+        <Text variant="secondary">
+          {status === "loading"
+            ? "Confirming the selected portfolio before review evidence is shown."
+            : "Open My book once. If the selection is still unavailable, contact support with the review date and work area—not client data."}
+        </Text>
       </div>
     </WorkbenchRailCard>
   );

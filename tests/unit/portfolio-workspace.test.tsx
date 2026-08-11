@@ -14,10 +14,31 @@ describe("PortfolioWorkspaceView", () => {
       />
     );
 
-    expect(screen.getByText("Portfolio context unavailable")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Return to My Book" })).not.toHaveLength(0);
-    for (const link of screen.getAllByRole("link", { name: "Return to My Book" })) {
+    expect(screen.getByText("Selected portfolio unavailable")).toBeInTheDocument();
+    expect(screen.getByTestId("portfolio-shell-unavailable")).toHaveTextContent(
+      "no other portfolio has been substituted",
+    );
+    expect(screen.getAllByRole("link", { name: "Open My book" })).not.toHaveLength(0);
+    for (const link of screen.getAllByRole("link", { name: "Open My book" })) {
       expect(link).toHaveAttribute("href", "/book");
     }
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "The selected portfolio is unavailable",
+    );
+  });
+
+  it("shows source confirmation as loading before terminal recovery actions", () => {
+    render(
+      <PortfolioWorkspaceView
+        workspace={null}
+        workspaceStatus="loading"
+        context={buildPortfolioWorkspaceContext()}
+      />,
+    );
+
+    expect(screen.getByText("Preparing portfolio review")).toBeInTheDocument();
+    expect(screen.getByText("Confirming the selected portfolio.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open My book" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("portfolio-shell-unavailable")).not.toBeInTheDocument();
   });
 });

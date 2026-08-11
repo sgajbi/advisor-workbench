@@ -650,6 +650,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.portfolio",
+    panel: "portfolio-workspace-shell-recovery",
+    operation: "portfolio.workspace.shell.recovery",
+  },
+  {
+    route: "workbench.portfolio",
     panel: "portfolio-book",
     operation: "portfolio.book",
   },

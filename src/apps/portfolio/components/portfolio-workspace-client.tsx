@@ -12,6 +12,7 @@ import {
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "../api";
+import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recovery-observability";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
@@ -71,10 +72,19 @@ export default function PortfolioWorkspaceClient({
     sourceKey: initialWorkspaceSourceKey,
     status: initialWorkspace ? "loaded" : "idle",
   });
+  const [shellRequestState, setShellRequestState] = useState<ShellRequestState>(
+    shellRequestRef.current,
+  );
   const workspaceState =
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
       ? workspaceDraft.workspace
       : initialWorkspace;
+  const activeShellRequestStatus =
+    shellRequestState.sourceKey === initialWorkspaceSourceKey
+      ? shellRequestState.status
+      : initialWorkspace
+        ? "loaded"
+        : "idle";
   const setWorkspaceState = useCallback(
     (
       next:
@@ -108,10 +118,12 @@ export default function PortfolioWorkspaceClient({
 
     async function loadShellWorkspace() {
       if (shellRequestRef.current.sourceKey !== initialWorkspaceSourceKey) {
-        shellRequestRef.current = {
+        const resetState: ShellRequestState = {
           sourceKey: initialWorkspaceSourceKey,
           status: initialWorkspace ? "loaded" : "idle",
         };
+        shellRequestRef.current = resetState;
+        setShellRequestState(resetState);
       }
       if (
         !selectedPortfolioId ||
@@ -122,10 +134,12 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      shellRequestRef.current = {
+      const loadingState: ShellRequestState = {
         sourceKey: initialWorkspaceSourceKey,
         status: "loading",
       };
+      shellRequestRef.current = loadingState;
+      setShellRequestState(loadingState);
       const shellWorkspace = await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
       if (cancelled) {
         return;
@@ -140,16 +154,22 @@ export default function PortfolioWorkspaceClient({
           };
         });
         setWorkspaceState(shellWorkspace);
-        shellRequestRef.current = {
+        const loadedState: ShellRequestState = {
           sourceKey: initialWorkspaceSourceKey,
           status: "loaded",
         };
+        shellRequestRef.current = loadedState;
+        setShellRequestState(loadedState);
+        recordPortfolioShellRecoveryLifecycle("ready");
         return;
       }
-      shellRequestRef.current = {
+      const unavailableState: ShellRequestState = {
         sourceKey: initialWorkspaceSourceKey,
         status: "unavailable",
       };
+      shellRequestRef.current = unavailableState;
+      setShellRequestState(unavailableState);
+      recordPortfolioShellRecoveryLifecycle("unavailable");
     }
 
     void loadShellWorkspace();
@@ -251,6 +271,14 @@ export default function PortfolioWorkspaceClient({
       ) : (
         <PortfolioWorkspaceView
           workspace={workspace}
+          workspaceStatus={
+            workspace
+              ? "ready"
+              : selectedPortfolioId &&
+                  (activeShellRequestStatus === "idle" || activeShellRequestStatus === "loading")
+                ? "loading"
+                : "unavailable"
+          }
           context={context}
           toolbar={
             !interactiveReady ? (
@@ -329,6 +357,7 @@ function getPortfolioWorkspaceShellOnce(portfolioId: string) {
     return existingRequest;
   }
 
+  recordPortfolioShellRecoveryLifecycle("automatic_attempt");
   const request = getPortfolioWorkspaceShell(portfolioId).finally(() => {
     shellInflightRequests.delete(portfolioId);
   });

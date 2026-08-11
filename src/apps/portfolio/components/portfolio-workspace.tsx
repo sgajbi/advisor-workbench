@@ -5,6 +5,7 @@ import { type ReactNode, useState } from "react";
 import {
   DegradedStatePanel,
   MainWithSideRailLayout,
+  ScreenStatePanel,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
@@ -25,14 +26,18 @@ import {
 import PortfolioReviewDecisionBrief from "./portfolio-review-decision-brief";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 import PortfolioSummaryHeaderSection from "./portfolio-summary-header-section";
-import PortfolioWorkspaceSideRail from "./portfolio-workspace-side-rail";
+import PortfolioWorkspaceSideRail, {
+  PortfolioWorkspaceStateSideRail,
+} from "./portfolio-workspace-side-rail";
 
 export default function PortfolioWorkspaceView({
   workspace,
+  workspaceStatus = workspace ? "ready" : "unavailable",
   context,
   toolbar,
 }: {
   workspace: PortfolioWorkspace | null;
+  workspaceStatus?: "loading" | "ready" | "unavailable";
   context: PortfolioWorkspaceContext;
   toolbar?: ReactNode;
 }) {
@@ -75,6 +80,13 @@ export default function PortfolioWorkspaceView({
 
   return (
     <>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {workspaceStatus === "loading"
+          ? "Confirming the selected portfolio."
+          : workspaceStatus === "unavailable"
+            ? "The selected portfolio is unavailable. Open My book to choose an available portfolio."
+            : "Portfolio review available."}
+      </p>
       <MainWithSideRailLayout
         sideDensity="comfortable"
         className="portfolio-layout"
@@ -82,7 +94,7 @@ export default function PortfolioWorkspaceView({
         mainClassName="portfolio-main"
         sideClassName="portfolio-side portfolio-side-wide"
         rail={
-          workspace ? (
+          workspaceStatus === "ready" && workspace ? (
             <PortfolioScreenRail portfolioId={workspace.portfolio.portfolio_id} activeScreen="portfolio" />
           ) : null
         }
@@ -93,24 +105,34 @@ export default function PortfolioWorkspaceView({
               bodyClassName="portfolio-page-frame-body"
               title="Portfolio Review"
               subtitle={
-                workspace
+                workspaceStatus === "loading"
+                  ? "Confirming the selected portfolio and current review evidence"
+                  : workspace
                   ? "Review portfolio value, returns, liquidity, exceptions, and the next business action."
                   : "Portfolio context, readiness, and decision support"
               }
             >
               <WorkbenchSectionStack className="portfolio-page-sections">
-                {!workspace ? (
+                {workspaceStatus === "loading" ? (
+                  <ScreenStatePanel
+                    kind="loading"
+                    title="Preparing portfolio review"
+                    body="Confirming the selected portfolio and loading current review evidence."
+                    rows={4}
+                  />
+                ) : !workspace ? (
+                  <div data-testid="portfolio-shell-unavailable">
                     <DegradedStatePanel
-                    title="Portfolio context unavailable"
-                    status="Workspace unavailable"
-                    actions={[
-                      { href: "/book", label: "Return to My Book" },
-                      { href: "/performance", label: "Performance" },
-                      { href: "/workbench", label: "Open Operations" },
-                    ]}
-                  >
-                    <p className="error-text">We could not load the selected portfolio briefing.</p>
-                  </DegradedStatePanel>
+                      title="Selected portfolio unavailable"
+                      status="Review unavailable"
+                      actions={[{ href: "/book", label: "Open My book" }]}
+                    >
+                      <p className="error-text">
+                        We could not confirm this portfolio for review. Open My book to choose an
+                        available portfolio; no other portfolio has been substituted.
+                      </p>
+                    </DegradedStatePanel>
+                  </div>
                 ) : (
                   <>
                     <PortfolioAnalyticalMainColumn
@@ -136,14 +158,20 @@ export default function PortfolioWorkspaceView({
           </>
         }
         side={
-          <PortfolioWorkspaceSideRail
-            workspace={workspace}
-            context={context}
-            exceptions={exceptionSummaries}
-            actions={setupActions}
-            showDetailFootnote={false}
-            onOpenException={handleOpenException}
-          />
+          workspaceStatus === "ready" && workspace ? (
+            <PortfolioWorkspaceSideRail
+              workspace={workspace}
+              context={context}
+              exceptions={exceptionSummaries}
+              actions={setupActions}
+              showDetailFootnote={false}
+              onOpenException={handleOpenException}
+            />
+          ) : (
+            <PortfolioWorkspaceStateSideRail
+              status={workspaceStatus === "loading" ? "loading" : "unavailable"}
+            />
+          )
         }
       />
 
