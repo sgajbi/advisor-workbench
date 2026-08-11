@@ -73,7 +73,9 @@ npm run scale:proof
 The command uses a separate Compose project, two copies of one immutable Workbench image, a pinned
 stable NGINX validation balancer without affinity, and a non-business source fixture. It writes
 machine-readable and reviewable evidence under `output/scale-proof/` and tears down its own
-containers. The harness is safe to use without disturbing the canonical front-office stack, but it
+containers. It stops and removes one Workbench container, creates a replacement, and fails unless
+the replacement has a different container identity before recovery traffic is accepted. The
+harness is safe to use without disturbing the canonical front-office stack, but it
 is not production topology, load/soak, high-availability, disaster-recovery, identity, or bank
 capacity certification.
 

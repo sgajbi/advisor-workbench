@@ -232,8 +232,9 @@ concurrency group.
   `output/observability-live/<timestamp>/`
 - scale proof writes non-certifying JSON and Markdown evidence under `output/scale-proof/`; accept
   it only when `result=passed`, `certification_posture=engineering_regression_non_certifying`, both
-  replicas served baseline and recovery traffic, source persistence survived replica loss, and the
-  explicit non-claims remain present
+  replicas served baseline and recovery traffic, the removed replica was replaced by a different
+  container identity, source persistence survived replica loss, and the explicit non-claims remain
+  present
 - final visual review should use canonical validated captures, not pre-validation diagnostics
 
 ## Canonical live validation coverage

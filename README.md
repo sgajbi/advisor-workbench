@@ -321,7 +321,7 @@ http://workbench.dev.lotus/data-products
   Docker parity check
 - `npm run scale:proof`
   non-certifying two-replica production-image regression proof with source persistence and
-  replacement recovery
+  disposable-container replacement recovery
 - `npm run live:stack:up`
   canonical front-office stack bring-up
 - `npm run live:validate`

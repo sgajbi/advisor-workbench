@@ -79,10 +79,11 @@ identity that differs from the value embedded in the immutable build.
 
 The hermetic `npm run scale:proof` regression has now demonstrated two identical production-image
 replicas behind a no-affinity, least-connections balancer; cross-replica source persistence; bounded
-operation while one replica is stopped; and distribution after recovery. It records latency, errors,
-upstream distribution, image identity, and resource snapshots under `output/scale-proof/`. Protected
-PR and main lanes run the proof against the same image they scan and upload its machine-readable
-evidence.
+operation while one replica is stopped and removed; changed container identity after disposable
+replacement; and distribution after recovery. It records latency, errors, upstream distribution,
+image identity, replacement-container identity, and resource snapshots under `output/scale-proof/`.
+Protected PR and main lanes run the proof against the same image they scan and upload its
+machine-readable evidence.
 
 This is an engineering regression, not capacity or availability certification. Workbench does not
 claim production load or soak capacity, high availability, disaster recovery, multi-region

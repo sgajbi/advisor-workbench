@@ -86,11 +86,13 @@ is regression evidence, not a bank production capacity claim.
 `npm run scale:proof` runs two replicas of the same hardened production image behind the
 digest-pinned stable NGINX validation balancer. The harness requires no session affinity, proves
 both replicas receive requests, persists a mutation in the source fixture, reads it through the
-other replica, stops one replica, verifies the source record remains available, restarts the
-replica, and proves traffic distribution recovers. Successful distribution counts the terminal
+other replica, stops and removes one replica, verifies the source record remains available,
+creates a replacement container, asserts its container identity changed, and proves traffic
+distribution recovers. Successful distribution counts the terminal
 replica in each NGINX attempt chain, so retrying a failed replica through one healthy process cannot
 masquerade as two serving replicas. The harness fails on image-identity drift, missing distribution,
-lost persistence, excessive errors, or p95 latency above the governed threshold.
+unchanged replacement-container identity, lost persistence, excessive errors, or p95 latency above
+the governed threshold.
 
 The proof emits JSON and Markdown under `output/scale-proof/`, includes resource snapshots, and
 labels itself `engineering_regression_non_certifying`. The NGINX image is a mature, official,
