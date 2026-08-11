@@ -615,7 +615,8 @@ Container runtime rules:
     and requires rolling deployment identity outside development. `npm run scale:proof` uses two
     identical production-image replicas, a pinned and separately scanned stable NGINX validation
     balancer without affinity, and a bounded source fixture to prove cross-replica persistence,
-    one-replica interruption, recovery, thresholds, and resource evidence. This harness is an
+    one-replica interruption, recovery, thresholds, concurrent per-phase container resource
+    evidence, and host load-generator resource evidence. This harness is an
     engineering regression and must not be described as the production deployment topology.
 
 ## Local API Contract Evidence

@@ -94,8 +94,10 @@ masquerade as two serving replicas. The harness fails on image-identity drift, m
 unchanged replacement-container identity, lost persistence, excessive errors, or p95 latency above
 the governed threshold.
 
-The proof emits JSON and Markdown under `output/scale-proof/`, includes resource snapshots, and
-labels itself `engineering_regression_non_certifying`. The NGINX image is a mature, official,
+The proof emits JSON and Markdown under `output/scale-proof/`. It streams container CPU and memory
+samples concurrently during every workload phase and records the host Node load generator's CPU,
+RSS, and host-resource posture for the same phase, rather than relying on a terminal idle snapshot.
+It labels itself `engineering_regression_non_certifying`. The NGINX image is a mature, official,
 digest-pinned validation dependency, scanned separately in protected CI; it is not a Workbench
 production orchestration decision.
 

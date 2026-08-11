@@ -102,8 +102,9 @@ concurrency group.
   hermetic engineering regression with two identical production-image replicas behind a
   digest-pinned stable NGINX least-connections balancer. It requires no affinity, records distribution
   across both replicas, persists and re-reads source-owned state across replicas, stops and recovers
-  one replica, enforces error and p95 thresholds, captures p99 and resource evidence, and writes JSON
-  plus Markdown under `output/scale-proof/`. It is not production topology, load/soak, HA, DR,
+  one replica, enforces error and p95 thresholds, captures p99, streams container resource samples
+  during each workload phase, records the host Node load generator for the same phase, and writes
+  JSON plus Markdown under `output/scale-proof/`. It is not production topology, load/soak, HA, DR,
   multi-region, identity, or bank-capacity certification.
   Successful replica distribution uses the terminal address from each balancer attempt chain; a
   failed first attempt retried through the same healthy replica cannot satisfy the two-replica gate.

@@ -55,6 +55,13 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain('compose(["rm", "-f", "workbench-a"])');
     expect(runner).toContain("assertContainerReplacement");
     expect(runner).toContain("replica_replacement: replicaReplacement");
+    expect(runner).toContain('resource_evidence: "captured_concurrently_per_phase"');
+    expect(runner).toContain("startContainerResourceMonitor");
+    expect(runner).toContain("createLoadGeneratorResourceTracker");
+    expect(runner).toContain("Concurrent phase resource evidence");
+    expect(runner).toContain("Load-generator evidence covers the host Node process");
+    expect(runner).toContain("resources:");
+    expect(runner).not.toContain("collectResourceEvidence");
     expect(runner).toContain("engineering_regression_non_certifying");
     expect(runner).toContain("explicit_non_claims");
     expect(runner).toContain("resolveSuccessfulTerminalUpstream");
@@ -84,7 +91,9 @@ describe("Workbench scale-proof governance", () => {
     expect(readme).toContain("/api/health/live");
     expect(operations).toContain("/api/health/ready");
     expect(technologyRisk).toContain("validation dependency, not a production orchestration");
+    expect(technologyRisk).toContain("host Node load generator's per-phase CPU and RSS");
     expect(validation).toContain("engineering_regression_non_certifying");
+    expect(validation).toContain("streams container resource samples");
     expect(architecture).toContain("neither requires sticky sessions nor");
   });
 });
