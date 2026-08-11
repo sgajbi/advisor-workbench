@@ -22,7 +22,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
 | Direct dependency admission | 14 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
-| Scale validation dependency | Official NGINX stable `1.28.3` Alpine `3.23` image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
+| Scale validation dependency | Official NGINX stable `1.30.3` Alpine `3.23` slim image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
 
 The versioned source is
 [`workbench-runtime-support-policy.v1.json`](../docs/architecture/workbench-runtime-support-policy.v1.json).
