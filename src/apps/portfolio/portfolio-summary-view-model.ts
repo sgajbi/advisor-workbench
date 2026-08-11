@@ -203,8 +203,8 @@ export function buildPortfolioSourceLimitations(
   workspace: PortfolioWorkspace
 ): PortfolioSourceLimitation[] {
   const limitations = new Map<string, PortfolioSourceLimitation>();
-  const add = (limitation: PortfolioSourceLimitation) => {
-    const duplicateKey = `${limitation.sourceService}:${limitation.detail}`;
+  const add = (limitation: PortfolioSourceLimitation, evidenceContext = "") => {
+    const duplicateKey = `${evidenceContext}:${limitation.sourceService}:${limitation.detail}`;
     if (!limitations.has(duplicateKey)) {
       limitations.set(duplicateKey, limitation);
     }
@@ -259,7 +259,7 @@ export function buildPortfolioSourceLimitations(
         title: `${periodEvidence.period} performance unavailable`,
         detail: periodEvidence.unavailable.detail,
         scope: "performance",
-      });
+      }, periodEvidence.period);
     }
     for (const failure of periodEvidence.partial_failures ?? []) {
       add({
@@ -268,7 +268,7 @@ export function buildPortfolioSourceLimitations(
         title: `${periodEvidence.period} performance evidence needs attention`,
         detail: failure.detail,
         scope: "performance",
-      });
+      }, periodEvidence.period);
     }
     for (const [index, warning] of (periodEvidence.warnings ?? []).entries()) {
       add({
@@ -277,7 +277,7 @@ export function buildPortfolioSourceLimitations(
         title: `${periodEvidence.period} performance evidence is qualified`,
         detail: warning,
         scope: "performance",
-      });
+      }, periodEvidence.period);
     }
   }
 

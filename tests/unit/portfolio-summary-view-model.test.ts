@@ -302,6 +302,32 @@ describe("portfolio summary view model", () => {
     ).toHaveLength(1);
   });
 
+  it("preserves period identity when source limitations share the same detail", () => {
+    const workspace = buildWorkspace({
+      performance_period_returns: [
+        {
+          period: "QTD",
+          return_pct: 1.2,
+          warnings: ["One benchmark close is delayed."],
+        },
+        {
+          period: "YTD",
+          return_pct: 4.5,
+          warnings: ["One benchmark close is delayed."],
+        },
+      ],
+    });
+
+    expect(
+      buildPortfolioSourceLimitations(workspace)
+        .filter((limitation) => limitation.detail === "One benchmark close is delayed.")
+        .map((limitation) => limitation.title)
+    ).toEqual([
+      "QTD performance evidence is qualified",
+      "YTD performance evidence is qualified",
+    ]);
+  });
+
   it("scales cashflow point heights against the largest projected movement", () => {
     const cashflow = buildWorkspace().cashflow_outlook!;
 
