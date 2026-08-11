@@ -237,6 +237,16 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('link', { name: /Income/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Filters/i })).toHaveCount(0);
 
+    if (process.env.PORTFOLIO_E2E_FIXTURE === 'cashflow') {
+      await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Performance evidence is qualified' })
+      ).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Source Limitations' })).toBeVisible();
+      await expect(page.getByText('MTD performance unavailable')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);
+    }
+
     await expect(page.getByRole('heading', { name: /Asset Allocation/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Top Holdings/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Cashflow Forecast/i })).toHaveCount(0);

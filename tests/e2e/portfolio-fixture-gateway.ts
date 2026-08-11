@@ -45,6 +45,34 @@ export async function startPortfolioFixtureGateway({
       return;
     }
 
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/book`) {
+      sendJson(response, buildBookResponse());
+      return;
+    }
+
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/income-summary`) {
+      sendJson(response, { reporting_currency: 'USD' });
+      return;
+    }
+
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/activity-summary`) {
+      sendJson(response, { reporting_currency: 'USD', buckets: [] });
+      return;
+    }
+
+    if (
+      requestUrl.pathname ===
+      `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/performance-snapshot`
+    ) {
+      const period = requestUrl.searchParams.get('period') ?? 'EXPLICIT';
+      if (period === 'MTD') {
+        sendJson(response, { code: 'fixture_mtd_performance_unavailable' }, 503);
+        return;
+      }
+      sendJson(response, buildPerformanceResponse(period));
+      return;
+    }
+
     if (
       requestUrl.pathname ===
       `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/projected-cashflow`
@@ -115,6 +143,36 @@ function buildProjectedCashflowResponse(horizonDays: number) {
     as_of_date: AS_OF_DATE,
     cashflow_outlook: buildCashflowOutlook(horizonDays),
     warnings: [],
+    partial_failures: [],
+  };
+}
+
+function buildBookResponse() {
+  return {
+    as_of_date: AS_OF_DATE,
+    portfolio: buildWorkspaceResponse().portfolio,
+    summary: buildWorkspaceResponse().summary,
+    cash_balances: [],
+    allocation_views: [{ dimension: 'asset_class', buckets: [] }],
+    top_positions: [],
+    positions: [],
+  };
+}
+
+function buildPerformanceResponse(period: string) {
+  return {
+    period,
+    as_of_date: AS_OF_DATE,
+    benchmark_code: 'BMK_GLOBAL_BALANCED_60_40',
+    portfolio_return_pct: period === 'QTD' ? 1.8 : period === 'YTD' ? 4.6 : 2.4,
+    benchmark_return_pct: null,
+    excess_return_pct: null,
+    sparkline: [],
+    unavailable: null,
+    warnings:
+      period === 'EXPLICIT'
+        ? ['Benchmark history contains one delayed market close.']
+        : [],
     partial_failures: [],
   };
 }
