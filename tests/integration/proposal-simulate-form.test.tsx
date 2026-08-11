@@ -182,6 +182,24 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByLabelText("Additional Cash Assumption")).toHaveValue("10000");
   });
 
+  it("applies the admitted cash assumption to proposed impact while preserving current value", async () => {
+    renderForm();
+    await waitForPortfolioEvidence();
+
+    const impactPanel = screen.getByTestId("proposal-draft-impact");
+    expect(within(impactPanel).getByText("USD 44,000")).toBeInTheDocument();
+    expect(within(impactPanel).getAllByText("USD 54,000")).toHaveLength(2);
+
+    fireEvent.change(screen.getByLabelText("Additional Cash Assumption"), {
+      target: { value: "20000" },
+    });
+
+    await waitFor(() =>
+      expect(within(impactPanel).getAllByText("USD 64,000")).toHaveLength(2)
+    );
+    expect(within(impactPanel).getByText("USD 44,000")).toBeInTheDocument();
+  });
+
   it("evaluates a source-authorized proposal with zero additional cash", async () => {
     renderForm("PB_SG_GLOBAL_BAL_001");
     await waitForPortfolioEvidence();

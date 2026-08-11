@@ -73,6 +73,19 @@ describe("proposal draft preview", () => {
     );
   });
 
+  it("adds admitted scenario cash to proposed value without rewriting current portfolio truth", () => {
+    const preview = buildProposalDraftPreview([applePosition], 5_000, [], [], 10_000);
+
+    expect(preview.currentPortfolioValue).toBe(24_000);
+    expect(preview.cashDelta).toBe(10_000);
+    expect(preview.proposedCash).toBe(15_000);
+    expect(preview.proposedPortfolioValue).toBe(34_000);
+    expect(preview.allocationRows.find((row) => row.assetClass === "Cash")).toMatchObject({
+      currentValue: 5_000,
+      proposedValue: 15_000,
+    });
+  });
+
   it("adds an off-book instrument and reports unpriced draft lines", () => {
     const offBookTrade: ProposalDraftTradeIntent = {
       id: "trade_1",

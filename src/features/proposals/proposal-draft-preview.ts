@@ -171,7 +171,8 @@ export function buildProposalDraftPreview(
   positions: PortfolioPositionView[],
   cashAmount: number,
   cashFlows: ProposalDraftCashFlowIntent[],
-  trades: ProposalDraftTradeIntent[]
+  trades: ProposalDraftTradeIntent[],
+  additionalCashAmount = 0
 ): ProposalDraftPreview {
   const rowMap = new Map<string, DraftPositionPreviewRow>();
   positions.forEach((position) => {
@@ -228,10 +229,11 @@ export function buildProposalDraftPreview(
     tradeNotional += trade.side === "SELL" ? -(executableQuantity * price) : executableQuantity * price;
   });
 
-  const cashDelta = cashFlows.reduce((sum, item) => {
+  const cashFlowDelta = cashFlows.reduce((sum, item) => {
     const amount = Math.abs(item.amount || 0);
     return item.direction === "OUT" ? sum - amount : sum + amount;
   }, 0);
+  const cashDelta = additionalCashAmount + cashFlowDelta;
   const rows = Array.from(rowMap.values()).sort(
     (left, right) => right.proposedValue - left.proposedValue
   );

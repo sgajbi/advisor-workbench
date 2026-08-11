@@ -151,6 +151,32 @@ describe("proposal draft currency authority", () => {
     });
   });
 
+  it("applies admitted additional cash only to the proposed portfolio posture", () => {
+    const impact = buildProposalDraftImpactModel({
+      positions: [position],
+      cashAmount: 25_000,
+      cashFlows: [],
+      trades: [],
+      requestedCurrency: "USD",
+      portfolioEvidence: portfolioEvidence(),
+      additionalCashAdmission: {
+        status: "ready",
+        inputState: "positive",
+        amount: 10_000,
+      },
+    });
+
+    expect(impact).toMatchObject({
+      status: "available",
+      preview: {
+        currentPortfolioValue: 44_000,
+        proposedPortfolioValue: 54_000,
+        proposedCash: 35_000,
+        cashDelta: 10_000,
+      },
+    });
+  });
+
   it("withholds projection when an active cash movement uses another currency", () => {
     expect(
       buildProposalDraftCurrencyAuthority({
