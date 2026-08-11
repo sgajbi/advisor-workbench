@@ -254,16 +254,12 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-core"],
+      "wikiSlug": "Portfolio-Review-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-performance", "lotus-manage"],
       "implementationEvidence": ["src/apps/portfolio/page.tsx"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "book-and-portfolio-entry-guides",
-        "reason": "The current Portfolio Review Workflow is a family overview rather than the canonical screen guide."
-      }
+      "coverageException": null
     },
     {
       "id": "portfolio-allocation",

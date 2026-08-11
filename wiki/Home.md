@@ -2,6 +2,10 @@
 
 `lotus-workbench` is the primary product UI for Lotus.
 
+**Current scope:** this wiki documents the implemented Gateway-backed Workbench surfaces, their
+business workflows, operating boundaries, and validation evidence. A documented route is not by
+itself a production-identity, entitlement, client-delivery, or bank-certification claim.
+
 ## Start here
 
 - Repo entrypoint: [README.md](../README.md)
@@ -12,6 +16,8 @@
   [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
 - Business-facing Portfolio screen flow:
   [Portfolio Review Workflow](Portfolio-Review-Workflow)
+- Daily selected-portfolio decision checkpoint:
+  [Portfolio Review](Portfolio-Review-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Governed business guide inventory for every active screen and mode:
@@ -59,6 +65,7 @@
 ## Navigation
 
 - [Overview](Overview)
+- [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
