@@ -46,7 +46,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Guide available | Gateway and Core |
-| [Portfolio Review](Portfolio-Review-Screen-Guide) | `/portfolio` | Active | Guide available | Gateway, Core, Performance, and Manage |
+| [Portfolio Review](Portfolio-Review-Screen-Guide) | `/portfolio` | Active | Guide available | Gateway, Core, and Performance |
 | Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway and Core |
 | Positions | `/positions` | Active | Guide planned — #605 | Gateway and Core |
 | Transactions | `/transactions` | Active | Guide planned — #605 | Gateway and Core |
