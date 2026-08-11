@@ -228,8 +228,8 @@ describe("AdvisorBookWorkspace", () => {
 
     expect(await screen.findByText("Book access is not available")).toBeInTheDocument();
     expect(screen.getByText(/does not currently provide access/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reference 403.*contact support/i)).toBeInTheDocument();
-    expect(screen.queryByText(/HTTP/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/HTTP status 403.*contact support/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Reference 403/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("table", { name: "Portfolios in my book" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
@@ -240,6 +240,8 @@ describe("AdvisorBookWorkspace", () => {
       .mockResolvedValueOnce(readyResponse);
     render(<AdvisorBookWorkspace />);
 
+    expect(await screen.findByText(/HTTP status 502/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Reference 502/i)).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
     await waitFor(() => expect(getAdvisorBookMock).toHaveBeenCalledTimes(2));
     expect(await screen.findByText("Book available")).toBeInTheDocument();

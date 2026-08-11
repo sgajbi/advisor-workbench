@@ -29,6 +29,11 @@ export class WorkbenchApiError extends Error {
   }
 }
 
+export type WorkbenchApiErrorEvidence = Readonly<{
+  label: "HTTP status";
+  value: string;
+}>;
+
 export function getWorkbenchApiErrorStatus(error: unknown): number | null {
   if (error instanceof WorkbenchApiError) {
     return error.status;
@@ -38,6 +43,13 @@ export function getWorkbenchApiErrorStatus(error: unknown): number | null {
     return match ? Number(match[1]) : null;
   }
   return null;
+}
+
+export function getWorkbenchApiErrorEvidence(
+  error: unknown
+): WorkbenchApiErrorEvidence | null {
+  const status = getWorkbenchApiErrorStatus(error);
+  return status === null ? null : { label: "HTTP status", value: String(status) };
 }
 
 export function isWorkbenchPermissionBlockedError(error: unknown): boolean {

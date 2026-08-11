@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getWorkbenchApiErrorEvidence,
   getWorkbenchApiErrorStatus,
   isWorkbenchPermissionBlockedError,
   WorkbenchApiError,
@@ -25,5 +26,19 @@ describe("workbench API error classification", () => {
 
     expect(getWorkbenchApiErrorStatus(error)).toBeNull();
     expect(isWorkbenchPermissionBlockedError(error)).toBe(false);
+  });
+
+  it("projects an HTTP status without inventing request-reference semantics", () => {
+    const evidence = getWorkbenchApiErrorEvidence(
+      new WorkbenchApiError("advisor book", 502),
+    );
+
+    expect(evidence).toEqual({ label: "HTTP status", value: "502" });
+    expect(evidence).not.toHaveProperty("reference");
+    expect(evidence).not.toHaveProperty("correlationId");
+  });
+
+  it("returns no operational evidence when the error has no HTTP status", () => {
+    expect(getWorkbenchApiErrorEvidence(new Error("network unavailable"))).toBeNull();
   });
 });
