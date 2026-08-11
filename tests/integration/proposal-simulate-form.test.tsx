@@ -294,6 +294,25 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   });
 
+  it("rejects a large fractional assumption before browser numeric rounding", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption") as HTMLInputElement;
+    fireEvent.change(cashInput, { target: { value: "99999999999999.99" } });
+    fireEvent.blur(cashInput);
+
+    expect(cashInput.value).toBe("99999999999999.99");
+    await waitFor(() => expect(cashInput).toHaveAttribute("aria-invalid", "true"));
+    expect(screen.getByText("Additional cash assumption is too large to model reliably.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-blocked-by",
+      "additional_cash"
+    );
+  });
+
   it("uses provided initial portfolio id", () => {
     renderForm("PORT_UI_1001");
     const portfolioInput = screen.getByLabelText("Portfolio ID") as HTMLInputElement;

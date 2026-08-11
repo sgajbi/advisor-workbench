@@ -27,6 +27,7 @@ describe("proposal scenario cash admission", () => {
     ["10000", 10000],
     ["1250.75", 1250.75],
     [".5", 0.5],
+    ["00012.30", 12.3],
   ])("admits the positive decimal %s", (input, amount) => {
     expect(assessProposalScenarioCashInput(input)).toEqual({
       status: "ready",
@@ -61,11 +62,33 @@ describe("proposal scenario cash admission", () => {
     }
   );
 
-  it("rejects amounts beyond JavaScript's reliable integer range", () => {
-    expect(assessProposalScenarioCashInput("9007199254740992")).toEqual({
-      status: "invalid",
-      reason: "out_of_range",
-      message: "Additional cash assumption is too large to model reliably.",
+  it.each(["0.001", "1250.755"])(
+    "rejects unsupported monetary precision in %s before numeric conversion",
+    (input) => {
+      expect(assessProposalScenarioCashInput(input)).toEqual({
+        status: "invalid",
+        reason: "unsupported_precision",
+        message: "Enter additional cash using no more than 2 decimal places.",
+      });
+    }
+  );
+
+  it.each(["90071992547409.92", "99999999999999.99", "9007199254740992"])(
+    "rejects %s beyond the reliable scaled monetary range",
+    (input) => {
+      expect(assessProposalScenarioCashInput(input)).toEqual({
+        status: "invalid",
+        reason: "out_of_range",
+        message: "Additional cash assumption is too large to model reliably.",
+      });
+    }
+  );
+
+  it("admits the maximum amount representable as safe minor units", () => {
+    expect(assessProposalScenarioCashInput("90071992547409.91")).toEqual({
+      status: "ready",
+      inputState: "positive",
+      amount: 90071992547409.9,
     });
   });
 });

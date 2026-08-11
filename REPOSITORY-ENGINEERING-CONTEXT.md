@@ -372,7 +372,8 @@ Current repository posture:
     Additional cash is an optional draft assumption, not a replacement for source portfolio cash.
     Blank and zero mean no additional cash. An admitted positive amount increases proposed cash and
     proposed portfolio value without rewriting current source cash or current portfolio value.
-    Negative, malformed, and out-of-range values remain
+    Admit no more than two decimal places and validate scaled minor units before numeric conversion;
+    negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not
     coerce invalid advisor input to zero, publish a zero-based indicative projection for it, or
