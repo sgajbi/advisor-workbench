@@ -255,10 +255,15 @@ export function scanRuntimeStateSource({
 
 function collectMutatedBindings(sourceFile, moduleBindings) {
   const mutated = new Set();
+  const bindingsByScope = collectBindingsByScope(sourceFile);
   const recordRoot = (expression) => {
     const root = rootIdentifier(expression);
-    if (root && moduleBindings.has(root)) {
-      mutated.add(root);
+    if (
+      root &&
+      moduleBindings.has(root.text) &&
+      resolvesToModuleScope(root, bindingsByScope, sourceFile)
+    ) {
+      mutated.add(root.text);
     }
   };
   const visit = (node) => {
@@ -311,7 +316,103 @@ function rootIdentifier(expression) {
   ) {
     current = current.expression;
   }
-  return ts.isIdentifier(current) ? current.text : undefined;
+  return ts.isIdentifier(current) ? current : undefined;
+}
+
+function collectBindingsByScope(sourceFile) {
+  const bindingsByScope = new Map();
+  const addBinding = (scope, name) => {
+    const bindings = bindingsByScope.get(scope) ?? new Set();
+    bindings.add(name);
+    bindingsByScope.set(scope, bindings);
+  };
+  const addBindingName = (scope, name) => {
+    if (ts.isIdentifier(name)) {
+      addBinding(scope, name.text);
+      return;
+    }
+    for (const element of name.elements) {
+      if (!ts.isOmittedExpression(element)) {
+        addBindingName(scope, element.name);
+      }
+    }
+  };
+  const visit = (node) => {
+    if (ts.isCatchClause(node) && node.variableDeclaration) {
+      addBindingName(node, node.variableDeclaration.name);
+    } else if (
+      ts.isVariableDeclaration(node) &&
+      !ts.isCatchClause(node.parent)
+    ) {
+      const declarationList = node.parent;
+      const isBlockScoped =
+        (declarationList.flags & ts.NodeFlags.BlockScoped) !== 0;
+      const scope = findBindingScope(node, isBlockScoped);
+      addBindingName(scope, node.name);
+    } else if (ts.isParameter(node) && isFunctionScope(node.parent)) {
+      addBindingName(node.parent, node.name);
+    } else if (
+      (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) &&
+      node.name
+    ) {
+      addBinding(findBindingScope(node, true), node.name.text);
+    } else if (
+      (ts.isFunctionExpression(node) || ts.isClassExpression(node)) &&
+      node.name
+    ) {
+      addBinding(node, node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return bindingsByScope;
+}
+
+function findBindingScope(node, blockScoped) {
+  let current = node.parent;
+  while (current) {
+    if (isFunctionScope(current) || ts.isSourceFile(current)) {
+      return current;
+    }
+    if (blockScoped && isLexicalScope(current)) {
+      return current;
+    }
+    current = current.parent;
+  }
+  throw new Error("Runtime-state binding has no lexical scope.");
+}
+
+function resolvesToModuleScope(identifier, bindingsByScope, sourceFile) {
+  let current = identifier.parent;
+  while (current) {
+    if (
+      (isFunctionScope(current) || isLexicalScope(current)) &&
+      bindingsByScope.get(current)?.has(identifier.text)
+    ) {
+      return current === sourceFile;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function isFunctionScope(node) {
+  return ts.isFunctionLike(node);
+}
+
+function isLexicalScope(node) {
+  return (
+    ts.isSourceFile(node) ||
+    ts.isBlock(node) ||
+    ts.isModuleBlock(node) ||
+    ts.isCaseBlock(node) ||
+    ts.isCatchClause(node) ||
+    ts.isClassDeclaration(node) ||
+    ts.isClassExpression(node) ||
+    ts.isForStatement(node) ||
+    ts.isForInStatement(node) ||
+    ts.isForOfStatement(node)
+  );
 }
 
 function collectSourceFiles(directory) {
