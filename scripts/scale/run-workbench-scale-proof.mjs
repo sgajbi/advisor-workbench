@@ -1,6 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
-import { once } from "node:events";
 import { join } from "node:path";
 
 import {
@@ -11,6 +10,7 @@ import { assertContainerReplacement } from "./container-replacement-evidence.mjs
 import {
   createLoadGeneratorResourceTracker,
   parseDockerStatsLines,
+  stopMonitoredProcess,
   summarizeContainerResourceSamples,
 } from "./phase-resource-evidence.mjs";
 import { resolveScaleProofDeploymentId } from "./scale-proof-configuration.mjs";
@@ -349,7 +349,7 @@ async function startContainerResourceMonitor() {
       10_000,
     );
   } catch (error) {
-    await stopChild(child);
+    await stopMonitoredProcess(child);
     throw error;
   }
   const baselineSampleCount = samples.length;
@@ -364,7 +364,7 @@ async function startContainerResourceMonitor() {
           10_000,
         );
       } finally {
-        await stopChild(child);
+        await stopMonitoredProcess(child);
       }
       return samples.slice(baselineSampleCount);
     },
@@ -394,13 +394,6 @@ async function waitForSampleCount(
       throw new Error("Timed out waiting for concurrent Docker resource evidence.");
     }
     await delay(50);
-  }
-}
-
-async function stopChild(child) {
-  if (child.exitCode === null) {
-    child.kill();
-    await once(child, "close");
   }
 }
 
