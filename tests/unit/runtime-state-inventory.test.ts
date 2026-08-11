@@ -186,6 +186,42 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
   });
 
+  it.each([
+    [
+      "conditional initializer",
+      "const cache = Object.freeze({}); function update(useCache) { const ref = useCache ? cache : {}; ref.value = 1; }",
+    ],
+    [
+      "short-circuit reassignment",
+      "const cache = Object.freeze({}); function update(useCache) { let ref = {}; ref = useCache && cache; ref.value = 1; }",
+    ],
+  ])("follows module aliases through a %s", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
+  it("discovers a mutated imported singleton binding", () => {
+    expect(
+      scanRuntimeStateSource({
+        source: "import { cache as sharedCache } from './state'; sharedCache.set('key', 'value');",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({
+      file: "src/features/example.ts",
+      symbol: "sharedCache",
+    });
+  });
+
+  it("does not classify a type-only import as runtime state", () => {
+    expect(
+      scanRuntimeStateSource({
+        source: "import type { Cache } from './state'; type LocalCache = Cache;",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
   it("discovers mutated module state introduced through nested destructuring", () => {
     expect(
       scanRuntimeStateSource({
@@ -212,6 +248,11 @@ describe("runtime state inventory", () => {
       "class Cache { static entries = new Map(); }",
       "Cache",
     ],
+    [
+      "class-expression static field",
+      "const Cache = class { static entries = []; static add(value) { this.entries.push(value); } };",
+      "Cache",
+    ],
   ])("discovers process-local state held on a module %s", (_name, source, symbol) => {
     expect(
       scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
@@ -223,6 +264,16 @@ describe("runtime state inventory", () => {
       scanRuntimeStateSource({
         source:
           "class Formatter { static readonly label = 'Ready'; static format() { return Formatter.label; } }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
+  it("does not classify a benign class expression as mutable state", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const Formatter = class { static readonly label = 'Ready'; static format() { return Formatter.label; } };",
         file: "src/features/example.ts",
       }),
     ).toEqual([]);
