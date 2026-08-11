@@ -1,4 +1,5 @@
 import DetailCard from "./detail-card";
+import { cx } from "../utils/cx";
 
 type ActionItem = {
   key: string;
@@ -15,13 +16,15 @@ export default function ActionListCard({
   title,
   subtitle,
   items,
+  className,
 }: {
   title: string;
   subtitle: string;
   items: ActionItem[];
+  className?: string;
 }) {
   return (
-    <DetailCard title={title} subtitle={subtitle} className="action-list-card">
+    <DetailCard title={title} subtitle={subtitle} className={cx("action-list-card", className)}>
       <div className="portfolio-guidance-list portfolio-workflow-list" role="list" aria-label={`${title} workflow list`}>
         {items.map((item) => (
           <div

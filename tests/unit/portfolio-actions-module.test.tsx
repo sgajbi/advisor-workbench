@@ -5,7 +5,7 @@ import PortfolioActionsModule from "../../src/apps/portfolio/modules/portfolio-a
 
 describe("PortfolioActionsModule", () => {
   it("renders compact workflow copy with one short reason and no target line", () => {
-    render(
+    const { container } = render(
       <PortfolioActionsModule
         actions={[
           {
@@ -39,6 +39,10 @@ describe("PortfolioActionsModule", () => {
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
       "/performance"
+    );
+    expect(container.querySelectorAll(".portfolio-actions-card")).toHaveLength(1);
+    expect(container.querySelector(".portfolio-actions-card")).not.toHaveClass(
+      "workbench-rail-card"
     );
   });
 

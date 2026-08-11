@@ -4,7 +4,6 @@ import {
   DefinitionList,
   DetailCard,
   StateInfoHint,
-  WorkbenchRailCard,
 } from "@/design-system";
 
 import { formatDate } from "../../formatters";
@@ -48,19 +47,19 @@ export default function PortfolioReadinessModule({
   }
 
   return (
-    <WorkbenchRailCard className="portfolio-side-card portfolio-readiness-card">
-      <DetailCard
-        title="Reporting Readiness"
-        subtitle="Only unresolved book gaps that still need attention."
-        actions={
+    <DetailCard
+      className="portfolio-side-card portfolio-readiness-card"
+      title="Reporting Readiness"
+      subtitle="Only unresolved book gaps that still need attention."
+      actions={
           !exceptions.length && reportingNeedsAttention ? (
             <StateInfoHint
               body="Reporting needs the core book prerequisites to be in place: holdings coverage, pricing/valuation, transaction history, and a source-ready reporting state."
               label="Why reporting is unavailable"
             />
           ) : undefined
-        }
-      >
+      }
+    >
         {exceptions.length ? (
           <div className="portfolio-readiness-exception-list" role="list" aria-label="Readiness exceptions">
             {exceptions.map((exception) => (
@@ -102,8 +101,7 @@ export default function PortfolioReadinessModule({
             ]}
           />
         ) : null}
-      </DetailCard>
-    </WorkbenchRailCard>
+    </DetailCard>
   );
 }
 
