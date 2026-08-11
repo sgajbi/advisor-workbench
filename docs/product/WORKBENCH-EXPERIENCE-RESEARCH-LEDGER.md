@@ -3581,8 +3581,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 ### Adopted decisions
 
 1. Use one pure, typed admission model for blank, zero, positive, negative, malformed, and
-   out-of-range inputs; the Zod schema, field recovery, and workflow-action gate consume the same
-   model.
+   out-of-range inputs; admit at most two decimal places and validate exact scaled minor units
+   before converting to the numeric preview model. The Zod schema, field recovery, and
+   workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio
    value only; current cash and current portfolio value remain the source-confirmed baseline.
@@ -3601,11 +3602,13 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    contribution.
 2. Converting blank, negative, or malformed text to zero, because that hides operator intent and
    can enable an action with a value the advisor did not enter.
-3. Using native `type="number"` as the business validator, because it can discard invalid text and
+3. Checking only `Number.MAX_SAFE_INTEGER` after decimal conversion, because a large fractional
+   amount may already have rounded before that check. Admission validates scaled minor units first.
+4. Using native `type="number"` as the business validator, because it can discard invalid text and
    permits wheel-driven value changes.
-4. Sending the assumption as portfolio cash or adding it to Gateway stateful input; the Gateway
+5. Sending the assumption as portfolio cash or adding it to Gateway stateful input; the Gateway
    request continues to carry only the source-backed portfolio, date, and mandate identity.
-5. Adding a form or money-input dependency for a bounded validation correction that the governed
+6. Adding a form or money-input dependency for a bounded validation correction that the governed
    stack already supports.
 
 ### Validation and publication decision
