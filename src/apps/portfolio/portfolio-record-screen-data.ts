@@ -42,6 +42,7 @@ export async function loadPortfolioRecordScreenData({
       timeWindow: "30D",
       reportStartDate: window.startDate,
       reportEndDate: window.endDate,
+      includeWorkflowActions: false,
     }),
     getPortfolioWorkspaceDetailedDetails(selectedPortfolioId, {
       asOfDate: shell.as_of_date,
