@@ -552,7 +552,10 @@ Boundary rules:
 2. direct raw service consumption is not the default pattern,
 3. presentation logic may shape or prioritize information, but domain authority stays upstream,
 4. visual polish should not introduce fake data, duplicated meaning, or unsupported workflow states,
-5. domain-product discovery UI must consume gateway domain-product APIs only and must render
+5. HTTP status, correlation id, request id, and support reference are distinct evidence types;
+   label a status as HTTP status and expose another reference only when its governed semantics and
+   support-queryability are proven,
+6. domain-product discovery UI must consume gateway domain-product APIs only and must render
    unavailable, stale, partial, blocked, and error trust states truthfully.
 
 Technology-selection rules:

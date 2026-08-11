@@ -165,5 +165,7 @@ test("fails visibly without falling back to a global portfolio catalogue", async
 
   await expect(page.getByText("Your book could not be loaded")).toBeVisible();
   await expect(page.getByText(/No broader portfolio list has been substituted/i)).toBeVisible();
+  await expect(page.getByText(/HTTP status 502/i)).toBeVisible();
+  await expect(page.getByText(/Reference 502/i)).toHaveCount(0);
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toHaveCount(0);
 });

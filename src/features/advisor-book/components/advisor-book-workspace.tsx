@@ -15,7 +15,7 @@ import {
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import {
-  getWorkbenchApiErrorStatus,
+  getWorkbenchApiErrorEvidence,
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api-client";
 
@@ -102,6 +102,7 @@ function AdvisorBookWorkspaceContent({
   }
 
   if (error) {
+    const errorEvidence = getWorkbenchApiErrorEvidence(error);
     return (
       <ScreenStatePanel
         kind={isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error"}
@@ -116,8 +117,8 @@ function AdvisorBookWorkspaceContent({
             : "Portfolio assignments are temporarily unavailable. No broader portfolio list has been substituted."
         }
         hint={
-          getWorkbenchApiErrorStatus(error)
-            ? `Reference ${getWorkbenchApiErrorStatus(error)}. Retry, or contact support if access should be available.`
+          errorEvidence
+            ? `${errorEvidence.label} ${errorEvidence.value}. Retry, or contact support if access should be available.`
             : "Retry when portfolio assignments are available."
         }
         action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
