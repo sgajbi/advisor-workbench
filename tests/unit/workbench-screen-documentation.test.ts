@@ -56,7 +56,7 @@ describe("Workbench screen documentation governance", () => {
     expect(result.summary).toEqual({
       routeEntrypoints: 21,
       activeSurfaces: 36,
-      aliases: 3,
+      aliases: 2,
       mappedGuides: 1,
       coverageExceptions: 36,
       unmappedGuides: 35,
@@ -159,12 +159,12 @@ describe("Workbench screen documentation governance", () => {
   it("rejects fragment navigation without an implementation-owned target", () => {
     const registry = loadRegistry();
     const surface = registry.surfaces.find(
-      (candidate: { id: string }) => candidate.id === "proposal-simulation",
+      (candidate: { id: string }) => candidate.id === "client-context-alias",
     );
     surface.fragment = "simulation";
 
     expect(validate(registry).errors).toContain(
-      "Surface proposal-simulation fragment target does not exist: #simulation.",
+      "Surface client-context-alias fragment target does not exist: #simulation.",
     );
   });
 

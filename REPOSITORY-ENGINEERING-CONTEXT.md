@@ -351,7 +351,10 @@ Current repository posture:
     Gateway/Core/Advise, lets advisors model buys, sells, off-book instruments, and cash
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
-    risk, performance, or execution truth locally. The detail route records advisor-use narrative
+    risk, performance, or execution truth locally. Evaluation is an in-screen Proposal Builder
+    result after Gateway/Advise success, not a separate journey mode or fragment destination; a
+    created workspace must not be described as evaluated until the evaluation call succeeds. The
+    detail route records advisor-use narrative
     review and reviewed report-package requests through Gateway proposal endpoints only. It settles
     primary proposal detail independently from workflow, approval, and lineage reads, keeps
     available decision evidence visible when an ancillary source is unavailable, presents
