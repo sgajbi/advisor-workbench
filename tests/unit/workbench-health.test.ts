@@ -54,6 +54,23 @@ describe("Workbench runtime health", () => {
     });
   });
 
+  it("rejects the reserved local identity outside development", () => {
+    expect(
+      assessWorkbenchReadiness(
+        {
+          LOTUS_ENVIRONMENT: "prod",
+          WORKBENCH_DEPLOYMENT_ID: "local-development",
+        },
+        "local-development",
+      ),
+    ).toMatchObject({
+      status: "not_ready",
+      deployment_id: "local-development",
+      build_deployment_id: "local-development",
+      failures: ["local_deployment_identity_forbidden"],
+    });
+  });
+
   it("rejects runtime identity that differs from the immutable build", () => {
     expect(
       assessWorkbenchReadiness(

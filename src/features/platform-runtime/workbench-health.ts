@@ -63,7 +63,15 @@ export function assessWorkbenchReadiness(
     failures.push("build_deployment_identity_invalid");
   } else if (!buildDeploymentId) {
     failures.push("build_deployment_identity_required");
-  } else if (deploymentId && deploymentId !== buildDeploymentId) {
+  }
+  if (
+    !developmentEnvironment &&
+    (deploymentId === LOCAL_DEVELOPMENT_DEPLOYMENT_ID ||
+      buildDeploymentId === LOCAL_DEVELOPMENT_DEPLOYMENT_ID)
+  ) {
+    failures.push("local_deployment_identity_forbidden");
+  }
+  if (deploymentId && buildDeploymentId && deploymentId !== buildDeploymentId) {
     failures.push("deployment_identity_mismatch");
   }
 
