@@ -357,7 +357,9 @@ Current repository posture:
     their latest refresh is confirmed. Partial or previously loaded evidence remains visible with
     its source posture, but manual scenario cash, an initial failure, or a failed refresh cannot
     authorize those actions. Keep the two reads parallel and provide an explicit source refresh;
-    do not collapse failures to `null`, field validation, or fabricated empty-state success.
+    required book reads must bypass the browser module response cache so that refresh reaches the
+    BFF, while request-token and query ownership prevent an older response from replacing newer
+    evidence. Do not collapse failures to `null`, field validation, or fabricated empty-state success.
     Evaluation is an in-screen Proposal Builder
     result after Gateway/Advise success, not a separate journey mode or fragment destination. A
     created workspace must not be described as evaluated until the evaluation call succeeds and
