@@ -26,7 +26,7 @@ Add an iterative intent builder inside the proposal simulation screen:
 ## Architectural Impact
 
 - Better alignment with advisory lifecycle behavior (iterate, evaluate, refine).
-- Shared payload builder improves reliability and testability.
+- One typed draft model and explicit stateful action mapping improve reliability and testability.
 - No API contract changes; the `/proposals/simulate` screen uses the existing Gateway
   `/api/v1/advisory-workspaces*` contract for iterative draft evaluation and handoff, while
   proposal queue/detail continue to use `/api/v1/proposals*`.
