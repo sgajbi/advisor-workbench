@@ -1,8 +1,8 @@
 # Portfolio Review
 
 Portfolio Review is the selected portfolio's daily decision checkpoint. It brings identity,
-valuation context, current return measures, source-reported exceptions, readiness, and the next
-supported handoff into one review. It is not a client profile, recommendation engine, mandate
+valuation context, current return measures, source-reported exceptions, a Workbench-composed review
+posture, and the next supported handoff into one review. It is not a client profile, recommendation engine, mandate
 approval, or trading screen.
 
 ## Current Scope
@@ -52,7 +52,7 @@ portfolio-entitlement work remains governed by
    date before comparing figures.
 3. Review AUM, invested assets, cash, and source-returned MTD, QTD, and YTD net returns.
 4. Read **Review focus** before the secondary evidence: it carries the primary source-reported
-   attention item or supported next step plus the overall readiness posture.
+   attention item or supported next step plus a Workbench-composed readiness label.
 5. Review exceptions and the evidence rail when the decision depends on reporting, valuation,
    benchmark, or source coverage.
 6. Continue to the owning record, analytics, reporting, advisory, or mandate workflow. Returning to
@@ -68,8 +68,10 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
 - Presents source-backed AUM, invested assets, cash, cash weight, and MTD/QTD/YTD net returns.
 - Opens supporting drawers for AUM, invested-assets, and cash evidence without turning those
   drawers into recommendations.
-- Presents one source-backed review focus, overall portfolio readiness, reporting coverage, open
-  exceptions, and the recommended source workflow action.
+- Presents one source-backed review focus, reporting coverage, open exceptions, and the recommended
+  source workflow action. Its visible **Ready**, **Partial**, or **Not Ready** label is a Workbench
+  presentation projection over source-returned positions, reporting status, publication permission,
+  blocking controls, and partial failures; it is not a source-owned approval or mandate decision.
 - Keeps partial failures and source-reported exception detail visible instead of treating missing
   evidence as zero or clear.
 - Exposes period, as-of, reporting-currency, filter, export, and additional-workflow controls only
@@ -106,7 +108,8 @@ review** is guidance, not a persisted workflow state or approval command.
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
 | Portfolio catalogue and selected portfolio | Requested through the Workbench BFF; Workbench does not substitute an unrelated global book when selection is unavailable | Gateway portfolio APIs over Core portfolio identity |
-| Portfolio identity, profile, AUM, invested assets, cash, readiness, workflow cues, warnings, and exceptions | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate source truth | Core portfolio state composed by Gateway |
+| Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, workflow cues, warnings, and exceptions | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
+| Overall review label | Workbench deterministically projects **Ready**, **Partial**, or **Not Ready** from source-returned position coverage, reporting status, publication permission, blocking controls, and partial failures | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
 | Positions, allocation, income, activity, and supporting book detail | Loaded through Gateway portfolio book and summary-detail contracts; record screens remain their owning presentation | Core portfolio book and transaction sources through Gateway |
 | MTD, QTD, YTD, selected-period return, benchmark identity, and availability | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable | Performance calculation authority composed by Gateway |
 | Reporting coverage and generation posture | Rendered as readiness evidence; row count is not treated as a generation timestamp or publication event | Core source-readiness evidence composed by Gateway; not a Report service publication event |
@@ -139,8 +142,9 @@ currently re-contact source authority.
 
 Portfolio Review does not:
 
-- calculate portfolio valuation, performance, benchmark return, readiness, reporting coverage,
-  mandate breach, risk, suitability, or priority in the browser;
+- calculate portfolio valuation, performance, benchmark return, reporting coverage, mandate breach,
+  risk, suitability, or priority in the browser. Workbench does project the disclosed overall review
+  label from exact source-returned readiness inputs;
 - aggregate households, external assets, delegated books, or a relationship manager's whole book;
 - recommend a trade, rebalance, product, proposal, or client action;
 - approve a mandate, suitability outcome, proposal, report, or client communication;

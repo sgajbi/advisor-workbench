@@ -81,6 +81,12 @@ describe("Workbench screen documentation governance", () => {
     expect(portfolioAliases.map((route: { routePattern: string }) => route.routePattern)).toEqual(
       expect.arrayContaining(["/", "/portfolio", "/portfolios", "/suite"]),
     );
+    const guide = fs.readFileSync(
+      path.join(rootDirectory, "wiki", "Portfolio-Review-Screen-Guide.md"),
+      "utf8",
+    );
+    expect(guide).toContain("Workbench presentation classification");
+    expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
     expect(validate(registry).errors).toEqual([]);
   });
 
