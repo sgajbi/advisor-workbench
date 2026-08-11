@@ -255,15 +255,14 @@ export function scanRuntimeStateSource({
 
 function collectMutatedBindings(sourceFile, moduleBindings) {
   const mutated = new Set();
-  const bindingsByScope = collectBindingsByScope(sourceFile);
+  const bindingGraph = collectBindingGraph(sourceFile);
   const recordRoot = (expression) => {
     const root = rootIdentifier(expression);
-    if (
-      root &&
-      moduleBindings.has(root.text) &&
-      resolvesToModuleScope(root, bindingsByScope, sourceFile)
-    ) {
-      mutated.add(root.text);
+    const moduleBinding = root
+      ? resolveModuleBinding(root, bindingGraph, sourceFile, moduleBindings)
+      : undefined;
+    if (moduleBinding) {
+      mutated.add(moduleBinding);
     }
   };
   const visit = (node) => {
@@ -319,12 +318,18 @@ function rootIdentifier(expression) {
   return ts.isIdentifier(current) ? current : undefined;
 }
 
-function collectBindingsByScope(sourceFile) {
+function collectBindingGraph(sourceFile) {
   const bindingsByScope = new Map();
+  const aliasesByScope = new Map();
   const addBinding = (scope, name) => {
     const bindings = bindingsByScope.get(scope) ?? new Set();
     bindings.add(name);
     bindingsByScope.set(scope, bindings);
+  };
+  const addAlias = (scope, name, target) => {
+    const aliases = aliasesByScope.get(scope) ?? new Map();
+    aliases.set(name, target);
+    aliasesByScope.set(scope, aliases);
   };
   const addBindingName = (scope, name) => {
     if (ts.isIdentifier(name)) {
@@ -349,6 +354,12 @@ function collectBindingsByScope(sourceFile) {
         (declarationList.flags & ts.NodeFlags.BlockScoped) !== 0;
       const scope = findBindingScope(node, isBlockScoped);
       addBindingName(scope, node.name);
+      const aliasTarget = node.initializer
+        ? rootIdentifier(node.initializer)
+        : undefined;
+      if (ts.isIdentifier(node.name) && aliasTarget) {
+        addAlias(scope, node.name.text, aliasTarget);
+      }
     } else if (ts.isParameter(node) && isFunctionScope(node.parent)) {
       addBindingName(node.parent, node.name);
     } else if (
@@ -365,7 +376,7 @@ function collectBindingsByScope(sourceFile) {
     ts.forEachChild(node, visit);
   };
   visit(sourceFile);
-  return bindingsByScope;
+  return { bindingsByScope, aliasesByScope };
 }
 
 function findBindingScope(node, blockScoped) {
@@ -382,18 +393,52 @@ function findBindingScope(node, blockScoped) {
   throw new Error("Runtime-state binding has no lexical scope.");
 }
 
-function resolvesToModuleScope(identifier, bindingsByScope, sourceFile) {
+function resolveModuleBinding(
+  identifier,
+  bindingGraph,
+  sourceFile,
+  moduleBindings,
+  visited = new Map(),
+) {
+  const binding = resolveBinding(identifier, bindingGraph.bindingsByScope);
+  if (!binding) {
+    return undefined;
+  }
+  if (binding.scope === sourceFile) {
+    return moduleBindings.has(binding.name) ? binding.name : undefined;
+  }
+  const visitedNames = visited.get(binding.scope) ?? new Set();
+  if (visitedNames.has(binding.name)) {
+    return undefined;
+  }
+  visitedNames.add(binding.name);
+  visited.set(binding.scope, visitedNames);
+  const aliasTarget = bindingGraph.aliasesByScope
+    .get(binding.scope)
+    ?.get(binding.name);
+  return aliasTarget
+    ? resolveModuleBinding(
+        aliasTarget,
+        bindingGraph,
+        sourceFile,
+        moduleBindings,
+        visited,
+      )
+    : undefined;
+}
+
+function resolveBinding(identifier, bindingsByScope) {
   let current = identifier.parent;
   while (current) {
     if (
       (isFunctionScope(current) || isLexicalScope(current)) &&
       bindingsByScope.get(current)?.has(identifier.text)
     ) {
-      return current === sourceFile;
+      return { name: identifier.text, scope: current };
     }
     current = current.parent;
   }
-  return false;
+  return undefined;
 }
 
 function isFunctionScope(node) {
