@@ -236,8 +236,10 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeFalsy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
-    expect(document.querySelectorAll(".workbench-rail-card").length).toBeGreaterThanOrEqual(2);
-    expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelectorAll(".workbench-rail-card")).toHaveLength(1);
+    expect(document.querySelector(".portfolio-evidence-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-context-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(2);
