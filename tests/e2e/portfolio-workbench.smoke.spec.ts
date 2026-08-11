@@ -235,6 +235,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('YTD Return')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Income/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Filters/i })).toHaveCount(0);
 
     await expect(page.getByRole('heading', { name: /Asset Allocation/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Top Holdings/i })).toHaveCount(0);
@@ -255,6 +256,21 @@ test.describe('Portfolio workbench smoke', () => {
 
     const summaryModuleMetrics = await measureGrid(page.locator('.portfolio-summary-cluster').first());
     expect(summaryModuleMetrics.width).toBeGreaterThan(900);
+
+    for (const viewport of [
+      { width: 1024, height: 1000 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Export portfolio data/i })).toBeVisible();
+      const pageWidth = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth + 1);
+    }
   });
 
   test('income route renders the dedicated income and activity workspace', async ({ page, request }) => {

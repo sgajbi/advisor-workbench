@@ -194,14 +194,14 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Portfolio period presets" }))
       .toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Filters" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: /Book Context/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Reporting Readiness/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Reporting Readiness/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Portfolio Insights/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Critical Exceptions and Blockers/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Source Limitations/i })).toBeInTheDocument();
     const summaryCluster = document.querySelector(".portfolio-summary-cluster");
     expect(summaryCluster).toBeTruthy();
     expect(summaryCluster?.querySelector("#portfolio-summary")).toBeTruthy();
@@ -231,16 +231,16 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-paired-analytics-grid.workbench-summary-region")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-summary-module").length).toBe(0);
     expect(screen.getByText("Review focus")).toBeInTheDocument();
-    expect(screen.getByText("Recommended next step")).toBeInTheDocument();
+    expect(screen.queryByText("Recommended next step")).not.toBeInTheDocument();
     expect(document.querySelector(".workbench-decision-brief")).toBeTruthy();
     expect(document.querySelector(".portfolio-summary-module-card.workbench-summary-module-card")).toBeFalsy();
     expect(screen.queryByLabelText("Income summary")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
-    expect(document.querySelectorAll(".workbench-rail-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".workbench-rail-card").length).toBeGreaterThanOrEqual(2);
     expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeTruthy();
-    expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
-    expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Reporting Coverage" })).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
@@ -353,7 +353,7 @@ describe("PortfolioFoundationPage", () => {
     });
 
     expect(screen.getByRole("heading", { name: /Book Context/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Reporting Readiness/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Reporting Readiness/i })).not.toBeInTheDocument();
     expect(screen.getByText("Identity")).toBeInTheDocument();
     expect(screen.queryByText("Book Setup")).not.toBeInTheDocument();
     const detailedCluster = document.querySelector(".portfolio-detailed-cluster");

@@ -153,6 +153,10 @@ describe("portfolio side rail modules", () => {
     );
 
     expect(screen.getByText("Available Work Areas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Return to My Book" })).toHaveAttribute(
+      "href",
+      "/book"
+    );
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
       "/performance"

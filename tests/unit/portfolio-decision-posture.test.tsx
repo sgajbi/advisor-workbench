@@ -21,7 +21,9 @@ describe("portfolio decision posture", () => {
 
     expect(screen.getByText("Review Evidence")).toBeInTheDocument();
     expect(screen.getByText("Portfolio decision review")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio book, Performance, Cashflow, Reporting")).toBeInTheDocument();
     expect(screen.getByText("11 rows")).toBeInTheDocument();
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
@@ -34,5 +36,26 @@ describe("portfolio decision posture", () => {
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );
+  });
+
+  it("does not imply a benchmark assignment or absent evidence source", () => {
+    render(
+      <PortfolioEvidenceModule
+        workspace={buildPortfolioWorkspace({
+          performance: null,
+          cashflow_outlook: null,
+          readiness: {
+            has_positions: true,
+            reporting: { status: "PENDING", generated_at_utc: null, row_count: 0 },
+          },
+        })}
+        context={buildPortfolioWorkspaceContext()}
+      />
+    );
+
+    expect(screen.getByText("Portfolio book")).toBeInTheDocument();
+    expect(screen.getByText("Not supplied")).toBeInTheDocument();
+    expect(screen.queryByText(/Cashflow/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Assigned benchmark/)).not.toBeInTheDocument();
   });
 });

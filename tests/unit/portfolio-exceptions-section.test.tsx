@@ -6,14 +6,13 @@ import PortfolioExceptionsSection from "../../src/apps/portfolio/components/port
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("PortfolioExceptionsSection", () => {
-  it("renders a clear empty state when the backend reports no active failures", () => {
-    render(<PortfolioExceptionsSection workspace={buildPortfolioWorkspace()} />);
+  it("does not repeat an all-clear conclusion when no source limitation exists", () => {
+    const { container } = render(
+      <PortfolioExceptionsSection workspace={buildPortfolioWorkspace()} />
+    );
 
-    expect(screen.getByRole("heading", { name: "Exceptions" })).toBeInTheDocument();
-    expect(screen.getByText("No active exceptions")).toBeInTheDocument();
-    expect(
-      screen.getByText("Reporting and operational checks are currently clear.")
-    ).toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText(/No active exceptions/i)).not.toBeInTheDocument();
   });
 
   it("renders service area and advisor-readable detail for active coverage failures", () => {
@@ -32,7 +31,7 @@ describe("PortfolioExceptionsSection", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Critical Exceptions and Blockers" })
+      screen.getByRole("heading", { name: "Source Limitations" })
     ).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Portfolio data")).toBeInTheDocument();

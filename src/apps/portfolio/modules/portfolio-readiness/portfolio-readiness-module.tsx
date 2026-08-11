@@ -38,13 +38,20 @@ export default function PortfolioReadinessModule({
   showDetailFootnote: boolean;
   onOpenException: (exception: PortfolioExceptionSummary) => void;
 }) {
+  const reportingNeedsAttention =
+    workspace.readiness.reporting.status.toUpperCase() !== "READY";
+
+  if (!exceptions.length && !reportingNeedsAttention) {
+    return null;
+  }
+
   return (
     <WorkbenchRailCard className="portfolio-side-card portfolio-readiness-card">
       <DetailCard
         title="Reporting Readiness"
         subtitle="Only unresolved book gaps that still need attention."
         actions={
-          !exceptions.length && workspace.readiness.reporting.status.toUpperCase() !== "READY" ? (
+          !exceptions.length && reportingNeedsAttention ? (
             <StateInfoHint
               body="Reporting needs the core book prerequisites to be in place: holdings coverage, pricing/valuation, transaction history, and a source-ready reporting state."
               label="Why reporting is unavailable"
@@ -67,14 +74,15 @@ export default function PortfolioReadinessModule({
               </div>
             ))}
           </div>
-        ) : (
+        ) : reportingNeedsAttention ? (
           <div className="portfolio-readiness-clear-state">
-            <strong>No active readiness exceptions</strong>
+            <strong>Reporting prerequisites need attention</strong>
             <p className="muted">
-              Holdings, pricing, transactions, and reporting are currently in a usable state.
+              No detailed source exception is available. Review the prerequisite guidance before
+              client use.
             </p>
           </div>
-        )}
+        ) : null}
         {showDetailFootnote ? (
           <DefinitionList
             ariaLabel="Readiness operational dates"
