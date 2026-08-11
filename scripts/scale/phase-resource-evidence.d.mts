@@ -40,4 +40,10 @@ export function parseDockerStatsLines(
   lines: string[],
 ): Array<Record<string, string>>;
 
-export function stopMonitoredProcess(child: ChildProcess): Promise<void>;
+export function stopMonitoredProcess(
+  child: ChildProcess,
+  options?: {
+    gracefulTimeoutMs?: number;
+    forceTimeoutMs?: number;
+  },
+): Promise<void>;
