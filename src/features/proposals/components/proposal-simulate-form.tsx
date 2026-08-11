@@ -8,7 +8,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, Stack, TextField } from "@mui/material";
 
-import { getPortfolioBook, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
+import {
+  getRequiredPortfolioBook,
+  getRequiredPortfolioWorkspaceShell,
+} from "@/apps/portfolio/api";
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
@@ -39,6 +42,7 @@ import {
   buildPersistedProposalDraftWorkflowContext,
   buildSimulationProposalWorkflowContext,
 } from "../proposal-workflow-context-view-model";
+import { buildProposalPortfolioEvidence } from "../proposal-portfolio-evidence";
 import { SectionBlock } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import {
@@ -47,6 +51,7 @@ import {
   CurrentPositionsPanel,
   DraftOrderBlotterPanel,
   IndicativeDraftImpactPanel,
+  ProposalPortfolioEvidencePanel,
   SavedAdvisoryDraftPanel,
 } from "./proposal-builder-domain-panels";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
@@ -98,11 +103,6 @@ function decimalString(value: number, digits: number): string {
 function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
   const amount = Math.abs(item.amount || 0);
   return decimalString(item.direction === "OUT" ? -amount : amount, 2);
-}
-
-function isCashPosition(position: PortfolioPositionView): boolean {
-  const assetClass = position.asset_class?.trim().toLowerCase();
-  return assetClass === "cash" || position.security_id.toUpperCase().startsWith("CASH_");
 }
 
 export default function ProposalSimulateForm({
@@ -158,32 +158,54 @@ export default function ProposalSimulateForm({
     [portfolioId, savedDraft]
   );
   usePublishProposalWorkflowContext(workflowContextModel);
-  const { data: portfolioBook, isLoading: positionsLoading } = useQuery({
+  const portfolioBookQuery = useQuery({
     queryKey: ["proposal-position-builder-book", portfolioId, baseCurrency],
     queryFn: async () =>
-      await getPortfolioBook(portfolioId, {
+      await getRequiredPortfolioBook(portfolioId, {
         reportingCurrency: baseCurrency || "USD",
       }),
     enabled: portfolioId.trim().length > 0,
     ...workbenchStrictQueryDefaults,
   });
-  const { data: portfolioShell } = useQuery({
+  const portfolioWorkspaceQuery = useQuery({
     queryKey: ["proposal-position-builder-shell", portfolioId],
-    queryFn: async () => await getPortfolioWorkspaceShell(portfolioId),
+    queryFn: async () => await getRequiredPortfolioWorkspaceShell(portfolioId),
     enabled: portfolioId.trim().length > 0,
     ...workbenchStrictQueryDefaults,
   });
-  const positions = useMemo(() => portfolioBook?.positions ?? [], [portfolioBook?.positions]);
-  const tradablePositions = useMemo(() => positions.filter((position) => !isCashPosition(position)), [positions]);
-  const cashPositionAmount = useMemo(
+  const portfolioEvidence = useMemo(
     () =>
-      positions
-        .filter(isCashPosition)
-        .reduce((sum, position) => sum + (position.market_value_base ?? 0), 0),
-    [positions]
+      buildProposalPortfolioEvidence({
+        portfolioId,
+        bookQuery: {
+          data: portfolioBookQuery.data,
+          isLoading: portfolioBookQuery.isLoading,
+          isFetching: portfolioBookQuery.isFetching,
+          error: portfolioBookQuery.error,
+        },
+        workspaceQuery: {
+          data: portfolioWorkspaceQuery.data,
+          isLoading: portfolioWorkspaceQuery.isLoading,
+          isFetching: portfolioWorkspaceQuery.isFetching,
+          error: portfolioWorkspaceQuery.error,
+        },
+        manualCashAmount: cashAmount || 0,
+      }),
+    [
+      cashAmount,
+      portfolioBookQuery.data,
+      portfolioBookQuery.error,
+      portfolioBookQuery.isFetching,
+      portfolioBookQuery.isLoading,
+      portfolioId,
+      portfolioWorkspaceQuery.data,
+      portfolioWorkspaceQuery.error,
+      portfolioWorkspaceQuery.isFetching,
+      portfolioWorkspaceQuery.isLoading,
+    ]
   );
-  const sourceCashAmount =
-    portfolioShell?.summary?.total_cash_base ?? (cashPositionAmount || cashAmount || 0);
+  const tradablePositions = portfolioEvidence.positions.items;
+  const sourceCashAmount = portfolioEvidence.cash.amount;
   const draftPreview = useMemo(
     () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
     [cashFlows, sourceCashAmount, tradablePositions, trades]
@@ -217,6 +239,23 @@ export default function ProposalSimulateForm({
       ...current,
       createTradeIntentFromPosition(current.length + 1, position, side),
     ]);
+  }
+
+  async function refreshPortfolioEvidence() {
+    await Promise.all([
+      portfolioBookQuery.refetch({ cancelRefetch: true }),
+      portfolioWorkspaceQuery.refetch({ cancelRefetch: true }),
+    ]);
+  }
+
+  function confirmPortfolioEvidence(): boolean {
+    if (portfolioEvidence.canEvaluate) {
+      return true;
+    }
+    setError(
+      "Confirm current portfolio holdings and cash before evaluating or saving this advisor draft."
+    );
+    return false;
   }
 
   function netCashImpact(): string {
@@ -315,6 +354,9 @@ export default function ProposalSimulateForm({
   async function onSubmit(values: FormInput) {
     setError(null);
     setSavedDraft(null);
+    if (!confirmPortfolioEvidence()) {
+      return;
+    }
     setLoading(true);
     try {
       await createEvaluatedWorkspace(values);
@@ -329,6 +371,9 @@ export default function ProposalSimulateForm({
   async function onSaveDraft() {
     const isValid = await form.trigger();
     if (!isValid) {
+      return;
+    }
+    if (!confirmPortfolioEvidence()) {
       return;
     }
 
@@ -451,7 +496,8 @@ export default function ProposalSimulateForm({
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={!isHydrated || loading}
+                  disabled={!isHydrated || loading || !portfolioEvidence.canEvaluate}
+                  aria-describedby="proposal-evidence-action-reason"
                   fullWidth
                 >
                   {evaluateActionLabel}
@@ -460,7 +506,8 @@ export default function ProposalSimulateForm({
                   type="button"
                   variant="outlined"
                   onClick={onSaveDraft}
-                  disabled={!isHydrated || savingDraft}
+                  disabled={!isHydrated || savingDraft || !portfolioEvidence.canEvaluate}
+                  aria-describedby="proposal-evidence-action-reason"
                   fullWidth
                 >
                   {saveActionLabel}
@@ -468,11 +515,22 @@ export default function ProposalSimulateForm({
                 <Button component={Link} href="/proposals" variant="text" fullWidth>
                   View Proposal Queue
                 </Button>
+                <p id="proposal-evidence-action-reason" className={styles.actionReason}>
+                  {portfolioEvidence.canEvaluate
+                    ? "Evaluation uses the confirmed portfolio book and cash posture."
+                    : "Evaluation and draft handoff remain unavailable until portfolio evidence is confirmed."}
+                </p>
               </Stack>
             </section>
           </aside>
 
           <div className={styles.mainLane}>
+            <ProposalPortfolioEvidencePanel
+              evidence={portfolioEvidence}
+              baseCurrency={baseCurrency || "USD"}
+              onRefresh={refreshPortfolioEvidence}
+            />
+
             <section className={styles.panel} aria-labelledby="portfolio-context-heading">
               <div className={styles.panelHeader}>
                 <div>
@@ -563,7 +621,7 @@ export default function ProposalSimulateForm({
 
             <CurrentPositionsPanel
               positions={tradablePositions}
-              positionsLoading={positionsLoading}
+              evidenceStatus={portfolioEvidence.positions.status}
               baseCurrency={baseCurrency || "USD"}
               onAddPositionTrade={addPositionTrade}
             />
