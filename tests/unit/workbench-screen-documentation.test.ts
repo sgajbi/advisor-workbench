@@ -89,6 +89,10 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
     expect(guide).toContain("it does not request\n  the detailed workflow or insight endpoints");
     expect(guide).toContain("not a persisted or source-recommended action");
+    expect(guide).toContain("has no dedicated\n  visible region on this screen today");
+    expect(guide).toContain("retained but unrendered payload fields do not\nbecome visible evidence");
+    expect(guide).toContain("not dynamic lineage");
+    expect(guide).toContain("not source provenance or supportability proof");
     expect(validate(registry).errors).toEqual([]);
   });
 

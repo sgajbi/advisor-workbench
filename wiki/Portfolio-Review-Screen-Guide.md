@@ -75,13 +75,16 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
   **Complete portfolio review** next step, and **Ready**, **Partial**, or **Not Ready** label are
   Workbench presentation projections over loaded source facts, not source-owned actions, approvals,
   recommendations, or mandate decisions.
-- Keeps partial failures and source-reported exception detail visible instead of treating missing
-  evidence as zero or clear.
+- Keeps partial failures visible instead of treating missing evidence as zero or clear. A Gateway
+  warning without a partial-failure entry is retained in the workspace/export but has no dedicated
+  visible region on this screen today; that gap is tracked by #649.
 - Exposes period, as-of, reporting-currency, filter, export, and additional-workflow controls only
   within current source capability. Unsupported historical review or currency restatement is
   disabled and explained.
-- Shows readiness, book context, benchmark, source scope, reporting coverage, and adjacent
-  Gateway-backed work areas in the secondary rail.
+- Shows readiness, book context, available benchmark label/code, reporting coverage, and adjacent
+  Workbench routes in the secondary rail. The rail's **Sources** value is static Workbench copy,
+  not dynamic lineage, and **Assigned benchmark** is a generic fallback when no benchmark label or
+  code is present; neither is proof of source assignment or downstream readiness.
 - Exports the current Workbench review projection as a local JSON file. Export does not create a
   report, archive record, approval, communication, or source-side business event.
 
@@ -111,17 +114,21 @@ review** is guidance, not a persisted workflow state or approval command.
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
 | Portfolio catalogue and selected portfolio | Requested through the Workbench BFF; Workbench does not substitute an unrelated global book when selection is unavailable | Gateway portfolio APIs over Core portfolio identity |
-| Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, workflow cues, warnings, and exceptions | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
+| Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, and partial failures | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
 | Overall review label | Workbench deterministically projects **Ready**, **Partial**, or **Not Ready** from source-returned position coverage, reporting status, publication permission, blocking controls, and partial failures | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
 | Review focus and next step | Source partial failures remain evidenced when present; the current healthy summary flow falls back to **Portfolio review is ready** and **Complete portfolio review** without loading detailed workflow or insight contracts | Workbench presentation guidance; not a persisted or source-recommended action |
 | Positions, allocation, income, activity, and supporting book detail | Loaded through Gateway portfolio book and summary-detail contracts; record screens remain their owning presentation | Core portfolio book and transaction sources through Gateway |
-| MTD, QTD, YTD, selected-period return, benchmark identity, and availability | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable | Performance calculation authority composed by Gateway |
+| MTD, QTD, YTD, selected-period return, and available benchmark label/code | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable and a generic benchmark fallback is not treated as identity evidence | Performance calculation authority composed by Gateway |
 | Reporting coverage and generation posture | Rendered as readiness evidence; row count is not treated as a generation timestamp or publication event | Core source-readiness evidence composed by Gateway; not a Report service publication event |
-| Rebalance and operating supportability | Displayed only where the workspace publishes it; no browser-owned monitoring decision | Manage operating evidence composed by Gateway |
+| Gateway warnings | Retained in the workspace projection and local export, but a warning without a partial failure is not rendered in the current Portfolio Review | Gateway contract data; not visible review evidence today |
+| Rebalance payload | Retained in the shell response but not consumed by the current Portfolio Review components | Manage contract data composed by Gateway; only the adjacent Mandate Operations handoff is visible |
+| Review Evidence **Sources** row | Displays a fixed Workbench summary rather than contract-returned lineage | Workbench orientation copy; not source provenance or supportability proof |
 | Export | Browser serializes the confirmed current Workbench projection | Workbench local action; no source-side report or archive authority |
 
 Browser requests use the same-origin BFF and server composition uses the governed Gateway endpoint;
-neither path calls Core, Performance, Report, or Manage directly.
+neither path calls Core, Performance, Report, or Manage directly. Source ownership in the catalogue
+describes facts actually presented on this screen; retained but unrendered payload fields do not
+become visible evidence merely because the shell contract contains them.
 Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow in
 [Integrations](Integrations).
 
@@ -133,7 +140,8 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Ready | Identity, metrics, review focus, controls, exceptions/readiness, evidence, and handoffs | Use the review focus and source evidence before continuing |
 | No selectable portfolio | **Portfolio context unavailable** and **Selection unavailable**; no global portfolio list is substituted | Open **My book** to re-establish source-backed portfolio membership |
 | Selected workspace unavailable | An automatic bounded client fetch attempts to recover the selected shell; persistent failure leaves the explicit unavailable workspace | Return through **My book** or follow the first support step |
-| Partial or degraded | Available facts remain visible with source failure, warning, readiness, or exception detail | Use only evidenced facts and continue to the owning workflow or support path |
+| Partial or degraded | Available facts remain visible with partial-failure, readiness, or exception detail | Use only evidenced facts and continue to the owning workflow or support path |
+| Warning without partial failure | No dedicated warning region is rendered; the warning remains in the local projection/export | Do not infer an all-clear source posture from the absence of visible warnings; follow #649 |
 | Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope | Keep the effective current scope; do not relabel latest evidence as historical or restated |
 | Empty supporting detail | Source-backed zero or unavailable supporting detail remains distinct from the portfolio headline | Open the owning record screen before concluding that activity or exposure is absent |
 | Permission blocked | Portfolio Review has no dedicated authenticated-principal permission panel today; a failed catalogue or workspace read remains unavailable | Do not add browser authority headers; follow #436 and the operations runbook |
@@ -199,7 +207,8 @@ governed commands and evidence locations.
 ## First Support Step
 
 Confirm the selected portfolio, visible as-of date, base/reporting currency, readiness state,
-reporting coverage, and exact source failure or warning shown on screen. Do not paste client or
+reporting coverage, and exact partial failure shown on screen. A Gateway warning without a partial
+failure is not currently visible and must not be claimed as reviewed. Do not paste client or
 portfolio identifiers, exported JSON, or raw response payloads into a support channel. If portfolio
 context is unavailable, open **My book** once to re-establish source-backed selection. If the same
 scope remains unavailable or partial, follow [Operations Runbook](Operations-Runbook) and record
