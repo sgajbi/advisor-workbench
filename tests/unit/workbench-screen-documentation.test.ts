@@ -101,7 +101,9 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("only the Performance, Cashflow, or Reporting evidence actually present");
     expect(guide).toContain("not calculation lineage or supportability certification");
     expect(guide).toContain("Portfolio Review deliberately excludes record-oriented filters");
-    expect(guide).toContain("successful dated book evidence replaces both totals and valuation date together");
+    expect(guide).toContain(
+      "a complete dated book summary replaces totals, valuation date, and position-coverage readiness together",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
