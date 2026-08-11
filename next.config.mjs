@@ -13,6 +13,9 @@ if (!deploymentId) {
 const nextConfig = {
   output: "standalone",
   deploymentId,
+  env: {
+    WORKBENCH_BUILD_DEPLOYMENT_ID: deploymentId,
+  },
   reactStrictMode: true,
   allowedDevOrigins: ["workbench.dev.lotus", "127.0.0.1", "localhost"],
   eslint: {

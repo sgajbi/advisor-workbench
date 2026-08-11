@@ -54,6 +54,43 @@ describe("runtime support policy", () => {
     );
   });
 
+  it.each([
+    [
+      "a mutable deployment-id default",
+      (dockerfile: string) =>
+        dockerfile.replace(
+          "ARG WORKBENCH_DEPLOYMENT_ID\n",
+          "ARG WORKBENCH_DEPLOYMENT_ID=local-development\n",
+        ),
+      "without a default",
+    ],
+    [
+      "a builder that does not fail closed",
+      (dockerfile: string) =>
+        dockerfile.replace(
+          'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
+          "RUN npm run build",
+        ),
+      "builder must require",
+    ],
+    [
+      "a runner that drops deployment identity",
+      (dockerfile: string) =>
+        dockerfile.replace(
+          "FROM ci-base AS runner\nWORKDIR /app\nARG WORKBENCH_DEPLOYMENT_ID\n",
+          "FROM ci-base AS runner\nWORKDIR /app\n",
+        ),
+      "runner must retain",
+    ],
+  ])("rejects %s", (_name, mutate, expectedFailure) => {
+    const evidence = loadEvidence();
+    evidence.dockerfile = mutate(evidence.dockerfile);
+
+    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+      expect.arrayContaining([expect.stringContaining(expectedFailure)]),
+    );
+  });
+
   it("rejects CI runtime and non-root container drift", () => {
     const evidence = loadEvidence();
     evidence.workflowSources[".github/workflows/feature-lane.yml"] += [
@@ -690,13 +727,13 @@ describe("runtime support policy", () => {
   it("does not treat COPY heredoc payloads as Docker instructions", () => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
-      "RUN npm run build",
+      'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
       [
         "COPY <<'EOF' /tmp/policy-example",
         'SHELL ["bash"]',
         "ONBUILD RUN npm install express",
         "EOF",
-        "RUN npm run build",
+        'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
       ].join("\n")
     );
 
@@ -706,11 +743,11 @@ describe("runtime support policy", () => {
   it("does not treat a JSON COPY filename as a heredoc operator", () => {
     const evidence = loadEvidence();
     evidence.dockerfile = evidence.dockerfile.replace(
-      "RUN npm run build",
+      'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
       [
         `COPY ["<<'RUN npm run build'", "/tmp/policy-example"]`,
         "RUN npm install express",
-        "RUN npm run build",
+        'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
       ].join("\n")
     );
 

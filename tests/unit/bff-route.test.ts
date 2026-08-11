@@ -214,6 +214,35 @@ describe("BFF proxy route", () => {
     });
   });
 
+  it("keeps a streamed Gateway body timeout inside the bounded failure contract", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const upstreamResponse = new Response(null, { status: 202 });
+    vi.spyOn(upstreamResponse, "arrayBuffer").mockRejectedValue(
+      new DOMException("Gateway body timed out", "TimeoutError"),
+    );
+    fetchMock.mockResolvedValue(upstreamResponse);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/intake/portfolio-bundle",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(504);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "gateway_request_timed_out",
+      status: "unavailable",
+    });
+  });
+
   it("returns a truthful non-cacheable failure for a Gateway network error", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockRejectedValue(new TypeError("connection refused"));
