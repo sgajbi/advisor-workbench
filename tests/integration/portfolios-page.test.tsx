@@ -242,7 +242,7 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Reporting Coverage" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence Coverage" })).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
