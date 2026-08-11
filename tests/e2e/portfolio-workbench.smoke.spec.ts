@@ -1,7 +1,15 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
 import { test, expect } from '@playwright/test';
 import {
   measureGrid,
 } from './workbench-smoke-helpers';
+import {
+  collectFocusableDomOrder,
+  measureViewportEvidence,
+  traverseSequentialKeyboardFocus,
+} from './workbench-accessibility-evidence';
 import {
   startPortfolioFixtureGateway,
   type PortfolioFixtureScenario,
@@ -293,6 +301,9 @@ test.describe('Portfolio workbench smoke', () => {
         page.getByText('MTD valuation history is incomplete; no return is shown.')
       ).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);
+      await expect(page.getByRole('heading', { name: 'Recommended Actions' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Open Performance' })).toBeVisible();
+      await expect(page.getByText('BMK_GLOBAL_BALANCED_60_40', { exact: true })).toBeVisible();
     }
 
     await expect(page.getByRole('heading', { name: /Asset Allocation/i })).toHaveCount(0);
@@ -315,19 +326,142 @@ test.describe('Portfolio workbench smoke', () => {
     const summaryModuleMetrics = await measureGrid(page.locator('.portfolio-summary-cluster').first());
     expect(summaryModuleMetrics.width).toBeGreaterThan(900);
 
+    const viewportEvidence = [];
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    const capturesIssue649Evidence =
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO === 'review-matrix' && Boolean(evidenceDirectory);
+
     for (const viewport of [
+      { width: 1440, height: 1000 },
       { width: 1024, height: 1000 },
-      { width: 390, height: 844 },
+      { width: 768, height: 1024 },
+      { width: 721, height: 1000 },
+      { width: 720, height: 1000 },
+      { width: 561, height: 900 },
+      { width: 519, height: 900 },
     ]) {
       await page.setViewportSize(viewport);
       await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
       await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
       await expect(page.getByRole('button', { name: /Export portfolio data/i })).toBeVisible();
-      const pageWidth = await page.evaluate(() => ({
-        clientWidth: document.documentElement.clientWidth,
-        scrollWidth: document.documentElement.scrollWidth,
-      }));
-      expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth + 1);
+      await expect(page.getByRole('heading', { name: 'Book Context' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Review Evidence' })).toBeVisible();
+      await expect(page.getByText(session.portfolioId!, { exact: true }).first()).toBeVisible();
+      await expect(page.getByText('Valuation date', { exact: true })).toBeVisible();
+      await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
+
+      const measurements = await measureViewportEvidence(page);
+      expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
+        measurements.document.clientWidth + 1
+      );
+
+      const railHeader = page.getByTestId('portfolio-screen-rail-header');
+      const railHeaderRegions = await railHeader.evaluate((element) =>
+        Array.from(element.children, (child) => {
+          const bounds = child.getBoundingClientRect();
+          const style = getComputedStyle(child);
+          return {
+            display: style.display,
+            fits: child.scrollWidth <= child.clientWidth + 1,
+            left: Math.round(bounds.left),
+            top: Math.round(bounds.top),
+          };
+        })
+      );
+      expect(railHeaderRegions.filter((region) => region.display !== 'none').every((region) => region.fits)).toBe(true);
+
+      if (viewport.width <= 1200) {
+        const visibleHeaderRegions = railHeaderRegions.filter((region) => region.display !== 'none');
+        expect(visibleHeaderRegions).toHaveLength(3);
+        if (viewport.width <= 720) {
+          expect(visibleHeaderRegions[0].top).toBeLessThan(visibleHeaderRegions[1].top);
+          expect(visibleHeaderRegions[1].top).toBeLessThan(visibleHeaderRegions[2].top);
+        } else {
+          expect(visibleHeaderRegions[0].left).toBeLessThan(visibleHeaderRegions[1].left);
+          expect(visibleHeaderRegions[1].left).toBeLessThan(visibleHeaderRegions[2].left);
+        }
+
+        const disclosure = page.getByRole('button', { name: /Current view Portfolio Review/ });
+        await disclosure.focus();
+        const focusIndicator = await disclosure.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return {
+            outlineStyle: style.outlineStyle,
+            outlineWidth: style.outlineWidth,
+          };
+        });
+        expect(focusIndicator.outlineStyle).not.toBe('none');
+        expect(focusIndicator.outlineWidth).not.toBe('0px');
+        await page.keyboard.press('Enter');
+        await expect(
+          page.getByRole('navigation', { name: 'Workbench screen navigation' })
+        ).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(disclosure).toBeFocused();
+      }
+
+      const focusableDomOrder = await collectFocusableDomOrder(page.locator('body'));
+      expect(focusableDomOrder.length).toBeGreaterThan(8);
+      expect(focusableDomOrder.every((element) => element.name.length > 0)).toBe(true);
+
+      let keyboardEvidence = null;
+      if (viewport.width === 519) {
+        keyboardEvidence = await traverseSequentialKeyboardFocus(page, focusableDomOrder.length);
+        expect(keyboardEvidence).toHaveLength(focusableDomOrder.length);
+        expect(keyboardEvidence.every((element) => element.focusVisible)).toBe(true);
+        expect(keyboardEvidence.every((element) => element.notObscured)).toBe(true);
+        expect(keyboardEvidence.every((element) => element.withinViewport)).toBe(true);
+
+        const primaryActionIndex = keyboardEvidence.findIndex(
+          (element) => element.name === 'Open Performance'
+        );
+        const adjacentPerformanceIndex = keyboardEvidence.findIndex(
+          (element, index) => index > primaryActionIndex && element.name === 'Performance'
+        );
+        expect(primaryActionIndex).toBeGreaterThan(-1);
+        expect(adjacentPerformanceIndex).toBeGreaterThan(primaryActionIndex);
+      }
+
+      viewportEvidence.push({
+        scenario: process.env.PORTFOLIO_E2E_FIXTURE ?? 'canonical',
+        portfolioId: session.portfolioId,
+        measurements,
+        railHeaderRegions,
+        focusableDomOrder,
+        keyboardEvidence,
+      });
+
+      if (capturesIssue649Evidence && evidenceDirectory) {
+        await page.evaluate(() => {
+          (document.activeElement as HTMLElement | null)?.blur();
+          window.scrollTo(0, 0);
+        });
+        await mkdir(evidenceDirectory, { recursive: true });
+        await page.screenshot({
+          path: resolve(
+            evidenceDirectory,
+            `diagnostic-degraded-portfolio-review-${viewport.width}.png`
+          ),
+          fullPage: true,
+        });
+      }
+    }
+
+    if (capturesIssue649Evidence && evidenceDirectory) {
+      await writeFile(
+        resolve(evidenceDirectory, 'portfolio-review-accessibility-evidence.json'),
+        `${JSON.stringify(
+          {
+            generatedAtUtc: new Date().toISOString(),
+            proofType: 'owned degraded-state fixture',
+            decision: 'Performance evidence remains qualified and the source-owned action precedes adjacent workflows.',
+            viewports: viewportEvidence,
+          },
+          null,
+          2
+        )}\n`,
+        'utf8'
+      );
     }
   });
 

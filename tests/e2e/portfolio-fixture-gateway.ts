@@ -94,6 +94,24 @@ export async function startPortfolioFixtureGateway({
       return;
     }
 
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/workflow`) {
+      sendJson(response, {
+        actions: [
+          {
+            sequence: 1,
+            title: 'Review performance evidence',
+            impact:
+              'Confirm the incomplete valuation history before using portfolio returns in the client discussion.',
+            target: 'Performance review',
+            href: `/performance?portfolioId=${PORTFOLIO_ID}`,
+            cta_label: 'Open Performance',
+            recommended: true,
+          },
+        ],
+      });
+      return;
+    }
+
     sendJson(response, { code: 'fixture_route_not_found' }, 404);
   });
 
