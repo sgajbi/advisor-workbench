@@ -217,13 +217,17 @@ export function scanRuntimeStateSource({
   );
   const moduleBindings = new Set();
   for (const statement of sourceFile.statements) {
-    if (!ts.isVariableStatement(statement)) {
-      continue;
-    }
-    for (const declaration of statement.declarationList.declarations) {
-      for (const identifier of bindingIdentifiers(declaration.name)) {
-        moduleBindings.add(identifier.text);
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        for (const identifier of bindingIdentifiers(declaration.name)) {
+          moduleBindings.add(identifier.text);
+        }
       }
+    } else if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
+      statement.name
+    ) {
+      moduleBindings.add(statement.name.text);
     }
   }
   const mutatedBindings = collectMutatedBindings(sourceFile, moduleBindings);
@@ -249,7 +253,37 @@ export function scanRuntimeStateSource({
       }
     }
   }
+  for (const statement of sourceFile.statements) {
+    if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
+      statement.name &&
+      (mutatedBindings.has(statement.name.text) ||
+        (ts.isClassDeclaration(statement) && hasMutableStaticState(statement)))
+    ) {
+      stateHolders.push({
+        file: normalizePath(file),
+        symbol: statement.name.text,
+      });
+    }
+  }
   return stateHolders;
+}
+
+function hasMutableStaticState(declaration) {
+  return declaration.members.some((member) => {
+    if (!ts.isPropertyDeclaration(member) || !hasModifier(member, ts.SyntaxKind.StaticKeyword)) {
+      return false;
+    }
+    const initializer = member.initializer?.getText() ?? "";
+    return (
+      !hasModifier(member, ts.SyntaxKind.ReadonlyKeyword) ||
+      MUTABLE_COLLECTION_PATTERN.test(initializer)
+    );
+  });
+}
+
+function hasModifier(node, kind) {
+  return node.modifiers?.some((modifier) => modifier.kind === kind) ?? false;
 }
 
 function collectMutatedBindings(sourceFile, moduleBindings) {
@@ -257,10 +291,10 @@ function collectMutatedBindings(sourceFile, moduleBindings) {
   const bindingGraph = collectBindingGraph(sourceFile);
   const recordRoot = (expression) => {
     const root = rootIdentifier(expression);
-    const moduleBinding = root
-      ? resolveModuleBinding(root, bindingGraph, sourceFile, moduleBindings)
-      : undefined;
-    if (moduleBinding) {
+    const moduleBindingsForRoot = root
+      ? resolveModuleBindings(root, bindingGraph, sourceFile, moduleBindings)
+      : new Set();
+    for (const moduleBinding of moduleBindingsForRoot) {
       mutated.add(moduleBinding);
     }
   };
@@ -354,10 +388,10 @@ function collectBindingGraph(sourceFile) {
     bindings.add(name);
     bindingsByScope.set(scope, bindings);
   };
-  const addAliasEvent = (scope, name, position, target) => {
+  const addAliasEvent = (scope, name, position, target, conditional = false) => {
     const aliases = aliasesByScope.get(scope) ?? new Map();
     const events = aliases.get(name) ?? [];
-    events.push({ position, target });
+    events.push({ conditional, position, target });
     aliases.set(name, events);
     aliasesByScope.set(scope, aliases);
   };
@@ -424,6 +458,7 @@ function collectBindingGraph(sourceFile) {
           binding.name,
           node.end,
           target,
+          isConditionallyExecuted(node, binding.scope),
         );
       }
     }
@@ -431,6 +466,37 @@ function collectBindingGraph(sourceFile) {
   };
   collectAssignments(sourceFile);
   return { bindingsByScope, aliasesByScope };
+}
+
+function isConditionallyExecuted(node, bindingScope) {
+  let current = node.parent;
+  while (current && current !== bindingScope) {
+    if (
+      ts.isIfStatement(current) ||
+      ts.isConditionalExpression(current) ||
+      ts.isSwitchStatement(current) ||
+      ts.isCaseClause(current) ||
+      ts.isDefaultClause(current) ||
+      ts.isForStatement(current) ||
+      ts.isForInStatement(current) ||
+      ts.isForOfStatement(current) ||
+      ts.isWhileStatement(current) ||
+      ts.isDoStatement(current) ||
+      ts.isTryStatement(current) ||
+      ts.isCatchClause(current) ||
+      (isFunctionScope(current) && current !== bindingScope) ||
+      (ts.isBinaryExpression(current) &&
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(current.operatorToken.kind))
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
 }
 
 function findBindingScope(node, blockScoped) {
@@ -447,7 +513,7 @@ function findBindingScope(node, blockScoped) {
   throw new Error("Runtime-state binding has no lexical scope.");
 }
 
-function resolveModuleBinding(
+function resolveModuleBindings(
   identifier,
   bindingGraph,
   sourceFile,
@@ -456,32 +522,46 @@ function resolveModuleBinding(
 ) {
   const binding = resolveBinding(identifier, bindingGraph.bindingsByScope);
   if (!binding) {
-    return undefined;
+    return new Set();
   }
   if (binding.scope === sourceFile) {
-    return moduleBindings.has(binding.name) ? binding.name : undefined;
+    return moduleBindings.has(binding.name)
+      ? new Set([binding.name])
+      : new Set();
   }
   const visitedNames = visited.get(binding.scope) ?? new Set();
   if (visitedNames.has(binding.name)) {
-    return undefined;
+    return new Set();
   }
   visitedNames.add(binding.name);
   visited.set(binding.scope, visitedNames);
   const aliasEvents = bindingGraph.aliasesByScope
     .get(binding.scope)
     ?.get(binding.name);
-  const aliasTarget = aliasEvents
-    ?.filter((event) => event.position < identifier.pos)
-    .sort((left, right) => right.position - left.position)[0]?.target;
-  return aliasTarget
-    ? resolveModuleBinding(
-        aliasTarget,
+  const candidates = new Set();
+  const priorEvents = (aliasEvents ?? [])
+    .filter((event) => event.position < identifier.pos)
+    .sort((left, right) => right.position - left.position);
+  for (const event of priorEvents) {
+    if (event.target) {
+      const branchVisited = new Map(
+        [...visited].map(([scope, names]) => [scope, new Set(names)]),
+      );
+      for (const moduleBinding of resolveModuleBindings(
+        event.target,
         bindingGraph,
         sourceFile,
         moduleBindings,
-        visited,
-      )
-    : undefined;
+        branchVisited,
+      )) {
+        candidates.add(moduleBinding);
+      }
+    }
+    if (!event.conditional) {
+      break;
+    }
+  }
+  return candidates;
 }
 
 function resolveBinding(identifier, bindingsByScope) {
