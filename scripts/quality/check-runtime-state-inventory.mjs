@@ -288,12 +288,21 @@ function hasMutableStaticState(declaration) {
     if (!ts.isPropertyDeclaration(member) || !hasModifier(member, ts.SyntaxKind.StaticKeyword)) {
       return false;
     }
-    const initializer = member.initializer?.getText() ?? "";
     return (
       !hasModifier(member, ts.SyntaxKind.ReadonlyKeyword) ||
-      MUTABLE_COLLECTION_PATTERN.test(initializer)
+      isMutableStaticInitializer(member.initializer)
     );
   });
+}
+
+function isMutableStaticInitializer(initializer) {
+  return Boolean(
+    initializer &&
+      (ts.isArrayLiteralExpression(initializer) ||
+        ts.isObjectLiteralExpression(initializer) ||
+        ts.isNewExpression(initializer) ||
+        MUTABLE_COLLECTION_PATTERN.test(initializer.getText())),
+  );
 }
 
 function hasModifier(node, kind) {
@@ -303,11 +312,20 @@ function hasModifier(node, kind) {
 function collectMutatedBindings(sourceFile, moduleBindings) {
   const mutated = new Set();
   const bindingGraph = collectBindingGraph(sourceFile);
+  const functionReturns = collectFunctionReturns(
+    sourceFile,
+    bindingGraph,
+    moduleBindings,
+  );
   const recordRoot = (expression) => {
     const root = rootIdentifier(expression);
     const moduleBindingsForRoot = root
       ? resolveModuleBindings(root, bindingGraph, sourceFile, moduleBindings)
-      : new Set();
+      : resolveCallReturnBindings(
+          expression,
+          bindingGraph,
+          functionReturns,
+        );
     for (const moduleBinding of moduleBindingsForRoot) {
       mutated.add(moduleBinding);
     }
@@ -327,6 +345,15 @@ function collectMutatedBindings(sourceFile, moduleBindings) {
           mutated.add(binding.name);
         }
       } else {
+        for (const identifier of assignmentIdentifiers(node.left)) {
+          const binding = resolveBinding(
+            identifier,
+            bindingGraph.bindingsByScope,
+          );
+          if (binding?.scope === sourceFile && moduleBindings.has(binding.name)) {
+            mutated.add(binding.name);
+          }
+        }
         recordRoot(node.left);
       }
     } else if (
@@ -392,6 +419,37 @@ function bindingIdentifiers(name) {
   return name.elements.flatMap((element) =>
     ts.isOmittedExpression(element) ? [] : bindingIdentifiers(element.name),
   );
+}
+
+function assignmentIdentifiers(expression) {
+  if (ts.isIdentifier(expression)) {
+    return [expression];
+  }
+  if (ts.isParenthesizedExpression(expression)) {
+    return assignmentIdentifiers(expression.expression);
+  }
+  if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+    return assignmentIdentifiers(expression.left);
+  }
+  if (ts.isArrayLiteralExpression(expression)) {
+    return expression.elements.flatMap((element) =>
+      ts.isSpreadElement(element) || ts.isOmittedExpression(element)
+        ? []
+        : assignmentIdentifiers(element),
+    );
+  }
+  if (ts.isObjectLiteralExpression(expression)) {
+    return expression.properties.flatMap((property) => {
+      if (ts.isShorthandPropertyAssignment(property)) {
+        return [property.name];
+      }
+      if (ts.isPropertyAssignment(property)) {
+        return assignmentIdentifiers(property.initializer);
+      }
+      return [];
+    });
+  }
+  return [];
 }
 
 function importBindingIdentifiers(declaration) {
@@ -508,16 +566,18 @@ function collectBindingGraph(sourceFile) {
   const collectAssignments = (node) => {
     if (
       ts.isBinaryExpression(node) &&
-      ts.isIdentifier(node.left) &&
       node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
       node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
     ) {
-      const binding = resolveBinding(node.left, bindingsByScope);
-      if (binding) {
-        const targets =
-          node.operatorToken.kind === ts.SyntaxKind.EqualsToken
-            ? aliasTargets(node.right)
-            : [];
+      const assignedIdentifiers = assignmentIdentifiers(node.left);
+      for (const identifier of assignedIdentifiers) {
+        const binding = resolveBinding(identifier, bindingsByScope);
+        if (!binding) {
+          continue;
+        }
+        const targets = node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+          ? aliasTargets(node.right)
+          : [];
         addAliasEvent(
           binding.scope,
           binding.name,
@@ -531,6 +591,94 @@ function collectBindingGraph(sourceFile) {
   };
   collectAssignments(sourceFile);
   return { bindingsByScope, aliasesByScope };
+}
+
+function collectFunctionReturns(sourceFile, bindingGraph, moduleBindings) {
+  const returnsByScope = new Map();
+  const addReturns = (identifier, functionNode) => {
+    const binding = resolveBinding(identifier, bindingGraph.bindingsByScope);
+    if (!binding) {
+      return;
+    }
+    const moduleReturns = new Set();
+    for (const expression of functionReturnExpressions(functionNode)) {
+      for (const target of aliasTargets(expression)) {
+        for (const moduleBinding of resolveModuleBindings(
+          target,
+          bindingGraph,
+          sourceFile,
+          moduleBindings,
+        )) {
+          moduleReturns.add(moduleBinding);
+        }
+      }
+    }
+    if (moduleReturns.size === 0) {
+      return;
+    }
+    const scopeReturns = returnsByScope.get(binding.scope) ?? new Map();
+    scopeReturns.set(binding.name, moduleReturns);
+    returnsByScope.set(binding.scope, scopeReturns);
+  };
+  const visit = (node) => {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      addReturns(node.name, node);
+    } else if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      (ts.isArrowFunction(node.initializer) ||
+        ts.isFunctionExpression(node.initializer))
+    ) {
+      addReturns(node.name, node.initializer);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return returnsByScope;
+}
+
+function functionReturnExpressions(functionNode) {
+  if (ts.isArrowFunction(functionNode) && !ts.isBlock(functionNode.body)) {
+    return [functionNode.body];
+  }
+  const expressions = [];
+  const visit = (node) => {
+    if (node !== functionNode && isFunctionScope(node)) {
+      return;
+    }
+    if (ts.isReturnStatement(node) && node.expression) {
+      expressions.push(node.expression);
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(functionNode.body);
+  return expressions;
+}
+
+function resolveCallReturnBindings(expression, bindingGraph, functionReturns) {
+  let current = expression;
+  while (
+    ts.isPropertyAccessExpression(current) ||
+    ts.isElementAccessExpression(current) ||
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isTypeAssertionExpression(current) ||
+    ts.isNonNullExpression(current)
+  ) {
+    current = current.expression;
+  }
+  if (!ts.isCallExpression(current) || !ts.isIdentifier(current.expression)) {
+    return new Set();
+  }
+  const binding = resolveBinding(
+    current.expression,
+    bindingGraph.bindingsByScope,
+  );
+  return binding
+    ? new Set(functionReturns.get(binding.scope)?.get(binding.name) ?? [])
+    : new Set();
 }
 
 function isConditionallyExecuted(node, bindingScope) {
