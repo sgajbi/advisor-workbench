@@ -15,9 +15,12 @@ export function PortfolioEvidenceModule({
 }) {
   const evidenceRows = [
     { label: "Review scope", value: "Portfolio decision review" },
-    { label: "Sources", value: "Book, holdings, reporting, and cashflow" },
+    { label: "Evidence", value: formatPortfolioEvidence(workspace) },
     { label: "Benchmark", value: formatPortfolioBenchmark(workspace) },
-    { label: "As-of", value: formatDate(context.selectedAsOfDate) },
+    ...(context.selectedAsOfDate !== workspace.as_of_date
+      ? [{ label: "Review date", value: formatDate(context.selectedAsOfDate) }]
+      : []),
+    { label: "Valuation date", value: formatDate(workspace.as_of_date) },
     { label: "Reporting coverage", value: formatCount(workspace.readiness.reporting.row_count, "row") },
   ];
 
@@ -25,9 +28,9 @@ export function PortfolioEvidenceModule({
     <WorkbenchRailCard className="portfolio-side-card portfolio-evidence-card">
       <div className="portfolio-evidence-header">
         <Text variant="cardTitle">Review Evidence</Text>
-        <SemanticBadge tone={workspace.partial_failures.length ? "warn" : "success"}>
-          {workspace.partial_failures.length ? "Partial" : "Ready"}
-        </SemanticBadge>
+        {workspace.partial_failures.length ? (
+          <SemanticBadge tone="warn">Partial</SemanticBadge>
+        ) : null}
       </div>
       <div className="portfolio-evidence-list">
         {evidenceRows.map((row) => (
@@ -55,8 +58,22 @@ function formatPortfolioBenchmark(workspace: PortfolioWorkspace): string {
   return (
     workspace.performance?.benchmark_label ??
     workspace.performance?.benchmark_code ??
-    "Assigned benchmark"
+    "Not supplied"
   );
+}
+
+function formatPortfolioEvidence(workspace: PortfolioWorkspace): string {
+  const sources = ["Portfolio book"];
+  if (workspace.performance) {
+    sources.push("Performance");
+  }
+  if (workspace.cashflow_outlook) {
+    sources.push("Cashflow");
+  }
+  if (workspace.readiness.reporting.row_count) {
+    sources.push("Reporting");
+  }
+  return sources.join(", ");
 }
 
 function buildPortfolioModeHref(

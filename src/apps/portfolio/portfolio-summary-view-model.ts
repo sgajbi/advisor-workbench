@@ -200,6 +200,28 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
         ? "Complete the outstanding readiness checks before using this review."
         : "Restore core book coverage before using this review.";
 
+  const rows: PortfolioDecisionBriefRow[] = [
+    {
+      label: "Reporting coverage",
+      value: formatStatus(workspace.readiness.reporting.status),
+      support: getReportingFreshnessSupport(workspace),
+    },
+  ];
+  if (exceptionCount) {
+    rows.push({
+      label: "Open exceptions",
+      value: `${exceptionCount} open`,
+      support: "Review source exceptions before the client discussion",
+    });
+  }
+  if (nextAction) {
+    rows.push({
+      label: "Recommended next step",
+      value: nextAction.title,
+      support: nextAction.impact?.split(".")[0] ?? "Open the source-owned workflow action",
+    });
+  }
+
   return {
     headline: primaryAttention?.title ?? nextAction?.title ?? readinessHeadline,
     support:
@@ -208,23 +230,7 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
       readinessHeadlineSupport,
     readiness,
     attentionItems,
-    rows: [
-      {
-        label: "Reporting coverage",
-        value: formatStatus(workspace.readiness.reporting.status),
-        support: getReportingFreshnessSupport(workspace),
-      },
-      {
-        label: "Open exceptions",
-        value: exceptionCount ? `${exceptionCount} open` : "Clear",
-        support: exceptionCount ? "Review source exceptions before the client discussion" : "No source-reported exceptions",
-      },
-      {
-        label: "Recommended next step",
-        value: nextAction?.title ?? "Complete portfolio review",
-        support: nextAction?.impact?.split(".")[0] ?? "Confirm the review evidence and outstanding items",
-      },
-    ],
+    rows,
   };
 }
 

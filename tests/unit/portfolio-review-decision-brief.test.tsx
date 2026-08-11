@@ -83,5 +83,36 @@ describe("PortfolioReviewDecisionBrief", () => {
     expect(screen.getByText("10 report rows published")).toBeInTheDocument();
     expect(screen.queryByText("Review coverage")).not.toBeInTheDocument();
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
+    expect(screen.queryByText("Recommended next step")).not.toBeInTheDocument();
+  });
+
+  it("communicates a ready portfolio once without duplicate all-clear facts", () => {
+    render(
+      <PortfolioReviewDecisionBrief
+        workspace={buildPortfolioWorkspace({
+          exception_summaries: [],
+          partial_failures: [],
+          insights: [],
+          workflow_actions: [],
+          operations: {
+            business_date: "2026-05-12",
+            latest_booked_transaction_date: "2026-05-12",
+            latest_booked_position_snapshot_date: "2026-05-12",
+            publish_allowed: true,
+            controls_blocking: null,
+            active_reprocessing_keys: null,
+            stale_reprocessing_keys: null,
+            failed_valuation_jobs_within_window: null,
+            failed_aggregation_jobs_within_window: null,
+          },
+        })}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Portfolio review is ready" })).toBeInTheDocument();
+    expect(screen.getByText("No source-reported items need attention.")).toBeInTheDocument();
+    expect(screen.queryByText("Open exceptions")).not.toBeInTheDocument();
+    expect(screen.queryByText("Clear")).not.toBeInTheDocument();
+    expect(screen.queryByText("Recommended next step")).not.toBeInTheDocument();
   });
 });
