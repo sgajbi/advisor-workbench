@@ -6,6 +6,7 @@ import {
   parseUpstreamAttemptChain,
   resolveSuccessfulTerminalUpstream,
 } from "./upstream-evidence.mjs";
+import { assertContainerReplacement } from "./container-replacement-evidence.mjs";
 import { resolveScaleProofDeploymentId } from "./scale-proof-configuration.mjs";
 
 const composeFile = "docker-compose.scale-proof.yml";
@@ -63,6 +64,7 @@ try {
   const baseline = await runLoadPhase("baseline");
   assertPhase(baseline, thresholds.baselineMaxErrorRate, true);
 
+  const originalContainerId = inspectContainerId("workbench-a");
   compose(["stop", "workbench-a"]);
   const replacement = await runLoadPhase("one-replica-unavailable");
   assertPhase(replacement, thresholds.replacementMaxErrorRate, false);
@@ -71,8 +73,14 @@ try {
     throw new Error("Persisted source state was lost with a Workbench replica.");
   }
 
+  compose(["rm", "-f", "workbench-a"]);
   compose(["up", "-d", "--no-deps", "--no-build", "workbench-a"]);
   await waitForContainerHealth("workbench-a", 60_000);
+  const replicaReplacement = assertContainerReplacement({
+    service: "workbench-a",
+    beforeContainerId: originalContainerId,
+    afterContainerId: inspectContainerId("workbench-a"),
+  });
   const recovery = await runLoadPhase("replacement-recovered");
   assertPhase(recovery, thresholds.recoveryMaxErrorRate, true);
 
@@ -99,6 +107,7 @@ try {
       cross_replica_read_upstream: crossReplicaRead.upstream,
       retained_during_replica_loss: true,
     },
+    replica_replacement: replicaReplacement,
     phases: [baseline, replacement, recovery],
     resources: collectResourceEvidence(),
     explicit_non_claims: [
@@ -276,6 +285,10 @@ function inspectImageIdentity() {
       ];
     }),
   );
+}
+
+function inspectContainerId(service) {
+  return compose(["ps", "-q", service], { capture: true }).trim();
 }
 
 function collectResourceEvidence() {
