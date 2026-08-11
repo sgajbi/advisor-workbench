@@ -151,6 +151,15 @@ describe("proposal portfolio evidence", () => {
   it.each([
     ["date", { as_of_date: undefined }],
     ["portfolio", { portfolio: undefined }],
+    [
+      "currency",
+      {
+        portfolio: {
+          ...portfolioBook().portfolio,
+          base_currency: "US",
+        },
+      },
+    ],
     ["cash", { summary: { cash_market_value_base: undefined } }],
     ["positions", { positions: undefined }],
   ])("treats a response with missing %s evidence as incomplete", (_name, malformed) => {
@@ -207,6 +216,30 @@ describe("proposal portfolio evidence", () => {
     expect(evidence.status).toBe("refreshing");
     expect(evidence.canEvaluateAndHandoff).toBe(false);
     expect(evidence.positions.status).toBe("refreshing");
+  });
+
+  it("exposes active recovery posture while mismatched evidence refreshes", () => {
+    const mismatchedBook = portfolioBook({ as_of_date: "2026-04-09" });
+    const refreshing = buildEvidence({
+      bookQuery: { ...readyQuery(mismatchedBook), isFetching: true },
+    });
+    const failed = buildEvidence({
+      bookQuery: {
+        ...readyQuery(mismatchedBook),
+        error: new Error("mismatched book refresh failed"),
+      },
+    });
+
+    expect(refreshing).toMatchObject({
+      status: "refreshing",
+      canEvaluateAndHandoff: false,
+      positions: { status: "context_mismatch" },
+    });
+    expect(failed).toMatchObject({
+      status: "refresh_failed",
+      canEvaluateAndHandoff: false,
+      positions: { status: "context_mismatch" },
+    });
   });
 
   it("does not classify an incomplete context as ready or start with fabricated evidence", () => {

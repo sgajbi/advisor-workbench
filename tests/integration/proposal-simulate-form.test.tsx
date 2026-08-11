@@ -196,6 +196,22 @@ describe("ProposalSimulateForm", () => {
     expect(screen.queryByText("Draft not yet persisted")).not.toBeInTheDocument();
   });
 
+  it("submits the schema-normalized portfolio identifier when saving a draft", async () => {
+    renderForm("  PB_SG_GLOBAL_BAL_001  ");
+
+    await waitForPortfolioEvidence();
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    await waitFor(() => expect(advisoryApiMocks.createAdvisoryWorkspace).toHaveBeenCalled());
+    expect(advisoryApiMocks.createAdvisoryWorkspace).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        stateful_input: expect.objectContaining({
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        }),
+      }),
+    });
+  });
+
   it("retains construction-only posture when draft persistence fails", async () => {
     advisoryApiMocks.handoffAdvisoryWorkspace.mockRejectedValueOnce(
       new Error("advisory service unavailable")
@@ -539,6 +555,45 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByRole("button", { name: "Sell Down" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("uses source currency for visible values when portfolio currency mismatches", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce(
+      portfolioBook(undefined, { currency: "SGD" })
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    const evidencePanel = await waitForPortfolioEvidence("context_mismatch");
+    const setupSummary = screen.getByLabelText("Proposal setup summary");
+    const positionsPanel = screen.getByRole("heading", { name: "Current Positions" }).closest("section");
+    expect(positionsPanel).not.toBeNull();
+    expect(within(evidencePanel).getByText("SGD 25,000")).toBeInTheDocument();
+    expect(within(setupSummary).getByText("SGD 25,000")).toBeInTheDocument();
+    expect(within(positionsPanel!).getByText("SGD 19,000")).toBeInTheDocument();
+    expect(screen.getByText("SGD portfolio book")).toBeInTheDocument();
+  });
+
+  it("shows active recovery and refresh failure for mismatched evidence", async () => {
+    let rejectRefresh: ((reason?: unknown) => void) | undefined;
+    portfolioApiMocks.getRequiredPortfolioBook
+      .mockResolvedValueOnce(portfolioBook(undefined, { asOfDate: "2026-04-09" }))
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof portfolioBook>>((_resolve, reject) => {
+            rejectRefresh = reject;
+          })
+      );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence("context_mismatch");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    await waitForPortfolioEvidence("refreshing");
+    expect(screen.getByRole("button", { name: "Refreshing..." })).toBeDisabled();
+    await act(async () => rejectRefresh?.(new Error("mismatched book refresh failed")));
+    await waitForPortfolioEvidence("refresh_failed");
+    expect(screen.getByText("Latest portfolio evidence is not confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeEnabled();
   });
 
   it("does not let an older date request replace the currently selected evidence", async () => {

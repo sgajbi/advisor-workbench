@@ -3473,6 +3473,7 @@ another product's layout, visual identity, wording, calculations, or unsupported
 
 Workbench #638 owns implementation. Focused proof must cover matching context, missing or mismatched
 effective context, date changes, older completion ordering, cached refresh failure, source recovery,
-and action admission. The dedicated Proposal Builder screen guide remains owned by #605; this slice
-will update repository context and the codebase review ledger, then record whether its source-
-authority correction requires an interim wiki catalogue change before merge.
+and action admission. No wiki source change is required for this slice: the screen catalogue already
+records the Proposal Builder route and its Gateway/Core/Advise ownership, while #605 owns the
+dedicated business screen guide. Repository context and the codebase review ledger carry the new
+one-snapshot source-authority rule without duplicating that technical detail into the catalogue.
