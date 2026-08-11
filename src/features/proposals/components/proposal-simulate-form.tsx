@@ -258,11 +258,15 @@ export default function ProposalSimulateForm({
     (item) => item.cappedToAvailableQuantity
   ).length;
   const canRunProposalWorkflow =
-    portfolioEvidence.canEvaluateAndHandoff && scenarioCashAdmission.status === "ready";
+    portfolioEvidence.canEvaluateAndHandoff &&
+    scenarioCashAdmission.status === "ready" &&
+    !(draftImpactModel.status === "unavailable" && draftImpactModel.blockedBy === "monetary_precision");
   const workflowActionReason = !portfolioEvidence.canEvaluateAndHandoff
     ? "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."
     : scenarioCashAdmission.status === "invalid"
       ? "Correct the additional cash assumption before evaluating or saving this draft."
+      : draftImpactModel.status === "unavailable" && draftImpactModel.blockedBy === "monetary_precision"
+        ? "Reduce the additional cash assumption or draft amounts before evaluating or saving this draft."
       : "Evaluation uses the source-confirmed portfolio snapshot; the additional cash assumption changes indicative impact only.";
 
   function updateCashFlow(id: string, patch: Partial<ProposalDraftCashFlowIntent>) {
@@ -536,6 +540,8 @@ export default function ProposalSimulateForm({
                   )
                 : draftImpactModel.blockedBy === "additional_cash"
                   ? "Additional cash needs correction"
+                  : draftImpactModel.blockedBy === "monetary_precision"
+                    ? "Draft amount exceeds reliable range"
                   : "Currency alignment required"}
             </strong>
           </div>

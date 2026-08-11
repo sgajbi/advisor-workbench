@@ -3583,7 +3583,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 1. Use one pure, typed admission model for blank, zero, positive, negative, malformed, and
    out-of-range inputs; admit at most two decimal places, validate exact scaled minor units, and
    cap the range below the floating-point spacing boundary where adjacent cents stop being
-   distinguishable. The Zod schema, field recovery, and
+   distinguishable. Recheck the completed current/proposed preview against the same boundary so
+   source cash, positions, cash movements, or draft orders cannot push an individually admitted
+   assumption into an unreliable aggregate. The Zod schema, field recovery, and
    workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio
@@ -3606,7 +3608,8 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 3. Checking only `Number.MAX_SAFE_INTEGER` after decimal conversion, because a large fractional
    amount may already have rounded before that check and even safe minor units can collapse when
    converted back to a large floating-point major-unit value. Admission preserves scaled units
-   through the range decision and caps conversion where every adjacent cent remains distinct.
+   through the range decision, caps conversion where every adjacent cent remains distinct, and
+   withholds any completed aggregate that crosses that boundary.
 4. Using native `type="number"` as the business validator, because it can discard invalid text and
    permits wheel-driven value changes.
 5. Sending the assumption as portfolio cash or adding it to Gateway stateful input; the Gateway

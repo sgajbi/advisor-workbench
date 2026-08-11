@@ -177,6 +177,30 @@ describe("proposal draft currency authority", () => {
     });
   });
 
+  it("withholds an aggregate projection when source cash pushes admitted cash beyond cent resolution", () => {
+    expect(
+      buildProposalDraftImpactModel({
+        positions: [],
+        cashAmount: 10_000,
+        cashFlows: [],
+        trades: [],
+        requestedCurrency: "USD",
+        portfolioEvidence: portfolioEvidence({ positions: [] }),
+        additionalCashAdmission: {
+          status: "ready",
+          inputState: "positive",
+          amount: 70368744177663.99,
+        },
+      })
+    ).toMatchObject({
+      status: "unavailable",
+      blockedBy: "monetary_precision",
+      title: "Draft amount exceeds the reliable preview range",
+      currencyAuthority: { status: "available", currency: "USD" },
+      preview: null,
+    });
+  });
+
   it("withholds projection when an active cash movement uses another currency", () => {
     expect(
       buildProposalDraftCurrencyAuthority({
