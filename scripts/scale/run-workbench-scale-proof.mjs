@@ -92,9 +92,9 @@ try {
     topology: {
       workbench_replicas: 2,
       session_affinity: false,
-      load_balancer: "nginx-1.28.3-stable-alpine",
+      load_balancer: "nginx-1.30.3-stable-alpine-slim",
       load_balancer_digest:
-        "sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236",
+        "sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
       gateway: "bounded-source-owned-fixture",
       workbench_image: image,
       workbench_image_identity: imageIdentity.a,

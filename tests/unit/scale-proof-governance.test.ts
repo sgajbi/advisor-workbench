@@ -29,7 +29,7 @@ describe("Workbench scale-proof governance", () => {
     const fixture = read("scripts", "scale", "gateway-fixture.mjs");
 
     expect(compose).toContain(
-      "nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236",
+      "nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
     );
     expect(compose).toContain(
       "node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3",
