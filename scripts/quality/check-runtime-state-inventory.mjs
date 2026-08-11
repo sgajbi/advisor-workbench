@@ -12,6 +12,32 @@ const SCHEMA_PATH =
 const NEXT_CONFIG_PATH = "next.config.mjs";
 const MUTABLE_COLLECTION_PATTERN =
   /\bnew\s+(?:Map|Set|WeakMap|WeakSet)\b|\bglobalThis\b|\b[A-Za-z_$][A-Za-z0-9_$]*\.__[A-Za-z0-9_$]+/;
+const MUTATING_METHODS = new Set([
+  "add",
+  "append",
+  "clear",
+  "copyWithin",
+  "delete",
+  "fill",
+  "pop",
+  "prepend",
+  "push",
+  "put",
+  "remove",
+  "reset",
+  "reverse",
+  "set",
+  "shift",
+  "sort",
+  "splice",
+  "unshift",
+  "update",
+  "write",
+]);
+const STATIC_MUTATORS = new Map([
+  ["Object", new Set(["assign", "defineProperties", "defineProperty", "setPrototypeOf"])],
+  ["Reflect", new Set(["defineProperty", "deleteProperty", "set", "setPrototypeOf"])],
+]);
 const PROHIBITED_SOURCE_FEATURES = [
   { name: "Server Action directive", pattern: /["']use server["']/ },
   { name: "Cache Component directive", pattern: /["']use cache(?::\s*remote)?["']/ },
@@ -170,13 +196,37 @@ export function collectRuntimeStateInventoryFailures(root = ".") {
 
 function scanSourceFile(file, root) {
   const source = readFileSync(file, "utf8");
+  return scanRuntimeStateSource({
+    source,
+    file: normalizePath(relative(root, file)),
+    scriptKind: file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  });
+}
+
+export function scanRuntimeStateSource({
+  source,
+  file = "src/runtime-state-source.ts",
+  scriptKind = ts.ScriptKind.TS,
+}) {
   const sourceFile = ts.createSourceFile(
     file,
     source,
     ts.ScriptTarget.Latest,
     true,
-    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    scriptKind,
   );
+  const moduleBindings = new Set();
+  for (const statement of sourceFile.statements) {
+    if (!ts.isVariableStatement(statement)) {
+      continue;
+    }
+    for (const declaration of statement.declarationList.declarations) {
+      if (ts.isIdentifier(declaration.name)) {
+        moduleBindings.add(declaration.name.text);
+      }
+    }
+  }
+  const mutatedBindings = collectMutatedBindings(sourceFile, moduleBindings);
   const stateHolders = [];
   for (const statement of sourceFile.statements) {
     if (!ts.isVariableStatement(statement)) {
@@ -188,15 +238,80 @@ function scanSourceFile(file, root) {
         continue;
       }
       const initializer = declaration.initializer?.getText(sourceFile) ?? "";
-      if (!isConst || MUTABLE_COLLECTION_PATTERN.test(initializer)) {
+      if (
+        !isConst ||
+        MUTABLE_COLLECTION_PATTERN.test(initializer) ||
+        mutatedBindings.has(declaration.name.text)
+      ) {
         stateHolders.push({
-          file: normalizePath(relative(root, file)),
+          file: normalizePath(file),
           symbol: declaration.name.text,
         });
       }
     }
   }
   return stateHolders;
+}
+
+function collectMutatedBindings(sourceFile, moduleBindings) {
+  const mutated = new Set();
+  const recordRoot = (expression) => {
+    const root = rootIdentifier(expression);
+    if (root && moduleBindings.has(root)) {
+      mutated.add(root);
+    }
+  };
+  const visit = (node) => {
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+      node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+    ) {
+      recordRoot(node.left);
+    } else if (
+      (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
+      (node.operator === ts.SyntaxKind.PlusPlusToken ||
+        node.operator === ts.SyntaxKind.MinusMinusToken)
+    ) {
+      recordRoot(node.operand);
+    } else if (ts.isDeleteExpression(node)) {
+      recordRoot(node.expression);
+    } else if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        MUTATING_METHODS.has(callee.name.text)
+      ) {
+        recordRoot(callee.expression);
+      }
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        STATIC_MUTATORS.get(callee.expression.text)?.has(callee.name.text) &&
+        node.arguments[0]
+      ) {
+        recordRoot(node.arguments[0]);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(sourceFile, visit);
+  return mutated;
+}
+
+function rootIdentifier(expression) {
+  let current = expression;
+  while (
+    ts.isPropertyAccessExpression(current) ||
+    ts.isElementAccessExpression(current) ||
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isTypeAssertionExpression(current) ||
+    ts.isNonNullExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return ts.isIdentifier(current) ? current.text : undefined;
 }
 
 function collectSourceFiles(directory) {
