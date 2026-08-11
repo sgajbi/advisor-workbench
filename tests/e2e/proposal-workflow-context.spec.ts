@@ -2,7 +2,75 @@ import { expect, test, type Page } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
+async function mockProposalPortfolioEvidence(
+  page: Page,
+  { failFirstRead = false }: { failFirstRead?: boolean } = {}
+) {
+  let bookReadCount = 0;
+  let workspaceReadCount = 0;
+
+  await page.route(
+    `**/api/bff/api/v1/portfolio/portfolios/${portfolioId}/book**`,
+    async (route) => {
+      bookReadCount += 1;
+      if (failFirstRead && bookReadCount === 1) {
+        await route.fulfill({ status: 503, json: { detail: "Portfolio book unavailable" } });
+        return;
+      }
+      await route.fulfill({
+        json: {
+          positions: [
+            {
+              security_id: "AAPL",
+              instrument_name: "Apple Inc.",
+              asset_class: "Equities",
+              quantity: 100,
+              market_value_base: 19_000,
+              weight_pct: 82.6,
+            },
+          ],
+          top_positions: [],
+          allocation_views: [],
+        },
+      });
+    }
+  );
+  await page.route(
+    `**/api/bff/api/v1/portfolio/portfolios/${portfolioId}/workspace`,
+    async (route) => {
+      workspaceReadCount += 1;
+      if (failFirstRead && workspaceReadCount === 1) {
+        await route.fulfill({ status: 503, json: { detail: "Portfolio workspace unavailable" } });
+        return;
+      }
+      await route.fulfill({
+        json: {
+          as_of_date: "2026-04-10",
+          portfolio: { portfolio_id: portfolioId },
+          profile: {},
+          summary: {
+            assets_under_management_base: 23_000,
+            invested_market_value_base: 19_000,
+            cash_market_value_base: 4_000,
+            cash_weight_pct: 17.4,
+            position_count: 1,
+            cash_balance_count: 1,
+          },
+          cashflow_outlook: null,
+          performance: null,
+          rebalance: null,
+          reporting: {},
+          workflow_cues: [],
+          warnings: [],
+          partial_failures: [],
+        },
+      });
+    }
+  );
+}
+
 async function mockProposalBuilderEvaluation(page: Page) {
+  await mockProposalPortfolioEvidence(page);
   await page.route("**/api/bff/api/v1/advisory-workspaces**", async (route) => {
     const url = new URL(route.request().url());
     const evaluated = url.pathname.endsWith("/evaluate");
@@ -327,6 +395,33 @@ test("keeps proposal evaluation inside construction without persisted workflow a
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
+});
+
+test("keeps proposal actions unavailable until failed portfolio evidence is refreshed", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { failFirstRead: true });
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
+  await expect(page.getByText("Portfolio evidence is unavailable")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+
+  await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
+  await expect(page.getByText("Portfolio evidence confirmed")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
+  await testInfo.attach("proposal-evidence-recovery", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
 });
 
 for (const viewport of [
