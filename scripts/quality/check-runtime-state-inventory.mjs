@@ -482,8 +482,8 @@ function collectBindingGraph(sourceFile) {
       const scope = findBindingScope(node, isBlockScoped);
       addBindingName(scope, node.name);
       const targets = node.initializer ? aliasTargets(node.initializer) : [];
-      if (ts.isIdentifier(node.name)) {
-        addAliasEvent(scope, node.name.text, node.end, targets);
+      for (const identifier of bindingIdentifiers(node.name)) {
+        addAliasEvent(scope, identifier.text, node.end, targets);
       }
     } else if (ts.isImportDeclaration(node)) {
       for (const identifier of importBindingIdentifiers(node)) {
