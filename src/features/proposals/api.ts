@@ -62,8 +62,6 @@ import {
   ProposalNarrativeReviewRequest,
   ProposalReportRequest,
   ProposalReportRequestData,
-  ProposalSimulateRequest,
-  ProposalSimulateResponse,
   ProposalSubmitRequest,
   ProposalVersionData,
   ProposalWorkflowEventsData,
@@ -131,27 +129,6 @@ export async function getBankDemoSupportedClaimRegister(): Promise<BankDemoSuppo
   }
   const envelope = (await response.json()) as BankDemoProofEnvelopeResponse;
   return envelope.data as unknown as BankDemoSupportedClaimRegisterData;
-}
-
-export async function simulateProposal(
-  payload: ProposalSimulateRequest,
-  idempotencyKey: string,
-): Promise<ProposalSimulateResponse> {
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals/simulate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Idempotency-Key": idempotencyKey,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal simulate failed (${response.status}): ${body}`);
-  }
-
-  return (await response.json()) as ProposalSimulateResponse;
 }
 
 export async function createProposalArtifact(

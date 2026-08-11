@@ -63,7 +63,6 @@ import {
   reviewAdvisoryWorkspaceRationale,
   reviewProposalMemo,
   reviewProposalNarrative,
-  simulateProposal,
   submitProposal,
 } from "../../src/features/proposals/api";
 
@@ -111,52 +110,6 @@ describe("proposal api", () => {
           "Idempotency-Key": "idem-submit-1",
         }),
       }),
-    );
-  });
-
-  it("calls proposal simulation through the Gateway advisory BFF contract", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(
-            JSON.stringify({
-              correlation_id: "c",
-              contract_version: "v1",
-              data: { run_id: "proposal_run_1" },
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            },
-          ),
-      ),
-    );
-
-    await simulateProposal(
-      {
-        body: {
-          portfolio_snapshot: { portfolio_id: "PB_SG_GLOBAL_BAL_001" },
-          proposed_trades: [],
-          proposed_cash_flows: [],
-          options: {},
-        },
-      },
-      "idem-simulate-1",
-    );
-
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/proposals/simulate`,
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          "Idempotency-Key": "idem-simulate-1",
-        }),
-      }),
-    );
-    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain(
-      "rebalance/simulate",
     );
   });
 

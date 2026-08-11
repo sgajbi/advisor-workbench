@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -30,5 +30,16 @@ describe("proposal ownership documentation", () => {
     expect(text).not.toContain("POST /api/v1/proposals/simulate");
     expect(text).not.toContain("compatibility draft entry");
     expect(text).not.toContain("integrated through lotus-gateway to lotus-manage only");
+  });
+
+  it("keeps Workbench proposal construction on the stateful advisory workspace", () => {
+    const proposalApi = readFileSync("src/features/proposals/api.ts", "utf8");
+
+    expect(proposalApi).toContain("/advisory-workspaces");
+    expect(proposalApi).not.toContain("/proposals/simulate");
+    expect(proposalApi).not.toContain("simulateProposal");
+    expect(
+      existsSync("src/features/proposals/simulation-payload.ts"),
+    ).toBe(false);
   });
 });

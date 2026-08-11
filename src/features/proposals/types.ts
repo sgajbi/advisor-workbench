@@ -8,10 +8,6 @@ export type {
   AdvisorIdeaReviewAction,
 } from "./idea-action-reasons";
 
-export type ProposalSimulateRequest = {
-  body: Record<string, unknown>;
-};
-
 export type ProposalSimulateResponse = {
   correlation_id: string;
   contract_version: string;
