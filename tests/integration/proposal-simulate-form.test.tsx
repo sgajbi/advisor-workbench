@@ -470,8 +470,46 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
     expect(screen.getByText("Portfolio evidence is incomplete")).toBeInTheDocument();
     expect(screen.getByText("Manual scenario cash")).toBeInTheDocument();
+    const positionsPanel = screen.getByRole("heading", { name: "Current Positions" }).closest("section");
+    expect(positionsPanel).not.toBeNull();
+    expect(
+      within(positionsPanel!).getByText("1 position · incomplete evidence")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buy More" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sell Down" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("shows active recovery and retry after incomplete evidence refresh fails", async () => {
+    let rejectRefresh: ((reason?: unknown) => void) | undefined;
+    portfolioApiMocks.getRequiredPortfolioBook
+      .mockResolvedValueOnce({
+        ...portfolioBook(),
+        summary: {
+          ...portfolioBook().summary,
+          cash_market_value_base: undefined,
+        },
+      })
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof portfolioBook>>((_resolve, reject) => {
+            rejectRefresh = reject;
+          })
+      );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence("partial");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    await waitForPortfolioEvidence("refreshing");
+    expect(screen.getByRole("button", { name: "Refreshing..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Buy More" })).toBeDisabled();
+    await act(async () => rejectRefresh?.(new Error("incomplete book refresh failed")));
+    await waitForPortfolioEvidence("refresh_failed");
+    expect(screen.getByText("Latest portfolio evidence is not confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Buy More" })).toBeDisabled();
   });
 
   it("treats an empty source-backed book as ready rather than unavailable", async () => {

@@ -19,6 +19,7 @@ export type ProposalPositionsEvidenceStatus =
   | "loading"
   | "ready"
   | "empty"
+  | "partial"
   | "refreshing"
   | "cached"
   | "context_mismatch"
@@ -94,12 +95,11 @@ export function buildProposalPortfolioEvidence({
     effectivePortfolioId !== null &&
     effectiveCurrency !== null;
   const hasVisibleBookEvidence = bookPositions !== null || sourceCash !== null;
-  const hasContractFailure = bookQuery.data !== undefined && !hasCompleteBook;
   const sourcePosture = projectQuerySourcePosture({
-    hasData: hasCompleteBook,
+    hasData: hasVisibleBookEvidence,
     isLoading: hasSelectedContext && bookQuery.isLoading,
     isFetching: hasSelectedContext && bookQuery.isFetching,
-    hasError: Boolean(bookQuery.error) || hasContractFailure,
+    hasError: Boolean(bookQuery.error),
   });
   const matchesSelectedContext =
     hasCompleteBook &&
@@ -131,6 +131,7 @@ export function buildProposalPortfolioEvidence({
         hasSelectedContext,
         hasBookData: bookPositions !== null,
         hasContextMismatch: hasCompleteBook && !matchesSelectedContext,
+        hasIncompleteEvidence: status === "partial",
         positionCount: tradablePositions.length,
         posture: sourcePosture,
       }),
@@ -171,25 +172,20 @@ function resolveEvidenceStatus({
     return "not_selected";
   }
 
+  if (hasVisibleBookEvidence && sourcePosture.hasRefreshFailure) {
+    return "refresh_failed";
+  }
+  if (sourcePosture.isInitialLoading) {
+    return "checking";
+  }
+  if (sourcePosture.isRefreshing) {
+    return hasVisibleBookEvidence ? "refreshing" : "checking";
+  }
   if (hasCompleteBook) {
-    if (sourcePosture.hasRefreshFailure) {
-      return "refresh_failed";
-    }
-    if (sourcePosture.isInitialLoading) {
-      return "checking";
-    }
-    if (sourcePosture.isRefreshing) {
-      return "refreshing";
-    }
     return matchesSelectedContext ? "ready" : "context_mismatch";
   }
-
   if (hasVisibleBookEvidence) {
-    return sourcePosture.isInitialLoading ? "checking" : "partial";
-  }
-
-  if (sourcePosture.isInitialLoading || sourcePosture.isRefreshing) {
-    return "checking";
+    return "partial";
   }
   return "unavailable";
 }
@@ -198,12 +194,14 @@ function resolvePositionsStatus({
   hasSelectedContext,
   hasBookData,
   hasContextMismatch,
+  hasIncompleteEvidence,
   positionCount,
   posture,
 }: {
   hasSelectedContext: boolean;
   hasBookData: boolean;
   hasContextMismatch: boolean;
+  hasIncompleteEvidence: boolean;
   positionCount: number;
   posture: QuerySourcePosture;
 }): ProposalPositionsEvidenceStatus {
@@ -221,6 +219,9 @@ function resolvePositionsStatus({
   }
   if (posture.isRefreshing) {
     return "refreshing";
+  }
+  if (hasIncompleteEvidence) {
+    return "partial";
   }
   return positionCount > 0 ? "ready" : "empty";
 }
