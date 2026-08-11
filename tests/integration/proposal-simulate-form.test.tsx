@@ -43,7 +43,13 @@ vi.mock("../../src/apps/portfolio/api", () => ({
 
 vi.mock("../../src/features/proposals/api", () => advisoryApiMocks);
 
-function workspaceEnvelope(workspaceId = "aws_test_001") {
+function workspaceEnvelope(
+  workspaceId = "aws_test_001",
+  latestProposalResult: unknown = {
+    status: "READY",
+    proposal_run_id: "run-test",
+  }
+) {
   return {
     correlation_id: "corr-test",
     contract_version: "v1",
@@ -60,12 +66,18 @@ function workspaceEnvelope(workspaceId = "aws_test_001") {
             cash_flow_count: 0,
           },
         },
-        latest_proposal_result: {
-          status: "READY",
-          proposal_run_id: "run-test",
-        },
+        latest_proposal_result: latestProposalResult,
       },
     },
+  };
+}
+
+function workspaceEnvelopeWithoutEvaluationResult(workspaceId = "aws_test_001") {
+  const response = workspaceEnvelope(workspaceId);
+  const { latest_proposal_result: _latestProposalResult, ...workspace } = response.data.workspace;
+  return {
+    ...response,
+    data: { workspace },
   };
 }
 
@@ -244,6 +256,82 @@ describe("ProposalSimulateForm", () => {
     expect(
       screen.queryByRole("status", { name: "Proposal evaluation summary" })
     ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["missing result", workspaceEnvelopeWithoutEvaluationResult()],
+    ["null result", workspaceEnvelope("aws_test_001", null)],
+    ["empty result", workspaceEnvelope("aws_test_001", {})],
+    [
+      "malformed result",
+      workspaceEnvelope("aws_test_001", { status: "READY", proposal_run_id: 17 }),
+    ],
+  ])("rejects a 2xx evaluation envelope with %s", async (_name, evaluationResponse) => {
+    advisoryApiMocks.evaluateAdvisoryWorkspace.mockResolvedValueOnce(evaluationResponse);
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    expect(
+      await screen.findByText(
+        "Proposal evaluation returned incomplete evidence. Review the draft and try again."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/evaluated by Advise/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: "Proposal evaluation summary" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("recovers from incomplete evaluation evidence after an intentional retry", async () => {
+    advisoryApiMocks.evaluateAdvisoryWorkspace
+      .mockResolvedValueOnce(workspaceEnvelope("aws_test_001", null))
+      .mockResolvedValueOnce(workspaceEnvelope());
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    expect(
+      await screen.findByText(
+        "Proposal evaluation returned incomplete evidence. Review the draft and try again."
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    expect(
+      await screen.findByRole("status", { name: "Proposal evaluation summary" })
+    ).toHaveTextContent("run-test");
+    expect(screen.getByText("Workspace aws_test_001 evaluated by Advise")).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Proposal evaluation returned incomplete evidence. Review the draft and try again."
+      )
+    ).not.toBeInTheDocument();
+  });
+
+  it("removes stale evaluation evidence when draft handoff re-evaluation is incomplete", async () => {
+    advisoryApiMocks.evaluateAdvisoryWorkspace
+      .mockResolvedValueOnce(workspaceEnvelope())
+      .mockResolvedValueOnce(workspaceEnvelope("aws_test_002", null));
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    expect(
+      await screen.findByRole("status", { name: "Proposal evaluation summary" })
+    ).toHaveTextContent("run-test");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+
+    expect(
+      await screen.findByText(
+        "Proposal evaluation returned incomplete evidence. Review the draft and try again."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/evaluated by Advise/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: "Proposal evaluation summary" })
+    ).not.toBeInTheDocument();
+    expect(advisoryApiMocks.handoffAdvisoryWorkspace).not.toHaveBeenCalled();
   });
 
   it("caps submitted sell-down quantities to source-backed available units", async () => {
