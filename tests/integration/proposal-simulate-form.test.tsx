@@ -353,6 +353,15 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
 
+    fireEvent.change(screen.getByLabelText("Currency"), { target: { value: "EUR" } });
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-blocked-by",
+      "currency"
+    );
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(advisoryApiMocks.createAdvisoryWorkspace).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Currency"), { target: { value: "USD" } });
     fireEvent.change(movementAmount, { target: { value: "2.68" } });
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled()

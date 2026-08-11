@@ -3589,7 +3589,9 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    integer minor units through the complete preview, then convert only final range-admitted values
    for presentation. Use the same proposal-money boundary for cash-movement field recovery, net
    cash display, preview arithmetic, and submitted decimal strings so no path applies a different
-   rounding rule. The Zod schema, field recovery, and
+   rounding rule. Admit cash-movement precision independently of the impact panel's currency or
+   other first blocker, and prepare every submitted cash-flow amount before creating a server-side
+   workspace. The Zod schema, field recovery, and
    workflow-action gate consume the same model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
    cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio

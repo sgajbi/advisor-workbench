@@ -264,14 +264,20 @@ export default function ProposalSimulateForm({
   const cappedTradeCount = executableTradeRows.filter(
     (item) => item.cappedToAvailableQuantity
   ).length;
+  const cashMovementsPrecisionReady = cashFlows.every(
+    (item) => proposalMoneyToMinorUnits(Math.abs(item.amount || 0)) !== null
+  );
   const canRunProposalWorkflow =
     portfolioEvidence.canEvaluateAndHandoff &&
     scenarioCashAdmission.status === "ready" &&
+    cashMovementsPrecisionReady &&
     !(draftImpactModel.status === "unavailable" && draftImpactModel.blockedBy === "monetary_precision");
   const workflowActionReason = !portfolioEvidence.canEvaluateAndHandoff
     ? "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."
     : scenarioCashAdmission.status === "invalid"
       ? "Correct the additional cash assumption before evaluating or saving this draft."
+      : !cashMovementsPrecisionReady
+        ? "Correct cash movement precision before evaluating or saving this draft."
       : draftImpactModel.status === "unavailable" && draftImpactModel.blockedBy === "monetary_precision"
         ? "Reduce the additional cash assumption or draft amounts before evaluating or saving this draft."
       : "Evaluation uses the source-confirmed portfolio snapshot; the additional cash assumption changes indicative impact only.";
@@ -362,6 +368,10 @@ export default function ProposalSimulateForm({
     setWorkspaceEnvelope(null);
     setResult(null);
     const mandateId = values.mandateId?.trim();
+    const preparedCashFlows = validCashFlowRows().map((item) => ({
+      ...item,
+      signedAmount: signedCashAmount(item),
+    }));
     const workspaceResponse = await createAdvisoryWorkspace({
       body: {
         workspace_name: values.proposalTitle,
@@ -381,7 +391,7 @@ export default function ProposalSimulateForm({
 
     let latestResponse = workspaceResponse;
 
-    for (const item of validCashFlowRows()) {
+    for (const item of preparedCashFlows) {
       latestResponse = await applyAdvisoryWorkspaceDraftAction(workspaceId, {
         body: {
           actor_id: values.createdBy,
@@ -389,7 +399,7 @@ export default function ProposalSimulateForm({
           cash_flow: {
             intent_type: "CASH_FLOW",
             currency: item.currency.toUpperCase(),
-            amount: signedCashAmount(item),
+            amount: item.signedAmount,
             ...(item.description?.trim() ? { description: item.description.trim() } : {}),
           },
         },
