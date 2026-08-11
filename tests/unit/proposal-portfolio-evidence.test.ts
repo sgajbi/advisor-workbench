@@ -171,6 +171,49 @@ describe("proposal portfolio evidence", () => {
     expect(["partial", "unavailable"]).toContain(evidence.status);
   });
 
+  it("keeps visible holdings non-authoritative when combined evidence is incomplete", () => {
+    const evidence = buildEvidence({
+      bookQuery: readyQuery(
+        portfolioBook({ summary: { cash_market_value_base: undefined } })
+      ),
+    });
+
+    expect(evidence).toMatchObject({
+      status: "partial",
+      canEvaluateAndHandoff: false,
+      positions: {
+        status: "partial",
+        items: [expect.objectContaining({ security_id: "AAPL" })],
+      },
+    });
+  });
+
+  it("exposes recovery and failure posture for incomplete cached evidence", () => {
+    const incompleteBook = portfolioBook({
+      summary: { cash_market_value_base: undefined },
+    });
+    const refreshing = buildEvidence({
+      bookQuery: { ...readyQuery(incompleteBook), isFetching: true },
+    });
+    const failed = buildEvidence({
+      bookQuery: {
+        ...readyQuery(incompleteBook),
+        error: new Error("incomplete book refresh failed"),
+      },
+    });
+
+    expect(refreshing).toMatchObject({
+      status: "refreshing",
+      canEvaluateAndHandoff: false,
+      positions: { status: "refreshing" },
+    });
+    expect(failed).toMatchObject({
+      status: "refresh_failed",
+      canEvaluateAndHandoff: false,
+      positions: { status: "cached" },
+    });
+  });
+
   it("does not convert a failed source read into an empty book or confirmed manual cash", () => {
     const evidence = buildEvidence({
       bookQuery: failedQuery(),

@@ -102,7 +102,7 @@ export function CurrentPositionsPanel({
   baseCurrency: string;
   onAddPositionTrade: (position: PortfolioPositionView, side: "BUY" | "SELL") => void;
 }) {
-  const draftActionsDisabled = evidenceStatus === "context_mismatch";
+  const draftActionsDisabled = evidenceStatus !== "ready";
 
   return (
     <section className={styles.panel} aria-labelledby="current-positions-heading">
@@ -232,6 +232,8 @@ function positionsEvidenceLabel(
       return `${count} ${count === 1 ? "position" : "positions"} · refreshing`;
     case "cached":
       return `${count} ${count === 1 ? "position" : "positions"} · previously loaded`;
+    case "partial":
+      return `${count} ${count === 1 ? "position" : "positions"} · incomplete evidence`;
     case "context_mismatch":
       return `${count} ${count === 1 ? "position" : "positions"} · different context`;
     case "unavailable":
@@ -251,6 +253,8 @@ function positionsEmptyStateCopy(status: ProposalPositionsEvidenceStatus): strin
       return "Current holdings could not be loaded. No empty-book fallback is shown.";
     case "context_mismatch":
       return "The returned portfolio book belongs to a different context. Refresh before adding draft trades.";
+    case "partial":
+      return "Current holdings are visible, but the combined portfolio evidence is incomplete. Refresh before adding draft trades.";
     case "empty":
       return "The portfolio book is confirmed with no current investment positions. Add cash or an off-book instrument to begin the draft.";
     case "cached":
