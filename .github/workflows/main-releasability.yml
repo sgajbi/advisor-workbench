@@ -124,6 +124,7 @@ jobs:
       - name: Two-replica replacement and capacity regression proof
         env:
           SCALE_PROOF_SKIP_BUILD: "1"
+          WORKBENCH_DEPLOYMENT_ID: ${{ github.sha }}
           WORKBENCH_SCALE_IMAGE: lotus-workbench:ci-test
         run: node scripts/scale/run-workbench-scale-proof.mjs
       - name: Upload scale-proof evidence

@@ -5,7 +5,7 @@ x-workbench: &workbench
   environment:
     BFF_BASE_URL: http://scale-gateway:8080
     LOTUS_ENVIRONMENT: test
-    WORKBENCH_DEPLOYMENT_ID: scale-proof-issue-619
+    WORKBENCH_DEPLOYMENT_ID: ${WORKBENCH_DEPLOYMENT_ID:?WORKBENCH_DEPLOYMENT_ID is required}
     WORKBENCH_GATEWAY_REQUEST_TIMEOUT_MS: "5000"
   depends_on:
     scale-gateway:
