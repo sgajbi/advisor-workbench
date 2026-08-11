@@ -1,17 +1,41 @@
 const PROPOSAL_MINOR_UNIT_SCALE = 100;
+const PROPOSAL_DECIMAL_INPUT_PATTERN = /^([+-]?)(?:(\d+)(?:\.(\d{0,2}))?|\.(\d{1,2}))$/;
 
 export const PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT = 7_036_874_417_766_400n;
 
+export function proposalMoneyInputToMinorUnits(value: string): bigint | null {
+  const match = PROPOSAL_DECIMAL_INPUT_PATTERN.exec(value.trim());
+  if (!match) {
+    return null;
+  }
+
+  const wholeInput = (match[2] ?? "0").replace(/^0+(?=\d)/, "");
+  if (wholeInput.length > 14) {
+    return null;
+  }
+  const wholeUnits = BigInt(wholeInput);
+  const fractionalUnits = BigInt((match[3] ?? match[4] ?? "").padEnd(2, "0") || "0");
+  const magnitude = wholeUnits * BigInt(PROPOSAL_MINOR_UNIT_SCALE) + fractionalUnits;
+  if (!isProposalMoneyCentDistinguishable(magnitude)) {
+    return null;
+  }
+
+  return match[1] === "-" ? -magnitude : magnitude;
+}
+
 export function proposalMoneyToMinorUnits(value: number): bigint | null {
+  return Number.isFinite(value) ? proposalMoneyInputToMinorUnits(String(value)) : null;
+}
+
+export function proposalDerivedMoneyToMinorUnits(value: number): bigint | null {
   if (!Number.isFinite(value)) {
     return null;
   }
-  const scaledMinorUnits = value * PROPOSAL_MINOR_UNIT_SCALE;
-  const roundedMinorUnits = Math.round(scaledMinorUnits);
-  if (Math.abs(scaledMinorUnits - roundedMinorUnits) > 1e-7) {
-    return null;
-  }
-  return Number.isSafeInteger(roundedMinorUnits) ? BigInt(roundedMinorUnits) : null;
+  const roundedMinorUnits = Math.round(value * PROPOSAL_MINOR_UNIT_SCALE);
+  return Number.isSafeInteger(roundedMinorUnits) &&
+    isProposalMoneyCentDistinguishable(BigInt(roundedMinorUnits))
+    ? BigInt(roundedMinorUnits)
+    : null;
 }
 
 export function proposalMoneyFromMinorUnits(value: bigint): number {

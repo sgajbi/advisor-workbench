@@ -3,12 +3,15 @@ import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import type { CashFlowIntentInput, TradeIntentInput } from "./simulation-payload";
 import {
   isProposalMoneyCentDistinguishable,
+  proposalDerivedMoneyToMinorUnits,
   proposalMoneyFromMinorUnits,
+  proposalMoneyInputToMinorUnits,
   proposalMoneyToMinorUnits,
 } from "./proposal-money";
 
 export type ProposalDraftCashFlowIntent = CashFlowIntentInput & {
   id: string;
+  amountInput?: string;
 };
 
 export type ProposalDraftTradeIntent = TradeIntentInput & {
@@ -191,6 +194,15 @@ export function buildProposalDraftPreview(
     monetaryInputs.push(minorUnits);
     return minorUnits;
   };
+  const toDerivedMinorUnits = (value: number): bigint => {
+    const minorUnits = proposalDerivedMoneyToMinorUnits(value);
+    if (minorUnits === null) {
+      monetaryPrecisionReliable = false;
+      return 0n;
+    }
+    monetaryInputs.push(minorUnits);
+    return minorUnits;
+  };
   const rowMap = new Map<string, DraftPositionPreviewRow>();
   positions.forEach((position) => {
     const currentValue = proposalMoneyFromMinorUnits(
@@ -242,7 +254,7 @@ export function buildProposalDraftPreview(
       trade.side === "SELL" ? Math.min(trade.quantity, Math.max(0, row.proposedQuantity)) : trade.quantity;
     const quantityDelta = trade.side === "SELL" ? -executableQuantity : executableQuantity;
     row.proposedQuantity = Math.max(0, row.proposedQuantity + quantityDelta);
-    const proposedValueMinorUnits = toMinorUnits(
+    const proposedValueMinorUnits = toDerivedMinorUnits(
       Math.max(0, row.proposedQuantity * price)
     );
     const currentValueMinorUnits = toMinorUnits(row.currentValue);
@@ -251,14 +263,17 @@ export function buildProposalDraftPreview(
       proposedValueMinorUnits - currentValueMinorUnits
     );
     rowMap.set(instrumentId, row);
-    const tradeNotional = toMinorUnits(executableQuantity * price);
+    const tradeNotional = toDerivedMinorUnits(executableQuantity * price);
     tradeNotionalMinorUnits += trade.side === "SELL" ? -tradeNotional : tradeNotional;
   });
 
   const cashFlowDeltaMinorUnits = cashFlows.reduce((sum, item) => {
-    const amount = toMinorUnits(
-      Number.isFinite(item.amount) ? Math.abs(item.amount) : Number.NaN
-    );
+    const amount = proposalCashFlowToMinorUnits(item);
+    if (amount === null) {
+      monetaryPrecisionReliable = false;
+      return sum;
+    }
+    monetaryInputs.push(amount);
     return item.direction === "OUT" ? sum - amount : sum + amount;
   }, 0n);
   const cashAmountMinorUnits = toMinorUnits(cashAmount);
@@ -369,6 +384,21 @@ export function buildProposalDraftPreview(
     proposedLargestWeight,
     monetaryPrecisionReliable,
   };
+}
+
+export function proposalCashFlowToMinorUnits(
+  cashFlow: ProposalDraftCashFlowIntent
+): bigint | null {
+  if (cashFlow.amountInput !== undefined) {
+    const input = cashFlow.amountInput.trim();
+    if (!input) {
+      return 0n;
+    }
+    const minorUnits = proposalMoneyInputToMinorUnits(input);
+    return minorUnits !== null && minorUnits >= 0n ? minorUnits : null;
+  }
+  const minorUnits = proposalMoneyToMinorUnits(cashFlow.amount);
+  return minorUnits !== null && minorUnits >= 0n ? minorUnits : null;
 }
 
 function maxBigInt(left: bigint, right: bigint): bigint {

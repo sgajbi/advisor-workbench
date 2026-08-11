@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT } from "./proposal-money";
+import { proposalMoneyInputToMinorUnits } from "./proposal-money";
 
 const PLAIN_DECIMAL_PATTERN = /^(?:(\d+)(?:\.(\d*))?|\.(\d+))$/;
 
@@ -65,9 +65,8 @@ export function assessProposalScenarioCashInput(
     };
   }
 
-  const minorUnits =
-    BigInt(wholeDigits) * 100n + BigInt(fractionalDigits.padEnd(2, "0") || "0");
-  if (minorUnits >= PROPOSAL_CENT_DISTINGUISHABLE_MINOR_LIMIT) {
+  const minorUnits = proposalMoneyInputToMinorUnits(normalizedInput);
+  if (minorUnits === null) {
     return {
       status: "invalid",
       reason: "out_of_range",

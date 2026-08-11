@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   formatProposalMinorUnits,
   isProposalMoneyCentDistinguishable,
+  proposalDerivedMoneyToMinorUnits,
   proposalMoneyFromMinorUnits,
+  proposalMoneyInputToMinorUnits,
   proposalMoneyToMinorUnits,
 } from "../../src/features/proposals/proposal-money";
 
@@ -19,6 +21,13 @@ describe("proposal money", () => {
 
   it("rejects over-precision instead of applying a competing rounding rule", () => {
     expect(proposalMoneyToMinorUnits(2.675)).toBeNull();
+    expect(proposalMoneyToMinorUnits(1.0000000001)).toBeNull();
+    expect(proposalMoneyInputToMinorUnits("1.0000")).toBeNull();
+    expect(proposalMoneyInputToMinorUnits("9".repeat(1_000))).toBeNull();
+  });
+
+  it("rounds only derived indicative values at the documented minor-unit boundary", () => {
+    expect(proposalDerivedMoneyToMinorUnits(19_000 / 3)).toBe(633_333n);
   });
 
   it("keeps the cent-resolution boundary fail closed", () => {

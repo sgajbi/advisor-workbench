@@ -125,6 +125,32 @@ describe("proposal draft preview", () => {
     expect(preview.monetaryPrecisionReliable).toBe(false);
   });
 
+  it("rounds derived indicative notionals without blocking a valid quantity action", () => {
+    const fractionalPricePosition: PortfolioPositionView = {
+      ...applePosition,
+      quantity: 3,
+      market_value_base: 19_000,
+    };
+    const buyOne = createTradeIntentFromPosition(
+      1,
+      fractionalPricePosition,
+      "BUY",
+      "USD"
+    );
+    buyOne.quantity = 1;
+
+    const preview = buildProposalDraftPreview(
+      [fractionalPricePosition],
+      10_000,
+      [],
+      [buyOne]
+    );
+
+    expect(preview.monetaryPrecisionReliable).toBe(true);
+    expect(preview.tradeNotional).toBe(6_333.33);
+    expect(preview.rows[0]?.proposedValue).toBe(25_333.33);
+  });
+
   it("adds an off-book instrument and reports unpriced draft lines", () => {
     const offBookTrade: ProposalDraftTradeIntent = {
       id: "trade_1",
