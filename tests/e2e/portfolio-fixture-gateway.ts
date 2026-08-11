@@ -2,6 +2,7 @@ import { createServer, type Server, type ServerResponse } from 'node:http';
 
 const PORTFOLIO_ID = 'PB_SG_GLOBAL_BAL_001';
 const AS_OF_DATE = '2026-04-10';
+const MISSING_HISTORICAL_SUMMARY_DATE = '2026-04-01';
 const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
 export type PortfolioFixtureGateway = {
@@ -191,9 +192,11 @@ function buildBookResponse(asOfDate: string) {
     as_of_date: asOfDate,
     portfolio: buildWorkspaceResponse().portfolio,
     summary:
-      asOfDate === HISTORICAL_AS_OF_DATE
-        ? historicalSummary
-        : buildWorkspaceResponse().summary,
+      asOfDate === MISSING_HISTORICAL_SUMMARY_DATE
+        ? undefined
+        : asOfDate === HISTORICAL_AS_OF_DATE
+          ? historicalSummary
+          : buildWorkspaceResponse().summary,
     cash_balances: [],
     allocation_views: [{ dimension: 'asset_class', buckets: [] }],
     top_positions: [],
