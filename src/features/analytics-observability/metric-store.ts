@@ -51,9 +51,14 @@ export function appendAnalyticsUiMetricEvent(
   }
   metricEvents.push(event);
 
+  const canonicalLabels = Object.fromEntries(
+    Object.entries(event.labels).sort(([left], [right]) =>
+      left < right ? -1 : left > right ? 1 : 0,
+    ),
+  ) as Partial<Record<AnalyticsUiAllowedLabel, string>>;
   const sampleKey = JSON.stringify({
     metric_name: event.metric_name,
-    labels: event.labels,
+    labels: canonicalLabels,
   });
   const existing = metricSamples.get(sampleKey);
   if (existing) {
@@ -84,7 +89,7 @@ export function appendAnalyticsUiMetricEvent(
   metricSamples.set(sampleKey, {
     metric_name: event.metric_name,
     metric_type: metricType,
-    labels: { ...event.labels },
+    labels: canonicalLabels,
     value: event.value,
     sample_count: 1,
     bucket_counts:
