@@ -54,41 +54,49 @@ describe("runtime support policy", () => {
     );
   });
 
-  it.each([
-    [
-      "a mutable deployment-id default",
-      (dockerfile: string) =>
-        dockerfile.replace(
-          "ARG WORKBENCH_DEPLOYMENT_ID\n",
-          "ARG WORKBENCH_DEPLOYMENT_ID=local-development\n",
-        ),
-      "without a default",
-    ],
-    [
-      "a builder that does not fail closed",
-      (dockerfile: string) =>
-        dockerfile.replace(
-          'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
-          "RUN npm run build",
-        ),
-      "builder must require",
-    ],
-    [
-      "a runner that drops deployment identity",
-      (dockerfile: string) =>
-        dockerfile.replace(
-          "FROM ci-base AS runner\nWORKDIR /app\nARG WORKBENCH_DEPLOYMENT_ID\n",
-          "FROM ci-base AS runner\nWORKDIR /app\n",
-        ),
-      "runner must retain",
-    ],
-  ])("rejects %s", (_name, mutate, expectedFailure) => {
-    const evidence = loadEvidence();
-    evidence.dockerfile = mutate(evidence.dockerfile);
+  describe.each([
+    ["LF", "\n"],
+    ["CRLF", "\r\n"],
+  ])("%s Dockerfile fixture", (_lineEndingName, lineEnding) => {
+    it.each([
+      [
+        "a mutable deployment-id default",
+        (dockerfile: string) =>
+          dockerfile.replace(
+            /^ARG WORKBENCH_DEPLOYMENT_ID\r?\n/m,
+            `ARG WORKBENCH_DEPLOYMENT_ID=local-development${lineEnding}`,
+          ),
+        "without a default",
+      ],
+      [
+        "a builder that does not fail closed",
+        (dockerfile: string) =>
+          dockerfile.replace(
+            'RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build',
+            "RUN npm run build",
+          ),
+        "builder must require",
+      ],
+      [
+        "a runner that drops deployment identity",
+        (dockerfile: string) =>
+          dockerfile.replace(
+            /FROM ci-base AS runner\r?\nWORKDIR \/app\r?\nARG WORKBENCH_DEPLOYMENT_ID\r?\n/,
+            `FROM ci-base AS runner${lineEnding}WORKDIR /app${lineEnding}`,
+          ),
+        "runner must retain",
+      ],
+    ])("rejects %s", (_name, mutate, expectedFailure) => {
+      const evidence = loadEvidence();
+      evidence.dockerfile = evidence.dockerfile.replace(/\r?\n/g, lineEnding);
+      const originalDockerfile = evidence.dockerfile;
+      evidence.dockerfile = mutate(evidence.dockerfile);
 
-    expect(validateRuntimeSupportPolicy(evidence)).toEqual(
-      expect.arrayContaining([expect.stringContaining(expectedFailure)]),
-    );
+      expect(evidence.dockerfile).not.toBe(originalDockerfile);
+      expect(validateRuntimeSupportPolicy(evidence)).toEqual(
+        expect.arrayContaining([expect.stringContaining(expectedFailure)]),
+      );
+    });
   });
 
   it("rejects CI runtime and non-root container drift", () => {
