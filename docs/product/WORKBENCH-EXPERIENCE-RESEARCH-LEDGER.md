@@ -134,6 +134,57 @@ No repo wiki change is required for Slice 1. The slice changes composition and r
 client-side behavior; it does not add or change a supported feature, integration, operator command,
 or published runtime contract.
 
+### Slice 2 — exception-first decision proof
+
+Research was revalidated on 2026-08-12 from official sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes a whole-portfolio view, exception-based portfolio review, targeted advisor nudges, and
+   connected workflows. Those principles support one ranked decision path rather than equal-weight
+   dashboard cards.
+2. [W3C WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html),
+   [Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html),
+   [Focus Not Obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html),
+   and [Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) define the keyboard and
+   constrained-viewport evidence expected for a usable decision workstation.
+
+These sources inform workflow and quality criteria only. Lotus does not copy competitor layout,
+wording, visual identity, calculations, or unsupported capabilities, and this evidence is not a
+claim of comparative product superiority.
+
+Adopted under issue #649:
+
+1. Load the already-governed dated Gateway workflow projection in the summary fan-out so the first
+   visible action is source-supplied rather than a browser fallback.
+2. Keep the primary decision, source limitations, and workflow action ahead of secondary evidence
+   and analytical handoffs.
+3. Use one visual surface per business module; remove redundant rail-card wrappers instead of
+   adding page-specific CSS.
+4. Prove responsive behavior across the full 1440-to-519-pixel matrix, including the exact 721/720
+   rail transition, rather than validating only desktop and one mobile screenshot.
+5. Prove every focusable control has an accessible name, visible and unobscured focus, logical order,
+   Enter/Escape recovery, and a complete narrow-screen sequential traversal.
+6. Retain screenshots for visual review and machine-readable JSON for deterministic assertions;
+   neither substitutes for populated canonical source proof.
+
+Rejected:
+
+1. Browser-authored next actions, completion copy, exception thresholds, or readiness claims.
+2. Decorative charts, hero copy, extra cards, or bespoke global styles that do not reduce the time
+   from exception to supported action.
+3. Hiding source evidence to obtain a cleaner screenshot.
+4. Screenshot-only accessibility acceptance or a viewport sample that misses the layout boundary.
+5. A new UI dependency or framework for behavior already supported by the established Workbench
+   component system.
+
+Focused evidence passes 77 unit tests, TypeScript, touched-file lint, and the seven-viewport
+production-browser matrix, including 24-of-24 keyboard traversal at 519 pixels. The fresh populated
+canonical rerun remains blocked before Workbench/Gateway readiness by `lotus-core#943`; issue #649
+must retain that limitation until source-backed exact-main evidence is rerun. The Portfolio Review
+screen guide changes because its summary source contract, workflow-action posture, and validation
+procedure changed. Repository and platform context remain unchanged: the established Gateway/BFF
+ownership boundary and runtime topology did not change.
+
 ## Advisory Workflow Context Rail
 
 ### Business job
