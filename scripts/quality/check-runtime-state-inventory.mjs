@@ -216,6 +216,7 @@ export function scanRuntimeStateSource({
     scriptKind,
   );
   const moduleBindings = new Set();
+  const importedBindings = new Set();
   for (const statement of sourceFile.statements) {
     if (ts.isVariableStatement(statement)) {
       for (const declaration of statement.declarationList.declarations) {
@@ -228,6 +229,11 @@ export function scanRuntimeStateSource({
       statement.name
     ) {
       moduleBindings.add(statement.name.text);
+    } else if (ts.isImportDeclaration(statement)) {
+      for (const identifier of importBindingIdentifiers(statement)) {
+        moduleBindings.add(identifier.text);
+        importedBindings.add(identifier.text);
+      }
     }
   }
   const mutatedBindings = collectMutatedBindings(sourceFile, moduleBindings);
@@ -243,6 +249,9 @@ export function scanRuntimeStateSource({
         if (
           !isConst ||
           MUTABLE_COLLECTION_PATTERN.test(initializer) ||
+          (declaration.initializer &&
+            ts.isClassExpression(declaration.initializer) &&
+            hasMutableStaticState(declaration.initializer)) ||
           mutatedBindings.has(identifier.text)
         ) {
           stateHolders.push({
@@ -264,6 +273,11 @@ export function scanRuntimeStateSource({
         file: normalizePath(file),
         symbol: statement.name.text,
       });
+    }
+  }
+  for (const symbol of importedBindings) {
+    if (mutatedBindings.has(symbol)) {
+      stateHolders.push({ file: normalizePath(file), symbol });
     }
   }
   return stateHolders;
@@ -380,6 +394,55 @@ function bindingIdentifiers(name) {
   );
 }
 
+function importBindingIdentifiers(declaration) {
+  const importClause = declaration.importClause;
+  if (!importClause || importClause.isTypeOnly) {
+    return [];
+  }
+  const identifiers = importClause.name ? [importClause.name] : [];
+  const namedBindings = importClause.namedBindings;
+  if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+    identifiers.push(namedBindings.name);
+  } else if (namedBindings && ts.isNamedImports(namedBindings)) {
+    identifiers.push(
+      ...namedBindings.elements
+        .filter((element) => !element.isTypeOnly)
+        .map((element) => element.name),
+    );
+  }
+  return identifiers;
+}
+
+function aliasTargets(expression) {
+  let current = expression;
+  while (
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isTypeAssertionExpression(current) ||
+    ts.isNonNullExpression(current)
+  ) {
+    current = current.expression;
+  }
+  if (ts.isConditionalExpression(current)) {
+    return [
+      ...aliasTargets(current.whenTrue),
+      ...aliasTargets(current.whenFalse),
+    ];
+  }
+  if (
+    ts.isBinaryExpression(current) &&
+    [
+      ts.SyntaxKind.AmpersandAmpersandToken,
+      ts.SyntaxKind.BarBarToken,
+      ts.SyntaxKind.QuestionQuestionToken,
+    ].includes(current.operatorToken.kind)
+  ) {
+    return [...aliasTargets(current.left), ...aliasTargets(current.right)];
+  }
+  const target = rootIdentifier(current);
+  return target ? [target] : [];
+}
+
 function collectBindingGraph(sourceFile) {
   const bindingsByScope = new Map();
   const aliasesByScope = new Map();
@@ -388,10 +451,10 @@ function collectBindingGraph(sourceFile) {
     bindings.add(name);
     bindingsByScope.set(scope, bindings);
   };
-  const addAliasEvent = (scope, name, position, target, conditional = false) => {
+  const addAliasEvent = (scope, name, position, targets, conditional = false) => {
     const aliases = aliasesByScope.get(scope) ?? new Map();
     const events = aliases.get(name) ?? [];
-    events.push({ conditional, position, target });
+    events.push({ conditional, position, targets });
     aliases.set(name, events);
     aliasesByScope.set(scope, aliases);
   };
@@ -418,11 +481,13 @@ function collectBindingGraph(sourceFile) {
         (declarationList.flags & ts.NodeFlags.BlockScoped) !== 0;
       const scope = findBindingScope(node, isBlockScoped);
       addBindingName(scope, node.name);
-      const aliasTarget = node.initializer
-        ? rootIdentifier(node.initializer)
-        : undefined;
+      const targets = node.initializer ? aliasTargets(node.initializer) : [];
       if (ts.isIdentifier(node.name)) {
-        addAliasEvent(scope, node.name.text, node.end, aliasTarget);
+        addAliasEvent(scope, node.name.text, node.end, targets);
+      }
+    } else if (ts.isImportDeclaration(node)) {
+      for (const identifier of importBindingIdentifiers(node)) {
+        addBinding(sourceFile, identifier.text);
       }
     } else if (ts.isParameter(node) && isFunctionScope(node.parent)) {
       addBindingName(node.parent, node.name);
@@ -449,15 +514,15 @@ function collectBindingGraph(sourceFile) {
     ) {
       const binding = resolveBinding(node.left, bindingsByScope);
       if (binding) {
-        const target =
+        const targets =
           node.operatorToken.kind === ts.SyntaxKind.EqualsToken
-            ? rootIdentifier(node.right)
-            : undefined;
+            ? aliasTargets(node.right)
+            : [];
         addAliasEvent(
           binding.scope,
           binding.name,
           node.end,
-          target,
+          targets,
           isConditionallyExecuted(node, binding.scope),
         );
       }
@@ -543,12 +608,12 @@ function resolveModuleBindings(
     .filter((event) => event.position < identifier.pos)
     .sort((left, right) => right.position - left.position);
   for (const event of priorEvents) {
-    if (event.target) {
+    for (const target of event.targets) {
       const branchVisited = new Map(
         [...visited].map(([scope, names]) => [scope, new Set(names)]),
       );
       for (const moduleBinding of resolveModuleBindings(
-        event.target,
+        target,
         bindingGraph,
         sourceFile,
         moduleBindings,
