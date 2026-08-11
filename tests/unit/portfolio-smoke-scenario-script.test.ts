@@ -12,9 +12,12 @@ describe("Portfolio smoke scenario runner", () => {
     readFileSync(resolve(process.cwd(), "package.json"), "utf8"),
   ) as { scripts: Record<string, string> };
 
-  it("publishes the repo-native cashflow proof command", () => {
+  it("publishes repo-native cashflow and shell-unavailable proof commands", () => {
     expect(packageJson.scripts["test:e2e:portfolio:cashflow"]).toContain(
       "run-portfolio-smoke-scenario.mjs cashflow",
+    );
+    expect(packageJson.scripts["test:e2e:portfolio:unavailable"]).toContain(
+      "run-portfolio-smoke-scenario.mjs shell-unavailable",
     );
   });
 
@@ -34,11 +37,15 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("child.kill(signal)");
   });
 
-  it("runs only the governed cashflow browser scenario", () => {
+  it("runs only the two governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit'",
     );
+    expect(source).toContain(
+      "'selected shell failure reaches one truthful terminal recovery state'",
+    );
+    expect(source).toContain("scenario !== 'shell-unavailable'");
     expect(source).toContain("parseUnprivilegedPort(");
     expect(source).toContain("'PORTFOLIO_E2E_FIXTURE_PORT'");
     expect(source).toContain("'PORTFOLIO_E2E_WORKBENCH_PORT'");
