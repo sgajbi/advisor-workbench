@@ -1,6 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
@@ -18,28 +17,49 @@ const advisoryApiMocks = vi.hoisted(() => ({
   handoffAdvisoryWorkspace: vi.fn(),
 }));
 
-vi.mock("../../src/apps/portfolio/api", () => ({
-  getPortfolioBook: vi.fn(async () => ({
-    positions: [
-      {
-        security_id: "AAPL",
-        instrument_name: "Apple Inc.",
-        asset_class: "Equities",
-        quantity: 100,
-        market_price: 190,
-        market_value_base: 19000,
-        weight_pct: 19,
-      },
-    ],
+const portfolioApiMocks = vi.hoisted(() => ({
+  getRequiredPortfolioBook: vi.fn(),
+  getRequiredPortfolioWorkspaceShell: vi.fn(),
+}));
+
+vi.mock("../../src/apps/portfolio/api", () => portfolioApiMocks);
+
+function portfolioBook(positions = [
+  {
+    security_id: "AAPL",
+    instrument_name: "Apple Inc.",
+    asset_class: "Equities",
+    quantity: 100,
+    market_price: 190,
+    market_value_base: 19000,
+    weight_pct: 19,
+  },
+]) {
+  return {
+    positions,
     top_positions: [],
     allocation_views: [],
-  })),
-  getPortfolioWorkspaceShell: vi.fn(async () => ({
+  };
+}
+
+function portfolioWorkspace(totalCashBase = 25000) {
+  return {
     summary: {
-      total_cash_base: 25000,
+      total_cash_base: totalCashBase,
     },
-  })),
-}));
+  };
+}
+
+function resetPortfolioEvidenceMocks() {
+  portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValue(portfolioBook());
+  portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockResolvedValue(portfolioWorkspace());
+}
+
+async function waitForPortfolioEvidence(status = "ready") {
+  const panel = await screen.findByTestId("proposal-portfolio-evidence");
+  await waitFor(() => expect(panel).toHaveAttribute("data-evidence-status", status));
+  return panel;
+}
 
 vi.mock("../../src/features/proposals/api", () => advisoryApiMocks);
 
@@ -99,6 +119,7 @@ function renderForm(initialPortfolioId?: string) {
 describe("ProposalSimulateForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetPortfolioEvidenceMocks();
     advisoryApiMocks.createAdvisoryWorkspace.mockResolvedValue(workspaceEnvelope());
     advisoryApiMocks.applyAdvisoryWorkspaceDraftAction.mockResolvedValue(workspaceEnvelope());
     advisoryApiMocks.evaluateAdvisoryWorkspace.mockResolvedValue(workspaceEnvelope());
@@ -115,7 +136,7 @@ describe("ProposalSimulateForm", () => {
     });
   });
 
-  it("renders proposal simulation form", () => {
+  it("renders proposal simulation form", async () => {
     renderForm();
     expect(screen.getByText("Create Advisory Proposal")).toBeInTheDocument();
     expect(screen.getByText("Evaluate Workspace")).toBeInTheDocument();
@@ -124,6 +145,8 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByText("Indicative Draft Impact")).toBeInTheDocument();
     expect(screen.queryByLabelText("Idempotency Key")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Created By")).not.toBeInTheDocument();
+    await waitForPortfolioEvidence();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   });
 
   it("uses provided initial portfolio id", () => {
@@ -138,6 +161,7 @@ describe("ProposalSimulateForm", () => {
     expect(
       screen.getByRole("heading", { name: "Draft not yet persisted" })
     ).toBeInTheDocument();
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
 
     expect(
@@ -154,6 +178,7 @@ describe("ProposalSimulateForm", () => {
     );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
 
     expect(await screen.findByText("advisory service unavailable")).toBeInTheDocument();
@@ -171,6 +196,7 @@ describe("ProposalSimulateForm", () => {
     });
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
 
     expect(
@@ -188,6 +214,7 @@ describe("ProposalSimulateForm", () => {
     renderForm("PORT_UI_1001");
 
     expect(await screen.findByText("Apple Inc.")).toBeInTheDocument();
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Buy More" }));
 
     const instrumentInputs = screen.getAllByLabelText("Instrument") as HTMLInputElement[];
@@ -249,6 +276,7 @@ describe("ProposalSimulateForm", () => {
     );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
 
     expect(await screen.findByText("proposal evaluation unavailable")).toBeInTheDocument();
@@ -270,6 +298,7 @@ describe("ProposalSimulateForm", () => {
     advisoryApiMocks.evaluateAdvisoryWorkspace.mockResolvedValueOnce(evaluationResponse);
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
 
     expect(
@@ -289,6 +318,7 @@ describe("ProposalSimulateForm", () => {
       .mockResolvedValueOnce(workspaceEnvelope());
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
     expect(
       await screen.findByText(
@@ -315,6 +345,7 @@ describe("ProposalSimulateForm", () => {
       .mockResolvedValueOnce(workspaceEnvelope("aws_test_002", null));
     renderForm("PB_SG_GLOBAL_BAL_001");
 
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
     expect(
       await screen.findByRole("status", { name: "Proposal evaluation summary" })
@@ -338,6 +369,7 @@ describe("ProposalSimulateForm", () => {
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     expect(await screen.findByText("Apple Inc.")).toBeInTheDocument();
+    await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Sell Down" }));
 
     const quantityInputs = screen.getAllByLabelText("Quantity") as HTMLInputElement[];
@@ -363,5 +395,89 @@ describe("ProposalSimulateForm", () => {
         }
       )
     );
+  });
+
+  it("does not present unavailable sources as a confirmed empty portfolio", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockRejectedValueOnce(
+      new Error("portfolio book unavailable")
+    );
+    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
+      new Error("portfolio workspace unavailable")
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence("unavailable");
+    expect(screen.getByText("Portfolio evidence is unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Current holdings could not be loaded. No empty-book fallback is shown.")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/confirmed with no current investment positions/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(advisoryApiMocks.createAdvisoryWorkspace).not.toHaveBeenCalled();
+  });
+
+  it("keeps available holdings visible but blocks actions when cash evidence is unavailable", async () => {
+    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
+      new Error("portfolio workspace unavailable")
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence("partial");
+    expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio evidence is incomplete")).toBeInTheDocument();
+    expect(screen.getByText("Manual scenario cash")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("treats an empty source-backed book as ready rather than unavailable", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce(portfolioBook([]));
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence();
+    expect(screen.getAllByText("Confirmed empty").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/portfolio book is confirmed with no current investment positions/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  });
+
+  it("recovers unavailable portfolio evidence through an intentional source refresh", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook
+      .mockRejectedValueOnce(new Error("portfolio book unavailable"))
+      .mockResolvedValueOnce(portfolioBook());
+    portfolioApiMocks.getRequiredPortfolioWorkspaceShell
+      .mockRejectedValueOnce(new Error("portfolio workspace unavailable"))
+      .mockResolvedValueOnce(portfolioWorkspace());
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence("unavailable");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    await waitForPortfolioEvidence();
+    expect(screen.getByText("Portfolio evidence confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  });
+
+  it("retains cached evidence but blocks actions after a failed refresh", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+    portfolioApiMocks.getRequiredPortfolioBook.mockRejectedValueOnce(
+      new Error("portfolio book refresh unavailable")
+    );
+    portfolioApiMocks.getRequiredPortfolioWorkspaceShell.mockRejectedValueOnce(
+      new Error("portfolio workspace refresh unavailable")
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    await waitForPortfolioEvidence("refresh_failed");
+    expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
+    expect(screen.getByText("Latest portfolio evidence is not confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
   });
 });
