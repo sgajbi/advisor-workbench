@@ -5,7 +5,8 @@ import { Alert, Button, MenuItem, TextField } from "@mui/material";
 
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import { SemanticBadge, Text, type SemanticBadgeTone } from "@/design-system";
-import type { ProposalDraftCashFlowIntent, ProposalDraftPreview, ProposalDraftTradeIntent } from "../proposal-draft-preview";
+import type { ProposalDraftImpactModel } from "../proposal-draft-currency-authority";
+import type { ProposalDraftCashFlowIntent, ProposalDraftTradeIntent } from "../proposal-draft-preview";
 import { formatCurrencyValue, formatPercentValue, formatUnitValue } from "../proposal-draft-preview";
 import type {
   ProposalPortfolioEvidenceModel,
@@ -440,20 +441,56 @@ export function DraftOrderBlotterPanel({
 }
 
 export function IndicativeDraftImpactPanel({
-  draftPreview,
-  baseCurrency,
+  impactModel,
 }: {
-  draftPreview: ProposalDraftPreview;
-  baseCurrency: string;
+  impactModel: ProposalDraftImpactModel;
 }) {
+  if (impactModel.status === "unavailable") {
+    const { currencyAuthority } = impactModel;
+    return (
+      <section
+        className={styles.panel}
+        aria-labelledby="draft-impact-heading"
+        data-testid="proposal-draft-impact"
+        data-preview-currency-status={currencyAuthority.status}
+        data-requested-currency={currencyAuthority.requestedCurrency ?? undefined}
+        data-source-currency={currencyAuthority.sourceCurrency ?? undefined}
+      >
+        <div className={styles.panelHeader}>
+          <div>
+            <h3 id="draft-impact-heading">Indicative Draft Impact</h3>
+            <p>
+              Monetary projection is shown only when current portfolio evidence and draft entries
+              share one confirmed currency.
+            </p>
+          </div>
+        </div>
+        <Alert severity="warning" role="status" aria-live="polite">
+          <strong>{currencyAuthority.title}</strong> {currencyAuthority.body}
+        </Alert>
+      </section>
+    );
+  }
+
+  const { currencyAuthority, preview: draftPreview } = impactModel;
+  const baseCurrency = currencyAuthority.currency;
   return (
-    <section className={styles.panel} aria-labelledby="draft-impact-heading">
+    <section
+      className={styles.panel}
+      aria-labelledby="draft-impact-heading"
+      data-testid="proposal-draft-impact"
+      data-preview-currency-status={currencyAuthority.status}
+      data-preview-currency={baseCurrency}
+      data-requested-currency={currencyAuthority.requestedCurrency ?? undefined}
+      data-source-currency={currencyAuthority.sourceCurrency ?? undefined}
+    >
       <div className={styles.panelHeader}>
         <div>
           <h3 id="draft-impact-heading">Indicative Draft Impact</h3>
           <p>
             Live advisor preview from current holdings, draft orders, and cash movements. Formal
-            suitability, risk, and allocation proof is produced by simulation.
+            suitability, risk, and allocation proof is produced by simulation. All monetary values
+            use {baseCurrency}.
           </p>
         </div>
         <span>{formatCurrencyValue(draftPreview.proposedPortfolioValue, baseCurrency)}</span>

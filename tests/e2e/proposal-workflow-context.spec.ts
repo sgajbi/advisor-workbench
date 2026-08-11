@@ -8,10 +8,12 @@ async function mockProposalPortfolioEvidence(
     failFirstRead = false,
     effectiveDate,
     requestedDates,
+    sourceCurrencies,
   }: {
     failFirstRead?: boolean;
     effectiveDate?: string;
     requestedDates?: string[];
+    sourceCurrencies?: string[];
   } = {}
 ) {
   let bookReadCount = 0;
@@ -23,6 +25,7 @@ async function mockProposalPortfolioEvidence(
       const requestUrl = new URL(route.request().url());
       const requestedDate = requestUrl.searchParams.get("as_of_date") ?? "";
       const requestedCurrency = requestUrl.searchParams.get("reporting_currency") ?? "USD";
+      const sourceCurrency = sourceCurrencies?.[bookReadCount - 1] ?? requestedCurrency;
       requestedDates?.push(requestedDate);
       if (failFirstRead && bookReadCount === 1) {
         await route.fulfill({ status: 503, json: { detail: "Portfolio book unavailable" } });
@@ -35,7 +38,7 @@ async function mockProposalPortfolioEvidence(
             portfolio_id: portfolioId,
             display_name: "Global Balanced Portfolio",
             client_id: "CIF_001",
-            base_currency: requestedCurrency,
+            base_currency: sourceCurrency,
             booking_center_code: "SGPB",
           },
           summary: {
@@ -50,7 +53,7 @@ async function mockProposalPortfolioEvidence(
             {
               security_id: "CASH_USD",
               instrument_name: "US Dollar Cash",
-              currency: requestedCurrency,
+              currency: sourceCurrency,
               quantity: 4_000,
               market_value_base: 4_000,
               weight_pct: 17.4,
@@ -478,6 +481,42 @@ test("shows requested and source dates while blocking a mismatched source snapsh
   await expect(page.getByRole("button", { name: "Sell Down" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+});
+
+test("withholds mixed-currency impact until refreshed source evidence matches the proposal", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { sourceCurrencies: ["SGD", "USD"] });
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  const impact = page.getByTestId("proposal-draft-impact");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "context_mismatch");
+  await expect(impact).toHaveAttribute("data-preview-currency-status", "mixed_currency");
+  await expect(impact).toHaveAttribute("data-requested-currency", "USD");
+  await expect(impact).toHaveAttribute("data-source-currency", "SGD");
+  await expect(impact.getByText("Currency-aligned impact is unavailable")).toBeVisible();
+  await expect(impact.getByText("USD 23,000")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await testInfo.attach("proposal-mixed-currency-impact-withheld", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+
+  await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
+  await expect(impact).toHaveAttribute("data-preview-currency-status", "available");
+  await expect(impact).toHaveAttribute("data-preview-currency", "USD");
+  await expect(impact.getByText("USD 23,000").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  await testInfo.attach("proposal-currency-impact-recovered", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
 });
 
 for (const viewport of [
