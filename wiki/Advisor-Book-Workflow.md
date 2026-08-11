@@ -108,7 +108,7 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | Filtered empty | No rows for the applied client-reference or mandate view | Clear or revise the working view; this is not presented as an unavailable book |
 | Degraded or partial | Returned limitation and reason are visible with the available evidence | Use only the evidenced fields; follow the first support step if the decision needs missing authority |
 | Permission blocked | An explicit access state; no portfolio catalogue fallback | Verify the governed caller posture; do not use browser headers to bypass it |
-| Error or unavailable | An explicit source failure with a Retry control | Retry once to re-contact the source; escalate with the request reference if it persists |
+| Error or unavailable | An explicit source failure with a Retry control | Retry once to re-contact the source; escalate with the displayed HTTP status if it persists |
 
 Workbench does not keep a stale or cached book visible after a failed request and does not silently
 fall back to a global portfolio catalogue.
@@ -161,11 +161,13 @@ governed validation and recovery commands.
 
 ## First Support Step
 
-Read the visible availability reason, data-currency posture, and request reference without copying
-client references or response payloads into a support channel. Retry once. If the state persists,
-record the business date, booking-centre scope, request reference, and state classification, then
-follow [Operations Runbook](Operations-Runbook). Do not attempt recovery by adding browser identity
-or tenant headers.
+Read the visible state without copying client references or response payloads into a support
+channel. Ready or degraded evidence can include data-currency posture and a source correlation
+reference; the current failed-request panel exposes the HTTP status only. Retry once. If the state
+persists, record the business date, booking-centre scope, state classification, and exactly the
+status or correlation reference that is visible, then follow
+[Operations Runbook](Operations-Runbook). Do not describe an HTTP status as a request identifier,
+and do not attempt recovery by adding browser identity or tenant headers.
 
 ## Related Documentation
 
