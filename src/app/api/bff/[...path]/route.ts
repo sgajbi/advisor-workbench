@@ -111,6 +111,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
 
   let response: Response;
+  let responseBody: ArrayBuffer;
   try {
     response = await fetch(url, {
       method: request.method,
@@ -119,6 +120,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       cache: "no-store",
       signal: createGatewayRequestSignal(),
     });
+    responseBody = await response.arrayBuffer();
   } catch (error) {
     const timedOut = isGatewayRequestTimeout(error);
     return NextResponse.json(
@@ -136,7 +138,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("transfer-encoding");
 
-  return new NextResponse(await response.arrayBuffer(), {
+  return new NextResponse(responseBody, {
     status: response.status,
     headers: responseHeaders,
   });

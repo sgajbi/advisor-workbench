@@ -1,5 +1,5 @@
 ARG NODE_BASE_IMAGE=node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3
-ARG WORKBENCH_DEPLOYMENT_ID=local-development
+ARG WORKBENCH_DEPLOYMENT_ID
 
 FROM ${NODE_BASE_IMAGE} AS ci-base
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY package.json package-lock.json next-env.d.ts next.config.mjs tsconfig.json 
 COPY src ./src
 COPY scripts/quality/clean-next-build-artifacts.mjs ./scripts/quality/clean-next-build-artifacts.mjs
 COPY scripts/quality/check-portfolio-record-bundles.mjs ./scripts/quality/check-portfolio-record-bundles.mjs
-RUN npm run build
+RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build
 
 FROM ci-base AS runner
 WORKDIR /app

@@ -15,6 +15,7 @@ export interface WorkbenchReadiness {
   service: "lotus-workbench";
   environment: string;
   deployment_id: string | null;
+  build_deployment_id: string | null;
   gateway_origin: string | null;
   gateway_timeout_ms: number | null;
   certification_posture:
@@ -26,6 +27,7 @@ export interface WorkbenchReadiness {
 
 export function assessWorkbenchReadiness(
   environment: RuntimeEnvironment = process.env,
+  embeddedBuildDeploymentId = process.env.WORKBENCH_BUILD_DEPLOYMENT_ID,
 ): WorkbenchReadiness {
   const lotusEnvironment = resolveLotusEnvironment(environment);
   const failures: string[] = [];
@@ -50,10 +52,19 @@ export function assessWorkbenchReadiness(
   const developmentEnvironment = lotusEnvironment === "dev";
   const deploymentId = configuredDeploymentId ||
     (developmentEnvironment ? LOCAL_DEVELOPMENT_DEPLOYMENT_ID : null);
+  const buildDeploymentId = embeddedBuildDeploymentId?.trim() ||
+    (developmentEnvironment ? LOCAL_DEVELOPMENT_DEPLOYMENT_ID : null);
   if (deploymentId && !DEPLOYMENT_ID_PATTERN.test(deploymentId)) {
     failures.push("deployment_identity_invalid");
   } else if (!deploymentId) {
     failures.push("deployment_identity_required");
+  }
+  if (buildDeploymentId && !DEPLOYMENT_ID_PATTERN.test(buildDeploymentId)) {
+    failures.push("build_deployment_identity_invalid");
+  } else if (!buildDeploymentId) {
+    failures.push("build_deployment_identity_required");
+  } else if (deploymentId && deploymentId !== buildDeploymentId) {
+    failures.push("deployment_identity_mismatch");
   }
 
   return {
@@ -61,6 +72,7 @@ export function assessWorkbenchReadiness(
     service: "lotus-workbench",
     environment: lotusEnvironment,
     deployment_id: deploymentId,
+    build_deployment_id: buildDeploymentId,
     gateway_origin: gatewayOrigin,
     gateway_timeout_ms: gatewayTimeoutMs,
     certification_posture:

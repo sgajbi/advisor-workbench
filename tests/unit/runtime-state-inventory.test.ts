@@ -108,7 +108,7 @@ describe("runtime state inventory", () => {
       .replace(/^\s*deploymentId,\r?\n/m, "");
 
     expect(validateRuntimeStateInventory(evidence)).toContain(
-      "Next configuration must bind deploymentId to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
+      "Next configuration must bind deploymentId and embedded build identity to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
     );
   });
 

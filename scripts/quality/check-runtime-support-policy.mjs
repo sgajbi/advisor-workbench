@@ -134,6 +134,18 @@ export function validateRuntimeSupportPolicy({
       ? baseImageArguments[0].argument.slice("NODE_BASE_IMAGE=".length)
       : undefined;
   expectEqual(failures, "container base image", declaredImage, expectedImage);
+  const deploymentIdArguments = dockerModel.globalInstructions.filter(
+    ({ keyword, argument }) =>
+      keyword === "ARG" && argument.startsWith("WORKBENCH_DEPLOYMENT_ID")
+  );
+  if (
+    deploymentIdArguments.length !== 1 ||
+    deploymentIdArguments[0].argument !== "WORKBENCH_DEPLOYMENT_ID"
+  ) {
+    failures.push(
+      "Dockerfile must declare WORKBENCH_DEPLOYMENT_ID exactly once without a default so production image builds fail closed."
+    );
+  }
 
   const ciBaseStages = dockerModel.stages.filter(({ name }) => name === "ci-base");
   const governedBaseConsumers = dockerModel.stages.filter(
@@ -191,6 +203,30 @@ export function validateRuntimeSupportPolicy({
     failures.push('Dockerfile must declare exactly one Docker stage named "builder".');
   } else {
     expectDockerStageBase(failures, builderStages[0], "builder", "ci-base");
+    const builderArgumentCount = builderStages[0].instructions.filter(
+      ({ keyword, argument }) => keyword === "ARG" && argument === "WORKBENCH_DEPLOYMENT_ID"
+    ).length;
+    const builderEnvironmentCount = builderStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "ENV" &&
+        normalizeInstruction(argument) ===
+          "WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}"
+    ).length;
+    const guardedBuildCount = builderStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "RUN" &&
+        normalizeInstruction(argument) ===
+          'test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build'
+    ).length;
+    if (
+      builderArgumentCount !== 1 ||
+      builderEnvironmentCount !== 1 ||
+      guardedBuildCount !== 1
+    ) {
+      failures.push(
+        "The builder must require, bind, and validate WORKBENCH_DEPLOYMENT_ID before the production build."
+      );
+    }
     const dependencyCopies = builderStages[0].instructions.filter(
       ({ keyword, argument }) =>
         keyword === "COPY" &&
@@ -211,6 +247,20 @@ export function validateRuntimeSupportPolicy({
     failures.push('Dockerfile must declare exactly one Docker stage named "runner".');
   } else {
     expectDockerStageBase(failures, runnerStages[0], "runner", "ci-base");
+    const runnerArgumentCount = runnerStages[0].instructions.filter(
+      ({ keyword, argument }) => keyword === "ARG" && argument === "WORKBENCH_DEPLOYMENT_ID"
+    ).length;
+    const runnerEnvironmentCount = runnerStages[0].instructions.filter(
+      ({ keyword, argument }) =>
+        keyword === "ENV" &&
+        normalizeInstruction(argument) ===
+          "WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}"
+    ).length;
+    if (runnerArgumentCount !== 1 || runnerEnvironmentCount !== 1) {
+      failures.push(
+        "The runner must retain the exact build deployment identity as its default runtime identity."
+      );
+    }
     if (dockerModel.stages.at(-1) !== runnerStages[0]) {
       failures.push(
         'The named runner stage must be the final Docker stage because protected builds publish the default final stage.'

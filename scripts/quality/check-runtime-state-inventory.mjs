@@ -140,11 +140,12 @@ export function validateRuntimeStateInventory({
     }
   }
   if (
-    !/\bdeploymentId\s*[:,]/.test(nextConfig) ||
-    !/WORKBENCH_DEPLOYMENT_ID/.test(nextConfig)
+    !/^\s*deploymentId,\s*$/m.test(nextConfig) ||
+    !/WORKBENCH_DEPLOYMENT_ID/.test(nextConfig) ||
+    !/WORKBENCH_BUILD_DEPLOYMENT_ID\s*:\s*deploymentId/.test(nextConfig)
   ) {
     failures.push(
-      "Next configuration must bind deploymentId to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
+      "Next configuration must bind deploymentId and embedded build identity to WORKBENCH_DEPLOYMENT_ID for rolling-version protection",
     );
   }
 
