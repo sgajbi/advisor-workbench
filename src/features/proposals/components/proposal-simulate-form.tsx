@@ -138,7 +138,7 @@ export default function ProposalSimulateForm({
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [workspaceEnvelope, setWorkspaceEnvelope] =
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const [evaluatedWorkspaceId, setEvaluatedWorkspaceId] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState<{
     proposalId: string;
     portfolioId: string;
@@ -250,6 +250,7 @@ export default function ProposalSimulateForm({
   }
 
   async function createEvaluatedWorkspace(values: FormInput): Promise<AdvisoryWorkspaceEnvelopeResponse> {
+    setEvaluatedWorkspaceId(null);
     const mandateId = values.mandateId?.trim();
     const workspaceResponse = await createAdvisoryWorkspace({
       body: {
@@ -268,7 +269,6 @@ export default function ProposalSimulateForm({
       throw new Error("Advisory workspace was created without a workspace identifier.");
     }
 
-    setActiveWorkspaceId(workspaceId);
     let latestResponse = workspaceResponse;
 
     for (const item of validCashFlowRows()) {
@@ -303,6 +303,7 @@ export default function ProposalSimulateForm({
 
     latestResponse = await evaluateAdvisoryWorkspace(workspaceId);
 
+    setEvaluatedWorkspaceId(workspaceId);
     syncEvaluationFromWorkspace(latestResponse);
     return latestResponse;
   }
@@ -426,7 +427,9 @@ export default function ProposalSimulateForm({
                 {cappedTradeCount ? (
                   <li>{cappedTradeCount} sell line capped to source-backed available units</li>
                 ) : null}
-                {activeWorkspaceId ? <li>Workspace {activeWorkspaceId} evaluated by Advise</li> : null}
+                {evaluatedWorkspaceId ? (
+                  <li>Workspace {evaluatedWorkspaceId} evaluated by Advise</li>
+                ) : null}
               </ul>
               <Stack spacing={1} className={styles.actionButtons}>
                 <Button type="submit" variant="contained" disabled={loading} fullWidth>

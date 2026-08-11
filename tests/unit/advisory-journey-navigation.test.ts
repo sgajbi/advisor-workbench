@@ -15,6 +15,7 @@ describe("advisory journey navigation", () => {
       "proposal-builder",
     );
     expect(normalizeAdvisoryJourneyMode("technical-route")).toBe("overview");
+    expect(normalizeAdvisoryJourneyMode("simulation")).toBe("overview");
     expect(normalizeAdvisoryJourneyMode(undefined)).toBe("overview");
   });
 
@@ -65,10 +66,12 @@ describe("advisory journey navigation", () => {
         href: "/proposals/simulate?portfolioId=PB_1",
       },
     );
+    expect(items.some((item) => item.key === "simulation")).toBe(false);
+    expect(items.every((item) => !item.href.includes("#simulation"))).toBe(true);
   });
 
   it("keeps each journey definition anchored to advisor decisions and source-owned data", () => {
-    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(13);
+    expect(ADVISORY_JOURNEY_DEFINITIONS).toHaveLength(12);
     for (const definition of ADVISORY_JOURNEY_DEFINITIONS) {
       expect(definition.primaryDecision).toMatch(/\?$/);
       expect(definition.nextAction.length).toBeGreaterThan(10);

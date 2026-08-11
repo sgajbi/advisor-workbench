@@ -362,7 +362,13 @@ export function AdviseEvaluationSummaryPanel({
   draftTradeCount?: unknown;
 }) {
   return (
-    <section className={styles.resultPanel} aria-label="Simulation summary">
+    <section
+      className={styles.resultPanel}
+      aria-label="Proposal evaluation summary"
+      aria-atomic="true"
+      aria-live="polite"
+      role="status"
+    >
       <Text variant="sectionTitle">Advise Evaluation Summary</Text>
       <div className={styles.resultGrid}>
         <div>

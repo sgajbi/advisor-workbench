@@ -224,7 +224,26 @@ describe("ProposalSimulateForm", () => {
     await waitFor(() =>
       expect(advisoryApiMocks.evaluateAdvisoryWorkspace).toHaveBeenCalledWith("aws_test_001")
     );
-    expect(await screen.findByText("Advise Evaluation Summary")).toBeInTheDocument();
+    const evaluationSummary = await screen.findByRole("status", {
+      name: "Proposal evaluation summary",
+    });
+    expect(evaluationSummary).toHaveTextContent("Advise Evaluation Summary");
+    expect(screen.getByText("Workspace aws_test_001 evaluated by Advise")).toBeInTheDocument();
+  });
+
+  it("keeps evaluation failure explicit without claiming the workspace was evaluated", async () => {
+    advisoryApiMocks.evaluateAdvisoryWorkspace.mockRejectedValueOnce(
+      new Error("proposal evaluation unavailable")
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    expect(await screen.findByText("proposal evaluation unavailable")).toBeInTheDocument();
+    expect(screen.queryByText(/evaluated by Advise/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: "Proposal evaluation summary" })
+    ).not.toBeInTheDocument();
   });
 
   it("caps submitted sell-down quantities to source-backed available units", async () => {
