@@ -170,6 +170,14 @@ describe("ProposalSimulateForm", () => {
     expect(screen.queryByLabelText("Idempotency Key")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Created By")).not.toBeInTheDocument();
     await waitForPortfolioEvidence();
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-currency-status",
+      "available"
+    );
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-currency",
+      "USD"
+    );
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   });
 
@@ -552,6 +560,10 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByText("Latest portfolio evidence is not confirmed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-currency-status",
+      "available"
+    );
   });
 
   it("requests and confirms a new combined book when the advisory date changes", async () => {
@@ -609,6 +621,13 @@ describe("ProposalSimulateForm", () => {
     expect(within(setupSummary).getByText("SGD 25,000")).toBeInTheDocument();
     expect(within(positionsPanel!).getByText("SGD 19,000")).toBeInTheDocument();
     expect(screen.getByText("SGD portfolio book")).toBeInTheDocument();
+    const impactPanel = screen.getByTestId("proposal-draft-impact");
+    expect(impactPanel).toHaveAttribute("data-preview-currency-status", "mixed_currency");
+    expect(impactPanel).toHaveAttribute("data-requested-currency", "USD");
+    expect(impactPanel).toHaveAttribute("data-source-currency", "SGD");
+    expect(within(impactPanel).getByText("Currency-aligned impact is unavailable")).toBeInTheDocument();
+    expect(within(impactPanel).queryByText("USD 44,000")).not.toBeInTheDocument();
+    expect(screen.getByText("Currency alignment required")).toBeInTheDocument();
   });
 
   it("keeps manual scenario cash in proposal currency when partial source currency differs", async () => {
@@ -624,9 +643,14 @@ describe("ProposalSimulateForm", () => {
     const evidencePanel = await waitForPortfolioEvidence("partial");
     const setupSummary = screen.getByLabelText("Proposal setup summary");
     expect(within(evidencePanel).getByText("USD 10,000")).toBeInTheDocument();
-    expect(within(setupSummary).getAllByText("USD 10,000")).toHaveLength(2);
+    expect(within(setupSummary).getByText("USD 10,000")).toBeInTheDocument();
+    expect(within(setupSummary).getByText("Currency alignment required")).toBeInTheDocument();
     expect(screen.queryByText("SGD 10,000")).not.toBeInTheDocument();
     expect(screen.getByText("SGD portfolio book")).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-currency-status",
+      "mixed_currency"
+    );
   });
 
   it("shows active recovery and refresh failure for mismatched evidence", async () => {

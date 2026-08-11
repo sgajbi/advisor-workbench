@@ -19,7 +19,6 @@ import {
 } from "../api";
 import {
   buildExecutableTradeRows,
-  buildProposalDraftPreview,
   createCashFlowIntent,
   createTradeIntent,
   createTradeIntentFromPosition,
@@ -27,6 +26,7 @@ import {
   type ProposalDraftCashFlowIntent,
   type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
+import { buildProposalDraftImpactModel } from "../proposal-draft-currency-authority";
 import type { AdvisoryWorkspaceEnvelopeResponse, ProposalSimulateResponse } from "../types";
 import {
   buildAdvisoryWorkspaceEvaluationResult,
@@ -211,9 +211,24 @@ export default function ProposalSimulateForm({
     portfolioEvidence.cash.authority === "portfolio_book"
       ? portfolioEvidence.context.effectiveCurrency ?? (evidenceCurrency || "USD")
       : evidenceCurrency || "USD";
-  const draftPreview = useMemo(
-    () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
-    [cashFlows, sourceCashAmount, tradablePositions, trades]
+  const draftImpactModel = useMemo(
+    () =>
+      buildProposalDraftImpactModel({
+        positions: tradablePositions,
+        cashAmount: sourceCashAmount,
+        cashFlows,
+        trades,
+        requestedCurrency: evidenceCurrency,
+        portfolioEvidence,
+      }),
+    [
+      cashFlows,
+      evidenceCurrency,
+      portfolioEvidence,
+      sourceCashAmount,
+      tradablePositions,
+      trades,
+    ]
   );
   const executableTradeRows = useMemo(
     () => buildExecutableTradeRows(tradablePositions, trades),
@@ -474,7 +489,14 @@ export default function ProposalSimulateForm({
           </div>
           <div>
             <span>Indicative Cash After Draft</span>
-            <strong>{formatCurrencyValue(draftPreview.proposedCash, baseCurrency || "USD")}</strong>
+            <strong>
+              {draftImpactModel.preview
+                ? formatCurrencyValue(
+                    draftImpactModel.preview.proposedCash,
+                    draftImpactModel.currencyAuthority.currency
+                  )
+                : "Currency alignment required"}
+            </strong>
           </div>
         </div>
 
@@ -656,8 +678,7 @@ export default function ProposalSimulateForm({
             />
 
             <IndicativeDraftImpactPanel
-              draftPreview={draftPreview}
-              baseCurrency={baseCurrency || "USD"}
+              impactModel={draftImpactModel}
             />
 
             <section className={styles.panel} aria-labelledby="draft-details-heading">
