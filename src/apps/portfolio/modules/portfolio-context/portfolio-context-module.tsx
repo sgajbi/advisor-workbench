@@ -1,6 +1,6 @@
 "use client";
 
-import { ContextCard, WorkbenchRailCard } from "@/design-system";
+import { ContextCard } from "@/design-system";
 
 import type { PortfolioWorkspace } from "../../types";
 
@@ -14,11 +14,11 @@ export default function PortfolioContextModule({
   onCopy: (key: string, value: string | null | undefined) => void;
 }) {
   return (
-    <WorkbenchRailCard className="portfolio-side-card portfolio-context-card">
-      <ContextCard
-        title="Book Context"
-        subtitle="Client book identity for this review."
-        groups={[
+    <ContextCard
+      className="portfolio-side-card portfolio-context-card"
+      title="Book Context"
+      subtitle="Client book identity for this review."
+      groups={[
           {
             key: "identity",
             title: "Identity",
@@ -58,8 +58,7 @@ export default function PortfolioContextModule({
               { label: "Booking Centre", value: workspace.portfolio.booking_center_code ?? "N/A" },
             ],
           },
-        ]}
-      />
-    </WorkbenchRailCard>
+      ]}
+    />
   );
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { cx } from "../utils/cx";
 import DefinitionList from "./definition-list";
 import DetailCard from "./detail-card";
 
@@ -19,13 +20,15 @@ export default function ContextCard({
   title,
   subtitle,
   groups,
+  className,
 }: {
   title: string;
   subtitle: string;
   groups: ContextGroup[];
+  className?: string;
 }) {
   return (
-    <DetailCard title={title} subtitle={subtitle} className="context-card">
+    <DetailCard title={title} subtitle={subtitle} className={cx("context-card", className)}>
       <div className="portfolio-context-panel">
         {groups.map((group) => (
           <section key={group.key} className="portfolio-context-group" aria-label={group.title}>

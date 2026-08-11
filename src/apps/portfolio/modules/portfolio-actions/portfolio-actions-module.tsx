@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionListCard, WorkbenchRailCard } from "@/design-system";
+import { ActionListCard } from "@/design-system";
 
 import type { PortfolioWorkflowAction } from "../../types";
 
@@ -14,22 +14,21 @@ export default function PortfolioActionsModule({
   }
 
   return (
-    <WorkbenchRailCard className="portfolio-side-card portfolio-actions-card">
-      <ActionListCard
-        title="Recommended Actions"
-        subtitle="The next front-office checks before client use."
-        items={actions.map((action, index) => ({
-          key: `${action.title}-${index}`,
-          sequence: action.sequence || index + 1,
-          title: action.title,
-          impact: toCompactReason(action.impact),
-          target: undefined,
-          href: action.href,
-          ctaLabel: action.cta_label,
-          recommended: action.recommended,
-        }))}
-      />
-    </WorkbenchRailCard>
+    <ActionListCard
+      className="portfolio-side-card portfolio-actions-card"
+      title="Recommended Actions"
+      subtitle="The next front-office checks before client use."
+      items={actions.map((action, index) => ({
+        key: `${action.title}-${index}`,
+        sequence: action.sequence || index + 1,
+        title: action.title,
+        impact: toCompactReason(action.impact),
+        target: undefined,
+        href: action.href,
+        ctaLabel: action.cta_label,
+        recommended: action.recommended,
+      }))}
+    />
   );
 }
 
