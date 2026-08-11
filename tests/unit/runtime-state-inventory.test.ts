@@ -201,6 +201,21 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
   });
 
+  it.each([
+    [
+      "arrow getter",
+      "const cache = createCache(); const getCache = () => cache; getCache().set('key', 'value');",
+    ],
+    [
+      "function getter",
+      "const cache = createCache(); function getCache() { return cache; } getCache().set('key', 'value');",
+    ],
+  ])("traces state mutation through a %s", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("discovers a mutated imported singleton binding", () => {
     expect(
       scanRuntimeStateSource({
@@ -253,6 +268,16 @@ describe("runtime state inventory", () => {
       "const Cache = class { static entries = []; static add(value) { this.entries.push(value); } };",
       "Cache",
     ],
+    [
+      "readonly static array",
+      "class Cache { static readonly entries: string[] = []; }",
+      "Cache",
+    ],
+    [
+      "readonly static object",
+      "class Cache { static readonly entries = { count: 0 }; }",
+      "Cache",
+    ],
   ])("discovers process-local state held on a module %s", (_name, source, symbol) => {
     expect(
       scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
@@ -284,6 +309,21 @@ describe("runtime state inventory", () => {
     ).toEqual([]);
   });
 
+  it.each([
+    [
+      "object destructuring assignment",
+      "const cache = Object.freeze({ entries: [] }); function update() { let ref; ({ entries: ref } = cache); ref.push('value'); }",
+    ],
+    [
+      "array destructuring assignment",
+      "const cache = Object.freeze({ entries: [[]] }); function update() { let ref; [ref] = cache.entries; ref.push('value'); }",
+    ],
+  ])("traces a local alias created through %s", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("does not classify a static method or readonly primitive as mutable state", () => {
     expect(
       scanRuntimeStateSource({
@@ -299,6 +339,16 @@ describe("runtime state inventory", () => {
       scanRuntimeStateSource({
         source:
           "const Formatter = class { static readonly label = 'Ready'; static format() { return Formatter.label; } };",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
+  it("does not classify a frozen readonly static object as mutable state", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "class Formatter { static readonly labels = Object.freeze({ ready: 'Ready' }); }",
         file: "src/features/example.ts",
       }),
     ).toEqual([]);
