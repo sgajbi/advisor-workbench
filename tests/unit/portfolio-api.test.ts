@@ -371,6 +371,15 @@ describe("portfolio api", () => {
 
       if (url.includes("/book")) {
         return jsonResponse({
+          as_of_date: "2026-03-28",
+          summary: {
+            assets_under_management_base: 982500,
+            invested_market_value_base: 900000,
+            cash_market_value_base: 82500,
+            cash_weight_pct: 8.3969,
+            position_count: 3,
+            cash_balance_count: 1,
+          },
           allocation_views: [
             {
               dimension: "asset_class",
@@ -491,6 +500,15 @@ describe("portfolio api", () => {
     });
 
     expect(details?.allocation_views?.[0].dimension).toBe("asset_class");
+    expect(details?.as_of_date).toBe("2026-03-28");
+    expect(details?.summary).toEqual({
+      market_value_base: 982500,
+      invested_market_value_base: 900000,
+      total_cash_base: 82500,
+      cash_weight_pct: 8.3969,
+      position_count: 3,
+      cash_balance_count: 1,
+    });
     expect(details?.top_positions[0].market_value_base).toBe(147000);
     expect(details?.positions[0].market_value_local).toBe(147000);
     expect(details?.income_summary?.totals_requested_window.net.reporting_currency_amount).toBe(350);

@@ -25,6 +25,8 @@ export default function PortfolioSummaryHeaderSection({
   onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
 }) {
   const performanceReturns = resolvePortfolioPerformancePeriodReturns(workspace);
+  const valuationDate = formatDate(workspace.as_of_date);
+  const reviewingHistoricalDate = context.selectedAsOfDate !== workspace.as_of_date;
   const portfolioDisplayName =
     workspace.portfolio.display_name && workspace.portfolio.display_name !== workspace.portfolio.portfolio_id
       ? workspace.portfolio.display_name
@@ -48,7 +50,8 @@ export default function PortfolioSummaryHeaderSection({
               {workspace.portfolio.booking_center_code ? (
                 <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
               ) : null}
-              <span>As of {formatDate(context.selectedAsOfDate)}</span>
+              <span>Review date {formatDate(context.selectedAsOfDate)}</span>
+              {reviewingHistoricalDate ? <span>Valuation date {valuationDate}</span> : null}
               {workspace.profile.status ? (
                 <SemanticBadge className="portfolio-hero-status">
                   {formatStatus(workspace.profile.status)}
@@ -65,8 +68,8 @@ export default function PortfolioSummaryHeaderSection({
               label: "AUM",
               value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency, 0),
               definition:
-                "Total portfolio market value in the portfolio base currency as of the selected date.",
-              support: `As of ${formatDate(context.selectedAsOfDate)}`,
+                "Total portfolio market value in the portfolio base currency at the stated valuation date.",
+              support: `Valuation as of ${valuationDate}`,
               onClick: () => onOpenMetricDrawer("aum"),
             },
             {
@@ -79,7 +82,7 @@ export default function PortfolioSummaryHeaderSection({
               ),
               definition:
                 "Market value currently invested in funded holdings, excluding operational cash inventory.",
-              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
+              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM · ${valuationDate}`,
               onClick: () => onOpenMetricDrawer("invested_assets"),
             },
             {
@@ -88,7 +91,7 @@ export default function PortfolioSummaryHeaderSection({
               value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Available cash inventory in the portfolio base currency across published cash balances.",
-              support: `${formatPct(workspace.summary.cash_weight_pct)} cash allocation`,
+              support: `${formatPct(workspace.summary.cash_weight_pct)} cash · ${valuationDate}`,
               onClick: () => onOpenMetricDrawer("available_cash"),
             },
             {
