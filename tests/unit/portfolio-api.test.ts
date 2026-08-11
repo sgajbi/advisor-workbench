@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getPortfolioCatalog,
   getPortfolioAllocationViews,
+  getPortfolioBook,
   getPortfolioProjectedCashflow,
+  getRequiredPortfolioBook,
+  getRequiredPortfolioWorkspaceShell,
   getPortfolioTransactionLedger,
   getPortfolioWorkspaceDetailedDetails,
   getPortfolioWorkspaceShell,
@@ -211,6 +214,22 @@ describe("portfolio api", () => {
     expect(metricsJson).not.toContain("MANUAL_PB_USD_001");
     expect(metricsJson).not.toContain("MANUAL_CIF_001");
     expect(metricsJson).not.toContain("ADV_1001");
+  });
+
+  it("keeps tolerant portfolio callers isolated from required evidence reads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("gateway unavailable", { status: 503 }))
+    );
+
+    await expect(getPortfolioWorkspaceShell("PB_SG_GLOBAL_BAL_001")).resolves.toBeNull();
+    await expect(
+      getRequiredPortfolioWorkspaceShell("PB_SG_GLOBAL_BAL_001")
+    ).rejects.toThrow("Portfolio workspace evidence is unavailable.");
+    await expect(getPortfolioBook("PB_SG_GLOBAL_BAL_001")).resolves.toBeNull();
+    await expect(getRequiredPortfolioBook("PB_SG_GLOBAL_BAL_001")).rejects.toThrow(
+      "Portfolio book evidence is unavailable."
+    );
   });
 
   it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {
