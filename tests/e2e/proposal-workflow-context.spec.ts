@@ -419,6 +419,7 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
   await expect(page.getByText("Portfolio evidence is unavailable")).toBeVisible();
+  await page.getByLabel("Additional Cash Assumption").fill("0");
   await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
 
@@ -435,6 +436,79 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
     expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   }
   await testInfo.attach("proposal-evidence-recovery", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+});
+
+test("keeps additional-cash validation and workflow admission aligned", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalBuilderEvaluation(page);
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const cashInput = page.getByLabel("Additional Cash Assumption");
+  const actionPanel = page.locator("section[data-scenario-cash-state]");
+  const evaluateAction = page.getByRole("button", { name: "Evaluate Workspace" });
+  const saveAction = page.getByRole("button", { name: "Save Advisor Draft" });
+
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "positive");
+  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "ready");
+  await expect(evaluateAction).toBeEnabled();
+
+  await cashInput.fill("-250");
+  await cashInput.press("Tab");
+
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "negative");
+  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(cashInput).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page.getByText("Additional cash assumption cannot be negative. Enter 0 or a positive amount.").last()
+  ).toBeVisible();
+  await expect(evaluateAction).toBeDisabled();
+  await expect(saveAction).toBeDisabled();
+  await expect(page.getByTestId("proposal-draft-impact")).toHaveAttribute(
+    "data-preview-blocked-by",
+    "additional_cash"
+  );
+  await expect(page.getByText("Additional cash needs correction")).toBeVisible();
+  await expect(page.getByTestId("proposal-draft-impact").getByText("Current Value")).toHaveCount(0);
+
+  await cashInput.fill("1,000");
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "not_numeric");
+  await expect(
+    page.getByText(
+      "Enter additional cash as a number without currency symbols or separators, or leave it blank."
+    ).last()
+  ).toBeVisible();
+
+  await testInfo.attach("proposal-additional-cash-invalid", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  await cashInput.fill("");
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "empty");
+  await expect(cashInput).toHaveAttribute("aria-invalid", "false");
+  await expect(evaluateAction).toBeEnabled();
+  await expect(saveAction).toBeEnabled();
+
+  await cashInput.fill("0");
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "zero");
+  await evaluateAction.click();
+
+  await expect(
+    page.getByRole("status", { name: "Proposal evaluation summary" })
+  ).toContainText("Advise Evaluation Summary");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  ).toBe(true);
+  await testInfo.attach("proposal-additional-cash-zero-narrow", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });

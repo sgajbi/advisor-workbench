@@ -6,6 +6,7 @@ import {
   type ProposalDraftTradeIntent,
 } from "./proposal-draft-preview";
 import type { ProposalPortfolioEvidenceModel } from "./proposal-portfolio-evidence";
+import type { ProposalScenarioCashAdmission } from "./proposal-scenario-cash";
 
 type ProposalDraftCurrencyAuthorityBase = {
   requestedCurrency: string | null;
@@ -33,7 +34,10 @@ export type ProposalDraftImpactModel =
     }
   | {
       status: "unavailable";
-      currencyAuthority: Exclude<ProposalDraftCurrencyAuthority, { status: "available" }>;
+      blockedBy: "currency" | "additional_cash";
+      title: string;
+      body: string;
+      currencyAuthority: ProposalDraftCurrencyAuthority;
       preview: null;
     };
 
@@ -44,6 +48,7 @@ export function buildProposalDraftImpactModel({
   trades,
   requestedCurrency,
   portfolioEvidence,
+  additionalCashAdmission,
 }: {
   positions: PortfolioPositionView[];
   cashAmount: number;
@@ -51,6 +56,7 @@ export function buildProposalDraftImpactModel({
   trades: ProposalDraftTradeIntent[];
   requestedCurrency: string;
   portfolioEvidence: ProposalPortfolioEvidenceModel;
+  additionalCashAdmission?: ProposalScenarioCashAdmission;
 }): ProposalDraftImpactModel {
   const currencyAuthority = buildProposalDraftCurrencyAuthority({
     requestedCurrency,
@@ -59,8 +65,26 @@ export function buildProposalDraftImpactModel({
     trades,
   });
 
+  if (additionalCashAdmission?.status === "invalid") {
+    return {
+      status: "unavailable",
+      blockedBy: "additional_cash",
+      title: "Additional cash assumption needs correction",
+      body: "Correct the value above to restore the indicative draft projection.",
+      currencyAuthority,
+      preview: null,
+    };
+  }
+
   if (currencyAuthority.status !== "available") {
-    return { status: "unavailable", currencyAuthority, preview: null };
+    return {
+      status: "unavailable",
+      blockedBy: "currency",
+      title: currencyAuthority.title,
+      body: currencyAuthority.body,
+      currencyAuthority,
+      preview: null,
+    };
   }
 
   return {

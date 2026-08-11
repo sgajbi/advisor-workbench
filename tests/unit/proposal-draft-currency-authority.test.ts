@@ -126,6 +126,31 @@ describe("proposal draft currency authority", () => {
     });
   });
 
+  it("withholds impact instead of coercing an invalid additional-cash assumption to zero", () => {
+    expect(
+      buildProposalDraftImpactModel({
+        positions: [position],
+        cashAmount: 25_000,
+        cashFlows: [],
+        trades: [],
+        requestedCurrency: "USD",
+        portfolioEvidence: portfolioEvidence(),
+        additionalCashAdmission: {
+          status: "invalid",
+          reason: "not_numeric",
+          message:
+            "Enter additional cash as a number without currency symbols or separators, or leave it blank.",
+        },
+      })
+    ).toMatchObject({
+      status: "unavailable",
+      blockedBy: "additional_cash",
+      title: "Additional cash assumption needs correction",
+      currencyAuthority: { status: "available", currency: "USD" },
+      preview: null,
+    });
+  });
+
   it("withholds projection when an active cash movement uses another currency", () => {
     expect(
       buildProposalDraftCurrencyAuthority({

@@ -60,10 +60,16 @@ export function ProposalPortfolioEvidencePanel({
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Cash Evidence</Text>
-          <strong>
-            {cashCurrency
-              ? formatCurrencyValue(evidence.cash.amount, cashCurrency)
-              : "Currency not confirmed"}
+          <strong
+            data-cash-evidence-state={
+              evidence.cash.amount === null ? "needs_correction" : evidence.cash.authority
+            }
+          >
+            {evidence.cash.amount === null
+              ? "Needs correction"
+              : cashCurrency
+                ? formatCurrencyValue(evidence.cash.amount, cashCurrency)
+                : "Currency not confirmed"}
           </strong>
           <Text variant="metadata">{evidence.cash.label}</Text>
         </div>
@@ -472,6 +478,8 @@ export function IndicativeDraftImpactPanel({
         className={styles.panel}
         aria-labelledby="draft-impact-heading"
         data-testid="proposal-draft-impact"
+        data-preview-status={impactModel.status}
+        data-preview-blocked-by={impactModel.blockedBy}
         data-preview-currency-status={currencyAuthority.status}
         data-requested-currency={currencyAuthority.requestedCurrency ?? undefined}
         data-source-currency={currencyAuthority.sourceCurrency ?? undefined}
@@ -486,7 +494,7 @@ export function IndicativeDraftImpactPanel({
           </div>
         </div>
         <Alert severity="warning" role="status" aria-live="polite">
-          <strong>{currencyAuthority.title}</strong> {currencyAuthority.body}
+          <strong>{impactModel.title}</strong> {impactModel.body}
         </Alert>
       </section>
     );
@@ -499,6 +507,7 @@ export function IndicativeDraftImpactPanel({
       className={styles.panel}
       aria-labelledby="draft-impact-heading"
       data-testid="proposal-draft-impact"
+      data-preview-status={impactModel.status}
       data-preview-currency-status={currencyAuthority.status}
       data-preview-currency={baseCurrency}
       data-requested-currency={currencyAuthority.requestedCurrency ?? undefined}

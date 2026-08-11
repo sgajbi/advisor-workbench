@@ -27,6 +27,11 @@ import {
   type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
 import { buildProposalDraftImpactModel } from "../proposal-draft-currency-authority";
+import {
+  assessProposalScenarioCashInput,
+  PROPOSAL_SCENARIO_CASH_HELP,
+  proposalScenarioCashInputSchema,
+} from "../proposal-scenario-cash";
 import type { AdvisoryWorkspaceEnvelopeResponse, ProposalSimulateResponse } from "../types";
 import {
   buildAdvisoryWorkspaceEvaluationResult,
@@ -65,7 +70,7 @@ const schema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an advisory date in YYYY-MM-DD format"),
   mandateId: z.string().optional(),
   baseCurrency: z.string().trim().length(3, "Use a three-letter currency code"),
-  cashAmount: z.number().positive("Investable cash must be greater than 0"),
+  cashAmount: proposalScenarioCashInputSchema,
 });
 
 type FormInput = z.infer<typeof schema>;
@@ -115,6 +120,9 @@ export default function ProposalSimulateForm({
 
   const form = useForm<FormInput>({
     resolver: zodResolver(schema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
+    shouldFocusError: true,
     defaultValues: {
       idempotencyKey: defaultIdempotencyKey,
       createdBy: "advisor_1",
@@ -126,7 +134,7 @@ export default function ProposalSimulateForm({
           ? "MANDATE_PB_SG_GLOBAL_BAL_001"
           : "",
       baseCurrency: "USD",
-      cashAmount: 10000,
+      cashAmount: "10000",
     },
   });
 
@@ -152,6 +160,10 @@ export default function ProposalSimulateForm({
   const asOfDate = useWatch({ control: form.control, name: "asOfDate" });
   const baseCurrency = useWatch({ control: form.control, name: "baseCurrency" });
   const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
+  const scenarioCashAdmission = useMemo(
+    () => assessProposalScenarioCashInput(cashAmount),
+    [cashAmount]
+  );
   const evidencePortfolioId = portfolioId.trim();
   const evidenceAsOfDate = asOfDate.trim();
   const evidenceCurrency = baseCurrency.trim().toUpperCase();
@@ -194,10 +206,10 @@ export default function ProposalSimulateForm({
           isFetching: portfolioBookQuery.isFetching,
           error: portfolioBookQuery.error,
         },
-        manualCashAmount: cashAmount || 0,
+        manualCashAmount:
+          scenarioCashAdmission.status === "ready" ? scenarioCashAdmission.amount : null,
       }),
     [
-      cashAmount,
       evidenceAsOfDate,
       evidenceCurrency,
       evidencePortfolioId,
@@ -205,6 +217,7 @@ export default function ProposalSimulateForm({
       portfolioBookQuery.error,
       portfolioBookQuery.isFetching,
       portfolioBookQuery.isLoading,
+      scenarioCashAdmission,
     ]
   );
   const tradablePositions = portfolioEvidence.positions.items;
@@ -213,16 +226,18 @@ export default function ProposalSimulateForm({
     () =>
       buildProposalDraftImpactModel({
         positions: tradablePositions,
-        cashAmount: sourceCashAmount,
+        cashAmount: sourceCashAmount ?? 0,
         cashFlows,
         trades,
         requestedCurrency: evidenceCurrency,
         portfolioEvidence,
+        additionalCashAdmission: scenarioCashAdmission,
       }),
     [
       cashFlows,
       evidenceCurrency,
       portfolioEvidence,
+      scenarioCashAdmission,
       sourceCashAmount,
       tradablePositions,
       trades,
@@ -240,6 +255,13 @@ export default function ProposalSimulateForm({
   const cappedTradeCount = executableTradeRows.filter(
     (item) => item.cappedToAvailableQuantity
   ).length;
+  const canRunProposalWorkflow =
+    portfolioEvidence.canEvaluateAndHandoff && scenarioCashAdmission.status === "ready";
+  const workflowActionReason = !portfolioEvidence.canEvaluateAndHandoff
+    ? "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."
+    : scenarioCashAdmission.status === "invalid"
+      ? "Correct the additional cash assumption before evaluating or saving this draft."
+      : "Evaluation uses the source-confirmed portfolio snapshot; the additional cash assumption changes indicative impact only.";
 
   function updateCashFlow(id: string, patch: Partial<ProposalDraftCashFlowIntent>) {
     setCashFlows((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
@@ -485,11 +507,13 @@ export default function ProposalSimulateForm({
             <strong>{baseCurrency || "N/A"}</strong>
           </div>
           <div>
-            <span>Source Cash</span>
+            <span>Cash Context</span>
             <strong>
-              {cashEvidenceCurrency
-                ? formatCurrencyValue(sourceCashAmount, cashEvidenceCurrency)
-                : "Currency not confirmed"}
+              {sourceCashAmount === null
+                ? "Needs correction"
+                : cashEvidenceCurrency
+                  ? formatCurrencyValue(sourceCashAmount, cashEvidenceCurrency)
+                  : "Currency not confirmed"}
             </strong>
           </div>
           <div>
@@ -503,19 +527,29 @@ export default function ProposalSimulateForm({
           <div>
             <span>Indicative Cash After Draft</span>
             <strong>
-              {draftImpactModel.preview
+              {draftImpactModel.status === "available"
                 ? formatCurrencyValue(
                     draftImpactModel.preview.proposedCash,
                     draftImpactModel.currencyAuthority.currency
                   )
-                : "Currency alignment required"}
+                : draftImpactModel.blockedBy === "additional_cash"
+                  ? "Additional cash needs correction"
+                  : "Currency alignment required"}
             </strong>
           </div>
         </div>
 
         <div className={styles.workspaceGrid}>
           <aside className={styles.actionRail} aria-label="Proposal workflow actions">
-            <section className={styles.actionPanel}>
+            <section
+              className={styles.actionPanel}
+              data-scenario-cash-state={
+                scenarioCashAdmission.status === "ready"
+                  ? scenarioCashAdmission.inputState
+                  : scenarioCashAdmission.reason
+              }
+              data-workflow-admission={canRunProposalWorkflow ? "ready" : "blocked"}
+            >
               <div>
                 <h3>Advisor Workflow</h3>
                 <p>
@@ -538,7 +572,7 @@ export default function ProposalSimulateForm({
                   type="submit"
                   variant="contained"
                   disabled={
-                    !isHydrated || loading || !portfolioEvidence.canEvaluateAndHandoff
+                    !isHydrated || loading || !canRunProposalWorkflow
                   }
                   aria-describedby="proposal-evidence-action-reason"
                   fullWidth
@@ -550,7 +584,7 @@ export default function ProposalSimulateForm({
                   variant="outlined"
                   onClick={onSaveDraft}
                   disabled={
-                    !isHydrated || savingDraft || !portfolioEvidence.canEvaluateAndHandoff
+                    !isHydrated || savingDraft || !canRunProposalWorkflow
                   }
                   aria-describedby="proposal-evidence-action-reason"
                   fullWidth
@@ -561,9 +595,7 @@ export default function ProposalSimulateForm({
                   View Proposal Queue
                 </Button>
                 <p id="proposal-evidence-action-reason" className={styles.actionReason}>
-                  {portfolioEvidence.canEvaluateAndHandoff
-                    ? "Evaluation uses the portfolio snapshot confirmed for the selected advisory date."
-                    : "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."}
+                  {workflowActionReason}
                 </p>
               </Stack>
             </section>
@@ -646,20 +678,37 @@ export default function ProposalSimulateForm({
                   name="cashAmount"
                   render={({ field, fieldState }) => (
                     <TextField
-                      label="Scenario Cash (Draft Only)"
+                      label="Additional Cash Assumption"
                       size="small"
                       fullWidth
-                      type="number"
+                      type="text"
+                      name={field.name}
                       value={field.value}
                       onChange={(event) => {
-                        const next = (event.target as HTMLInputElement).valueAsNumber;
-                        field.onChange(Number.isNaN(next) ? 0 : next);
+                        const nextInput = event.target.value;
+                        field.onChange(nextInput);
+                        if (fieldState.isTouched || fieldState.error) {
+                          const nextAdmission = assessProposalScenarioCashInput(nextInput);
+                          if (nextAdmission.status === "invalid") {
+                            form.setError("cashAmount", {
+                              type: "validate",
+                              message: nextAdmission.message,
+                            });
+                          } else {
+                            form.clearErrors("cashAmount");
+                          }
+                        }
                       }}
+                      onBlur={field.onBlur}
+                      inputRef={field.ref}
                       error={!!fieldState.error}
-                      helperText={
-                        fieldState.error?.message ??
-                        "Supports indicative drafting only and never authorizes evaluation"
-                      }
+                      helperText={fieldState.error?.message ?? PROPOSAL_SCENARIO_CASH_HELP}
+                      slotProps={{
+                        htmlInput: {
+                          inputMode: "decimal",
+                          spellCheck: false,
+                        },
+                      }}
                     />
                   )}
                 />
