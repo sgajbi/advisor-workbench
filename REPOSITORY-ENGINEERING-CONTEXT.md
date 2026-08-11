@@ -383,7 +383,8 @@ Current repository posture:
     currency posture and prepare all cash-flow actions before the workspace-creation mutation so a
     late conversion failure cannot strand a workspace; round only derived indicative position and
     trade notionals to the nearest minor unit so fractional source-implied prices do not block a
-    valid quantity action;
+    valid quantity action, and derive trade cash from the rounded position-value delta so each
+    indicative trade remains self-financing across one or many draft rows;
     negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not

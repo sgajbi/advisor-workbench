@@ -151,6 +151,23 @@ describe("proposal draft preview", () => {
     expect(preview.rows[0]?.proposedValue).toBe(25_333.33);
   });
 
+  it("reconciles rounded position value and trade cash at one accounting boundary", () => {
+    const position: PortfolioPositionView = {
+      ...applePosition,
+      quantity: 6,
+      market_value_base: 100.01,
+    };
+    const buyThree = createTradeIntentFromPosition(1, position, "BUY", "USD");
+    buyThree.quantity = 3;
+
+    const preview = buildProposalDraftPreview([position], 100, [], [buyThree]);
+
+    expect(preview.tradeNotional).toBe(50);
+    expect(preview.rows[0]?.proposedValue).toBe(150.01);
+    expect(preview.proposedCash).toBe(50);
+    expect(preview.proposedPortfolioValue).toBe(preview.currentPortfolioValue);
+  });
+
   it("adds an off-book instrument and reports unpriced draft lines", () => {
     const offBookTrade: ProposalDraftTradeIntent = {
       id: "trade_1",
