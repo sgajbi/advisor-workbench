@@ -505,6 +505,18 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   await expect(evaluateAction).toBeEnabled();
   await expect(saveAction).toBeEnabled();
 
+  const cashMovementCurrency = page.getByRole("textbox", { name: "Currency", exact: true });
+  await page.getByLabel("Amount").fill("2.675");
+  await cashMovementCurrency.fill("EUR");
+  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(
+    page.getByText("Use no more than 2 decimal places and remain within the reliable draft range.")
+  ).toBeVisible();
+  await expect(evaluateAction).toBeDisabled();
+  await cashMovementCurrency.fill("USD");
+  await page.getByLabel("Amount").fill("0");
+  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "ready");
+
   await cashInput.fill("0");
   await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "zero");
   await evaluateAction.click();
