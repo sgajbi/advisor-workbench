@@ -3327,3 +3327,80 @@ and desktop/narrow production-browser behavior. Repository context, the runtime 
 business-facing screen catalogue, and the codebase review ledger change in the same slice. The wiki
 source therefore requires post-merge publication and strict parity. Workbench #631 separately owns
 portfolio-book and workspace-shell unavailable-versus-empty evidence and action gating.
+
+## Proposal Builder Portfolio Evidence Availability and Recovery
+
+### Business and engineering job
+
+An advisor can construct and retain a proposal only when the workstation can distinguish a
+confirmed portfolio posture from a source outage. Available or previously loaded holdings remain
+valuable for diagnosis and drafting, but they cannot become current decision authority merely
+because a browser fallback or manual cash field exists.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-11:
+
+1. [TanStack Query `useQuery` reference](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery)
+   distinguishes initial load errors from refetch errors, returns the last successfully resolved
+   data, exposes background fetching separately, and cancels a running refetch by default before a
+   replacement refetch.
+2. [TanStack Query background-fetching guidance](https://tanstack.com/query/v5/docs/framework/react/guides/background-fetching-indicators)
+   separates the first hard-loading state from a background refresh indicator while retained data
+   remains rendered.
+3. [IBM Carbon empty-state guidance](https://carbondesignsystem.com/patterns/empty-states-pattern/)
+   treats confirmed absence, first use, and system error as different contextual states and calls
+   for plain-language recovery guidance when a related system cannot supply data.
+4. [GOV.UK error-message guidance](https://design-system.service.gov.uk/components/error-message/)
+   says service capacity or availability is not a field-validation error because the user cannot
+   correct it through input.
+5. [GOV.UK service-problem guidance](https://design-system.service.gov.uk/patterns/problem-with-the-service-pages/)
+   requires clear service-problem copy, an actionable next step, and truthful explanation of what
+   previously entered information remains available.
+6. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   places portfolio analytics and checks inside a guided proposal-construction workflow, supporting
+   evidence recovery in context rather than a disconnected technical-error destination.
+
+### Adopted decisions
+
+1. Use strict readers at this decision boundary while retaining tolerant readers for unrelated
+   blank-safe screens; avoid a breaking global API behavior change.
+2. Project both source queries through one pure, typed evidence model that reuses the shared query
+   posture vocabulary and admits evaluation only from complete, usable, freshly confirmed data.
+3. Keep book and workspace reads parallel so the evidence panel does not introduce a request
+   waterfall.
+4. Keep available or cached holdings and cash visible during partial failure or refresh failure,
+   label their posture, and pause evaluation and handoff until a successful refresh.
+5. Treat a returned empty positions array as a confirmed empty book. Never use source failure,
+   malformed 2xx data, or `null` as equivalent empty evidence.
+6. Allow advisor-entered cash to support an indicative scenario only; label it as manual and never
+   use it to authorize a source-backed evaluation.
+7. Provide an explicit module-level refresh, a polite status update, and stable machine-readable
+   evidence state for browser proof without exposing technical status codes in primary copy.
+8. Use the existing React Query, MUI, design-system components, CSS module, and governed tokens;
+   this state correction does not justify another dependency or global style rule.
+
+### Rejected decisions
+
+1. Preserving the old `catch -> null -> []` chain, because it turns dependency failure into a
+   credible-looking empty portfolio.
+2. Attaching source availability to Portfolio ID, currency, or cash field validation, because the
+   advisor cannot correct an upstream outage by editing those values.
+3. Clearing cached evidence during refresh or refresh failure, because it discards useful context;
+   retained evidence is instead qualified and prevented from authorizing action.
+4. Letting one available source silently stand in for both holdings and cash, because a partial
+   picture is not a confirmed proposal baseline.
+5. Adding another cache library, global state store, polling loop, or Gateway contract solely for
+   view-state projection already supported by the current Workbench architecture.
+6. Blocking the entire Proposal Builder route when one source fails, because advisors can still
+   inspect available context, adjust an indicative draft, and recover in place without fabricated
+   decision authority.
+
+### Validation and publication decision
+
+Workbench #631 owns the implementation. Focused proof covers strict and tolerant API behavior,
+every evidence state, empty-versus-unavailable semantics, cached refresh failure, explicit recovery,
+action admission, and desktop/narrow browser behavior. Repository context, research, and the review
+ledger change in this slice. No wiki source changes: #605 already owns the dedicated Proposal Builder
+screen guide, and this correction does not change the screen's business purpose, navigation, source
+authority, or supported action set.
