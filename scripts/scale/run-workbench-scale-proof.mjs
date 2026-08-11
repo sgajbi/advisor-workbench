@@ -2,6 +2,11 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
+import {
+  parseUpstreamAttemptChain,
+  resolveSuccessfulTerminalUpstream,
+} from "./upstream-evidence.mjs";
+
 const composeFile = "docker-compose.scale-proof.yml";
 const baseUrl = "http://127.0.0.1:3090";
 const image = process.env.WORKBENCH_SCALE_IMAGE ?? "lotus-workbench:scale-proof";
@@ -122,18 +127,24 @@ async function runLoadPhase(name) {
           { cache: "no-store", signal: globalThis.AbortSignal.timeout(5_000) },
         );
         await response.arrayBuffer();
+        const upstreamHeader = response.headers.get("x-workbench-upstream");
         results.push({
           ok: response.ok,
           status: response.status,
           latency_ms: performance.now() - startedAt,
-          upstream: response.headers.get("x-workbench-upstream") ?? "unknown",
+          upstream_attempts: parseUpstreamAttemptChain(upstreamHeader),
+          terminal_upstream: resolveSuccessfulTerminalUpstream(
+            upstreamHeader,
+            response.ok,
+          ),
         });
       } catch {
         results.push({
           ok: false,
           status: 0,
           latency_ms: performance.now() - startedAt,
-          upstream: "network-error",
+          upstream_attempts: [],
+          terminal_upstream: "network-error",
         });
       }
     }
@@ -141,10 +152,11 @@ async function runLoadPhase(name) {
   await Promise.all(workers);
   const latencies = results.map(({ latency_ms }) => latency_ms).sort((a, b) => a - b);
   const errors = results.filter(({ ok }) => !ok).length;
+  const successfulResults = results.filter(({ ok }) => ok);
   const upstreams = Object.fromEntries(
-    [...new Set(results.map(({ upstream }) => upstream))].map((upstream) => [
+    [...new Set(successfulResults.map(({ terminal_upstream }) => terminal_upstream))].map((upstream) => [
       upstream,
-      results.filter((result) => result.upstream === upstream).length,
+      successfulResults.filter((result) => result.terminal_upstream === upstream).length,
     ]),
   );
   return {
@@ -157,6 +169,8 @@ async function runLoadPhase(name) {
     p99_ms: percentile(latencies, 99),
     max_ms: Math.max(...latencies),
     upstreams,
+    retried_requests: results.filter(({ upstream_attempts }) => upstream_attempts.length > 1)
+      .length,
   };
 }
 
@@ -185,7 +199,10 @@ async function requestJson(path, init) {
   });
   return {
     status: response.status,
-    upstream: response.headers.get("x-workbench-upstream") ?? "unknown",
+    upstream: resolveSuccessfulTerminalUpstream(
+      response.headers.get("x-workbench-upstream"),
+      response.ok,
+    ),
     body: await response.json(),
   };
 }
