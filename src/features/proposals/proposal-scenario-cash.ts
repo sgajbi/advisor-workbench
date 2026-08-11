@@ -3,6 +3,7 @@ import { z } from "zod";
 const PLAIN_DECIMAL_PATTERN = /^(?:(\d+)(?:\.(\d*))?|\.(\d+))$/;
 // Keep admitted values below 2^46 major units, where IEEE-754 spacing remains below one cent.
 const MAX_CENT_DISTINGUISHABLE_MINOR_UNITS = 7_036_874_417_766_399n;
+export const PROPOSAL_CENT_DISTINGUISHABLE_MAJOR_LIMIT = 2 ** 46;
 
 export const PROPOSAL_SCENARIO_CASH_HELP =
   "Optional draft assumption. Blank or 0 means no additional cash. Use up to 2 decimal places; source cash remains authoritative.";

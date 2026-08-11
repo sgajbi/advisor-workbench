@@ -6,7 +6,10 @@ import {
   type ProposalDraftTradeIntent,
 } from "./proposal-draft-preview";
 import type { ProposalPortfolioEvidenceModel } from "./proposal-portfolio-evidence";
-import type { ProposalScenarioCashAdmission } from "./proposal-scenario-cash";
+import {
+  PROPOSAL_CENT_DISTINGUISHABLE_MAJOR_LIMIT,
+  type ProposalScenarioCashAdmission,
+} from "./proposal-scenario-cash";
 
 type ProposalDraftCurrencyAuthorityBase = {
   requestedCurrency: string | null;
@@ -34,7 +37,7 @@ export type ProposalDraftImpactModel =
     }
   | {
       status: "unavailable";
-      blockedBy: "currency" | "additional_cash";
+      blockedBy: "currency" | "additional_cash" | "monetary_precision";
       title: string;
       body: string;
       currencyAuthority: ProposalDraftCurrencyAuthority;
@@ -87,17 +90,43 @@ export function buildProposalDraftImpactModel({
     };
   }
 
-  return {
-    status: "available",
-    currencyAuthority,
-    preview: buildProposalDraftPreview(
-      positions,
-      cashAmount,
-      cashFlows,
-      trades,
-      additionalCashAdmission?.status === "ready" ? additionalCashAdmission.amount : 0
-    ),
-  };
+  const preview = buildProposalDraftPreview(
+    positions,
+    cashAmount,
+    cashFlows,
+    trades,
+    additionalCashAdmission?.status === "ready" ? additionalCashAdmission.amount : 0
+  );
+  if (!hasReliableProposalDraftMonetaryPrecision(preview)) {
+    return {
+      status: "unavailable",
+      blockedBy: "monetary_precision",
+      title: "Draft amount exceeds the reliable preview range",
+      body: "Reduce the additional cash assumption or draft amounts to restore an exact cent-distinguishable projection.",
+      currencyAuthority,
+      preview: null,
+    };
+  }
+
+  return { status: "available", currencyAuthority, preview };
+}
+
+function hasReliableProposalDraftMonetaryPrecision(preview: ProposalDraftPreview): boolean {
+  const monetaryValues = [
+    preview.currentPortfolioValue,
+    preview.proposedPortfolioValue,
+    preview.proposedCash,
+    preview.cashDelta,
+    preview.tradeNotional,
+    ...preview.rows.flatMap((row) => [row.currentValue, row.proposedValue, row.deltaValue]),
+    ...preview.allocationRows.flatMap((row) => [row.currentValue, row.proposedValue]),
+  ];
+
+  return monetaryValues.every(
+    (value) =>
+      Number.isFinite(value) &&
+      Math.abs(value) < PROPOSAL_CENT_DISTINGUISHABLE_MAJOR_LIMIT
+  );
 }
 
 export function buildProposalDraftCurrencyAuthority({

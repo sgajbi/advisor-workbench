@@ -374,6 +374,8 @@ Current repository posture:
     proposed portfolio value without rewriting current source cash or current portfolio value.
     Admit no more than two decimal places, validate scaled minor units before numeric conversion,
     and cap the range below the point where adjacent cent values stop being distinguishable;
+    apply the same boundary to the completed current/proposed projection so source and draft
+    aggregation cannot reintroduce rounding;
     negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not

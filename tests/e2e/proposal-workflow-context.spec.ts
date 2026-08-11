@@ -490,6 +490,15 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
     contentType: "image/png",
   });
 
+  await cashInput.fill("70368744177663.99");
+  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "positive");
+  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(page.getByTestId("proposal-draft-impact")).toHaveAttribute(
+    "data-preview-blocked-by",
+    "monetary_precision"
+  );
+  await expect(page.getByText("Draft amount exceeds the reliable preview range")).toBeVisible();
+
   await cashInput.fill("");
   await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "empty");
   await expect(cashInput).toHaveAttribute("aria-invalid", "false");

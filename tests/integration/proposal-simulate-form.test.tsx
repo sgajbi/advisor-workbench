@@ -313,6 +313,30 @@ describe("ProposalSimulateForm", () => {
     );
   });
 
+  it("blocks aggregate impact that crosses the reliable cent-resolution boundary", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const cashInput = screen.getByLabelText("Additional Cash Assumption");
+    fireEvent.change(cashInput, { target: { value: "70368744177663.99" } });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+        "data-preview-blocked-by",
+        "monetary_precision"
+      )
+    );
+    expect(cashInput).toHaveAttribute("aria-invalid", "false");
+    expect(screen.getByText("Draft amount exceeds reliable range")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+
+    fireEvent.change(cashInput, { target: { value: "10000" } });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled()
+    );
+  });
+
   it("uses provided initial portfolio id", () => {
     renderForm("PORT_UI_1001");
     const portfolioInput = screen.getByLabelText("Portfolio ID") as HTMLInputElement;
