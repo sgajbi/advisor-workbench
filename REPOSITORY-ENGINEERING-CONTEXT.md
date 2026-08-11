@@ -352,6 +352,10 @@ Current repository posture:
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
     risk, performance, or execution truth locally. Proposal construction uses Gateway's combined
+    portfolio-book response and `/api/v1/advisory-workspaces*`; do not reintroduce a Workbench
+    `/api/v1/proposals/simulate` client or browser-built portfolio snapshot merely because Gateway
+    retains that separate capability for other supported consumers. Proposal draft intent types
+    belong beside the active draft model, not in a speculative transport builder. Treat the combined
     portfolio-book response as one holdings-and-cash authority. Its query and request identity must
     include portfolio id, advisory as-of date, and selected currency; evaluation and draft handoff
     are admitted only when the response returns usable positions and summary cash for the same

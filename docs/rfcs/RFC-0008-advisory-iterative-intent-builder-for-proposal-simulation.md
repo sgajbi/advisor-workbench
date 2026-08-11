@@ -21,7 +21,7 @@ Add an iterative intent builder inside the proposal simulation screen:
 1. Cash flow intent rows (direction, currency, amount, description).
 2. Trade intent rows (side, instrument, quantity).
 3. Scenario summary (net cash impact, valid trade count).
-4. Typed payload builder used by both simulate and save-draft actions.
+4. One typed draft model translated only into stateful advisory-workspace actions.
 
 ## Architectural Impact
 
@@ -38,8 +38,11 @@ Add an iterative intent builder inside the proposal simulation screen:
 
 ## High-Level Implementation Approach
 
-1. Extract payload construction into `simulation-payload.ts`.
+1. Keep cash-flow and trade intent types beside the active proposal-draft model.
 2. Implement dynamic intent rows and controls in `proposal-simulate-form.tsx`.
-3. Keep the existing advisory workspace evaluation and draft-save workflow unchanged from API
-   perspective.
-4. Add tests for payload mapping and UI rendering expectations.
+3. Translate reviewed draft intent into Gateway `/api/v1/advisory-workspaces*` actions; Workbench
+   does not build or submit a browser-owned portfolio snapshot to `/api/v1/proposals/simulate`.
+4. Test draft modelling, stateful action mapping, evaluation, and UI rendering expectations.
+
+The Gateway `/api/v1/proposals/simulate` capability remains a supported Gateway/Advise contract
+for its actual consumers. It is not a second Workbench Proposal Builder transport.
