@@ -88,6 +88,39 @@ describe("runtime state inventory", () => {
     ).toEqual([]);
   });
 
+  it.each([
+    [
+      "function-local variable",
+      "const cache = Object.freeze({}); function update() { const cache = []; cache.push('local'); }",
+    ],
+    [
+      "function parameter",
+      "const cache = Object.freeze({}); function update(cache) { cache.push('local'); }",
+    ],
+    [
+      "catch binding",
+      "const cache = Object.freeze({}); try { update(); } catch (cache) { cache.push('local'); }",
+    ],
+    [
+      "block-local function declaration",
+      "const cache = Object.freeze({}); { function cache() {} cache.entries = []; }",
+    ],
+  ])("does not attribute a shadowed %s mutation to module state", (_name, source) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toEqual([]);
+  });
+
+  it("still detects a module mutation from inside a nested lexical scope", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({ entries: [] }); function update() { cache.entries.push('module'); }",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("rejects a stale declaration that could hide dead state guidance", () => {
     const evidence = loadEvidence();
     evidence.discoveredStateHolders = evidence.discoveredStateHolders.filter(
