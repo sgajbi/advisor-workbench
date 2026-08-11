@@ -221,8 +221,8 @@ export function scanRuntimeStateSource({
       continue;
     }
     for (const declaration of statement.declarationList.declarations) {
-      if (ts.isIdentifier(declaration.name)) {
-        moduleBindings.add(declaration.name.text);
+      for (const identifier of bindingIdentifiers(declaration.name)) {
+        moduleBindings.add(identifier.text);
       }
     }
   }
@@ -234,19 +234,18 @@ export function scanRuntimeStateSource({
     }
     const isConst = (statement.declarationList.flags & ts.NodeFlags.Const) !== 0;
     for (const declaration of statement.declarationList.declarations) {
-      if (!ts.isIdentifier(declaration.name)) {
-        continue;
-      }
       const initializer = declaration.initializer?.getText(sourceFile) ?? "";
-      if (
-        !isConst ||
-        MUTABLE_COLLECTION_PATTERN.test(initializer) ||
-        mutatedBindings.has(declaration.name.text)
-      ) {
-        stateHolders.push({
-          file: normalizePath(file),
-          symbol: declaration.name.text,
-        });
+      for (const identifier of bindingIdentifiers(declaration.name)) {
+        if (
+          !isConst ||
+          MUTABLE_COLLECTION_PATTERN.test(initializer) ||
+          mutatedBindings.has(identifier.text)
+        ) {
+          stateHolders.push({
+            file: normalizePath(file),
+            symbol: identifier.text,
+          });
+        }
       }
     }
   }
@@ -271,13 +270,33 @@ function collectMutatedBindings(sourceFile, moduleBindings) {
       node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
       node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
     ) {
-      recordRoot(node.left);
+      if (ts.isIdentifier(node.left)) {
+        const binding = resolveBinding(node.left, bindingGraph.bindingsByScope);
+        if (
+          binding?.scope === sourceFile &&
+          moduleBindings.has(binding.name)
+        ) {
+          mutated.add(binding.name);
+        }
+      } else {
+        recordRoot(node.left);
+      }
     } else if (
       (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
       (node.operator === ts.SyntaxKind.PlusPlusToken ||
         node.operator === ts.SyntaxKind.MinusMinusToken)
     ) {
-      recordRoot(node.operand);
+      if (ts.isIdentifier(node.operand)) {
+        const binding = resolveBinding(node.operand, bindingGraph.bindingsByScope);
+        if (
+          binding?.scope === sourceFile &&
+          moduleBindings.has(binding.name)
+        ) {
+          mutated.add(binding.name);
+        }
+      } else {
+        recordRoot(node.operand);
+      }
     } else if (ts.isDeleteExpression(node)) {
       recordRoot(node.expression);
     } else if (ts.isCallExpression(node)) {
@@ -318,6 +337,15 @@ function rootIdentifier(expression) {
   return ts.isIdentifier(current) ? current : undefined;
 }
 
+function bindingIdentifiers(name) {
+  if (ts.isIdentifier(name)) {
+    return [name];
+  }
+  return name.elements.flatMap((element) =>
+    ts.isOmittedExpression(element) ? [] : bindingIdentifiers(element.name),
+  );
+}
+
 function collectBindingGraph(sourceFile) {
   const bindingsByScope = new Map();
   const aliasesByScope = new Map();
@@ -326,9 +354,11 @@ function collectBindingGraph(sourceFile) {
     bindings.add(name);
     bindingsByScope.set(scope, bindings);
   };
-  const addAlias = (scope, name, target) => {
+  const addAliasEvent = (scope, name, position, target) => {
     const aliases = aliasesByScope.get(scope) ?? new Map();
-    aliases.set(name, target);
+    const events = aliases.get(name) ?? [];
+    events.push({ position, target });
+    aliases.set(name, events);
     aliasesByScope.set(scope, aliases);
   };
   const addBindingName = (scope, name) => {
@@ -357,8 +387,8 @@ function collectBindingGraph(sourceFile) {
       const aliasTarget = node.initializer
         ? rootIdentifier(node.initializer)
         : undefined;
-      if (ts.isIdentifier(node.name) && aliasTarget) {
-        addAlias(scope, node.name.text, aliasTarget);
+      if (ts.isIdentifier(node.name)) {
+        addAliasEvent(scope, node.name.text, node.end, aliasTarget);
       }
     } else if (ts.isParameter(node) && isFunctionScope(node.parent)) {
       addBindingName(node.parent, node.name);
@@ -376,6 +406,30 @@ function collectBindingGraph(sourceFile) {
     ts.forEachChild(node, visit);
   };
   visit(sourceFile);
+  const collectAssignments = (node) => {
+    if (
+      ts.isBinaryExpression(node) &&
+      ts.isIdentifier(node.left) &&
+      node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+      node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+    ) {
+      const binding = resolveBinding(node.left, bindingsByScope);
+      if (binding) {
+        const target =
+          node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+            ? rootIdentifier(node.right)
+            : undefined;
+        addAliasEvent(
+          binding.scope,
+          binding.name,
+          node.end,
+          target,
+        );
+      }
+    }
+    ts.forEachChild(node, collectAssignments);
+  };
+  collectAssignments(sourceFile);
   return { bindingsByScope, aliasesByScope };
 }
 
@@ -413,9 +467,12 @@ function resolveModuleBinding(
   }
   visitedNames.add(binding.name);
   visited.set(binding.scope, visitedNames);
-  const aliasTarget = bindingGraph.aliasesByScope
+  const aliasEvents = bindingGraph.aliasesByScope
     .get(binding.scope)
     ?.get(binding.name);
+  const aliasTarget = aliasEvents
+    ?.filter((event) => event.position < identifier.pos)
+    .sort((left, right) => right.position - left.position)[0]?.target;
   return aliasTarget
     ? resolveModuleBinding(
         aliasTarget,
