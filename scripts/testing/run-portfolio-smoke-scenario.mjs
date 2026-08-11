@@ -13,8 +13,8 @@ const workbenchPort = parseUnprivilegedPort(
   process.env.PORTFOLIO_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? '31020',
 );
 
-if (scenario !== 'cashflow' && scenario !== 'shell-unavailable') {
-  throw new Error('Portfolio smoke scenario must be cashflow or shell-unavailable.');
+if (scenario !== 'cashflow' && scenario !== 'shell-unavailable' && scenario !== 'review-matrix') {
+  throw new Error('Portfolio smoke scenario must be cashflow, shell-unavailable, or review-matrix.');
 }
 if (fixturePort === workbenchPort) {
   throw new Error('Portfolio fixture and Workbench proof ports must be different.');
@@ -26,7 +26,9 @@ const evidenceDirectory = resolve(
   process.env.PORTFOLIO_E2E_EVIDENCE_DIR ??
     (scenario === 'shell-unavailable'
       ? 'output/playwright/issue-651-shell-recovery'
-      : 'output/playwright/issue-492-cashflow'),
+      : scenario === 'review-matrix'
+        ? 'output/playwright/issue-649-portfolio-review-matrix'
+        : 'output/playwright/issue-492-cashflow'),
 );
 mkdirSync(evidenceDirectory, { recursive: true });
 const playwrightCli = resolve(projectRoot, 'node_modules', '@playwright', 'test', 'cli.js');
@@ -39,7 +41,9 @@ const child = spawn(
     '--grep',
     scenario === 'shell-unavailable'
       ? 'selected shell failure reaches one truthful terminal recovery state'
-      : 'cashflow route keeps projection identity and movement semantics explicit',
+      : scenario === 'review-matrix'
+        ? 'portfolio review stays decision-focused and keeps detail work on dedicated screens'
+        : 'cashflow route keeps projection identity and movement semantics explicit',
     ...forwardedArguments,
   ],
   {
@@ -50,7 +54,8 @@ const child = spawn(
       ...process.env,
       BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`,
       PLAYWRIGHT_PORT: String(workbenchPort),
-      PORTFOLIO_E2E_FIXTURE: scenario,
+      PORTFOLIO_E2E_FIXTURE: scenario === 'review-matrix' ? 'cashflow' : scenario,
+      PORTFOLIO_E2E_PROOF_SCENARIO: scenario,
       PORTFOLIO_E2E_FIXTURE_PORT: String(fixturePort),
       PORTFOLIO_E2E_EVIDENCE_DIR: evidenceDirectory,
       WORKBENCH_E2E_FIXTURE_GATEWAY: 'portfolio',
