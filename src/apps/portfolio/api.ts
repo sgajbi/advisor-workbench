@@ -224,54 +224,20 @@ export async function getPortfolioWorkspaceShell(
   portfolioId: string
 ): Promise<PortfolioWorkspace | null> {
   try {
-    const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
-      resolvePortfolioRequestTarget(),
-      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
-      { useCache: false }
-    );
-    if (!summaryPayload) {
-      return null;
-    }
-
-    return {
-      as_of_date: summaryPayload.as_of_date,
-      portfolio: summaryPayload.portfolio,
-      profile: summaryPayload.profile,
-      summary: {
-        market_value_base: summaryPayload.summary.assets_under_management_base,
-        invested_market_value_base: summaryPayload.summary.invested_market_value_base,
-        total_cash_base: summaryPayload.summary.cash_market_value_base,
-        cash_weight_pct: summaryPayload.summary.cash_weight_pct,
-        position_count: summaryPayload.summary.position_count,
-        cash_balance_count: summaryPayload.summary.cash_balance_count,
-      },
-      allocations: [],
-      allocation_views: [],
-      cash_balances: [],
-      top_positions: [],
-      positions: [],
-      recent_transactions: [],
-      income_summary: null,
-      activity_summary: null,
-      cashflow_outlook: summaryPayload.cashflow_outlook,
-      performance: summaryPayload.performance,
-      rebalance: summaryPayload.rebalance,
-      control_capabilities: summaryPayload.control_capabilities ?? null,
-      readiness: {
-        has_positions: summaryPayload.summary.position_count > 0,
-        reporting: summaryPayload.reporting,
-      },
-      readiness_indicators: undefined,
-      supportability: undefined,
-      workflow_cues: summaryPayload.workflow_cues,
-      workflow_actions: undefined,
-      warnings: summaryPayload.warnings,
-      partial_failures: summaryPayload.partial_failures,
-      operations: summaryPayload.operations ?? null,
-    };
+    return await fetchPortfolioWorkspaceShell(portfolioId);
   } catch {
     return null;
   }
+}
+
+export async function getRequiredPortfolioWorkspaceShell(
+  portfolioId: string
+): Promise<PortfolioWorkspace> {
+  const workspace = await fetchPortfolioWorkspaceShell(portfolioId);
+  if (!workspace) {
+    throw new Error("Portfolio workspace evidence is unavailable.");
+  }
+  return workspace;
 }
 
 export async function getPortfolioBook(
@@ -282,21 +248,95 @@ export async function getPortfolioBook(
   } = {}
 ): Promise<PortfolioBookResponse | null> {
   try {
-    const bookQuery = new URLSearchParams();
-    if (params.asOfDate) {
-      bookQuery.set("as_of_date", params.asOfDate);
-    }
-    if (params.reportingCurrency) {
-      bookQuery.set("reporting_currency", params.reportingCurrency);
-    }
-    return await fetchPortfolioJson<PortfolioBookResponse>(
-      resolvePortfolioRequestTarget(),
-      `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
-      { query: bookQuery }
-    );
+    return await fetchPortfolioBook(portfolioId, params);
   } catch {
     return null;
   }
+}
+
+export async function getRequiredPortfolioBook(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+  } = {}
+): Promise<PortfolioBookResponse> {
+  const book = await fetchPortfolioBook(portfolioId, params);
+  if (!book) {
+    throw new Error("Portfolio book evidence is unavailable.");
+  }
+  return book;
+}
+
+async function fetchPortfolioWorkspaceShell(
+  portfolioId: string
+): Promise<PortfolioWorkspace | null> {
+  const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
+    resolvePortfolioRequestTarget(),
+    `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
+    { useCache: false }
+  );
+  if (!summaryPayload) {
+    return null;
+  }
+
+  return {
+    as_of_date: summaryPayload.as_of_date,
+    portfolio: summaryPayload.portfolio,
+    profile: summaryPayload.profile,
+    summary: {
+      market_value_base: summaryPayload.summary.assets_under_management_base,
+      invested_market_value_base: summaryPayload.summary.invested_market_value_base,
+      total_cash_base: summaryPayload.summary.cash_market_value_base,
+      cash_weight_pct: summaryPayload.summary.cash_weight_pct,
+      position_count: summaryPayload.summary.position_count,
+      cash_balance_count: summaryPayload.summary.cash_balance_count,
+    },
+    allocations: [],
+    allocation_views: [],
+    cash_balances: [],
+    top_positions: [],
+    positions: [],
+    recent_transactions: [],
+    income_summary: null,
+    activity_summary: null,
+    cashflow_outlook: summaryPayload.cashflow_outlook,
+    performance: summaryPayload.performance,
+    rebalance: summaryPayload.rebalance,
+    control_capabilities: summaryPayload.control_capabilities ?? null,
+    readiness: {
+      has_positions: summaryPayload.summary.position_count > 0,
+      reporting: summaryPayload.reporting,
+    },
+    readiness_indicators: undefined,
+    supportability: undefined,
+    workflow_cues: summaryPayload.workflow_cues,
+    workflow_actions: undefined,
+    warnings: summaryPayload.warnings,
+    partial_failures: summaryPayload.partial_failures,
+    operations: summaryPayload.operations ?? null,
+  };
+}
+
+async function fetchPortfolioBook(
+  portfolioId: string,
+  params: {
+    asOfDate?: string;
+    reportingCurrency?: string;
+  }
+): Promise<PortfolioBookResponse | null> {
+  const bookQuery = new URLSearchParams();
+  if (params.asOfDate) {
+    bookQuery.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    bookQuery.set("reporting_currency", params.reportingCurrency);
+  }
+  return await fetchPortfolioJson<PortfolioBookResponse>(
+    resolvePortfolioRequestTarget(),
+    `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
+    { query: bookQuery }
+  );
 }
 
 export async function getPortfolioWorkspaceSummaryDetails(
