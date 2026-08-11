@@ -3,6 +3,7 @@ import type {
   PortfolioCatalogResponse,
   PortfolioProjectedCashflowResponse,
   PortfolioRecordDataAvailability,
+  PortfolioSupportingEvidenceFailure,
   PortfolioWorkspace,
 } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
@@ -166,6 +167,7 @@ type PortfolioWorkspaceSummaryDetails = Pick<
   | "activity_summary"
   | "performance"
   | "performance_period_returns"
+  | "supporting_evidence_failures"
   | "readiness_indicators"
   | "exception_summaries"
   | "insights"
@@ -368,45 +370,78 @@ export async function getPortfolioWorkspaceSummaryDetails(
         usesCustomDateRange: false,
       })
     );
+    const portfolioPath = `/portfolio/portfolios/${encodeURIComponent(portfolioId)}`;
     const [
-      bookPayload,
-      incomePayload,
-      activityPayload,
-      performancePayload,
-      ...periodPerformancePayloads
-    ] = await Promise.all([
+      bookResult,
+      incomeResult,
+      activityResult,
+      performanceResult,
+      mtdPerformanceResult,
+      qtdPerformanceResult,
+      ytdPerformanceResult,
+    ] = await Promise.allSettled([
       fetchPortfolioJson<PortfolioBookResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
+        `${portfolioPath}/book`,
         { query: bookQuery }
       ),
       fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/income-summary`,
+        `${portfolioPath}/income-summary`,
         { query: summaryQuery }
       ),
       fetchPortfolioJson<PortfolioActivitySummaryResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/activity-summary`,
+        `${portfolioPath}/activity-summary`,
         { query: summaryQuery }
       ),
       fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
         resolvePortfolioRequestTarget(),
-        `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
+        `${portfolioPath}/performance-snapshot`,
         { query: performanceQuery }
       ),
-      ...performancePeriodQueries.map((query) =>
-        fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
-          resolvePortfolioRequestTarget(),
-          `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/performance-snapshot`,
-          { query }
-        )
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+        resolvePortfolioRequestTarget(),
+        `${portfolioPath}/performance-snapshot`,
+        { query: performancePeriodQueries[0] }
+      ),
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+        resolvePortfolioRequestTarget(),
+        `${portfolioPath}/performance-snapshot`,
+        { query: performancePeriodQueries[1] }
+      ),
+      fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
+        resolvePortfolioRequestTarget(),
+        `${portfolioPath}/performance-snapshot`,
+        { query: performancePeriodQueries[2] }
       ),
     ]);
+
+    const bookPayload = settledPortfolioPayload(bookResult);
 
     if (!bookPayload) {
       return null;
     }
+    const incomePayload = settledPortfolioPayload(incomeResult);
+    const activityPayload = settledPortfolioPayload(activityResult);
+    const performancePayload = settledPortfolioPayload(performanceResult);
+    const periodPerformancePayloads = [
+      settledPortfolioPayload(mtdPerformanceResult),
+      settledPortfolioPayload(qtdPerformanceResult),
+      settledPortfolioPayload(ytdPerformanceResult),
+    ];
+    const supportingEvidenceFailures = [
+      buildSupportingEvidenceFailure(incomePayload, "income_summary"),
+      buildSupportingEvidenceFailure(activityPayload, "activity_summary"),
+      buildSupportingEvidenceFailure(performancePayload, "selected_period_performance"),
+      ...periodPerformancePayloads.map((payload, index) =>
+        buildSupportingEvidenceFailure(
+          payload,
+          "standard_period_performance",
+          ["MTD", "QTD", "YTD"][index] as "MTD" | "QTD" | "YTD"
+        )
+      ),
+    ].filter((failure): failure is PortfolioSupportingEvidenceFailure => failure !== null);
     const allocationView =
       bookPayload.allocation_views.find((view) => view.dimension === "asset_class") ??
       bookPayload.allocation_views[0];
@@ -429,6 +464,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       performance_period_returns: periodPerformancePayloads.map((payload, index) =>
         mapPortfolioPerformancePeriodReturn(["MTD", "QTD", "YTD"][index] as "MTD" | "QTD" | "YTD", payload)
       ),
+      supporting_evidence_failures: supportingEvidenceFailures,
     };
   } catch {
     return null;
@@ -455,6 +491,49 @@ function mapPortfolioBookSummary(
       position_count: payload.summary.position_count,
       cash_balance_count: payload.summary.cash_balance_count,
     },
+  };
+}
+
+function buildSupportingEvidenceFailure(
+  payload: unknown | null,
+  evidenceScope: PortfolioSupportingEvidenceFailure["evidence_scope"],
+  period?: "MTD" | "QTD" | "YTD"
+): PortfolioSupportingEvidenceFailure | null {
+  if (payload !== null) {
+    return null;
+  }
+
+  if (evidenceScope === "income_summary") {
+    return {
+      evidence_scope: evidenceScope,
+      source_service: "lotus-gateway",
+      title: "Income evidence unavailable",
+      detail: "Income evidence could not be retrieved through Gateway for this review period.",
+    };
+  }
+  if (evidenceScope === "activity_summary") {
+    return {
+      evidence_scope: evidenceScope,
+      source_service: "lotus-gateway",
+      title: "Activity evidence unavailable",
+      detail: "Portfolio activity evidence could not be retrieved through Gateway for this review period.",
+    };
+  }
+  if (evidenceScope === "selected_period_performance") {
+    return {
+      evidence_scope: evidenceScope,
+      source_service: "lotus-gateway",
+      title: "Selected-period performance unavailable",
+      detail: "Performance evidence could not be retrieved through Gateway for the selected review period. No return is shown.",
+    };
+  }
+
+  return {
+    evidence_scope: evidenceScope,
+    period,
+    source_service: "lotus-gateway",
+    title: `${period} performance unavailable`,
+    detail: `${period} performance evidence could not be retrieved through Gateway. No return is shown.`,
   };
 }
 

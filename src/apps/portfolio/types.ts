@@ -18,6 +18,18 @@ export type PortfolioPartialFailure = {
   detail: string;
 };
 
+export type PortfolioSupportingEvidenceFailure = {
+  evidence_scope:
+    | "income_summary"
+    | "activity_summary"
+    | "selected_period_performance"
+    | "standard_period_performance";
+  period?: "MTD" | "QTD" | "YTD";
+  source_service: "lotus-gateway";
+  title: string;
+  detail: string;
+};
+
 export type PortfolioCashflowOutlook = {
   as_of_date: string;
   range_end_date: string;
@@ -382,6 +394,7 @@ export type PortfolioWorkspace = {
       requirements: string[];
     } | null;
   }>;
+  supporting_evidence_failures?: PortfolioSupportingEvidenceFailure[];
   rebalance: {
     status: string;
     last_run_at_utc: string | null;

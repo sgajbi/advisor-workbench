@@ -35,9 +35,9 @@ export default function WorkbenchDecisionBrief({
     tone: SemanticBadgeTone;
     support?: string;
   };
-  attentionItems: WorkbenchDecisionBriefAttention[];
+  attentionItems?: WorkbenchDecisionBriefAttention[];
   facts: WorkbenchDecisionBriefFact[];
-  emptyMessage: string;
+  emptyMessage?: string;
   className?: string;
 }) {
   return (
@@ -57,27 +57,29 @@ export default function WorkbenchDecisionBrief({
         </div>
       </div>
 
-      <div className="workbench-decision-brief-attention" aria-label={`${eyebrow} items`}>
-        {attentionItems.length ? (
-          attentionItems.map((item) => (
-            <article
-              key={item.key}
-              className={cx(
-                "workbench-decision-brief-attention-item",
-                `workbench-decision-brief-attention-${item.tone ?? "neutral"}`
-              )}
-            >
-              <span className="workbench-decision-brief-marker" aria-hidden="true" />
-              <div>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
-              </div>
-            </article>
-          ))
-        ) : (
-          <p className="workbench-decision-brief-empty">{emptyMessage}</p>
-        )}
-      </div>
+      {attentionItems?.length || emptyMessage ? (
+        <div className="workbench-decision-brief-attention" aria-label={`${eyebrow} items`}>
+          {attentionItems?.length ? (
+            attentionItems.map((item) => (
+              <article
+                key={item.key}
+                className={cx(
+                  "workbench-decision-brief-attention-item",
+                  `workbench-decision-brief-attention-${item.tone ?? "neutral"}`
+                )}
+              >
+                <span className="workbench-decision-brief-marker" aria-hidden="true" />
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="workbench-decision-brief-empty">{emptyMessage}</p>
+          )}
+        </div>
+      ) : null}
 
       <dl className="workbench-decision-brief-facts">
         {facts.map((fact) => (

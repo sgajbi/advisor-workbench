@@ -136,6 +136,41 @@ describe("portfolio summary view model", () => {
     });
   });
 
+  it("qualifies a ready book when source-owned performance evidence is partial", () => {
+    const workspace = buildWorkspace({
+      performance: {
+        period: "YTD",
+        return_pct: 4.2,
+        warnings: ["Benchmark history contains one delayed market close."],
+        partial_failures: [
+          {
+            source_service: "lotus-performance",
+            error_code: "MARKET_DATA_DELAY",
+            detail: "One benchmark data point was delayed and backfilled.",
+          },
+        ],
+      },
+    });
+
+    expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
+      statusLabel: "Partial",
+      support: "Book evidence is available; supporting review evidence needs attention.",
+      tone: "warn",
+    });
+    expect(buildPortfolioSummaryAttentionItems(workspace)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Performance evidence needs attention",
+          detail: "One benchmark data point was delayed and backfilled.",
+        }),
+        expect.objectContaining({
+          title: "Performance evidence is qualified",
+          detail: "Benchmark history contains one delayed market close.",
+        }),
+      ])
+    );
+  });
+
   it("scales cashflow point heights against the largest projected movement", () => {
     const cashflow = buildWorkspace().cashflow_outlook!;
 
