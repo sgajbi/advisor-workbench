@@ -1,4 +1,7 @@
-import type { AdvisoryWorkspaceEnvelopeResponse } from "./types";
+import type {
+  AdvisoryWorkspaceEnvelopeResponse,
+  ProposalSimulateResponse,
+} from "./types";
 
 export function recordValue(source: unknown): Record<string, unknown> | null {
   return source && typeof source === "object" && !Array.isArray(source)
@@ -27,6 +30,27 @@ export function extractLatestProposalResult(
   envelope: AdvisoryWorkspaceEnvelopeResponse
 ): Record<string, unknown> | null {
   return recordValue(extractAdvisoryWorkspace(envelope).latest_proposal_result);
+}
+
+export function buildAdvisoryWorkspaceEvaluationResult(
+  envelope: AdvisoryWorkspaceEnvelopeResponse
+): ProposalSimulateResponse | null {
+  const latestProposalResult = extractLatestProposalResult(envelope);
+  const status = stringValue(latestProposalResult?.status);
+  const proposalRunId = stringValue(latestProposalResult?.proposal_run_id);
+  if (!latestProposalResult || !status || !proposalRunId) {
+    return null;
+  }
+
+  return {
+    correlation_id: envelope.correlation_id,
+    contract_version: envelope.contract_version,
+    data: {
+      ...latestProposalResult,
+      status,
+      proposal_run_id: proposalRunId,
+    },
+  };
 }
 
 export function extractEvaluationSummary(

@@ -29,10 +29,10 @@ import {
 } from "../proposal-draft-preview";
 import type { AdvisoryWorkspaceEnvelopeResponse, ProposalSimulateResponse } from "../types";
 import {
+  buildAdvisoryWorkspaceEvaluationResult,
   extractAdvisoryWorkspaceId,
   extractEvaluationSummary,
   extractHandoffProposalId,
-  extractLatestProposalResult,
   recordValue,
 } from "../advisory-workspace-response";
 import {
@@ -240,19 +240,21 @@ export default function ProposalSimulateForm({
   }
 
   function syncEvaluationFromWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse) {
-    setWorkspaceEnvelope(envelope);
-    const latestProposalResult = extractLatestProposalResult(envelope);
-    if (latestProposalResult) {
-      setResult({
-        correlation_id: envelope.correlation_id,
-        contract_version: envelope.contract_version,
-        data: latestProposalResult,
-      });
+    const evaluationResult = buildAdvisoryWorkspaceEvaluationResult(envelope);
+    if (!evaluationResult) {
+      throw new Error(
+        "Proposal evaluation returned incomplete evidence. Review the draft and try again."
+      );
     }
+
+    setWorkspaceEnvelope(envelope);
+    setResult(evaluationResult);
   }
 
   async function createEvaluatedWorkspace(values: FormInput): Promise<AdvisoryWorkspaceEnvelopeResponse> {
     setEvaluatedWorkspaceId(null);
+    setWorkspaceEnvelope(null);
+    setResult(null);
     const mandateId = values.mandateId?.trim();
     const workspaceResponse = await createAdvisoryWorkspace({
       body: {
@@ -305,16 +307,14 @@ export default function ProposalSimulateForm({
 
     latestResponse = await evaluateAdvisoryWorkspace(workspaceId);
 
-    setEvaluatedWorkspaceId(workspaceId);
     syncEvaluationFromWorkspace(latestResponse);
+    setEvaluatedWorkspaceId(workspaceId);
     return latestResponse;
   }
 
   async function onSubmit(values: FormInput) {
     setError(null);
-    setResult(null);
     setSavedDraft(null);
-    setWorkspaceEnvelope(null);
     setLoading(true);
     try {
       await createEvaluatedWorkspace(values);
