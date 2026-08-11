@@ -243,11 +243,7 @@
       "implementationEvidence": ["src/features/advisor-book/components/advisor-book-workspace.tsx"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "book-and-portfolio-entry-guides",
-        "reason": "Existing guide must be aligned to the complete screen-guide heading and state contract."
-      }
+      "coverageException": null
     },
     {
       "id": "portfolio-review",

@@ -58,7 +58,7 @@ describe("Workbench screen documentation governance", () => {
       activeSurfaces: 36,
       aliases: 2,
       mappedGuides: 1,
-      coverageExceptions: 36,
+      coverageExceptions: 35,
       unmappedGuides: 35,
     });
   });
@@ -137,10 +137,14 @@ describe("Workbench screen documentation governance", () => {
     const surface = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "advisor-book",
     );
-    surface.coverageException = null;
+    surface.coverageException = {
+      issue: 605,
+      plannedSlice: "book-and-portfolio-entry-guides",
+      reason: "The guide is intentionally marked incomplete for this regression test.",
+    };
 
     expect(validate(registry).errors).toContain(
-      "Screen guide catalogue guide status for advisor-book must be Guide available, not Existing guide; complete-standard alignment planned.",
+      "Screen guide catalogue guide status for advisor-book must be Existing guide; complete-standard alignment planned, not Guide available.",
     );
   });
 

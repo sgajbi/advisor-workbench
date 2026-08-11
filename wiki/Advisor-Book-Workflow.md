@@ -1,65 +1,180 @@
-# Advisor Book Workflow
+# Advisor Book
 
-`/book` is the source-backed entry point for a relationship manager's supported own-book
-portfolio coverage.
+Advisor Book is the relationship manager's source-backed starting point for finding an assigned
+portfolio and continuing the client-service workflow. It is an own-book portfolio register, not a
+client 360, opportunity ranking, household view, or book-AUM dashboard.
 
-## Business flow
+## Current Scope
 
-1. Open **My book** from the portfolio context switcher.
-2. Confirm the own-book scope, business date, booking centre, availability, and operating
-   limitations.
-3. Read each measure by its stated scope: matching portfolios cover the filtered result, while
-   portfolios shown, clients shown, and assignment evidence cover the current page only. Lotus
-   does not present client references as households.
-4. Set an exact client reference, supported mandate, sort field, and ascending or descending
-   direction, then apply them as one view. **Clear view** removes those working filters and sorting
-   choices while preserving the governed business date.
-5. Confirm the result range and displayed order above the portfolio register, then page through the
-   source results. Displayed order follows the order returned for the page. If it differs from the
-   requested controls, Workbench keeps both the displayed and requested order explicit.
-6. Open a portfolio to continue into Portfolio Review.
-7. From Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk,
-   Proposal, Advisory, Reports, or Manage, use **Portfolio context** to change portfolio while
-   keeping the current business task and supported filters. Workbench loads own-book choices only
-   when this disclosure is opened.
+| Screen posture | Current truth |
+| --- | --- |
+| Canonical route | `/book` |
+| Navigation | **My book** in the portfolio context switcher |
+| Supported scope | The current governed caller's own-book portfolio membership, subject to the identity boundary below |
+| Evidence posture | Gateway/Core membership and provenance are validated; canonical proof remains partial where tenant scope is trusted-context-only |
+| Primary next action | Open a returned portfolio in Portfolio Review |
 
-## Source and authority
+Workbench presents only the book membership returned through Gateway. UAT and production fail
+closed until [Workbench #436](https://github.com/sgajbi/lotus-workbench/issues/436) provides an
+authenticated principal; development configuration is permitted only in an explicitly
+development-scoped runtime. This page does not claim production identity, delegated-book access,
+or independently certified tenant assignment.
 
-- Workbench calls Gateway `GET /api/v1/advisor-book/portfolios` through its same-origin BFF.
-- Gateway consumes Core `PortfolioManagerBookMembership:v1`; Workbench validates the exact `v1`
-  own-book contract and does not reconstruct membership.
-- The BFF removes browser-supplied identity, tenant, region, booking-centre, role, and capability
-  headers. Development configuration is allowed only in an explicitly development-scoped runtime.
-- UAT and production fail closed until Workbench #436 provides an authenticated principal.
+## Business Purpose
 
-## Deliberate boundaries
+Advisor Book helps a relationship manager answer a narrow operational question: **which supported
+portfolios are assigned to my book, and which portfolio should I review next?** It reduces the time
+spent searching across unrelated portfolio records while keeping assignment evidence, business
+date, booking-centre scope, and source limitations visible before the user proceeds.
 
-This first slice supports own-book membership only. It does not claim or calculate:
+## Who Uses This Screen
 
-- team, delegated, or supervisor coverage,
-- households or grouped client relationships,
-- book or client AUM,
-- source-backed attention ranking or favourites,
-- suitability, recommendation, communication, order, or execution authority.
+- **Relationship managers and advisors** use it to locate an assigned portfolio and start or resume
+  a portfolio review.
+- **Portfolio and investment specialists** can use the returned assignment and mandate context when
+  supporting an advisor, without treating the screen as delegated-book authority.
+- **Operations and support teams** use the visible availability, provenance, snapshot, and request
+  references to distinguish an empty book from unavailable or insufficiently evidenced source data.
+- **Product and demonstration teams** use the governed canonical proof to verify that the screen is
+  populated from the supported source contract rather than a browser fallback.
 
-If Gateway reports tenant scope as trusted-context-only, legacy advisor projection, stale evidence,
-or another source limitation, Workbench keeps that boundary visible. If membership is unavailable,
-Workbench shows an explicit unavailable or permission state and does not substitute a global
-portfolio catalogue.
+These roles describe screen use, not production entitlements. Workbench does not infer supervisory,
+team, delegated, tenant, or booking-centre permissions in the browser.
 
-## Canonical proof
+## Workflow Position
 
-The governed browser validator requires exactly one canonical portfolio in the returned own-book
-scope. It proves `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current
-accepted snapshot/content evidence, the exact requested business-date scope, and
-`portfolio_party_role_assignments` / `role_type` lineage;
-legacy projection, duplicate membership, stale evidence, or unrelated degradation fails closed.
-Certification also requires internally consistent paging metadata and complete own-book coverage;
-a partial or later page cannot establish canonical membership uniqueness.
-Trusted-context-only tenant scope is accepted only as the explicit, separately owned Core #798
-limitation and is recorded in the machine-readable summary. The validator then classifies
-`advisor.book_overview` as `partial` even when its membership input is source-ready, because
-authoritative assignment proof does not independently certify the panel's wider tenant and scope
-boundaries. It captures `advisor-book-overview-live.png` only after the API and panel checks pass.
-The governed platform panel registry must contain that panel before the screenshot can be treated
-as demo-ready evidence; publication is tracked by lotus-platform #583.
+1. Open **My book** from the portfolio context switcher or navigate to `/book`.
+2. Confirm own-book scope, business date, booking centre, availability, and operating limitations.
+3. Narrow the register using an exact client reference, supported mandate, and requested sort.
+4. Confirm the returned range and displayed order before moving between source pages.
+5. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Workflow).
+6. Within another supported portfolio screen, use **Portfolio context** to change portfolio while
+   preserving the current business task and supported filters. Workbench requests own-book choices
+   only when the switcher is opened.
+
+The screen is an entry and selection step. It does not replace suitability review, proposal
+approval, order handling, execution, settlement, reporting, or client communication workflows.
+
+## Implemented Capabilities
+
+- Shows the own-book scope, governed as-of date, booking centre, availability reason, assignment
+  basis, source service, snapshot, correlation reference, and current-evidence posture returned by
+  the supported contract.
+- Separates filtered-book measures from current-page measures: **matching portfolios** covers the
+  filtered result; **portfolios shown**, **clients shown**, and assignment evidence cover the current
+  page only. Client references are not presented as households.
+- Applies an exact client-reference filter, a supported mandate filter, sort field, and sort
+  direction as one view.
+- Shows both requested and displayed order when the source page does not match the requested sort.
+- Pages through source results using the returned paging metadata and preserves the governed
+  business date when the working view is cleared.
+- Opens a source-returned portfolio in Portfolio Review using task-preserving navigation.
+- Keeps legacy assignment, stale evidence, trusted-context-only tenant scope, and other returned
+  limitations visible instead of manufacturing confidence in the browser.
+
+## Decisions And Actions
+
+| User decision or action | Required evidence or gate | Persisted business change |
+| --- | --- | --- |
+| Apply a book view | Enter supported filters and sorting, then choose **Apply view** | None; this requests a new source-backed view |
+| Clear the working view | Choose **Clear view** | None; filters and sorting reset while the governed date remains |
+| Move between result pages | Use **Previous** or **Next** when source paging permits | None; Workbench requests the selected source page |
+| Retry unavailable evidence | Choose **Retry** after an explicit error or permission state | None; Workbench re-contacts the same source boundary |
+| Open a portfolio | Select a portfolio returned in the current own-book page | None on Advisor Book; the task continues in Portfolio Review |
+
+The screen exposes no approval, recommendation, communication, order, execution, settlement, or
+assignment-maintenance command. A displayed row is evidence of returned membership, not authority
+to perform an unrelated regulated action.
+
+## Information And Source Authority
+
+| Business fact or action | Workbench boundary | Source authority |
+| --- | --- | --- |
+| Own-book membership, filters, sorting, and paging | Requested through the same-origin BFF; Workbench validates the exact `v1` response and does not reconstruct membership | Gateway `GET /api/v1/advisor-book/portfolios` over Core `PortfolioManagerBookMembership:v1` |
+| Portfolio reference, client reference, mandate, currency, lifecycle, and assignment basis | Presented from validated response fields; no household, AUM, or attention score is derived | Core membership contract through Gateway |
+| Business date, booking centre, source service, snapshot, correlation, evidence currency, support state, and reason codes | Shown as operating evidence and limitations; no browser-side readiness calculation | Gateway/Core provenance and supportability fields |
+| Caller and tenant boundary | Browser-supplied identity, tenant, region, booking-centre, role, and capability headers are removed by the BFF | Governed runtime context; production principal remains owned by Workbench #436 |
+
+Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
+[Integrations](Integrations).
+
+## Screen States And Recovery
+
+| State | What the user sees | Recovery posture |
+| --- | --- | --- |
+| Loading | A dedicated book-loading state while the source request is outstanding | Wait for the governed response; no global portfolio list is substituted |
+| Ready | Scope, evidence, measures, filters, register, paging, and operating boundaries | Review source scope before opening a portfolio |
+| Empty book | Source-confirmed empty posture for the requested own-book scope | Confirm date and operating scope; Retry only if the source posture suggests recovery |
+| Filtered empty | No rows for the applied client-reference or mandate view | Clear or revise the working view; this is not presented as an unavailable book |
+| Degraded or partial | Returned limitation and reason are visible with the available evidence | Use only the evidenced fields; follow the first support step if the decision needs missing authority |
+| Permission blocked | An explicit access state; no portfolio catalogue fallback | Verify the governed caller posture; do not use browser headers to bypass it |
+| Error or unavailable | An explicit source failure with a Retry control | Retry once to re-contact the source; escalate with the request reference if it persists |
+
+Workbench does not keep a stale or cached book visible after a failed request and does not silently
+fall back to a global portfolio catalogue.
+
+## Workbench Boundaries
+
+This slice deliberately does not claim, infer, or calculate:
+
+- team, delegated, supervisor, household, or grouped-client coverage,
+- independent tenant or production identity authority,
+- book, household, or client AUM,
+- attention ranking, favourites, or opportunity priority,
+- suitability, recommendation, proposal approval, or mandate-change authority,
+- client communication, report publication, order creation, execution, fills, or settlement.
+
+Technology certification, resilience, scalability, dependency support, and explicit non-claims are
+owned centrally in [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support); this
+guide does not turn a supported screen into a claim of bank approval or production readiness.
+
+## Adjacent Handoffs
+
+- [Portfolio Review](Portfolio-Review-Workflow) is the supported next step after portfolio
+  selection.
+- The portfolio context switcher can preserve the current task when moving between supported
+  Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk, Proposal,
+  Advisory, Reports, and Manage surfaces.
+- Redirects and compatibility routes reuse their canonical screen guides. They do not create a
+  second Advisor Book workflow or source of truth.
+
+## Evidence And Validation
+
+- Focused unit and integration coverage validates the strict Advisor Book contract, state model,
+  filters, paging, task-preserving navigation, permission handling, and absence of a global fallback.
+- `scripts/live/validation/browser-workflows.mjs` validates the browser workflow through Gateway.
+- Canonical proof uses `PB_SG_GLOBAL_BAL_001` and requires exactly one canonical portfolio,
+  `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current accepted snapshot
+  and content evidence, the exact business-date scope, complete internally consistent paging, and
+  `portfolio_party_role_assignments` / `role_type` lineage.
+- Legacy projection, duplicate membership, stale evidence, incomplete paging, or unrelated
+  degradation fails closed. Trusted-context-only tenant scope is recorded as the separately owned
+  [Core #798](https://github.com/sgajbi/lotus-core/issues/798) limitation, so
+  `advisor.book_overview` remains `partial` even when membership is ready.
+- `advisor-book-overview-live.png` is captured only after API and panel checks pass. The screenshot
+  is demonstration evidence, not readiness proof; the governed platform panel registry must also
+  contain the panel, tracked by
+  [lotus-platform #583](https://github.com/sgajbi/lotus-platform/issues/583).
+
+Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
+governed validation and recovery commands.
+
+## First Support Step
+
+Read the visible availability reason, data-currency posture, and request reference without copying
+client references or response payloads into a support channel. Retry once. If the state persists,
+record the business date, booking-centre scope, request reference, and state classification, then
+follow [Operations Runbook](Operations-Runbook). Do not attempt recovery by adding browser identity
+or tenant headers.
+
+## Related Documentation
+
+- [Screen Guide Catalogue](Screen-Guide-Catalogue)
+- [Portfolio Review](Portfolio-Review-Workflow)
+- [Supported Features](Supported-Features)
+- [API Surface](API-Surface)
+- [Integrations](Integrations)
+- [Validation and CI](Validation-and-CI)
+- [Operations Runbook](Operations-Runbook)
+- [Security and Governance](Security-and-Governance)
+- [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)
