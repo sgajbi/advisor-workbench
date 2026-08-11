@@ -3380,6 +3380,10 @@ Research was reviewed on 2026-08-11:
    evidence state for browser proof without exposing technical status codes in primary copy.
 8. Use the existing React Query, MUI, design-system components, CSS module, and governed tokens;
    this state correction does not justify another dependency or global style rule.
+9. Size the dense action and order-entry controls from the centre workspace container rather than
+   the browser viewport. Persistent navigation and workflow rails can leave a narrow usable column
+   on a wide desktop, so component-owned container queries preserve the business workflow without
+   leaking page-specific breakpoints into global CSS.
 
 ### Rejected decisions
 
@@ -3401,7 +3405,8 @@ Research was reviewed on 2026-08-11:
 
 Workbench #631 owns the implementation. Focused proof covers strict and tolerant API behavior,
 every evidence state, empty-versus-unavailable semantics, cached refresh failure, explicit recovery,
-action admission, and desktop/narrow browser behavior. Repository context, research, and the review
-ledger change in this slice. No wiki source changes: #605 already owns the dedicated Proposal Builder
-screen guide, and this correction does not change the screen's business purpose, navigation, source
-authority, or supported action set.
+action admission, and desktop/narrow browser behavior. Browser proof also asserts that the advisor
+workflow and draft order blotter remain contained within their centre-workspace panels. Repository
+context, research, and the review ledger change in this slice. No wiki source changes: #605 already
+owns the dedicated Proposal Builder screen guide, and this correction does not change the screen's
+business purpose, navigation, source authority, or supported action set.
