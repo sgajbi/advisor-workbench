@@ -319,7 +319,7 @@ describe("dependency security governance", () => {
 
       expect(workflow.match(new RegExp(trivyActionCommit, "g"))).toHaveLength(3);
       expect(workflow).toContain(
-        "nginx:1.28.3-alpine3.23@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236",
+        "nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
       );
       expect(workflow).toContain(
         "Two-replica replacement and capacity regression proof",
