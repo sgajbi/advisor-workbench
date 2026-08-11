@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
 import { join } from "node:path";
 
 import {
@@ -7,6 +8,11 @@ import {
   resolveSuccessfulTerminalUpstream,
 } from "./upstream-evidence.mjs";
 import { assertContainerReplacement } from "./container-replacement-evidence.mjs";
+import {
+  createLoadGeneratorResourceTracker,
+  parseDockerStatsLines,
+  summarizeContainerResourceSamples,
+} from "./phase-resource-evidence.mjs";
 import { resolveScaleProofDeploymentId } from "./scale-proof-configuration.mjs";
 
 const composeFile = "docker-compose.scale-proof.yml";
@@ -109,7 +115,7 @@ try {
     },
     replica_replacement: replicaReplacement,
     phases: [baseline, replacement, recovery],
-    resources: collectResourceEvidence(),
+    resource_evidence: "captured_concurrently_per_phase",
     explicit_non_claims: [
       "production_high_availability",
       "disaster_recovery",
@@ -129,6 +135,8 @@ try {
 }
 
 async function runLoadPhase(name) {
+  const containerMonitor = await startContainerResourceMonitor();
+  const loadGeneratorResources = createLoadGeneratorResourceTracker();
   const results = [];
   let nextIndex = 0;
   const workers = Array.from({ length: thresholds.concurrency }, async () => {
@@ -152,6 +160,7 @@ async function runLoadPhase(name) {
             response.ok,
           ),
         });
+        loadGeneratorResources.sample();
       } catch {
         results.push({
           ok: false,
@@ -160,10 +169,12 @@ async function runLoadPhase(name) {
           upstream_attempts: [],
           terminal_upstream: "network-error",
         });
+        loadGeneratorResources.sample();
       }
     }
   });
   await Promise.all(workers);
+  const containerSamples = await containerMonitor.finish();
   const latencies = results.map(({ latency_ms }) => latency_ms).sort((a, b) => a - b);
   const errors = results.filter(({ ok }) => !ok).length;
   const successfulResults = results.filter(({ ok }) => ok);
@@ -185,6 +196,10 @@ async function runLoadPhase(name) {
     upstreams,
     retried_requests: results.filter(({ upstream_attempts }) => upstream_attempts.length > 1)
       .length,
+    resources: {
+      containers: summarizeContainerResourceSamples(containerSamples),
+      load_generator: loadGeneratorResources.finish(),
+    },
   };
 }
 
@@ -291,21 +306,102 @@ function inspectContainerId(service) {
   return compose(["ps", "-q", service], { capture: true }).trim();
 }
 
-function collectResourceEvidence() {
+async function startContainerResourceMonitor() {
   const containerIds = compose(["ps", "-q"], { capture: true })
     .split(/\r?\n/)
     .filter(Boolean);
   if (containerIds.length === 0) {
-    return [];
+    throw new Error("Scale proof resource monitor found no running containers.");
   }
-  return run(
+  const child = spawn(
     "docker",
-    ["stats", "--no-stream", "--format", "{{json .}}", ...containerIds],
-    { capture: true },
-  )
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((line) => JSON.parse(line));
+    ["stats", "--format", "{{json .}}", ...containerIds],
+    { cwd: process.cwd(), env: process.env, shell: false, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  const samples = [];
+  let stdoutBuffer = "";
+  const monitorState = { stderr: "", error: undefined };
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => {
+    try {
+      stdoutBuffer += chunk;
+      const lines = stdoutBuffer.split(/\r?\n/);
+      stdoutBuffer = lines.pop() ?? "";
+      samples.push(...parseDockerStatsLines(lines));
+    } catch (error) {
+      monitorState.error = error;
+      child.kill();
+    }
+  });
+  child.stderr.on("data", (chunk) => {
+    monitorState.stderr += chunk;
+  });
+  child.once("error", (error) => {
+    monitorState.error = error;
+  });
+  try {
+    await waitForSampleCount(
+      samples,
+      containerIds.length,
+      child,
+      monitorState,
+      10_000,
+    );
+  } catch (error) {
+    await stopChild(child);
+    throw error;
+  }
+  const baselineSampleCount = samples.length;
+  return {
+    async finish() {
+      try {
+        await waitForSampleCount(
+          samples,
+          baselineSampleCount + containerIds.length,
+          child,
+          monitorState,
+          10_000,
+        );
+      } finally {
+        await stopChild(child);
+      }
+      return samples.slice(baselineSampleCount);
+    },
+  };
+}
+
+async function waitForSampleCount(
+  samples,
+  expectedCount,
+  child,
+  monitorState,
+  timeoutMs,
+) {
+  const deadline = Date.now() + timeoutMs;
+  while (samples.length < expectedCount) {
+    if (monitorState.error) {
+      throw new Error("docker stats emitted invalid resource evidence.", {
+        cause: monitorState.error,
+      });
+    }
+    if (child.exitCode !== null) {
+      throw new Error(
+        `docker stats exited before phase evidence was captured: ${monitorState.stderr}`,
+      );
+    }
+    if (Date.now() >= deadline) {
+      throw new Error("Timed out waiting for concurrent Docker resource evidence.");
+    }
+    await delay(50);
+  }
+}
+
+async function stopChild(child) {
+  if (child.exitCode === null) {
+    child.kill();
+    await once(child, "close");
+  }
 }
 
 function writeEvidence(result) {
@@ -331,6 +427,26 @@ function writeEvidence(result) {
         (phase) =>
           `| ${phase.name} | ${phase.requests} | ${phase.errors} | ${(phase.error_rate * 100).toFixed(2)}% | ${phase.p95_ms.toFixed(1)} | ${Object.keys(phase.upstreams).join(", ")} |`,
       ),
+      "",
+      "## Concurrent phase resource evidence",
+      "",
+      "| Phase | Container samples | Peak container CPU | Peak container memory | Load-generator CPU | Load-generator RSS |",
+      "| --- | ---: | ---: | ---: | ---: | ---: |",
+      ...result.phases.map((phase) => {
+        const containerSamples = phase.resources.containers.reduce(
+          (total, container) => total + container.sample_count,
+          0,
+        );
+        const peakContainerCpu = Math.max(
+          ...phase.resources.containers.map((container) => container.cpu_peak_percent),
+        );
+        const peakContainerMemory = Math.max(
+          ...phase.resources.containers.map((container) => container.memory_peak_bytes),
+        );
+        return `| ${phase.name} | ${containerSamples} | ${peakContainerCpu.toFixed(2)}% | ${(peakContainerMemory / 1024 ** 2).toFixed(1)} MiB | ${phase.resources.load_generator.cpu_core_equivalents.toFixed(3)} cores | ${(phase.resources.load_generator.rss_peak_bytes / 1024 ** 2).toFixed(1)} MiB |`;
+      }),
+      "",
+      "Container samples are streamed during each workload phase. Load-generator evidence covers the host Node process for the same phase and is not attributed to the containers.",
       "",
       "This is engineering regression evidence, not production HA, DR, bank-capacity, multi-region, or production-identity certification.",
       "",
