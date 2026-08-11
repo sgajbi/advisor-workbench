@@ -17,6 +17,7 @@ import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
+import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("portfolio api", () => {
   afterEach(() => {
@@ -607,6 +608,61 @@ describe("portfolio api", () => {
     expect(requestedUrls.some((url) => url.includes("/positions"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/performance/details"))).toBe(false);
     expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(false);
+  });
+
+  it.each([
+    { positionCount: 0, expectedHasPositions: false },
+    { positionCount: 3, expectedHasPositions: true },
+  ])(
+    "replaces shell holdings readiness atomically from a dated $positionCount-position summary",
+    ({ positionCount, expectedHasPositions }) => {
+      const workspace = buildPortfolioWorkspace({
+        readiness: {
+          has_positions: positionCount === 0,
+          reporting: {
+            status: "READY",
+            generated_at_utc: "2026-05-12T00:00:00Z",
+            row_count: 11,
+          },
+        },
+      });
+
+      const merged = mergePortfolioWorkspace(workspace, {
+        as_of_date: "2026-04-30",
+        summary: {
+          market_value_base: positionCount === 0 ? 0 : 750000,
+          invested_market_value_base: positionCount === 0 ? 0 : 700000,
+          total_cash_base: positionCount === 0 ? 0 : 50000,
+          cash_weight_pct: positionCount === 0 ? 0 : 6.67,
+          position_count: positionCount,
+          cash_balance_count: positionCount === 0 ? 0 : 1,
+        },
+      });
+
+      expect(merged.as_of_date).toBe("2026-04-30");
+      expect(merged.summary.position_count).toBe(positionCount);
+      expect(merged.readiness.has_positions).toBe(expectedHasPositions);
+      expect(merged.readiness.reporting).toEqual(workspace.readiness.reporting);
+    }
+  );
+
+  it("retains shell holdings readiness when dated summary evidence is incomplete", () => {
+    const workspace = buildPortfolioWorkspace({
+      readiness: {
+        has_positions: true,
+        reporting: {
+          status: "READY",
+          generated_at_utc: "2026-05-12T00:00:00Z",
+          row_count: 11,
+        },
+      },
+    });
+
+    const merged = mergePortfolioWorkspace(workspace, {
+      performance: null,
+    });
+
+    expect(merged.readiness).toEqual(workspace.readiness);
   });
 
   it("preserves dated book evidence when one standard performance period fails", async () => {

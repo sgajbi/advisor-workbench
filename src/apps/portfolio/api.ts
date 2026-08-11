@@ -796,11 +796,19 @@ export function mergePortfolioWorkspace(
           ...details.record_data_availability,
         }
       : undefined;
+  const readiness = {
+    ...workspace.readiness,
+    ...details.readiness,
+    ...(details.summary
+      ? { has_positions: details.summary.position_count > 0 }
+      : {}),
+  };
 
   return {
     ...workspace,
     ...details,
     cashflow_outlook: details.cashflow_outlook ?? workspace.cashflow_outlook,
+    readiness,
     record_data_availability: recordDataAvailability,
   };
 }

@@ -2,6 +2,7 @@ import { createServer, type Server, type ServerResponse } from 'node:http';
 
 const PORTFOLIO_ID = 'PB_SG_GLOBAL_BAL_001';
 const AS_OF_DATE = '2026-04-10';
+const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
@@ -46,7 +47,10 @@ export async function startPortfolioFixtureGateway({
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/book`) {
-      sendJson(response, buildBookResponse());
+      sendJson(
+        response,
+        buildBookResponse(requestUrl.searchParams.get('as_of_date') ?? AS_OF_DATE)
+      );
       return;
     }
 
@@ -123,7 +127,37 @@ function buildWorkspaceResponse() {
     cashflow_outlook: buildCashflowOutlook(10),
     performance: null,
     rebalance: null,
-    control_capabilities: null,
+    control_capabilities: {
+      historical_snapshots: {
+        state: 'supported',
+        reason: 'Book evidence is available for governed historical review dates.',
+        requested_as_of_date: AS_OF_DATE,
+        effective_as_of_date: AS_OF_DATE,
+        earliest_available_as_of_date: HISTORICAL_AS_OF_DATE,
+        latest_available_as_of_date: AS_OF_DATE,
+        module_capabilities: [
+          {
+            module: 'book',
+            state: 'supported',
+            reason: 'Book totals and holdings readiness honor the selected review date.',
+          },
+        ],
+      },
+      reporting_currency_restatement: {
+        state: 'supported',
+        reason: 'The fixture book is reported in its source-owned USD currency.',
+        requested_reporting_currency: 'USD',
+        effective_reporting_currency: 'USD',
+        supported_currencies: ['USD'],
+        module_capabilities: [
+          {
+            module: 'book',
+            state: 'supported',
+            reason: 'Book evidence is reported in USD.',
+          },
+        ],
+      },
+    },
     workflow_cues: [],
     warnings: [],
     partial_failures: [],
@@ -143,11 +177,23 @@ function buildProjectedCashflowResponse(horizonDays: number) {
   };
 }
 
-function buildBookResponse() {
+function buildBookResponse(asOfDate: string) {
+  const historicalSummary = {
+    assets_under_management_base: 0,
+    invested_market_value_base: 0,
+    cash_market_value_base: 0,
+    cash_weight_pct: 0,
+    position_count: 0,
+    cash_balance_count: 0,
+  };
+
   return {
-    as_of_date: AS_OF_DATE,
+    as_of_date: asOfDate,
     portfolio: buildWorkspaceResponse().portfolio,
-    summary: buildWorkspaceResponse().summary,
+    summary:
+      asOfDate === HISTORICAL_AS_OF_DATE
+        ? historicalSummary
+        : buildWorkspaceResponse().summary,
     cash_balances: [],
     allocation_views: [{ dimension: 'asset_class', buckets: [] }],
     top_positions: [],

@@ -286,6 +286,29 @@ test.describe('Portfolio workbench smoke', () => {
     }
   });
 
+  test('historical zero-position evidence replaces current holdings readiness', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow',
+      'Historical source-to-render proof requires the owned portfolio fixture.'
+    );
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const session = await openPortfolioReview(page, request);
+    test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
+
+    await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+    await page.getByLabel('As of').fill('2026-03-31');
+
+    await expect(page.getByText('Review date 31 Mar 2026')).toBeVisible();
+    await expect(page.getByText('Valuation as of 31 Mar 2026')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'AUM: 0 USD' })).toBeVisible();
+    const decisionReview = page.getByRole('region', { name: 'Portfolio decision review' });
+    await expect(decisionReview.getByLabel('Status Partial')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);
+  });
+
   test('income route renders the dedicated income and activity workspace', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openIncomePortfolio(page, request);
