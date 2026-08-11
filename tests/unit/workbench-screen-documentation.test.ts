@@ -91,10 +91,12 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
     expect(guide).toContain("it does not request detailed workflow or insight endpoints");
     expect(guide).toContain("not a persisted approval or browser-invented action");
-    expect(guide).toContain("retained without a dedicated visible region");
+    expect(guide).toContain("source-owned performance warnings and partial failures");
+    expect(guide).toContain("supporting-request outages visible");
     expect(guide).toContain("retained but unrendered payload fields do not\nbecome visible evidence");
     expect(guide).toContain("Manage failures carried in `partial_failures` are rendered");
-    expect(guide).toContain("performance snapshot failures remain nested");
+    expect(guide).toContain("the affected analytical scope is named");
+    expect(guide).toContain("Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping");
     expect(guide).toContain("a terminal unavailable response is not re-requested");
     expect(guide).toContain("only the Performance, Cashflow, or Reporting evidence actually present");
     expect(guide).toContain("not calculation lineage or supportability certification");

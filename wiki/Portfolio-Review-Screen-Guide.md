@@ -75,10 +75,10 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
   review label is a Workbench presentation projection over loaded source facts, not a source-owned
   action, approval, recommendation, or mandate decision. A recommended next step appears only when
   a loaded source workflow supplies one; the screen does not fabricate a completion action.
-- Keeps top-level workspace-shell partial failures visible instead of treating them as zero or
-  clear. Period-specific performance snapshot failures remain nested and are not promoted into the
-  current decision/exception posture; a Gateway warning without a top-level partial failure is also
-  retained without a dedicated visible region. Those evidence gaps are tracked by #649.
+- Keeps workspace-shell failures, source-owned performance warnings and partial failures, and
+  supporting-request outages visible instead of treating them as zero or clear. A failed income,
+  activity, selected-period, MTD, QTD, or YTD request does not discard successfully returned dated
+  book evidence; the affected analytical scope is named and its unavailable return remains blank.
 - Exposes period, as-of, reporting-currency, export, and additional-workflow controls only within
   current source capability. Unsupported historical review or currency restatement is disabled and
   explained. Record filters stay on the record screens where their effect is visible; Portfolio
@@ -115,12 +115,13 @@ command unless an owning source workflow supplies a supported next action.
 | --- | --- | --- |
 | Portfolio catalogue and selected portfolio | Requested through the Workbench BFF; Workbench does not substitute an unrelated global book when selection is unavailable | Gateway portfolio APIs over Core portfolio identity |
 | Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, and partial failures | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
-| Overall review label | Workbench deterministically projects the review posture from source-returned position coverage, reporting status, publication permission, blocking controls, and partial failures | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
+| Overall review label | Workbench deterministically projects the review posture from source-returned position coverage, reporting status, publication permission, blocking controls, and visible source/supporting-evidence limitations. Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
 | Review focus and next step | Source partial failures remain evidenced when present; a next step is shown only when the loaded workspace supplies a workflow action | Workbench presentation guidance over source facts; not a persisted approval or browser-invented action |
 | Positions, allocation, income, activity, and supporting book detail | Loaded through Gateway portfolio book and summary-detail contracts; record screens remain their owning presentation | Core portfolio book and transaction sources through Gateway |
 | MTD, QTD, YTD, selected-period return, and available benchmark label/code | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable and a generic benchmark fallback is not treated as identity evidence | Performance calculation authority composed by Gateway |
 | Reporting coverage and generation posture | Rendered as readiness evidence; row count is not treated as a generation timestamp or publication event | Core source-readiness evidence composed by Gateway; not a Report service publication event |
-| Gateway warnings | Retained in the workspace projection and local export, but a warning without a partial failure is not rendered in the current Portfolio Review | Gateway contract data; not visible review evidence today |
+| Performance warnings and partial failures | Promoted into the decision brief and **Source Limitations** so a usable book cannot be presented with an unqualified healthy analytical posture | Performance-owned warning/failure evidence composed by Gateway; Workbench does not invent severity or a return |
+| Supporting request availability | Workbench records the exact income, activity, selected-period, MTD, QTD, or YTD request scope that could not be retrieved through Gateway; independently returned book and performance evidence remains usable | Workbench transport observation over Gateway requests; not a source calculation or fallback result |
 | Rebalance and supportability payload | Successful data is retained in the shell response but not consumed by the current Portfolio Review components; Manage failures carried in `partial_failures` are rendered as **Monitoring** exceptions | Manage owns the conditional failure evidence, not a visible healthy rebalance or supportability posture |
 | Review Evidence source list | Includes Portfolio book and only the Performance, Cashflow, or Reporting evidence actually present in the loaded workspace | Workbench orientation over loaded contracts; not calculation lineage or supportability certification |
 | Export | Browser serializes the confirmed current Workbench projection | Workbench local action; no source-side report or archive authority |
@@ -140,8 +141,8 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Ready | Identity, metrics, one review focus, controls, evidence, and handoffs without repeated all-clear panels | Use the review focus and source evidence before continuing |
 | No selectable portfolio | **Portfolio context unavailable** and **Selection unavailable**; no global portfolio list is substituted | Open **My book** to re-establish source-backed portfolio membership |
 | Selected workspace unavailable | One automatic shell request is made for the selected portfolio; a terminal unavailable response is not re-requested in a render loop | Return through the visible **My book** action; broader recovery telemetry remains tracked by [#651](https://github.com/sgajbi/lotus-workbench/issues/651) |
-| Partial or degraded | Available facts remain visible with top-level shell partial-failure and readiness detail; nested performance snapshot failures are not currently elevated | Use only evidenced facts; period-specific failure visibility is tracked by #649 |
-| Warning without partial failure | No dedicated warning region is rendered; the warning remains in the local projection/export | Do not infer an all-clear source posture from the absence of visible warnings; follow #649 |
+| Partial or degraded | Available book facts remain visible with the affected source or supporting analytical scope in **Source Limitations**; a ready book is qualified to **Partial** when supporting review evidence is limited | Use the dated book evidence that remains visible; do not use an unavailable return and open the owning specialist screen if the analytical scope is required |
+| Warning without partial failure | The source warning is visible as qualified performance evidence and prevents an unqualified ready posture | Review the exact warning and use only the evidenced return/benchmark scope |
 | Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope. While dated details load, existing totals retain their actual valuation date; successful dated book evidence replaces both totals and valuation date together | Keep the effective source scope; do not relabel latest evidence as historical or restated |
 | Empty supporting detail | Source-backed zero or unavailable supporting detail remains distinct from the portfolio headline | Open the owning record screen before concluding that activity or exposure is absent |
 | Permission blocked | Portfolio Review has no dedicated authenticated-principal permission panel today; a failed catalogue or workspace read remains unavailable | Do not add browser authority headers; follow #436 and the operations runbook |
@@ -201,8 +202,9 @@ Compatibility routes and aliases reuse this guide and must not fork the business
 - Focused tests prove the single healthy decision hierarchy, conditional source limitations,
   conditional evidence sources, absent-benchmark language, visible-date integrity, removal of
   misleading summary filters, and finite selected-shell request lifecycle.
-- Nested performance-snapshot warning promotion and broader unavailable-state telemetry remain
-  bounded follow-up concerns; this guide does not overstate those source limitations as resolved.
+- Focused mixed-success tests prove a failed standard-period request leaves dated book, income,
+  selected-period, and other standard-period evidence usable; the failed return remains blank,
+  recovery clears the limitation, and source-owned performance warnings qualify the review.
 
 Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
 governed commands and evidence locations.
@@ -210,13 +212,13 @@ governed commands and evidence locations.
 ## First Support Step
 
 Confirm the selected portfolio, visible as-of date, base/reporting currency, readiness state,
-reporting coverage, and exact partial failure shown on screen. A Gateway warning without a partial
-failure is not currently visible and must not be claimed as reviewed. Do not paste client or
-portfolio identifiers, exported JSON, or raw response payloads into a support channel. If portfolio
-context is unavailable, open **My book** once to re-establish source-backed selection. If the same
-scope remains unavailable or partial, follow [Operations Runbook](Operations-Runbook) and record
-only the business-date scope, state classification, affected work area, and a displayed correlation
-or support reference when its semantics are explicitly labelled.
+reporting coverage, and exact limitation shown on screen. Record whether the limitation affects the
+book or only income, activity, selected-period, MTD, QTD, or YTD supporting evidence. Do not paste
+client or portfolio identifiers, exported JSON, or raw response payloads into a support channel. If
+portfolio context is unavailable, open **My book** once to re-establish source-backed selection. If
+the same scope remains unavailable or partial, follow [Operations Runbook](Operations-Runbook) and
+record only the business-date scope, state classification, affected work area, and a displayed
+correlation or support reference when its semantics are explicitly labelled.
 
 ## Related Documentation
 
