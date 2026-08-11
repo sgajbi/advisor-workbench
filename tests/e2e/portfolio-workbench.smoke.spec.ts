@@ -286,7 +286,7 @@ test.describe('Portfolio workbench smoke', () => {
     }
   });
 
-  test('historical zero-position evidence replaces current holdings readiness', async ({
+  test('historical review preserves valuation scope and replaces complete dated evidence atomically', async ({
     page,
     request,
   }) => {
@@ -299,6 +299,13 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+    await page.getByLabel('As of').fill('2026-04-01');
+
+    await expect(page.getByText('Review date 01 Apr 2026')).toBeVisible();
+    await expect(page.getByText('Valuation as of 10 Apr 2026')).toBeVisible();
+    await expect(page.getByText('Valuation as of 01 Apr 2026')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+
     await page.getByLabel('As of').fill('2026-03-31');
 
     await expect(page.getByText('Review date 31 Mar 2026')).toBeVisible();

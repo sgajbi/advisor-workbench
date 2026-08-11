@@ -211,9 +211,11 @@ Compatibility routes and aliases reuse this guide and must not fork the business
 - Focused mixed-success tests prove a failed standard-period request leaves dated book, income,
   selected-period, and other standard-period evidence usable; the failed return remains blank,
   recovery clears the limitation, and source-owned performance warnings qualify the review.
-- Source-to-render historical proof changes a current populated book to a dated zero-position book
-  and verifies the selected review date, source valuation date, zero AUM, and qualified portfolio
-  readiness change together without altering the separately sourced reporting posture.
+- Source-to-render historical proof first verifies that a missing dated summary keeps current totals
+  labelled with their actual valuation date, then changes the same populated book to a dated
+  zero-position book and verifies that selected review date, source valuation date, zero AUM, and
+  qualified portfolio readiness change together without altering separately sourced reporting
+  posture.
 
 Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
 governed commands and evidence locations.
