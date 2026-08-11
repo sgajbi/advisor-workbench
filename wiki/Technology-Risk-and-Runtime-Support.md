@@ -74,6 +74,8 @@ Next standalone output, source-owned durable business state, closed runtime-stat
 deterministic deployment identity make the Workbench container suitable for a replicated
 application tier. `/api/health/live` is process-only; `/api/health/ready` validates build and runtime
 configuration without turning a downstream outage into fabricated application success.
+Production-image builds require an explicit deployment identity, and readiness rejects a runtime
+identity that differs from the value embedded in the immutable build.
 
 The hermetic `npm run scale:proof` regression has now demonstrated two identical production-image
 replicas behind a no-affinity, least-connections balancer; cross-replica source persistence; bounded

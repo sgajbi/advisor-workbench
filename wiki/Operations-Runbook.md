@@ -56,7 +56,7 @@ http://workbench.dev.lotus/performance?portfolioId=PB_SG_GLOBAL_BAL_001&mode=ris
 | Endpoint or input | Operational meaning | Do not infer |
 | --- | --- | --- |
 | `/api/health/live` | The Workbench process can serve HTTP | Gateway or source-service readiness |
-| `/api/health/ready` | The build identity, Gateway address, request timeout, and deployment identity are valid | End-to-end product health or source freshness |
+| `/api/health/ready` | The embedded build identity matches the runtime deployment identity, and Gateway address plus request timeout are valid | End-to-end product health or source freshness |
 | `WORKBENCH_DEPLOYMENT_ID` | All replicas in one rollout cohort serve the same deterministic deployment identity | A release is approved or production-certified |
 
 Gateway degradation remains visible through bounded BFF failures and panel recovery. Do not remove
