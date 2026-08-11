@@ -377,6 +377,8 @@ Current repository posture:
     apply the same boundary to the completed current/proposed projection so source and draft
     aggregation cannot reintroduce rounding; preserve monetary arithmetic as integer minor units
     through the complete preview and convert only final range-admitted values for presentation;
+    use the same proposal-money boundary for cash-movement field recovery, net display, preview,
+    and submitted decimal strings so browser evidence and source intent cannot diverge;
     negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not

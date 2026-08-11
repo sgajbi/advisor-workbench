@@ -26,6 +26,7 @@ import {
   type ProposalDraftCashFlowIntent,
   type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
+import { formatProposalMinorUnits, proposalMoneyToMinorUnits } from "../proposal-money";
 import { buildProposalDraftImpactModel } from "../proposal-draft-currency-authority";
 import {
   assessProposalScenarioCashInput,
@@ -107,7 +108,13 @@ function decimalString(value: number, digits: number): string {
 
 function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
   const amount = Math.abs(item.amount || 0);
-  return decimalString(item.direction === "OUT" ? -amount : amount, 2);
+  const minorUnits = proposalMoneyToMinorUnits(amount);
+  if (minorUnits === null) {
+    throw new Error(
+      "Cash movement amount must use no more than 2 decimal places and remain within the reliable draft range."
+    );
+  }
+  return formatProposalMinorUnits(item.direction === "OUT" ? -minorUnits : minorUnits);
 }
 
 export default function ProposalSimulateForm({
@@ -315,11 +322,15 @@ export default function ProposalSimulateForm({
   }
 
   function netCashImpact(): string {
-    const total = cashFlows.reduce((sum, item) => {
-      const amount = Math.abs(item.amount || 0);
-      return item.direction === "OUT" ? sum - amount : sum + amount;
-    }, 0);
-    return total.toFixed(2);
+    let totalMinorUnits = 0n;
+    for (const item of cashFlows) {
+      const minorUnits = proposalMoneyToMinorUnits(Math.abs(item.amount || 0));
+      if (minorUnits === null) {
+        return "Needs correction";
+      }
+      totalMinorUnits += item.direction === "OUT" ? -minorUnits : minorUnits;
+    }
+    return formatProposalMinorUnits(totalMinorUnits);
   }
 
   function validTradeCount(): number {
