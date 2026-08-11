@@ -8,10 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, Stack, TextField } from "@mui/material";
 
-import {
-  getRequiredPortfolioBook,
-  getRequiredPortfolioWorkspaceShell,
-} from "@/apps/portfolio/api";
+import { getRequiredPortfolioBook } from "@/apps/portfolio/api";
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
@@ -61,10 +58,13 @@ const schema = z.object({
   idempotencyKey: z.string().min(6, "Draft control key is required"),
   createdBy: z.string().min(1, "Advisor identity is required"),
   proposalTitle: z.string().min(1, "Advisory draft title is required"),
-  portfolioId: z.string().min(1, "Portfolio ID is required"),
-  asOfDate: z.string().min(10, "As-of date is required"),
+  portfolioId: z.string().trim().min(1, "Portfolio ID is required"),
+  asOfDate: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an advisory date in YYYY-MM-DD format"),
   mandateId: z.string().optional(),
-  baseCurrency: z.string().min(3, "Base currency is required"),
+  baseCurrency: z.string().trim().length(3, "Use a three-letter currency code"),
   cashAmount: z.number().positive("Investable cash must be greater than 0"),
 });
 
@@ -150,6 +150,13 @@ export default function ProposalSimulateForm({
   const asOfDate = useWatch({ control: form.control, name: "asOfDate" });
   const baseCurrency = useWatch({ control: form.control, name: "baseCurrency" });
   const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
+  const evidencePortfolioId = portfolioId.trim();
+  const evidenceAsOfDate = asOfDate.trim();
+  const evidenceCurrency = baseCurrency.trim().toUpperCase();
+  const hasPortfolioEvidenceContext =
+    evidencePortfolioId.length > 0 &&
+    /^\d{4}-\d{2}-\d{2}$/.test(evidenceAsOfDate) &&
+    /^[A-Z]{3}$/.test(evidenceCurrency);
   const workflowContextModel = useMemo(
     () =>
       savedDraft
@@ -159,49 +166,43 @@ export default function ProposalSimulateForm({
   );
   usePublishProposalWorkflowContext(workflowContextModel);
   const portfolioBookQuery = useQuery({
-    queryKey: ["proposal-position-builder-book", portfolioId, baseCurrency],
+    queryKey: [
+      "proposal-position-builder-book",
+      evidencePortfolioId,
+      evidenceAsOfDate,
+      evidenceCurrency,
+    ],
     queryFn: async () =>
-      await getRequiredPortfolioBook(portfolioId, {
-        reportingCurrency: baseCurrency || "USD",
+      await getRequiredPortfolioBook(evidencePortfolioId, {
+        asOfDate: evidenceAsOfDate,
+        reportingCurrency: evidenceCurrency,
       }),
-    enabled: portfolioId.trim().length > 0,
-    ...workbenchStrictQueryDefaults,
-  });
-  const portfolioWorkspaceQuery = useQuery({
-    queryKey: ["proposal-position-builder-shell", portfolioId],
-    queryFn: async () => await getRequiredPortfolioWorkspaceShell(portfolioId),
-    enabled: portfolioId.trim().length > 0,
+    enabled: hasPortfolioEvidenceContext,
     ...workbenchStrictQueryDefaults,
   });
   const portfolioEvidence = useMemo(
     () =>
       buildProposalPortfolioEvidence({
-        portfolioId,
+        portfolioId: evidencePortfolioId,
+        asOfDate: evidenceAsOfDate,
+        reportingCurrency: evidenceCurrency,
         bookQuery: {
           data: portfolioBookQuery.data,
           isLoading: portfolioBookQuery.isLoading,
           isFetching: portfolioBookQuery.isFetching,
           error: portfolioBookQuery.error,
         },
-        workspaceQuery: {
-          data: portfolioWorkspaceQuery.data,
-          isLoading: portfolioWorkspaceQuery.isLoading,
-          isFetching: portfolioWorkspaceQuery.isFetching,
-          error: portfolioWorkspaceQuery.error,
-        },
         manualCashAmount: cashAmount || 0,
       }),
     [
       cashAmount,
+      evidenceAsOfDate,
+      evidenceCurrency,
+      evidencePortfolioId,
       portfolioBookQuery.data,
       portfolioBookQuery.error,
       portfolioBookQuery.isFetching,
       portfolioBookQuery.isLoading,
-      portfolioId,
-      portfolioWorkspaceQuery.data,
-      portfolioWorkspaceQuery.error,
-      portfolioWorkspaceQuery.isFetching,
-      portfolioWorkspaceQuery.isLoading,
     ]
   );
   const tradablePositions = portfolioEvidence.positions.items;
@@ -242,10 +243,7 @@ export default function ProposalSimulateForm({
   }
 
   async function refreshPortfolioEvidence() {
-    await Promise.all([
-      portfolioBookQuery.refetch({ cancelRefetch: true }),
-      portfolioWorkspaceQuery.refetch({ cancelRefetch: true }),
-    ]);
+    await portfolioBookQuery.refetch({ cancelRefetch: true });
   }
 
   function confirmPortfolioEvidence(): boolean {
@@ -521,8 +519,8 @@ export default function ProposalSimulateForm({
                 </Button>
                 <p id="proposal-evidence-action-reason" className={styles.actionReason}>
                   {portfolioEvidence.canEvaluateAndHandoff
-                    ? "Evaluation uses the confirmed portfolio book and cash posture."
-                    : "Evaluation and draft handoff remain unavailable until portfolio evidence is confirmed."}
+                    ? "Evaluation uses the portfolio snapshot confirmed for the selected advisory date."
+                    : "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."}
                 </p>
               </Stack>
             </section>
@@ -562,12 +560,12 @@ export default function ProposalSimulateForm({
                   name="baseCurrency"
                   render={({ field, fieldState }) => (
                     <TextField
-                      label="Base Currency"
+                      label="Portfolio Currency"
                       size="small"
                       fullWidth
                       {...field}
                       error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Reporting currency for the proposal"}
+                      helperText={fieldState.error?.message ?? "Must match the source portfolio book"}
                     />
                   )}
                 />
@@ -578,10 +576,11 @@ export default function ProposalSimulateForm({
                     <TextField
                       label="Advisory As-of Date"
                       size="small"
+                      type="date"
                       fullWidth
                       {...field}
                       error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Source portfolio context resolved by Advise"}
+                      helperText={fieldState.error?.message ?? "Portfolio snapshot used for this proposal"}
                     />
                   )}
                 />
