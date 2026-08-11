@@ -249,7 +249,7 @@ export default function ProposalSimulateForm({
   }
 
   function confirmPortfolioEvidence(): boolean {
-    if (portfolioEvidence.canEvaluate) {
+    if (portfolioEvidence.canEvaluateAndHandoff) {
       return true;
     }
     setError(
@@ -496,7 +496,9 @@ export default function ProposalSimulateForm({
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={!isHydrated || loading || !portfolioEvidence.canEvaluate}
+                  disabled={
+                    !isHydrated || loading || !portfolioEvidence.canEvaluateAndHandoff
+                  }
                   aria-describedby="proposal-evidence-action-reason"
                   fullWidth
                 >
@@ -506,7 +508,9 @@ export default function ProposalSimulateForm({
                   type="button"
                   variant="outlined"
                   onClick={onSaveDraft}
-                  disabled={!isHydrated || savingDraft || !portfolioEvidence.canEvaluate}
+                  disabled={
+                    !isHydrated || savingDraft || !portfolioEvidence.canEvaluateAndHandoff
+                  }
                   aria-describedby="proposal-evidence-action-reason"
                   fullWidth
                 >
@@ -516,7 +520,7 @@ export default function ProposalSimulateForm({
                   View Proposal Queue
                 </Button>
                 <p id="proposal-evidence-action-reason" className={styles.actionReason}>
-                  {portfolioEvidence.canEvaluate
+                  {portfolioEvidence.canEvaluateAndHandoff
                     ? "Evaluation uses the confirmed portfolio book and cash posture."
                     : "Evaluation and draft handoff remain unavailable until portfolio evidence is confirmed."}
                 </p>

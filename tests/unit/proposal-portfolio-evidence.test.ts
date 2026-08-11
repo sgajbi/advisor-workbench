@@ -59,7 +59,7 @@ describe("proposal portfolio evidence", () => {
 
     expect(evidence).toMatchObject({
       status: "ready",
-      canEvaluate: true,
+      canEvaluateAndHandoff: true,
       title: "Portfolio evidence confirmed",
       positions: {
         status: "ready",
@@ -79,7 +79,7 @@ describe("proposal portfolio evidence", () => {
     });
 
     expect(evidence.status).toBe("ready");
-    expect(evidence.canEvaluate).toBe(true);
+    expect(evidence.canEvaluateAndHandoff).toBe(true);
     expect(evidence.positions).toEqual({ status: "empty", items: [] });
   });
 
@@ -90,7 +90,7 @@ describe("proposal portfolio evidence", () => {
 
     expect(evidence).toMatchObject({
       status: "partial",
-      canEvaluate: false,
+      canEvaluateAndHandoff: false,
       title: "Portfolio evidence is incomplete",
       positions: {
         status: "ready",
@@ -111,7 +111,7 @@ describe("proposal portfolio evidence", () => {
 
     expect(evidence).toMatchObject({
       status: "unavailable",
-      canEvaluate: false,
+      canEvaluateAndHandoff: false,
       title: "Portfolio evidence is unavailable",
       positions: { status: "unavailable", items: [] },
       cash: {
@@ -136,7 +136,7 @@ describe("proposal portfolio evidence", () => {
 
     expect(evidence).toMatchObject({
       status: "refresh_failed",
-      canEvaluate: false,
+      canEvaluateAndHandoff: false,
       positions: {
         status: "cached",
         items: [expect.objectContaining({ security_id: "AAPL" })],
@@ -155,7 +155,7 @@ describe("proposal portfolio evidence", () => {
     });
 
     expect(evidence.status).toBe("refreshing");
-    expect(evidence.canEvaluate).toBe(false);
+    expect(evidence.canEvaluateAndHandoff).toBe(false);
     expect(evidence.positions.status).toBe("refreshing");
   });
 
@@ -166,7 +166,7 @@ describe("proposal portfolio evidence", () => {
     });
 
     expect(evidence.status).toBe("unavailable");
-    expect(evidence.canEvaluate).toBe(false);
+    expect(evidence.canEvaluateAndHandoff).toBe(false);
     expect(evidence.positions.status).toBe("unavailable");
   });
 
@@ -188,6 +188,6 @@ describe("proposal portfolio evidence", () => {
     });
 
     expect(evidence.status).toBe("not_selected");
-    expect(evidence.canEvaluate).toBe(false);
+    expect(evidence.canEvaluateAndHandoff).toBe(false);
   });
 });
