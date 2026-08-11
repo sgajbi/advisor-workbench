@@ -13,7 +13,7 @@ approval, or trading screen.
 | Navigation | **Portfolio** in the portfolio review rail; current Home destination |
 | Supported scope | One selected portfolio and its current Gateway-backed review evidence |
 | Evidence posture | Active and covered by canonical `PB_SG_GLOBAL_BAL_001` browser validation |
-| Primary next action | Resolve the source-reported review focus or open the owning specialist workflow |
+| Primary next action | Resolve evidenced exceptions when present or open the owning specialist workflow |
 
 `/`, `/suite`, and `/portfolios` resolve to this canonical screen, and advisory
 `client-context` resolves here as a compatibility alias. Those entry paths do not create separate
@@ -51,8 +51,9 @@ portfolio-entitlement work remains governed by
 2. Confirm portfolio, client reference, booking centre, mandate status, base currency, and as-of
    date before comparing figures.
 3. Review AUM, invested assets, cash, and source-returned MTD, QTD, and YTD net returns.
-4. Read **Review focus** before the secondary evidence: it carries the primary source-reported
-   attention item or supported next step plus a Workbench-composed readiness label.
+4. Read **Review focus** before the secondary evidence. On the current summary flow, source partial
+   failures can supply attention evidence, while the healthy-state focus and **Complete portfolio
+   review** next step are Workbench-composed fallbacks over the loaded workspace facts.
 5. Review exceptions and the evidence rail when the decision depends on reporting, valuation,
    benchmark, or source coverage.
 6. Continue to the owning record, analytics, reporting, advisory, or mandate workflow. Returning to
@@ -68,10 +69,12 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
 - Presents source-backed AUM, invested assets, cash, cash weight, and MTD/QTD/YTD net returns.
 - Opens supporting drawers for AUM, invested-assets, and cash evidence without turning those
   drawers into recommendations.
-- Presents one source-backed review focus, reporting coverage, open exceptions, and the recommended
-  source workflow action. Its visible **Ready**, **Partial**, or **Not Ready** label is a Workbench
-  presentation projection over source-returned positions, reporting status, publication permission,
-  blocking controls, and partial failures; it is not a source-owned approval or mandate decision.
+- Presents one review focus, reporting coverage, and open exceptions. The current summary screen
+  loads the workspace shell, book/summary details, and performance snapshots; it does not request
+  the detailed workflow or insight endpoints. Its healthy-state **Portfolio review is ready** focus,
+  **Complete portfolio review** next step, and **Ready**, **Partial**, or **Not Ready** label are
+  Workbench presentation projections over loaded source facts, not source-owned actions, approvals,
+  recommendations, or mandate decisions.
 - Keeps partial failures and source-reported exception detail visible instead of treating missing
   evidence as zero or clear.
 - Exposes period, as-of, reporting-currency, filter, export, and additional-workflow controls only
@@ -110,6 +113,7 @@ review** is guidance, not a persisted workflow state or approval command.
 | Portfolio catalogue and selected portfolio | Requested through the Workbench BFF; Workbench does not substitute an unrelated global book when selection is unavailable | Gateway portfolio APIs over Core portfolio identity |
 | Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, workflow cues, warnings, and exceptions | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
 | Overall review label | Workbench deterministically projects **Ready**, **Partial**, or **Not Ready** from source-returned position coverage, reporting status, publication permission, blocking controls, and partial failures | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
+| Review focus and next step | Source partial failures remain evidenced when present; the current healthy summary flow falls back to **Portfolio review is ready** and **Complete portfolio review** without loading detailed workflow or insight contracts | Workbench presentation guidance; not a persisted or source-recommended action |
 | Positions, allocation, income, activity, and supporting book detail | Loaded through Gateway portfolio book and summary-detail contracts; record screens remain their owning presentation | Core portfolio book and transaction sources through Gateway |
 | MTD, QTD, YTD, selected-period return, benchmark identity, and availability | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable | Performance calculation authority composed by Gateway |
 | Reporting coverage and generation posture | Rendered as readiness evidence; row count is not treated as a generation timestamp or publication event | Core source-readiness evidence composed by Gateway; not a Report service publication event |
