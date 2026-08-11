@@ -176,6 +176,16 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
   });
 
+  it("conservatively retains a module alias across conditional reassignment", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({}); function update(reset) { let ref = cache; if (reset) { ref = {}; } ref.value = 1; }",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("discovers mutated module state introduced through nested destructuring", () => {
     expect(
       scanRuntimeStateSource({
@@ -184,6 +194,38 @@ describe("runtime state inventory", () => {
         file: "src/features/example.ts",
       }),
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
+  it.each([
+    [
+      "function object",
+      "function handler() {} handler.cache = {};",
+      "handler",
+    ],
+    [
+      "class object",
+      "class Cache {} Cache.entries = new Map();",
+      "Cache",
+    ],
+    [
+      "class static field",
+      "class Cache { static entries = new Map(); }",
+      "Cache",
+    ],
+  ])("discovers process-local state held on a module %s", (_name, source, symbol) => {
+    expect(
+      scanRuntimeStateSource({ source, file: "src/features/example.ts" }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol });
+  });
+
+  it("does not classify a static method or readonly primitive as mutable state", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "class Formatter { static readonly label = 'Ready'; static format() { return Formatter.label; } }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
   });
 
   it("rejects a stale declaration that could hide dead state guidance", () => {
