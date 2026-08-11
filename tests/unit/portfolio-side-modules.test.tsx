@@ -33,6 +33,70 @@ const workspace = {
 };
 
 describe("portfolio side rail modules", () => {
+  it.each(["READY", "COMPLETE"])(
+    "hides attention-only reporting readiness for resolved %s source status",
+    (status) => {
+      render(
+        <PortfolioReadinessModule
+          workspace={
+            {
+              ...workspace,
+              readiness: { reporting: { status } },
+            } as PortfolioWorkspace
+          }
+          showDetailFootnote={false}
+          onOpenException={vi.fn()}
+          exceptions={[]}
+        />
+      );
+
+      expect(
+        screen.queryByRole("heading", { name: "Reporting Readiness" })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  it("keeps unresolved reporting status visible when no detailed exception is supplied", () => {
+    render(
+      <PortfolioReadinessModule
+        workspace={workspace as PortfolioWorkspace}
+        showDetailFootnote={false}
+        onOpenException={vi.fn()}
+        exceptions={[]}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Reporting Readiness" })).toBeInTheDocument();
+    expect(screen.getByText("Reporting prerequisites need attention")).toBeInTheDocument();
+  });
+
+  it("keeps source exceptions visible even when reporting status is resolved", () => {
+    render(
+      <PortfolioReadinessModule
+        workspace={
+          {
+            ...workspace,
+            readiness: { reporting: { status: "COMPLETE" } },
+          } as PortfolioWorkspace
+        }
+        showDetailFootnote={false}
+        onOpenException={vi.fn()}
+        exceptions={[
+          {
+            key: "pricing",
+            title: "Pricing coverage incomplete",
+            detail: "One position still needs current pricing.",
+            tone: "warn",
+            href: "#portfolio-attention",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Reporting Readiness" })).toBeInTheDocument();
+    expect(screen.getByText("Pricing coverage incomplete")).toBeInTheDocument();
+  });
+
   it("renders portfolio context as grouped definition-list detail content with copy actions", () => {
     const onCopy = vi.fn();
 
