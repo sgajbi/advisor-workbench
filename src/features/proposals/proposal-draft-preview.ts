@@ -1,6 +1,5 @@
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 
-import type { CashFlowIntentInput, TradeIntentInput } from "./simulation-payload";
 import {
   isProposalMoneyCentDistinguishable,
   proposalDerivedMoneyToMinorUnits,
@@ -9,13 +8,20 @@ import {
   proposalMoneyToMinorUnits,
 } from "./proposal-money";
 
-export type ProposalDraftCashFlowIntent = CashFlowIntentInput & {
+export type ProposalDraftCashFlowIntent = {
   id: string;
+  currency: string;
+  amount: number;
+  direction: "IN" | "OUT";
+  description?: string;
   amountInput?: string;
 };
 
-export type ProposalDraftTradeIntent = TradeIntentInput & {
+export type ProposalDraftTradeIntent = {
   id: string;
+  side: "BUY" | "SELL";
+  instrumentId: string;
+  quantity: number;
   source: "HELD_POSITION" | "NEW_INSTRUMENT";
   instrumentName?: string;
   assetClass?: string;
