@@ -85,7 +85,10 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
 - Exposes period, as-of, reporting-currency, export, and additional-workflow controls only within
   current source capability. Unsupported historical review or currency restatement is disabled and
   explained. Record filters stay on the record screens where their effect is visible; Portfolio
-  Review does not imply that a record filter restates whole-portfolio measures or readiness.
+  Review does not imply that a record filter restates whole-portfolio measures or readiness. When
+  a complete dated book summary is returned, its totals, valuation date, and position-coverage
+  readiness replace the latest-book evidence together; reporting posture remains separately
+  source-owned.
 - Shows book context, available benchmark label/code, reporting coverage, actual valuation date,
   and only the evidence sources present in the loaded workspace. A missing benchmark is labelled
   **Not supplied** rather than implying an assignment. The rail is orientation and evidence
@@ -146,7 +149,7 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Selected workspace unavailable | One automatic shell request is made for the selected portfolio; a terminal unavailable response is not re-requested in a render loop | Return through the visible **My book** action; broader recovery telemetry remains tracked by [#651](https://github.com/sgajbi/lotus-workbench/issues/651) |
 | Partial or degraded | Available book facts remain visible with the affected source or supporting analytical scope in **Source Limitations**; a ready book is qualified to **Partial** when a selected or standard-period response is unavailable, warned, partial, or not retrievable | Use the dated book evidence that remains visible; do not use an unavailable return and open the owning specialist screen if the analytical scope is required |
 | Warning without partial failure | The source warning is visible as qualified performance evidence and prevents an unqualified ready posture | Review the exact warning and use only the evidenced return/benchmark scope |
-| Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope. While dated details load, existing totals retain their actual valuation date; successful dated book evidence replaces both totals and valuation date together | Keep the effective source scope; do not relabel latest evidence as historical or restated |
+| Stale or unsupported scope | Historical/currency controls are disabled or qualified when the source does not support the requested scope. While dated details load, existing totals and holdings readiness retain their actual valuation scope; a complete dated book summary replaces totals, valuation date, and position-coverage readiness together. A dated zero-position summary cannot inherit current holdings readiness | Keep the effective source scope; do not relabel latest evidence as historical or restated |
 | Empty supporting detail | Source-backed zero or unavailable supporting detail remains distinct from the portfolio headline | Open the owning record screen before concluding that activity or exposure is absent |
 | Permission blocked | Portfolio Review has no dedicated authenticated-principal permission panel today; a failed catalogue or workspace read remains unavailable | Do not add browser authority headers; follow #436 and the operations runbook |
 | Error | Catalogue or workspace failures fail closed to unavailable context; partial source failures remain visible within an otherwise usable review | Re-enter through **My book** or retry the owning specialist screen; escalate if the same scope persists |
@@ -208,6 +211,9 @@ Compatibility routes and aliases reuse this guide and must not fork the business
 - Focused mixed-success tests prove a failed standard-period request leaves dated book, income,
   selected-period, and other standard-period evidence usable; the failed return remains blank,
   recovery clears the limitation, and source-owned performance warnings qualify the review.
+- Source-to-render historical proof changes a current populated book to a dated zero-position book
+  and verifies the selected review date, source valuation date, zero AUM, and qualified portfolio
+  readiness change together without altering the separately sourced reporting posture.
 
 Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
 governed commands and evidence locations.
