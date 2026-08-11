@@ -351,7 +351,14 @@ Current repository posture:
     Gateway/Core/Advise, lets advisors model buys, sells, off-book instruments, and cash
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
-    risk, performance, or execution truth locally. Evaluation is an in-screen Proposal Builder
+    risk, performance, or execution truth locally. Its required portfolio-book and workspace-shell
+    readers must preserve the distinction between a confirmed empty book and unavailable evidence.
+    Evaluation and draft handoff are admitted only when both sources contain usable evidence and
+    their latest refresh is confirmed. Partial or previously loaded evidence remains visible with
+    its source posture, but manual scenario cash, an initial failure, or a failed refresh cannot
+    authorize those actions. Keep the two reads parallel and provide an explicit source refresh;
+    do not collapse failures to `null`, field validation, or fabricated empty-state success.
+    Evaluation is an in-screen Proposal Builder
     result after Gateway/Advise success, not a separate journey mode or fragment destination. A
     created workspace must not be described as evaluated until the evaluation call succeeds and
     its response carries a non-empty source-owned `status` and `proposal_run_id`; a 2xx response
