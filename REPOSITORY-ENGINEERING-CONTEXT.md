@@ -379,8 +379,11 @@ Current repository posture:
     through the complete preview and convert only final range-admitted values for presentation;
     use the same proposal-money boundary for cash-movement field recovery, net display, preview,
     and submitted decimal strings so browser evidence and source intent cannot diverge; admit
-    cash-movement precision independently of currency posture and prepare all cash-flow actions
-    before the workspace-creation mutation so a late conversion failure cannot strand a workspace;
+    cash-movement precision from the preserved advisor-entered decimal text independently of
+    currency posture and prepare all cash-flow actions before the workspace-creation mutation so a
+    late conversion failure cannot strand a workspace; round only derived indicative position and
+    trade notionals to the nearest minor unit so fractional source-implied prices do not block a
+    valid quantity action;
     negative, malformed, over-precision, and out-of-range values remain
     visible for correction and block both evaluation and draft handoff. Keep one pure admission
     model shared by schema validation, field recovery, and workflow-action availability; do not

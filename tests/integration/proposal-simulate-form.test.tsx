@@ -342,7 +342,7 @@ describe("ProposalSimulateForm", () => {
     await waitForPortfolioEvidence();
 
     const movementAmount = screen.getByLabelText("Amount");
-    fireEvent.change(movementAmount, { target: { value: "2.675" } });
+    fireEvent.change(movementAmount, { target: { value: "1.0000000001" } });
 
     expect(
       screen.getByText(
@@ -460,6 +460,38 @@ describe("ProposalSimulateForm", () => {
 
     const instrumentInputs = screen.getAllByLabelText("Instrument") as HTMLInputElement[];
     expect(instrumentInputs.some((input) => input.value === "AAPL")).toBe(true);
+  });
+
+  it("keeps valid quantity actions available when indicative notionals require cent rounding", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValue(
+      portfolioBook([
+        {
+          security_id: "FRACTIONAL-PRICE",
+          instrument_name: "Fractional Price Holding",
+          asset_class: "Equities",
+          quantity: 3,
+          market_price: 6_333.333333,
+          market_value_base: 19_000,
+          weight_pct: 43.2,
+        },
+      ])
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    expect(await screen.findByText("Fractional Price Holding")).toBeInTheDocument();
+    await waitForPortfolioEvidence();
+    fireEvent.click(screen.getByRole("button", { name: "Buy More" }));
+    const quantityInputs = screen.getAllByLabelText("Quantity") as HTMLInputElement[];
+    fireEvent.change(quantityInputs[quantityInputs.length - 1], { target: { value: "1" } });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+        "data-preview-status",
+        "available"
+      )
+    );
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
   });
 
   it("withholds impact when an active draft price uses another currency", async () => {

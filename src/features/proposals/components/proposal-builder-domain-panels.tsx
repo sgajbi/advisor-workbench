@@ -6,13 +6,14 @@ import { Alert, Button, MenuItem, TextField } from "@mui/material";
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
 import { SemanticBadge, Text, type SemanticBadgeTone } from "@/design-system";
 import type { ProposalDraftImpactModel } from "../proposal-draft-currency-authority";
-import type { ProposalDraftCashFlowIntent, ProposalDraftTradeIntent } from "../proposal-draft-preview";
 import {
   formatCurrencyValue,
   formatPercentValue,
   formatUnitValue,
+  proposalCashFlowToMinorUnits,
+  type ProposalDraftCashFlowIntent,
+  type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
-import { proposalMoneyToMinorUnits } from "../proposal-money";
 import type {
   ProposalPortfolioEvidenceModel,
   ProposalPortfolioEvidenceStatus,
@@ -312,7 +313,7 @@ export function CashMovementsPanel({
       </div>
       <div className={styles.intentRows}>
         {cashFlows.map((item) => {
-          const amountNeedsCorrection = proposalMoneyToMinorUnits(item.amount) === null;
+          const amountNeedsCorrection = proposalCashFlowToMinorUnits(item) === null;
           return (
           <div key={item.id} className={styles.cashRow}>
             <TextField
@@ -336,18 +337,22 @@ export function CashMovementsPanel({
             <TextField
               label="Amount"
               size="small"
-              type="number"
-              value={item.amount}
+              type="text"
+              value={item.amountInput ?? String(item.amount)}
               error={amountNeedsCorrection}
               helperText={
                 amountNeedsCorrection
                   ? "Use no more than 2 decimal places and remain within the reliable draft range."
                   : undefined
               }
-              inputProps={{ step: "0.01" }}
+              inputProps={{ inputMode: "decimal", spellCheck: false }}
               onChange={(event) => {
-                const next = (event.target as HTMLInputElement).valueAsNumber;
-                onUpdateCashFlow(item.id, { amount: Number.isNaN(next) ? 0 : next });
+                const amountInput = event.target.value;
+                const parsedAmount = Number(amountInput);
+                onUpdateCashFlow(item.id, {
+                  amountInput,
+                  amount: Number.isFinite(parsedAmount) ? parsedAmount : 0,
+                });
               }}
             />
             <TextField

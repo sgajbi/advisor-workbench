@@ -506,7 +506,7 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   await expect(saveAction).toBeEnabled();
 
   const cashMovementCurrency = page.getByRole("textbox", { name: "Currency", exact: true });
-  await page.getByLabel("Amount").fill("2.675");
+  await page.getByLabel("Amount").fill("1.0000000001");
   await cashMovementCurrency.fill("EUR");
   await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
   await expect(

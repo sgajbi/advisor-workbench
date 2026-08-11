@@ -23,10 +23,11 @@ import {
   createTradeIntent,
   createTradeIntentFromPosition,
   formatCurrencyValue,
+  proposalCashFlowToMinorUnits,
   type ProposalDraftCashFlowIntent,
   type ProposalDraftTradeIntent,
 } from "../proposal-draft-preview";
-import { formatProposalMinorUnits, proposalMoneyToMinorUnits } from "../proposal-money";
+import { formatProposalMinorUnits } from "../proposal-money";
 import { buildProposalDraftImpactModel } from "../proposal-draft-currency-authority";
 import {
   assessProposalScenarioCashInput,
@@ -107,8 +108,7 @@ function decimalString(value: number, digits: number): string {
 }
 
 function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
-  const amount = Math.abs(item.amount || 0);
-  const minorUnits = proposalMoneyToMinorUnits(amount);
+  const minorUnits = proposalCashFlowToMinorUnits(item);
   if (minorUnits === null) {
     throw new Error(
       "Cash movement amount must use no more than 2 decimal places and remain within the reliable draft range."
@@ -265,7 +265,7 @@ export default function ProposalSimulateForm({
     (item) => item.cappedToAvailableQuantity
   ).length;
   const cashMovementsPrecisionReady = cashFlows.every(
-    (item) => proposalMoneyToMinorUnits(Math.abs(item.amount || 0)) !== null
+    (item) => proposalCashFlowToMinorUnits(item) !== null
   );
   const canRunProposalWorkflow =
     portfolioEvidence.canEvaluateAndHandoff &&
@@ -330,7 +330,7 @@ export default function ProposalSimulateForm({
   function netCashImpact(): string {
     let totalMinorUnits = 0n;
     for (const item of cashFlows) {
-      const minorUnits = proposalMoneyToMinorUnits(Math.abs(item.amount || 0));
+      const minorUnits = proposalCashFlowToMinorUnits(item);
       if (minorUnits === null) {
         return "Needs correction";
       }
@@ -344,7 +344,10 @@ export default function ProposalSimulateForm({
   }
 
   function validCashFlowRows(): ProposalDraftCashFlowIntent[] {
-    return cashFlows.filter((item) => item.currency.trim().length > 0 && item.amount > 0);
+    return cashFlows.filter((item) => {
+      const minorUnits = proposalCashFlowToMinorUnits(item);
+      return item.currency.trim().length > 0 && minorUnits !== null && minorUnits > 0n;
+    });
   }
 
   function validTradeRows() {
