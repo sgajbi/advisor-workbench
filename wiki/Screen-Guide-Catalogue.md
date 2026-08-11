@@ -8,8 +8,8 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. The Advisor Book guide has passed the complete
-guide standard; the remaining 35 dedicated guides are explicit work under
+screens or modes, and two compatibility aliases**. Advisor Book and Portfolio Review have passed
+the complete guide standard; the remaining 34 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -46,7 +46,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Guide available | Gateway and Core |
-| Portfolio Review | `/portfolio` | Active | Guide planned — #605 | Gateway and Core |
+| [Portfolio Review](Portfolio-Review-Screen-Guide) | `/portfolio` | Active | Guide available | Gateway, Core, Performance, and Manage |
 | Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway and Core |
 | Positions | `/positions` | Active | Guide planned — #605 | Gateway and Core |
 | Transactions | `/transactions` | Active | Guide planned — #605 | Gateway and Core |
@@ -55,7 +55,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | Portfolio Intake | `/intake` | Active | Guide planned — #605 | Gateway and Core |
 
 The `client-context` advisory mode resolves to Portfolio Review. It is an alias, not an additional
-client profile or suitability screen, and it reuses the future Portfolio Review guide.
+client profile or suitability screen, and it reuses the canonical Portfolio Review guide.
 
 ## Performance And Risk Review
 

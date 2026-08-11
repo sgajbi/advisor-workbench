@@ -47,7 +47,7 @@ team, delegated, tenant, or booking-centre permissions in the browser.
 2. Confirm own-book scope, business date, booking centre, availability, and operating limitations.
 3. Narrow the register using an exact client reference, supported mandate, and requested sort.
 4. Confirm the returned range and displayed order before moving between source pages.
-5. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Workflow).
+5. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Screen-Guide).
 6. Within another supported portfolio screen, use **Portfolio context** to change portfolio while
    preserving the current business task and supported filters. Workbench requests own-book choices
    only when the switcher is opened.
@@ -130,7 +130,7 @@ guide does not turn a supported screen into a claim of bank approval or producti
 
 ## Adjacent Handoffs
 
-- [Portfolio Review](Portfolio-Review-Workflow) is the supported next step after portfolio
+- [Portfolio Review](Portfolio-Review-Screen-Guide) is the supported next step after portfolio
   selection.
 - The portfolio context switcher can preserve the current task when moving between supported
   Portfolio, Allocation, Positions, Transactions, Income, Cashflow, Performance, Risk, Proposal,
@@ -172,7 +172,7 @@ and do not attempt recovery by adding browser identity or tenant headers.
 ## Related Documentation
 
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
-- [Portfolio Review](Portfolio-Review-Workflow)
+- [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Supported Features](Supported-Features)
 - [API Surface](API-Surface)
 - [Integrations](Integrations)

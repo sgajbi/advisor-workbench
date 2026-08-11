@@ -57,10 +57,31 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 1,
-      coverageExceptions: 35,
-      unmappedGuides: 35,
+      mappedGuides: 2,
+      coverageExceptions: 34,
+      unmappedGuides: 34,
     });
+  });
+
+  it("maps Portfolio Review and its compatibility paths to one complete canonical guide", () => {
+    const registry = loadRegistry();
+    const portfolioReview = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "portfolio-review",
+    );
+    const portfolioAliases = registry.routeEntrypoints.filter(
+      (route: { canonicalSurfaceIds: string[] }) =>
+        route.canonicalSurfaceIds.includes("portfolio-review"),
+    );
+
+    expect(portfolioReview).toMatchObject({
+      routePattern: "/portfolio",
+      wikiSlug: "Portfolio-Review-Screen-Guide",
+      coverageException: null,
+    });
+    expect(portfolioAliases.map((route: { routePattern: string }) => route.routePattern)).toEqual(
+      expect.arrayContaining(["/", "/portfolio", "/portfolios", "/suite"]),
+    );
+    expect(validate(registry).errors).toEqual([]);
   });
 
   it("rejects a source route that disappears from the registry", () => {
