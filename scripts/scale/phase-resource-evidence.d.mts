@@ -1,3 +1,5 @@
+import type { ChildProcess } from "node:child_process";
+
 export interface ContainerResourcePeak {
   name: string;
   cpu_peak_percent: number;
@@ -37,3 +39,5 @@ export function summarizeContainerResourceSamples(
 export function parseDockerStatsLines(
   lines: string[],
 ): Array<Record<string, string>>;
+
+export function stopMonitoredProcess(child: ChildProcess): Promise<void>;

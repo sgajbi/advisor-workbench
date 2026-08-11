@@ -1,4 +1,5 @@
 import { cpus, freemem, loadavg } from "node:os";
+import { once } from "node:events";
 
 const MEMORY_UNITS = new Map([
   ["B", 1],
@@ -88,6 +89,15 @@ export function parseDockerStatsLines(lines) {
     }
     return [JSON.parse(line.slice(start, end + 1))];
   });
+}
+
+export async function stopMonitoredProcess(child) {
+  if (child.exitCode !== null) {
+    return;
+  }
+  const closed = once(child, "close");
+  child.kill();
+  await closed;
 }
 
 function parsePercentage(value) {

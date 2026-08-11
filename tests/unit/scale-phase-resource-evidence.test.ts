@@ -1,8 +1,11 @@
+import type { ChildProcess } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { describe, expect, it, vi } from "vitest";
 
 import {
   createLoadGeneratorResourceTracker,
   parseDockerStatsLines,
+  stopMonitoredProcess,
   summarizeContainerResourceSamples,
 } from "../../scripts/scale/phase-resource-evidence.mjs";
 
@@ -19,6 +22,33 @@ describe("scale phase resource evidence", () => {
 
   it("rejects malformed JSON-shaped stats instead of fabricating a sample", () => {
     expect(() => parseDockerStatsLines(['\u001b[H{"Name":}'])).toThrow();
+  });
+
+  it("subscribes for process close before sending termination", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: null as number | null,
+      kill: vi.fn(),
+    });
+    child.kill.mockImplementation(() => {
+      child.exitCode = 0;
+      child.emit("close", 0);
+      return true;
+    });
+
+    await expect(
+      stopMonitoredProcess(child as unknown as ChildProcess),
+    ).resolves.toBeUndefined();
+    expect(child.kill).toHaveBeenCalledOnce();
+  });
+
+  it("does not signal a resource monitor that already exited", async () => {
+    const child = Object.assign(new EventEmitter(), {
+      exitCode: 0,
+      kill: vi.fn(),
+    });
+
+    await stopMonitoredProcess(child as unknown as ChildProcess);
+    expect(child.kill).not.toHaveBeenCalled();
   });
 
   it("retains per-container CPU and memory peaks from concurrent samples", () => {
