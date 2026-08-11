@@ -90,7 +90,13 @@ export function buildProposalDraftImpactModel({
   return {
     status: "available",
     currencyAuthority,
-    preview: buildProposalDraftPreview(positions, cashAmount, cashFlows, trades),
+    preview: buildProposalDraftPreview(
+      positions,
+      cashAmount,
+      cashFlows,
+      trades,
+      additionalCashAdmission?.status === "ready" ? additionalCashAdmission.amount : 0
+    ),
   };
 }
 

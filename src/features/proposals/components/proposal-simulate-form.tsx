@@ -222,11 +222,13 @@ export default function ProposalSimulateForm({
   );
   const tradablePositions = portfolioEvidence.positions.items;
   const sourceCashAmount = portfolioEvidence.cash.amount;
+  const currentCashAmount =
+    portfolioEvidence.cash.authority === "portfolio_book" ? (sourceCashAmount ?? 0) : 0;
   const draftImpactModel = useMemo(
     () =>
       buildProposalDraftImpactModel({
         positions: tradablePositions,
-        cashAmount: sourceCashAmount ?? 0,
+        cashAmount: currentCashAmount,
         cashFlows,
         trades,
         requestedCurrency: evidenceCurrency,
@@ -235,10 +237,10 @@ export default function ProposalSimulateForm({
       }),
     [
       cashFlows,
+      currentCashAmount,
       evidenceCurrency,
       portfolioEvidence,
       scenarioCashAdmission,
-      sourceCashAmount,
       tradablePositions,
       trades,
     ]

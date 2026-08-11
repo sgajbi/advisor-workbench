@@ -3584,7 +3584,8 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
    out-of-range inputs; the Zod schema, field recovery, and workflow-action gate consume the same
    model.
 2. Treat blank and zero as explicit no-additional-cash assumptions while keeping source portfolio
-   cash authoritative.
+   cash authoritative. Apply an admitted positive amount to proposed cash and proposed portfolio
+   value only; current cash and current portfolio value remain the source-confirmed baseline.
 3. Preserve malformed text for correction, provide a specific business recovery message, and keep
    both evaluation and draft handoff unavailable until the value is valid. Withhold the indicative
    projection as well; an invalid assumption must never be modelled or displayed as zero.
@@ -3610,7 +3611,7 @@ product's layout, visual identity, wording, calculations, or unsupported capabil
 ### Validation and publication decision
 
 Workbench #639 owns implementation. Focused proof covers all admission states, aligned button
-availability, explicit errors, recovery, unchanged Gateway payload, successful source-backed
-evaluation, and desktop/narrow browser behavior. No wiki source change is required: the route,
+availability, explicit errors, recovery, positive-assumption impact, unchanged Gateway payload,
+successful source-backed evaluation, and desktop/narrow browser behavior. No wiki source change is required: the route,
 screen purpose, source owners, supported actions, and operator procedure remain unchanged, while
 #605 owns the dedicated Proposal Builder business guide.
