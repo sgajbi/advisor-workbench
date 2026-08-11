@@ -351,15 +351,18 @@ Current repository posture:
     Gateway/Core/Advise, lets advisors model buys, sells, off-book instruments, and cash
     movements, evaluates stateful workspaces through `lotus-advise`, and shows advisor-use
     allocation/readiness impact without sending UI-supplied positions or recomputing suitability,
-    risk, performance, or execution truth locally. Its required portfolio-book and workspace-shell
-    readers must preserve the distinction between a confirmed empty book and unavailable evidence.
-    Evaluation and draft handoff are admitted only when both sources contain usable evidence and
-    their latest refresh is confirmed. Partial or previously loaded evidence remains visible with
-    its source posture, but manual scenario cash, an initial failure, or a failed refresh cannot
-    authorize those actions. Keep the two reads parallel and provide an explicit source refresh;
-    required book reads must bypass the browser module response cache so that refresh reaches the
-    BFF, while request-token and query ownership prevent an older response from replacing newer
-    evidence. Do not collapse failures to `null`, field validation, or fabricated empty-state success.
+    risk, performance, or execution truth locally. Proposal construction uses Gateway's combined
+    portfolio-book response as one holdings-and-cash authority. Its query and request identity must
+    include portfolio id, advisory as-of date, and selected currency; evaluation and draft handoff
+    are admitted only when the response returns usable positions and summary cash for the same
+    portfolio, effective date, and portfolio currency. The evidence panel shows requested and
+    effective dates and distinguishes a confirmed empty book from unavailable, incomplete, or
+    mismatched evidence. Previously loaded evidence remains visible but qualified during refresh or
+    refresh failure, while manual scenario cash, an initial failure, a mismatch, or a failed refresh
+    cannot authorize action. Required book reads bypass the browser module response cache so an
+    intentional refresh reaches the BFF; date-specific React Query identity plus the shared request-
+    token boundary prevents an older response from replacing newer evidence. Do not reintroduce an
+    undated workspace-shell cash merge, collapse failures to `null`, or fabricate empty-state success.
     Evaluation is an in-screen Proposal Builder
     result after Gateway/Advise success, not a separate journey mode or fragment destination. A
     created workspace must not be described as evaluated until the evaluation call succeeds and
