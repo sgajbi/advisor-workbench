@@ -34,8 +34,31 @@ describe("PortfolioExceptionsSection", () => {
       screen.getByRole("heading", { name: "Source Limitations" })
     ).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio data")).toBeInTheDocument();
+    expect(screen.getByText("Reporting coverage needs attention")).toBeInTheDocument();
+    expect(screen.getByText("Source: Portfolio data")).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getByText("cash balance service unavailable")).toBeInTheDocument();
+  });
+
+  it("surfaces period-specific supporting evidence failures without hiding book evidence", () => {
+    render(
+      <PortfolioExceptionsSection
+        workspace={buildPortfolioWorkspace({
+          supporting_evidence_failures: [
+            {
+              evidence_scope: "standard_period_performance",
+              period: "MTD",
+              source_service: "lotus-gateway",
+              title: "MTD performance unavailable",
+              detail: "MTD performance evidence could not be retrieved through Gateway. No return is shown.",
+            },
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByText("MTD performance unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/No return is shown/)).toBeInTheDocument();
+    expect(screen.getByText("Source: Gateway")).toBeInTheDocument();
   });
 });

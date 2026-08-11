@@ -3,10 +3,13 @@
 import { AnalyticsModule, MetricRow, SectionHeader } from "@/design-system";
 
 import type { PortfolioWorkspace } from "../types";
+import { buildPortfolioSourceLimitations } from "../portfolio-summary-view-model";
 import { getEvidenceServiceLabel } from "../workspace-config";
 
 export default function PortfolioExceptionsSection({ workspace }: { workspace: PortfolioWorkspace }) {
-  if (!workspace.partial_failures.length) {
+  const limitations = buildPortfolioSourceLimitations(workspace);
+
+  if (!limitations.length) {
     return null;
   }
 
@@ -20,18 +23,21 @@ export default function PortfolioExceptionsSection({ workspace }: { workspace: P
         subtitle="Unresolved source issues that limit this portfolio review."
       />
       <AnalyticsModule
-        title="Reporting Coverage"
-        subtitle="Issues affecting reporting, valuation, or portfolio operations."
+        title="Evidence Coverage"
+        subtitle="Source and supporting evidence that requires attention before client use."
       >
-        <MetricRow label="Active limitations" value={workspace.partial_failures.length} />
+        <MetricRow label="Active limitations" value={limitations.length} />
         <div className="portfolio-guidance-list">
-          {workspace.partial_failures.map((failure) => (
+          {limitations.map((limitation) => (
             <div
-              key={`${failure.source_service}-${failure.error_code}`}
+              key={limitation.key}
               className="portfolio-guidance-item"
             >
-              <strong>{getEvidenceServiceLabel(failure.source_service)}</strong>
-              <p className="portfolio-evidence-copy">{failure.detail}</p>
+              <strong>{limitation.title}</strong>
+              <p className="portfolio-evidence-copy">{limitation.detail}</p>
+              <small className="muted">
+                Source: {getEvidenceServiceLabel(limitation.sourceService)}
+              </small>
             </div>
           ))}
         </div>

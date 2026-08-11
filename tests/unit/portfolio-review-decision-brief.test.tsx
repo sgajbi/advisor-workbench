@@ -110,9 +110,36 @@ describe("PortfolioReviewDecisionBrief", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Portfolio review is ready" })).toBeInTheDocument();
-    expect(screen.getByText("No source-reported items need attention.")).toBeInTheDocument();
+    expect(screen.queryByText("No source-reported items need attention.")).not.toBeInTheDocument();
     expect(screen.queryByText("Open exceptions")).not.toBeInTheDocument();
     expect(screen.queryByText("Clear")).not.toBeInTheDocument();
     expect(screen.queryByText("Recommended next step")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Review focus items")).not.toBeInTheDocument();
+  });
+
+  it("does not present an unqualified ready posture when performance evidence is limited", () => {
+    render(
+      <PortfolioReviewDecisionBrief
+        workspace={buildPortfolioWorkspace({
+          performance: {
+            period: "YTD",
+            return_pct: 4.2,
+            warnings: ["Benchmark history contains one delayed market close."],
+            partial_failures: [],
+          },
+          exception_summaries: [],
+          partial_failures: [],
+          insights: [],
+          workflow_actions: [],
+        })}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Performance evidence is qualified" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Portfolio review is ready" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Performance evidence is qualified")).toHaveLength(1);
   });
 });

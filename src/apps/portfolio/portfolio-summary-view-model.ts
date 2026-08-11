@@ -28,6 +28,14 @@ export type PortfolioSummaryAttentionItem = {
   tone: "danger" | "warn" | "neutral";
 };
 
+export type PortfolioSourceLimitation = {
+  key: string;
+  sourceService: string;
+  title: string;
+  detail: string;
+  scope: "portfolio" | "performance" | "income" | "activity";
+};
+
 export type PortfolioSummaryReadiness = {
   statusLabel: "Not Ready" | "Partial" | "Ready";
   support: string;
@@ -147,12 +155,14 @@ export function buildPortfolioSummaryAttentionItems(
     });
   }
 
-  if (!(workspace.exception_summaries?.length) && workspace.partial_failures.length) {
-    const firstFailure = workspace.partial_failures[0];
+  const sourceLimitations = buildPortfolioSourceLimitations(workspace).filter(
+    (limitation) => !(workspace.exception_summaries?.length) || limitation.scope !== "portfolio"
+  );
+  for (const limitation of sourceLimitations) {
     items.push({
-      key: `failure-${firstFailure.source_service}-${firstFailure.error_code}`,
-      title: "Reporting coverage needs attention",
-      detail: firstFailure.detail,
+      key: limitation.key,
+      title: limitation.title,
+      detail: limitation.detail,
       tone: "warn",
     });
   }
@@ -173,12 +183,87 @@ export function buildPortfolioSummaryReadiness(
   workspace: PortfolioWorkspace
 ): PortfolioSummaryReadiness {
   const readinessStatus = getBookReadinessStatus(workspace);
+  const hasSupportingLimitations = buildPortfolioSourceLimitations(workspace).some(
+    (limitation) => limitation.scope !== "portfolio"
+  );
+  const qualifiedStatus = readinessStatus === "Ready" && hasSupportingLimitations
+    ? "Partial"
+    : readinessStatus;
 
   return {
-    statusLabel: readinessStatus,
-    support: getBookReadinessSupport(workspace),
-    tone: readinessStatus === "Ready" ? "success" : readinessStatus === "Partial" ? "warn" : "danger",
+    statusLabel: qualifiedStatus,
+    support: hasSupportingLimitations
+      ? "Book evidence is available; supporting review evidence needs attention."
+      : getBookReadinessSupport(workspace),
+    tone: qualifiedStatus === "Ready" ? "success" : qualifiedStatus === "Partial" ? "warn" : "danger",
   };
+}
+
+export function buildPortfolioSourceLimitations(
+  workspace: PortfolioWorkspace
+): PortfolioSourceLimitation[] {
+  const limitations = new Map<string, PortfolioSourceLimitation>();
+  const add = (limitation: PortfolioSourceLimitation) => {
+    const duplicateKey = `${limitation.sourceService}:${limitation.detail}`;
+    if (!limitations.has(duplicateKey)) {
+      limitations.set(duplicateKey, limitation);
+    }
+  };
+
+  for (const failure of workspace.partial_failures) {
+    add({
+      key: `failure-${failure.source_service}-${failure.error_code}`,
+      sourceService: failure.source_service,
+      title: "Reporting coverage needs attention",
+      detail: failure.detail,
+      scope: "portfolio",
+    });
+  }
+
+  if (workspace.performance?.unavailable) {
+    add({
+      key: "performance-unavailable",
+      sourceService: "lotus-performance",
+      title: workspace.performance.unavailable.title,
+      detail: workspace.performance.unavailable.detail,
+      scope: "performance",
+    });
+  }
+  for (const failure of workspace.performance?.partial_failures ?? []) {
+    add({
+      key: `performance-failure-${failure.source_service}-${failure.error_code}`,
+      sourceService: failure.source_service,
+      title: "Performance evidence needs attention",
+      detail: failure.detail,
+      scope: "performance",
+    });
+  }
+  for (const [index, warning] of (workspace.performance?.warnings ?? []).entries()) {
+    add({
+      key: `performance-warning-${index}`,
+      sourceService: "lotus-performance",
+      title: "Performance evidence is qualified",
+      detail: warning,
+      scope: "performance",
+    });
+  }
+
+  for (const failure of workspace.supporting_evidence_failures ?? []) {
+    add({
+      key: `supporting-${failure.evidence_scope}-${failure.period ?? "selected"}`,
+      sourceService: failure.source_service,
+      title: failure.title,
+      detail: failure.detail,
+      scope:
+        failure.evidence_scope === "income_summary"
+          ? "income"
+          : failure.evidence_scope === "activity_summary"
+            ? "activity"
+            : "performance",
+    });
+  }
+
+  return [...limitations.values()];
 }
 
 export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): PortfolioDecisionBrief {

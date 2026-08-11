@@ -27,9 +27,7 @@ export default function PortfolioReviewDecisionBrief({
         tone: brief.readiness.tone,
         support: readinessSupport,
       }}
-      attentionItems={brief.attentionItems}
       facts={brief.rows}
-      emptyMessage="No source-reported items need attention."
     />
   );
 }
