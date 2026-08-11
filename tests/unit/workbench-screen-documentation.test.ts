@@ -89,8 +89,10 @@ describe("Workbench screen documentation governance", () => {
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("Workbench presentation classification");
     expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
-    expect(guide).toContain("it does not request detailed workflow or insight endpoints");
-    expect(guide).toContain("not a persisted approval or browser-invented action");
+    expect(guide).toContain("bounded Gateway `/workflow` projection");
+    expect(guide).toContain("it does not request the detailed `/insights` record slice");
+    expect(guide).toContain("the screen does not fabricate a completion action");
+    expect(guide).toContain("Workbench orders and labels the handoff but does not persist approval");
     expect(guide).toContain("source-owned performance warnings and partial failures");
     expect(guide).toContain("supporting-request outages visible");
     expect(guide).toContain("retained but unrendered payload fields do not\nbecome visible evidence");
