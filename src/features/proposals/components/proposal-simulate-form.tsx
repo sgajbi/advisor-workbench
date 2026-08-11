@@ -40,6 +40,7 @@ import {
   buildSimulationProposalWorkflowContext,
 } from "../proposal-workflow-context-view-model";
 import { SectionBlock } from "@/design-system";
+import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import {
   AdviseEvaluationSummaryPanel,
   CashMovementsPanel,
@@ -109,6 +110,7 @@ export default function ProposalSimulateForm({
 }: {
   initialPortfolioId?: string;
 }) {
+  const isHydrated = useClientMounted();
   const [defaultIdempotencyKey] = useState(createUiIdempotencyKey);
 
   const form = useForm<FormInput>({
@@ -365,6 +367,20 @@ export default function ProposalSimulateForm({
     }
   }
 
+  let evaluateActionLabel = "Evaluate Workspace";
+  if (!isHydrated) {
+    evaluateActionLabel = "Preparing Workspace...";
+  } else if (loading) {
+    evaluateActionLabel = "Evaluating...";
+  }
+
+  let saveActionLabel = "Save Advisor Draft";
+  if (!isHydrated) {
+    saveActionLabel = "Preparing Workspace...";
+  } else if (savingDraft) {
+    saveActionLabel = "Handing Off...";
+  }
+
   return (
     <SectionBlock
       title="Create Advisory Proposal"
@@ -432,11 +448,22 @@ export default function ProposalSimulateForm({
                 ) : null}
               </ul>
               <Stack spacing={1} className={styles.actionButtons}>
-                <Button type="submit" variant="contained" disabled={loading} fullWidth>
-                  {loading ? "Evaluating..." : "Evaluate Workspace"}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={!isHydrated || loading}
+                  fullWidth
+                >
+                  {evaluateActionLabel}
                 </Button>
-                <Button type="button" variant="outlined" onClick={onSaveDraft} disabled={savingDraft} fullWidth>
-                  {savingDraft ? "Handing Off..." : "Save Advisor Draft"}
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={onSaveDraft}
+                  disabled={!isHydrated || savingDraft}
+                  fullWidth
+                >
+                  {saveActionLabel}
                 </Button>
                 <Button component={Link} href="/proposals" variant="text" fullWidth>
                   View Proposal Queue

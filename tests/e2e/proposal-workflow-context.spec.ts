@@ -2,6 +2,38 @@ import { expect, test, type Page } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
+async function mockProposalBuilderEvaluation(page: Page) {
+  await page.route("**/api/bff/api/v1/advisory-workspaces**", async (route) => {
+    const url = new URL(route.request().url());
+    const evaluated = url.pathname.endsWith("/evaluate");
+    await route.fulfill({
+      json: {
+        correlation_id: evaluated ? "corr-builder-evaluation" : "corr-builder-create",
+        contract_version: "v1",
+        data: {
+          workspace: {
+            workspace_id: "aws_browser_001",
+            ...(evaluated
+              ? {
+                  evaluation_summary: {
+                    status: "READY",
+                    blocking_issue_count: 0,
+                    review_issue_count: 1,
+                    impact_summary: { trade_count: 0 },
+                  },
+                  latest_proposal_result: {
+                    status: "READY",
+                    proposal_run_id: "run_browser_001",
+                  },
+                }
+              : {}),
+          },
+        },
+      },
+    });
+  });
+}
+
 async function mockProposalQueue(page: Page) {
   await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
     await route.fulfill({
@@ -296,3 +328,29 @@ test("keeps proposal evaluation inside construction without persisted workflow a
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
 });
+
+for (const viewport of [
+  { name: "desktop", width: 1440, height: 1000 },
+  { name: "narrow", width: 390, height: 844 },
+]) {
+  test(`evaluates inside Proposal Builder without a duplicate ${viewport.name} destination`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await mockProposalBuilderEvaluation(page);
+    await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+      waitUntil: "domcontentloaded",
+    });
+
+    await page.getByRole("button", { name: "Evaluate Workspace" }).click();
+
+    await expect(
+      page.getByRole("status", { name: "Proposal evaluation summary" })
+    ).toContainText("Advise Evaluation Summary");
+    await expect(page.getByText("Workspace aws_browser_001 evaluated by Advise")).toBeVisible();
+    await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+  });
+}
