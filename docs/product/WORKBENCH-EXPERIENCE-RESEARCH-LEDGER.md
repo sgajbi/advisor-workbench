@@ -3364,7 +3364,8 @@ Research was reviewed on 2026-08-11:
 ### Adopted decisions
 
 1. Use strict readers at this decision boundary while retaining tolerant readers for unrelated
-   blank-safe screens; avoid a breaking global API behavior change.
+   blank-safe screens; required book reads bypass browser module response reuse so intentional
+   refresh reaches the BFF without a breaking global API behavior change.
 2. Project both source queries through one pure, typed evidence model that reuses the shared query
    posture vocabulary and admits evaluation only from complete, usable, freshly confirmed data.
 3. Keep book and workspace reads parallel so the evidence panel does not introduce a request
