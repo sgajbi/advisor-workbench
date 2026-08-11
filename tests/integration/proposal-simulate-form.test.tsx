@@ -611,6 +611,24 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByText("SGD portfolio book")).toBeInTheDocument();
   });
 
+  it("keeps manual scenario cash in proposal currency when partial source currency differs", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce({
+      ...portfolioBook(undefined, { currency: "SGD" }),
+      summary: {
+        ...portfolioBook().summary,
+        cash_market_value_base: undefined,
+      },
+    });
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    const evidencePanel = await waitForPortfolioEvidence("partial");
+    const setupSummary = screen.getByLabelText("Proposal setup summary");
+    expect(within(evidencePanel).getByText("USD 10,000")).toBeInTheDocument();
+    expect(within(setupSummary).getAllByText("USD 10,000")).toHaveLength(2);
+    expect(screen.queryByText("SGD 10,000")).not.toBeInTheDocument();
+    expect(screen.getByText("SGD portfolio book")).toBeInTheDocument();
+  });
+
   it("shows active recovery and refresh failure for mismatched evidence", async () => {
     let rejectRefresh: ((reason?: unknown) => void) | undefined;
     portfolioApiMocks.getRequiredPortfolioBook

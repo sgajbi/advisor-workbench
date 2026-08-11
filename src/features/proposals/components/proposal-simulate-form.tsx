@@ -208,7 +208,9 @@ export default function ProposalSimulateForm({
   const tradablePositions = portfolioEvidence.positions.items;
   const sourceCashAmount = portfolioEvidence.cash.amount;
   const sourceEvidenceCurrency =
-    portfolioEvidence.context.effectiveCurrency ?? (evidenceCurrency || "USD");
+    portfolioEvidence.cash.authority === "portfolio_book"
+      ? portfolioEvidence.context.effectiveCurrency ?? (evidenceCurrency || "USD")
+      : evidenceCurrency || "USD";
   const draftPreview = useMemo(
     () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
     [cashFlows, sourceCashAmount, tradablePositions, trades]
