@@ -248,6 +248,39 @@ export function buildPortfolioSourceLimitations(
     });
   }
 
+  for (const periodEvidence of workspace.performance_period_returns ?? []) {
+    if (workspace.performance?.period === periodEvidence.period) {
+      continue;
+    }
+    if (periodEvidence.unavailable) {
+      add({
+        key: `performance-${periodEvidence.period.toLowerCase()}-unavailable`,
+        sourceService: "lotus-performance",
+        title: `${periodEvidence.period} performance unavailable`,
+        detail: periodEvidence.unavailable.detail,
+        scope: "performance",
+      });
+    }
+    for (const failure of periodEvidence.partial_failures ?? []) {
+      add({
+        key: `performance-${periodEvidence.period.toLowerCase()}-failure-${failure.source_service}-${failure.error_code}`,
+        sourceService: failure.source_service,
+        title: `${periodEvidence.period} performance evidence needs attention`,
+        detail: failure.detail,
+        scope: "performance",
+      });
+    }
+    for (const [index, warning] of (periodEvidence.warnings ?? []).entries()) {
+      add({
+        key: `performance-${periodEvidence.period.toLowerCase()}-warning-${index}`,
+        sourceService: "lotus-performance",
+        title: `${periodEvidence.period} performance evidence is qualified`,
+        detail: warning,
+        scope: "performance",
+      });
+    }
+  }
+
   for (const failure of workspace.supporting_evidence_failures ?? []) {
     add({
       key: `supporting-${failure.evidence_scope}-${failure.period ?? "selected"}`,

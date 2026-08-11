@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPortfolioSourceLimitations,
   buildPortfolioSummaryAttentionItems,
   buildPortfolioSummaryReadiness,
   resolvePortfolioCashflowPointHeight,
@@ -202,6 +203,103 @@ describe("portfolio summary view model", () => {
       support: "Publication currently blocked",
       tone: "danger",
     });
+  });
+
+  it("qualifies a ready book with source-owned standard-period limitations", () => {
+    const workspace = buildWorkspace({
+      operations: {
+        publish_allowed: true,
+        controls_blocking: false,
+      },
+      performance: {
+        period: "30D",
+        return_pct: 2.4,
+        warnings: [],
+        partial_failures: [],
+      },
+      performance_period_returns: [
+        {
+          period: "MTD",
+          return_pct: null,
+          unavailable: {
+            title: "Performance history incomplete",
+            detail: "MTD valuation history is incomplete.",
+            requirements: ["Daily valuations"],
+          },
+        },
+        {
+          period: "QTD",
+          return_pct: 1.2,
+          warnings: ["One benchmark close is delayed."],
+        },
+        {
+          period: "YTD",
+          return_pct: 4.5,
+          partial_failures: [
+            {
+              source_service: "lotus-performance",
+              error_code: "BENCHMARK_PARTIAL",
+              detail: "Benchmark-relative return is partial.",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
+      statusLabel: "Partial",
+      support: "Book evidence is available; supporting review evidence needs attention.",
+      tone: "warn",
+    });
+    expect(buildPortfolioSourceLimitations(workspace)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "MTD performance unavailable",
+          detail: "MTD valuation history is incomplete.",
+        }),
+        expect.objectContaining({
+          title: "QTD performance evidence is qualified",
+          detail: "One benchmark close is delayed.",
+        }),
+        expect.objectContaining({
+          title: "YTD performance evidence needs attention",
+          detail: "Benchmark-relative return is partial.",
+        }),
+      ])
+    );
+  });
+
+  it("does not duplicate source posture for a selected standard period", () => {
+    const workspace = buildWorkspace({
+      performance: {
+        period: "MTD",
+        return_pct: null,
+        unavailable: {
+          title: "MTD performance unavailable",
+          detail: "MTD valuation history is incomplete.",
+          requirements: ["Daily valuations"],
+        },
+        warnings: [],
+        partial_failures: [],
+      },
+      performance_period_returns: [
+        {
+          period: "MTD",
+          return_pct: null,
+          unavailable: {
+            title: "MTD performance unavailable",
+            detail: "MTD valuation history is incomplete.",
+            requirements: ["Daily valuations"],
+          },
+        },
+      ],
+    });
+
+    expect(
+      buildPortfolioSourceLimitations(workspace).filter(
+        (limitation) => limitation.detail === "MTD valuation history is incomplete."
+      )
+    ).toHaveLength(1);
   });
 
   it("scales cashflow point heights against the largest projected movement", () => {
