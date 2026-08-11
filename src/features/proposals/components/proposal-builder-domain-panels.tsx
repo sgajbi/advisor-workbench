@@ -102,6 +102,8 @@ export function CurrentPositionsPanel({
   baseCurrency: string;
   onAddPositionTrade: (position: PortfolioPositionView, side: "BUY" | "SELL") => void;
 }) {
+  const draftActionsDisabled = evidenceStatus === "context_mismatch";
+
   return (
     <section className={styles.panel} aria-labelledby="current-positions-heading">
       <div className={styles.panelHeader}>
@@ -144,6 +146,7 @@ export function CurrentPositionsPanel({
                         type="button"
                         size="small"
                         variant="outlined"
+                        disabled={draftActionsDisabled}
                         onClick={() => onAddPositionTrade(position, "BUY")}
                       >
                         Buy More
@@ -153,6 +156,7 @@ export function CurrentPositionsPanel({
                         size="small"
                         variant="outlined"
                         color="inherit"
+                        disabled={draftActionsDisabled}
                         onClick={() => onAddPositionTrade(position, "SELL")}
                       >
                         Sell Down
@@ -228,6 +232,8 @@ function positionsEvidenceLabel(
       return `${count} ${count === 1 ? "position" : "positions"} · refreshing`;
     case "cached":
       return `${count} ${count === 1 ? "position" : "positions"} · previously loaded`;
+    case "context_mismatch":
+      return `${count} ${count === 1 ? "position" : "positions"} · different context`;
     case "unavailable":
       return "Unavailable";
     case "empty":
@@ -243,6 +249,8 @@ function positionsEmptyStateCopy(status: ProposalPositionsEvidenceStatus): strin
       return "Loading current holdings from the portfolio book.";
     case "unavailable":
       return "Current holdings could not be loaded. No empty-book fallback is shown.";
+    case "context_mismatch":
+      return "The returned portfolio book belongs to a different context. Refresh before adding draft trades.";
     case "empty":
       return "The portfolio book is confirmed with no current investment positions. Add cash or an off-book instrument to begin the draft.";
     case "cached":

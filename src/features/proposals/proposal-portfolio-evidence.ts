@@ -21,6 +21,7 @@ export type ProposalPositionsEvidenceStatus =
   | "empty"
   | "refreshing"
   | "cached"
+  | "context_mismatch"
   | "unavailable";
 
 export type ProposalCashAuthority = "portfolio_book" | "manual_scenario";
@@ -129,6 +130,7 @@ export function buildProposalPortfolioEvidence({
       status: resolvePositionsStatus({
         hasSelectedContext,
         hasBookData: bookPositions !== null,
+        hasContextMismatch: hasCompleteBook && !matchesSelectedContext,
         positionCount: tradablePositions.length,
         posture: sourcePosture,
       }),
@@ -196,11 +198,13 @@ function resolveEvidenceStatus({
 function resolvePositionsStatus({
   hasSelectedContext,
   hasBookData,
+  hasContextMismatch,
   positionCount,
   posture,
 }: {
   hasSelectedContext: boolean;
   hasBookData: boolean;
+  hasContextMismatch: boolean;
   positionCount: number;
   posture: QuerySourcePosture;
 }): ProposalPositionsEvidenceStatus {
@@ -209,6 +213,9 @@ function resolvePositionsStatus({
   }
   if (!hasBookData) {
     return "unavailable";
+  }
+  if (hasContextMismatch) {
+    return "context_mismatch";
   }
   if (posture.hasRefreshFailure) {
     return "cached";
