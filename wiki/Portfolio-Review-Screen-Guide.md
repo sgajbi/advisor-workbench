@@ -121,7 +121,7 @@ review** is guidance, not a persisted workflow state or approval command.
 | MTD, QTD, YTD, selected-period return, and available benchmark label/code | Requested through Gateway performance-snapshot contracts; missing return evidence remains unavailable and a generic benchmark fallback is not treated as identity evidence | Performance calculation authority composed by Gateway |
 | Reporting coverage and generation posture | Rendered as readiness evidence; row count is not treated as a generation timestamp or publication event | Core source-readiness evidence composed by Gateway; not a Report service publication event |
 | Gateway warnings | Retained in the workspace projection and local export, but a warning without a partial failure is not rendered in the current Portfolio Review | Gateway contract data; not visible review evidence today |
-| Rebalance payload | Retained in the shell response but not consumed by the current Portfolio Review components | Manage contract data composed by Gateway; only the adjacent Mandate Operations handoff is visible |
+| Rebalance and supportability payload | Successful data is retained in the shell response but not consumed by the current Portfolio Review components; Manage failures carried in `partial_failures` are rendered as **Monitoring** exceptions | Manage owns the conditional failure evidence, not a visible healthy rebalance or supportability posture |
 | Review Evidence **Sources** row | Displays a fixed Workbench summary rather than contract-returned lineage | Workbench orientation copy; not source provenance or supportability proof |
 | Export | Browser serializes the confirmed current Workbench projection | Workbench local action; no source-side report or archive authority |
 

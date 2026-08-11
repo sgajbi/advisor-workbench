@@ -255,7 +255,7 @@
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
       "wikiSlug": "Portfolio-Review-Screen-Guide",
-      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-performance"],
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-performance", "lotus-manage"],
       "implementationEvidence": ["src/apps/portfolio/page.tsx"],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
