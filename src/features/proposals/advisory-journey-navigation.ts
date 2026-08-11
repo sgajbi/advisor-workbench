@@ -7,7 +7,6 @@ export type AdvisoryJourneyMode =
   | "client-context"
   | "opportunities"
   | "proposal-builder"
-  | "simulation"
   | "suitability"
   | "risk-impact"
   | "approval-queue"
@@ -112,24 +111,6 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     shellVisible: true,
   },
   {
-    key: "simulation",
-    label: "Simulation",
-    detail: "Portfolio impact",
-    title: "Proposal Simulation",
-    description:
-      "Advisor-use proposal impact across allocation, risk, and readiness.",
-    primaryDecision:
-      "Does the simulated proposal improve the portfolio enough to proceed?",
-    nextAction: "Review suitability and risk impact.",
-    dataSources: [
-      "lotus-gateway",
-      "lotus-advise",
-      "lotus-performance",
-      "lotus-risk",
-    ],
-    shellVisible: false,
-  },
-  {
     key: "suitability",
     label: "Suitability",
     detail: "Mandate fit",
@@ -231,8 +212,6 @@ export function buildAdvisoryJourneyHref(
       return `/recommendations?portfolioId=${encoded}&mode=proof`;
     case "proposal-builder":
       return `/proposals/simulate?portfolioId=${encoded}`;
-    case "simulation":
-      return `/proposals/simulate?portfolioId=${encoded}#simulation`;
     case "client-context":
       return `/portfolio?portfolioId=${encoded}`;
     case "approval-queue":
