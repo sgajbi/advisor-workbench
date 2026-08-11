@@ -232,6 +232,49 @@ describe("portfolio api", () => {
     );
   });
 
+  it("forces required book evidence past cache without allowing an older read to replace it", async () => {
+    const staleBook = {
+      positions: [{ security_id: "STALE", instrument_name: "Stale holding", quantity: 1 }],
+      top_positions: [],
+      allocation_views: [],
+    };
+    const currentBook = {
+      positions: [{ security_id: "CURRENT", instrument_name: "Current holding", quantity: 2 }],
+      top_positions: [],
+      allocation_views: [],
+    };
+    let resolveStale: ((response: Response) => void) | undefined;
+    let resolveCurrent: ((response: Response) => void) | undefined;
+    const fetchSpy = vi
+      .fn()
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<Response>((resolve) => {
+            resolveStale = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<Response>((resolve) => {
+            resolveCurrent = resolve;
+          })
+      );
+    vi.stubGlobal("fetch", fetchSpy);
+    const params = { reportingCurrency: "USD" };
+
+    const staleRequest = getPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
+    const currentRequest = getRequiredPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
+
+    resolveCurrent?.(jsonResponse(currentBook));
+    expect((await currentRequest).positions[0]?.security_id).toBe("CURRENT");
+    resolveStale?.(jsonResponse(staleBook));
+    expect((await staleRequest)?.positions[0]?.security_id).toBe("STALE");
+
+    const cached = await getPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
+    expect(cached?.positions[0]?.security_id).toBe("CURRENT");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {
     vi.stubGlobal(
       "fetch",

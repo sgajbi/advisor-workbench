@@ -43,13 +43,10 @@ type ProposalWorkspaceEvidence = {
 
 export type ProposalPortfolioEvidenceModel = {
   status: ProposalPortfolioEvidenceStatus;
-  canEvaluate: boolean;
+  canEvaluateAndHandoff: boolean;
   title: string;
   body: string;
   hint: string | null;
-  bookSourcePosture: QuerySourcePosture;
-  workspaceSourcePosture: QuerySourcePosture;
-  combinedSourcePosture: QuerySourcePosture;
   positions: {
     status: ProposalPositionsEvidenceStatus;
     items: PortfolioPositionView[];
@@ -100,8 +97,7 @@ export function buildProposalPortfolioEvidence({
     hasPortfolio,
     hasBookData: bookPositions !== null,
     hasWorkspaceData: workspaceCash !== null,
-    bookSourcePosture,
-    workspaceSourcePosture,
+    combinedSourcePosture,
   });
   const positions = bookPositions ?? [];
   const tradablePositions = positions.filter((position) => !isCashPosition(position));
@@ -119,11 +115,8 @@ export function buildProposalPortfolioEvidence({
 
   return {
     status,
-    canEvaluate: status === "ready",
+    canEvaluateAndHandoff: status === "ready",
     ...evidenceCopy(status),
-    bookSourcePosture,
-    workspaceSourcePosture,
-    combinedSourcePosture,
     positions: {
       status: resolvePositionsStatus({
         hasPortfolio,
@@ -141,41 +134,40 @@ function resolveEvidenceStatus({
   hasPortfolio,
   hasBookData,
   hasWorkspaceData,
-  bookSourcePosture,
-  workspaceSourcePosture,
+  combinedSourcePosture,
 }: {
   hasPortfolio: boolean;
   hasBookData: boolean;
   hasWorkspaceData: boolean;
-  bookSourcePosture: QuerySourcePosture;
-  workspaceSourcePosture: QuerySourcePosture;
+  combinedSourcePosture: QuerySourcePosture;
 }): ProposalPortfolioEvidenceStatus {
   if (!hasPortfolio) {
     return "not_selected";
   }
 
   if (hasBookData && hasWorkspaceData) {
-    if (bookSourcePosture.hasRefreshFailure || workspaceSourcePosture.hasRefreshFailure) {
+    if (combinedSourcePosture.hasRefreshFailure) {
       return "refresh_failed";
     }
-    if (bookSourcePosture.isRefreshing || workspaceSourcePosture.isRefreshing) {
+    if (combinedSourcePosture.isInitialLoading) {
+      return "checking";
+    }
+    if (combinedSourcePosture.isRefreshing) {
       return "refreshing";
     }
     return "ready";
   }
 
   if (hasBookData || hasWorkspaceData) {
-    if (bookSourcePosture.isInitialLoading || workspaceSourcePosture.isInitialLoading) {
+    if (combinedSourcePosture.isInitialLoading) {
       return "checking";
     }
     return "partial";
   }
 
   if (
-    bookSourcePosture.isInitialLoading ||
-    workspaceSourcePosture.isInitialLoading ||
-    bookSourcePosture.isRefreshing ||
-    workspaceSourcePosture.isRefreshing
+    combinedSourcePosture.isInitialLoading ||
+    combinedSourcePosture.isRefreshing
   ) {
     return "checking";
   }

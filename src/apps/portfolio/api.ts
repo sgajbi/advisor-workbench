@@ -261,7 +261,10 @@ export async function getRequiredPortfolioBook(
     reportingCurrency?: string;
   } = {}
 ): Promise<PortfolioBookResponse> {
-  const book = await fetchPortfolioBook(portfolioId, params);
+  const book = await fetchPortfolioBook(portfolioId, {
+    ...params,
+    forceRefresh: true,
+  });
   if (!book) {
     throw new Error("Portfolio book evidence is unavailable.");
   }
@@ -323,6 +326,7 @@ async function fetchPortfolioBook(
   params: {
     asOfDate?: string;
     reportingCurrency?: string;
+    forceRefresh?: boolean;
   }
 ): Promise<PortfolioBookResponse | null> {
   const bookQuery = new URLSearchParams();
@@ -335,7 +339,7 @@ async function fetchPortfolioBook(
   return await fetchPortfolioJson<PortfolioBookResponse>(
     resolvePortfolioRequestTarget(),
     `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
-    { query: bookQuery }
+    { query: bookQuery, forceRefresh: params.forceRefresh }
   );
 }
 
