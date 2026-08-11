@@ -81,21 +81,25 @@ describe("Workbench screen documentation governance", () => {
     expect(portfolioAliases.map((route: { routePattern: string }) => route.routePattern)).toEqual(
       expect.arrayContaining(["/", "/portfolio", "/portfolios", "/suite"]),
     );
-    const guide = fs.readFileSync(
-      path.join(rootDirectory, "wiki", "Portfolio-Review-Screen-Guide.md"),
-      "utf8",
-    );
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Portfolio-Review-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
     expect(guide).toContain("Workbench presentation classification");
     expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
-    expect(guide).toContain("it does not request\n  the detailed workflow or insight endpoints");
-    expect(guide).toContain("not a persisted or source-recommended action");
+    expect(guide).toContain("it does not request detailed workflow or insight endpoints");
+    expect(guide).toContain("not a persisted approval or browser-invented action");
     expect(guide).toContain("retained without a dedicated visible region");
     expect(guide).toContain("retained but unrendered payload fields do not\nbecome visible evidence");
     expect(guide).toContain("Manage failures carried in `partial_failures` are rendered");
     expect(guide).toContain("performance snapshot failures remain nested");
-    expect(guide).toContain("has no terminal attempt/backoff bound");
-    expect(guide).toContain("not dynamic lineage");
-    expect(guide).toContain("not source provenance or supportability proof");
+    expect(guide).toContain("a terminal unavailable response is not re-requested");
+    expect(guide).toContain("only the Performance, Cashflow, or Reporting evidence actually present");
+    expect(guide).toContain("not calculation lineage or supportability certification");
+    expect(guide).toContain("Portfolio Review deliberately excludes record-oriented filters");
+    expect(guide).toContain("successful dated book evidence replaces both totals and valuation date together");
     expect(validate(registry).errors).toEqual([]);
   });
 
