@@ -472,9 +472,7 @@ test("shows requested and source dates while blocking a mismatched source snapsh
   await expect(evidence).toHaveAttribute("data-requested-as-of-date", "2026-04-10");
   await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-09");
   await expect(page.getByText("Portfolio context does not match")).toBeVisible();
-  const positionsPanel = page.locator("section").filter({
-    has: page.getByRole("heading", { name: "Current Positions" }),
-  }).first();
+  const positionsPanel = page.getByRole("region", { name: "Current Positions" });
   await expect(positionsPanel.getByText("1 position · different context")).toBeVisible();
   await expect(page.getByRole("button", { name: "Buy More" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Sell Down" })).toBeDisabled();
