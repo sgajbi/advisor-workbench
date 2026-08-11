@@ -146,6 +146,46 @@ describe("runtime state inventory", () => {
     ).toEqual([]);
   });
 
+  it("invalidates a local alias when its binding is reassigned", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({}); function update() { let ref = cache; ref = {}; ref.value = 1; }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
+  it("does not treat local alias increment as mutation of its prior referent", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const count = 1; function update() { let localCount = count; localCount++; }",
+        file: "src/features/example.ts",
+      }),
+    ).toEqual([]);
+  });
+
+  it("retains module mutation evidence that occurs before local alias reassignment", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = Object.freeze({}); function update() { let ref = cache; ref.value = 1; ref = {}; }",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
+  it("discovers mutated module state introduced through nested destructuring", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const { stores: { cache }, entries: [firstEntry] } = createStores(); cache.set('key', firstEntry);",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("rejects a stale declaration that could hide dead state guidance", () => {
     const evidence = loadEvidence();
     evidence.discoveredStateHolders = evidence.discoveredStateHolders.filter(
