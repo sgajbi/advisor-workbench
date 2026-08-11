@@ -363,6 +363,12 @@ Current repository posture:
     intentional refresh reaches the BFF; date-specific React Query identity plus the shared request-
     token boundary prevents an older response from replacing newer evidence. Do not reintroduce an
     undated workspace-shell cash merge, collapse failures to `null`, or fabricate empty-state success.
+    Indicative draft impact has one explicit currency authority: source portfolio values, manual
+    scenario cash, active cash movements, and draft prices must share the requested proposal
+    currency before Workbench computes or renders monetary totals and allocation projections. When
+    currencies differ or identity is incomplete, preserve the underlying source and draft records
+    but withhold the combined projection until an approved source contract supplies conversion
+    evidence. Workbench must not translate, relabel, or infer authoritative FX in the browser.
     Evaluation is an in-screen Proposal Builder
     result after Gateway/Advise success, not a separate journey mode or fragment destination. A
     created workspace must not be described as evaluated until the evaluation call succeeds and
