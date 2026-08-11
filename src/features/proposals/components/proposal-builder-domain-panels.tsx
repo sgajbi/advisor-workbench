@@ -110,8 +110,8 @@ export function CurrentPositionsPanel({
         <div>
           <h3 id="current-positions-heading">Current Positions</h3>
           <p>
-            Start from the live portfolio book, then buy more units or sell down holdings into the
-            advisor-use draft.
+            Review portfolio-book holdings, then add position changes when the source evidence
+            matches the advisory context.
           </p>
         </div>
         <span>{positionsEvidenceLabel(evidenceStatus, positions.length)}</span>

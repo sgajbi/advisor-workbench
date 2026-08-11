@@ -207,6 +207,8 @@ export default function ProposalSimulateForm({
   );
   const tradablePositions = portfolioEvidence.positions.items;
   const sourceCashAmount = portfolioEvidence.cash.amount;
+  const sourceEvidenceCurrency =
+    portfolioEvidence.context.effectiveCurrency ?? (evidenceCurrency || "USD");
   const draftPreview = useMemo(
     () => buildProposalDraftPreview(tradablePositions, sourceCashAmount, cashFlows, trades),
     [cashFlows, sourceCashAmount, tradablePositions, trades]
@@ -375,7 +377,11 @@ export default function ProposalSimulateForm({
       return;
     }
 
-    const values = form.getValues();
+    const parsedValues = schema.safeParse(form.getValues());
+    if (!parsedValues.success) {
+      return;
+    }
+    const values = parsedValues.data;
     setError(null);
     setSavingDraft(true);
     try {
@@ -453,7 +459,7 @@ export default function ProposalSimulateForm({
           <div>
             <span>Source Cash</span>
             <strong>
-              {formatCurrencyValue(sourceCashAmount, baseCurrency || "USD")}
+              {formatCurrencyValue(sourceCashAmount, sourceEvidenceCurrency)}
             </strong>
           </div>
           <div>
@@ -529,7 +535,7 @@ export default function ProposalSimulateForm({
           <div className={styles.mainLane}>
             <ProposalPortfolioEvidencePanel
               evidence={portfolioEvidence}
-              baseCurrency={baseCurrency || "USD"}
+              baseCurrency={sourceEvidenceCurrency}
               onRefresh={refreshPortfolioEvidence}
             />
 
@@ -625,7 +631,7 @@ export default function ProposalSimulateForm({
             <CurrentPositionsPanel
               positions={tradablePositions}
               evidenceStatus={portfolioEvidence.positions.status}
-              baseCurrency={baseCurrency || "USD"}
+              baseCurrency={sourceEvidenceCurrency}
               onAddPositionTrade={addPositionTrade}
             />
 

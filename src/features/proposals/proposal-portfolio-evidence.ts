@@ -86,7 +86,7 @@ export function buildProposalPortfolioEvidence({
   const sourceCash = finiteNumberOrNull(bookQuery.data?.summary?.cash_market_value_base);
   const effectiveAsOfDate = nonEmptyStringOrNull(bookQuery.data?.as_of_date);
   const effectivePortfolioId = nonEmptyStringOrNull(bookQuery.data?.portfolio?.portfolio_id);
-  const effectiveCurrency = upperCaseStringOrNull(bookQuery.data?.portfolio?.base_currency);
+  const effectiveCurrency = currencyCodeOrNull(bookQuery.data?.portfolio?.base_currency);
   const hasCompleteBook =
     bookPositions !== null &&
     sourceCash !== null &&
@@ -146,7 +146,10 @@ export function buildProposalPortfolioEvidence({
         : {
             amount: sourceCash,
             authority: "portfolio_book",
-            label: "Portfolio book cash confirmed",
+            label:
+              status === "ready"
+                ? "Portfolio book cash confirmed"
+                : "Portfolio book cash loaded",
           },
   };
 }
@@ -168,10 +171,6 @@ function resolveEvidenceStatus({
     return "not_selected";
   }
 
-  if (hasCompleteBook && !matchesSelectedContext) {
-    return "context_mismatch";
-  }
-
   if (hasCompleteBook) {
     if (sourcePosture.hasRefreshFailure) {
       return "refresh_failed";
@@ -182,7 +181,7 @@ function resolveEvidenceStatus({
     if (sourcePosture.isRefreshing) {
       return "refreshing";
     }
-    return "ready";
+    return matchesSelectedContext ? "ready" : "context_mismatch";
   }
 
   if (hasVisibleBookEvidence) {
@@ -247,7 +246,7 @@ function evidenceCopy(status: ProposalPortfolioEvidenceStatus): {
     case "refreshing":
       return {
         title: "Refreshing portfolio evidence",
-        body: "The previously confirmed snapshot remains visible while its combined portfolio book refreshes.",
+        body: "The previously loaded snapshot remains visible while its combined portfolio book refreshes.",
         hint: "Evaluation is paused until the refresh confirms the selected context.",
       };
     case "ready":
@@ -271,7 +270,7 @@ function evidenceCopy(status: ProposalPortfolioEvidenceStatus): {
     case "refresh_failed":
       return {
         title: "Latest portfolio evidence is not confirmed",
-        body: "The previously confirmed snapshot remains visible, but its latest source refresh did not complete.",
+        body: "The previously loaded snapshot remains visible, but its latest source refresh did not complete.",
         hint: "Refresh again before relying on this draft for an advisory decision.",
       };
     case "unavailable":
@@ -300,6 +299,7 @@ function nonEmptyStringOrNull(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
-function upperCaseStringOrNull(value: unknown): string | null {
-  return nonEmptyStringOrNull(value)?.toUpperCase() ?? null;
+function currencyCodeOrNull(value: unknown): string | null {
+  const currency = nonEmptyStringOrNull(value)?.toUpperCase() ?? null;
+  return currency && /^[A-Z]{3}$/.test(currency) ? currency : null;
 }
