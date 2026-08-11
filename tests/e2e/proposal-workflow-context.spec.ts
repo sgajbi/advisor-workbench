@@ -418,6 +418,12 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
   await expect(page.getByText("Portfolio evidence confirmed")).toBeVisible();
   await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
+  for (const headingName of ["Advisor Workflow", "Draft Order Blotter"]) {
+    const panel = page.locator("section").filter({
+      has: page.getByRole("heading", { name: headingName }),
+    }).first();
+    expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
   await testInfo.attach("proposal-evidence-recovery", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",

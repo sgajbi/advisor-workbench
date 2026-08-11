@@ -603,7 +603,7 @@ export default function ProposalSimulateForm({
                   name="cashAmount"
                   render={({ field, fieldState }) => (
                     <TextField
-                      label="Fallback Cash"
+                      label="Scenario Cash (Draft Only)"
                       size="small"
                       fullWidth
                       type="number"
@@ -615,7 +615,7 @@ export default function ProposalSimulateForm({
                       error={!!fieldState.error}
                       helperText={
                         fieldState.error?.message ??
-                        "Used only when portfolio-book cash is unavailable; Advise resolves source cash"
+                        "Supports indicative drafting only and never authorizes evaluation"
                       }
                     />
                   )}
