@@ -4,21 +4,58 @@ const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
 async function mockProposalPortfolioEvidence(
   page: Page,
-  { failFirstRead = false }: { failFirstRead?: boolean } = {}
+  {
+    failFirstRead = false,
+    effectiveDate,
+    requestedDates,
+  }: {
+    failFirstRead?: boolean;
+    effectiveDate?: string;
+    requestedDates?: string[];
+  } = {}
 ) {
   let bookReadCount = 0;
-  let workspaceReadCount = 0;
 
   await page.route(
     `**/api/bff/api/v1/portfolio/portfolios/${portfolioId}/book**`,
     async (route) => {
       bookReadCount += 1;
+      const requestUrl = new URL(route.request().url());
+      const requestedDate = requestUrl.searchParams.get("as_of_date") ?? "";
+      const requestedCurrency = requestUrl.searchParams.get("reporting_currency") ?? "USD";
+      requestedDates?.push(requestedDate);
       if (failFirstRead && bookReadCount === 1) {
         await route.fulfill({ status: 503, json: { detail: "Portfolio book unavailable" } });
         return;
       }
       await route.fulfill({
         json: {
+          as_of_date: effectiveDate ?? requestedDate,
+          portfolio: {
+            portfolio_id: portfolioId,
+            display_name: "Global Balanced Portfolio",
+            client_id: "CIF_001",
+            base_currency: requestedCurrency,
+            booking_center_code: "SGPB",
+          },
+          summary: {
+            assets_under_management_base: 23_000,
+            invested_market_value_base: 19_000,
+            cash_market_value_base: 4_000,
+            cash_weight_pct: 17.4,
+            position_count: 1,
+            cash_balance_count: 1,
+          },
+          cash_balances: [
+            {
+              security_id: "CASH_USD",
+              instrument_name: "US Dollar Cash",
+              currency: requestedCurrency,
+              quantity: 4_000,
+              market_value_base: 4_000,
+              weight_pct: 17.4,
+            },
+          ],
           positions: [
             {
               security_id: "AAPL",
@@ -31,38 +68,6 @@ async function mockProposalPortfolioEvidence(
           ],
           top_positions: [],
           allocation_views: [],
-        },
-      });
-    }
-  );
-  await page.route(
-    `**/api/bff/api/v1/portfolio/portfolios/${portfolioId}/workspace`,
-    async (route) => {
-      workspaceReadCount += 1;
-      if (failFirstRead && workspaceReadCount === 1) {
-        await route.fulfill({ status: 503, json: { detail: "Portfolio workspace unavailable" } });
-        return;
-      }
-      await route.fulfill({
-        json: {
-          as_of_date: "2026-04-10",
-          portfolio: { portfolio_id: portfolioId },
-          profile: {},
-          summary: {
-            assets_under_management_base: 23_000,
-            invested_market_value_base: 19_000,
-            cash_market_value_base: 4_000,
-            cash_weight_pct: 17.4,
-            position_count: 1,
-            cash_balance_count: 1,
-          },
-          cashflow_outlook: null,
-          performance: null,
-          rebalance: null,
-          reporting: {},
-          workflow_cues: [],
-          warnings: [],
-          partial_failures: [],
         },
       });
     }
@@ -428,6 +433,47 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
+});
+
+test("refetches and confirms the combined portfolio book for a changed advisory date", async ({
+  page,
+}) => {
+  const requestedDates: string[] = [];
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { requestedDates });
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
+  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-10");
+
+  await page.getByLabel("Advisory As-of Date").fill("2026-04-11");
+
+  await expect(evidence).toHaveAttribute("data-requested-as-of-date", "2026-04-11");
+  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-11");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
+  expect(requestedDates).toEqual(expect.arrayContaining(["2026-04-10", "2026-04-11"]));
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+});
+
+test("shows requested and source dates while blocking a mismatched source snapshot", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { effectiveDate: "2026-04-09" });
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "context_mismatch");
+  await expect(evidence).toHaveAttribute("data-requested-as-of-date", "2026-04-10");
+  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-09");
+  await expect(page.getByText("Portfolio context does not match")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
 });
 
 for (const viewport of [
