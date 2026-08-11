@@ -45,4 +45,29 @@ describe("analytics UI metric store", () => {
     expect(rememberAnalyticsUiAttentionKey("attention-0")).toBe(true);
     expect(incrementAnalyticsUiPanelFailure("panel-0")).toBe(1);
   });
+
+  it("coalesces equivalent label sets regardless of property order", () => {
+    const sharedEvent = {
+      event_name: "workbench.analytics.panel_state" as const,
+      metric_name: "lotus_workbench_panel_state_total" as const,
+      value: 1,
+      recorded_at: "2026-08-10T00:00:00.000Z",
+    };
+    appendAnalyticsUiMetricEvent({
+      ...sharedEvent,
+      labels: { route: "workbench.performance", state: "ready" },
+    });
+    appendAnalyticsUiMetricEvent({
+      ...sharedEvent,
+      labels: { state: "ready", route: "workbench.performance" },
+    });
+
+    expect(getAnalyticsUiMetricSamples()).toEqual([
+      expect.objectContaining({
+        labels: { route: "workbench.performance", state: "ready" },
+        sample_count: 2,
+        value: 2,
+      }),
+    ]);
+  });
 });
