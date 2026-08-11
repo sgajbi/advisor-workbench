@@ -19,11 +19,13 @@ import styles from "./proposal-simulate-form.module.css";
 
 export function ProposalPortfolioEvidencePanel({
   evidence,
-  baseCurrency,
+  cashCurrency,
+  sourceCurrency,
   onRefresh,
 }: {
   evidence: ProposalPortfolioEvidenceModel;
-  baseCurrency: string;
+  cashCurrency: string | null;
+  sourceCurrency: string | null;
   onRefresh: () => Promise<void>;
 }) {
   const refreshPending = evidence.status === "checking" || evidence.status === "refreshing";
@@ -38,7 +40,7 @@ export function ProposalPortfolioEvidencePanel({
       data-evidence-status={evidence.status}
       data-requested-as-of-date={evidence.context.requestedAsOfDate || undefined}
       data-effective-as-of-date={evidence.context.effectiveAsOfDate ?? undefined}
-      data-evidence-currency={evidence.context.effectiveCurrency ?? undefined}
+      data-evidence-currency={sourceCurrency ?? undefined}
     >
       <div className={styles.panelHeader}>
         <div role="status" aria-live="polite" aria-atomic="true">
@@ -58,7 +60,11 @@ export function ProposalPortfolioEvidencePanel({
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Cash Evidence</Text>
-          <strong>{formatCurrencyValue(evidence.cash.amount, baseCurrency)}</strong>
+          <strong>
+            {cashCurrency
+              ? formatCurrencyValue(evidence.cash.amount, cashCurrency)
+              : "Currency not confirmed"}
+          </strong>
           <Text variant="metadata">{evidence.cash.label}</Text>
         </div>
         <div className={styles.evidenceFact}>
@@ -70,8 +76,8 @@ export function ProposalPortfolioEvidencePanel({
           <Text variant="microLabel">Source As-of</Text>
           <strong>{evidence.context.effectiveAsOfDate ?? "Not confirmed"}</strong>
           <Text variant="metadata">
-            {evidence.context.effectiveCurrency
-              ? `${evidence.context.effectiveCurrency} portfolio book`
+            {sourceCurrency
+              ? `${sourceCurrency} portfolio book`
               : "Source context unavailable"}
           </Text>
         </div>
@@ -100,7 +106,7 @@ export function CurrentPositionsPanel({
 }: {
   positions: PortfolioPositionView[];
   evidenceStatus: ProposalPositionsEvidenceStatus;
-  baseCurrency: string;
+  baseCurrency: string | null;
   onAddPositionTrade: (position: PortfolioPositionView, side: "BUY" | "SELL") => void;
 }) {
   const draftActionsDisabled = evidenceStatus !== "ready";
@@ -139,7 +145,11 @@ export function CurrentPositionsPanel({
                   </td>
                   <td>{position.asset_class ?? "Unclassified"}</td>
                   <td>{formatUnitValue(position.quantity)}</td>
-                  <td>{formatCurrencyValue(position.market_value_base ?? 0, baseCurrency)}</td>
+                  <td>
+                    {baseCurrency
+                      ? formatCurrencyValue(position.market_value_base ?? 0, baseCurrency)
+                      : "Currency not confirmed"}
+                  </td>
                   <td>{formatPercentValue(position.weight_pct ?? 0)}</td>
                   <td>
                     <div className={styles.positionActions}>
@@ -420,6 +430,16 @@ export function DraftOrderBlotterPanel({
                 onUpdateTrade(item.id, { referencePrice: Number.isNaN(next) ? 0 : next });
               }}
               helperText={item.source === "NEW_INSTRUMENT" ? "Used for indicative preview" : undefined}
+            />
+            <TextField
+              label="Price Currency"
+              size="small"
+              value={item.referencePriceCurrency ?? ""}
+              onChange={(event) =>
+                onUpdateTrade(item.id, { referencePriceCurrency: event.target.value })
+              }
+              helperText="Required for a priced order"
+              inputProps={{ maxLength: 3 }}
             />
             <Button
               type="button"

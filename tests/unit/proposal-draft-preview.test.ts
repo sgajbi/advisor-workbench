@@ -6,7 +6,7 @@ import {
   buildProposalDraftPreview,
   createCashFlowIntent,
   createTradeIntentFromPosition,
-  inferReferencePrice,
+  inferBaseCurrencyReferencePrice,
   type ProposalDraftTradeIntent,
 } from "../../src/features/proposals/proposal-draft-preview";
 
@@ -32,14 +32,22 @@ const bondPosition: PortfolioPositionView = {
 
 describe("proposal draft preview", () => {
   it("infers a reference price from the portfolio book", () => {
-    expect(inferReferencePrice(applePosition)).toBe(190);
-    expect(inferReferencePrice({ ...applePosition, market_price: null })).toBe(190);
+    expect(inferBaseCurrencyReferencePrice(applePosition)).toBe(190);
+    expect(
+      inferBaseCurrencyReferencePrice({
+        ...applePosition,
+        currency: "EUR",
+        market_price: 175,
+        market_value_base: 20_000,
+      })
+    ).toBe(200);
+    expect(inferBaseCurrencyReferencePrice({ ...applePosition, market_value_base: null })).toBe(0);
   });
 
   it("updates cash, position values, and allocation after held-position trades", () => {
-    const buyMoreApple = createTradeIntentFromPosition(1, applePosition, "BUY");
+    const buyMoreApple = createTradeIntentFromPosition(1, applePosition, "BUY", "USD");
     buyMoreApple.quantity = 10;
-    const sellBonds = createTradeIntentFromPosition(2, bondPosition, "SELL");
+    const sellBonds = createTradeIntentFromPosition(2, bondPosition, "SELL", "USD");
     sellBonds.quantity = 20;
 
     const cashFlow = createCashFlowIntent(1, "USD");
@@ -97,7 +105,7 @@ describe("proposal draft preview", () => {
   });
 
   it("does not credit cash for sell quantity above the available holding", () => {
-    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL");
+    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL", "USD");
     oversellApple.quantity = 150;
 
     const preview = buildProposalDraftPreview([applePosition], 5000, [], [oversellApple]);
@@ -110,7 +118,7 @@ describe("proposal draft preview", () => {
   });
 
   it("caps submitted sell rows to the available source-backed holding quantity", () => {
-    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL");
+    const oversellApple = createTradeIntentFromPosition(1, applePosition, "SELL", "USD");
     oversellApple.quantity = 150;
 
     const executableRows = buildExecutableTradeRows([applePosition], [oversellApple]);

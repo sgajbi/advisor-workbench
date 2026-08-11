@@ -133,7 +133,9 @@ export default function ProposalSimulateForm({
   const [cashFlows, setCashFlows] = useState<ProposalDraftCashFlowIntent[]>([
     createCashFlowIntent(1, "USD"),
   ]);
-  const [trades, setTrades] = useState<ProposalDraftTradeIntent[]>([createTradeIntent(1)]);
+  const [trades, setTrades] = useState<ProposalDraftTradeIntent[]>([
+    createTradeIntent(1, "USD"),
+  ]);
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -207,10 +209,6 @@ export default function ProposalSimulateForm({
   );
   const tradablePositions = portfolioEvidence.positions.items;
   const sourceCashAmount = portfolioEvidence.cash.amount;
-  const sourceEvidenceCurrency =
-    portfolioEvidence.cash.authority === "portfolio_book"
-      ? portfolioEvidence.context.effectiveCurrency ?? (evidenceCurrency || "USD")
-      : evidenceCurrency || "USD";
   const draftImpactModel = useMemo(
     () =>
       buildProposalDraftImpactModel({
@@ -230,6 +228,11 @@ export default function ProposalSimulateForm({
       trades,
     ]
   );
+  const sourceBookCurrency = draftImpactModel.currencyAuthority.sourceCurrency;
+  const cashEvidenceCurrency =
+    portfolioEvidence.cash.authority === "portfolio_book"
+      ? sourceBookCurrency
+      : draftImpactModel.currencyAuthority.requestedCurrency;
   const executableTradeRows = useMemo(
     () => buildExecutableTradeRows(tradablePositions, trades),
     [tradablePositions, trades]
@@ -251,13 +254,21 @@ export default function ProposalSimulateForm({
   }
 
   function addTrade() {
-    setTrades((current) => [...current, createTradeIntent(current.length + 1)]);
+    setTrades((current) => [
+      ...current,
+      createTradeIntent(current.length + 1, evidenceCurrency),
+    ]);
   }
 
   function addPositionTrade(position: PortfolioPositionView, side: "BUY" | "SELL") {
     setTrades((current) => [
       ...current,
-      createTradeIntentFromPosition(current.length + 1, position, side),
+      createTradeIntentFromPosition(
+        current.length + 1,
+        position,
+        side,
+        sourceBookCurrency ?? ""
+      ),
     ]);
   }
 
@@ -476,7 +487,9 @@ export default function ProposalSimulateForm({
           <div>
             <span>Source Cash</span>
             <strong>
-              {formatCurrencyValue(sourceCashAmount, sourceEvidenceCurrency)}
+              {cashEvidenceCurrency
+                ? formatCurrencyValue(sourceCashAmount, cashEvidenceCurrency)
+                : "Currency not confirmed"}
             </strong>
           </div>
           <div>
@@ -559,7 +572,8 @@ export default function ProposalSimulateForm({
           <div className={styles.mainLane}>
             <ProposalPortfolioEvidencePanel
               evidence={portfolioEvidence}
-              baseCurrency={sourceEvidenceCurrency}
+              cashCurrency={cashEvidenceCurrency}
+              sourceCurrency={sourceBookCurrency}
               onRefresh={refreshPortfolioEvidence}
             />
 
@@ -655,7 +669,7 @@ export default function ProposalSimulateForm({
             <CurrentPositionsPanel
               positions={tradablePositions}
               evidenceStatus={portfolioEvidence.positions.status}
-              baseCurrency={sourceEvidenceCurrency}
+              baseCurrency={sourceBookCurrency}
               onAddPositionTrade={addPositionTrade}
             />
 

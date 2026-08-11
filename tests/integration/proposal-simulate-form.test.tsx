@@ -38,7 +38,7 @@ function portfolioBook(
   context: {
     portfolioId?: string;
     asOfDate?: string;
-    currency?: string;
+    currency?: string | null;
   } = {}
 ) {
   return {
@@ -47,7 +47,7 @@ function portfolioBook(
       portfolio_id: context.portfolioId ?? "PB_SG_GLOBAL_BAL_001",
       display_name: "Global Balanced Portfolio",
       client_id: "CIF_001",
-      base_currency: context.currency ?? "USD",
+      base_currency: context.currency === undefined ? "USD" : context.currency,
       booking_center_code: "SGPB",
     },
     summary: {
@@ -267,6 +267,28 @@ describe("ProposalSimulateForm", () => {
 
     const instrumentInputs = screen.getAllByLabelText("Instrument") as HTMLInputElement[];
     expect(instrumentInputs.some((input) => input.value === "AAPL")).toBe(true);
+  });
+
+  it("withholds impact when an active draft price uses another currency", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence();
+    fireEvent.click(screen.getByRole("button", { name: "Buy More" }));
+    const quantityInputs = screen.getAllByLabelText("Quantity") as HTMLInputElement[];
+    const priceCurrencyInputs = screen.getAllByLabelText(
+      "Price Currency"
+    ) as HTMLInputElement[];
+    fireEvent.change(quantityInputs[quantityInputs.length - 1], { target: { value: "10" } });
+    fireEvent.change(priceCurrencyInputs[priceCurrencyInputs.length - 1], {
+      target: { value: "EUR" },
+    });
+
+    const impactPanel = screen.getByTestId("proposal-draft-impact");
+    await waitFor(() =>
+      expect(impactPanel).toHaveAttribute("data-preview-currency-status", "mixed_currency")
+    );
+    expect(within(impactPanel).getByText("Currency-aligned impact is unavailable")).toBeInTheDocument();
+    expect(within(impactPanel).queryByText("USD 44,000")).not.toBeInTheDocument();
   });
 
   it("creates a stateful Advise workspace and applies draft trades without sending positions", async () => {
@@ -629,6 +651,52 @@ describe("ProposalSimulateForm", () => {
     expect(within(impactPanel).queryByText("USD 44,000")).not.toBeInTheDocument();
     expect(screen.getByText("Currency alignment required")).toBeInTheDocument();
   });
+
+  it.each([null, "US"])(
+    "does not relabel source money when portfolio currency is %s and restores it after refresh",
+    async (unconfirmedCurrency) => {
+      portfolioApiMocks.getRequiredPortfolioBook
+        .mockResolvedValueOnce(portfolioBook(undefined, { currency: unconfirmedCurrency }))
+        .mockResolvedValueOnce(portfolioBook(undefined, { currency: "USD" }));
+      renderForm("PB_SG_GLOBAL_BAL_001");
+
+      const evidencePanel = await screen.findByTestId("proposal-portfolio-evidence");
+      const setupSummary = screen.getByLabelText("Proposal setup summary");
+      const sourceCashSummary = within(setupSummary).getByText("Source Cash").closest("div");
+      const positionsPanel = screen
+        .getByRole("heading", { name: "Current Positions" })
+        .closest("section");
+      expect(positionsPanel).not.toBeNull();
+      await waitFor(() =>
+        expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+          "data-preview-currency-status",
+          "unresolved"
+        )
+      );
+      expect(within(evidencePanel).getByText("Currency not confirmed")).toBeInTheDocument();
+      expect(sourceCashSummary).not.toBeNull();
+      expect(within(sourceCashSummary!).getByText("Currency not confirmed")).toBeInTheDocument();
+      expect(within(positionsPanel!).getByText("Currency not confirmed")).toBeInTheDocument();
+      expect(within(evidencePanel).queryByText("USD 25,000")).not.toBeInTheDocument();
+      expect(within(setupSummary).queryByText("USD 25,000")).not.toBeInTheDocument();
+      expect(within(positionsPanel!).queryByText("USD 19,000")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Buy More" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+      await waitForPortfolioEvidence();
+      await waitFor(() =>
+        expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+          "data-preview-currency-status",
+          "available"
+        )
+      );
+      expect(within(evidencePanel).getByText("USD 25,000")).toBeInTheDocument();
+      expect(within(sourceCashSummary!).getByText("USD 25,000")).toBeInTheDocument();
+      expect(within(positionsPanel!).getByText("USD 19,000")).toBeInTheDocument();
+    }
+  );
 
   it("keeps manual scenario cash in proposal currency when partial source currency differs", async () => {
     portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce({
