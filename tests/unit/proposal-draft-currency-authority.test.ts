@@ -5,7 +5,10 @@ import {
   buildProposalDraftCurrencyAuthority,
   buildProposalDraftImpactModel,
 } from "../../src/features/proposals/proposal-draft-currency-authority";
-import type { ProposalDraftCashFlowIntent } from "../../src/features/proposals/proposal-draft-preview";
+import type {
+  ProposalDraftCashFlowIntent,
+  ProposalDraftTradeIntent,
+} from "../../src/features/proposals/proposal-draft-preview";
 import type { ProposalPortfolioEvidenceModel } from "../../src/features/proposals/proposal-portfolio-evidence";
 
 const position: PortfolioPositionView = {
@@ -61,6 +64,18 @@ function cashFlow(currency: string, amount = 1_000): ProposalDraftCashFlowIntent
   };
 }
 
+function pricedTrade(currency: string | null): ProposalDraftTradeIntent {
+  return {
+    id: "trade-VTI",
+    source: "NEW_INSTRUMENT",
+    side: "BUY",
+    instrumentId: "VTI",
+    quantity: 5,
+    referencePrice: 250,
+    referencePriceCurrency: currency,
+  };
+}
+
 describe("proposal draft currency authority", () => {
   it("admits a source-backed preview only when source and active draft values share one currency", () => {
     expect(
@@ -68,6 +83,7 @@ describe("proposal draft currency authority", () => {
         requestedCurrency: "usd",
         portfolioEvidence: portfolioEvidence(),
         cashFlows: [cashFlow("USD")],
+        trades: [pricedTrade("USD")],
       })
     ).toMatchObject({
       status: "available",
@@ -84,6 +100,7 @@ describe("proposal draft currency authority", () => {
         requestedCurrency: "USD",
         portfolioEvidence: portfolioEvidence({ sourceCurrency: "SGD" }),
         cashFlows: [],
+        trades: [],
       })
     ).toMatchObject({
       status: "mixed_currency",
@@ -115,6 +132,7 @@ describe("proposal draft currency authority", () => {
         requestedCurrency: "USD",
         portfolioEvidence: portfolioEvidence(),
         cashFlows: [cashFlow("EUR")],
+        trades: [],
       })
     ).toMatchObject({
       status: "mixed_currency",
@@ -129,6 +147,7 @@ describe("proposal draft currency authority", () => {
         requestedCurrency: "USD",
         portfolioEvidence: portfolioEvidence(),
         cashFlows: [cashFlow("US")],
+        trades: [],
       })
     ).toMatchObject({
       status: "unresolved",
@@ -146,11 +165,44 @@ describe("proposal draft currency authority", () => {
           cashAuthority: "manual_scenario",
         }),
         cashFlows: [cashFlow("USD")],
+        trades: [],
       })
     ).toMatchObject({
       status: "available",
       currency: "USD",
       sourceCurrency: null,
+    });
+  });
+
+  it("withholds projection when a priced draft order uses another currency", () => {
+    expect(
+      buildProposalDraftCurrencyAuthority({
+        requestedCurrency: "USD",
+        portfolioEvidence: portfolioEvidence(),
+        cashFlows: [],
+        trades: [pricedTrade("EUR")],
+      })
+    ).toMatchObject({
+      status: "mixed_currency",
+      currency: null,
+      conflictingCurrencies: ["EUR"],
+    });
+  });
+
+  it("requires currency authority for every active priced draft order", () => {
+    expect(
+      buildProposalDraftImpactModel({
+        positions: [position],
+        cashAmount: 25_000,
+        cashFlows: [],
+        trades: [pricedTrade(null)],
+        requestedCurrency: "USD",
+        portfolioEvidence: portfolioEvidence(),
+      })
+    ).toMatchObject({
+      status: "unavailable",
+      currencyAuthority: { status: "unresolved" },
+      preview: null,
     });
   });
 });

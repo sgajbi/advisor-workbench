@@ -12,6 +12,7 @@ export type ProposalDraftTradeIntent = TradeIntentInput & {
   instrumentName?: string;
   assetClass?: string;
   referencePrice?: number;
+  referencePriceCurrency?: string | null;
 };
 
 export type ExecutableProposalDraftTradeIntent = ProposalDraftTradeIntent & {
@@ -66,7 +67,10 @@ export function createCashFlowIntent(
   };
 }
 
-export function createTradeIntent(index: number): ProposalDraftTradeIntent {
+export function createTradeIntent(
+  index: number,
+  referencePriceCurrency = ""
+): ProposalDraftTradeIntent {
   return {
     id: `trade_${index}`,
     source: "NEW_INSTRUMENT",
@@ -76,13 +80,15 @@ export function createTradeIntent(index: number): ProposalDraftTradeIntent {
     instrumentName: "",
     assetClass: "",
     referencePrice: 0,
+    referencePriceCurrency,
   };
 }
 
 export function createTradeIntentFromPosition(
   index: number,
   position: PortfolioPositionView,
-  side: "BUY" | "SELL"
+  side: "BUY" | "SELL",
+  portfolioCurrency: string
 ): ProposalDraftTradeIntent {
   return {
     id: `trade_${index}`,
@@ -92,14 +98,12 @@ export function createTradeIntentFromPosition(
     quantity: 0,
     instrumentName: position.instrument_name,
     assetClass: position.asset_class ?? "Unclassified",
-    referencePrice: inferReferencePrice(position),
+    referencePrice: inferBaseCurrencyReferencePrice(position),
+    referencePriceCurrency: portfolioCurrency,
   };
 }
 
-export function inferReferencePrice(position: PortfolioPositionView): number {
-  if (position.market_price && position.market_price > 0) {
-    return position.market_price;
-  }
+export function inferBaseCurrencyReferencePrice(position: PortfolioPositionView): number {
   if (position.market_value_base && position.quantity > 0) {
     return position.market_value_base / position.quantity;
   }

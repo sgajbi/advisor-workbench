@@ -56,6 +56,7 @@ export function buildProposalDraftImpactModel({
     requestedCurrency,
     portfolioEvidence,
     cashFlows,
+    trades,
   });
 
   if (currencyAuthority.status !== "available") {
@@ -73,10 +74,12 @@ export function buildProposalDraftCurrencyAuthority({
   requestedCurrency,
   portfolioEvidence,
   cashFlows,
+  trades,
 }: {
   requestedCurrency: string;
   portfolioEvidence: ProposalPortfolioEvidenceModel;
   cashFlows: ProposalDraftCashFlowIntent[];
+  trades: ProposalDraftTradeIntent[];
 }): ProposalDraftCurrencyAuthority {
   const requested = currencyCodeOrNull(requestedCurrency);
   const source = currencyCodeOrNull(portfolioEvidence.context.effectiveCurrency);
@@ -86,8 +89,23 @@ export function buildProposalDraftCurrencyAuthority({
   const activeCashFlowCurrencies = cashFlows
     .filter((cashFlow) => Number.isFinite(cashFlow.amount) && Math.abs(cashFlow.amount) > 0)
     .map((cashFlow) => currencyCodeOrNull(cashFlow.currency));
+  const activeTradePriceCurrencies = trades
+    .filter(
+      (trade) =>
+        trade.instrumentId.trim().length > 0 &&
+        Number.isFinite(trade.quantity) &&
+        trade.quantity > 0 &&
+        Number.isFinite(trade.referencePrice) &&
+        (trade.referencePrice ?? 0) > 0
+    )
+    .map((trade) => currencyCodeOrNull(trade.referencePriceCurrency));
 
-  if (!requested || (hasSourceValues && !source) || activeCashFlowCurrencies.includes(null)) {
+  if (
+    !requested ||
+    (hasSourceValues && !source) ||
+    activeCashFlowCurrencies.includes(null) ||
+    activeTradePriceCurrencies.includes(null)
+  ) {
     return {
       status: "unresolved",
       currency: null,
@@ -96,13 +114,17 @@ export function buildProposalDraftCurrencyAuthority({
       conflictingCurrencies: [],
       title: "Currency context is incomplete",
       body:
-        "Monetary totals and allocation projections are withheld until the portfolio and every active cash movement have a confirmed three-letter currency.",
+        "Monetary totals and allocation projections are withheld until the portfolio, every active cash movement, and every priced draft order have a confirmed three-letter currency.",
     };
   }
 
   const conflictingCurrencies = Array.from(
     new Set(
-      [hasSourceValues ? source : null, ...activeCashFlowCurrencies].filter(
+      [
+        hasSourceValues ? source : null,
+        ...activeCashFlowCurrencies,
+        ...activeTradePriceCurrencies,
+      ].filter(
         (currency): currency is string => Boolean(currency && currency !== requested)
       )
     )
@@ -129,8 +151,8 @@ export function buildProposalDraftCurrencyAuthority({
     conflictingCurrencies: [],
     title: `${requested} currency context confirmed`,
     body: hasSourceValues
-      ? `Source portfolio values and active draft entries share ${requested} as their currency authority.`
-      : `Manual scenario values and active draft entries use ${requested}; no source portfolio values are included.`,
+      ? `Source portfolio values, active cash movements, and priced draft orders share ${requested} as their currency authority.`
+      : `Manual scenario values and priced draft entries use ${requested}; no source portfolio values are included.`,
   };
 }
 

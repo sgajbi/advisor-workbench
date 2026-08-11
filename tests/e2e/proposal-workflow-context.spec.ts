@@ -13,7 +13,7 @@ async function mockProposalPortfolioEvidence(
     failFirstRead?: boolean;
     effectiveDate?: string;
     requestedDates?: string[];
-    sourceCurrencies?: string[];
+    sourceCurrencies?: Array<string | null>;
   } = {}
 ) {
   let bookReadCount = 0;
@@ -25,7 +25,9 @@ async function mockProposalPortfolioEvidence(
       const requestUrl = new URL(route.request().url());
       const requestedDate = requestUrl.searchParams.get("as_of_date") ?? "";
       const requestedCurrency = requestUrl.searchParams.get("reporting_currency") ?? "USD";
-      const sourceCurrency = sourceCurrencies?.[bookReadCount - 1] ?? requestedCurrency;
+      const sourceCurrency = sourceCurrencies
+        ? sourceCurrencies[bookReadCount - 1]
+        : requestedCurrency;
       requestedDates?.push(requestedDate);
       if (failFirstRead && bookReadCount === 1) {
         await route.fulfill({ status: 503, json: { detail: "Portfolio book unavailable" } });
@@ -517,6 +519,40 @@ test("withholds mixed-currency impact until refreshed source evidence matches th
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
+
+  await page.getByRole("button", { name: "Buy More" }).click();
+  await page.getByLabel("Quantity").last().fill("10");
+  await page.getByLabel("Price Currency").last().fill("EUR");
+  await expect(impact).toHaveAttribute("data-preview-currency-status", "mixed_currency");
+  await expect(impact.getByText("Currency-aligned impact is unavailable")).toBeVisible();
+  await expect(impact.getByText(/monetary evidence in EUR/)).toBeVisible();
+});
+
+test("withholds unlabelled source money until currency identity is refreshed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { sourceCurrencies: [null, "USD"] });
+  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  const impact = page.getByTestId("proposal-draft-impact");
+  const positions = page.getByRole("region", { name: "Current Positions" });
+  await expect(impact).toHaveAttribute("data-preview-currency-status", "unresolved");
+  await expect(evidence.getByText("Currency not confirmed")).toBeVisible();
+  await expect(positions.getByText("Currency not confirmed")).toBeVisible();
+  await expect(evidence.getByText("USD 4,000")).toHaveCount(0);
+  await expect(positions.getByText("USD 19,000")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+
+  await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
+  await expect(impact).toHaveAttribute("data-preview-currency-status", "available");
+  await expect(evidence.getByText("USD 4,000")).toBeVisible();
+  await expect(positions.getByText("USD 19,000")).toBeVisible();
 });
 
 for (const viewport of [
