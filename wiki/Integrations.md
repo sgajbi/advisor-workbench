@@ -54,15 +54,20 @@ must travel through Gateway-shaped contracts.
    key, but Gateway/Core remain responsible for ingestion replay semantics, duplicate handling,
    source lineage, and durable job truth.
 7. Portfolio report ordering uses `/api/bff/api/v1/report-ordering/options`,
-   `/api/bff/api/v1/reports/portfolio-reviews`, and `/api/bff/api/v1/report-jobs` only. Workbench
-   does not call `lotus-report` directly.
+   `/api/bff/api/v1/reports/portfolio-reviews`, `/api/bff/api/v1/report-batches*`, and
+   `/api/bff/api/v1/report-jobs` only. Portfolio-bundle selection also consumes the existing
+   source-backed Advisor Book contract. Workbench does not call `lotus-report` or `lotus-core`
+   directly.
 8. The BFF removes browser-supplied reporting authority headers and derives development role and
    portfolio entitlement from server configuration. Other environments fail closed until an
    authenticated-principal resolver is available.
 9. Structured report data and governed PDF readiness are independent source states. Report-data
    completion does not mean archive, advisor approval, client delivery, or communication.
-10. Workbench does not expose report-batch materialization, report-worker run-once, browser-defined
-    worker capacity, ad hoc archive lookup, direct document download, or client-distribution controls.
+10. Workbench can submit an explicit portfolio bundle and read its source-owned status only when
+    Reporting publishes the exact capability and route. Gateway owns final membership and
+    eligibility verification; Report owns materialization and per-portfolio lifecycle. Workbench
+    does not expose report-worker run-once, browser-defined worker capacity, ad hoc archive lookup,
+    direct document download, or client-distribution controls.
 11. Outcome-review report job requests use Gateway `POST /api/v1/reports/outcome-reviews` through
     `/api/bff/api/v1/reports/outcome-reviews` after loading manage-owned `DpmOutcomeReportInput`.
     Workbench does not call `lotus-report`, `lotus-render`, or `lotus-archive` directly for

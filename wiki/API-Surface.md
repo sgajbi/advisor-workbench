@@ -20,6 +20,7 @@ and canonical validation remain authoritative.
 - `/portfolios`
 - `/intake`
 - `/performance`
+- `/reports`
 - `/data-products`
 - `/proposals`
 - `/proposals/simulate`
@@ -80,6 +81,11 @@ promote dormant labels into product ownership just because historical route file
 - `/intake` submits portfolio bundle writes through `/api/bff/api/v1/intake/portfolio-bundle`
   and forwards a bounded `X-Idempotency-Key` so Gateway/Core own safe duplicate-submit replay
   semantics
+- `/reports` reads Gateway report-ordering options and recent jobs, submits reviewed
+  single-portfolio requests through `/api/v1/reports/portfolio-reviews`, and submits/refreshes an
+  explicit portfolio bundle through `/api/v1/report-batches*` only when that exact capability is
+  published. Bundle candidates come from the Gateway-backed Advisor Book; the browser does not
+  author membership or materialized portfolio authority.
 - canonical product proof should use `workbench.dev.lotus`, not ad hoc localhost URLs
 - shell navigation support is narrower than the historical route set: `Proposal` and `Advisory`
   are currently disabled even though direct proposal routes now exist for bounded advisory

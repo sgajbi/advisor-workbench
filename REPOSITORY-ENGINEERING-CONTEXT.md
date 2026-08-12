@@ -73,24 +73,31 @@ Current repository posture:
    lineage, durable job truth, and downstream readiness. Workbench must not bypass Gateway, call
    `lotus-core` directly, infer activation/valuation/reporting readiness, or treat the browser key
    as source ingestion truth.
-7. `/reports` is the portfolio-scoped Report Centre. It consumes the Gateway-owned report-ordering
-   catalogue, submits one reviewed and idempotent portfolio-review request, and shows recent
-   report-data job history. One exhaustive screen-state projection owns both the setup workspace
-   and readiness rail so loading, restricted, unavailable, empty, reviewed, submitting, accepted,
-   and not-accepted states cannot contradict each other or expose actions that the source state
-   cannot support. Acceptance ends the current reviewed intent, not the portfolio's future reporting
-   workflow: an advisor must explicitly start another report, after which Workbench clears only that
-   portfolio's accepted handle, preserves valid configuration, requires a new review, and generates
-   a fresh idempotency key only for the next submission. Output readiness is source-owned by format:
-   structured data may be ready while
-   governed PDF creation is unavailable. Report-data completion does not imply archive, advisor
-   approval, client delivery, or communication. The Workbench BFF strips browser reporting
-   authority headers and derives the development role and portfolio entitlement from server
-   configuration; non-development environments fail closed until authenticated-principal
-   resolution exists. Submission adapters must send only configuration fields published by the
-   selected source catalogue; caller application and correlation provenance belong in governed
-   headers, not in business `options`. Obsolete browser batch materialization, worker run-once,
-   archive lookup, and direct download controls were retired under issues #449 and #458,
+7. `/reports` is the Report Centre for one selected portfolio or an explicit portfolio bundle. It
+   consumes the Gateway-owned report-ordering catalogue, submits a reviewed and idempotent
+   single-portfolio request or batch, and shows recent report-data history or source-owned separate
+   portfolio outcomes. Portfolio-bundle selection must come from the Gateway-backed Advisor Book,
+   remain explicit and searchable, require at least two active memberships, and be described as
+   separate reports rather than a consolidated client, household, or book report. Workbench may
+   precheck selected ids against configured development entitlement, but Gateway remains the final
+   caller, membership, and eligibility authority and Report owns materialization and item lifecycle.
+   The sorted selection is part of the reviewed intent; a portfolio, date, selection, report,
+   section, output, or currency change clears stale review and batch posture. One exhaustive
+   screen-state projection owns the setup workspace and readiness rail so loading, restricted,
+   unavailable, empty, reviewed, submitting, accepted, and not-accepted states cannot contradict
+   each other or expose actions that source state cannot support. Acceptance ends the current
+   reviewed intent, not the future reporting workflow. An advisor must explicitly start another
+   report, preserve only valid setup, review again, and receive a fresh idempotency key for the new
+   intent. Batch acceptance is not portfolio completion: refresh item lifecycle from Gateway and
+   retain complete, in-progress, retryable, terminal, cancelled, and recovery posture separately.
+   Output readiness is source-owned by format; structured data may be ready while governed PDF
+   creation is unavailable. Report-data completion does not imply archive, advisor approval, client
+   delivery, or communication. The Workbench BFF strips browser reporting authority headers and
+   derives development role and entitlement from server configuration; non-development environments
+   fail closed until authenticated-principal resolution exists. Submission adapters send only
+   source-published configuration fields; caller and correlation provenance belong in governed
+   headers, not business `options`. Browser worker run-once, capacity, materialized membership,
+   archive lookup, direct download, and distribution controls remain prohibited,
 8. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
@@ -959,6 +966,13 @@ Most relevant current governance:
     utility outside the five Gateway `shell-bootstrap.v1` advisor workspaces, so it deliberately
     renders no current workspace rather than inventing a sixth capability or selecting an unrelated
     domain. Home, platform utility, workspace, and unmatched route scopes remain distinct.
+11. Shared interactive primitives own their base, priority, focus, hover, disabled, reduced-motion,
+    and accessibility presentation beside the component. `ActionButton` keeps stable compatibility
+    class names only for existing feature-level sizing and placement; global CSS must not regain its
+    base or state contract. Disabled actions remain native `disabled`, visually unambiguous, and
+    protected from hover overrides across primary, secondary, and quiet priorities. When migrating
+    a shared primitive out of legacy global CSS, remove duplicate selectors and ratchet the governed
+    global line and normalized-byte budgets in the same issue-backed change.
 
 ## Context Maintenance Rule
 

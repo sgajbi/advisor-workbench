@@ -1252,6 +1252,85 @@ review reset, focus restoration, and no horizontal overflow. The wiki supported-
 updated because same-session sequential report requests are newly supported; no Gateway, Report,
 OpenAPI, runtime runbook, or platform skill change is required.
 
+### Slice 5 — source-backed portfolio bundle workflow
+
+Issue #662 extends Report Centre from repeated single-portfolio setup to one reviewed setup across
+an explicit selection from the advisor's current book. The business objective is reduced periodic-
+review preparation time with stronger exception visibility, not bulk processing theatre or a
+consolidated relationship report.
+
+#### Interaction and market research
+
+Research was reviewed on 2026-08-12 against the merged Gateway batch contract and current Advisor
+Book boundary:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   connects whole-portfolio context, book insight, and scalable advisor workflows. Lotus adopts the
+   book-to-selection workflow principle while keeping source membership and each portfolio outcome
+   explicit.
+2. [BlackRock's manage-business-at-scale guidance](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/manage-business-at-scale)
+   describes systematic assessment across an advisor book. Lotus uses one governed setup and a
+   compact outcome summary to reduce repetitive work without creating browser-owned rankings or
+   eligibility.
+3. [Morningstar Advisor Workstation's portfolio report builder](https://advisor.morningstar.com/enterprise/commonscenariossolutionsguide.pdf)
+   distinguishes multiple portfolio selection from the separate choice to aggregate or group
+   holdings. Lotus therefore labels this capability **Portfolio bundle** and states that it creates
+   a separate report for every portfolio.
+4. [Morningstar Advisor Workstation](https://www.morningstar.com/en-gb/products/advisor-workstation)
+   places client reporting and aggregated account context inside the advisor workflow. Lotus keeps
+   Reporting adjacent to My Book and portfolio context, but does not claim household aggregation
+   where no governing source contract exists.
+
+These sources inform workflow principles only. Lotus does not copy competitor layout, wording,
+visual identity, calculations, or unsupported claims, and does not claim superiority without
+measured comparative evidence.
+
+#### Adopted decisions
+
+1. Offer the bundle only when the exact Gateway/Report capability and route are published.
+2. Reuse the source-backed Advisor Book rather than accepting free-text portfolio identifiers or a
+   global catalogue.
+3. Keep selection bounded to the first 100 source-ordered memberships, searchable, keyboard-native,
+   and explicit about inactive and degraded memberships.
+4. Require two portfolios and include the sorted selection in the reviewed intent so any material
+   context change invalidates stale confirmation.
+5. Let Gateway re-resolve trusted caller, membership, and reporting eligibility at submission;
+   Workbench's development entitlement precheck is never final authority.
+6. Summarize portfolio-report count, complete, in-progress, and attention posture, then retain every
+   separate portfolio lifecycle, attempt count, failure summary, and support reference.
+7. Keep one source-owned refresh loop after acceptance and preserve explicit failure or partial
+   completion instead of presenting the batch as universally complete.
+8. Reuse the shared ActionButton contract and prove disabled review/submit posture in the rendered
+   production build.
+
+#### Rejected decisions
+
+1. No client, household, relationship, or book aggregation is implied by a portfolio bundle.
+2. No browser-authored membership, provenance, eligibility, worker capacity, retry policy, archive
+   publication, document download, distribution, or communication control is introduced.
+3. No local per-portfolio reporting preflight is invented. Until Gateway publishes source-owned
+   candidate preflight, Workbench can prove current book membership before review and final
+   eligibility only through the accepted/rejected batch response and refreshed item outcomes.
+4. No archived-document action is fabricated. Opening an archived output remains outside this slice
+   until Gateway exposes a governed, entitled document boundary.
+5. No decorative card mosaic, oversized hero, wizard, or novelty interaction replaces the dense
+   setup, decision rail, and outcome table.
+
+#### Validation and remaining evidence
+
+The production Report Centre build passes the 17-journey browser matrix at desktop, tablet,
+responsive boundary, and mobile widths. The bundle journey selects two source-returned portfolios,
+requires review, proves the disabled-to-enabled submit treatment, submits one idempotent Gateway
+batch, renders mixed source-owned outcomes, exposes an accessible completion measure, and remains
+free of horizontal overflow. Focused contract, API, hook, view-model, integration, BFF, TypeScript,
+ESLint, and CSS-governance checks pass. Diagnostic screenshots remain local evidence, not canonical
+demo proof.
+
+Issue #662 remains broader than this implemented slice: source-owned per-candidate preflight,
+governed archived-document opening, and canonical multi-membership runtime proof require explicit
+Gateway/Report and seed support. Those boundaries must remain visible and issue-backed rather than
+being simulated in Workbench.
+
 ## Portfolio Reporting Source Posture
 
 ### Business job
