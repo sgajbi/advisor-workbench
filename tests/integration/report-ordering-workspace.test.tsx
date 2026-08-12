@@ -245,6 +245,31 @@ describe("ReportOrderingWorkspace", () => {
     }));
   });
 
+  it("returns to an available book page when the current page falls outside a smaller source book", async () => {
+    advisorBookMock.mockImplementation(({ offset }) => {
+      const result = buildAdvisorBookResult();
+      result.response.page.offset = offset ?? 0;
+      if (offset === 100) {
+        result.response.items = [];
+        result.response.page.total_count = 2;
+        result.response.page.returned_count = 0;
+      }
+      return result;
+    });
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Next portfolios" }));
+
+    await waitFor(() => expect(advisorBookMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      offset: 0,
+      limit: 100,
+    })));
+    expect(screen.getByRole("checkbox", { name: /Global Balanced Mandate/ })).toBeInTheDocument();
+    expect(screen.queryByText("No portfolios available")).not.toBeInTheDocument();
+  });
+
   it("selects the routed portfolio when source membership appears on a later book page", async () => {
     advisorBookMock.mockImplementation(({ offset }) => {
       const result = buildAdvisorBookResult({ includeCurrentPortfolio: offset === 100 });

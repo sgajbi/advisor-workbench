@@ -162,6 +162,18 @@ function PortfolioBookSelection({
     if (retainedPortfolioIds.length === selectedPortfolioIds.length) return;
     onSelectionChange(retainedPortfolioIds);
   }, [book.response, disabled, onSelectionChange, selectedPortfolioIds]);
+  const pageOutOfRange = Boolean(
+    book.response &&
+    book.response.items.length === 0 &&
+    book.response.page.total_count > 0 &&
+    book.response.page.offset >= book.response.page.total_count,
+  );
+  useEffect(() => {
+    if (!pageOutOfRange || !book.response) return;
+    const { limit, total_count: totalCount } = book.response.page;
+    setFilter("");
+    setOffset(Math.floor((totalCount - 1) / limit) * limit);
+  }, [book.response, pageOutOfRange]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {
     const query = filter.trim().toLocaleLowerCase();
@@ -197,7 +209,7 @@ function PortfolioBookSelection({
           {selected.size} selected
         </SemanticBadge>
       </div>
-      {book.loading ? (
+      {book.loading || pageOutOfRange ? (
         <ScreenStatePanel kind="loading" title="Loading your book" body="Checking source-confirmed portfolio assignments." rows={4} />
       ) : book.error ? (
         <ScreenStatePanel
