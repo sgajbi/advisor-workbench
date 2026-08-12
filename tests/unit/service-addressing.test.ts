@@ -109,6 +109,15 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
   });
 
+  it("allows only the exact process-owned Portfolio transactions-status fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18120/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "portfolio";
+    process.env.PORTFOLIO_E2E_FIXTURE = "transactions-status";
+    process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
+  });
+
   it("allows only the exact process-owned PM quality record-selection fixture loopback", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:18140/";
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "pm-quality";

@@ -17,10 +17,11 @@ if (
   scenario !== 'cashflow' &&
   scenario !== 'shell-unavailable' &&
   scenario !== 'review-matrix' &&
-  scenario !== 'positions-status'
+  scenario !== 'positions-status' &&
+  scenario !== 'transactions-status'
 ) {
   throw new Error(
-    'Portfolio smoke scenario must be cashflow, shell-unavailable, review-matrix, or positions-status.',
+    'Portfolio smoke scenario must be cashflow, shell-unavailable, review-matrix, positions-status, or transactions-status.',
   );
 }
 if (fixturePort === workbenchPort) {
@@ -37,6 +38,8 @@ const evidenceDirectory = resolve(
         ? 'output/playwright/issue-649-portfolio-review-matrix'
         : scenario === 'positions-status'
           ? 'output/playwright/issue-669-positions-status'
+        : scenario === 'transactions-status'
+          ? 'output/playwright/issue-671-transactions-settlement'
         : 'output/playwright/issue-492-cashflow'),
 );
 mkdirSync(evidenceDirectory, { recursive: true });
@@ -54,6 +57,8 @@ const child = spawn(
         ? 'portfolio review stays decision-focused and keeps detail work on dedicated screens'
         : scenario === 'positions-status'
           ? 'positions keep source status truthful across screen, export, and evidence'
+        : scenario === 'transactions-status'
+          ? 'transactions keep settlement applicability truthful across screen, detail, export, and evidence'
         : 'cashflow route keeps projection identity and movement semantics explicit',
     ...forwardedArguments,
   ],

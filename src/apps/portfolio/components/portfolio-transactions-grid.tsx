@@ -24,7 +24,6 @@ import { buildPortfolioTransactionSettlementSummary } from "../portfolio-transac
 import {
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
-  shouldPinPortfolioGridLeadColumns,
 } from "./portfolio-grid-helpers";
 import {
   buildTransactionExportRows,
@@ -237,7 +236,6 @@ function PortfolioTransactionsGridBody({
       buildTransactionColumn({
         field: "tradeDate",
         headerName: "Trade Date",
-        pinned: shouldPinPortfolioGridLeadColumns(gridDensity) ? "left" : null,
         minWidth: 118,
         valueFormatter: ({ value }) => formatDate(value),
       }),
@@ -258,6 +256,15 @@ function PortfolioTransactionsGridBody({
         minWidth: 190,
         flex: 1.5,
         cellRenderer: transactionInstrumentCellRenderer,
+      }),
+      buildTransactionColumn({
+        colId: "settlementStatus",
+        headerName: "Settlement Status",
+        minWidth: 132,
+        maxWidth: 152,
+        pinned: "right",
+        valueGetter: ({ data }) => data?.settlementState.label ?? "",
+        cellRenderer: transactionStatusCellRenderer,
       }),
       buildTransactionColumn({
         field: "quantity",
@@ -300,13 +307,6 @@ function PortfolioTransactionsGridBody({
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),
         cellClass: ({ value }) =>
           `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getPortfolioAmountToneClass(value)}`,
-      }),
-      buildTransactionColumn({
-        colId: "settlementStatus",
-        headerName: "Settlement Status",
-        minWidth: 132,
-        valueGetter: ({ data }) => data?.settlementState.label ?? "",
-        cellRenderer: transactionStatusCellRenderer,
       }),
       buildTransactionColumn({
         field: "realizedGainLossBase",

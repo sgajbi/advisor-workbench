@@ -5,7 +5,11 @@ const AS_OF_DATE = '2026-04-10';
 const MISSING_HISTORICAL_SUMMARY_DATE = '2026-04-01';
 const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
-export type PortfolioFixtureScenario = 'cashflow' | 'shell-unavailable' | 'positions-status';
+export type PortfolioFixtureScenario =
+  | 'cashflow'
+  | 'shell-unavailable'
+  | 'positions-status'
+  | 'transactions-status';
 
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
@@ -87,7 +91,14 @@ export async function startPortfolioFixtureGateway({
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/transactions`) {
-      sendJson(response, { total: 0, skip: 0, limit: 200, transactions: [] });
+      const transactions =
+        scenario === 'transactions-status' ? buildTransactionSettlementMatrix() : [];
+      sendJson(response, {
+        total: transactions.length,
+        skip: 0,
+        limit: 200,
+        transactions,
+      });
       return;
     }
 
@@ -325,6 +336,57 @@ function buildPositionStatusMatrix() {
       weight_pct: 0.04,
       currency: 'USD',
       reprocessing_status: null,
+    },
+  ];
+}
+
+function buildTransactionSettlementMatrix() {
+  const common = {
+    transaction_date: '2026-04-09T00:00:00Z',
+    settlement_date: '2026-04-11',
+    transaction_type: 'FX',
+    security_id: 'USD',
+    quantity: 1,
+    currency: 'USD',
+    source_system: 'CORE_LEDGER',
+  };
+
+  return [
+    {
+      ...common,
+      transaction_id: 'TX_SETTLED',
+      component_type: 'FX_CASH_SETTLEMENT_BUY',
+      instrument_id: 'Settled cash leg',
+      gross_amount: 100_000,
+      net_cost_base: 100_000,
+      settlement_status: 'SETTLED',
+    },
+    {
+      ...common,
+      transaction_id: 'TX_REVIEW',
+      component_type: 'FX_CASH_SETTLEMENT_SELL',
+      instrument_id: 'Cash leg requiring review',
+      gross_amount: -100_000,
+      net_cost_base: -100_000,
+      settlement_status: 'FUTURE_SOURCE_STATE',
+    },
+    {
+      ...common,
+      transaction_id: 'TX_NOT_REPORTED',
+      component_type: 'FX_CASH_SETTLEMENT_BUY',
+      instrument_id: 'Cash leg without source status',
+      gross_amount: 25_000,
+      net_cost_base: 25_000,
+      settlement_status: null,
+    },
+    {
+      ...common,
+      transaction_id: 'TX_NOT_APPLICABLE',
+      component_type: 'FX_CONTRACT_OPEN',
+      instrument_id: 'FX contract opening event',
+      gross_amount: 0,
+      net_cost_base: 0,
+      settlement_status: null,
     },
   ];
 }

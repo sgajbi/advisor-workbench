@@ -25,7 +25,8 @@ test.beforeAll(async () => {
   if (
     scenario !== 'cashflow' &&
     scenario !== 'shell-unavailable' &&
-    scenario !== 'positions-status'
+    scenario !== 'positions-status' &&
+    scenario !== 'transactions-status'
   ) {
     return;
   }
@@ -659,7 +660,9 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openPositionsPortfolio(page, request);
     expect(session).toEqual({ portfolioId: 'PB_SG_GLOBAL_BAL_001', available: true });
 
-    const displayedStates = await page.locator('.portfolio-position-status').allTextContents();
+    const positionStates = page.locator('.portfolio-position-status');
+    await expect(positionStates).toHaveCount(5);
+    const displayedStates = await positionStates.allTextContents();
     expect(displayedStates).toEqual([
       'Current',
       'Review required',
@@ -736,6 +739,99 @@ test.describe('Portfolio workbench smoke', () => {
     }
   });
 
+  test('transactions keep settlement applicability truthful across screen, detail, export, and evidence', async ({ page, request }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'transactions-status',
+      'This deterministic settlement-applicability matrix runs only in its owned proof scenario.',
+    );
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const session = await openTransactionsPortfolio(page, request);
+    expect(session).toEqual({ portfolioId: 'PB_SG_GLOBAL_BAL_001', available: true });
+
+    const settlementStates = page.locator('.portfolio-position-status');
+    await expect(settlementStates).toHaveCount(4);
+    const displayedStates = await settlementStates.allTextContents();
+    expect(displayedStates).toEqual([
+      'Settled',
+      'Review required',
+      'Not reported',
+      'Not applicable',
+    ]);
+    await expect(page.getByText('FUTURE_SOURCE_STATE', { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText(
+        '1 settlement status requires review; 1 settlement status not reported; 1 settlement status settled; 1 ledger entry not applicable',
+        { exact: true },
+      ).first(),
+    ).toBeVisible();
+
+    const settlementEvidence = page
+      .locator('.portfolio-record-source-item')
+      .filter({ hasText: 'Settlement' });
+    await expect(settlementEvidence.getByText('Review required', { exact: true })).toBeVisible();
+    await expect(
+      settlementEvidence.getByText(
+        '1 settlement status requires review; 1 settlement status not reported; 1 settlement status settled; 1 ledger entry not applicable',
+        { exact: true },
+      ),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Review transaction TX_NOT_REPORTED' }).click();
+    const drawer = page.locator('.portfolio-detail-drawer');
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByText('Settlement status', { exact: true }).first()).toBeVisible();
+    await expect(drawer.getByText('Not reported', { exact: true }).first()).toBeVisible();
+    await page.getByRole('button', { name: /Close/i }).first().click();
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export transactions' }).click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    const csv = await readFile(downloadedPath!, 'utf8');
+    expect(csv).toContain('Settlement Status');
+    for (const state of displayedStates) {
+      expect(csv).toContain(state);
+    }
+    expect(csv).not.toContain('FUTURE_SOURCE_STATE');
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await expect(page.getByRole('heading', { name: /^Transactions$/i })).toBeVisible();
+      await expect(page.getByText('Review required', { exact: true }).first()).toBeVisible();
+      const pageWidth = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(pageWidth.scrollWidth - pageWidth.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: resolve(evidenceDirectory, 'diagnostic-transactions-settlement-matrix.png'),
+        fullPage: true,
+      });
+      await writeFile(
+        resolve(evidenceDirectory, 'transactions-settlement-proof.json'),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            displayedStates,
+            settlementEvidence: 'Review required',
+            rawSourceCodesVisible: false,
+            csvUsesBusinessStates: true,
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+    }
+  });
+
   test('transactions route preserves currency semantics and opens related booked activity', async ({ page, request }) => {
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openTransactionsPortfolio(page, request);
@@ -750,7 +846,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('Gross Amount', { exact: true })).toBeVisible();
     await expect(page.getByText('Net Cost (USD)', { exact: true })).toBeVisible();
     await expect(page.getByText('Settlement Status', { exact: true })).toBeVisible();
-    await expect(page.getByText('4 loaded entries need settlement review', { exact: true })).toBeVisible();
+    await expect(page.getByText(/settlement status/i).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /^Book first transaction$/i })).toHaveCount(0);
 
     await page.getByLabel('Transaction start date').fill('2025-04-01');

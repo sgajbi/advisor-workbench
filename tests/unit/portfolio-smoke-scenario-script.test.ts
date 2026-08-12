@@ -25,6 +25,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(packageJson.scripts["test:e2e:portfolio:positions-status"]).toContain(
       "run-portfolio-smoke-scenario.mjs positions-status",
     );
+    expect(packageJson.scripts["test:e2e:portfolio:transactions-status"]).toContain(
+      "run-portfolio-smoke-scenario.mjs transactions-status",
+    );
   });
 
   it("binds the BFF to the exact owned Portfolio fixture without a shell", () => {
@@ -43,7 +46,7 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("child.kill(signal)");
   });
 
-  it("runs only the four governed Portfolio browser scenarios", () => {
+  it("runs only the five governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit'",
@@ -57,9 +60,13 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain(
       "'positions keep source status truthful across screen, export, and evidence'",
     );
+    expect(source).toContain(
+      "'transactions keep settlement applicability truthful across screen, detail, export, and evidence'",
+    );
     expect(source).toContain("scenario !== 'review-matrix'");
     expect(source).toContain("scenario !== 'shell-unavailable'");
     expect(source).toContain("scenario !== 'positions-status'");
+    expect(source).toContain("scenario !== 'transactions-status'");
     expect(source).toContain("parseUnprivilegedPort(");
     expect(source).toContain("'PORTFOLIO_E2E_FIXTURE_PORT'");
     expect(source).toContain("'PORTFOLIO_E2E_WORKBENCH_PORT'");
