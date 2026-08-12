@@ -40,7 +40,7 @@ describe("portfolio record evidence view model", () => {
       }),
     });
 
-    expect(viewModel.status).toEqual({ label: "Ready", tone: "success" });
+    expect(viewModel.status).toEqual({ label: "Partial", tone: "warn" });
     expect(viewModel.facts).not.toContainEqual({
       label: "Portfolio",
       value: "PB_SG_GLOBAL_BAL_001",
@@ -60,9 +60,11 @@ describe("portfolio record evidence view model", () => {
           detail: "2 positions available for review",
         }),
         expect.objectContaining({
-          label: "Reprocessing",
-          detail: "1 flag on positions, 1 stale key",
-          status: "Review",
+          label: "Position Status",
+          detail:
+            "1 position requires review; 1 position status not reported; 1 source key stale",
+          status: "Review required",
+          tone: "warn",
         }),
       ])
     );
@@ -77,6 +79,81 @@ describe("portfolio record evidence view model", () => {
     expect(viewModel.adjacentWorkflows.map((workflow) => workflow.label)).not.toContain(
       "Positions",
     );
+  });
+
+  it("keeps missing position status explicit in the detailed and overall posture", () => {
+    const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+      screen: "positions",
+      workspace: buildPortfolioWorkspace({
+        positions: [
+          {
+            security_id: "EQ_1",
+            instrument_name: "Apple Inc.",
+            asset_class: "EQUITY",
+            quantity: 10,
+            market_price: 210,
+            market_value_base: 2100,
+            weight_pct: 2.1,
+            currency: "USD",
+            reprocessing_status: null,
+          },
+        ],
+      }),
+    });
+
+    expect(viewModel.status).toEqual({ label: "Partial", tone: "warn" });
+    expect(viewModel.sourcePostureItems).toContainEqual(
+      expect.objectContaining({
+        label: "Position Status",
+        detail: "1 position status not reported",
+        status: "Not reported",
+        tone: "warn",
+      }),
+    );
+  });
+
+  it("shows an all-current posture only for explicitly current positions", () => {
+    const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+      screen: "positions",
+      workspace: buildPortfolioWorkspace({
+        positions: [
+          {
+            security_id: "EQ_1",
+            instrument_name: "Apple Inc.",
+            asset_class: "EQUITY",
+            quantity: 10,
+            market_price: 210,
+            market_value_base: 2100,
+            weight_pct: 2.1,
+            currency: "USD",
+            reprocessing_status: "CURRENT",
+          },
+        ],
+      }),
+    });
+
+    expect(viewModel.status).toEqual({ label: "Ready", tone: "success" });
+    expect(viewModel.sourcePostureItems).toContainEqual(
+      expect.objectContaining({
+        label: "Position Status",
+        detail: "1 position status current",
+        status: "Current",
+        tone: "success",
+      }),
+    );
+  });
+
+  it("promotes warning source evidence into the overall record posture", () => {
+    const workspace = buildPortfolioWorkspace({});
+    workspace.cashflow_outlook = {
+      ...workspace.cashflow_outlook!,
+      total_net_cashflow_base: 750,
+      upcoming_points: [],
+    };
+
+    expect(
+      buildPortfolioRecordEvidenceRailViewModel({ screen: "cashflow", workspace }).status,
+    ).toEqual({ label: "Partial", tone: "warn" });
   });
 
   it("builds income and activity evidence with front-office copy", () => {

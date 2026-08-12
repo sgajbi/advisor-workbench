@@ -1,5 +1,10 @@
 import type { PortfolioPositionView } from "../types";
 import { formatStatus } from "../formatters";
+import {
+  buildPortfolioPositionState,
+  type PortfolioPositionStateKind,
+  type PortfolioPositionStateTone,
+} from "../portfolio-position-state-view-model";
 
 export type HoldingsColumnKey =
   | "instrument"
@@ -27,7 +32,9 @@ export type HoldingsRow = {
   weight: number | null;
   upl: number | null;
   currency: string;
-  status?: string | null;
+  status: string;
+  statusKind: PortfolioPositionStateKind;
+  statusTone: PortfolioPositionStateTone;
   sector: string;
   heldSince: string | null;
   isin: string | null;
@@ -87,23 +94,29 @@ export function buildHoldingsRows(
   positions: PortfolioPositionView[],
   baseCurrency: string,
 ): HoldingsRow[] {
-  return positions.map((position) => ({
-    securityId: position.security_id,
-    instrument: position.instrument_name,
-    assetClass: formatStatus(position.asset_class),
-    quantity: position.quantity,
-    price: position.market_price ?? null,
-    marketValue: position.market_value_base ?? null,
-    costBasis: position.cost_basis_base ?? null,
-    weight: position.weight_pct ?? null,
-    upl: position.unrealized_gain_loss_base ?? null,
-    currency: position.currency ?? baseCurrency,
-    status: position.reprocessing_status ?? null,
-    sector: formatStatus(position.sector),
-    heldSince: position.held_since_date ?? null,
-    isin: position.isin ?? null,
-    raw: position,
-  }));
+  return positions.map((position) => {
+    const positionState = buildPortfolioPositionState(position);
+
+    return {
+      securityId: position.security_id,
+      instrument: position.instrument_name,
+      assetClass: formatStatus(position.asset_class),
+      quantity: position.quantity,
+      price: position.market_price ?? null,
+      marketValue: position.market_value_base ?? null,
+      costBasis: position.cost_basis_base ?? null,
+      weight: position.weight_pct ?? null,
+      upl: position.unrealized_gain_loss_base ?? null,
+      currency: position.currency ?? baseCurrency,
+      status: positionState.label,
+      statusKind: positionState.kind,
+      statusTone: positionState.tone,
+      sector: formatStatus(position.sector),
+      heldSince: position.held_since_date ?? null,
+      isin: position.isin ?? null,
+      raw: position,
+    };
+  });
 }
 
 export function countUnpricedHoldings(positions: PortfolioPositionView[]): number {
@@ -159,7 +172,7 @@ export function buildHoldingsExportRows(
           output["Currency"] = row.currency;
           break;
         case "status":
-          output["Status"] = row.status ? formatStatus(row.status) : "Current";
+          output["Status"] = row.status;
           break;
         case "sector":
           output["Sector"] = row.sector;

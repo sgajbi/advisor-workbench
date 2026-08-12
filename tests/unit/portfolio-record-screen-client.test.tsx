@@ -136,7 +136,20 @@ vi.mock(
                   weight: position.weight_pct,
                   upl: position.unrealized_gain_loss_base ?? null,
                   currency: position.currency ?? "USD",
-                  status: position.reprocessing_status,
+                  status: position.reprocessing_status?.trim()
+                    ? position.reprocessing_status.trim().toUpperCase() === "CURRENT"
+                      ? "Current"
+                      : "Review required"
+                    : "Not reported",
+                  statusKind: position.reprocessing_status?.trim()
+                    ? position.reprocessing_status.trim().toUpperCase() === "CURRENT"
+                      ? "current"
+                      : "review_required"
+                    : "not_reported",
+                  statusTone:
+                    position.reprocessing_status?.trim().toUpperCase() === "CURRENT"
+                      ? "clear"
+                      : "warn",
                   sector: position.sector ?? "N/A",
                   heldSince: position.held_since_date ?? null,
                   isin: position.isin ?? null,
