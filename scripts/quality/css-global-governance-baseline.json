@@ -8,6 +8,7 @@
     "performance-risk-compact-segmented-control",
     "performance-risk-rolling-window-toolbar",
     "performance-risk-window-toolbar",
+    "portfolio-income-activity",
     "portfolio-primary-view-tabs",
     "portfolio-cashflow",
     "portfolio-segmented-control",
@@ -63,8 +64,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 13713,
-      "maxBytes": 301510
+      "maxLines": 13652,
+      "maxBytes": 300164
     }
   ]
 }

@@ -508,7 +508,7 @@ test.describe('Portfolio workbench smoke', () => {
 
     await expect(page.getByText('Booked income', { exact: true })).toBeVisible();
     await expect(page.getByText('Booked cash movements', { exact: true })).toBeVisible();
-    await expect(page.locator('.portfolio-income-activity-workspace')).toBeVisible();
+    await expect(page.getByTestId('income-activity-workspace')).toBeVisible();
     await expect(page.getByRole('table', { name: 'Booked income by type' })).toBeVisible();
     await expect(page.getByRole('table', { name: 'Booked cash movements by type' })).toBeVisible();
     await expect(page.getByText('Current cash weight')).toBeVisible();
@@ -518,7 +518,7 @@ test.describe('Portfolio workbench smoke', () => {
       page.getByRole('table', { name: 'Booked income by type' }).getByText('Ready')
     ).toHaveCount(0);
 
-    const incomeMetricStrip = await measureGrid(page.locator('.portfolio-income-activity-metrics').first());
+    const incomeMetricStrip = await measureGrid(page.getByLabel('Booked income summary'));
     expect(incomeMetricStrip.childCount).toBe(4);
     expect(incomeMetricStrip.width).toBeGreaterThan(900);
   });
@@ -563,6 +563,15 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByText(sourceCode, { exact: true })).toHaveCount(0);
     }
 
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: resolve(evidenceDirectory, 'diagnostic-income-activity-booked-cash.png'),
+        fullPage: true,
+      });
+    }
+
     const viewportEvidence = [];
     for (const viewport of [
       { width: 1440, height: 1100, expectedMetricColumns: 4 },
@@ -586,17 +595,28 @@ test.describe('Portfolio workbench smoke', () => {
       expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
         measurements.document.clientWidth + 1,
       );
-      viewportEvidence.push({ viewport, measurements });
+
+      let keyboardEvidence = null;
+      if (viewport.width === 519) {
+        const focusableDomOrder = await collectFocusableDomOrder(page.locator('body'));
+        expect(focusableDomOrder.length).toBeGreaterThan(8);
+        expect(focusableDomOrder.every((element) => element.name.length > 0)).toBe(true);
+
+        keyboardEvidence = await traverseSequentialKeyboardFocus(page, focusableDomOrder.length);
+        // Chromium includes horizontally scrollable table regions in sequential focus even though
+        // they are not matched by the explicit focusable-selector inventory.
+        expect(keyboardEvidence.length).toBeGreaterThanOrEqual(focusableDomOrder.length);
+        expect(keyboardEvidence.every((element) => element.name.length > 0)).toBe(true);
+        expect(keyboardEvidence.every((element) => element.focusVisible)).toBe(true);
+        expect(keyboardEvidence.every((element) => element.notObscured)).toBe(true);
+        expect(keyboardEvidence.every((element) => element.withinViewport)).toBe(true);
+      }
+
+      viewportEvidence.push({ viewport, measurements, keyboardEvidence });
     }
 
     await page.setViewportSize({ width: 1440, height: 1100 });
-    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
     if (evidenceDirectory) {
-      await mkdir(evidenceDirectory, { recursive: true });
-      await page.screenshot({
-        path: resolve(evidenceDirectory, 'diagnostic-income-activity-booked-cash.png'),
-        fullPage: true,
-      });
       await writeFile(
         resolve(evidenceDirectory, 'income-activity-proof.json'),
         `${JSON.stringify(
