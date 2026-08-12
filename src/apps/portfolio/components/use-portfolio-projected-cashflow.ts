@@ -35,7 +35,9 @@ export function usePortfolioProjectedCashflow({
   initialWarnings: string[];
   initialPartialFailures: PortfolioPartialFailure[];
 }) {
-  const initialHorizonKey = resolveCashflowHorizonKey(initialCashflowOutlook?.projection_days);
+  const initialHorizonKey = resolveCashflowHorizonKey(
+    initialCashflowOutlook?.projection_days,
+  );
   const initialSnapshot = buildInitialCashflowSnapshot({
     outlook: initialCashflowOutlook,
     warnings: initialWarnings,
@@ -86,7 +88,9 @@ export function usePortfolioProjectedCashflow({
         return;
       }
 
-      const snapshot = response ? buildCashflowSnapshot(selectedHorizonDays, response) : null;
+      const snapshot = response
+        ? buildCashflowSnapshot(selectedHorizonDays, response)
+        : null;
       if (snapshot) {
         setSnapshots((current) => ({
           ...current,
@@ -160,3 +164,7 @@ export function usePortfolioProjectedCashflow({
     },
   };
 }
+
+export type PortfolioProjectedCashflowController = ReturnType<
+  typeof usePortfolioProjectedCashflow
+>;

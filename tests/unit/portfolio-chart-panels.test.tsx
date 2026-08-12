@@ -72,13 +72,26 @@ describe("portfolio chart panels", () => {
       />
     );
 
-    expect(screen.getByLabelText("Projected cashflow chart in USD")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: "Projected cash movement chart in USD; bars show dated movement and the line shows cumulative movement",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Cash movement chart key")).toHaveTextContent(
+      "Bars: dated movementLine: cumulative movement",
+    );
     expect(screen.getByLabelText("Projected cash movement mix")).toHaveTextContent("1 inflow");
     expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
       "Net Projected Movement"
     );
     expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
       "Largest Outflow"
+    );
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
+      "Projected Inflows"
+    );
+    expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent(
+      "Projected Outflows"
     );
     expect(screen.queryByText("Ending Cumulative")).not.toBeInTheDocument();
   });

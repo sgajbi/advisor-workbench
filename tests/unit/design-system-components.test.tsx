@@ -515,6 +515,25 @@ describe("design-system components", () => {
     expect(screen.getByText("100%")).toBeInTheDocument();
   });
 
+  it("makes an explicitly named scrollable analytics table region keyboard reachable", () => {
+    render(
+      <AnalyticsTable
+        ariaLabel="Projected cash movement schedule"
+        scrollRegionLabel="Projected cash movement schedule, horizontally scrollable"
+        columns={[{ key: "date", label: "Date" }]}
+        rows={[{ key: "row-1", cells: ["31 Dec 2026"] }]}
+      />
+    );
+
+    const scrollRegion = screen.getByRole("region", {
+      name: "Projected cash movement schedule, horizontally scrollable",
+    });
+    expect(scrollRegion).toHaveAttribute("tabindex", "0");
+    expect(
+      screen.getByRole("table", { name: "Projected cash movement schedule" })
+    ).toBeInTheDocument();
+  });
+
   it("renders dense analytics tables through the shared frame contract", () => {
     render(
       <AnalyticsTable

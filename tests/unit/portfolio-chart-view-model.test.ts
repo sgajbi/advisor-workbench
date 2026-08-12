@@ -25,9 +25,11 @@ describe("portfolio chart view model", () => {
     expect(model.zeroLineY).toEqual(expect.any(Number));
     expect(model.positiveFlowCount).toBe(2);
     expect(model.negativeFlowCount).toBe(1);
+    expect(model.totalInflows).toBe(7_500);
+    expect(model.totalOutflows).toBe(-2_500);
     expect(model.largestInflow?.projection_date).toBe("2026-05-13");
     expect(model.largestOutflow?.projection_date).toBe("2026-05-12");
-    expect(model.focusPoint?.projection_date).toBe("2026-05-13");
+    expect(model.focusPoint?.projection_date).toBe("2026-05-12");
     expect(model.flatCashflow).toBe(false);
   });
 
@@ -63,9 +65,11 @@ describe("portfolio chart view model", () => {
 
   it("formats chart labels and tooltips consistently", () => {
     const cashflowPoint = buildCashflowOutlook().upcoming_points[0];
-    expect(formatCashflowNetFlowTitle(cashflowPoint, "USD")).toBe("12 May 2026: net flow -2,500 USD");
+    expect(formatCashflowNetFlowTitle(cashflowPoint, "USD")).toBe(
+      "12 May 2026: net flow -2,500 USD",
+    );
     expect(formatCashflowPointTitle(cashflowPoint, "USD")).toBe(
-      "12 May 2026: cumulative projected movement -2,500 USD"
+      "12 May 2026: cumulative projected movement -2,500 USD",
     );
     expect(
       buildTopHoldingTooltip(
@@ -78,8 +82,8 @@ describe("portfolio chart view model", () => {
           weight_pct: 4.5,
         },
         "weight",
-        "USD"
-      )
+        "USD",
+      ),
     ).toContain("Focus metric: 4.50%");
   });
 
@@ -91,13 +95,17 @@ describe("portfolio chart view model", () => {
 
     expect(roundSvg(1.23456)).toBe(1.23);
     expect(buildLinePath(points)).toBe("M 1.111 2.222 L 3.333 4.444");
-    expect(buildAreaPath(points)).toBe("M 1.111 164 L 1.111 2.222 L 3.333 4.444 L 3.333 164 Z");
+    expect(buildAreaPath(points)).toBe(
+      "M 1.111 164 L 1.111 2.222 L 3.333 4.444 L 3.333 164 Z",
+    );
     expect(buildLinePath([])).toBe("");
     expect(buildAreaPath([])).toBe("");
   });
 });
 
-function buildCashflowOutlook(): NonNullable<PortfolioWorkspace["cashflow_outlook"]> {
+function buildCashflowOutlook(): NonNullable<
+  PortfolioWorkspace["cashflow_outlook"]
+> {
   return {
     as_of_date: "2026-05-12",
     range_end_date: "2026-05-15",
