@@ -56,12 +56,14 @@ export function useReportOrderingWorkflow({
   reportingCurrency,
   scopeMode = "single_portfolio",
   selectedPortfolioIds = [portfolioId],
+  portfolioSelectionState = "ready",
 }: {
   portfolioId: string;
   asOfDate: string;
   reportingCurrency: string;
   scopeMode?: ReportOrderingScopeMode;
   selectedPortfolioIds?: string[];
+  portfolioSelectionState?: "loading" | "ready" | "error";
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
   const [catalogueState, setCatalogueState] =
@@ -224,9 +226,14 @@ export function useReportOrderingWorkflow({
   );
   const model = useMemo(
     () => baseModel
-      ? applyReportScopeReadiness(baseModel, scopeMode, selectedPortfolioIds)
+      ? applyReportScopeReadiness(
+          baseModel,
+          scopeMode,
+          selectedPortfolioIds,
+          portfolioSelectionState,
+        )
       : null,
-    [baseModel, scopeMode, selectedPortfolioIds],
+    [baseModel, portfolioSelectionState, scopeMode, selectedPortfolioIds],
   );
   const publishedConfigurationFieldIds = useMemo(
     () =>

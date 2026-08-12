@@ -156,6 +156,7 @@ export function applyReportScopeReadiness(
   model: ReportOrderingViewModel,
   scopeMode: ReportOrderingScopeMode,
   selectedPortfolioIds: string[],
+  portfolioSelectionState: "loading" | "ready" | "error" = "ready",
 ): ReportOrderingViewModel {
   if (scopeMode === "single_portfolio") {
     return model;
@@ -163,6 +164,13 @@ export function applyReportScopeReadiness(
   const issues = [...model.readiness.issues];
   if (!findPortfolioReviewBatchMode(model.family)) {
     issues.push("Portfolio bundle ordering is not currently published for this report.");
+  }
+  if (portfolioSelectionState !== "ready") {
+    issues.push(
+      portfolioSelectionState === "error"
+        ? "Portfolio assignments are unavailable. Restore My book before reviewing this bundle."
+        : "Portfolio assignments are still loading.",
+    );
   }
   if (selectedPortfolioIds.length < 2) {
     issues.push("Select at least two portfolios from your book for a portfolio bundle.");

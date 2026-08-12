@@ -17,6 +17,7 @@ export function ReportPortfolioScopePanel({
   selectedPortfolioIds,
   onScopeModeChange,
   onSelectionChange,
+  onBookStateChange,
 }: {
   currentPortfolioId: string;
   asOfDate: string;
@@ -26,6 +27,7 @@ export function ReportPortfolioScopePanel({
   selectedPortfolioIds: string[];
   onScopeModeChange: (mode: ReportOrderingScopeMode) => void;
   onSelectionChange: (portfolioIds: string[]) => void;
+  onBookStateChange: (state: "loading" | "ready" | "error") => void;
 }) {
   return (
     <SectionBlock
@@ -64,6 +66,7 @@ export function ReportPortfolioScopePanel({
           disabled={disabled}
           selectedPortfolioIds={selectedPortfolioIds}
           onSelectionChange={onSelectionChange}
+          onBookStateChange={onBookStateChange}
         />
       ) : null}
     </SectionBlock>
@@ -103,16 +106,21 @@ function PortfolioBookSelection({
   disabled,
   selectedPortfolioIds,
   onSelectionChange,
+  onBookStateChange,
 }: {
   currentPortfolioId: string;
   asOfDate: string;
   disabled: boolean;
   selectedPortfolioIds: string[];
   onSelectionChange: (portfolioIds: string[]) => void;
+  onBookStateChange: (state: "loading" | "ready" | "error") => void;
 }) {
   const [filter, setFilter] = useState("");
   const [offset, setOffset] = useState(0);
   const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 });
+  useEffect(() => {
+    onBookStateChange(book.error ? "error" : book.response && !book.loading ? "ready" : "loading");
+  }, [book.error, book.loading, book.response, onBookStateChange]);
   const initialSelectionKeyRef = useRef("");
   useEffect(() => {
     setFilter("");

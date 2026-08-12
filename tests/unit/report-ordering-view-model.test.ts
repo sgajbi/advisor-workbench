@@ -252,6 +252,14 @@ describe("report ordering view model", () => {
         "PB_SG_INCOME_002",
       ]),
     ).toEqual(expect.objectContaining({ canSubmit: true }));
+    expect(
+      applyReportScopeReadiness(
+        baseModel,
+        "explicit_portfolio_batch",
+        ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+        "error",
+      ),
+    ).toEqual(expect.objectContaining({ canSubmit: false }));
   });
 
   it("accepts only the governed selection-required batch capability posture", () => {

@@ -35,12 +35,15 @@ export function ReportOrderingWorkspace({
 }) {
   const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
+  const [portfolioSelectionState, setPortfolioSelectionState] =
+    useState<"loading" | "ready" | "error">("loading");
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
     reportingCurrency: portfolio.baseCurrency,
     scopeMode,
     selectedPortfolioIds,
+    portfolioSelectionState,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
@@ -53,6 +56,7 @@ export function ReportOrderingWorkspace({
   useEffect(() => {
     setScopeMode("single_portfolio");
     setSelectedPortfolioIds([]);
+    setPortfolioSelectionState("loading");
     selectionDateRef.current = portfolio.asOfDate;
   }, [portfolio.asOfDate, portfolio.portfolioId]);
 
@@ -61,6 +65,7 @@ export function ReportOrderingWorkspace({
     if (!configurationDate || configurationDate === selectionDateRef.current) return;
     selectionDateRef.current = configurationDate;
     setSelectedPortfolioIds([]);
+    setPortfolioSelectionState("loading");
   }, [portfolio.portfolioId, workflow.configuration?.asOfDate]);
 
   function focusReadiness() {
@@ -166,6 +171,7 @@ export function ReportOrderingWorkspace({
                         onSelectionChange={(portfolioIds) => {
                           if (!configurationLocked) setSelectedPortfolioIds(portfolioIds);
                         }}
+                        onBookStateChange={setPortfolioSelectionState}
                       />
                       <ReportConfigurationPanel
                         model={workspaceState.model}
