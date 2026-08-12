@@ -48,6 +48,7 @@ export function ReportOrderingWorkspace({
   const selectionDateRef = useRef(portfolio.asOfDate);
   const workspaceState = workflow.screenState.workspace;
   const batchAvailable = Boolean(findPortfolioReviewBatchMode(workflow.model?.family ?? null));
+  const configurationLocked = workflow.submissionState === "submitting";
 
   useEffect(() => {
     setScopeMode("single_portfolio");
@@ -156,13 +157,19 @@ export function ReportOrderingWorkspace({
                         asOfDate={workflow.configuration.asOfDate}
                         scopeMode={scopeMode}
                         batchAvailable={batchAvailable}
+                        disabled={configurationLocked}
                         selectedPortfolioIds={selectedPortfolioIds}
-                        onScopeModeChange={setScopeMode}
-                        onSelectionChange={setSelectedPortfolioIds}
+                        onScopeModeChange={(mode) => {
+                          if (!configurationLocked) setScopeMode(mode);
+                        }}
+                        onSelectionChange={(portfolioIds) => {
+                          if (!configurationLocked) setSelectedPortfolioIds(portfolioIds);
+                        }}
                       />
                       <ReportConfigurationPanel
                         model={workspaceState.model}
                         configuration={workflow.configuration}
+                        disabled={configurationLocked}
                         updateConfiguration={workflow.updateConfiguration}
                         toggleSection={workflow.toggleSection}
                       />

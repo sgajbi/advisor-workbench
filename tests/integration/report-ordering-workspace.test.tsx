@@ -192,6 +192,50 @@ describe("ReportOrderingWorkspace", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
+  it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
+    let resolveSubmission:
+      | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
+      | null = null;
+    submitBatchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmission = resolve;
+      }),
+    );
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    const secondPortfolio = screen.getByRole("checkbox", { name: /Income Preservation Mandate/ });
+    fireEvent.click(secondPortfolio);
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Submitting portfolio bundle" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Selected portfolio/ })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: /Portfolio bundle/ })).toBeDisabled();
+    expect(screen.getByRole("searchbox", { name: "Find a portfolio" })).toBeDisabled();
+    expect(secondPortfolio).toBeDisabled();
+    expect(screen.getByLabelText("Report date")).toBeDisabled();
+    expect(screen.getByLabelText("Reporting currency")).toBeDisabled();
+    expect(screen.getByRole("radio", { name: /Structured data package/ })).toBeDisabled();
+
+    await act(async () => {
+      resolveSubmission?.(parseReportBatchHandle(buildReportBatchHandle()));
+    });
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle accepted" }),
+    ).toBeInTheDocument();
+    expect(submitBatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+      }),
+    );
+  });
+
   it("keeps a rejected portfolio bundle explicit and never renders success outcomes", async () => {
     submitBatchMock.mockRejectedValue(new Error("batch unavailable"));
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
