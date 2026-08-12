@@ -1,4 +1,5 @@
 import { formatCount, formatCurrency, formatDate, formatStatus } from "./formatters";
+import type { CashflowProjectionSnapshot } from "./portfolio-projected-cashflow-view-model";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
 import { buildPortfolioPositionStateSummary } from "./portfolio-position-state-view-model";
 import { buildPortfolioTransactionSettlementSummary } from "./portfolio-transaction-settlement-view-model";
@@ -51,26 +52,51 @@ export type PortfolioRecordEvidenceRailViewModel = {
   adjacentWorkflows: PortfolioRecordAdjacentWorkflow[];
 };
 
+export type PortfolioRecordCashflowProjection = {
+  selectedHorizonDays: number;
+  snapshot: CashflowProjectionSnapshot | null;
+  state: "loading" | "refreshing" | "ready" | "unconfirmed" | "unavailable";
+};
+
 export function buildPortfolioRecordEvidenceRailViewModel({
   screen,
   workspace,
+  cashflowProjection,
 }: {
   screen: PortfolioRecordScreenKind;
   workspace: PortfolioWorkspace;
+  cashflowProjection?: PortfolioRecordCashflowProjection;
 }): PortfolioRecordEvidenceRailViewModel {
   const portfolioId = workspace.portfolio.portfolio_id;
   const sourcePostureItems = buildSourcePostureItems({
     screen,
     workspace,
+    cashflowProjection,
   });
   const isPartial =
     workspace.partial_failures.length > 0 ||
-    sourcePostureItems.some((item) => item.tone === "warn" || item.tone === "danger");
+    sourcePostureItems.some(
+      (item) => item.tone === "warn" || item.tone === "danger",
+    );
+  const cashflowUnavailable = cashflowProjection?.state === "unavailable";
+  const cashflowLoading = cashflowProjection?.state === "loading";
 
   return {
     status: {
-      label: isPartial ? "Partial" : "Ready",
-      tone: isPartial ? "warn" : "success",
+      label: cashflowUnavailable
+        ? "Unavailable"
+        : cashflowLoading
+          ? "Loading"
+          : isPartial
+            ? "Partial"
+            : "Ready",
+      tone: cashflowUnavailable
+        ? "danger"
+        : isPartial
+          ? "warn"
+          : cashflowLoading
+            ? "default"
+            : "success",
     },
     facts: [
       { label: "Client", value: workspace.portfolio.client_id ?? "N/A" },
@@ -85,9 +111,11 @@ export function buildPortfolioRecordEvidenceRailViewModel({
 function buildSourcePostureItems({
   screen,
   workspace,
+  cashflowProjection,
 }: {
   screen: PortfolioRecordScreenKind;
   workspace: PortfolioWorkspace;
+  cashflowProjection?: PortfolioRecordCashflowProjection;
 }): PortfolioRecordSourcePosture[] {
   if (screen === "transactions") {
     return buildTransactionSourcePosture(workspace);
@@ -98,7 +126,7 @@ function buildSourcePostureItems({
   }
 
   if (screen === "cashflow") {
-    return buildCashflowSourcePosture(workspace);
+    return buildCashflowSourcePosture(workspace, cashflowProjection);
   }
 
   if (screen === "allocation") {
@@ -198,25 +226,72 @@ function buildIncomeActivitySourcePosture(
 }
 
 function buildCashflowSourcePosture(
-  workspace: PortfolioWorkspace
+  workspace: PortfolioWorkspace,
+  projection?: PortfolioRecordCashflowProjection,
 ): PortfolioRecordSourcePosture[] {
-  const cashflow = workspace.cashflow_outlook;
+  const cashflow = projection
+    ? (projection.snapshot?.outlook ?? null)
+    : workspace.cashflow_outlook;
   const pointCount = cashflow?.upcoming_points.length ?? 0;
   const positiveCount =
-    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base > 0).length ?? 0;
+    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base > 0)
+      .length ?? 0;
   const negativeCount =
-    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base < 0).length ?? 0;
+    cashflow?.upcoming_points.filter((point) => point.net_cashflow_base < 0)
+      .length ?? 0;
   const aggregateOnlyMovement = Boolean(
-    cashflow && pointCount === 0 && cashflow.total_net_cashflow_base !== 0
+    cashflow && pointCount === 0 && cashflow.total_net_cashflow_base !== 0,
   );
   const aggregateDirection =
     cashflow && cashflow.total_net_cashflow_base < 0 ? "outflow" : "inflow";
   const aggregateAmount = cashflow
     ? formatCurrency(
         Math.abs(cashflow.total_net_cashflow_base),
-        workspace.portfolio.base_currency
+        workspace.portfolio.base_currency,
       )
     : null;
+  const limited = Boolean(
+    projection?.snapshot &&
+    (projection.snapshot.warnings.length > 0 ||
+      projection.snapshot.partialFailures.length > 0),
+  );
+  const projectionState =
+    projection?.state ?? (cashflow ? "ready" : "unavailable");
+
+  if (!cashflow) {
+    const loading = projectionState === "loading";
+    return [
+      {
+        label: "Projection Coverage",
+        source: loading
+          ? `${projection?.selectedHorizonDays ?? 10}-day projection requested`
+          : "Projected movement source unavailable",
+        detail: loading
+          ? "Expected inflows and outflows are being retrieved for the selected horizon"
+          : `No ${projection?.selectedHorizonDays ?? 10}-day projected cash movement is available for review`,
+        tone: loading ? "default" : "danger",
+        status: loading ? "Loading" : "Unavailable",
+      },
+      buildCashPositionSourcePosture(workspace),
+    ];
+  }
+
+  const evidenceNeedsReview =
+    limited ||
+    projectionState === "refreshing" ||
+    projectionState === "unconfirmed";
+  const evidenceStatus =
+    projectionState === "refreshing"
+      ? "Confirming"
+      : projectionState === "unconfirmed"
+        ? "Unconfirmed"
+        : limited
+          ? "Limited"
+          : aggregateOnlyMovement
+            ? "Partial"
+            : "Available";
+  const evidenceTone: PortfolioRecordEvidenceTone =
+    evidenceNeedsReview || aggregateOnlyMovement ? "warn" : "success";
 
   return [
     {
@@ -225,14 +300,14 @@ function buildCashflowSourcePosture(
       detail: cashflow
         ? aggregateOnlyMovement
           ? `Net projected movement available through ${formatDate(
-              cashflow.range_end_date
+              cashflow.range_end_date,
             )}; dated projection points unavailable`
           : `${formatCount(pointCount, "projected point")} through ${formatDate(
-              cashflow.range_end_date
+              cashflow.range_end_date,
             )}`
         : "No projected cashflow outlook returned for this portfolio",
-      tone: aggregateOnlyMovement ? "warn" : cashflow ? "success" : "warn",
-      status: aggregateOnlyMovement ? "Partial" : cashflow ? "Available" : "Unavailable",
+      tone: evidenceTone,
+      status: evidenceStatus,
     },
     {
       label: "Projection Basis",
@@ -246,18 +321,38 @@ function buildCashflowSourcePosture(
           ? `Net projected ${aggregateDirection} of ${aggregateAmount}; dated inflow and outflow counts unavailable`
           : `${formatCount(positiveCount, "inflow")} and ${formatCount(
               negativeCount,
-              "outflow"
+              "outflow",
             )} in the returned forecast`
         : "Horizon cannot be displayed until the source outlook is available",
-      tone: aggregateOnlyMovement ? "warn" : cashflow ? "success" : "default",
-      status: aggregateOnlyMovement
-        ? "Aggregate only"
-        : cashflow
-          ? `${cashflow.projection_days} days`
-          : "N/A",
+      tone: evidenceTone,
+      status:
+        projectionState === "refreshing"
+          ? "Confirming"
+          : projectionState === "unconfirmed"
+            ? "Unconfirmed"
+            : aggregateOnlyMovement
+              ? "Aggregate only"
+              : `${cashflow.projection_days} days`,
     },
-    buildReportingSourcePosture(workspace),
+    buildCashPositionSourcePosture(workspace),
   ];
+}
+
+function buildCashPositionSourcePosture(
+  workspace: PortfolioWorkspace,
+): PortfolioRecordSourcePosture {
+  return {
+    label: "Cash Position",
+    source: "Booked cash",
+    detail: `${formatCurrency(
+      workspace.summary.total_cash_base,
+      workspace.portfolio.base_currency,
+    )} as of ${formatDate(
+      workspace.as_of_date,
+    )}; projected movements are not applied as an ending balance`,
+    tone: "success",
+    status: "Available",
+  };
 }
 
 function buildPositionSourcePosture(

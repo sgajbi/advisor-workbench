@@ -27,7 +27,8 @@ export type AnalyticsTableRow = {
 };
 
 export type AnalyticsTableDensity = "compact" | "comfortable";
-export type AnalyticsTableVariant = "default" | "analysis" | "observation" | "portfolio";
+export type AnalyticsTableVariant =
+  "default" | "analysis" | "observation" | "portfolio";
 
 type AnalyticsTableState = {
   title: string;
@@ -65,6 +66,7 @@ export default function AnalyticsTable({
   variant = "default",
   emptyState,
   loadingState,
+  scrollRegionLabel,
 }: {
   ariaLabel: string;
   columns: AnalyticsTableColumn[];
@@ -76,9 +78,10 @@ export default function AnalyticsTable({
   variant?: AnalyticsTableVariant;
   emptyState?: AnalyticsTableState;
   loadingState?: AnalyticsTableState;
+  scrollRegionLabel?: string;
 }) {
   const hasRows = rows.length > 0;
-  const state = !hasRows ? loadingState ?? emptyState ?? null : null;
+  const state = !hasRows ? (loadingState ?? emptyState ?? null) : null;
   const headerCellSx = getHeaderCellSx(density);
   const bodyCellSx = getBodyCellSx(density);
   const footerCellSx = getFooterCellSx(density);
@@ -87,12 +90,15 @@ export default function AnalyticsTable({
     <TableContainer
       component={Paper}
       variant="outlined"
+      role={scrollRegionLabel ? "region" : undefined}
+      aria-label={scrollRegionLabel}
+      tabIndex={scrollRegionLabel ? 0 : undefined}
       className={cx(
         "analytics-table-frame",
         `analytics-table-density-${density}`,
         `analytics-table-variant-${variant}`,
         density === "compact" && "analytics-table-frame-dense",
-        className
+        className,
       )}
       sx={{
         borderRadius: `${lotusThemeTokens.radius.md}px`,
@@ -100,6 +106,14 @@ export default function AnalyticsTable({
         boxShadow: "none",
         bgcolor: lotusThemeTokens.color.surface.panel,
         overflow: "auto",
+        ...(scrollRegionLabel
+          ? {
+              "&:focus-visible": {
+                outline: "2px solid rgba(49, 93, 138, 0.78)",
+                outlineOffset: "2px",
+              },
+            }
+          : {}),
       }}
     >
       <Table
@@ -124,7 +138,7 @@ export default function AnalyticsTable({
                 className={cx(
                   "analytics-table-cell",
                   "analytics-table-head-cell",
-                  column.align === "right" && "analytics-table-cell-numeric"
+                  column.align === "right" && "analytics-table-cell-numeric",
                 )}
                 sx={headerCellSx}
               >
@@ -136,10 +150,17 @@ export default function AnalyticsTable({
         <TableBody>
           {state ? (
             <TableRow className="analytics-table-state-row">
-              <TableCell colSpan={Math.max(columns.length, 1)} className="analytics-table-state-cell">
+              <TableCell
+                colSpan={Math.max(columns.length, 1)}
+                className="analytics-table-state-cell"
+              >
                 <div className="analytics-table-state">
-                  <strong className="analytics-table-state-title">{state.title}</strong>
-                  <span className="analytics-table-state-body">{state.body}</span>
+                  <strong className="analytics-table-state-title">
+                    {state.title}
+                  </strong>
+                  <span className="analytics-table-state-body">
+                    {state.body}
+                  </span>
                 </div>
               </TableCell>
             </TableRow>
@@ -186,7 +207,8 @@ export default function AnalyticsTable({
                       className={cx(
                         "analytics-table-cell",
                         "analytics-table-body-cell",
-                        column?.align === "right" && "analytics-table-cell-numeric"
+                        column?.align === "right" &&
+                          "analytics-table-cell-numeric",
                       )}
                       sx={bodyCellSx}
                     >
@@ -210,7 +232,8 @@ export default function AnalyticsTable({
                     className={cx(
                       "analytics-table-cell",
                       "analytics-table-footer-cell",
-                      column?.align === "right" && "analytics-table-cell-numeric"
+                      column?.align === "right" &&
+                        "analytics-table-cell-numeric",
                     )}
                     sx={footerCellSx}
                   >

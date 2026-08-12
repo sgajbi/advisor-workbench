@@ -222,6 +222,98 @@ describe("portfolio record evidence view model", () => {
     );
   });
 
+  it("binds Cashflow evidence to the active projection instead of the server-seeded horizon", () => {
+    const workspace = buildPortfolioWorkspace({});
+    const activeOutlook = {
+      ...workspace.cashflow_outlook!,
+      projection_days: 30,
+      range_end_date: "2026-06-11",
+      upcoming_points: [
+        {
+          projection_date: "2026-05-13",
+          net_cashflow_base: 125_000,
+          projected_cumulative_cashflow_base: 125_000,
+        },
+        {
+          projection_date: "2026-05-18",
+          net_cashflow_base: -80_000,
+          projected_cumulative_cashflow_base: 45_000,
+        },
+        {
+          projection_date: "2026-06-04",
+          net_cashflow_base: 55_000,
+          projected_cumulative_cashflow_base: 100_000,
+        },
+      ],
+    };
+
+    const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+      screen: "cashflow",
+      workspace,
+      cashflowProjection: {
+        selectedHorizonDays: 30,
+        state: "ready",
+        snapshot: {
+          requestedHorizonDays: 30,
+          outlook: activeOutlook,
+          response: null,
+          warnings: [],
+          partialFailures: [],
+        },
+      },
+    });
+
+    expect(viewModel.status).toEqual({ label: "Ready", tone: "success" });
+    expect(viewModel.sourcePostureItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Projection Coverage",
+          detail: "3 projected points through 11 Jun 2026",
+          status: "Available",
+        }),
+        expect.objectContaining({
+          label: "Projection Basis",
+          detail: "2 inflows and 1 outflow in the returned forecast",
+          status: "30 days",
+        }),
+        expect.objectContaining({
+          label: "Cash Position",
+          source: "Booked cash",
+          detail: expect.stringContaining(
+            "projected movements are not applied as an ending balance",
+          ),
+        }),
+      ]),
+    );
+    expect(
+      viewModel.sourcePostureItems.find(
+        (item) => item.label === "Reporting Snapshot",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("keeps an unavailable selected Cashflow horizon explicit", () => {
+    const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+      screen: "cashflow",
+      workspace: buildPortfolioWorkspace({}),
+      cashflowProjection: {
+        selectedHorizonDays: 90,
+        state: "unavailable",
+        snapshot: null,
+      },
+    });
+
+    expect(viewModel.status).toEqual({ label: "Unavailable", tone: "danger" });
+    expect(viewModel.sourcePostureItems[0]).toEqual(
+      expect.objectContaining({
+        source: "Projected movement source unavailable",
+        detail: "No 90-day projected cash movement is available for review",
+        status: "Unavailable",
+        tone: "danger",
+      }),
+    );
+  });
+
   it.each([
     {
       input: { status: "READY", generated_at_utc: null, row_count: 11 },
@@ -333,7 +425,7 @@ describe("portfolio record evidence view model", () => {
     });
   });
 
-  it("uses the same reporting posture on every Portfolio record screen", () => {
+  it("uses the same reporting posture on record screens where reporting is decision context", () => {
     const workspace = buildPortfolioWorkspace({});
     workspace.readiness.reporting = {
       status: "READY",
@@ -346,7 +438,6 @@ describe("portfolio record evidence view model", () => {
       "allocation",
       "transactions",
       "income",
-      "cashflow",
     ] as const) {
       const reporting = buildPortfolioRecordEvidenceRailViewModel({ screen, workspace })
         .sourcePostureItems.find((item) => item.label === "Reporting Snapshot");

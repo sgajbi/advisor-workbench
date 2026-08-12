@@ -10,6 +10,7 @@ import {
 } from "@/design-system";
 
 import type { PortfolioRecordScreenData } from "../portfolio-record-screen-data";
+import type { PortfolioRecordCashflowProjection } from "../portfolio-record-evidence-view-model";
 import {
   buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
@@ -27,22 +28,41 @@ export default function PortfolioRecordScreenShell({
   portfolioId,
   workspace,
   children,
+  cashflowProjection,
 }: PortfolioRecordScreenData & {
   screen: PortfolioRecordScreenKind;
   children?: ReactNode;
+  cashflowProjection?: PortfolioRecordCashflowProjection;
 }) {
   const copy = getPortfolioRecordScreenCopy(screen);
   const resolvedPortfolioId = portfolioId ?? "No portfolio";
-  const bookDisplayName = workspace ? buildPortfolioRecordDisplayName(workspace) : resolvedPortfolioId;
-  const headerKpis = workspace ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen) : [];
+  const bookDisplayName = workspace
+    ? buildPortfolioRecordDisplayName(workspace)
+    : resolvedPortfolioId;
+  const headerKpis = workspace
+    ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen)
+    : [];
 
   return (
     <PortfolioPageLayout>
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
         mainClassName="portfolio-main portfolio-record-screen-main"
-        rail={<PortfolioScreenRail portfolioId={resolvedPortfolioId} activeScreen={screen} />}
-        side={workspace ? <PortfolioRecordEvidenceRail screen={screen} workspace={workspace} /> : undefined}
+        rail={
+          <PortfolioScreenRail
+            portfolioId={resolvedPortfolioId}
+            activeScreen={screen}
+          />
+        }
+        side={
+          workspace ? (
+            <PortfolioRecordEvidenceRail
+              screen={screen}
+              workspace={workspace}
+              cashflowProjection={cashflowProjection}
+            />
+          ) : undefined
+        }
         sideClassName="portfolio-record-evidence-shell"
         main={
           <WorkbenchPageFrame
@@ -54,7 +74,8 @@ export default function PortfolioRecordScreenShell({
             <WorkbenchSectionStack className="portfolio-page-sections">
               {!workspace ? (
                 <DegradedStatePanel title="Portfolio records unavailable">
-                  The selected portfolio records are not available for this review.
+                  The selected portfolio records are not available for this
+                  review.
                 </DegradedStatePanel>
               ) : (
                 <>

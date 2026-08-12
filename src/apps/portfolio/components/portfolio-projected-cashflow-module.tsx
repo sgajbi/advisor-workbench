@@ -30,7 +30,10 @@ import { PortfolioProjectedCashflowPanel } from "./portfolio-chart-panels";
 import PortfolioModuleState from "./portfolio-module-state";
 import choiceStyles from "./portfolio-choice-groups.module.css";
 import styles from "./portfolio-projected-cashflow.module.css";
-import { usePortfolioProjectedCashflow } from "./use-portfolio-projected-cashflow";
+import {
+  usePortfolioProjectedCashflow,
+  type PortfolioProjectedCashflowController,
+} from "./use-portfolio-projected-cashflow";
 
 export default function PortfolioProjectedCashflowModule({
   portfolioId,
@@ -49,7 +52,6 @@ export default function PortfolioProjectedCashflowModule({
   initialPartialFailures: PortfolioPartialFailure[];
   defaultExpanded: boolean;
 }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
   const cashflow = usePortfolioProjectedCashflow({
     portfolioId,
     asOfDate,
@@ -57,6 +59,29 @@ export default function PortfolioProjectedCashflowModule({
     initialWarnings,
     initialPartialFailures,
   });
+
+  return (
+    <PortfolioProjectedCashflowModuleView
+      portfolioId={portfolioId}
+      baseCurrency={baseCurrency}
+      cashflow={cashflow}
+      defaultExpanded={defaultExpanded}
+    />
+  );
+}
+
+export function PortfolioProjectedCashflowModuleView({
+  portfolioId,
+  baseCurrency,
+  cashflow,
+  defaultExpanded,
+}: {
+  portfolioId: string;
+  baseCurrency: string;
+  cashflow: PortfolioProjectedCashflowController;
+  defaultExpanded: boolean;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const snapshot = cashflow.selectedSnapshot;
   const outlook = snapshot?.outlook ?? null;
   const movementRows = outlook ? buildCashflowMovementRows(outlook) : [];
@@ -78,7 +103,9 @@ export default function PortfolioProjectedCashflowModule({
 
     const rows = buildCashflowExportRows(snapshot, baseCurrency);
     const csv = [
-      ["Date", "Net projected movement", "Cumulative projected movement"].join(","),
+      ["Date", "Net projected movement", "Cumulative projected movement"].join(
+        ",",
+      ),
       ...rows.map((row) => row.map((value) => csvEscape(value)).join(",")),
     ].join("\n");
 
@@ -148,7 +175,11 @@ export default function PortfolioProjectedCashflowModule({
           body="Expected cash movements could not be retrieved for this horizon. No prior-horizon figures are being shown as current."
           hint="Retry the projection or continue with another available horizon."
           action={
-            <button type="button" className="portfolio-inline-action" onClick={cashflow.retry}>
+            <button
+              type="button"
+              className="portfolio-inline-action"
+              onClick={cashflow.retry}
+            >
               Retry projection
             </button>
           }
@@ -179,7 +210,12 @@ export default function PortfolioProjectedCashflowModule({
               title="Projection available with limitations"
               body="Some projection inputs were unavailable. Review the returned movement schedule with the source limitation in mind."
               hint={`${Math.max(snapshot.partialFailures.length, snapshot.warnings.length)} source limitation${
-                Math.max(snapshot.partialFailures.length, snapshot.warnings.length) === 1 ? "" : "s"
+                Math.max(
+                  snapshot.partialFailures.length,
+                  snapshot.warnings.length,
+                ) === 1
+                  ? ""
+                  : "s"
               } reported.`}
               why={buildSnapshotEvidence(snapshot.response)}
             />
@@ -203,7 +239,11 @@ export default function PortfolioProjectedCashflowModule({
               body="The server-seeded projection remains visible, but the projected cash movement source could not confirm its current support evidence."
               hint="Treat the figures as prior workspace evidence until the source refresh succeeds."
               action={
-                <button type="button" className="portfolio-inline-action" onClick={cashflow.retry}>
+                <button
+                  type="button"
+                  className="portfolio-inline-action"
+                  onClick={cashflow.retry}
+                >
                   Retry evidence refresh
                 </button>
               }
@@ -229,14 +269,20 @@ export default function PortfolioProjectedCashflowModule({
                 <>
                   <p className={styles.tableNote}>
                     Showing {movementRows.length} movement date
-                    {movementRows.length === 1 ? "" : "s"} from {outlook.upcoming_points.length}{" "}
-                    returned projection points. Export includes every returned point.
+                    {movementRows.length === 1 ? "" : "s"} from{" "}
+                    {outlook.upcoming_points.length} returned projection points.
+                    Export includes every returned point.
+                  </p>
+                  <p className={styles.scrollHint}>
+                    Swipe, or focus the schedule and use the arrow keys, to
+                    compare every column.
                   </p>
                   <AnalyticsTable
                     density="compact"
                     variant="portfolio"
                     className={`portfolio-analytics-table ${styles.table}`}
                     ariaLabel="Projected cash movement schedule"
+                    scrollRegionLabel="Projected cash movement schedule, horizontally scrollable"
                     columns={[
                       { key: "date", label: "Date" },
                       {
@@ -255,7 +301,10 @@ export default function PortfolioProjectedCashflowModule({
                       cells: [
                         formatDate(point.projection_date),
                         formatCurrency(point.net_cashflow_base, baseCurrency),
-                        formatCurrency(point.projected_cumulative_cashflow_base, baseCurrency),
+                        formatCurrency(
+                          point.projected_cumulative_cashflow_base,
+                          baseCurrency,
+                        ),
                       ],
                     }))}
                   />
@@ -277,7 +326,9 @@ export default function PortfolioProjectedCashflowModule({
   );
 }
 
-function buildFailureEvidence(response: PortfolioProjectedCashflowResponse | null) {
+function buildFailureEvidence(
+  response: PortfolioProjectedCashflowResponse | null,
+) {
   if (!response?.correlation_id) {
     return undefined;
   }
@@ -288,7 +339,9 @@ function buildFailureEvidence(response: PortfolioProjectedCashflowResponse | nul
   };
 }
 
-function buildSnapshotEvidence(response: PortfolioProjectedCashflowResponse | null) {
+function buildSnapshotEvidence(
+  response: PortfolioProjectedCashflowResponse | null,
+) {
   return buildFailureEvidence(response);
 }
 

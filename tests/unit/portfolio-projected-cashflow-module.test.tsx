@@ -292,7 +292,7 @@ describe("PortfolioProjectedCashflowModule", () => {
     });
 
     expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent("-750 USD");
-    expect(screen.getAllByText("Dated detail unavailable")).toHaveLength(2);
+    expect(screen.getAllByText("Dated detail unavailable")).toHaveLength(3);
     expect(screen.queryByText("No outflow")).not.toBeInTheDocument();
     expect(screen.getByText("Dated movement schedule unavailable")).toBeInTheDocument();
     expect(screen.queryByText("No projected cash movement")).not.toBeInTheDocument();
@@ -313,6 +313,31 @@ describe("PortfolioProjectedCashflowModule", () => {
       screen.getByText(
         "Showing 2 movement dates from 4 returned projection points. Export includes every returned point."
       )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Projected Inflows").closest("div"),
+    ).toHaveTextContent("500 USD");
+    expect(
+      screen.getByText("Projected Outflows").closest("div"),
+    ).toHaveTextContent("-250 USD");
+    expect(
+      screen.getByText("Largest Outflow").closest("div"),
+    ).toHaveTextContent("-250 USD");
+    expect(
+      screen.queryByText("Horizon", { exact: true }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Cash movement chart key")).toHaveTextContent(
+      "Bars: dated movementLine: cumulative movement",
+    );
+    expect(
+      screen.getByRole("region", {
+        name: "Projected cash movement schedule, horizontally scrollable",
+      }),
+    ).toHaveAttribute("tabindex", "0");
+    expect(
+      screen.getByText(
+        "Swipe, or focus the schedule and use the arrow keys, to compare every column.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(3);
   });

@@ -1,9 +1,15 @@
 "use client";
 
-import { ActionLink, SemanticBadge, Text, WorkbenchRailCard } from "@/design-system";
+import {
+  ActionLink,
+  SemanticBadge,
+  Text,
+  WorkbenchRailCard,
+} from "@/design-system";
 
 import {
   buildPortfolioRecordEvidenceRailViewModel,
+  type PortfolioRecordCashflowProjection,
   type PortfolioRecordSourcePosture,
 } from "../portfolio-record-evidence-view-model";
 import type { PortfolioRecordScreenKind } from "../portfolio-record-screen-view-model";
@@ -12,25 +18,40 @@ import type { PortfolioWorkspace } from "../types";
 export default function PortfolioRecordEvidenceRail({
   screen,
   workspace,
+  cashflowProjection,
 }: {
   screen: PortfolioRecordScreenKind;
   workspace: PortfolioWorkspace;
+  cashflowProjection?: PortfolioRecordCashflowProjection;
 }) {
-  const viewModel = buildPortfolioRecordEvidenceRailViewModel({ screen, workspace });
+  const viewModel = buildPortfolioRecordEvidenceRailViewModel({
+    screen,
+    workspace,
+    cashflowProjection,
+  });
 
   return (
-    <div className="portfolio-record-evidence-rail" aria-label="Portfolio record data governance">
+    <div
+      className="portfolio-record-evidence-rail"
+      aria-label="Portfolio record data governance"
+    >
       <WorkbenchRailCard className="portfolio-record-evidence-card">
         <div className="portfolio-record-evidence-header">
           <div>
             <Text variant="label">Review Evidence</Text>
             <Text variant="cardTitle">Data Readiness</Text>
           </div>
-          <SemanticBadge tone={viewModel.status.tone}>{viewModel.status.label}</SemanticBadge>
+          <SemanticBadge tone={viewModel.status.tone}>
+            {viewModel.status.label}
+          </SemanticBadge>
         </div>
         <div className="portfolio-record-evidence-context">
           {viewModel.facts.map((fact) => (
-            <EvidenceFact key={fact.label} label={fact.label} value={fact.value} />
+            <EvidenceFact
+              key={fact.label}
+              label={fact.label}
+              value={fact.value}
+            />
           ))}
         </div>
       </WorkbenchRailCard>
