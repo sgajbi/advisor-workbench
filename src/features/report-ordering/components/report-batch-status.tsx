@@ -16,6 +16,7 @@ export function ReportBatchStatusPanel({
 }) {
   const summary = status ? buildBatchSummary(status) : null;
   const lifecycle = status ? batchLifecycle(status.status) : null;
+  const supportPosture = status ? batchSupportPosture(status) : null;
   return (
     <SectionBlock
       title="Portfolio bundle progress"
@@ -61,6 +62,15 @@ export function ReportBatchStatusPanel({
             </div>
           </div>
         ) : null}
+        {supportPosture ? (
+          <div aria-label="Portfolio bundle support posture">
+            <ScreenStatePanel
+              kind={supportPosture.kind}
+              title={supportPosture.title}
+              body={supportPosture.body}
+            />
+          </div>
+        ) : null}
         <AnalyticsTable
           ariaLabel="Portfolio report bundle outcomes"
           density="compact"
@@ -102,6 +112,51 @@ export function ReportBatchStatusPanel({
       )}
     </SectionBlock>
   );
+}
+
+function batchSupportPosture(status: ReportBatchStatus) {
+  const renderState = status.render_supportability?.state.toLocaleLowerCase();
+  const requestedOutputUnsupported = Boolean(
+    status.render_supportability &&
+    status.requested_output_formats.some(
+      (outputFormat) => !status.render_supportability?.supported_output_formats.includes(outputFormat),
+    ),
+  );
+  if (
+    renderState === "unavailable" ||
+    status.render_supportability?.deterministic_output_supported === false ||
+    requestedOutputUnsupported
+  ) {
+    return {
+      kind: "unavailable" as const,
+      title: "Requested output unavailable",
+      body: "Portfolio report data may be complete, but Reporting cannot currently create the requested governed output. Refresh after output services recover; nothing has been archived or delivered.",
+    };
+  }
+  if (renderState === "degraded") {
+    return {
+      kind: "partial" as const,
+      title: "Requested output has limitations",
+      body: "Portfolio report data may be complete, but the source reports limitations in governed output creation. Review the requested format and refresh before relying on a document.",
+    };
+  }
+
+  const reportingState = status.supportability?.state.toLocaleLowerCase();
+  if (reportingState === "unavailable") {
+    return {
+      kind: "unavailable" as const,
+      title: "Reporting support unavailable",
+      body: "The source cannot currently confirm full reporting support for this bundle. Keep the portfolio outcomes for review and refresh before taking any document action.",
+    };
+  }
+  if (reportingState === "degraded") {
+    return {
+      kind: "partial" as const,
+      title: "Reporting support has limitations",
+      body: "The source reports limited support for this bundle. Review portfolio outcomes and refresh before relying on the report pack as complete.",
+    };
+  }
+  return null;
 }
 
 function batchLifecycle(status: ReportBatchStatus["status"]) {
