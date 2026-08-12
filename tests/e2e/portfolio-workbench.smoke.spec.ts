@@ -565,15 +565,23 @@ test.describe('Portfolio workbench smoke', () => {
 
     const viewportEvidence = [];
     for (const viewport of [
-      { width: 1440, height: 1100 },
-      { width: 1024, height: 1000 },
-      { width: 768, height: 1024 },
-      { width: 519, height: 900 },
+      { width: 1440, height: 1100, expectedMetricColumns: 4 },
+      { width: 1024, height: 1000, expectedMetricColumns: 4 },
+      { width: 768, height: 1024, expectedMetricColumns: 3 },
+      { width: 519, height: 900, expectedMetricColumns: 2 },
     ]) {
       await page.setViewportSize(viewport);
       await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible();
       await expect(page.getByRole('table', { name: 'Booked income by type' })).toBeVisible();
       await expect(page.getByRole('table', { name: 'Booked cash movements by type' })).toBeVisible();
+      for (const metricStrip of [incomeSummary, movementSummary]) {
+        const metricLayout = await measureGrid(metricStrip);
+        expect(metricLayout.childCount).toBe(4);
+        expect(metricLayout.columns.split(' ').filter(Boolean)).toHaveLength(
+          viewport.expectedMetricColumns,
+        );
+        expect(metricLayout.childWidths.every((width) => width > 100)).toBe(true);
+      }
       const measurements = await measureViewportEvidence(page);
       expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
         measurements.document.clientWidth + 1,
