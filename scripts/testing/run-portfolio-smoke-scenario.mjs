@@ -13,8 +13,15 @@ const workbenchPort = parseUnprivilegedPort(
   process.env.PORTFOLIO_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? '31020',
 );
 
-if (scenario !== 'cashflow' && scenario !== 'shell-unavailable' && scenario !== 'review-matrix') {
-  throw new Error('Portfolio smoke scenario must be cashflow, shell-unavailable, or review-matrix.');
+if (
+  scenario !== 'cashflow' &&
+  scenario !== 'shell-unavailable' &&
+  scenario !== 'review-matrix' &&
+  scenario !== 'positions-status'
+) {
+  throw new Error(
+    'Portfolio smoke scenario must be cashflow, shell-unavailable, review-matrix, or positions-status.',
+  );
 }
 if (fixturePort === workbenchPort) {
   throw new Error('Portfolio fixture and Workbench proof ports must be different.');
@@ -28,6 +35,8 @@ const evidenceDirectory = resolve(
       ? 'output/playwright/issue-651-shell-recovery'
       : scenario === 'review-matrix'
         ? 'output/playwright/issue-649-portfolio-review-matrix'
+        : scenario === 'positions-status'
+          ? 'output/playwright/issue-669-positions-status'
         : 'output/playwright/issue-492-cashflow'),
 );
 mkdirSync(evidenceDirectory, { recursive: true });
@@ -43,6 +52,8 @@ const child = spawn(
       ? 'selected shell failure reaches one truthful terminal recovery state'
       : scenario === 'review-matrix'
         ? 'portfolio review stays decision-focused and keeps detail work on dedicated screens'
+        : scenario === 'positions-status'
+          ? 'positions keep source status truthful across screen, export, and evidence'
         : 'cashflow route keeps projection identity and movement semantics explicit',
     ...forwardedArguments,
   ],
