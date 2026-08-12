@@ -485,6 +485,12 @@ Current repository posture:
     excluded from classified net cash movement until the source contract defines their direction.
     Do not infer direction from amount sign, gross-sum activity magnitudes as net cashflow, combine
     income and tax rows into one event count, or infer source readiness from non-zero bookings.
+    Its booked-record scope, classification-review posture, directional amounts, and exact-value
+    table treatment are owned by `portfolio-income-activity.module.css`; the shared
+    `WorkbenchSummaryMetricStrip` remains the only owner of responsive metric density. The owned
+    `income-activity` browser scenario must use a contract-valid Gateway fixture, exact business
+    values, raw-code absence, keyboard traversal, and 1440/1024/768/519 page-overflow proof. Do not
+    return feature selectors to global CSS or let a generic smoke depend on arbitrary upstream data.
 22. Portfolio Cashflow preserves the full Gateway projected-cashflow envelope and keys loading,
     ready, degraded, unavailable, retry, result, and export state by the explicit 10-, 30-, or
     90-day horizon. Workbench must not relabel one horizon's response as another or describe

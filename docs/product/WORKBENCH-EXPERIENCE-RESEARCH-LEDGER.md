@@ -696,6 +696,38 @@ nesting defect when metric cards were wrapped by tooltips; the shared component 
 coverage were corrected for every consumer. Cross-screen narrow-navigation and reporting-source
 posture findings are tracked separately in #426 and #427.
 
+### Slice 2 — owned certification, dense metric composition, and operating guide
+
+GitHub issue #674 governs the certification tranche. A duplicate search confirmed that #425 owns
+the completed business model, #492 the wider CSS-decomposition campaign, and #605 the complete
+screen-guide programme; none owned deterministic populated Income proof. The first owned fixture
+run exposed a real contract gap in the test boundary: the generic fixture returned only a reporting
+currency, so server rendering failed when the required booked-income totals were absent. The new
+scenario publishes a complete current Gateway shape for `PB_SG_GLOBAL_BAL_001` and asserts the
+gross-to-net bridge, classified cash direction, unknown-bucket exclusion, exact rows, and absence of
+raw source codes.
+
+Populated visual review then found that page-local metric CSS declared columns without owning grid
+display. Four summary cards therefore stacked into oversized blocks and pushed decision evidence
+several screens below the fold. The correction reuses the default responsive
+`WorkbenchSummaryMetricStrip`, producing four/four/three/two columns at 1440/1024/768/519 px. The
+feature's booked-scope note, classification posture, table width, and directional amount treatment
+now live in one colocated CSS Module. Ineffective duplicated metric breakpoints were removed, the
+legacy global budget was lowered exactly, and the retired selector prefix cannot return.
+
+Official BlackRock Aladdin Wealth/accounting, Avaloq investment-management, Temenos wealth,
+SWIFT securities-flow, and Salesforce financial-history material was reviewed for #674. Lotus
+adopts booked-history-first language, gross-to-net explanation, exact supporting rows, factual
+classification exceptions, and compact chronological review. It rejects competitor copying,
+decorative card mosaics, unsupported forecast or tax authority, direct source calls, and a new UI
+framework. The result is evaluated through business usefulness and measurable evidence, not an
+unsupported claim of competitor superiority.
+
+The complete Income And Activity guide now explains purpose, roles, workflow position, source
+authority, independent module states, recovery, adjacent handoffs, keyboard/table behavior, and
+non-goals. Shared API and operations inventories remain linked rather than copied. The governed
+screen registry moves from five to six mapped guides and from 31 to 30 exceptions.
+
 ### Validation record
 
 1. Focused income/activity view-model, workspace, record-header, record-screen, chart-regression,
@@ -726,10 +758,11 @@ posture findings are tracked separately in #426 and #427.
 
 ### Publication decision
 
-No repo wiki change is required for this slice. It corrects and composes an already supported
-Income screen without changing a Gateway contract, supported-feature claim, operator command, or
-canonical runtime flow. The repository engineering context records the reusable activity-direction
-rule; #426 and #427 preserve the cross-screen follow-up work.
+The original #425 slice required no wiki change. Issue #674 does: it closes the explicit #605
+Income And Activity guide exception and changes durable CSS ownership and browser-proof truth. The
+repo-local guide, registry, catalogue, Home, Sidebar, architecture guidance, repository context,
+and review ledger therefore change together. Publish the authored wiki source only after merge and
+verify strict source/publication parity before closure.
 
 ## Cashflow Review
 
