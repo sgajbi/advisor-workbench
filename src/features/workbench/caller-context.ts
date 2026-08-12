@@ -315,6 +315,7 @@ export function applyReportOrderingRouteCallerContextHeaders(
   }
 
   const usesAdvisorBookBatchPrincipal =
+    (request.method === "GET" && request.upstreamPath === "api/v1/report-ordering/options") ||
     (request.method === "POST" && request.upstreamPath === "api/v1/report-batches") ||
     (request.method === "GET" && /^api\/v1\/report-batches\/[^/]+$/.test(request.upstreamPath));
   const context = usesAdvisorBookBatchPrincipal

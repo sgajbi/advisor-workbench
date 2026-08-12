@@ -1110,6 +1110,11 @@ describe("BFF proxy route", () => {
   });
 
   it("derives report-ordering authority at the BFF instead of trusting browser headers", async () => {
+    process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID = "RM_CH_007";
+    process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID = "tenant-ch";
+    process.env.WORKBENCH_ADVISOR_BOOK_REGION = "EMEA";
+    process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
+    process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
 
@@ -1138,13 +1143,14 @@ describe("BFF proxy route", () => {
 
     expect(response.status).toBe(200);
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
-    expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
-    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
-    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
-    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("RM_CH_007");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
+    expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
+    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
     expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
