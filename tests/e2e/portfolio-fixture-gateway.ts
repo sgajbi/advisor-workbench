@@ -7,6 +7,7 @@ const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
 export type PortfolioFixtureScenario =
   | 'cashflow'
+  | 'income-activity'
   | 'shell-unavailable'
   | 'positions-status'
   | 'transactions-status';
@@ -103,12 +104,22 @@ export async function startPortfolioFixtureGateway({
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/income-summary`) {
-      sendJson(response, { reporting_currency: 'USD' });
+      sendJson(
+        response,
+        scenario === 'income-activity'
+          ? buildIncomeSummaryResponse()
+          : { reporting_currency: 'USD' }
+      );
       return;
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/activity-summary`) {
-      sendJson(response, { reporting_currency: 'USD', buckets: [] });
+      sendJson(
+        response,
+        scenario === 'income-activity'
+          ? buildActivitySummaryResponse()
+          : { reporting_currency: 'USD', buckets: [] }
+      );
       return;
     }
 
@@ -156,6 +167,78 @@ export async function startPortfolioFixtureGateway({
     port,
     close: () => close(server),
     getWorkspaceRequestCount: () => workspaceRequestCount,
+  };
+}
+
+function buildIncomeSummaryResponse() {
+  return {
+    correlation_id: 'corr-income-activity-income',
+    contract_version: 'v1',
+    portfolio_id: PORTFOLIO_ID,
+    reporting_currency: 'USD',
+    window_start_date: '2026-03-12',
+    window_end_date: AS_OF_DATE,
+    totals_requested_window: buildIncomePeriod(12_000, 1_200, 300, 10_500, 3),
+    totals_year_to_date: buildIncomePeriod(30_000, 3_000, 500, 26_500, 8),
+    income_types: [
+      {
+        income_type: 'DIVIDEND',
+        requested_window: buildIncomePeriod(8_000, 1_000, 0, 7_000, 2),
+        year_to_date: buildIncomePeriod(20_000, 2_500, 0, 17_500, 5),
+      },
+      {
+        income_type: 'INTEREST',
+        requested_window: buildIncomePeriod(4_000, 200, 300, 3_500, 1),
+        year_to_date: buildIncomePeriod(10_000, 500, 500, 9_000, 3),
+      },
+    ],
+  };
+}
+
+function buildActivitySummaryResponse() {
+  return {
+    correlation_id: 'corr-income-activity-movements',
+    contract_version: 'v1',
+    portfolio_id: PORTFOLIO_ID,
+    reporting_currency: 'USD',
+    window_start_date: '2026-03-12',
+    window_end_date: AS_OF_DATE,
+    buckets: [
+      buildActivityBucket('INFLOWS', 100_000, 150_000, 1),
+      buildActivityBucket('OUTFLOWS', 25_000, 40_000, 1),
+      buildActivityBucket('FEES', 1_000, 2_500, 1),
+      buildActivityBucket('TAXES', 500, 1_500, 2),
+      buildActivityBucket('CORPORATE_ACTIONS', 2_000, 3_000, 1),
+    ],
+  };
+}
+
+function buildIncomePeriod(
+  gross: number,
+  withholdingTax: number,
+  otherDeductions: number,
+  net: number,
+  transactionCount: number
+) {
+  return {
+    gross: { reporting_currency_amount: gross, transaction_count: transactionCount },
+    withholding_tax: {
+      reporting_currency_amount: withholdingTax,
+      transaction_count: transactionCount,
+    },
+    other_deductions: {
+      reporting_currency_amount: otherDeductions,
+      transaction_count: transactionCount,
+    },
+    net: { reporting_currency_amount: net, transaction_count: transactionCount },
+  };
+}
+
+function buildActivityBucket(bucket: string, requested: number, yearToDate: number, count: number) {
+  return {
+    bucket,
+    requested_window: { reporting_currency_amount: requested, transaction_count: count },
+    year_to_date: { reporting_currency_amount: yearToDate, transaction_count: count },
   };
 }
 

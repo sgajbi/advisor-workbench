@@ -24,6 +24,7 @@ test.beforeAll(async () => {
   const scenario = process.env.PORTFOLIO_E2E_FIXTURE;
   if (
     scenario !== 'cashflow' &&
+    scenario !== 'income-activity' &&
     scenario !== 'shell-unavailable' &&
     scenario !== 'positions-status' &&
     scenario !== 'transactions-status'
@@ -520,6 +521,93 @@ test.describe('Portfolio workbench smoke', () => {
     const incomeMetricStrip = await measureGrid(page.locator('.portfolio-income-activity-metrics').first());
     expect(incomeMetricStrip.childCount).toBe(4);
     expect(incomeMetricStrip.width).toBeGreaterThan(900);
+  });
+
+  test('income and activity keeps booked cash evidence truthful across governed viewports', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'income-activity',
+      'This deterministic booked-cash review runs only in its owned proof scenario.',
+    );
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const session = await openIncomePortfolio(page, request);
+    expect(session).toEqual({ portfolioId: 'PB_SG_GLOBAL_BAL_001', available: true });
+
+    await expect(page.getByText('Booked records only')).toBeVisible();
+    const incomeSummary = page.getByLabel('Booked income summary');
+    await expect(incomeSummary.getByText('12,000 USD', { exact: true })).toBeVisible();
+    await expect(incomeSummary.getByText('1,500 USD', { exact: true })).toBeVisible();
+    await expect(incomeSummary.getByText('10,500 USD', { exact: true })).toBeVisible();
+    await expect(incomeSummary.getByText('26,500 USD', { exact: true })).toBeVisible();
+
+    const incomeTable = page.getByRole('table', { name: 'Booked income by type' });
+    await expect(incomeTable.getByText('Dividend income', { exact: true })).toBeVisible();
+    await expect(incomeTable.getByText('Interest income', { exact: true })).toBeVisible();
+
+    const movementSummary = page.getByLabel('Booked cash movement summary');
+    await expect(movementSummary.getByText('100,000 USD', { exact: true })).toBeVisible();
+    await expect(movementSummary.getByText('26,500 USD', { exact: true })).toBeVisible();
+    await expect(movementSummary.getByText('73,500 USD', { exact: true })).toBeVisible();
+    await expect(movementSummary.getByText('6.00%', { exact: true })).toBeVisible();
+
+    const movementTable = page.getByRole('table', { name: 'Booked cash movements by type' });
+    await expect(movementTable.getByText('Subscriptions and transfers in')).toBeVisible();
+    await expect(movementTable.getByText('Withdrawals and transfers out')).toBeVisible();
+    await expect(movementTable.getByText('-25,000 USD', { exact: true })).toBeVisible();
+    await expect(movementTable.getByText('Other activity · Corporate Actions')).toBeVisible();
+    await expect(movementTable.getByText('Excluded from net')).toBeVisible();
+    await expect(page.getByText('Classification review')).toBeVisible();
+    for (const sourceCode of ['INFLOWS', 'OUTFLOWS', 'FEES', 'TAXES', 'CORPORATE_ACTIONS']) {
+      await expect(page.getByText(sourceCode, { exact: true })).toHaveCount(0);
+    }
+
+    const viewportEvidence = [];
+    for (const viewport of [
+      { width: 1440, height: 1100 },
+      { width: 1024, height: 1000 },
+      { width: 768, height: 1024 },
+      { width: 519, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible();
+      await expect(page.getByRole('table', { name: 'Booked income by type' })).toBeVisible();
+      await expect(page.getByRole('table', { name: 'Booked cash movements by type' })).toBeVisible();
+      const measurements = await measureViewportEvidence(page);
+      expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
+        measurements.document.clientWidth + 1,
+      );
+      viewportEvidence.push({ viewport, measurements });
+    }
+
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: resolve(evidenceDirectory, 'diagnostic-income-activity-booked-cash.png'),
+        fullPage: true,
+      });
+      await writeFile(
+        resolve(evidenceDirectory, 'income-activity-proof.json'),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            reportingCurrency: 'USD',
+            grossIncome: 12_000,
+            netIncome: 10_500,
+            classifiedNetMovement: 73_500,
+            excludedMovement: 2_000,
+            rawSourceCodesVisible: false,
+            viewports: viewportEvidence,
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+    }
   });
 
   test('cashflow route keeps projection identity and movement semantics explicit', async ({

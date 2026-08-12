@@ -16,6 +16,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(packageJson.scripts["test:e2e:portfolio:cashflow"]).toContain(
       "run-portfolio-smoke-scenario.mjs cashflow",
     );
+    expect(packageJson.scripts["test:e2e:portfolio:income-activity"]).toContain(
+      "run-portfolio-smoke-scenario.mjs income-activity",
+    );
     expect(packageJson.scripts["test:e2e:portfolio:unavailable"]).toContain(
       "run-portfolio-smoke-scenario.mjs shell-unavailable",
     );
@@ -46,10 +49,13 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("child.kill(signal)");
   });
 
-  it("runs only the five governed Portfolio browser scenarios", () => {
+  it("runs only the six governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit'",
+    );
+    expect(source).toContain(
+      "'income and activity keeps booked cash evidence truthful across governed viewports'",
     );
     expect(source).toContain(
       "'selected shell failure reaches one truthful terminal recovery state'",
@@ -64,6 +70,7 @@ describe("Portfolio smoke scenario runner", () => {
       "'transactions keep settlement applicability truthful across screen, detail, export, and evidence'",
     );
     expect(source).toContain("scenario !== 'review-matrix'");
+    expect(source).toContain("scenario !== 'income-activity'");
     expect(source).toContain("scenario !== 'shell-unavailable'");
     expect(source).toContain("scenario !== 'positions-status'");
     expect(source).toContain("scenario !== 'transactions-status'");

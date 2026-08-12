@@ -15,13 +15,14 @@ const workbenchPort = parseUnprivilegedPort(
 
 if (
   scenario !== 'cashflow' &&
+  scenario !== 'income-activity' &&
   scenario !== 'shell-unavailable' &&
   scenario !== 'review-matrix' &&
   scenario !== 'positions-status' &&
   scenario !== 'transactions-status'
 ) {
   throw new Error(
-    'Portfolio smoke scenario must be cashflow, shell-unavailable, review-matrix, positions-status, or transactions-status.',
+    'Portfolio smoke scenario must be cashflow, income-activity, shell-unavailable, review-matrix, positions-status, or transactions-status.',
   );
 }
 if (fixturePort === workbenchPort) {
@@ -34,6 +35,8 @@ const evidenceDirectory = resolve(
   process.env.PORTFOLIO_E2E_EVIDENCE_DIR ??
     (scenario === 'shell-unavailable'
       ? 'output/playwright/issue-651-shell-recovery'
+      : scenario === 'income-activity'
+        ? 'output/playwright/issue-674-income-activity'
       : scenario === 'review-matrix'
         ? 'output/playwright/issue-649-portfolio-review-matrix'
         : scenario === 'positions-status'
@@ -53,6 +56,8 @@ const child = spawn(
     '--grep',
     scenario === 'shell-unavailable'
       ? 'selected shell failure reaches one truthful terminal recovery state'
+      : scenario === 'income-activity'
+        ? 'income and activity keeps booked cash evidence truthful across governed viewports'
       : scenario === 'review-matrix'
         ? 'portfolio review stays decision-focused and keeps detail work on dedicated screens'
         : scenario === 'positions-status'
