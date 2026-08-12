@@ -163,7 +163,7 @@ export function buildTransactionDrawer(
         value: formatCurrency(row.grossAmount, row.transactionCurrency ?? baseCurrency),
       },
       { label: "Net Cost", value: formatCurrency(row.netCostBase, baseCurrency) },
-      { label: "Status", value: formatStatus(row.status) },
+      { label: "Settlement status", value: row.settlementState.label },
     ],
     tabs: [
       {
@@ -191,10 +191,10 @@ export function buildTransactionDrawer(
         content: renderDrawerDefinitionList([
           ["Trade Date", formatDate(row.tradeDate)],
           ["Settlement Date", formatDate(row.settleDate)],
-          ["Status", formatStatus(row.status)],
+          ["Settlement status", row.settlementState.label],
           [
             "Component Type",
-            row.componentType ? formatStatus(row.componentType) : "N/A",
+            row.componentType ? formatStatus(row.componentType) : "Not reported",
           ],
           ["FX Contract ID", row.raw.fx_contract_id ?? "N/A"],
           ["Swap Event ID", row.raw.swap_event_id ?? "N/A"],

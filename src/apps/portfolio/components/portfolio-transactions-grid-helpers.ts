@@ -1,5 +1,9 @@
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { formatDate, formatStatus } from "../formatters";
+import {
+  buildPortfolioTransactionSettlementState,
+  type PortfolioTransactionSettlementState,
+} from "../portfolio-transaction-settlement-view-model";
 
 export type TransactionRow = {
   transactionId: string;
@@ -15,7 +19,7 @@ export type TransactionRow = {
   netCostBase: number | null;
   realizedGainLossBase: number | null;
   priceCurrency: string;
-  status: string;
+  settlementState: PortfolioTransactionSettlementState;
   componentType: string | null;
   sourceSystem: string | null;
   raw: PortfolioTransactionView;
@@ -131,18 +135,11 @@ export function buildTransactionRows(
     netCostBase: transaction.net_cost_base ?? null,
     realizedGainLossBase: transaction.realized_gain_loss_base ?? null,
     priceCurrency: transaction.currency ?? baseCurrency,
-    status: formatStatus(transaction.settlement_status),
+    settlementState: buildPortfolioTransactionSettlementState(transaction),
     componentType: transaction.component_type ? formatStatus(transaction.component_type) : null,
     sourceSystem: transaction.source_system ? formatStatus(transaction.source_system) : null,
     raw: transaction,
   }));
-}
-
-export function countTransactionsNeedingSettlementReview(rows: TransactionRow[]): number {
-  return rows.filter((row) => {
-    const status = row.status.trim().toUpperCase();
-    return status !== "SETTLED";
-  }).length;
 }
 
 export function formatTransactionLedgerCoverage(params: {
@@ -173,7 +170,7 @@ export function buildTransactionExportRows(rows: TransactionRow[], baseCurrency:
     "Gross Amount": row.grossAmount ?? "",
     [`Net Cost (${baseCurrency})`]: row.netCostBase ?? "",
     [`Realized P&L (${baseCurrency})`]: row.realizedGainLossBase ?? "",
-    Status: row.status,
+    "Settlement Status": row.settlementState.label,
     Component: row.componentType ?? "",
     Source: row.sourceSystem ?? "",
   }));

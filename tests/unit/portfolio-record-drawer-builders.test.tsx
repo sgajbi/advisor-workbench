@@ -109,7 +109,12 @@ describe("portfolio record drawer builders", () => {
       netCostBase: 9000,
       realizedGainLossBase: 120,
       priceCurrency: "EUR",
-      status: "Settled",
+      settlementState: {
+        kind: "settled",
+        label: "Settled",
+        tone: "clear",
+        applicable: true,
+      },
       componentType: "Trade",
       sourceSystem: "Core",
       raw: {

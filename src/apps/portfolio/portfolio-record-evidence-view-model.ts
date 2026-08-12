@@ -1,6 +1,7 @@
 import { formatCount, formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
 import { buildPortfolioPositionStateSummary } from "./portfolio-position-state-view-model";
+import { buildPortfolioTransactionSettlementSummary } from "./portfolio-transaction-settlement-view-model";
 import type { PortfolioWorkspace } from "./types";
 
 export type PortfolioRecordEvidenceTone = "default" | "success" | "warn" | "danger";
@@ -309,16 +310,15 @@ function buildTransactionSourcePosture(
   workspace: PortfolioWorkspace
 ): PortfolioRecordSourcePosture[] {
   const transactionCount = workspace.recent_transactions.length;
-  const settledCount = workspace.recent_transactions.filter(
-    (transaction) => transaction.settlement_status?.toUpperCase() === "SETTLED"
-  ).length;
+  const settlement = buildPortfolioTransactionSettlementSummary(
+    workspace.recent_transactions,
+  );
   const componentCount = new Set(
     workspace.recent_transactions
       .map((transaction) => transaction.component_type)
       .filter((value): value is string => Boolean(value))
   ).size;
   const sourceSystems = uniqueSourceSystems(workspace);
-  const allSettled = transactionCount > 0 && settledCount === transactionCount;
 
   return [
     {
@@ -331,9 +331,9 @@ function buildTransactionSourcePosture(
     {
       label: "Settlement",
       source: "Ledger settlement state",
-      detail: `${formatCount(settledCount, "settled event")} of ${formatCount(transactionCount, "event")}`,
-      tone: allSettled ? "success" : transactionCount ? "warn" : "default",
-      status: allSettled ? "Matched" : transactionCount ? "Review" : "N/A",
+      detail: settlement.detail,
+      tone: settlement.tone,
+      status: settlement.status,
     },
     {
       label: "Components",
@@ -342,7 +342,7 @@ function buildTransactionSourcePosture(
         ? `${formatCount(componentCount, "component type")} represented in the current window`
         : "No transaction component mix returned for the current window",
       tone: componentCount ? "success" : "default",
-      status: componentCount ? "Validated" : "N/A",
+      status: componentCount ? "Available" : "Empty",
     },
     buildReportingSourcePosture(workspace),
   ];

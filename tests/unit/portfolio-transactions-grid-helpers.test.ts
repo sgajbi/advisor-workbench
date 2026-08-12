@@ -5,7 +5,6 @@ import {
   buildTransactionFilterOptions,
   buildTransactionLedgerQuery,
   buildTransactionRows,
-  countTransactionsNeedingSettlementReview,
   formatTransactionLedgerCoverage,
   shouldReuseInitialTransactions,
 } from "../../src/apps/portfolio/components/portfolio-transactions-grid-helpers";
@@ -155,7 +154,12 @@ describe("portfolio transactions grid helpers", () => {
         netCostBase: 9000,
         realizedGainLossBase: 120,
         priceCurrency: "EUR",
-        status: "Settled",
+        settlementState: {
+          kind: "settled",
+          label: "Settled",
+          tone: "clear",
+          applicable: true,
+        },
       },
       {
         transactionId: "TX_2",
@@ -164,10 +168,14 @@ describe("portfolio transactions grid helpers", () => {
         transactionCurrency: null,
         netCostBase: null,
         priceCurrency: "USD",
-        status: "Pending",
+        settlementState: {
+          kind: "review_required",
+          label: "Review required",
+          tone: "warn",
+          applicable: true,
+        },
       },
     ]);
-    expect(countTransactionsNeedingSettlementReview(rows)).toBe(1);
     expect(buildTransactionExportRows(rows, "USD")[0]).toEqual({
       "Trade Date": "20 Mar 2026",
       "Settle Date": "24 Mar 2026",
@@ -179,7 +187,7 @@ describe("portfolio transactions grid helpers", () => {
       "Gross Amount": 8500,
       "Net Cost (USD)": 9000,
       "Realized P&L (USD)": 120,
-      Status: "Settled",
+      "Settlement Status": "Settled",
       Component: "Trade",
       Source: "Core Ledger",
     });
@@ -197,13 +205,23 @@ describe("portfolio transactions grid helpers", () => {
     ).toBe("401–450 of 450 ledger entries");
   });
 
-  it("keeps unavailable settlement state in the visible review count", () => {
-    const [row] = buildTransactionRows(
+  it("keeps missing settlement state explicit without manufacturing an exception", () => {
+    const rows = buildTransactionRows(
       [
         {
-          transaction_id: "TX_UNKNOWN",
+          transaction_id: "TX_NOT_REPORTED",
           transaction_date: "2026-03-20T00:00:00Z",
           transaction_type: "BUY",
+          component_type: "FX_CASH_SETTLEMENT_BUY",
+          security_id: "EQ_1",
+          instrument_id: "AAPL",
+          quantity: 1,
+        },
+        {
+          transaction_id: "TX_NOT_APPLICABLE",
+          transaction_date: "2026-03-20T00:00:00Z",
+          transaction_type: "BUY",
+          component_type: "TRADE",
           security_id: "EQ_1",
           instrument_id: "AAPL",
           quantity: 1,
@@ -212,6 +230,13 @@ describe("portfolio transactions grid helpers", () => {
       "USD",
     );
 
-    expect(countTransactionsNeedingSettlementReview([row])).toBe(1);
+    expect(rows.map((row) => row.settlementState.label)).toEqual([
+      "Not reported",
+      "Not applicable",
+    ]);
+    expect(buildTransactionExportRows(rows, "USD").map((row) => row["Settlement Status"])).toEqual([
+      "Not reported",
+      "Not applicable",
+    ]);
   });
 });
