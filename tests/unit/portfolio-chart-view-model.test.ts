@@ -5,7 +5,7 @@ import {
   buildLinePath,
   buildProjectedCashflowChartModel,
   buildTopHoldingTooltip,
-  formatCashflowNetFlowTitle,
+  formatCashflowNetMovementTitle,
   formatCashflowPointTitle,
   roundSvg,
 } from "../../src/apps/portfolio/portfolio-chart-view-model";
@@ -23,12 +23,16 @@ describe("portfolio chart view model", () => {
     expect(model.areaPath).toMatch(/^M 28 164 L 28 /);
     expect(model.linePath).toMatch(/^M 28 /);
     expect(model.zeroLineY).toEqual(expect.any(Number));
-    expect(model.positiveFlowCount).toBe(2);
-    expect(model.negativeFlowCount).toBe(1);
-    expect(model.totalInflows).toBe(7_500);
-    expect(model.totalOutflows).toBe(-2_500);
-    expect(model.largestInflow?.projection_date).toBe("2026-05-13");
-    expect(model.largestOutflow?.projection_date).toBe("2026-05-12");
+    expect(model.positiveNetMovementCount).toBe(2);
+    expect(model.negativeNetMovementCount).toBe(1);
+    expect(model.totalPositiveNetMovement).toBe(7_500);
+    expect(model.totalNegativeNetMovement).toBe(-2_500);
+    expect(model.largestPositiveNetMovement?.projection_date).toBe(
+      "2026-05-13",
+    );
+    expect(model.largestNegativeNetMovement?.projection_date).toBe(
+      "2026-05-12",
+    );
     expect(model.focusPoint?.projection_date).toBe("2026-05-12");
     expect(model.flatCashflow).toBe(false);
   });
@@ -65,8 +69,8 @@ describe("portfolio chart view model", () => {
 
   it("formats chart labels and tooltips consistently", () => {
     const cashflowPoint = buildCashflowOutlook().upcoming_points[0];
-    expect(formatCashflowNetFlowTitle(cashflowPoint, "USD")).toBe(
-      "12 May 2026: net flow -2,500 USD",
+    expect(formatCashflowNetMovementTitle(cashflowPoint, "USD")).toBe(
+      "12 May 2026: net movement -2,500 USD",
     );
     expect(formatCashflowPointTitle(cashflowPoint, "USD")).toBe(
       "12 May 2026: cumulative projected movement -2,500 USD",

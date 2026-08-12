@@ -500,8 +500,10 @@ Current repository posture:
     projection dates, reporting currency, and booked/projected basis remain visible evidence.
     The selected-horizon controller belongs above both the movement module and record evidence rail;
     both must consume the same snapshot so a changed horizon cannot leave stale source posture
-    beside current figures. The first scan separates net movement, projected sources, projected
-    uses, and largest outflow. Current booked cash remains separate **Cash Position** context and
+    beside current figures. Because each returned point is already a dated net value, the first
+    scan separates total net movement, positive net movement, negative net movement, and the
+    largest dated negative movement; it must not relabel those derived figures as gross inflows,
+    gross outflows, sources, or uses. Current booked cash remains separate **Cash Position** context and
     must never be combined locally into an ending balance. Exact schedules use the reusable named,
     focusable `AnalyticsTable` scroll-region contract; feature layout remains owned by
     `portfolio-projected-cashflow.module.css`, not global CSS.

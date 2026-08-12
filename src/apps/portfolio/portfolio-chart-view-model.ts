@@ -34,12 +34,12 @@ export type PortfolioProjectedCashflowChartModel = {
   areaPath: string;
   linePath: string;
   zeroLineY: number | null;
-  positiveFlowCount: number;
-  negativeFlowCount: number;
-  totalInflows: number;
-  totalOutflows: number;
-  largestInflow: CashflowPoint | null;
-  largestOutflow: CashflowPoint | null;
+  positiveNetMovementCount: number;
+  negativeNetMovementCount: number;
+  totalPositiveNetMovement: number;
+  totalNegativeNetMovement: number;
+  largestPositiveNetMovement: CashflowPoint | null;
+  largestNegativeNetMovement: CashflowPoint | null;
   focusPoint: CashflowPoint | null;
   focusX: number;
   focusY: number;
@@ -66,17 +66,21 @@ export function buildProjectedCashflowChartModel(
   const maxValue = cumulativeMax + visualPadding;
   const range = Math.max(maxValue - minValue, 1);
   const maxFlow = Math.max(...flowValues.map((value) => Math.abs(value)), 1);
-  const positiveFlowCount = flowValues.filter((value) => value > 0).length;
-  const negativeFlowCount = flowValues.filter((value) => value < 0).length;
-  const totalInflows = flowValues.reduce(
+  const positiveNetMovementCount = flowValues.filter(
+    (value) => value > 0,
+  ).length;
+  const negativeNetMovementCount = flowValues.filter(
+    (value) => value < 0,
+  ).length;
+  const totalPositiveNetMovement = flowValues.reduce(
     (total, value) => total + (value > 0 ? value : 0),
     0,
   );
-  const totalOutflows = flowValues.reduce(
+  const totalNegativeNetMovement = flowValues.reduce(
     (total, value) => total + (value < 0 ? value : 0),
     0,
   );
-  const largestInflow = points.reduce<CashflowPoint | null>(
+  const largestPositiveNetMovement = points.reduce<CashflowPoint | null>(
     (largest, point) => {
       if (point.net_cashflow_base <= 0) {
         return largest;
@@ -87,7 +91,7 @@ export function buildProjectedCashflowChartModel(
     },
     null,
   );
-  const largestOutflow = points.reduce<CashflowPoint | null>(
+  const largestNegativeNetMovement = points.reduce<CashflowPoint | null>(
     (largest, point) => {
       if (point.net_cashflow_base >= 0) {
         return largest;
@@ -98,7 +102,11 @@ export function buildProjectedCashflowChartModel(
     },
     null,
   );
-  const focusPoint = largestOutflow ?? largestInflow ?? points.at(-1) ?? null;
+  const focusPoint =
+    largestNegativeNetMovement ??
+    largestPositiveNetMovement ??
+    points.at(-1) ??
+    null;
   const chartPoints = points.map((point, index) => {
     const x =
       points.length === 1 ? 28 : 28 + (index / (points.length - 1)) * 264;
@@ -157,18 +165,19 @@ export function buildProjectedCashflowChartModel(
     areaPath: buildAreaPath(chartPoints),
     linePath: buildLinePath(chartPoints),
     zeroLineY,
-    positiveFlowCount,
-    negativeFlowCount,
-    totalInflows,
-    totalOutflows,
-    largestInflow,
-    largestOutflow,
+    positiveNetMovementCount,
+    negativeNetMovementCount,
+    totalPositiveNetMovement,
+    totalNegativeNetMovement,
+    largestPositiveNetMovement,
+    largestNegativeNetMovement,
     focusPoint,
     focusX: focusChartPoint
       ? Math.min(Math.max(focusChartPoint.x + 8, 46), 222)
       : 152,
     focusY: focusChartPoint ? Math.max(focusChartPoint.y - 40, 12) : 24,
-    flatCashflow: positiveFlowCount === 0 && negativeFlowCount === 0,
+    flatCashflow:
+      positiveNetMovementCount === 0 && negativeNetMovementCount === 0,
   };
 }
 
@@ -223,11 +232,11 @@ export function formatCashflowPointTitle(
   )}`;
 }
 
-export function formatCashflowNetFlowTitle(
+export function formatCashflowNetMovementTitle(
   point: CashflowPoint,
   currency: string,
 ): string {
-  return `${formatDate(point.projection_date)}: net flow ${formatCurrency(
+  return `${formatDate(point.projection_date)}: net movement ${formatCurrency(
     point.net_cashflow_base,
     currency,
   )}`;

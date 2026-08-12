@@ -658,7 +658,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByLabel("Projected cashflow summary")).toHaveCount(0);
     await expect(
       page.getByRole("img", {
-        name: /Projected cash movement chart in USD; bars show dated movement and the line shows cumulative movement/i,
+        name: /Projected cash movement chart in USD; bars show dated net movement and the line shows cumulative movement/i,
       }),
     ).toBeVisible();
     await expect(page.getByRole("radio", { name: "10D" })).toHaveAttribute(
@@ -693,7 +693,7 @@ test.describe('Portfolio workbench smoke', () => {
       .locator(".portfolio-record-source-item")
       .filter({ hasText: "Projection Basis" });
     await expect(projectionEvidence).toContainText("30 days");
-    await expect(projectionEvidence).toContainText("2 inflows and 1 outflow");
+    await expect(projectionEvidence).toContainText("2 positive movement dates and 1 negative movement date");
     await expect(projectionEvidence).not.toContainText("10 days");
     await expect(
       page.getByText("Cash Position", { exact: true }),
@@ -702,7 +702,7 @@ test.describe('Portfolio workbench smoke', () => {
       page.getByText("Reporting Snapshot", { exact: true }),
     ).toHaveCount(0);
     await expect(page.getByLabel("Cash movement chart key")).toContainText(
-      "Bars: dated movementLine: cumulative movement",
+      "Bars: dated net movementLine: cumulative movement",
     );
 
     const projectionHorizon = page.getByRole("radiogroup", {
@@ -785,11 +785,11 @@ test.describe('Portfolio workbench smoke', () => {
             portfolioId: session.portfolioId,
             selectedHorizonDays: 30,
             projectionPointCount: 3,
-            inflowCount: 2,
-            outflowCount: 1,
+            positiveNetMovementCount: 2,
+            negativeNetMovementCount: 1,
             evidenceRailHorizonDays: 30,
             chartSemantics: {
-              bars: "dated movement",
+              bars: "dated net movement",
               line: "cumulative movement",
             },
             viewportEvidence,

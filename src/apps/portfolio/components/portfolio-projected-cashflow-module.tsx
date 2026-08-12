@@ -316,7 +316,7 @@ export function PortfolioProjectedCashflowModuleView({
               variant="status"
               state="empty"
               title="No projected cash movement"
-              body="The source returned no expected inflows or outflows for this horizon."
+              body="The source returned no dated projected net movement for this horizon."
               hint="Choose another horizon to review a different forward period."
             />
           )}

@@ -214,7 +214,7 @@ describe("portfolio record evidence view model", () => {
         }),
         expect.objectContaining({
           label: "Projection Basis",
-          detail: "Net projected outflow of 750 USD; dated inflow and outflow counts unavailable",
+          detail: "Net projected movement of -750 USD; dated positive and negative movement counts unavailable",
           status: "Aggregate only",
           tone: "warn",
         }),
@@ -273,7 +273,7 @@ describe("portfolio record evidence view model", () => {
         }),
         expect.objectContaining({
           label: "Projection Basis",
-          detail: "2 inflows and 1 outflow in the returned forecast",
+          detail: "2 positive movement dates and 1 negative movement date in the returned projection",
           status: "30 days",
         }),
         expect.objectContaining({
