@@ -29,11 +29,16 @@ export function ReportBatchStatusPanel({
       {error ? (
         <ScreenStatePanel
           kind="error"
-          title="Current outcomes unavailable"
-          body={error}
+          title={status ? "Outcome refresh unavailable" : "Current outcomes unavailable"}
+          body={
+            status
+              ? `${error} The last source-confirmed outcomes remain visible below.`
+              : error
+          }
           action={<ActionButton onClick={onRefresh}>Try Again</ActionButton>}
         />
-      ) : (
+      ) : null}
+      {!error || status ? (
         <>
         {summary ? (
           <div className={styles.batchSummary} aria-label="Portfolio bundle summary">
@@ -109,7 +114,7 @@ export function ReportBatchStatusPanel({
           })}
         />
         </>
-      )}
+      ) : null}
     </SectionBlock>
   );
 }

@@ -114,7 +114,11 @@ describe("ReportOrderingWorkspace", () => {
       status_url: "/api/v1/report-jobs/rjob_2",
       idempotency_key: "intent_2",
     });
-    submitBatchMock.mockResolvedValue(parseReportBatchHandle(buildReportBatchHandle()));
+    submitBatchMock.mockImplementation(async (order) => {
+      const handle = buildReportBatchHandle();
+      handle.idempotency_key = order.idempotencyKey;
+      return parseReportBatchHandle(handle);
+    });
     batchStatusMock.mockResolvedValue(parseReportBatchStatus(buildReportBatchStatus()));
   });
 
@@ -385,7 +389,9 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("radio", { name: /Structured data package/ })).toBeDisabled();
 
     await act(async () => {
-      resolveSubmission?.(parseReportBatchHandle(buildReportBatchHandle()));
+      const handle = buildReportBatchHandle();
+      handle.idempotency_key = submitBatchMock.mock.calls[0][0].idempotencyKey;
+      resolveSubmission?.(parseReportBatchHandle(handle));
     });
     expect(
       await screen.findByRole("heading", { name: "Portfolio bundle accepted" }),
@@ -405,8 +411,14 @@ describe("ReportOrderingWorkspace", () => {
     secondHandle.batch_id = "rbch_second";
     secondHandle.status_url = "/api/v1/report-batches/rbch_second";
     submitBatchMock
-      .mockResolvedValueOnce(parseReportBatchHandle(firstHandle))
-      .mockResolvedValueOnce(parseReportBatchHandle(secondHandle));
+      .mockImplementationOnce(async (order) => {
+        firstHandle.idempotency_key = order.idempotencyKey;
+        return parseReportBatchHandle(firstHandle);
+      })
+      .mockImplementationOnce(async (order) => {
+        secondHandle.idempotency_key = order.idempotencyKey;
+        return parseReportBatchHandle(secondHandle);
+      });
 
     const firstStatus = buildReportBatchStatus();
     firstStatus.batch_id = "rbch_first";
@@ -643,6 +655,52 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Retry Portfolio Bundle" })).toBeEnabled();
     expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
     expect(batchStatusMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an accepted batch handle for a different idempotency intent", async () => {
+    const staleHandle = buildReportBatchHandle();
+    staleHandle.idempotency_key = "stale_prior_intent";
+    submitBatchMock.mockResolvedValue(parseReportBatchHandle(staleHandle));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle not accepted" }),
+    ).toBeInTheDocument();
+    expect(batchStatusMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
+  });
+
+  it("keeps last source-confirmed outcomes visible when refresh fails", async () => {
+    batchStatusMock
+      .mockResolvedValueOnce(parseReportBatchStatus(buildReportBatchStatus()))
+      .mockRejectedValueOnce(new Error("temporary refresh failure"));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh outcomes" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Outcome refresh unavailable" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/last source-confirmed outcomes remain visible below/)).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
+    expect(screen.getByText("Report data complete")).toBeInTheDocument();
   });
 
   it("automatically retries a transient source-owned batch status failure", async () => {
