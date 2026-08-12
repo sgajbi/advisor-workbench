@@ -1230,6 +1230,79 @@ describe("BFF proxy route", () => {
     );
   });
 
+  it("derives trusted own-book authority for an explicit report batch", async () => {
+    process.env.WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS =
+      "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"status":"materialized"}', { status: 202 }));
+    const body = JSON.stringify({
+      selector_mode: "explicit_portfolio_list",
+      portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+      as_of_date: "2026-04-22",
+      requested_output_formats: ["pdf"],
+    });
+    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "X-Caller-Capabilities": "reporting.admin",
+        "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+      },
+      body,
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
+    });
+
+    expect(response.status).toBe(202);
+    const [, upstreamInit] = fetchMock.mock.calls[0];
+    const upstreamHeaders = upstreamInit?.headers as Headers;
+    expect(upstreamInit?.body).toBe(body);
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
+      "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002",
+    );
+  });
+
+  it("rejects an out-of-book report batch before Gateway submission", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        selector_mode: "explicit_portfolio_list",
+        portfolio_ids: ["UNENTITLED_PORTFOLIO"],
+        as_of_date: "2026-04-22",
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(403);
+  });
+
+  it("forwards source-owned report batch status without browser authority", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"status":"running"}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-batches/rbch_1",
+      { method: "GET", headers: { "X-Role": "reporting_admin", Cookie: "spoofed=true" } },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-batches", "rbch_1"] }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("Cookie")).toBeNull();
+  });
+
   it("requires an authenticated reporting principal outside development", async () => {
     process.env.LOTUS_ENVIRONMENT = "uat";
     const fetchMock = vi.mocked(fetch);

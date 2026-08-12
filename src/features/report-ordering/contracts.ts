@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const availabilityStateSchema = z.enum(["ready", "partial", "unavailable"]);
+const businessDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const eligibilityStateSchema = z.enum([
   "ready",
   "partial",
@@ -185,6 +186,89 @@ export const reportJobListResponseSchema = z
   })
   .strict();
 
+const batchStatusSchema = z.enum([
+  "materialized", "running", "paused", "cancelled", "completed",
+  "completed_with_failures", "failed",
+]);
+const batchItemStatusSchema = z.enum([
+  "materialized", "leased", "waiting_on_report_job", "succeeded",
+  "failed_retryable", "failed_terminal", "cancelled", "recovery_pending",
+]);
+const reportingSupportabilitySchema = z.object({
+  feature_key: z.string().min(1),
+  state: z.string().min(1),
+  reason: z.string().min(1),
+  freshness_bucket: z.string().min(1),
+  evidence_feature_count: z.number().int().min(0),
+  ready_evidence_feature_count: z.number().int().min(0),
+  degraded_evidence_feature_count: z.number().int().min(0),
+  workflow_count: z.number().int().min(0),
+  ready_workflow_count: z.number().int().min(0),
+}).strict();
+const renderSupportabilitySchema = z.object({
+  feature_key: z.string().min(1),
+  state: z.string().min(1),
+  reason: z.string().min(1),
+  freshness_bucket: z.string().min(1),
+  deterministic_output_supported: z.boolean(),
+  render_store_ready: z.boolean(),
+  template_registry_ready: z.boolean(),
+  default_output_format: z.string().min(1).nullable(),
+  supported_output_formats: z.array(z.string().min(1)),
+}).strict();
+
+export const reportBatchHandleSchema = z.object({
+  batch_id: z.string().min(1),
+  status: batchStatusSchema,
+  status_url: z.string().min(1),
+  idempotency_key: z.string().min(1),
+  item_count: z.number().int().min(0),
+  supportability: reportingSupportabilitySchema.nullable(),
+  render_supportability: renderSupportabilitySchema.nullable(),
+}).strict();
+
+const reportBatchItemSchema = z.object({
+  batch_item_id: z.string().min(1),
+  item_position: z.number().int().min(1),
+  portfolio_id: z.string().min(1),
+  status: batchItemStatusSchema,
+  report_job_id: z.string().min(1).nullable(),
+  attempt_count: z.number().int().min(0),
+  retry_eligible: z.boolean(),
+  next_retry_at: z.string().min(1).nullable(),
+  last_error_category: z.string().min(1).nullable(),
+  last_error_summary: z.string().min(1).nullable(),
+  created_at: z.string().min(1),
+  started_at: z.string().min(1).nullable(),
+  completed_at: z.string().min(1).nullable(),
+  cancelled_at: z.string().min(1).nullable(),
+}).strict();
+
+export const reportBatchStatusSchema = z.object({
+  batch_id: z.string().min(1),
+  selector_mode: z.literal("explicit_portfolio_list"),
+  tenant_id: z.string().min(1),
+  region: z.string().min(1),
+  materialized_portfolio_ids: z.array(z.string().min(1)).min(1),
+  as_of_date: businessDateSchema,
+  requested_output_formats: z.array(z.string().min(1)).min(1),
+  reporting_currency: z.string().min(1).nullable(),
+  status: batchStatusSchema,
+  item_count: z.number().int().min(0),
+  status_counts: z.record(z.string(), z.number().int().min(0)),
+  items: z.array(reportBatchItemSchema),
+  created_at: z.string().min(1),
+  updated_at: z.string().min(1).nullable(),
+  started_at: z.string().min(1).nullable(),
+  completed_at: z.string().min(1).nullable(),
+  cancelled_at: z.string().min(1).nullable(),
+  failed_at: z.string().min(1).nullable(),
+  correlation_id: z.string().min(1),
+  trace_id: z.string().min(1),
+  supportability: reportingSupportabilitySchema.nullable(),
+  render_supportability: renderSupportabilitySchema.nullable(),
+}).strict();
+
 export type ReportOrderingResponse = z.infer<typeof reportOrderingResponseSchema>;
 export type ReportFamily = ReportOrderingResponse["reportFamilies"][number];
 export type ReportConfigurationField = ReportFamily["configurationFields"][number];
@@ -194,6 +278,9 @@ export type ReportOrderingMode = ReportFamily["orderingModes"][number];
 export type ReportJobHandle = z.infer<typeof reportJobHandleSchema>;
 export type ReportJobListResponse = z.infer<typeof reportJobListResponseSchema>;
 export type ReportJobListItem = ReportJobListResponse["items"][number];
+export type ReportBatchHandle = z.infer<typeof reportBatchHandleSchema>;
+export type ReportBatchStatus = z.infer<typeof reportBatchStatusSchema>;
+export type ReportBatchItem = ReportBatchStatus["items"][number];
 
 export function parseReportOrderingResponse(value: unknown): ReportOrderingResponse {
   return reportOrderingResponseSchema.parse(value);
@@ -205,4 +292,12 @@ export function parseReportJobHandle(value: unknown): ReportJobHandle {
 
 export function parseReportJobListResponse(value: unknown): ReportJobListResponse {
   return reportJobListResponseSchema.parse(value);
+}
+
+export function parseReportBatchHandle(value: unknown): ReportBatchHandle {
+  return reportBatchHandleSchema.parse(value);
+}
+
+export function parseReportBatchStatus(value: unknown): ReportBatchStatus {
+  return reportBatchStatusSchema.parse(value);
 }

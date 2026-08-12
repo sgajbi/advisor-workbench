@@ -8,9 +8,13 @@ import {
 } from "@/features/workbench/api-client";
 
 import {
+  parseReportBatchHandle,
+  parseReportBatchStatus,
   parseReportJobHandle,
   parseReportJobListResponse,
   parseReportOrderingResponse,
+  type ReportBatchHandle,
+  type ReportBatchStatus,
   type ReportJobHandle,
   type ReportJobListResponse,
   type ReportOrderingResponse,
@@ -25,6 +29,10 @@ export type PortfolioReviewOrder = {
   allocationDimensions?: string[];
   sections: string[];
   idempotencyKey: string;
+};
+
+export type PortfolioReviewBatchOrder = Omit<PortfolioReviewOrder, "portfolioId"> & {
+  portfolioIds: string[];
 };
 
 export async function getReportOrderingOptions(
@@ -59,22 +67,45 @@ export async function submitPortfolioReviewOrder(
         }),
         body: JSON.stringify({
           portfolio_scope: { portfolio_ids: [order.portfolioId] },
-          as_of_date: order.asOfDate,
-          requested_output_formats: [order.outputFormat],
-          ...(order.reportingCurrency
-            ? { reporting_currency: order.reportingCurrency }
-            : {}),
-          options: {
-            sections: order.sections,
-            ...(order.allocationDimensions?.length
-              ? { allocation_dimensions: order.allocationDimensions }
-              : {}),
-            ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),
-          },
+          ...buildReportConfigurationPayload(order),
         }),
       },
     );
     return parseReportJobHandle(payload);
+  });
+}
+
+export async function submitPortfolioReviewBatch(
+  order: PortfolioReviewBatchOrder,
+): Promise<ReportBatchHandle> {
+  return await observeWorkbenchMutation("reporting.portfolio-review.batch.submit", async () => {
+    const payload = await fetchWorkbenchMutation<unknown>(
+      buildWorkbenchUrl("client", "/report-batches"),
+      "portfolio report batch",
+      {
+        method: "POST",
+        headers: buildAnalyticsUiCorrelationHeaders({ "Idempotency-Key": order.idempotencyKey }),
+        body: JSON.stringify({
+          selector_mode: "explicit_portfolio_list",
+          portfolio_ids: order.portfolioIds,
+          ...buildReportConfigurationPayload(order),
+        }),
+      },
+    );
+    return parseReportBatchHandle(payload);
+  });
+}
+
+export async function getPortfolioReviewBatchStatus(
+  batchId: string,
+): Promise<ReportBatchStatus> {
+  return await observeWorkbenchResource("reporting.portfolio-review.batch.status", async () => {
+    const payload = await fetchWorkbenchJson<unknown>(
+      buildWorkbenchUrl("client", `/report-batches/${encodeURIComponent(batchId)}`),
+      "portfolio report batch status",
+      { headers: buildAnalyticsUiCorrelationHeaders() },
+    );
+    return parseReportBatchStatus(payload);
   });
 }
 
@@ -96,4 +127,21 @@ export async function listPortfolioReviewOrders(
     );
     return parseReportJobListResponse(payload);
   });
+}
+
+function buildReportConfigurationPayload(
+  order: Omit<PortfolioReviewOrder, "portfolioId" | "idempotencyKey">,
+) {
+  return {
+    as_of_date: order.asOfDate,
+    requested_output_formats: [order.outputFormat],
+    ...(order.reportingCurrency ? { reporting_currency: order.reportingCurrency } : {}),
+    options: {
+      sections: order.sections,
+      ...(order.allocationDimensions?.length
+        ? { allocation_dimensions: order.allocationDimensions }
+        : {}),
+      ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),
+    },
+  };
 }
