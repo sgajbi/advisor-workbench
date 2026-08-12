@@ -1,0 +1,46 @@
+.workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.scopeNote,
+.classificationNote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-tile);
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  font-size: var(--type-microcopy-size);
+  line-height: var(--type-microcopy-line-height);
+}
+
+.classificationNote {
+  border-color: rgba(155, 103, 0, 0.24);
+  background: rgba(255, 248, 225, 0.72);
+}
+
+.table :global(table) {
+  min-width: 820px;
+}
+
+.amountPositive {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.amountNegative {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .scopeNote,
+  .classificationNote {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

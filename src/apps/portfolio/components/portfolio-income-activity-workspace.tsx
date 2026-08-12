@@ -14,6 +14,7 @@ import {
 } from "../portfolio-income-activity-view-model";
 import type { PortfolioWorkspace } from "../types";
 import PortfolioModuleState from "./portfolio-module-state";
+import styles from "./portfolio-income-activity.module.css";
 
 type PortfolioIncomeActivityWorkspaceProps = {
   workspace: PortfolioWorkspace;
@@ -25,8 +26,8 @@ export default function PortfolioIncomeActivityWorkspace({
   const review = buildPortfolioIncomeActivityReview(workspace);
 
   return (
-    <div className="portfolio-income-activity-workspace">
-      <div className="portfolio-income-activity-scope-note" role="note">
+    <div className={styles.workspace} data-testid="income-activity-workspace">
+      <div className={styles.scopeNote} role="note">
         <SemanticBadge tone="default">Booked records only</SemanticBadge>
         <span>
           Dividend and interest bookings are shown separately from subscriptions, withdrawals,
@@ -75,7 +76,6 @@ function IncomeReviewModule({ income }: { income: PortfolioIncomeReview | null }
       compact
     >
       <WorkbenchSummaryMetricStrip
-        className="portfolio-income-activity-metrics"
         ariaLabel="Booked income summary"
         items={[
           {
@@ -111,7 +111,7 @@ function IncomeReviewModule({ income }: { income: PortfolioIncomeReview | null }
 
       <AnalyticsTable
         ariaLabel="Booked income by type"
-        className="portfolio-income-activity-table"
+        className={styles.table}
         density="compact"
         variant="portfolio"
         columns={[
@@ -190,7 +190,6 @@ function ActivityReviewModule({
       compact
     >
       <WorkbenchSummaryMetricStrip
-        className="portfolio-income-activity-metrics"
         ariaLabel="Booked cash movement summary"
         items={[
           {
@@ -225,7 +224,7 @@ function ActivityReviewModule({
       />
 
       {activity.requestedWindow.unclassifiedMovement > 0 ? (
-        <div className="portfolio-income-activity-classification-note" role="note">
+        <div className={styles.classificationNote} role="note">
           <SemanticBadge tone="warn">Classification review</SemanticBadge>
           <span>
             {formatCurrency(
@@ -241,7 +240,7 @@ function ActivityReviewModule({
 
       <AnalyticsTable
         ariaLabel="Booked cash movements by type"
-        className="portfolio-income-activity-table"
+        className={styles.table}
         density="compact"
         variant="portfolio"
         columns={[
@@ -299,10 +298,10 @@ function ActivityDirectionBadge({ direction }: { direction: PortfolioActivityDir
 
 function getMovementClassName(direction: PortfolioActivityDirection): string | undefined {
   if (direction === "inflow") {
-    return "portfolio-income-activity-amount-positive";
+    return styles.amountPositive;
   }
   if (direction === "outflow") {
-    return "portfolio-income-activity-amount-negative";
+    return styles.amountNegative;
   }
   return undefined;
 }

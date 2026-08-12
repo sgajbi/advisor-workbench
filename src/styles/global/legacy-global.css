@@ -13232,55 +13232,6 @@
   }
 }
 
-.portfolio-income-activity-workspace {
-  display: grid;
-  gap: 16px;
-}
-
-.portfolio-income-activity-scope-note,
-.portfolio-income-activity-classification-note {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 10px 12px;
-  border: var(--border-subtle);
-  border-radius: var(--radius-tile);
-  background: var(--surface-secondary);
-  color: var(--text-muted);
-  font-size: var(--type-microcopy-size);
-  line-height: var(--type-microcopy-line-height);
-}
-
-.portfolio-income-activity-classification-note {
-  border-color: rgba(155, 103, 0, 0.24);
-  background: rgba(255, 248, 225, 0.72);
-}
-
-.portfolio-income-activity-metrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.portfolio-income-activity-table table {
-  min-width: 820px;
-}
-
-.portfolio-income-activity-amount-positive {
-  color: var(--success);
-  font-weight: 700;
-}
-
-.portfolio-income-activity-amount-negative {
-  color: var(--danger);
-  font-weight: 700;
-}
-
-@media (max-width: 1280px) {
-  .portfolio-income-activity-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 1500px) {
   .portfolio-record-standalone-header {
     grid-template-columns: 1fr;
@@ -13289,18 +13240,6 @@
 
   .portfolio-record-standalone-kpis {
     justify-content: flex-start;
-  }
-}
-
-@media (max-width: 720px) {
-  .portfolio-income-activity-scope-note,
-  .portfolio-income-activity-classification-note {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .portfolio-income-activity-metrics {
-    grid-template-columns: 1fr;
   }
 }
 

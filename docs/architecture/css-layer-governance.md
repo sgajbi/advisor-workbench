@@ -47,6 +47,12 @@ owners. Generic Portfolio chart geometry and the reusable `AnalyticsTable` contr
 until their own consumer boundaries are proven. Do not repair Cashflow presentation through an
 app-shell or route selector; the `portfolio-cashflow` prefix is retired from governed global CSS.
 
+Income & Activity follows the same ownership boundary. Booked-record scope, classification-review
+posture, exact-value table handling, and directional amount treatment are owned by
+`portfolio-income-activity.module.css`. Responsive metric density remains owned by the shared
+`WorkbenchSummaryMetricStrip`; feature-local breakpoints must not duplicate or override that
+primitive. The `portfolio-income-activity` selector family is retired from governed global CSS.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.
