@@ -677,6 +677,29 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
   });
 
+  it("rejects an accepted batch handle that omits reviewed portfolios", async () => {
+    submitBatchMock.mockImplementation(async (order) => {
+      const partialHandle = buildReportBatchHandle();
+      partialHandle.idempotency_key = order.idempotencyKey;
+      partialHandle.item_count = 1;
+      return parseReportBatchHandle(partialHandle);
+    });
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle not accepted" }),
+    ).toBeInTheDocument();
+    expect(batchStatusMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
+  });
+
   it("keeps last source-confirmed outcomes visible when refresh fails", async () => {
     batchStatusMock
       .mockResolvedValueOnce(parseReportBatchStatus(buildReportBatchStatus()))
