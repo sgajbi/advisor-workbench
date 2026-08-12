@@ -22,6 +22,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Positions](Positions-Screen-Guide)
 - Booked activity, applicable settlement exceptions, and transaction lineage:
   [Transactions](Transactions-Screen-Guide)
+- Booked income, source-recorded deductions, and classified cash movement:
+  [Income And Activity](Income-And-Activity-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
@@ -74,6 +76,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
+- [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

@@ -7,6 +7,7 @@
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
+- [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

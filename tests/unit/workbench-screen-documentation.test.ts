@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 5,
-      coverageExceptions: 31,
-      unmappedGuides: 31,
+      mappedGuides: 6,
+      coverageExceptions: 30,
+      unmappedGuides: 30,
     });
   });
 
@@ -109,6 +109,31 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("does not:\n\n- infer settlement success");
     expect(guide).toContain("raw-code blotter, card mosaic, browser-inferred success state");
     expect(guide).toContain("not a\nclaim of bank approval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Income And Activity to one complete booked-record business guide", () => {
+    const registry = loadRegistry();
+    const incomeAndActivity = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "income-and-activity",
+    );
+
+    expect(incomeAndActivity).toMatchObject({
+      routePattern: "/income",
+      wikiSlug: "Income-And-Activity-Screen-Guide",
+      runtimeEvidence: ["tests/e2e/portfolio-workbench.smoke.spec.ts"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Income-And-Activity-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("unknown buckets visible as **Excluded from net**");
+    expect(guide).toContain("does not:\n\n- forecast dividends");
+    expect(guide).toContain("not a claim of bank approval or competitor superiority");
+    expect(guide).toContain("complete named sequential keyboard\n  focus");
     expect(validate(registry).errors).toEqual([]);
   });
 
