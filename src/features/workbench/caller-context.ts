@@ -401,6 +401,9 @@ function readBatchPortfolioIds(bodyText: string | undefined): string[] | null {
   }
   try {
     const body = JSON.parse(bodyText) as Record<string, unknown>;
+    if (body.selector_mode !== "explicit_portfolio_list") {
+      return null;
+    }
     const portfolioIds = body.portfolio_ids;
     if (
       !Array.isArray(portfolioIds) ||
