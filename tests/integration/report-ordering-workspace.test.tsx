@@ -241,6 +241,25 @@ describe("ReportOrderingWorkspace", () => {
     }));
   });
 
+  it("selects the routed portfolio when source membership appears on a later book page", async () => {
+    advisorBookMock.mockImplementation(({ offset }) => {
+      const result = buildAdvisorBookResult({ includeCurrentPortfolio: offset === 100 });
+      result.response.page.offset = offset ?? 0;
+      return result;
+    });
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    expect(screen.getByText("0 selected")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next portfolios" }));
+
+    expect(
+      await screen.findByRole("checkbox", { name: /Global Balanced Mandate/ }),
+    ).toBeChecked();
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+  });
+
   it("does not count an inactive routed portfolio before source-owned book confirmation", async () => {
     advisorBookMock.mockReturnValue(
       buildAdvisorBookResult({ currentPortfolioStatus: "INACTIVE" }),
