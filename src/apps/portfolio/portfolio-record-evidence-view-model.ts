@@ -1,5 +1,6 @@
 import { formatCount, formatCurrency, formatDate, formatStatus } from "./formatters";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
+import { buildPortfolioPositionStateSummary } from "./portfolio-position-state-view-model";
 import type { PortfolioWorkspace } from "./types";
 
 export type PortfolioRecordEvidenceTone = "default" | "success" | "warn" | "danger";
@@ -61,11 +62,14 @@ export function buildPortfolioRecordEvidenceRailViewModel({
     screen,
     workspace,
   });
+  const isPartial =
+    workspace.partial_failures.length > 0 ||
+    sourcePostureItems.some((item) => item.tone === "warn" || item.tone === "danger");
 
   return {
     status: {
-      label: workspace.partial_failures.length ? "Partial" : "Ready",
-      tone: workspace.partial_failures.length ? "warn" : "success",
+      label: isPartial ? "Partial" : "Ready",
+      tone: isPartial ? "warn" : "success",
     },
     facts: [
       { label: "Client", value: workspace.portfolio.client_id ?? "N/A" },
@@ -258,43 +262,45 @@ function buildCashflowSourcePosture(
 function buildPositionSourcePosture(
   workspace: PortfolioWorkspace
 ): PortfolioRecordSourcePosture[] {
-  const unpricedCount = workspace.positions.filter(
-    (position) => position.market_price == null || position.market_value_base == null
+  const positionCount = workspace.positions.filter(
+    (position) => position.source_record_type !== "cash_balance"
   ).length;
-  const reprocessingCount = workspace.positions.filter((position) => position.reprocessing_status).length;
-  const staleCount =
-    workspace.operations?.stale_reprocessing_keys ??
-    workspace.positions.filter((position) =>
-      (position.reprocessing_status ?? "").toLowerCase().includes("stale")
-    ).length;
+  const unpricedCount = workspace.positions.filter(
+    (position) =>
+      position.source_record_type !== "cash_balance" &&
+      (position.market_price == null || position.market_value_base == null)
+  ).length;
+  const positionState = buildPortfolioPositionStateSummary(
+    workspace.positions,
+    workspace.operations?.stale_reprocessing_keys ?? 0,
+  );
 
   return [
     {
       label: "Pricing Source",
       source: "Book records",
-      detail: unpricedCount
+      detail: !positionCount
+        ? "No booked holdings are available for pricing review"
+        : unpricedCount
         ? `${formatCount(unpricedCount, "holding")} missing price or valuation`
         : "All visible holdings have price and valuation data",
-      tone: unpricedCount ? "warn" : "success",
-      status: unpricedCount ? "Partial" : "Verified",
+      tone: !positionCount ? "default" : unpricedCount ? "warn" : "success",
+      status: !positionCount ? "N/A" : unpricedCount ? "Partial" : "Complete",
     },
     {
       label: "Positions Ledger",
       source: "Booked holdings inventory",
       detail: `${formatCount(workspace.positions.length, "position")} available for review`,
       tone: workspace.readiness.has_positions ? "success" : "default",
-      status: workspace.readiness.has_positions ? "Reconciled" : "Empty",
+      status: workspace.readiness.has_positions ? "Available" : "Empty",
     },
     buildReportingSourcePosture(workspace),
     {
-      label: "Reprocessing",
-      source: "Portfolio operations",
-      detail:
-        reprocessingCount || staleCount
-          ? `${formatCount(reprocessingCount, "flag")} on positions, ${formatCount(staleCount, "stale key")}`
-          : "No position-level reprocessing flags in the visible inventory",
-      tone: staleCount ? "warn" : "success",
-      status: staleCount ? "Review" : "Clear",
+      label: "Position Status",
+      source: "Booked position controls",
+      detail: positionState.detail,
+      tone: positionState.tone,
+      status: positionState.status,
     },
   ];
 }

@@ -11,7 +11,7 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 
 import type { PortfolioPositionView } from "../types";
-import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "../formatters";
+import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity } from "../formatters";
 import {
   buildDefaultHoldingsColumnVisibility,
   buildExpandedHoldingsColumnVisibility,
@@ -100,6 +100,14 @@ export default function PortfolioHoldingsGrid({
         flex: 1.1,
       }),
       buildHoldingsColumn({
+        key: "status",
+        headerName: "Status",
+        field: "status",
+        hide: !columnVisibility.status,
+        minWidth: 132,
+        cellRenderer: holdingsStatusCellRenderer,
+      }),
+      buildHoldingsColumn({
         key: "quantity",
         headerName: "Quantity",
         field: "quantity",
@@ -162,14 +170,6 @@ export default function PortfolioHoldingsGrid({
         field: "currency",
         hide: !columnVisibility.currency,
         minWidth: 92,
-      }),
-      buildHoldingsColumn({
-        key: "status",
-        headerName: "Status",
-        field: "status",
-        hide: !columnVisibility.status,
-        minWidth: 112,
-        cellRenderer: holdingsStatusCellRenderer,
       }),
       buildHoldingsColumn({
         key: "sector",
@@ -390,20 +390,12 @@ function holdingsInstrumentCellRenderer(
   );
 }
 
-function holdingsStatusCellRenderer(params: ICellRendererParams<HoldingsRow, string | null>) {
-  const value = params.value;
-  if (!value) {
-    return <span className="portfolio-position-status portfolio-position-status-clear">Current</span>;
-  }
-  const normalized = value.toLowerCase();
-  const tone = normalized.includes("fail")
-    ? "danger"
-    : normalized.includes("stale") || normalized.includes("pending")
-      ? "warn"
-      : "neutral";
+function holdingsStatusCellRenderer(params: ICellRendererParams<HoldingsRow, string>) {
+  const value = params.value ?? "Not reported";
+  const tone = params.data?.statusTone ?? "warn";
   return (
     <span className={`portfolio-position-status portfolio-position-status-${tone}`}>
-      {formatStatus(value)}
+      {value}
     </span>
   );
 }

@@ -47,7 +47,11 @@ describe("PortfolioRecordEvidenceRail", () => {
     expect(screen.getByText("Booked holdings inventory")).toBeInTheDocument();
     expect(screen.getByText("1 holding missing price or valuation")).toBeInTheDocument();
     expect(screen.getByText("2 positions available for review")).toBeInTheDocument();
-    expect(screen.getByText("1 flag on positions, 1 stale key")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "1 position requires review; 1 position status not reported; 1 source key stale",
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Positions" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute(
       "href",

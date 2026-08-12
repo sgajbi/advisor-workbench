@@ -55,7 +55,9 @@ describe("portfolio holdings grid helpers", () => {
       assetClass: "Equity",
       marketValue: 147000,
       sector: "Technology",
-      status: "STALE_PRICE",
+      status: "Review required",
+      statusKind: "review_required",
+      statusTone: "warn",
       isin: "US0378331005",
     });
     expect(rows[1]).toMatchObject({
@@ -64,7 +66,9 @@ describe("portfolio holdings grid helpers", () => {
       currency: "USD",
       marketValue: null,
       sector: "N/A",
-      status: null,
+      status: "Not reported",
+      statusKind: "not_reported",
+      statusTone: "warn",
     });
   });
 
@@ -103,10 +107,58 @@ describe("portfolio holdings grid helpers", () => {
       "Weight %": 14.67,
       "Unrealized P&L (USD)": 12000,
       Currency: "USD",
-      Status: "Stale Price",
+      Status: "Review required",
       Sector: "Technology",
       "Held Since": "2026-03-10",
     });
+  });
+
+  it("uses one business status projection for the grid and export", () => {
+    const cashBalance: PortfolioPositionView = {
+      source_record_type: "cash_balance",
+      security_id: "CASH_USD_1",
+      instrument_name: "USD Operating Cash",
+      asset_class: "Cash",
+      currency: "USD",
+      quantity: 100,
+      market_value_base: 100,
+      weight_pct: 0.01,
+    };
+    const currentPosition: PortfolioPositionView = {
+      ...positions[0],
+      security_id: "EQ_CURRENT",
+      reprocessing_status: "CURRENT",
+    };
+    const rows = buildHoldingsRows([currentPosition, positions[0], positions[1], cashBalance], "USD");
+    const exportRows = buildHoldingsExportRows(
+      rows,
+      {
+        ...buildDefaultHoldingsColumnVisibility("essential"),
+        instrument: false,
+        assetClass: false,
+        quantity: false,
+        price: false,
+        marketValue: false,
+        costBasis: false,
+        weight: false,
+        upl: false,
+        currency: false,
+      },
+      "USD",
+    );
+
+    expect(rows.map((row) => row.status)).toEqual([
+      "Current",
+      "Review required",
+      "Not reported",
+      "Not applicable",
+    ]);
+    expect(exportRows).toEqual([
+      { Status: "Current" },
+      { Status: "Review required" },
+      { Status: "Not reported" },
+      { Status: "Not applicable" },
+    ]);
   });
 
   it("separates essential and expanded column defaults", () => {
