@@ -34,7 +34,7 @@ export function ReportOrderingWorkspace({
   };
 }) {
   const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
-  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState([portfolio.portfolioId]);
+  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
@@ -52,7 +52,7 @@ export function ReportOrderingWorkspace({
 
   useEffect(() => {
     setScopeMode("single_portfolio");
-    setSelectedPortfolioIds([portfolio.portfolioId]);
+    setSelectedPortfolioIds([]);
     selectionDateRef.current = portfolio.asOfDate;
   }, [portfolio.asOfDate, portfolio.portfolioId]);
 
@@ -60,7 +60,7 @@ export function ReportOrderingWorkspace({
     const configurationDate = workflow.configuration?.asOfDate;
     if (!configurationDate || configurationDate === selectionDateRef.current) return;
     selectionDateRef.current = configurationDate;
-    setSelectedPortfolioIds([portfolio.portfolioId]);
+    setSelectedPortfolioIds([]);
   }, [portfolio.portfolioId, workflow.configuration?.asOfDate]);
 
   function focusReadiness() {
@@ -154,6 +154,7 @@ export function ReportOrderingWorkspace({
                       className={styles.focusTarget}
                     >
                       <ReportPortfolioScopePanel
+                        currentPortfolioId={portfolio.portfolioId}
                         asOfDate={workflow.configuration.asOfDate}
                         scopeMode={scopeMode}
                         batchAvailable={batchAvailable}

@@ -87,14 +87,31 @@ export function useReportOrderingWorkflow({
   const [batchStatusError, setBatchStatusError] = useState<string | null>(null);
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
+  const activeBatchIdRef = useRef<string | null>(null);
+  const batchStatusRequestSequenceRef = useRef(0);
   const historyRequestSequenceRef = useRef(0);
 
   const loadBatchStatus = useCallback(async (batchId: string) => {
+    const requestSequence = ++batchStatusRequestSequenceRef.current;
     setBatchStatusError(null);
     try {
-      setBatchStatus(await getPortfolioReviewBatchStatus(batchId));
+      const response = await getPortfolioReviewBatchStatus(batchId);
+      if (
+        activeBatchIdRef.current !== batchId ||
+        batchStatusRequestSequenceRef.current !== requestSequence ||
+        response.batch_id !== batchId
+      ) {
+        return false;
+      }
+      setBatchStatus(response);
       return true;
     } catch {
+      if (
+        activeBatchIdRef.current !== batchId ||
+        batchStatusRequestSequenceRef.current !== requestSequence
+      ) {
+        return false;
+      }
       setBatchStatus(null);
       setBatchStatusError("The bundle was accepted, but current portfolio outcomes could not be loaded.");
       return false;
@@ -180,6 +197,8 @@ export function useReportOrderingWorkflow({
 
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
+    activeBatchIdRef.current = null;
+    batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
     setSubmittedBatchHandle(null);
     setBatchStatus(null);
@@ -363,8 +382,12 @@ export function useReportOrderingWorkflow({
       }
       if (scopeMode === "explicit_portfolio_batch") {
         const batchHandle = handle as ReportBatchHandle;
+        activeBatchIdRef.current = batchHandle.batch_id;
         setSubmittedBatchHandle(batchHandle);
         await loadBatchStatus(batchHandle.batch_id);
+        if (activeBatchIdRef.current !== batchHandle.batch_id) {
+          return false;
+        }
       } else {
         setSubmittedHandlesByPortfolio((current) => ({
           ...current,
@@ -409,6 +432,8 @@ export function useReportOrderingWorkflow({
       return next;
     });
     setReviewedIntent(null);
+    activeBatchIdRef.current = null;
+    batchStatusRequestSequenceRef.current += 1;
     setSubmittedBatchHandle(null);
     setBatchStatus(null);
     setBatchStatusError(null);

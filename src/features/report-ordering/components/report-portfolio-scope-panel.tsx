@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, FieldLabel, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import { useAdvisorBook } from "@/features/advisor-book/use-advisor-book";
@@ -9,6 +9,7 @@ import type { ReportOrderingScopeMode } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 
 export function ReportPortfolioScopePanel({
+  currentPortfolioId,
   asOfDate,
   scopeMode,
   batchAvailable,
@@ -17,6 +18,7 @@ export function ReportPortfolioScopePanel({
   onScopeModeChange,
   onSelectionChange,
 }: {
+  currentPortfolioId: string;
   asOfDate: string;
   scopeMode: ReportOrderingScopeMode;
   batchAvailable: boolean;
@@ -57,6 +59,7 @@ export function ReportPortfolioScopePanel({
       ) : null}
       {scopeMode === "explicit_portfolio_batch" ? (
         <PortfolioBookSelection
+          currentPortfolioId={currentPortfolioId}
           asOfDate={asOfDate}
           disabled={disabled}
           selectedPortfolioIds={selectedPortfolioIds}
@@ -95,11 +98,13 @@ function ScopeChoice({
 }
 
 function PortfolioBookSelection({
+  currentPortfolioId,
   asOfDate,
   disabled,
   selectedPortfolioIds,
   onSelectionChange,
 }: {
+  currentPortfolioId: string;
   asOfDate: string;
   disabled: boolean;
   selectedPortfolioIds: string[];
@@ -108,10 +113,28 @@ function PortfolioBookSelection({
   const [filter, setFilter] = useState("");
   const [offset, setOffset] = useState(0);
   const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 });
+  const initialSelectionKeyRef = useRef("");
   useEffect(() => {
     setFilter("");
     setOffset(0);
+    initialSelectionKeyRef.current = "";
   }, [asOfDate]);
+  useEffect(() => {
+    if (
+      !book.response ||
+      selectedPortfolioIds.length > 0 ||
+      initialSelectionKeyRef.current === `${asOfDate}:${currentPortfolioId}`
+    ) {
+      return;
+    }
+    initialSelectionKeyRef.current = `${asOfDate}:${currentPortfolioId}`;
+    const currentPortfolio = book.response.items.find(
+      (item) => item.portfolio_id === currentPortfolioId && item.status === "ACTIVE",
+    );
+    if (currentPortfolio) {
+      onSelectionChange([currentPortfolio.portfolio_id]);
+    }
+  }, [asOfDate, book.response, currentPortfolioId, onSelectionChange, selectedPortfolioIds.length]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {
     const query = filter.trim().toLocaleLowerCase();
