@@ -297,7 +297,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
   });
 
-  it("removes a selected portfolio that disappears from its confirmed book page", async () => {
+  it("preserves a selected portfolio across a shifted book page until Gateway revalidates it", async () => {
     const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
@@ -308,10 +308,9 @@ describe("ReportOrderingWorkspace", () => {
     advisorBookMock.mockReturnValue(buildAdvisorBookResult({ includeCurrentPortfolio: false }));
     view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
 
-    await waitFor(() => expect(screen.getByText("1 selected")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("2 selected")).toBeInTheDocument());
     expect(screen.queryByRole("checkbox", { name: /Global Balanced Mandate/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
   });
 
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
@@ -560,6 +559,49 @@ describe("ReportOrderingWorkspace", () => {
       expect(
         screen.getByText(/returned portfolio outcomes did not match this request/),
       ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 10_000)).toBe(true),
+      );
+      const retry = timerSpy.mock.calls.find(([, delay]) => delay === 10_000)?.[0];
+
+      await act(async () => {
+        (retry as () => void)();
+      });
+      expect(
+        await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+      ).toBeInTheDocument();
+      expect(batchStatusMock).toHaveBeenCalledTimes(2);
+    } finally {
+      timerSpy.mockRestore();
+    }
+  });
+
+  it("retries when source-owned outcomes differ from the reviewed portfolio bundle", async () => {
+    const substitutedStatus = buildReportBatchStatus();
+    substitutedStatus.materialized_portfolio_ids[1] = "PB_SG_UNREVIEWED_003";
+    substitutedStatus.items[1].portfolio_id = "PB_SG_UNREVIEWED_003";
+    batchStatusMock
+      .mockResolvedValueOnce(parseReportBatchStatus(substitutedStatus))
+      .mockResolvedValueOnce(parseReportBatchStatus(buildReportBatchStatus()));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      fireEvent.click(submit);
+      expect(
+        await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/returned portfolios did not match the reviewed selection/),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("table", { name: "Portfolio report bundle outcomes" }),
+      ).not.toBeInTheDocument();
       await waitFor(() =>
         expect(timerSpy.mock.calls.some(([, delay]) => delay === 10_000)).toBe(true),
       );
