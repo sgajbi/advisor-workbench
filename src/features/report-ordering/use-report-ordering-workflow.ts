@@ -257,6 +257,9 @@ export function useReportOrderingWorkflow({
 
   const updateConfiguration = useCallback(
     (patch: Partial<ReportOrderingConfiguration>) => {
+      if (activeSubmissionProgress.state === "submitting") {
+        return;
+      }
       setConfiguration((current) => {
         if (!current) {
           return current;
@@ -273,7 +276,7 @@ export function useReportOrderingWorkflow({
           : { portfolioId, state: "idle", error: null },
       );
     },
-    [catalogue, portfolioId],
+    [activeSubmissionProgress.state, catalogue, portfolioId],
   );
 
   const toggleSection = useCallback(

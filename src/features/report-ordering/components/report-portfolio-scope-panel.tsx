@@ -12,6 +12,7 @@ export function ReportPortfolioScopePanel({
   asOfDate,
   scopeMode,
   batchAvailable,
+  disabled,
   selectedPortfolioIds,
   onScopeModeChange,
   onSelectionChange,
@@ -19,6 +20,7 @@ export function ReportPortfolioScopePanel({
   asOfDate: string;
   scopeMode: ReportOrderingScopeMode;
   batchAvailable: boolean;
+  disabled: boolean;
   selectedPortfolioIds: string[];
   onScopeModeChange: (mode: ReportOrderingScopeMode) => void;
   onSelectionChange: (portfolioIds: string[]) => void;
@@ -34,13 +36,14 @@ export function ReportPortfolioScopePanel({
         <div className={styles.scopeModeGrid}>
           <ScopeChoice
             checked={scopeMode === "single_portfolio"}
+            disabled={disabled}
             label="Selected portfolio"
             detail="Create one report for the portfolio in your current workspace."
             onChange={() => onScopeModeChange("single_portfolio")}
           />
           <ScopeChoice
             checked={scopeMode === "explicit_portfolio_batch"}
-            disabled={!batchAvailable}
+            disabled={disabled || !batchAvailable}
             label="Portfolio bundle"
             detail="Create a separate report for each selected portfolio in your book. This is not a consolidated client report."
             onChange={() => onScopeModeChange("explicit_portfolio_batch")}
@@ -55,6 +58,7 @@ export function ReportPortfolioScopePanel({
       {scopeMode === "explicit_portfolio_batch" ? (
         <PortfolioBookSelection
           asOfDate={asOfDate}
+          disabled={disabled}
           selectedPortfolioIds={selectedPortfolioIds}
           onSelectionChange={onSelectionChange}
         />
@@ -92,10 +96,12 @@ function ScopeChoice({
 
 function PortfolioBookSelection({
   asOfDate,
+  disabled,
   selectedPortfolioIds,
   onSelectionChange,
 }: {
   asOfDate: string;
+  disabled: boolean;
   selectedPortfolioIds: string[];
   onSelectionChange: (portfolioIds: string[]) => void;
 }) {
@@ -141,7 +147,7 @@ function PortfolioBookSelection({
           kind="error"
           title="Portfolio selection unavailable"
           body="Your portfolio assignments could not be loaded. No bundle can be reviewed until the source is available."
-          action={<ActionButton onClick={() => void book.reload()}>Try Again</ActionButton>}
+          action={<ActionButton disabled={disabled} onClick={() => void book.reload()}>Try Again</ActionButton>}
         />
       ) : book.response?.items.length === 0 ? (
         <ScreenStatePanel kind="empty" title="No portfolios available" body="No portfolio assignments are available for this business date." />
@@ -154,6 +160,7 @@ function PortfolioBookSelection({
                 id="report-portfolio-filter"
                 className="workbench-input"
                 type="search"
+                disabled={disabled}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 placeholder="Client, mandate or portfolio"
@@ -163,11 +170,11 @@ function PortfolioBookSelection({
               <ActionButton
                 priority="secondary"
                 onClick={() => onSelectionChange([...new Set([...selected, ...selectableVisibleIds])].sort())}
-                disabled={selectableVisibleIds.length === 0}
+                disabled={disabled || selectableVisibleIds.length === 0}
               >
                 Select portfolios shown
               </ActionButton>
-              <ActionButton priority="secondary" onClick={() => onSelectionChange([])} disabled={selected.size === 0}>
+              <ActionButton priority="secondary" onClick={() => onSelectionChange([])} disabled={disabled || selected.size === 0}>
                 Clear selection
               </ActionButton>
             </div>
@@ -180,7 +187,7 @@ function PortfolioBookSelection({
                   <input
                     type="checkbox"
                     checked={selected.has(item.portfolio_id)}
-                    disabled={inactive}
+                    disabled={disabled || inactive}
                     onChange={() => toggle(item.portfolio_id)}
                   />
                   <span className={styles.portfolioSelectionIdentity}>

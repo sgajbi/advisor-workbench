@@ -8,11 +8,13 @@ import styles from "../report-ordering-workspace.module.css";
 export function ReportConfigurationPanel({
   model,
   configuration,
+  disabled,
   updateConfiguration,
   toggleSection,
 }: {
   model: ReportOrderingViewModel;
   configuration: ReportOrderingConfiguration;
+  disabled: boolean;
   updateConfiguration: (patch: Partial<ReportOrderingConfiguration>) => void;
   toggleSection: (sectionId: string) => void;
 }) {
@@ -48,6 +50,7 @@ export function ReportConfigurationPanel({
                     name="report-family"
                     value={family.reportFamilyId}
                     checked={selected}
+                    disabled={disabled}
                     onChange={() => updateConfiguration({ familyId: family.reportFamilyId })}
                   />
                   <span className={styles.choiceBody}>
@@ -107,6 +110,7 @@ export function ReportConfigurationPanel({
               className="workbench-input"
               type="date"
               value={configuration.asOfDate}
+              disabled={disabled}
               onChange={(event) => updateConfiguration({ asOfDate: event.target.value })}
               aria-describedby="report-ordering-as-of-help"
             />
@@ -124,6 +128,7 @@ export function ReportConfigurationPanel({
                 className="workbench-input"
                 inputMode="text"
                 maxLength={3}
+                disabled={disabled}
                 value={configuration.reportingCurrency}
                 onChange={(event) =>
                   updateConfiguration({
@@ -160,6 +165,7 @@ export function ReportConfigurationPanel({
                   <input
                     type="checkbox"
                     checked={configuration.allocationDimensions.includes(option.value)}
+                    disabled={disabled}
                     onChange={() =>
                       updateConfiguration({
                         allocationDimensions: configuration.allocationDimensions.includes(option.value)
@@ -201,7 +207,7 @@ export function ReportConfigurationPanel({
                   <input
                     type="checkbox"
                     checked={section.selected}
-                    disabled={section.required}
+                    disabled={disabled || section.required}
                     onChange={() => toggleSection(section.id)}
                   />
                   <span className={styles.choiceBody}>
@@ -241,7 +247,7 @@ export function ReportConfigurationPanel({
                   name="report-output"
                   value={output.id}
                   checked={configuration.outputFormat === output.id}
-                  disabled={!output.available}
+                  disabled={disabled || !output.available}
                   onChange={() => updateConfiguration({ outputFormat: output.id })}
                 />
                 <span className={styles.choiceBody}>
