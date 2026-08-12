@@ -102,12 +102,10 @@ export function stripBrowserSuppliedAuthorityHeaders(headers: Headers) {
 }
 
 const REPORTING_CALLER_CONTEXT_ENV_OVERRIDES = {
-  role: "WORKBENCH_REPORTING_CALLER_ROLE",
   portfolioIds: "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
 } as const;
 
 const DEFAULT_REPORTING_CALLER_CONTEXT = {
-  role: "client_advisor",
   portfolioIds: "PB_SG_GLOBAL_BAL_001",
 } as const;
 
@@ -297,13 +295,6 @@ export function applyReportOrderingRouteCallerContextHeaders(
       : { status: "rejected", reason: authorityMode };
   }
 
-  const role =
-    process.env[REPORTING_CALLER_CONTEXT_ENV_OVERRIDES.role]?.trim() ||
-    DEFAULT_REPORTING_CALLER_CONTEXT.role;
-  if (role !== "client_advisor" && role !== "portfolio_manager") {
-    return { status: "rejected", reason: "invalid_reporting_configuration" };
-  }
-
   const portfolioIds = configuredReportingPortfolioIds();
   if (portfolioIds.length === 0) {
     return { status: "rejected", reason: "invalid_reporting_configuration" };
@@ -314,13 +305,7 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "rejected", reason: requestPosture };
   }
 
-  const usesAdvisorBookBatchPrincipal =
-    (request.method === "GET" && request.upstreamPath === "api/v1/report-ordering/options") ||
-    (request.method === "POST" && request.upstreamPath === "api/v1/report-batches") ||
-    (request.method === "GET" && /^api\/v1\/report-batches\/[^/]+$/.test(request.upstreamPath));
-  const context = usesAdvisorBookBatchPrincipal
-    ? resolveAdvisorBookDevelopmentContext()
-    : resolveDefaultCallerContext();
+  const context = resolveAdvisorBookDevelopmentContext();
   if (!context) {
     return { status: "rejected", reason: "invalid_reporting_configuration" };
   }
@@ -329,11 +314,9 @@ export function applyReportOrderingRouteCallerContextHeaders(
   headers.set("X-Tenant-Id", context.tenantId);
   headers.set("X-Region", context.region);
   headers.set("X-Booking-Center-Code", context.bookingCenterCode);
-  headers.set("X-Role", usesAdvisorBookBatchPrincipal ? context.role : role);
+  headers.set("X-Role", context.role);
   headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
-  if (usesAdvisorBookBatchPrincipal) {
-    headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
-  }
+  headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
 
   return { status: "applied", mode: authorityMode };
 }
