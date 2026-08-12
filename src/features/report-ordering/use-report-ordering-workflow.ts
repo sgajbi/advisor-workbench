@@ -112,21 +112,24 @@ export function useReportOrderingWorkflow({
       ) {
         return false;
       }
-      setBatchStatus(null);
       setBatchStatusError("The bundle was accepted, but current portfolio outcomes could not be loaded.");
       return false;
     }
   }, []);
 
   useEffect(() => {
-    if (!submittedBatchHandle || !batchStatus || isTerminalBatchStatus(batchStatus.status)) {
+    if (
+      !submittedBatchHandle ||
+      (batchStatus && isTerminalBatchStatus(batchStatus.status)) ||
+      (!batchStatus && !batchStatusError)
+    ) {
       return;
     }
     const timer = window.setTimeout(() => {
       void loadBatchStatus(submittedBatchHandle.batch_id);
-    }, 5000);
+    }, batchStatusError ? 10_000 : 5_000);
     return () => window.clearTimeout(timer);
-  }, [batchStatus, loadBatchStatus, submittedBatchHandle]);
+  }, [batchStatus, batchStatusError, loadBatchStatus, submittedBatchHandle]);
 
   const loadHistory = useCallback(async () => {
     const requestSequence = ++historyRequestSequenceRef.current;
