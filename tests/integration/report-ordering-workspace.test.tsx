@@ -279,6 +279,24 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByText(/Restore My book before reviewing this bundle/)).toBeInTheDocument();
   });
 
+  it("removes a selected portfolio when refreshed source evidence marks it inactive", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+
+    advisorBookMock.mockReturnValue(buildAdvisorBookResult({ currentPortfolioStatus: "INACTIVE" }));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    await waitFor(() => expect(screen.getByText("1 selected")).toBeInTheDocument());
+    expect(screen.getByRole("checkbox", { name: /Global Balanced Mandate/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Global Balanced Mandate/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)

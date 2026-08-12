@@ -314,9 +314,10 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "rejected", reason: requestPosture };
   }
 
-  const isBatchSubmission =
-    request.method === "POST" && request.upstreamPath === "api/v1/report-batches";
-  const context = isBatchSubmission
+  const usesAdvisorBookBatchPrincipal =
+    (request.method === "POST" && request.upstreamPath === "api/v1/report-batches") ||
+    (request.method === "GET" && /^api\/v1\/report-batches\/[^/]+$/.test(request.upstreamPath));
+  const context = usesAdvisorBookBatchPrincipal
     ? resolveAdvisorBookDevelopmentContext()
     : resolveDefaultCallerContext();
   if (!context) {
@@ -327,9 +328,9 @@ export function applyReportOrderingRouteCallerContextHeaders(
   headers.set("X-Tenant-Id", context.tenantId);
   headers.set("X-Region", context.region);
   headers.set("X-Booking-Center-Code", context.bookingCenterCode);
-  headers.set("X-Role", isBatchSubmission ? context.role : role);
+  headers.set("X-Role", usesAdvisorBookBatchPrincipal ? context.role : role);
   headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
-  if (isBatchSubmission) {
+  if (usesAdvisorBookBatchPrincipal) {
     headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
   }
 

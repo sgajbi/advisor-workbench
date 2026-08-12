@@ -143,6 +143,18 @@ function PortfolioBookSelection({
       onSelectionChange([currentPortfolio.portfolio_id]);
     }
   }, [asOfDate, book.response, currentPortfolioId, onSelectionChange, selectedPortfolioIds.length]);
+  useEffect(() => {
+    if (!book.response || disabled || selectedPortfolioIds.length === 0) return;
+    const inactivePortfolioIds = new Set(
+      book.response.items
+        .filter((item) => item.status !== "ACTIVE")
+        .map((item) => item.portfolio_id),
+    );
+    if (!selectedPortfolioIds.some((portfolioId) => inactivePortfolioIds.has(portfolioId))) return;
+    onSelectionChange(
+      selectedPortfolioIds.filter((portfolioId) => !inactivePortfolioIds.has(portfolioId)),
+    );
+  }, [book.response, disabled, onSelectionChange, selectedPortfolioIds]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {
     const query = filter.trim().toLocaleLowerCase();
