@@ -99,7 +99,9 @@ controls and do not occur on this screen.
 | Create another report | A prior request has been accepted | None until the new request is separately reviewed and submitted |
 
 The browser never converts a failed submission into accepted posture and never presents a
-bundle-level acceptance as proof that every portfolio report completed.
+bundle-level acceptance as proof that every portfolio report completed. The completion measure
+counts only source-confirmed successful portfolio reports; retryable, terminal, and cancelled
+outcomes remain separate and never inflate completion.
 
 ## Information And Source Authority
 
@@ -127,7 +129,8 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | Degraded or partial | Available evidence remains visible with source limitations | Use only evidenced portfolios and outputs; Gateway still fails closed on unverifiable membership |
 | Submission not accepted | An explicit failure with the reviewed setup retained for controlled retry | Retry only the unchanged reviewed intent or correct the setup and review again |
 | Partially complete bundle | Separate complete, in-progress, retryable, and terminal portfolio outcomes | Refresh outcomes; use the affected item's support reference if it remains unresolved |
-| Outcome refresh unavailable | The accepted batch remains visible but current item posture is unavailable | Choose **Try Again** or **Refresh outcomes**; do not infer completion from prior state |
+| Outcome refresh unavailable | The accepted batch and its last source-confirmed output support posture remain visible, while current item posture is marked unavailable | Choose **Try Again** or **Refresh outcomes**; newer explicit source evidence replaces the retained posture, but absent evidence never implies support or completion |
+| Portfolio context changed | The prior portfolio's pending catalogue, history, submission, and outcome results cannot publish into the new workspace | Continue in the selected portfolio context; return deliberately if the prior workflow still needs attention |
 
 ## Workbench Boundaries
 
