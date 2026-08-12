@@ -7653,60 +7653,6 @@
   color: #945760;
 }
 
-.action-button,
-.lotus-primary-action {
-  border: 1px solid rgba(23, 32, 43, 0.12);
-  border-radius: 9px;
-  padding: 0.62rem 0.95rem;
-  background: #ffffff;
-  color: var(--brand-strong);
-  font-family: var(--font-ui);
-  font-size: var(--type-button-size);
-  font-weight: 600;
-  line-height: var(--type-button-line-height);
-  letter-spacing: 0;
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease,
-    transform 120ms ease;
-}
-
-.action-button:hover,
-.lotus-primary-action:hover {
-  border-color: rgba(87, 121, 157, 0.24);
-  background: rgba(247, 249, 251, 0.98);
-}
-
-.action-button-primary,
-.lotus-primary-action-primary {
-  border-color: rgba(23, 32, 43, 0.1);
-  background: linear-gradient(180deg, #22384b, #182b3d);
-  color: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.action-button-primary:hover,
-.lotus-primary-action-primary:hover {
-  border-color: rgba(24, 43, 61, 0.95);
-  background: linear-gradient(180deg, #1d3143, #152433);
-}
-
-.action-button-quiet {
-  border-color: transparent;
-  background: transparent;
-  color: var(--brand);
-  padding-inline: 0.2rem;
-}
-
-.action-button-quiet:hover {
-  border-color: transparent;
-  background: transparent;
-  color: var(--brand-strong);
-}
-
 .performance-advisor-brief-body-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.72fr) minmax(21rem, 0.84fr);
@@ -8417,8 +8363,6 @@
 }
 
 .performance-advisor-brief-toolbar-button:focus-visible,
-.action-button:focus-visible,
-.lotus-primary-action:focus-visible,
 .performance-advisor-brief-workflow-action:focus-visible,
 .performance-advisor-brief-drilldown-action:focus-visible,
 .performance-advisor-brief-evidence-chip:focus-visible,

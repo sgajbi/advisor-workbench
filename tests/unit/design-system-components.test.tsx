@@ -318,6 +318,7 @@ describe("design-system components", () => {
   it("renders shared semantic badges, action buttons, and true mode tabs", () => {
     const onChange = vi.fn();
     const onClick = vi.fn();
+    const onDisabledClick = vi.fn();
 
     render(
       <>
@@ -326,6 +327,15 @@ describe("design-system components", () => {
         </SemanticBadge>
         <ActionButton priority="primary" onClick={onClick} aria-label="Copy decision note">
           Copy Note
+        </ActionButton>
+        <ActionButton priority="primary" disabled onClick={onDisabledClick}>
+          Submit Portfolio Bundle
+        </ActionButton>
+        <ActionButton disabled onClick={onDisabledClick}>
+          Refresh Book
+        </ActionButton>
+        <ActionButton priority="quiet" disabled onClick={onDisabledClick}>
+          Clear Selection
         </ActionButton>
         <ModeTabs
           idBase="workspace-modes"
@@ -345,6 +355,16 @@ describe("design-system components", () => {
     expect(screen.getByRole("button", { name: "Copy decision note" })).toHaveClass(
       "action-button",
       "action-button-primary"
+    );
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toHaveClass(
+      "action-button",
+      "action-button-primary"
+    );
+    expect(screen.getByRole("button", { name: "Refresh Book" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Clear Selection" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Clear Selection" })).toHaveClass(
+      "action-button-quiet"
     );
     expect(screen.getByRole("tablist", { name: "Workspace modes" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveAttribute(
@@ -373,9 +393,13 @@ describe("design-system components", () => {
     expect(onChange).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy decision note" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit Portfolio Bundle" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Book" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear Selection" }));
     fireEvent.click(screen.getByRole("tab", { name: "Summary" }));
 
     expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onDisabledClick).not.toHaveBeenCalled();
     expect(onChange).toHaveBeenCalledWith("summary");
   });
 

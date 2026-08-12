@@ -185,10 +185,28 @@ test("orders a reviewed portfolio bundle and renders source-owned outcomes", asy
   await page.getByRole("checkbox", { name: /Report Centre recovery mandate/ }).click();
   await expect(page.getByText("2 selected", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Review Portfolio Bundle" })).toBeEnabled();
+  const submitBundle = page.getByRole("button", { name: "Submit Portfolio Bundle" });
+  await expect(submitBundle).toBeDisabled();
+  const disabledActionStyle = await submitBundle.evaluate((button) => {
+    const computed = window.getComputedStyle(button);
+    return { background: computed.backgroundImage, color: computed.color, cursor: computed.cursor };
+  });
+  expect(disabledActionStyle.cursor).toBe("not-allowed");
   await captureDiagnosticScreenshot(page, "portfolio-bundle-selection-1440");
 
   await page.getByRole("button", { name: "Review Portfolio Bundle" }).click();
-  await page.getByRole("button", { name: "Submit Portfolio Bundle" }).click();
+  await expect(submitBundle).toBeEnabled();
+  await expect
+    .poll(() => submitBundle.evaluate((button) => window.getComputedStyle(button).color))
+    .toBe("rgb(255, 255, 255)");
+  const enabledActionStyle = await submitBundle.evaluate((button) => {
+    const computed = window.getComputedStyle(button);
+    return { background: computed.backgroundImage, color: computed.color, cursor: computed.cursor };
+  });
+  expect(enabledActionStyle.cursor).toBe("pointer");
+  expect(enabledActionStyle.background).not.toBe(disabledActionStyle.background);
+  expect(enabledActionStyle.color).not.toBe(disabledActionStyle.color);
+  await submitBundle.click();
 
   await expect(
     page.getByRole("status").getByRole("heading", { name: "Portfolio bundle accepted" }),
