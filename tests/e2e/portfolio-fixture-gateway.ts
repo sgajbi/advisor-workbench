@@ -29,6 +29,11 @@ export async function startPortfolioFixtureGateway({
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
 
+    if (requestUrl.pathname === '/api/v1/platform/capabilities') {
+      sendJson(response, buildPlatformCapabilitiesResponse());
+      return;
+    }
+
     if (requestUrl.pathname === '/api/v1/foundation/portfolios') {
       sendJson(response, {
         items: [{ portfolio_id: PORTFOLIO_ID }],
@@ -167,6 +172,116 @@ export async function startPortfolioFixtureGateway({
     port,
     close: () => close(server),
     getWorkspaceRequestCount: () => workspaceRequestCount,
+  };
+}
+
+function buildPlatformCapabilitiesResponse() {
+  const workspace = (
+    id: string,
+    label: string,
+    href: string,
+    enabled = true,
+  ) => ({
+    id,
+    label,
+    href,
+    enabled,
+    supportability: {
+      state: enabled ? 'ready' : 'unavailable',
+      reasons: enabled ? [] : [`${id}_unavailable`],
+    },
+    freshness: {
+      state: 'current',
+      freshnessClass: 'shell_navigation',
+      evaluatedAt: `${AS_OF_DATE}T00:00:00Z`,
+      maxAgeSeconds: 60,
+    },
+    evidence: {
+      state: enabled ? 'source_backed' : 'unavailable',
+      lineageSources: enabled ? ['lotus-gateway'] : [],
+      partialFailure: false,
+      sourceErrorServices: [],
+    },
+    versioning: {
+      shellContractVersion: 'shell-bootstrap.v1',
+      capabilityContractVersion: 'portfolio-fixture.v1',
+      sourcePolicyVersion: null,
+      sourcePolicyVersions: {},
+    },
+    caching: {
+      cacheMode: 'request_scoped_composition',
+      invalidationOwner: 'upstream_service',
+      staleReadTolerance: 'bounded_navigation_refresh',
+      revalidateOnNavigation: true,
+      ttlSeconds: 60,
+      correctnessCritical: false,
+    },
+  });
+
+  return {
+    data: {
+      consumerSystem: 'UI',
+      tenantId: 'default',
+      contractVersion: 'portfolio-fixture.v1',
+      sources: {},
+      partialFailure: false,
+      errors: [],
+      normalized: {
+        navigation: {},
+        workflowFlags: {},
+        inputModesBySource: {},
+        inputModesUnion: [],
+        moduleHealth: {},
+        policyVersionsBySource: {},
+        lotusCorePolicyDiagnostics: {
+          available: true,
+          allowedSections: ['OVERVIEW'],
+          warnings: [],
+          policyProvenance: {
+            policyVersion: 'portfolio-fixture.v1',
+            policySource: 'owned-fixture',
+            matchedRuleId: 'portfolio-e2e',
+            strictMode: false,
+          },
+        },
+        shellBootstrap: {
+          contractVersion: 'shell-bootstrap.v1',
+          supportability: { state: 'ready', reasons: [] },
+          freshness: {
+            state: 'current',
+            freshnessClass: 'shell_navigation',
+            evaluatedAt: `${AS_OF_DATE}T00:00:00Z`,
+            maxAgeSeconds: 60,
+          },
+          evidence: {
+            state: 'source_backed',
+            lineageSources: ['lotus-gateway'],
+            partialFailure: false,
+            sourceErrorServices: [],
+          },
+          versioning: {
+            shellContractVersion: 'shell-bootstrap.v1',
+            capabilityContractVersion: 'portfolio-fixture.v1',
+            sourcePolicyVersions: {},
+          },
+          caching: {
+            cacheMode: 'request_scoped_composition',
+            invalidationOwner: 'upstream_service',
+            staleReadTolerance: 'bounded_navigation_refresh',
+            revalidateOnNavigation: true,
+            ttlSeconds: 60,
+            correctnessCritical: false,
+          },
+          workspaces: [
+            workspace('portfolio', 'Portfolio', '/portfolio'),
+            workspace('performance', 'Performance', '/performance'),
+            workspace('risk', 'Risk', '/performance?mode=risk'),
+            workspace('proposal', 'Proposal', '/proposals', false),
+            workspace('advisory', 'Advisory', '/recommendations', false),
+          ],
+        },
+      },
+    },
   };
 }
 
