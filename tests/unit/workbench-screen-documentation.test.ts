@@ -57,10 +57,37 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 2,
-      coverageExceptions: 34,
-      unmappedGuides: 34,
+      mappedGuides: 3,
+      coverageExceptions: 33,
+      unmappedGuides: 33,
     });
+  });
+
+  it("maps Report Centre to one complete source-backed business guide", () => {
+    const registry = loadRegistry();
+    const reportCentre = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "report-centre",
+    );
+
+    expect(reportCentre).toMatchObject({
+      routePattern: "/reports",
+      wikiSlug: "Report-Centre-Screen-Guide",
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Report-Centre-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain(
+      "A portfolio bundle creates a separate report outcome for each portfolio",
+    );
+    expect(guide).toContain("verify current membership and report eligibility again");
+    expect(guide).toContain("does not combine clients or hide partial\ncompletion");
+    expect(guide).toContain("multi-portfolio canonical seed remains required");
+    expect(guide).toContain("it is not a claim of bank approval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
   });
 
   it("maps Portfolio Review and its compatibility paths to one complete canonical guide", () => {
@@ -225,6 +252,7 @@ describe("Workbench screen documentation governance", () => {
     const surface = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "report-centre",
     );
+    surface.wikiSlug = null;
     surface.coverageException = null;
 
     expect(validate(registry).errors).toContain(

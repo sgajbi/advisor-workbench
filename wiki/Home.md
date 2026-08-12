@@ -20,6 +20,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Portfolio Review](Portfolio-Review-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
+- Reviewed single-portfolio and own-book bundle reporting flow:
+  [Report Centre](Report-Centre-Screen-Guide)
 - Governed business guide inventory for every active screen and mode:
   [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - Bank architecture and procurement evidence for the supported runtime baseline:
@@ -68,6 +70,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
+- [Report Centre](Report-Centre-Screen-Guide)
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Architecture](Architecture)
 - [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)

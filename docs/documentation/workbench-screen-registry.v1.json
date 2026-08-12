@@ -410,16 +410,19 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "Report-Centre-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-report"],
-      "implementationEvidence": ["src/app/reports/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/app/reports/page.tsx",
+        "src/features/report-ordering/components/report-portfolio-scope-panel.tsx",
+        "src/features/report-ordering/components/report-batch-status.tsx"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/report-centre-state.smoke.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "reporting-and-data-product-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "proposal-detail",
