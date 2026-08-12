@@ -3,7 +3,7 @@
 import { formatCurrency, formatDate } from "../formatters";
 import {
   buildProjectedCashflowChartModel,
-  formatCashflowNetFlowTitle,
+  formatCashflowNetMovementTitle,
   formatCashflowPointTitle,
 } from "../portfolio-chart-view-model";
 import type { PortfolioWorkspace } from "../types";
@@ -43,57 +43,77 @@ export default function PortfolioProjectedCashflowPanel({
           </strong>
         </div>
         <div className={styles.summaryStat}>
-          <span>Projected Inflows</span>
+          <span>Positive Net Movement</span>
           <strong>
             {aggregateOnlyMovement
               ? "Dated detail unavailable"
-              : formatCurrency(chartModel.totalInflows, baseCurrency)}
+              : formatCurrency(
+                  chartModel.totalPositiveNetMovement,
+                  baseCurrency,
+                )}
           </strong>
         </div>
         <div className={styles.summaryStat}>
-          <span>Projected Outflows</span>
+          <span>Negative Net Movement</span>
           <strong>
             {aggregateOnlyMovement
               ? "Dated detail unavailable"
-              : formatCurrency(chartModel.totalOutflows, baseCurrency)}
+              : formatCurrency(
+                  chartModel.totalNegativeNetMovement,
+                  baseCurrency,
+                )}
           </strong>
         </div>
         <div className={styles.summaryStat}>
-          <span>Largest Outflow</span>
+          <span>Largest Negative Movement</span>
           <strong>
-            {chartModel.largestOutflow
+            {chartModel.largestNegativeNetMovement
               ? formatCurrency(
-                  chartModel.largestOutflow.net_cashflow_base,
+                  chartModel.largestNegativeNetMovement.net_cashflow_base,
                   baseCurrency,
                 )
               : aggregateOnlyMovement
                 ? "Dated detail unavailable"
-                : "No outflow"}
+                : "No negative movement"}
           </strong>
-          {chartModel.largestOutflow ? (
-            <em>{formatDate(chartModel.largestOutflow.projection_date)}</em>
+          {chartModel.largestNegativeNetMovement ? (
+            <em>
+              {formatDate(
+                chartModel.largestNegativeNetMovement.projection_date,
+              )}
+            </em>
           ) : null}
         </div>
       </div>
-      <div className={styles.chartLegend} aria-label="Cash movement chart key">
-        <span>
-          <span className={styles.movementSwatches} aria-hidden="true">
-            <span className={styles.inflowSwatch} />
-            <span className={styles.outflowSwatch} />
+      {chartModel.chartPoints.length ? (
+        <div
+          className={styles.chartLegend}
+          aria-label="Cash movement chart key"
+        >
+          <span>
+            <span className={styles.movementSwatches} aria-hidden="true">
+              <span className={styles.positiveMovementSwatch} />
+              <span className={styles.negativeMovementSwatch} />
+            </span>
+            Bars: dated net movement
           </span>
-          Bars: dated movement
-        </span>
-        <span>
-          <span className={styles.cumulativeSwatch} aria-hidden="true" />
-          Line: cumulative movement
-        </span>
-      </div>
+          <span>
+            <span className={styles.cumulativeSwatch} aria-hidden="true" />
+            Line: cumulative movement
+          </span>
+        </div>
+      ) : aggregateOnlyMovement ? (
+        <p className={styles.tableNote}>
+          Dated chart unavailable; the source returned aggregate net movement
+          only.
+        </p>
+      ) : null}
       <div className={styles.chart} hidden={!chartModel.chartPoints.length}>
         <svg
           viewBox="0 0 320 196"
           className="portfolio-timeseries-chart-svg"
           role="img"
-          aria-label={`Projected cash movement chart in ${baseCurrency}; bars show dated movement and the line shows cumulative movement`}
+          aria-label={`Projected cash movement chart in ${baseCurrency}; bars show dated net movement and the line shows cumulative movement`}
         >
           {[36, 68, 100, 132, 164].map((gridY) => (
             <line
@@ -129,7 +149,7 @@ export default function PortfolioProjectedCashflowPanel({
                 }
               >
                 <title>
-                  {formatCashflowNetFlowTitle(bar.point, baseCurrency)}
+                  {formatCashflowNetMovementTitle(bar.point, baseCurrency)}
                 </title>
               </rect>
             </g>
@@ -186,8 +206,8 @@ export default function PortfolioProjectedCashflowPanel({
         aria-label="Projected cash movement mix"
         hidden={!chartModel.chartPoints.length}
       >
-        <span>{`${chartModel.positiveFlowCount} inflow${chartModel.positiveFlowCount === 1 ? "" : "s"}`}</span>
-        <span>{`${chartModel.negativeFlowCount} outflow${chartModel.negativeFlowCount === 1 ? "" : "s"}`}</span>
+        <span>{`${chartModel.positiveNetMovementCount} positive movement date${chartModel.positiveNetMovementCount === 1 ? "" : "s"}`}</span>
+        <span>{`${chartModel.negativeNetMovementCount} negative movement date${chartModel.negativeNetMovementCount === 1 ? "" : "s"}`}</span>
         <span>{`Through ${formatDate(cashflowOutlook.range_end_date)}`}</span>
       </div>
     </div>

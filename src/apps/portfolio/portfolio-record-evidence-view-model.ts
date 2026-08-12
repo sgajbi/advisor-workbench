@@ -242,11 +242,9 @@ function buildCashflowSourcePosture(
   const aggregateOnlyMovement = Boolean(
     cashflow && pointCount === 0 && cashflow.total_net_cashflow_base !== 0,
   );
-  const aggregateDirection =
-    cashflow && cashflow.total_net_cashflow_base < 0 ? "outflow" : "inflow";
   const aggregateAmount = cashflow
     ? formatCurrency(
-        Math.abs(cashflow.total_net_cashflow_base),
+        cashflow.total_net_cashflow_base,
         workspace.portfolio.base_currency,
       )
     : null;
@@ -267,7 +265,7 @@ function buildCashflowSourcePosture(
           ? `${projection?.selectedHorizonDays ?? 10}-day projection requested`
           : "Projected movement source unavailable",
         detail: loading
-          ? "Expected inflows and outflows are being retrieved for the selected horizon"
+          ? "Projected net movement points are being retrieved for the selected horizon"
           : `No ${projection?.selectedHorizonDays ?? 10}-day projected cash movement is available for review`,
         tone: loading ? "default" : "danger",
         status: loading ? "Loading" : "Unavailable",
@@ -318,11 +316,11 @@ function buildCashflowSourcePosture(
         : "Not provided",
       detail: cashflow
         ? aggregateOnlyMovement
-          ? `Net projected ${aggregateDirection} of ${aggregateAmount}; dated inflow and outflow counts unavailable`
-          : `${formatCount(positiveCount, "inflow")} and ${formatCount(
+          ? `Net projected movement of ${aggregateAmount}; dated positive and negative movement counts unavailable`
+          : `${formatCount(positiveCount, "positive movement date")} and ${formatCount(
               negativeCount,
-              "outflow",
-            )} in the returned forecast`
+              "negative movement date",
+            )} in the returned projection`
         : "Horizon cannot be displayed until the source outlook is available",
       tone: evidenceTone,
       status:

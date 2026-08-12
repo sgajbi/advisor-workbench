@@ -43,7 +43,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   cashflow: {
     title: "Cashflow",
     subtitle:
-      "Review expected inflows and outflows across the selected horizon. Figures show movement, not projected cash balances.",
+      "Review expected dated net cash movements across the selected horizon. Figures show movement, not projected cash balances.",
     kicker: "Projected cash movement",
   },
 };

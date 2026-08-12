@@ -156,7 +156,7 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("current booked cash remains a separate fact");
-    expect(guide).toContain("bars for dated movement from the cumulative movement line");
+    expect(guide).toContain("bars for dated net movement from the cumulative movement line");
     expect(guide).toContain("does not:\n\n- calculate opening cash");
     expect(guide).toContain("not a claim of bank approval or\ncompetitor superiority");
     expect(validate(registry).errors).toEqual([]);

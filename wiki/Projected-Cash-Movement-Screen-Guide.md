@@ -1,7 +1,7 @@
 # Projected Cash Movement
 
 Projected Cash Movement is the selected portfolio's forward movement review. It helps an advisor
-or portfolio manager understand expected dated inflows and outflows before a client conversation,
+or portfolio manager understand expected dated net cash movements before a client conversation,
 funding discussion, or mandate review. It does not calculate an ending cash balance, decide
 liquidity sufficiency, recommend funding, or initiate a transfer, trade, or settlement instruction.
 
@@ -25,19 +25,20 @@ book, team book, or multiple mandates.
 Projected Cash Movement helps an advisor or portfolio manager answer four bounded questions:
 
 1. What is the net expected cash movement over the selected horizon?
-2. How much of that movement is expected inflow and how much is expected outflow?
-3. Which dated outflow is largest and therefore most useful to discuss first?
+2. How much positive and negative net movement appears across the returned dates?
+3. Which dated negative net movement is largest and therefore most useful to discuss first?
 4. Is the projection complete enough to explain, or is source evidence limited, unconfirmed, or
    unavailable?
 
-The reading order is projection identity and basis, sources and uses, largest outflow, dated
+The reading order is projection identity and basis, positive and negative net movement, largest
+negative movement, dated
 movement pattern, exact schedule, then source posture. Current booked cash is shown separately as
 decision context and is never combined with projected movement to invent an ending balance.
 
 ## Who Uses This Screen
 
-- **Client advisors and relationship managers** prepare a source-backed explanation of expected
-  subscriptions, withdrawals, fees, income, or other returned movement before a client discussion.
+- **Client advisors and relationship managers** prepare a source-backed explanation of the timing
+  and direction of returned projected movement before a client discussion.
 - **Portfolio managers and investment specialists** review the timing and direction of expected
   movement alongside current booked cash without treating it as funding authority.
 - **Investment operations and support teams** investigate missing dated detail, projection
@@ -55,8 +56,9 @@ supervisory claims.
    [Transactions](Transactions-Screen-Guide), or [Income And Activity](Income-And-Activity-Screen-Guide).
 2. Confirm the selected mandate, reporting currency, source as-of date, projection basis, and
    selected 10-, 30-, or 90-day horizon.
-3. Compare net projected movement, projected inflows, projected outflows, and the largest outflow.
-4. Read bars as dated movement and the line as cumulative movement; use the exact schedule for
+3. Compare net projected movement, positive net movement, negative net movement, and the largest
+   dated negative movement.
+4. Read bars as dated net movement and the line as cumulative movement; use the exact schedule for
    values that should not be inferred from chart geometry.
 5. Check source limitations and current booked cash before explaining the projection or handing off
    to an adjacent workflow.
@@ -71,9 +73,10 @@ dated points.
   Workbench BFF and Gateway.
 - Keeps the selected horizon, projection result, status rail, schedule, and export gate on one
   controller-owned state so prior-horizon evidence cannot appear current.
-- Presents net projected movement, projected inflows, projected outflows, largest outflow, source
-  as-of date, returned horizon, projection basis, currency, and dated movement schedule.
-- Distinguishes bars for dated movement from the cumulative movement line in visible and accessible
+- Presents net projected movement, positive net movement, negative net movement, the largest dated
+  negative movement, source as-of date, returned horizon, projection basis, currency, and dated
+  movement schedule.
+- Distinguishes bars for dated net movement from the cumulative movement line in visible and accessible
   chart semantics.
 - Preserves warnings, partial failures, contract version, correlation evidence, and aggregate-only
   posture without manufacturing missing dated detail.
@@ -86,8 +89,8 @@ dated points.
 
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
-| Explain expected sources and uses | Confirmed selected-horizon result, basis, currency, and source date | None; read-only review |
-| Prioritise an expected outflow discussion | Source-returned dated points and visible largest-outflow evidence | None; Workbench does not recommend funding |
+| Explain expected movement direction and timing | Confirmed selected-horizon result, basis, currency, and source date | None; read-only review |
+| Prioritise a negative-movement discussion | Source-returned dated points and visible largest-negative-movement evidence | None; Workbench does not recommend funding |
 | Change horizon | Supported 10-, 30-, or 90-day selection | None; requests a new projection |
 | Retry a failed projection | Explicit unavailable or unconfirmed source state | None; re-contacts source authority |
 | Export the exact schedule | Confirmed selected result with dated points and no active refresh or failure | Local evidence file only |
@@ -102,7 +105,7 @@ settlement, report request, client communication, or approval record.
 | --- | --- | --- |
 | Portfolio, mandate, reporting currency, booked cash, and governed as-of date | Formats selected-workspace facts and keeps booked cash separate from projected movement | Gateway over Core portfolio contracts |
 | Projection horizon, range, basis, net movement, dated points, warnings, and partial failures | Validates and presents the selected result without calculating source economics | Gateway projected-cashflow contract over Core records |
-| Inflow total, outflow total, and largest outflow | Deterministic presentation projection over returned dated points | Workbench view model over the confirmed Gateway response |
+| Positive net movement, negative net movement, and largest dated negative movement | Deterministic presentation projection over returned dated net values; does not claim gross receipts or payments | Workbench view model over the confirmed Gateway response |
 | Cumulative movement line | Plots the source-returned cumulative value; does not call it cash balance | Gateway projected-cashflow contract |
 | Retry | Repeats the selected-horizon BFF request | Gateway and owning source service |
 | CSV export | Formats every returned dated point after confirmation | Confirmed selected-horizon Workbench state |
@@ -116,9 +119,9 @@ Workbench uses the BFF and Gateway; it does not call Core directly. Shared contr
 | --- | --- | --- |
 | Loading | Selected horizon and a bounded loading state; no prior-horizon result is relabelled | Wait for the governed Gateway request |
 | Refreshing | Server-seeded result remains visible but marked as being confirmed; export is blocked | Wait or use the explicit retry after failure |
-| Ready | Confirmed scope, sources and uses, chart, schedule, and aligned evidence rail | Continue the review |
+| Ready | Confirmed scope, signed net movement, chart, schedule, and aligned evidence rail | Continue the review |
 | No movement | Explicit **No projected cash movement** for the selected horizon | Choose another horizon only when that is the intended business question |
-| Aggregate only | Net movement remains visible while dated sources, uses, schedule, and export are unavailable | Treat as partial and investigate source detail |
+| Aggregate only | Net movement remains visible while dated direction, chart, schedule, and export are unavailable | Treat as partial and investigate source detail |
 | Partial or limited | Returned result remains visible with named warnings or partial failures | Use returned support evidence; do not treat limitations as complete |
 | Unconfirmed | Prior workspace evidence is visibly qualified after confirmation fails | Retry the selected horizon before relying on it as current |
 | Unavailable | Selected horizon is replaced by an unavailable state and explicit retry | Retry through Gateway or follow the approved support process |
@@ -135,13 +138,13 @@ Projected Cash Movement deliberately does not:
 - apply projected movement to booked cash or present cumulative movement as a balance,
 - create a scenario, commitment schedule, private-markets capital call, transfer, payment, trade,
   order, execution, settlement, or reconciliation,
-- infer missing dated points, source classification, approval, entitlement, client suitability, or
-  source readiness,
+- infer missing dated points, gross receipts or payments within a netted date, source
+  classification, approval, entitlement, client suitability, or source readiness,
 - treat a screenshot, browser chart, or competitor feature description as calculation evidence,
 - expose implementation topology as the primary language of the business workflow.
 
 Official wealth-platform research informed the integrated cash-decision context, explicit
-projection horizon, and sources/uses reading order. Lotus did not copy a competitor's layout,
+projection horizon, and signed-movement reading order. Lotus did not copy a competitor's layout,
 wording, visual identity, or unsupported capability; this guide is not a claim of bank approval or
 competitor superiority.
 
@@ -159,15 +162,15 @@ competitor superiority.
 
 ## Evidence And Validation
 
-- Pure view-model tests prove inflow and outflow totals, outflow-first decision focus, flat and
-  aggregate-only posture, stable business labels, and exact export rows.
+- Pure view-model tests prove positive and negative net-movement totals, negative-movement-first
+  decision focus, flat and aggregate-only posture, stable business labels, and exact export rows.
 - Hook and component tests prove selected-horizon request fencing, loading, ready, empty, partial,
   unconfirmed, unavailable, retry, export, and accessible schedule behavior.
 - Evidence-rail tests prove the selected 30-day result replaces the server-seeded 10-day posture
   and that current booked cash remains a separate fact rather than an invented ending balance.
 - The owned production-browser scenario uses `PB_SG_GLOBAL_BAL_001`, selects 30 days, and proves two
-  inflows, one outflow, three dated points, aligned rail evidence, explicit chart semantics, and no
-  page overflow at 1440/1024/768/519 px.
+  positive net-movement dates, one negative net-movement date, three dated points, aligned rail
+  evidence, explicit chart semantics, and no page overflow at 1440/1024/768/519 px.
 - The browser matrix proves four/two/two/two summary columns and a named focusable schedule whose
   own overflow remains available at 519 px. Screenshots are visual evidence only; the matching JSON
   artifact retains machine-readable values and viewport measurements.

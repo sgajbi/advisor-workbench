@@ -278,7 +278,7 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     expect(screen.getByText("No projected cash movement")).toBeInTheDocument();
     expect(
-      screen.getByText("The source returned no expected inflows or outflows for this horizon.")
+      screen.getByText("The source returned no dated projected net movement for this horizon.")
     ).toBeInTheDocument();
     expect(screen.queryByText(/liquidity/i)).not.toBeInTheDocument();
   });
@@ -293,7 +293,13 @@ describe("PortfolioProjectedCashflowModule", () => {
 
     expect(screen.getByLabelText("Projected cash movement summary")).toHaveTextContent("-750 USD");
     expect(screen.getAllByText("Dated detail unavailable")).toHaveLength(3);
-    expect(screen.queryByText("No outflow")).not.toBeInTheDocument();
+    expect(screen.queryByText("No negative movement")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Dated chart unavailable; the source returned aggregate net movement only."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Cash movement chart key")).not.toBeInTheDocument();
     expect(screen.getByText("Dated movement schedule unavailable")).toBeInTheDocument();
     expect(screen.queryByText("No projected cash movement")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
@@ -315,19 +321,19 @@ describe("PortfolioProjectedCashflowModule", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Projected Inflows").closest("div"),
+      screen.getByText("Positive Net Movement").closest("div"),
     ).toHaveTextContent("500 USD");
     expect(
-      screen.getByText("Projected Outflows").closest("div"),
+      screen.getByText("Negative Net Movement").closest("div"),
     ).toHaveTextContent("-250 USD");
     expect(
-      screen.getByText("Largest Outflow").closest("div"),
+      screen.getByText("Largest Negative Movement").closest("div"),
     ).toHaveTextContent("-250 USD");
     expect(
       screen.queryByText("Horizon", { exact: true }),
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Cash movement chart key")).toHaveTextContent(
-      "Bars: dated movementLine: cumulative movement",
+      "Bars: dated net movementLine: cumulative movement",
     );
     expect(
       screen.getByRole("region", {
