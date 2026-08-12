@@ -39,6 +39,7 @@ export function ReportBatchStatusPanel({
             <div><span>Complete</span><strong>{summary.complete}</strong></div>
             <div><span>In progress</span><strong>{summary.inProgress}</strong></div>
             <div><span>Needs attention</span><strong>{summary.attention}</strong></div>
+            <div><span>Cancelled</span><strong>{summary.cancelled}</strong></div>
             <div className={styles.batchProgress}>
               <span>Completion</span>
               <div
@@ -103,10 +104,17 @@ function buildBatchSummary(status: ReportBatchStatus) {
   const attention = status.items.filter((item) =>
     item.status === "failed_retryable" || item.status === "failed_terminal",
   ).length;
-  const inProgress = Math.max(status.item_count - complete - attention, 0);
+  const cancelled = status.items.filter((item) => item.status === "cancelled").length;
+  const inProgress = status.items.filter((item) =>
+    item.status === "materialized" ||
+    item.status === "leased" ||
+    item.status === "waiting_on_report_job" ||
+    item.status === "recovery_pending"
+  ).length;
   return {
     complete,
     attention,
+    cancelled,
     inProgress,
     completionPercent: status.item_count === 0 ? 0 : Math.round((complete / status.item_count) * 100),
   };

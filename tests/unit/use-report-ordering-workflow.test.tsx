@@ -306,6 +306,40 @@ describe("useReportOrderingWorkflow", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
+  it("creates a fresh reviewed intent when the selected portfolio bundle changes", async () => {
+    const { result, rerender } = renderHook(
+      ({ selectedPortfolioIds }) =>
+        useReportOrderingWorkflow({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+          scopeMode: "explicit_portfolio_batch",
+          selectedPortfolioIds,
+        }),
+      {
+        initialProps: {
+          selectedPortfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+        },
+      },
+    );
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      result.current.reviewRequest();
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+
+    rerender({
+      selectedPortfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_GROWTH_003"],
+    });
+    expect(result.current.preflightReviewed).toBe(false);
+
+    act(() => {
+      result.current.reviewRequest();
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+    expect(result.current.canSubmitReviewedRequest).toBe(true);
+  });
+
   it("resets scope-bound state when the selected portfolio changes", async () => {
     const { result, rerender } = renderHook(
       ({ portfolioId }) =>

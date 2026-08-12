@@ -124,6 +124,20 @@
   gap: 8px;
 }
 
+.bookPagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bookPagination span {
+  color: #40515e;
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-align: center;
+}
+
 .portfolioSelectionList {
   display: grid;
   max-height: 360px;
@@ -192,7 +206,7 @@
 
 .batchSummary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
   margin-bottom: 12px;
   overflow: hidden;
@@ -644,6 +658,11 @@
 
   .selectionActions {
     justify-content: flex-start;
+  }
+
+  .bookPagination {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .batchSummary {

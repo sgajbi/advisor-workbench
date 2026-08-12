@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ActionButton, FieldLabel, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 import { useAdvisorBook } from "@/features/advisor-book/use-advisor-book";
@@ -106,7 +106,12 @@ function PortfolioBookSelection({
   onSelectionChange: (portfolioIds: string[]) => void;
 }) {
   const [filter, setFilter] = useState("");
-  const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", limit: 100 });
+  const [offset, setOffset] = useState(0);
+  const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 });
+  useEffect(() => {
+    setFilter("");
+    setOffset(0);
+  }, [asOfDate]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {
     const query = filter.trim().toLocaleLowerCase();
@@ -121,6 +126,8 @@ function PortfolioBookSelection({
   const selectableVisibleIds = visibleItems
     .filter((item) => item.status === "ACTIVE")
     .map((item) => item.portfolio_id);
+  const page = book.response?.page;
+  const lastReturned = page ? page.offset + page.returned_count : 0;
 
   function toggle(portfolioId: string) {
     const next = new Set(selected);
@@ -155,7 +162,7 @@ function PortfolioBookSelection({
         <>
           <div className={styles.bookSelectionTools}>
             <div className={styles.bookSearch}>
-              <FieldLabel htmlFor="report-portfolio-filter">Find a portfolio</FieldLabel>
+              <FieldLabel htmlFor="report-portfolio-filter">Filter portfolios on this page</FieldLabel>
               <input
                 id="report-portfolio-filter"
                 className="workbench-input"
@@ -203,6 +210,35 @@ function PortfolioBookSelection({
               );
             })}
           </div>
+          {page ? (
+            <nav className={styles.bookPagination} aria-label="Portfolio book pages">
+              <ActionButton
+                priority="secondary"
+                disabled={disabled || book.loading || page.offset === 0}
+                onClick={() => {
+                  setFilter("");
+                  setOffset(Math.max(page.offset - page.limit, 0));
+                }}
+              >
+                Previous portfolios
+              </ActionButton>
+              <span>
+                {page.returned_count > 0
+                  ? `${page.offset + 1}–${lastReturned} of ${page.total_count}`
+                  : `0 of ${page.total_count}`} portfolios
+              </span>
+              <ActionButton
+                priority="secondary"
+                disabled={disabled || book.loading || lastReturned >= page.total_count}
+                onClick={() => {
+                  setFilter("");
+                  setOffset(page.offset + page.limit);
+                }}
+              >
+                Next portfolios
+              </ActionButton>
+            </nav>
+          ) : null}
           {visibleItems.length === 0 ? <p className={styles.scopeBoundary}>No portfolios match the current search.</p> : null}
           {book.response?.supportability.state === "degraded" ? (
             <p className={styles.scopeBoundary}>Portfolio assignments are available with source limitations. Gateway will fail closed if selected membership cannot be verified.</p>

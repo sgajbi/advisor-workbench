@@ -15,6 +15,7 @@ import {
   parseReportOrderingResponse,
 } from "@/features/report-ordering/contracts";
 import { WorkbenchApiError } from "@/features/workbench/api-client";
+import { useAdvisorBook } from "@/features/advisor-book/use-advisor-book";
 import {
   buildReportBatchHandle,
   buildReportBatchStatus,
@@ -31,7 +32,7 @@ vi.mock("@/features/report-ordering/api", () => ({
 }));
 
 vi.mock("@/features/advisor-book/use-advisor-book", () => ({
-  useAdvisorBook: () => ({
+  useAdvisorBook: vi.fn(() => ({
     loading: false,
     error: null,
     reload: vi.fn(),
@@ -48,9 +49,13 @@ vi.mock("@/features/advisor-book/use-advisor-book", () => ({
           mandate_type: "DISCRETIONARY", status: "ACTIVE",
         },
       ],
+      page: {
+        total_count: 150, offset: 0, limit: 100, returned_count: 2,
+        sort_by: "client_id", sort_order: "asc",
+      },
       supportability: { state: "ready" },
     },
-  }),
+  })),
 }));
 
 const optionsMock = vi.mocked(getReportOrderingOptions);
@@ -58,6 +63,7 @@ const historyMock = vi.mocked(listPortfolioReviewOrders);
 const submitMock = vi.mocked(submitPortfolioReviewOrder);
 const submitBatchMock = vi.mocked(submitPortfolioReviewBatch);
 const batchStatusMock = vi.mocked(getPortfolioReviewBatchStatus);
+const advisorBookMock = vi.mocked(useAdvisorBook);
 
 const portfolio = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -192,6 +198,21 @@ describe("ReportOrderingWorkspace", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
+  it("pages through the source-owned advisor book instead of truncating bundle selection", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    expect(screen.getByText("1–2 of 150 portfolios")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next portfolios" }));
+
+    expect(advisorBookMock).toHaveBeenCalledWith(expect.objectContaining({
+      asOfDate: "2026-04-22",
+      offset: 100,
+      limit: 100,
+    }));
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
@@ -217,7 +238,8 @@ describe("ReportOrderingWorkspace", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /Selected portfolio/ })).toBeDisabled();
     expect(screen.getByRole("radio", { name: /Portfolio bundle/ })).toBeDisabled();
-    expect(screen.getByRole("searchbox", { name: "Find a portfolio" })).toBeDisabled();
+    expect(screen.getByRole("searchbox", { name: "Filter portfolios on this page" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next portfolios" })).toBeDisabled();
     expect(secondPortfolio).toBeDisabled();
     expect(screen.getByLabelText("Report date")).toBeDisabled();
     expect(screen.getByLabelText("Reporting currency")).toBeDisabled();
@@ -234,6 +256,33 @@ describe("ReportOrderingWorkspace", () => {
         portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
       }),
     );
+  });
+
+  it("reports cancelled portfolio outcomes separately from active work", async () => {
+    const status = buildReportBatchStatus();
+    (status as { status_counts: Record<string, number> }).status_counts = {
+      succeeded: 1,
+      cancelled: 1,
+    };
+    status.items[1].status = "cancelled";
+    status.items[1].retry_eligible = false;
+    status.items[1].last_error_category = null;
+    status.items[1].last_error_summary = null;
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    const summary = await screen.findByLabelText("Portfolio bundle summary");
+    expect(within(summary).getByText("In progress").parentElement).toHaveTextContent("In progress0");
+    expect(within(summary).getByText("Cancelled").parentElement).toHaveTextContent("Cancelled1");
+    expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toHaveTextContent("Cancelled");
   });
 
   it("keeps a rejected portfolio bundle explicit and never renders success outcomes", async () => {

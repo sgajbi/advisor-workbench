@@ -198,14 +198,12 @@ export function findPortfolioReviewBatchMode(
     (mode) =>
       mode.modeId === "explicit_portfolio_batch" &&
       mode.interactive &&
-      mode.eligibility.state !== "unavailable" &&
-      mode.eligibility.state !== "permission_blocked" &&
-      mode.eligibility.state !== "unsupported" &&
+      mode.eligibility.state === "partial" &&
+      mode.eligibility.reasonCode === "explicit_portfolio_selection_required" &&
       mode.submission?.capabilityId === "reporting.portfolio_review.explicit_batch" &&
       mode.submission.path === "/api/v1/report-batches" &&
-      mode.submission.state !== "unavailable" &&
-      mode.submission.state !== "permission_blocked" &&
-      mode.submission.state !== "unsupported",
+      mode.submission.state === "partial" &&
+      mode.submission.reasonCode === "explicit_portfolio_selection_required",
   ) ?? null;
 }
 
