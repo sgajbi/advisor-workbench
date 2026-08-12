@@ -313,6 +313,26 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
   });
 
+  it("clears a reviewed portfolio bundle when My book is definitively empty", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+
+    const emptyBook = buildAdvisorBookResult();
+    emptyBook.response.items = [];
+    emptyBook.response.page.total_count = 0;
+    emptyBook.response.page.returned_count = 0;
+    advisorBookMock.mockReturnValue(emptyBook);
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    expect(await screen.findByText("0 selected")).toBeInTheDocument();
+    expect(screen.getByText("No portfolios available")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
@@ -617,6 +637,40 @@ describe("ReportOrderingWorkspace", () => {
     } finally {
       timerSpy.mockRestore();
     }
+  });
+
+  it.each([
+    ["report date", (status: ReturnType<typeof buildReportBatchStatus>) => {
+      status.as_of_date = "2026-04-21";
+    }],
+    ["output format", (status: ReturnType<typeof buildReportBatchStatus>) => {
+      status.requested_output_formats = ["pdf"];
+    }],
+    ["reporting currency", (status: ReturnType<typeof buildReportBatchStatus>) => {
+      status.reporting_currency = "USD";
+    }],
+  ])("rejects source-owned outcomes with a different reviewed %s", async (_field, mutateStatus) => {
+    const mismatchedStatus = buildReportBatchStatus();
+    mutateStatus(mismatchedStatus);
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(mismatchedStatus));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/returned report setup did not match the reviewed request/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).not.toBeInTheDocument();
   });
 
   it("clears stale bundle selection when the report date changes", async () => {

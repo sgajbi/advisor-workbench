@@ -48,6 +48,13 @@ type SubmissionProgressState = {
   error: string | null;
 };
 
+type ActiveBatchIntent = {
+  portfolioIds: string[];
+  asOfDate: string;
+  requestedOutputFormats: string[];
+  reportingCurrency: string | null;
+};
+
 type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
 
 export function useReportOrderingWorkflow({
@@ -90,7 +97,7 @@ export function useReportOrderingWorkflow({
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
   const activeBatchIdRef = useRef<string | null>(null);
-  const activeBatchPortfolioIdsRef = useRef<string[]>([]);
+  const activeBatchIntentRef = useRef<ActiveBatchIntent | null>(null);
   const batchStatusRequestSequenceRef = useRef(0);
   const historyRequestSequenceRef = useRef(0);
 
@@ -111,16 +118,31 @@ export function useReportOrderingWorkflow({
         );
         return false;
       }
-      const expectedPortfolioIds = activeBatchPortfolioIdsRef.current;
+      const activeBatchIntent = activeBatchIntentRef.current;
       const returnedPortfolioIds = [...response.materialized_portfolio_ids].sort();
       if (
-        expectedPortfolioIds.length !== returnedPortfolioIds.length ||
-        expectedPortfolioIds.some(
+        !activeBatchIntent ||
+        activeBatchIntent.portfolioIds.length !== returnedPortfolioIds.length ||
+        activeBatchIntent.portfolioIds.some(
           (portfolioId, index) => portfolioId !== returnedPortfolioIds[index],
         )
       ) {
         setBatchStatusError(
           "The bundle was accepted, but the returned portfolios did not match the reviewed selection.",
+        );
+        return false;
+      }
+      const returnedOutputFormats = [...response.requested_output_formats].sort();
+      if (
+        response.as_of_date !== activeBatchIntent.asOfDate ||
+        activeBatchIntent.requestedOutputFormats.length !== returnedOutputFormats.length ||
+        activeBatchIntent.requestedOutputFormats.some(
+          (outputFormat, index) => outputFormat !== returnedOutputFormats[index],
+        ) ||
+        response.reporting_currency !== activeBatchIntent.reportingCurrency
+      ) {
+        setBatchStatusError(
+          "The bundle was accepted, but the returned report setup did not match the reviewed request.",
         );
         return false;
       }
@@ -222,7 +244,7 @@ export function useReportOrderingWorkflow({
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
     activeBatchIdRef.current = null;
-    activeBatchPortfolioIdsRef.current = [];
+    activeBatchIntentRef.current = null;
     batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
     setSubmittedBatchHandle(null);
@@ -416,7 +438,16 @@ export function useReportOrderingWorkflow({
       }
       if (scopeMode === "explicit_portfolio_batch") {
         const batchHandle = handle as ReportBatchHandle;
-        activeBatchPortfolioIdsRef.current = [...selectedPortfolioIds].sort();
+        activeBatchIntentRef.current = {
+          portfolioIds: [...selectedPortfolioIds].sort(),
+          asOfDate: configuration.asOfDate,
+          requestedOutputFormats: [configuration.outputFormat],
+          reportingCurrency:
+            publishedConfigurationFieldIds.has("reporting_currency") &&
+            configuration.reportingCurrency
+              ? configuration.reportingCurrency
+              : null,
+        };
         activeBatchIdRef.current = batchHandle.batch_id;
         setSubmittedBatchHandle(batchHandle);
         await loadBatchStatus(batchHandle.batch_id);
@@ -468,7 +499,7 @@ export function useReportOrderingWorkflow({
     });
     setReviewedIntent(null);
     activeBatchIdRef.current = null;
-    activeBatchPortfolioIdsRef.current = [];
+    activeBatchIntentRef.current = null;
     batchStatusRequestSequenceRef.current += 1;
     setSubmittedBatchHandle(null);
     setBatchStatus(null);
