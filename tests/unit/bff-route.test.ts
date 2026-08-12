@@ -1305,6 +1305,32 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(403);
   });
 
+  it.each([undefined, "advisor_book"])(
+    "rejects report batch selector mode %s before Gateway submission",
+    async (selectorMode) => {
+      const fetchMock = vi.mocked(fetch);
+      const requestBody: Record<string, unknown> = {
+        portfolio_ids: ["PB_SG_GLOBAL_BAL_001"],
+        as_of_date: "2026-04-22",
+      };
+      if (selectorMode) {
+        requestBody.selector_mode = selectorMode;
+      }
+      const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const response = await POST(request, {
+        params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(422);
+    },
+  );
+
   it("forwards source-owned report batch status without browser authority", async () => {
     process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID = "RM_CH_007";
     process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID = "tenant-ch";

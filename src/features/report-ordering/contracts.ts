@@ -244,7 +244,7 @@ const reportBatchItemSchema = z.object({
   cancelled_at: z.string().min(1).nullable(),
 }).strict();
 
-export const reportBatchStatusSchema = z.object({
+const reportBatchStatusBaseSchema = z.object({
   batch_id: z.string().min(1),
   selector_mode: z.literal("explicit_portfolio_list"),
   tenant_id: z.string().min(1),
@@ -268,6 +268,56 @@ export const reportBatchStatusSchema = z.object({
   supportability: reportingSupportabilitySchema.nullable(),
   render_supportability: renderSupportabilitySchema.nullable(),
 }).strict();
+
+function validateReportBatchStatus(
+  status: z.infer<typeof reportBatchStatusBaseSchema>,
+  context: z.RefinementCtx,
+) {
+  const materializedPortfolioIds = new Set(status.materialized_portfolio_ids);
+  const itemPortfolioIds = new Set(status.items.map((item) => item.portfolio_id));
+  const itemPositions = new Set(status.items.map((item) => item.item_position));
+
+  if (
+    status.item_count !== status.materialized_portfolio_ids.length ||
+    status.item_count !== status.items.length
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Batch item count must match materialized portfolios and outcomes",
+    });
+  }
+  if (materializedPortfolioIds.size !== status.materialized_portfolio_ids.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Materialized portfolio identifiers must be unique",
+    });
+  }
+  if (itemPortfolioIds.size !== status.items.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Batch outcome portfolio identifiers must be unique",
+    });
+  }
+  if (itemPositions.size !== status.items.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Batch outcome positions must be unique",
+    });
+  }
+  if (
+    materializedPortfolioIds.size !== itemPortfolioIds.size ||
+    [...materializedPortfolioIds].some((portfolioId) => !itemPortfolioIds.has(portfolioId))
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Batch outcomes must match the materialized portfolio selection",
+    });
+  }
+}
+
+export const reportBatchStatusSchema = reportBatchStatusBaseSchema.superRefine(
+  validateReportBatchStatus,
+);
 
 export type ReportOrderingResponse = z.infer<typeof reportOrderingResponseSchema>;
 export type ReportFamily = ReportOrderingResponse["reportFamilies"][number];

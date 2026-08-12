@@ -92,4 +92,27 @@ describe("report ordering contracts", () => {
     response.items[0].status = "emailed_to_client";
     expect(() => parseReportBatchStatus(response)).toThrow();
   });
+
+  it.each([
+    ["a mismatched item count", (response: ReturnType<typeof buildReportBatchStatus>) => {
+      response.item_count = 3;
+    }],
+    ["duplicate materialized portfolios", (response: ReturnType<typeof buildReportBatchStatus>) => {
+      response.materialized_portfolio_ids[1] = response.materialized_portfolio_ids[0];
+    }],
+    ["duplicate outcome positions", (response: ReturnType<typeof buildReportBatchStatus>) => {
+      response.items[1].item_position = response.items[0].item_position;
+    }],
+    ["duplicate outcome portfolios", (response: ReturnType<typeof buildReportBatchStatus>) => {
+      response.items[1].portfolio_id = response.items[0].portfolio_id;
+    }],
+    ["an outcome outside the materialized selection", (response: ReturnType<typeof buildReportBatchStatus>) => {
+      response.items[1].portfolio_id = "PB_SG_UNREVIEWED_003";
+    }],
+  ])("fails closed when batch status contains %s", (_scenario, mutateResponse) => {
+    const response = buildReportBatchStatus();
+    mutateResponse(response);
+
+    expect(() => parseReportBatchStatus(response)).toThrow();
+  });
 });
