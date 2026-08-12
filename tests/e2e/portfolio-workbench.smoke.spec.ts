@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { test, expect } from '@playwright/test';
@@ -22,7 +22,11 @@ let fixtureGateway: PortfolioFixtureGateway | null = null;
 
 test.beforeAll(async () => {
   const scenario = process.env.PORTFOLIO_E2E_FIXTURE;
-  if (scenario !== 'cashflow' && scenario !== 'shell-unavailable') {
+  if (
+    scenario !== 'cashflow' &&
+    scenario !== 'shell-unavailable' &&
+    scenario !== 'positions-status'
+  ) {
     return;
   }
   const port = Number(process.env.PORTFOLIO_E2E_FIXTURE_PORT ?? '18120');
@@ -644,6 +648,92 @@ test.describe('Portfolio workbench smoke', () => {
       'href',
       new RegExp(`/transactions\\?portfolioId=${session.portfolioId}`)
     );
+  });
+
+  test('positions keep source status truthful across screen, export, and evidence', async ({ page, request }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'positions-status',
+      'This deterministic source-status matrix runs only in its owned proof scenario.',
+    );
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const session = await openPositionsPortfolio(page, request);
+    expect(session).toEqual({ portfolioId: 'PB_SG_GLOBAL_BAL_001', available: true });
+
+    const displayedStates = await page.locator('.portfolio-position-status').allTextContents();
+    expect(displayedStates).toEqual([
+      'Current',
+      'Review required',
+      'Review required',
+      'Not reported',
+      'Not applicable',
+    ]);
+    await expect(page.getByText('STALE_PRICE', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('FUTURE_SOURCE_STATE', { exact: true })).toHaveCount(0);
+
+    const readinessCard = page
+      .locator('.portfolio-record-evidence-card')
+      .filter({ hasText: 'Data Readiness' });
+    await expect(readinessCard.getByText('Partial', { exact: true })).toBeVisible();
+    const statusEvidence = page
+      .locator('.portfolio-record-source-item')
+      .filter({ hasText: 'Position Status' });
+    await expect(statusEvidence.getByText('Review required', { exact: true })).toBeVisible();
+    await expect(
+      statusEvidence.getByText(
+        '2 positions require review; 1 position status not reported; 1 source key stale; 1 position status current',
+        { exact: true },
+      ),
+    ).toBeVisible();
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export holdings' }).click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    const csv = await readFile(downloadedPath!, 'utf8');
+    expect(csv).toContain('Current');
+    expect(csv).toContain('Review required');
+    expect(csv).toContain('Not reported');
+    expect(csv).toContain('Not applicable');
+    expect(csv).not.toContain('STALE_PRICE');
+    expect(csv).not.toContain('FUTURE_SOURCE_STATE');
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
+      await expect(page.getByText('Review required', { exact: true }).first()).toBeVisible();
+      const pageWidth = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(pageWidth.scrollWidth - pageWidth.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    await page.setViewportSize({ width: 1440, height: 1100 });
+
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: resolve(evidenceDirectory, 'diagnostic-positions-status-matrix.png'),
+        fullPage: true,
+      });
+      await writeFile(
+        resolve(evidenceDirectory, 'positions-status-proof.json'),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            overallReadiness: 'Partial',
+            displayedStates,
+            csvStates: ['Current', 'Review required', 'Not reported', 'Not applicable'],
+            rawSourceCodesVisible: false,
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+    }
   });
 
   test('transactions route preserves currency semantics and opens related booked activity', async ({ page, request }) => {

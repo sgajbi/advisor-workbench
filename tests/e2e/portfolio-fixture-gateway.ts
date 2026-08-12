@@ -5,7 +5,7 @@ const AS_OF_DATE = '2026-04-10';
 const MISSING_HISTORICAL_SUMMARY_DATE = '2026-04-01';
 const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
-export type PortfolioFixtureScenario = 'cashflow' | 'shell-unavailable';
+export type PortfolioFixtureScenario = 'cashflow' | 'shell-unavailable' | 'positions-status';
 
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
@@ -54,15 +54,40 @@ export async function startPortfolioFixtureGateway({
         sendJson(response, { code: 'portfolio_workspace_unavailable' }, 503);
         return;
       }
-      sendJson(response, buildWorkspaceResponse());
+      sendJson(response, buildWorkspaceResponse(scenario));
       return;
     }
 
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/book`) {
       sendJson(
         response,
-        buildBookResponse(requestUrl.searchParams.get('as_of_date') ?? AS_OF_DATE)
+        buildBookResponse(requestUrl.searchParams.get('as_of_date') ?? AS_OF_DATE, scenario)
       );
+      return;
+    }
+
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/liquidity`) {
+      sendJson(response, {
+        cash_balances:
+          scenario === 'positions-status'
+            ? [
+                {
+                  security_id: 'CASH_USD_1',
+                  instrument_name: 'USD Operating Cash',
+                  currency: 'USD',
+                  quantity: 750_000,
+                  market_value_base: 750_000,
+                  weight_pct: 6,
+                },
+              ]
+            : [],
+        cashflow_outlook: buildCashflowOutlook(10),
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/transactions`) {
+      sendJson(response, { total: 0, skip: 0, limit: 200, transactions: [] });
       return;
     }
 
@@ -123,7 +148,7 @@ export async function startPortfolioFixtureGateway({
   };
 }
 
-function buildWorkspaceResponse() {
+function buildWorkspaceResponse(scenario: PortfolioFixtureScenario = 'cashflow') {
   return {
     as_of_date: AS_OF_DATE,
     portfolio: {
@@ -192,7 +217,14 @@ function buildWorkspaceResponse() {
     workflow_cues: [],
     warnings: [],
     partial_failures: [],
-    operations: null,
+    operations:
+      scenario === 'positions-status'
+        ? {
+            business_date: AS_OF_DATE,
+            latest_booked_position_snapshot_date: AS_OF_DATE,
+            stale_reprocessing_keys: 1,
+          }
+        : null,
   };
 }
 
@@ -208,7 +240,7 @@ function buildProjectedCashflowResponse(horizonDays: number) {
   };
 }
 
-function buildBookResponse(asOfDate: string) {
+function buildBookResponse(asOfDate: string, scenario: PortfolioFixtureScenario = 'cashflow') {
   const historicalSummary = {
     assets_under_management_base: 0,
     invested_market_value_base: 0,
@@ -220,18 +252,81 @@ function buildBookResponse(asOfDate: string) {
 
   return {
     as_of_date: asOfDate,
-    portfolio: buildWorkspaceResponse().portfolio,
+    portfolio: buildWorkspaceResponse(scenario).portfolio,
     summary:
       asOfDate === MISSING_HISTORICAL_SUMMARY_DATE
         ? undefined
         : asOfDate === HISTORICAL_AS_OF_DATE
           ? historicalSummary
-          : buildWorkspaceResponse().summary,
+          : scenario === 'positions-status'
+            ? {
+                ...buildWorkspaceResponse(scenario).summary,
+                position_count: 4,
+                cash_balance_count: 1,
+              }
+            : buildWorkspaceResponse(scenario).summary,
     cash_balances: [],
     allocation_views: [{ dimension: 'asset_class', buckets: [] }],
     top_positions: [],
-    positions: [],
+    positions: scenario === 'positions-status' ? buildPositionStatusMatrix() : [],
   };
+}
+
+function buildPositionStatusMatrix() {
+  return [
+    {
+      security_id: 'EQ_CURRENT',
+      instrument_name: 'Current Equity Holding',
+      asset_class: 'EQUITY',
+      quantity: 100,
+      market_price: 125,
+      market_value_base: 12_500,
+      cost_basis_base: 10_000,
+      unrealized_gain_loss_base: 2_500,
+      weight_pct: 0.1,
+      currency: 'USD',
+      reprocessing_status: 'CURRENT',
+    },
+    {
+      security_id: 'FI_REVIEW',
+      instrument_name: 'Reviewed Bond Holding',
+      asset_class: 'FIXED_INCOME',
+      quantity: 200,
+      market_price: 99.5,
+      market_value_base: 19_900,
+      cost_basis_base: 20_000,
+      unrealized_gain_loss_base: -100,
+      weight_pct: 0.16,
+      currency: 'USD',
+      reprocessing_status: 'STALE_PRICE',
+    },
+    {
+      security_id: 'EQ_UNKNOWN',
+      instrument_name: 'Unrecognized Status Holding',
+      asset_class: 'EQUITY',
+      quantity: 50,
+      market_price: 80,
+      market_value_base: 4_000,
+      cost_basis_base: 3_800,
+      unrealized_gain_loss_base: 200,
+      weight_pct: 0.03,
+      currency: 'USD',
+      reprocessing_status: 'FUTURE_SOURCE_STATE',
+    },
+    {
+      security_id: 'ALT_MISSING',
+      instrument_name: 'Status Not Reported Holding',
+      asset_class: 'ALTERNATIVES',
+      quantity: 10,
+      market_price: 500,
+      market_value_base: 5_000,
+      cost_basis_base: 5_000,
+      unrealized_gain_loss_base: 0,
+      weight_pct: 0.04,
+      currency: 'USD',
+      reprocessing_status: null,
+    },
+  ];
 }
 
 function buildPerformanceResponse(period: string) {

@@ -12,7 +12,7 @@ describe("Portfolio smoke scenario runner", () => {
     readFileSync(resolve(process.cwd(), "package.json"), "utf8"),
   ) as { scripts: Record<string, string> };
 
-  it("publishes repo-native cashflow, review-matrix, and shell-unavailable proof commands", () => {
+  it("publishes repo-native portfolio proof commands", () => {
     expect(packageJson.scripts["test:e2e:portfolio:cashflow"]).toContain(
       "run-portfolio-smoke-scenario.mjs cashflow",
     );
@@ -21,6 +21,9 @@ describe("Portfolio smoke scenario runner", () => {
     );
     expect(packageJson.scripts["test:e2e:portfolio:review-matrix"]).toContain(
       "run-portfolio-smoke-scenario.mjs review-matrix",
+    );
+    expect(packageJson.scripts["test:e2e:portfolio:positions-status"]).toContain(
+      "run-portfolio-smoke-scenario.mjs positions-status",
     );
   });
 
@@ -40,7 +43,7 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("child.kill(signal)");
   });
 
-  it("runs only the three governed Portfolio browser scenarios", () => {
+  it("runs only the four governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit'",
@@ -51,8 +54,12 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain(
       "'portfolio review stays decision-focused and keeps detail work on dedicated screens'",
     );
+    expect(source).toContain(
+      "'positions keep source status truthful across screen, export, and evidence'",
+    );
     expect(source).toContain("scenario !== 'review-matrix'");
     expect(source).toContain("scenario !== 'shell-unavailable'");
+    expect(source).toContain("scenario !== 'positions-status'");
     expect(source).toContain("parseUnprivilegedPort(");
     expect(source).toContain("'PORTFOLIO_E2E_FIXTURE_PORT'");
     expect(source).toContain("'PORTFOLIO_E2E_WORKBENCH_PORT'");
