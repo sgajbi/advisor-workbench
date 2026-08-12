@@ -44,7 +44,6 @@ test.beforeAll(async () => {
     scenario: scenario as PortfolioFixtureScenario,
   });
 });
-
 test.afterAll(async () => {
   await fixtureGateway?.close();
   fixtureGateway = null;
@@ -638,55 +637,168 @@ test.describe('Portfolio workbench smoke', () => {
     }
   });
 
-  test('cashflow route keeps projection identity and movement semantics explicit', async ({
+  test("cashflow route keeps projection identity and movement semantics explicit", async ({
     page,
     request,
   }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1280, height: 1000 });
     const session = await openCashflowPortfolio(page, request);
-    test.skip(!session.available, 'Portfolio cashflow upstream unavailable in standalone smoke environment.');
+    test.skip(
+      !session.available,
+      "Portfolio cashflow upstream unavailable in standalone smoke environment.",
+    );
 
-    await expect(page.getByRole('heading', { name: /^Projected cash movement$/i })).toBeVisible();
-    await expect(page.getByLabel('Projected cash movement summary')).toBeVisible();
-    await expect(page.getByLabel('Projected cashflow summary')).toHaveCount(0);
-    await expect(page.getByRole('img', { name: /Projected cashflow chart in USD/i })).toBeVisible();
-    await expect(page.getByRole('radio', { name: '10D' })).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByRole('radio', { name: '30D' })).toBeVisible();
-    await expect(page.getByRole('radio', { name: '90D' })).toBeVisible();
-    await expect(page.getByLabel('Projection scope')).toContainText('Projection as of');
-    await expect(page.getByLabel('Projection scope')).toContainText('Projection basis');
-    await expect(page.getByText('Ending Cumulative')).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: /^Projected cash movement$/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByLabel("Projected cash movement summary"),
+    ).toBeVisible();
+    await expect(page.getByLabel("Projected cashflow summary")).toHaveCount(0);
+    await expect(
+      page.getByRole("img", {
+        name: /Projected cash movement chart in USD; bars show dated movement and the line shows cumulative movement/i,
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("radio", { name: "10D" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(page.getByRole("radio", { name: "30D" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "90D" })).toBeVisible();
+    await expect(page.getByLabel("Projection scope")).toContainText(
+      "Projection as of",
+    );
+    await expect(page.getByLabel("Projection scope")).toContainText(
+      "Projection basis",
+    );
+    await expect(page.getByText("Ending Cumulative")).toHaveCount(0);
     await expect(page.getByText(/liquidity forecast/i)).toHaveCount(0);
 
-    await page.getByRole('radio', { name: '10D' }).focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.getByRole('radio', { name: '30D' })).toBeFocused();
+    await page.getByRole("radio", { name: "10D" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByRole("radio", { name: "30D" })).toBeFocused();
     await expect(
-      page.getByText(/30-day projection(?: returned for a 30-day request)? · /i)
+      page.getByText(
+        /30-day projection(?: returned for a 30-day request)? · /i,
+      ),
     ).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole('radio', { name: '30D' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole("radio", { name: "30D" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await expect(page.getByText(/10-day projection · /i)).toHaveCount(0);
+    const projectionEvidence = page
+      .locator(".portfolio-record-source-item")
+      .filter({ hasText: "Projection Basis" });
+    await expect(projectionEvidence).toContainText("30 days");
+    await expect(projectionEvidence).toContainText("2 inflows and 1 outflow");
+    await expect(projectionEvidence).not.toContainText("10 days");
+    await expect(
+      page.getByText("Cash Position", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Reporting Snapshot", { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByLabel("Cash movement chart key")).toContainText(
+      "Bars: dated movementLine: cumulative movement",
+    );
 
-    const projectionHorizon = page.getByRole('radiogroup', { name: 'Projection horizon' });
+    const projectionHorizon = page.getByRole("radiogroup", {
+      name: "Projection horizon",
+    });
+    const movementSummary = page.getByLabel("Projected cash movement summary");
+    const scrollableSchedule = page.getByRole("region", {
+      name: "Projected cash movement schedule, horizontally scrollable",
+    });
     const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    const viewportEvidence: Array<{
+      width: number;
+      metricColumns: number;
+      pageOverflow: number;
+      scheduleOverflow: number;
+      scheduleFocusable: boolean;
+    }> = [];
     for (const width of [1440, 1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });
       await projectionHorizon.scrollIntoViewIfNeeded();
       await expect(projectionHorizon).toBeVisible();
-      await expect(page.getByLabel('Projected cash movement summary')).toBeVisible();
-      await expect(page.getByRole('table', { name: 'Projected cash movement schedule' })).toBeVisible();
+      await expect(
+        page.getByLabel("Projected cash movement summary"),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("table", { name: "Projected cash movement schedule" }),
+      ).toBeVisible();
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+      const metricColumns = await movementSummary.evaluate(
+        (element) =>
+          getComputedStyle(element)
+            .gridTemplateColumns.split(" ")
+            .filter(Boolean).length,
+      );
+      expect(metricColumns).toBe(width === 1440 ? 4 : 2);
+      await scrollableSchedule.focus();
+      await expect(scrollableSchedule).toBeFocused();
+      const scheduleLayout = await scrollableSchedule.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      if (width === 519) {
+        expect(scheduleLayout.scrollWidth).toBeGreaterThan(
+          scheduleLayout.clientWidth,
+        );
+        await expect(
+          page.getByText(
+            "Swipe, or focus the schedule and use the arrow keys, to compare every column.",
+          ),
+        ).toBeVisible();
+      }
+      viewportEvidence.push({
+        width,
+        metricColumns,
+        pageOverflow: layout.scrollWidth - layout.clientWidth,
+        scheduleOverflow:
+          scheduleLayout.scrollWidth - scheduleLayout.clientWidth,
+        scheduleFocusable: await scrollableSchedule.evaluate(
+          (element) => document.activeElement === element,
+        ),
+      });
       if (evidenceDirectory && (width === 1440 || width === 519)) {
+        await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: `${evidenceDirectory}/cashflow-${width}px.png`,
           fullPage: true,
         });
       }
+    }
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await writeFile(
+        resolve(evidenceDirectory, "cashflow-proof.json"),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            selectedHorizonDays: 30,
+            projectionPointCount: 3,
+            inflowCount: 2,
+            outflowCount: 1,
+            evidenceRailHorizonDays: 30,
+            chartSemantics: {
+              bars: "dated movement",
+              line: "cumulative movement",
+            },
+            viewportEvidence,
+          },
+          null,
+          2,
+        )}\n`,
+        "utf8",
+      );
     }
   });
 

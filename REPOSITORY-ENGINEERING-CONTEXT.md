@@ -498,6 +498,13 @@ Current repository posture:
     sufficiency, funding capacity, or a recommendation. Source-backed zero movement is an explicit
     no-movement result; Gateway warnings, partial failures, correlation, contract version,
     projection dates, reporting currency, and booked/projected basis remain visible evidence.
+    The selected-horizon controller belongs above both the movement module and record evidence rail;
+    both must consume the same snapshot so a changed horizon cannot leave stale source posture
+    beside current figures. The first scan separates net movement, projected sources, projected
+    uses, and largest outflow. Current booked cash remains separate **Cash Position** context and
+    must never be combined locally into an ending balance. Exact schedules use the reusable named,
+    focusable `AnalyticsTable` scroll-region contract; feature layout remains owned by
+    `portfolio-projected-cashflow.module.css`, not global CSS.
 23. Portfolio reporting evidence must distinguish source readiness from generated output. Gateway
     reporting `READY` can be derived from reportable book coverage and does not prove that a
     reporting snapshot exists. Workbench may use `generated_at_utc` as generation evidence, but

@@ -9,8 +9,8 @@ to find its operating guide.
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
-Transactions, Income And Activity, and Report Centre have passed the complete guide standard; the
-remaining 30 dedicated guides are explicit work under
+Transactions, Income And Activity, Projected Cash Movement, and Report Centre have passed the
+complete guide standard; the remaining 29 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -52,7 +52,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | [Positions](Positions-Screen-Guide) | `/positions` | Active | Guide available | Gateway and Core |
 | [Transactions](Transactions-Screen-Guide) | `/transactions` | Active | Guide available | Gateway and Core |
 | [Income And Activity](Income-And-Activity-Screen-Guide) | `/income` | Active | Guide available | Gateway and Core |
-| Projected Cash Movement | `/cashflow` | Active | Guide planned — #605 | Gateway and Core |
+| [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide) | `/cashflow` | Active | Guide available | Gateway and Core |
 | Portfolio Intake | `/intake` | Active | Guide planned — #605 | Gateway and Core |
 
 The `client-context` advisory mode resolves to Portfolio Review. It is an alias, not an additional

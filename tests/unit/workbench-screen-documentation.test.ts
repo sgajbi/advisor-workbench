@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 6,
-      coverageExceptions: 30,
-      unmappedGuides: 30,
+      mappedGuides: 7,
+      coverageExceptions: 29,
+      unmappedGuides: 29,
     });
   });
 
@@ -134,6 +134,31 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("does not:\n\n- forecast dividends");
     expect(guide).toContain("not a claim of bank approval or competitor superiority");
     expect(guide).toContain("complete named sequential keyboard\n  focus");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Projected Cash Movement to one horizon-safe business guide", () => {
+    const registry = loadRegistry();
+    const projectedCashMovement = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "projected-cash-movement",
+    );
+
+    expect(projectedCashMovement).toMatchObject({
+      routePattern: "/cashflow",
+      wikiSlug: "Projected-Cash-Movement-Screen-Guide",
+      runtimeEvidence: ["tests/e2e/portfolio-workbench.smoke.spec.ts"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Projected-Cash-Movement-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("current booked cash remains a separate fact");
+    expect(guide).toContain("bars for dated movement from the cumulative movement line");
+    expect(guide).toContain("does not:\n\n- calculate opening cash");
+    expect(guide).toContain("not a claim of bank approval or\ncompetitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 
