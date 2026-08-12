@@ -135,11 +135,11 @@ function PortfolioBookSelection({
     ) {
       return;
     }
-    initialSelectionKeyRef.current = `${asOfDate}:${currentPortfolioId}`;
     const currentPortfolio = book.response.items.find(
       (item) => item.portfolio_id === currentPortfolioId && item.status === "ACTIVE",
     );
     if (currentPortfolio) {
+      initialSelectionKeyRef.current = `${asOfDate}:${currentPortfolioId}`;
       onSelectionChange([currentPortfolio.portfolio_id]);
     }
   }, [asOfDate, book.response, currentPortfolioId, onSelectionChange, selectedPortfolioIds.length]);
