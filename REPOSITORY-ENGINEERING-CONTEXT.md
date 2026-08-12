@@ -90,6 +90,10 @@ Current repository posture:
    report, preserve only valid setup, review again, and receive a fresh idempotency key for the new
    intent. Batch acceptance is not portfolio completion: refresh item lifecycle from Gateway and
    retain complete, in-progress, retryable, terminal, cancelled, and recovery posture separately.
+   Fence catalogue, history, and submission publication by a monotonic workspace generation so an
+   `A -> B -> A` navigation cannot make an obsolete completion current again. If batch outcome
+   refresh is unavailable or returns no support posture, retain the accepted handle's last
+   source-confirmed format support evidence; replace it only with an explicit newer source posture.
    Output readiness is source-owned by format; structured data may be ready while governed PDF
    creation is unavailable. Report-data completion does not imply archive, advisor approval, client
    delivery, or communication. The Workbench BFF strips browser reporting authority headers and
