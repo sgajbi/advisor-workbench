@@ -171,6 +171,43 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
+test("orders a reviewed portfolio bundle and renders source-owned outcomes", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("radio", { name: /Portfolio bundle/ }).click();
+  await expect(page.getByText("1 selected", { exact: true })).toBeVisible();
+  await page.getByRole("checkbox", { name: /Report Centre recovery mandate/ }).click();
+  await expect(page.getByText("2 selected", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Review Portfolio Bundle" })).toBeEnabled();
+  await captureDiagnosticScreenshot(page, "portfolio-bundle-selection-1440");
+
+  await page.getByRole("button", { name: "Review Portfolio Bundle" }).click();
+  await page.getByRole("button", { name: "Submit Portfolio Bundle" }).click();
+
+  await expect(
+    page.getByRole("status").getByRole("heading", { name: "Portfolio bundle accepted" }),
+  ).toBeVisible();
+  const outcomes = page.getByRole("table", { name: "Portfolio report bundle outcomes" });
+  await expect(outcomes).toBeVisible();
+  await expect(outcomes.getByText(REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready)).toBeVisible();
+  await expect(outcomes.getByText(REPORT_CENTRE_FIXTURE_PORTFOLIOS.recovery)).toBeVisible();
+  await expect(outcomes.getByText("Report data complete")).toBeVisible();
+  await expect(outcomes.getByText("Needs retry")).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Portfolio bundle completion" })).toHaveAttribute(
+    "aria-valuenow",
+    "1",
+  );
+  await expect(page.getByText("Client delivery", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
+  await captureDiagnosticScreenshot(page, "portfolio-bundle-outcomes-1440");
+});
+
 test("tracks an accepted request and deliberately starts a second at constrained width", async ({
   page,
 }) => {

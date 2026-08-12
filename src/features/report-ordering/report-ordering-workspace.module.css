@@ -190,6 +190,58 @@
   font-weight: 650;
 }
 
+.batchSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid #d9dfe6;
+  border-radius: 8px;
+  background: #d9dfe6;
+}
+
+.batchSummary > div {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  background: #f8fafb;
+}
+
+.batchSummary span {
+  color: #65717c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.batchSummary strong {
+  color: #21313d;
+  font-size: 1rem;
+}
+
+.batchSummary .batchProgress {
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(120px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.batchProgressTrack {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dfe5ea;
+}
+
+.batchProgressTrack > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2f6f62;
+}
+
 .choiceCard,
 .sectionChoice {
   display: flex;
@@ -592,6 +644,10 @@
 
   .selectionActions {
     justify-content: flex-start;
+  }
+
+  .batchSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

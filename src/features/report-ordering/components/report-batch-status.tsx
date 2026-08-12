@@ -14,6 +14,7 @@ export function ReportBatchStatusPanel({
   error: string | null;
   onRefresh: () => void;
 }) {
+  const summary = status ? buildBatchSummary(status) : null;
   return (
     <SectionBlock
       title="Portfolio bundle progress"
@@ -31,6 +32,29 @@ export function ReportBatchStatusPanel({
           action={<ActionButton onClick={onRefresh}>Try Again</ActionButton>}
         />
       ) : (
+        <>
+        {summary ? (
+          <div className={styles.batchSummary} aria-label="Portfolio bundle summary">
+            <div><span>Portfolio reports</span><strong>{status?.item_count}</strong></div>
+            <div><span>Complete</span><strong>{summary.complete}</strong></div>
+            <div><span>In progress</span><strong>{summary.inProgress}</strong></div>
+            <div><span>Needs attention</span><strong>{summary.attention}</strong></div>
+            <div className={styles.batchProgress}>
+              <span>Completion</span>
+              <div
+                className={styles.batchProgressTrack}
+                role="progressbar"
+                aria-label="Portfolio bundle completion"
+                aria-valuemin={0}
+                aria-valuemax={status?.item_count ?? 0}
+                aria-valuenow={summary.complete}
+              >
+                <span style={{ width: `${summary.completionPercent}%` }} />
+              </div>
+              <strong>{summary.completionPercent}%</strong>
+            </div>
+          </div>
+        ) : null}
         <AnalyticsTable
           ariaLabel="Portfolio report bundle outcomes"
           density="compact"
@@ -45,7 +69,6 @@ export function ReportBatchStatusPanel({
           }}
           columns={[
             { key: "portfolio", label: "Portfolio" },
-            { key: "position", label: "Order" },
             { key: "status", label: "Outcome" },
             { key: "attempts", label: "Attempts" },
             { key: "support", label: "Support" },
@@ -56,7 +79,6 @@ export function ReportBatchStatusPanel({
               key: item.batch_item_id,
               cells: [
                 item.portfolio_id,
-                String(item.item_position),
                 <div key={`${item.batch_item_id}-outcome`} className={styles.historyStatus}>
                   <SemanticBadge tone={outcome.tone}>{outcome.label}</SemanticBadge>
                   <small>{item.last_error_summary ?? outcome.detail}</small>
@@ -70,9 +92,24 @@ export function ReportBatchStatusPanel({
             };
           })}
         />
+        </>
       )}
     </SectionBlock>
   );
+}
+
+function buildBatchSummary(status: ReportBatchStatus) {
+  const complete = status.items.filter((item) => item.status === "succeeded").length;
+  const attention = status.items.filter((item) =>
+    item.status === "failed_retryable" || item.status === "failed_terminal",
+  ).length;
+  const inProgress = Math.max(status.item_count - complete - attention, 0);
+  return {
+    complete,
+    attention,
+    inProgress,
+    completionPercent: status.item_count === 0 ? 0 : Math.round((complete / status.item_count) * 100),
+  };
 }
 
 function batchItemOutcome(status: ReportBatchStatus["items"][number]["status"], retryEligible: boolean) {

@@ -2,6 +2,8 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 
 import type { AdvisorBookResponse } from "../../src/features/advisor-book/contracts";
 import {
+  buildReportBatchHandle,
+  buildReportBatchStatus,
   buildReportJobListResponse,
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
@@ -101,6 +103,28 @@ export async function startReportCentreFixtureGateway({
         },
         202,
       );
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/report-batches" && request.method === "POST") {
+      sendJson(response, buildReportBatchHandle(), 202);
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/report-batches/rbch_1" && request.method === "GET") {
+      const status = buildReportBatchStatus();
+      const portfolioIds = [
+        REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready,
+        REPORT_CENTRE_FIXTURE_PORTFOLIOS.recovery,
+      ];
+      sendJson(response, {
+        ...status,
+        materialized_portfolio_ids: portfolioIds,
+        items: status.items.map((item, index) => ({
+          ...item,
+          portfolio_id: portfolioIds[index],
+        })),
+      });
       return;
     }
 
