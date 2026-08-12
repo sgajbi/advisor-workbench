@@ -399,6 +399,38 @@ describe("ReportOrderingWorkspace", () => {
     expect(batchStatusMock).not.toHaveBeenCalled();
   });
 
+  it("automatically retries a transient source-owned batch status failure", async () => {
+    batchStatusMock
+      .mockRejectedValueOnce(new Error("temporary status failure"))
+      .mockResolvedValueOnce(parseReportBatchStatus(buildReportBatchStatus()));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      fireEvent.click(submit);
+      expect(
+        await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
+      ).toBeInTheDocument();
+      const retry = timerSpy.mock.calls.find(([, delay]) => delay === 10_000)?.[0];
+      expect(retry).toEqual(expect.any(Function));
+
+      await act(async () => {
+        (retry as () => void)();
+      });
+      expect(
+        await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+      ).toBeInTheDocument();
+      expect(batchStatusMock).toHaveBeenCalledTimes(2);
+    } finally {
+      timerSpy.mockRestore();
+    }
+  });
+
   it("clears stale bundle selection when the report date changes", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
