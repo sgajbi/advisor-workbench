@@ -8,8 +8,8 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, and Report
-Centre have passed the complete guide standard; the remaining 33 dedicated guides are explicit work under
+screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions, and
+Report Centre have passed the complete guide standard; the remaining 32 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -48,7 +48,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Guide available | Gateway and Core |
 | [Portfolio Review](Portfolio-Review-Screen-Guide) | `/portfolio` | Active | Guide available | Gateway, Core, Performance, and Manage |
 | Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway and Core |
-| Positions | `/positions` | Active | Guide planned — #605 | Gateway and Core |
+| [Positions](Positions-Screen-Guide) | `/positions` | Active | Guide available | Gateway and Core |
 | Transactions | `/transactions` | Active | Guide planned — #605 | Gateway and Core |
 | Income And Activity | `/income` | Active | Guide planned — #605 | Gateway and Core |
 | Projected Cash Movement | `/cashflow` | Active | Guide planned — #605 | Gateway and Core |

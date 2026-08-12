@@ -57,10 +57,32 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 3,
-      coverageExceptions: 33,
-      unmappedGuides: 33,
+      mappedGuides: 4,
+      coverageExceptions: 32,
+      unmappedGuides: 32,
     });
+  });
+
+  it("maps Positions to one complete source-backed business guide", () => {
+    const registry = loadRegistry();
+    const positions = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "positions",
+    );
+
+    expect(positions).toMatchObject({
+      routePattern: "/positions",
+      wikiSlug: "Positions-Screen-Guide",
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(path.join(rootDirectory, "wiki", "Positions-Screen-Guide.md"), "utf8")
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("only an explicit source `CURRENT` state is shown as **Current**");
+    expect(guide).toContain("an absent state becomes **Not reported**");
+    expect(guide).toContain("unknown non-empty states fail closed to **Review required**");
+    expect(guide).toContain("source-returned cash balances");
+    expect(guide).toContain("this guide is not a\nclaim of bank approval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
   });
 
   it("maps Report Centre to one complete source-backed business guide", () => {
