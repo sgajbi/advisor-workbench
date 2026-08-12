@@ -52,4 +52,3 @@ export function applyAdvisorBookCallerContextHeaders(
 
   return { status: "applied", mode: authorityMode };
 }
-
