@@ -20,6 +20,7 @@ import type {
   PortfolioTransactionView,
 } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
+import { buildPortfolioTransactionSettlementSummary } from "../portfolio-transaction-settlement-view-model";
 import {
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
@@ -30,7 +31,6 @@ import {
   buildTransactionFilterOptions,
   buildTransactionLedgerQuery,
   buildTransactionRows,
-  countTransactionsNeedingSettlementReview,
   formatTransactionLedgerCoverage,
   shouldReuseInitialTransactions,
   type TransactionRow,
@@ -302,9 +302,10 @@ function PortfolioTransactionsGridBody({
           `portfolio-data-grid-cell portfolio-data-grid-cell-numeric ${getPortfolioAmountToneClass(value)}`,
       }),
       buildTransactionColumn({
-        field: "status",
+        colId: "settlementStatus",
         headerName: "Settlement Status",
-        minWidth: 106,
+        minWidth: 132,
+        valueGetter: ({ data }) => data?.settlementState.label ?? "",
         cellRenderer: transactionStatusCellRenderer,
       }),
       buildTransactionColumn({
@@ -363,7 +364,7 @@ function PortfolioTransactionsGridBody({
     [baseCurrency, gridDensity, onRowSelect, showExpandedColumns]
   );
 
-  const settlementReviewCount = countTransactionsNeedingSettlementReview(rowData);
+  const settlementSummary = buildPortfolioTransactionSettlementSummary(filteredTransactions);
   const coverageLabel = formatTransactionLedgerCoverage({
     total: ledgerPage.total,
     skip: ledgerPage.skip,
@@ -378,13 +379,7 @@ function PortfolioTransactionsGridBody({
       title="Booked activity"
       description={`Source-booked activity from ${formatDate(startDate)} to ${formatDate(endDate)}. Local gross amounts remain distinct from ${baseCurrency} portfolio amounts.`}
       summaryLabel={coverageLabel}
-      summaryValue={
-        settlementReviewCount
-          ? `${settlementReviewCount} loaded ${settlementReviewCount === 1 ? "entry needs" : "entries need"} settlement review`
-          : rowData.length
-            ? "All loaded entries settled"
-            : "No settlement state on this page"
-      }
+      summaryValue={settlementSummary.detail}
       searchControl={
         <TextField
           size="small"
@@ -626,18 +621,10 @@ function transactionInstrumentCellRenderer(params: ICellRendererParams<Transacti
 }
 
 function transactionStatusCellRenderer(params: ICellRendererParams<TransactionRow, string>) {
-  const value = params.value;
-  const normalized = value?.toLowerCase() ?? "";
-  const tone = normalized.includes("fail") || normalized.includes("cancel")
-    ? "danger"
-    : normalized.includes("pending") || normalized.includes("unsettled")
-      ? "warn"
-      : normalized && normalized !== "n/a"
-        ? "clear"
-        : "neutral";
+  const state = params.data?.settlementState;
   return (
-    <span className={`portfolio-position-status portfolio-position-status-${tone}`}>
-      {value || "N/A"}
+    <span className={`portfolio-position-status portfolio-position-status-${state?.tone ?? "neutral"}`}>
+      {state?.label ?? "Not applicable"}
     </span>
   );
 }
