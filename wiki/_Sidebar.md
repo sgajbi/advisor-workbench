@@ -5,6 +5,7 @@
 ### Orientation
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
+- [Positions](Positions-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

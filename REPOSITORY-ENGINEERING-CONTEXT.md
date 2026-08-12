@@ -512,6 +512,14 @@ that statically imports every record workspace. `npm run build` runs the determi
 `quality:portfolio-record-bundles` gate after Next.js compilation and must keep AG Grid out of the
 Cashflow and Income initial graphs while retaining it for the three grid workflows.
 
+Position source status is projected through
+`src/apps/portfolio/portfolio-position-state-view-model.ts`. Only an explicit normalized
+`CURRENT` source value is positive. Missing position status is **Not reported**, any other
+non-empty status is **Review required**, and Workbench-composed cash-balance rows are
+**Not applicable**. The holdings grid, CSV export, and evidence rail must consume this shared
+projection; do not infer current posture, expose arbitrary source codes as primary business copy,
+or duplicate the mapping in components.
+
 Primary areas:
 
 1. `src/app/`
