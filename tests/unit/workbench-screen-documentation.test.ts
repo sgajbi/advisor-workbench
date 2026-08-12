@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 4,
-      coverageExceptions: 32,
-      unmappedGuides: 32,
+      mappedGuides: 5,
+      coverageExceptions: 31,
+      unmappedGuides: 31,
     });
   });
 
@@ -82,6 +82,33 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("unknown non-empty states fail closed to **Review required**");
     expect(guide).toContain("source-returned cash balances");
     expect(guide).toContain("this guide is not a\nclaim of bank approval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Transactions to one complete applicability-aware business guide", () => {
+    const registry = loadRegistry();
+    const transactions = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "transactions",
+    );
+
+    expect(transactions).toMatchObject({
+      routePattern: "/transactions",
+      wikiSlug: "Transactions-Screen-Guide",
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Transactions-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain(
+      "absent status\n  on an FX cash-settlement component is **Not reported**",
+    );
+    expect(guide).toContain("other absent lifecycle status is\n  **Not applicable**");
+    expect(guide).toContain("does not:\n\n- infer settlement success");
+    expect(guide).toContain("raw-code blotter, card mosaic, browser-inferred success state");
+    expect(guide).toContain("not a\nclaim of bank approval or competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

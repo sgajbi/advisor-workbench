@@ -20,6 +20,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Portfolio Review](Portfolio-Review-Screen-Guide)
 - Booked inventory, valuation, source-status, and holding-activity review:
   [Positions](Positions-Screen-Guide)
+- Booked activity, applicable settlement exceptions, and transaction lineage:
+  [Transactions](Transactions-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
@@ -71,6 +73,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
+- [Transactions](Transactions-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

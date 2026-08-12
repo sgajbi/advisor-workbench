@@ -520,6 +520,15 @@ non-empty status is **Review required**, and Workbench-composed cash-balance row
 projection; do not infer current posture, expose arbitrary source codes as primary business copy,
 or duplicate the mapping in components.
 
+Transaction settlement posture is projected through
+`src/apps/portfolio/portfolio-transaction-settlement-view-model.ts`. A non-empty source status
+establishes applicability: normalized `SETTLED` is **Settled**, while any other reported value
+fails closed to **Review required**. When status is absent, only
+`FX_CASH_SETTLEMENT_BUY` and `FX_CASH_SETTLEMENT_SELL` are **Not reported**; other components are
+**Not applicable**. Grid, summary, evidence, drawer, and CSV must consume this shared projection.
+Do not treat every nullable lifecycle field as an exception, infer settlement success, leak raw
+source codes into primary business copy, or duplicate the joint-field rule in components.
+
 Primary areas:
 
 1. `src/app/`
