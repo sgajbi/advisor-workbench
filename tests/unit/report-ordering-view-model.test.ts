@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
 import {
+  applyReportScopeReadiness,
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
+  findPortfolioReviewBatchMode,
   selectReportOrderingFamily,
   toReportRequestRows,
 } from "@/features/report-ordering/view-model";
@@ -226,5 +228,36 @@ describe("report ordering view model", () => {
         allocationDimensions: [],
       }),
     );
+  });
+
+  it("requires a source-published batch capability and at least two selected portfolios", () => {
+    const response = parseReportOrderingResponse(buildReportOrderingResponse());
+    const configuration = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
+    const baseModel = buildReportOrderingViewModel(response, configuration);
+
+    expect(findPortfolioReviewBatchMode(baseModel.family)?.submission?.path).toBe(
+      "/api/v1/report-batches",
+    );
+    expect(
+      applyReportScopeReadiness(baseModel, "explicit_portfolio_batch", [
+        "PB_SG_GLOBAL_BAL_001",
+      ]).readiness.issues,
+    ).toContain("Select at least two portfolios from your book for a portfolio bundle.");
+    expect(
+      applyReportScopeReadiness(baseModel, "explicit_portfolio_batch", [
+        "PB_SG_GLOBAL_BAL_001",
+        "PB_SG_INCOME_002",
+      ]),
+    ).toEqual(expect.objectContaining({ canSubmit: true }));
+  });
+
+  it("fails closed when the published batch path is not the governed Gateway endpoint", () => {
+    const payload = buildReportOrderingResponse();
+    payload.reportFamilies[0].orderingModes[1].submission.path = "/api/v1/internal/batches";
+
+    expect(() => parseReportOrderingResponse(payload)).toThrow();
   });
 });

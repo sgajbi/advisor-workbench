@@ -3,26 +3,61 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ReportOrderingWorkspace } from "@/features/report-ordering/components/report-ordering-workspace";
 import {
+  getPortfolioReviewBatchStatus,
   getReportOrderingOptions,
   listPortfolioReviewOrders,
+  submitPortfolioReviewBatch,
   submitPortfolioReviewOrder,
 } from "@/features/report-ordering/api";
-import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
+import {
+  parseReportBatchHandle,
+  parseReportBatchStatus,
+  parseReportOrderingResponse,
+} from "@/features/report-ordering/contracts";
 import { WorkbenchApiError } from "@/features/workbench/api-client";
 import {
+  buildReportBatchHandle,
+  buildReportBatchStatus,
   buildReportJobListResponse,
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
 
 vi.mock("@/features/report-ordering/api", () => ({
+  getPortfolioReviewBatchStatus: vi.fn(),
   getReportOrderingOptions: vi.fn(),
   listPortfolioReviewOrders: vi.fn(),
+  submitPortfolioReviewBatch: vi.fn(),
   submitPortfolioReviewOrder: vi.fn(),
+}));
+
+vi.mock("@/features/advisor-book/use-advisor-book", () => ({
+  useAdvisorBook: () => ({
+    loading: false,
+    error: null,
+    reload: vi.fn(),
+    response: {
+      items: [
+        {
+          portfolio_id: "PB_SG_GLOBAL_BAL_001", display_name: "Global Balanced Mandate",
+          client_id: "CLIENT_001", base_currency: "SGD", booking_center_code: "Singapore",
+          mandate_type: "ADVISORY", status: "ACTIVE",
+        },
+        {
+          portfolio_id: "PB_SG_INCOME_002", display_name: "Income Preservation Mandate",
+          client_id: "CLIENT_002", base_currency: "USD", booking_center_code: "Singapore",
+          mandate_type: "DISCRETIONARY", status: "ACTIVE",
+        },
+      ],
+      supportability: { state: "ready" },
+    },
+  }),
 }));
 
 const optionsMock = vi.mocked(getReportOrderingOptions);
 const historyMock = vi.mocked(listPortfolioReviewOrders);
 const submitMock = vi.mocked(submitPortfolioReviewOrder);
+const submitBatchMock = vi.mocked(submitPortfolioReviewBatch);
+const batchStatusMock = vi.mocked(getPortfolioReviewBatchStatus);
 
 const portfolio = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -45,6 +80,8 @@ describe("ReportOrderingWorkspace", () => {
       status_url: "/api/v1/report-jobs/rjob_2",
       idempotency_key: "intent_2",
     });
+    submitBatchMock.mockResolvedValue(parseReportBatchHandle(buildReportBatchHandle()));
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(buildReportBatchStatus()));
   });
 
   it("renders a source-backed advisor flow and keeps unavailable PDF disabled", async () => {
@@ -127,6 +164,67 @@ describe("ReportOrderingWorkspace", () => {
     );
     expect(screen.queryByText("Report request accepted")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
+  });
+
+  it("selects a source-backed portfolio bundle and shows per-portfolio outcomes", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
+    expect(screen.getByText("Report data complete")).toBeInTheDocument();
+    expect(screen.getByText("Needs retry")).toBeInTheDocument();
+    expect(submitBatchMock).toHaveBeenCalledWith(expect.objectContaining({
+      portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+      idempotencyKey: expect.stringMatching(/^workbench-report-order-/),
+    }));
+    expect(batchStatusMock).toHaveBeenCalledWith("rbch_1");
+    expect(submitMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a rejected portfolio bundle explicit and never renders success outcomes", async () => {
+    submitBatchMock.mockRejectedValue(new Error("batch unavailable"));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle not accepted" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry Portfolio Bundle" })).toBeEnabled();
+    expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
+    expect(batchStatusMock).not.toHaveBeenCalled();
+  });
+
+  it("clears stale bundle selection when the report date changes", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Report date"), {
+      target: { value: "2026-04-23" },
+    });
+
+    await waitFor(() => expect(screen.getByText("1 selected")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
   });
 
   it("creates a second reviewed request with a fresh idempotency intent", async () => {
