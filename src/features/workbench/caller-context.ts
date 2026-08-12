@@ -407,7 +407,7 @@ function readBatchPortfolioIds(bodyText: string | undefined): string[] | null {
     const portfolioIds = body.portfolio_ids;
     if (
       !Array.isArray(portfolioIds) ||
-      portfolioIds.length === 0 ||
+      portfolioIds.length < 2 ||
       portfolioIds.some((portfolioId) => typeof portfolioId !== "string" || !portfolioId.trim())
     ) {
       return null;
