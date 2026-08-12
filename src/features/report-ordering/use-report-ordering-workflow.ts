@@ -90,6 +90,7 @@ export function useReportOrderingWorkflow({
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
   const activeBatchIdRef = useRef<string | null>(null);
+  const activeBatchPortfolioIdsRef = useRef<string[]>([]);
   const batchStatusRequestSequenceRef = useRef(0);
   const historyRequestSequenceRef = useRef(0);
 
@@ -107,6 +108,19 @@ export function useReportOrderingWorkflow({
       if (response.batch_id !== batchId) {
         setBatchStatusError(
           "The bundle was accepted, but the returned portfolio outcomes did not match this request.",
+        );
+        return false;
+      }
+      const expectedPortfolioIds = activeBatchPortfolioIdsRef.current;
+      const returnedPortfolioIds = [...response.materialized_portfolio_ids].sort();
+      if (
+        expectedPortfolioIds.length !== returnedPortfolioIds.length ||
+        expectedPortfolioIds.some(
+          (portfolioId, index) => portfolioId !== returnedPortfolioIds[index],
+        )
+      ) {
+        setBatchStatusError(
+          "The bundle was accepted, but the returned portfolios did not match the reviewed selection.",
         );
         return false;
       }
@@ -208,6 +222,7 @@ export function useReportOrderingWorkflow({
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
     activeBatchIdRef.current = null;
+    activeBatchPortfolioIdsRef.current = [];
     batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
     setSubmittedBatchHandle(null);
@@ -391,13 +406,17 @@ export function useReportOrderingWorkflow({
         idempotencyKey: activeReviewedIntent.idempotencyKey,
       };
       const handle = scopeMode === "explicit_portfolio_batch"
-        ? await submitPortfolioReviewBatch({ ...sharedOrder, portfolioIds: selectedPortfolioIds })
+        ? await submitPortfolioReviewBatch({
+            ...sharedOrder,
+            portfolioIds: [...selectedPortfolioIds].sort(),
+          })
         : await submitPortfolioReviewOrder({ ...sharedOrder, portfolioId });
       if (activePortfolioIdRef.current !== portfolioId) {
         return false;
       }
       if (scopeMode === "explicit_portfolio_batch") {
         const batchHandle = handle as ReportBatchHandle;
+        activeBatchPortfolioIdsRef.current = [...selectedPortfolioIds].sort();
         activeBatchIdRef.current = batchHandle.batch_id;
         setSubmittedBatchHandle(batchHandle);
         await loadBatchStatus(batchHandle.batch_id);
@@ -449,6 +468,7 @@ export function useReportOrderingWorkflow({
     });
     setReviewedIntent(null);
     activeBatchIdRef.current = null;
+    activeBatchPortfolioIdsRef.current = [];
     batchStatusRequestSequenceRef.current += 1;
     setSubmittedBatchHandle(null);
     setBatchStatus(null);
