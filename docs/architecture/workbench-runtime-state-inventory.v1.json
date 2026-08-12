@@ -80,7 +80,7 @@
     },
     {
       "id": "advisor-book-authority-lookup",
-      "file": "src/features/advisor-book/caller-context.ts",
+      "file": "src/features/workbench/caller-context.ts",
       "symbols": ["SUPPORTED_ADVISOR_BOOK_ROLES"],
       "classification": "immutable_lookup",
       "purpose": "Closed development caller-role validation vocabulary.",
