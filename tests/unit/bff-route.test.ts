@@ -1259,6 +1259,11 @@ describe("BFF proxy route", () => {
     const [, upstreamInit] = fetchMock.mock.calls[0];
     const upstreamHeaders = upstreamInit?.headers as Headers;
     expect(upstreamInit?.body).toBe(body);
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("PM_SG_001");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+    expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
+    expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002",
