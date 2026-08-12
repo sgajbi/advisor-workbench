@@ -15,6 +15,7 @@ export function ReportBatchStatusPanel({
   onRefresh: () => void;
 }) {
   const summary = status ? buildBatchSummary(status) : null;
+  const lifecycle = status ? batchLifecycle(status.status) : null;
   return (
     <SectionBlock
       title="Portfolio bundle progress"
@@ -35,6 +36,10 @@ export function ReportBatchStatusPanel({
         <>
         {summary ? (
           <div className={styles.batchSummary} aria-label="Portfolio bundle summary">
+            <div>
+              <span>Batch status</span>
+              <strong><SemanticBadge tone={lifecycle?.tone}>{lifecycle?.label}</SemanticBadge></strong>
+            </div>
             <div><span>Portfolio reports</span><strong>{status?.item_count}</strong></div>
             <div><span>Complete</span><strong>{summary.complete}</strong></div>
             <div><span>In progress</span><strong>{summary.inProgress}</strong></div>
@@ -97,6 +102,16 @@ export function ReportBatchStatusPanel({
       )}
     </SectionBlock>
   );
+}
+
+function batchLifecycle(status: ReportBatchStatus["status"]) {
+  if (status === "completed") return { label: "Complete", tone: "success" as const };
+  if (status === "completed_with_failures") return { label: "Complete with attention", tone: "warn" as const };
+  if (status === "failed") return { label: "Failed", tone: "danger" as const };
+  if (status === "cancelled") return { label: "Cancelled", tone: "default" as const };
+  if (status === "paused") return { label: "Paused", tone: "warn" as const };
+  if (status === "running") return { label: "In progress", tone: "default" as const };
+  return { label: "Queued", tone: "default" as const };
 }
 
 function buildBatchSummary(status: ReportBatchStatus) {

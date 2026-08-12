@@ -257,6 +257,28 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
   });
 
+  it("invalidates bundle readiness when the source-owned advisor book becomes unavailable", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+    advisorBookMock.mockReturnValue({
+      loading: false,
+      error: new Error("book unavailable"),
+      reload: vi.fn(),
+      response: null,
+    });
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio selection unavailable" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
+    expect(screen.getByText(/Restore My book before reviewing this bundle/)).toBeInTheDocument();
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
@@ -377,6 +399,23 @@ describe("ReportOrderingWorkspace", () => {
     expect(within(summary).getByText("In progress").parentElement).toHaveTextContent("In progress0");
     expect(within(summary).getByText("Cancelled").parentElement).toHaveTextContent("Cancelled1");
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toHaveTextContent("Cancelled");
+  });
+
+  it("surfaces a paused source batch separately from portfolio item progress", async () => {
+    const status = buildReportBatchStatus();
+    status.status = "paused";
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    const summary = await screen.findByLabelText("Portfolio bundle summary");
+    expect(within(summary).getByText("Batch status").parentElement).toHaveTextContent("Paused");
   });
 
   it("keeps a rejected portfolio bundle explicit and never renders success outcomes", async () => {
