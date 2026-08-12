@@ -213,6 +213,7 @@ export function useReportOrderingWorkflow({
     setSubmittedBatchHandle(null);
     setBatchStatus(null);
     setBatchStatusError(null);
+    setSubmissionProgress({ portfolioId, state: "idle", error: null });
     const timer = window.setTimeout(() => {
       void loadCatalogue(true);
       void loadHistory();

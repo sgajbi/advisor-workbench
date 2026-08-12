@@ -433,7 +433,38 @@ describe("ReportOrderingWorkspace", () => {
     const summary = await screen.findByLabelText("Portfolio bundle summary");
     expect(within(summary).getByText("In progress").parentElement).toHaveTextContent("In progress0");
     expect(within(summary).getByText("Cancelled").parentElement).toHaveTextContent("Cancelled1");
+    expect(screen.getByRole("progressbar", { name: "Portfolio bundle completion" })).toHaveAttribute(
+      "aria-valuenow",
+      "2",
+    );
+    expect(within(summary).getByText("100%")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toHaveTextContent("Cancelled");
+  });
+
+  it("clears accepted bundle posture when portfolio navigation ends its monitoring context", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle accepted" }),
+    ).toBeInTheDocument();
+
+    view.rerender(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+      />,
+    );
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
+
+    expect(screen.queryByRole("heading", { name: "Portfolio bundle accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
   });
 
   it("surfaces a paused source batch separately from portfolio item progress", async () => {
