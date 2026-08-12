@@ -301,6 +301,7 @@ export function useReportOrderingWorkflow({
       const fingerprint = configurationFingerprint(configuration);
       if (
         current?.portfolioId === portfolioId &&
+        current.scopeFingerprint === currentScopeFingerprint &&
         current?.configurationFingerprint === fingerprint &&
         current.sourceFingerprint === sourceFingerprintRef.current
       ) {

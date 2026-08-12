@@ -254,6 +254,26 @@ describe("report ordering view model", () => {
     ).toEqual(expect.objectContaining({ canSubmit: true }));
   });
 
+  it("accepts only the governed selection-required batch capability posture", () => {
+    const payload = buildReportOrderingResponse();
+    const mode = payload.reportFamilies[0].orderingModes[1];
+
+    mode.eligibility.reasonCode = "report_family_partially_available";
+    expect(
+      findPortfolioReviewBatchMode(
+        parseReportOrderingResponse(payload).reportFamilies[0],
+      ),
+    ).toBeNull();
+
+    mode.eligibility.reasonCode = "explicit_portfolio_selection_required";
+    mode.submission.reasonCode = "report_family_partially_available";
+    expect(
+      findPortfolioReviewBatchMode(
+        parseReportOrderingResponse(payload).reportFamilies[0],
+      ),
+    ).toBeNull();
+  });
+
   it("fails closed when the published batch path is not the governed Gateway endpoint", () => {
     const payload = buildReportOrderingResponse();
     payload.reportFamilies[0].orderingModes[1].submission.path = "/api/v1/internal/batches";
