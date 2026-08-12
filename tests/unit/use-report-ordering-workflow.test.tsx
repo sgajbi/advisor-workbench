@@ -404,7 +404,7 @@ describe("useReportOrderingWorkflow", () => {
     );
   });
 
-  it("keeps late submission completion scoped to the originating portfolio", async () => {
+  it("rejects late submission completion after A-to-B-to-A workspace navigation", async () => {
     let resolveSubmit:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewOrder>>) => void)
       | null = null;
@@ -439,6 +439,10 @@ describe("useReportOrderingWorkflow", () => {
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
     await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    rerender({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
+    await waitFor(() =>
+      expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"),
+    );
     expect(result.current.submissionState).toBe("idle");
     expect(result.current.submissionError).toBeNull();
     expect(result.current.submittedHandle).toBeNull();
@@ -451,6 +455,53 @@ describe("useReportOrderingWorkflow", () => {
         status_url: "/api/v1/report-jobs/rjob_old",
         idempotency_key: "intent_old",
       });
+      await expect(submitOutcome).resolves.toBe(false);
+    });
+
+    expect(result.current.submissionState).toBe("idle");
+    expect(result.current.submissionError).toBeNull();
+    expect(result.current.submittedHandle).toBeNull();
+  });
+
+  it("rejects late submission failure after A-to-B-to-A workspace navigation", async () => {
+    let rejectSubmit: ((reason: Error) => void) | null = null;
+    submitMock.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectSubmit = reject;
+      }),
+    );
+
+    const { result, rerender } = renderHook(
+      ({ portfolioId }) =>
+        useReportOrderingWorkflow({
+          portfolioId,
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      { initialProps: { portfolioId: "PB_SG_GLOBAL_BAL_001" } },
+    );
+
+    await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
+    act(() => {
+      expect(result.current.reviewRequest()).toBe(true);
+    });
+    await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+
+    let submitOutcome: Promise<boolean> | null = null;
+    act(() => {
+      submitOutcome = result.current.submitRequest();
+    });
+    await waitFor(() => expect(result.current.submissionState).toBe("submitting"));
+
+    rerender({ portfolioId: "PB_SG_OTHER_002" });
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    rerender({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
+    await waitFor(() =>
+      expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"),
+    );
+
+    await act(async () => {
+      rejectSubmit?.(new Error("late source rejection"));
       await expect(submitOutcome).resolves.toBe(false);
     });
 

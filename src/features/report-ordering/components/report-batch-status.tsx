@@ -2,21 +2,31 @@
 
 import { ActionButton, AnalyticsTable, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 
-import type { ReportBatchStatus } from "../contracts";
+import type { ReportBatchHandle, ReportBatchStatus } from "../contracts";
 import styles from "../report-ordering-workspace.module.css";
 
 export function ReportBatchStatusPanel({
   status,
+  acceptedHandle,
+  requestedOutputFormats,
   error,
   onRefresh,
 }: {
   status: ReportBatchStatus | null;
+  acceptedHandle: ReportBatchHandle | null;
+  requestedOutputFormats: string[];
   error: string | null;
   onRefresh: () => void;
 }) {
   const summary = status ? buildBatchSummary(status) : null;
   const lifecycle = status ? batchLifecycle(status.status) : null;
-  const supportPosture = status ? batchSupportPosture(status) : null;
+  const supportPosture = batchSupportPosture({
+    requestedOutputFormats: status?.requested_output_formats ?? requestedOutputFormats,
+    renderSupportability:
+      status?.render_supportability ?? acceptedHandle?.render_supportability ?? null,
+    reportingSupportability:
+      status?.supportability ?? acceptedHandle?.supportability ?? null,
+  });
   return (
     <SectionBlock
       title="Portfolio bundle progress"
@@ -37,6 +47,15 @@ export function ReportBatchStatusPanel({
           }
           action={<ActionButton onClick={onRefresh}>Try Again</ActionButton>}
         />
+      ) : null}
+      {supportPosture ? (
+        <div aria-label="Portfolio bundle support posture">
+          <ScreenStatePanel
+            kind={supportPosture.kind}
+            title={supportPosture.title}
+            body={supportPosture.body}
+          />
+        </div>
       ) : null}
       {!error || status ? (
         <>
@@ -59,21 +78,12 @@ export function ReportBatchStatusPanel({
                 aria-label="Portfolio bundle completion"
                 aria-valuemin={0}
                 aria-valuemax={status?.item_count ?? 0}
-                aria-valuenow={summary.settled}
+                aria-valuenow={summary.complete}
               >
                 <span style={{ width: `${summary.completionPercent}%` }} />
               </div>
               <strong>{summary.completionPercent}%</strong>
             </div>
-          </div>
-        ) : null}
-        {supportPosture ? (
-          <div aria-label="Portfolio bundle support posture">
-            <ScreenStatePanel
-              kind={supportPosture.kind}
-              title={supportPosture.title}
-              body={supportPosture.body}
-            />
           </div>
         ) : null}
         <AnalyticsTable
@@ -119,22 +129,30 @@ export function ReportBatchStatusPanel({
   );
 }
 
-function batchSupportPosture(status: ReportBatchStatus) {
-  const renderState = status.render_supportability?.state.toLocaleLowerCase();
+function batchSupportPosture({
+  requestedOutputFormats,
+  renderSupportability,
+  reportingSupportability,
+}: {
+  requestedOutputFormats: string[];
+  renderSupportability: ReportBatchStatus["render_supportability"];
+  reportingSupportability: ReportBatchStatus["supportability"];
+}) {
+  const renderState = renderSupportability?.state.toLocaleLowerCase();
   const requestedOutputUnsupported = Boolean(
-    status.render_supportability &&
-    status.requested_output_formats.some(
-      (outputFormat) => !status.render_supportability?.supported_output_formats.includes(outputFormat),
+    renderSupportability &&
+    requestedOutputFormats.some(
+      (outputFormat) => !renderSupportability.supported_output_formats.includes(outputFormat),
     ),
   );
-  const governedDocumentRequested = status.requested_output_formats.some(
+  const governedDocumentRequested = requestedOutputFormats.some(
     (outputFormat) => outputFormat.toLocaleLowerCase() !== "json",
   );
   if (
     requestedOutputUnsupported ||
     (governedDocumentRequested &&
       (renderState === "unavailable" ||
-        status.render_supportability?.deterministic_output_supported === false))
+        renderSupportability?.deterministic_output_supported === false))
   ) {
     return {
       kind: "unavailable" as const,
@@ -150,7 +168,7 @@ function batchSupportPosture(status: ReportBatchStatus) {
     };
   }
 
-  const reportingState = status.supportability?.state.toLocaleLowerCase();
+  const reportingState = reportingSupportability?.state.toLocaleLowerCase();
   if (reportingState === "unavailable") {
     return {
       kind: "unavailable" as const,
@@ -190,14 +208,13 @@ function buildBatchSummary(status: ReportBatchStatus) {
     item.status === "waiting_on_report_job" ||
     item.status === "recovery_pending"
   ).length;
-  const settled = complete + attention + cancelled;
   return {
     complete,
     attention,
     cancelled,
     inProgress,
-    settled,
-    completionPercent: status.item_count === 0 ? 0 : Math.round((settled / status.item_count) * 100),
+    completionPercent:
+      status.item_count === 0 ? 0 : Math.round((complete / status.item_count) * 100),
   };
 }
 
