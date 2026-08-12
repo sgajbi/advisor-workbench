@@ -100,9 +100,14 @@ export function useReportOrderingWorkflow({
       const response = await getPortfolioReviewBatchStatus(batchId);
       if (
         activeBatchIdRef.current !== batchId ||
-        batchStatusRequestSequenceRef.current !== requestSequence ||
-        response.batch_id !== batchId
+        batchStatusRequestSequenceRef.current !== requestSequence
       ) {
+        return false;
+      }
+      if (response.batch_id !== batchId) {
+        setBatchStatusError(
+          "The bundle was accepted, but the returned portfolio outcomes did not match this request.",
+        );
         return false;
       }
       setBatchStatus(response);

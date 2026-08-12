@@ -455,8 +455,49 @@ describe("ReportOrderingWorkspace", () => {
       expect(
         await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
       ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 10_000)).toBe(true),
+      );
       const retry = timerSpy.mock.calls.find(([, delay]) => delay === 10_000)?.[0];
-      expect(retry).toEqual(expect.any(Function));
+
+      await act(async () => {
+        (retry as () => void)();
+      });
+      expect(
+        await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+      ).toBeInTheDocument();
+      expect(batchStatusMock).toHaveBeenCalledTimes(2);
+    } finally {
+      timerSpy.mockRestore();
+    }
+  });
+
+  it("retries when source-owned outcomes identify a different batch", async () => {
+    const mismatchedStatus = buildReportBatchStatus();
+    mismatchedStatus.batch_id = "rbch_other";
+    batchStatusMock
+      .mockResolvedValueOnce(parseReportBatchStatus(mismatchedStatus))
+      .mockResolvedValueOnce(parseReportBatchStatus(buildReportBatchStatus()));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      fireEvent.click(submit);
+      expect(
+        await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/returned portfolio outcomes did not match this request/),
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 10_000)).toBe(true),
+      );
+      const retry = timerSpy.mock.calls.find(([, delay]) => delay === 10_000)?.[0];
 
       await act(async () => {
         (retry as () => void)();
