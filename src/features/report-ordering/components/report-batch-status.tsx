@@ -53,7 +53,7 @@ export function ReportBatchStatusPanel({
                 aria-label="Portfolio bundle completion"
                 aria-valuemin={0}
                 aria-valuemax={status?.item_count ?? 0}
-                aria-valuenow={summary.complete}
+                aria-valuenow={summary.settled}
               >
                 <span style={{ width: `${summary.completionPercent}%` }} />
               </div>
@@ -126,12 +126,14 @@ function buildBatchSummary(status: ReportBatchStatus) {
     item.status === "waiting_on_report_job" ||
     item.status === "recovery_pending"
   ).length;
+  const settled = complete + attention + cancelled;
   return {
     complete,
     attention,
     cancelled,
     inProgress,
-    completionPercent: status.item_count === 0 ? 0 : Math.round((complete / status.item_count) * 100),
+    settled,
+    completionPercent: status.item_count === 0 ? 0 : Math.round((settled / status.item_count) * 100),
   };
 }
 
