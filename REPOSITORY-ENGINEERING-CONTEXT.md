@@ -593,7 +593,10 @@ Runtime model:
 
 1. Next.js application with browser and server-rendered behavior,
 2. primary product dependency is `lotus-gateway`,
-3. live platform validation uses canonical `*.dev.lotus` routing.
+3. live platform validation uses canonical `*.dev.lotus` routing,
+4. the root App Router boundary uses the official MUI cache provider so streamed Emotion styles
+   are managed in the document head; do not add root-level hydration suppression or screen-local
+   CSS-in-JS workarounds.
 
 Boundary rules:
 
