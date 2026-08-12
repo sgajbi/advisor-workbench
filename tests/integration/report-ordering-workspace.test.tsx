@@ -32,31 +32,58 @@ vi.mock("@/features/report-ordering/api", () => ({
 }));
 
 vi.mock("@/features/advisor-book/use-advisor-book", () => ({
-  useAdvisorBook: vi.fn(() => ({
+  useAdvisorBook: vi.fn(),
+}));
+
+function buildAdvisorBookResult({
+  currentPortfolioStatus = "ACTIVE",
+  includeCurrentPortfolio = true,
+}: {
+  currentPortfolioStatus?: "ACTIVE" | "INACTIVE";
+  includeCurrentPortfolio?: boolean;
+} = {}) {
+  const items = [
+    ...(includeCurrentPortfolio ? [{
+      portfolio_id: "PB_SG_GLOBAL_BAL_001", display_name: "Global Balanced Mandate",
+      client_id: "CLIENT_001", base_currency: "SGD", booking_center_code: "Singapore",
+      mandate_type: "ADVISORY" as const, status: currentPortfolioStatus,
+      opened_on: "2020-01-01", closed_on: null,
+      membership_source: "PortfolioManagerBookMembership:v1" as const,
+      membership_reference: "membership-1", membership_basis: "governed_role_assignment" as const,
+    }] : []),
+    {
+      portfolio_id: "PB_SG_INCOME_002", display_name: "Income Preservation Mandate",
+      client_id: "CLIENT_002", base_currency: "USD", booking_center_code: "Singapore",
+      mandate_type: "DISCRETIONARY" as const, status: "ACTIVE" as const,
+      opened_on: "2021-01-01", closed_on: null,
+      membership_source: "PortfolioManagerBookMembership:v1" as const,
+      membership_reference: "membership-2", membership_basis: "governed_role_assignment" as const,
+    },
+  ];
+  return {
     loading: false,
     error: null,
     reload: vi.fn(),
     response: {
-      items: [
-        {
-          portfolio_id: "PB_SG_GLOBAL_BAL_001", display_name: "Global Balanced Mandate",
-          client_id: "CLIENT_001", base_currency: "SGD", booking_center_code: "Singapore",
-          mandate_type: "ADVISORY", status: "ACTIVE",
-        },
-        {
-          portfolio_id: "PB_SG_INCOME_002", display_name: "Income Preservation Mandate",
-          client_id: "CLIENT_002", base_currency: "USD", booking_center_code: "Singapore",
-          mandate_type: "DISCRETIONARY", status: "ACTIVE",
-        },
-      ],
-      page: {
-        total_count: 150, offset: 0, limit: 100, returned_count: 2,
-        sort_by: "client_id", sort_order: "asc",
+      correlation_id: "corr-book",
+      contract_version: "v1" as const,
+      scope: {
+        kind: "own_book" as const, label: "My book" as const,
+        as_of_date: "2026-04-22", booking_center_code: "Singapore",
       },
-      supportability: { state: "ready" },
+      items,
+      page: {
+        total_count: 150, offset: 0, limit: 100, returned_count: items.length,
+        sort_by: "client_id" as const, sort_order: "asc" as const,
+      },
+      supportability: {
+        state: "ready" as const, reason_code: "advisor_book_ready" as const,
+        tenant_scope: "source_confirmed" as const, limitations: [],
+      },
+      provenance: null,
     },
-  })),
-}));
+  };
+}
 
 const optionsMock = vi.mocked(getReportOrderingOptions);
 const historyMock = vi.mocked(listPortfolioReviewOrders);
@@ -75,6 +102,7 @@ const portfolio = {
 describe("ReportOrderingWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    advisorBookMock.mockReturnValue(buildAdvisorBookResult());
     optionsMock.mockResolvedValue(
       parseReportOrderingResponse(buildReportOrderingResponse()),
     );
@@ -213,6 +241,22 @@ describe("ReportOrderingWorkspace", () => {
     }));
   });
 
+  it("does not count an inactive routed portfolio before source-owned book confirmation", async () => {
+    advisorBookMock.mockReturnValue(
+      buildAdvisorBookResult({ currentPortfolioStatus: "INACTIVE" }),
+    );
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    await waitFor(() => expect(screen.getByText("0 selected")).toBeInTheDocument());
+    expect(screen.getByRole("checkbox", { name: /Global Balanced Mandate/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
@@ -256,6 +300,56 @@ describe("ReportOrderingWorkspace", () => {
         portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
       }),
     );
+  });
+
+  it("keeps a late prior-batch status response out of the active bundle", async () => {
+    const firstHandle = buildReportBatchHandle();
+    firstHandle.batch_id = "rbch_first";
+    firstHandle.status_url = "/api/v1/report-batches/rbch_first";
+    const secondHandle = buildReportBatchHandle();
+    secondHandle.batch_id = "rbch_second";
+    secondHandle.status_url = "/api/v1/report-batches/rbch_second";
+    submitBatchMock
+      .mockResolvedValueOnce(parseReportBatchHandle(firstHandle))
+      .mockResolvedValueOnce(parseReportBatchHandle(secondHandle));
+
+    const firstStatus = buildReportBatchStatus();
+    firstStatus.batch_id = "rbch_first";
+    firstStatus.items[1].last_error_summary = "Stale first-batch outcome";
+    const secondStatus = buildReportBatchStatus();
+    secondStatus.batch_id = "rbch_second";
+    secondStatus.items[1].last_error_summary = "Current second-batch outcome";
+    let resolveFirstStatus:
+      | ((value: ReturnType<typeof parseReportBatchStatus>) => void)
+      | null = null;
+    batchStatusMock
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveFirstStatus = resolve;
+      }))
+      .mockResolvedValueOnce(parseReportBatchStatus(secondStatus));
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const firstSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(firstSubmit).toBeEnabled());
+    fireEvent.click(firstSubmit);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Create another report" }));
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const secondSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(secondSubmit).toBeEnabled());
+    fireEvent.click(secondSubmit);
+    expect(await screen.findByText("Current second-batch outcome")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveFirstStatus?.(parseReportBatchStatus(firstStatus));
+    });
+    expect(screen.getByText("Current second-batch outcome")).toBeInTheDocument();
+    expect(screen.queryByText("Stale first-batch outcome")).not.toBeInTheDocument();
   });
 
   it("reports cancelled portfolio outcomes separately from active work", async () => {
