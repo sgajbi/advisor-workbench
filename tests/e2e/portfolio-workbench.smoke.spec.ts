@@ -10,6 +10,7 @@ import {
   measureViewportEvidence,
   traverseSequentialKeyboardFocus,
 } from './workbench-accessibility-evidence';
+import { observeBrowserRuntimeFailures } from './browser-runtime-reliability';
 import {
   startPortfolioFixtureGateway,
   type PortfolioFixtureScenario,
@@ -642,6 +643,7 @@ test.describe('Portfolio workbench smoke', () => {
     request,
   }) => {
     test.setTimeout(90_000);
+    const browserRuntime = observeBrowserRuntimeFailures(page);
     await page.setViewportSize({ width: 1280, height: 1000 });
     const session = await openCashflowPortfolio(page, request);
     test.skip(
@@ -776,6 +778,7 @@ test.describe('Portfolio workbench smoke', () => {
         });
       }
     }
+    const browserRuntimeFailures = browserRuntime.snapshot();
     if (evidenceDirectory) {
       await mkdir(evidenceDirectory, { recursive: true });
       await writeFile(
@@ -792,6 +795,10 @@ test.describe('Portfolio workbench smoke', () => {
               bars: "dated net movement",
               line: "cumulative movement",
             },
+            hydrationProof: {
+              routes: ["/cashflow"],
+              browserRuntimeFailures,
+            },
             viewportEvidence,
           },
           null,
@@ -800,6 +807,8 @@ test.describe('Portfolio workbench smoke', () => {
         "utf8",
       );
     }
+    await browserRuntime.assertStylesAreHeadManaged();
+    browserRuntime.assertClean();
   });
 
   test('allocation route connects direct exposures to contributing booked holdings', async ({ page, request }) => {
@@ -965,6 +974,50 @@ test.describe('Portfolio workbench smoke', () => {
         'utf8',
       );
     }
+  });
+
+  test('portfolio record routes hydrate without browser runtime errors', async ({ page, request }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow',
+      'Hydration proof requires the owned populated portfolio fixture.',
+    );
+    const browserRuntime = observeBrowserRuntimeFailures(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    const session = await openPositionsPortfolio(page, request);
+    test.skip(
+      !session.available,
+      'Portfolio positions upstream unavailable in standalone smoke environment.',
+    );
+
+    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    const compactNavigation = page.getByRole('button', {
+      name: /Current view Positions/i,
+    });
+    await compactNavigation.focus();
+    await expect(compactNavigation).toBeFocused();
+
+    const browserRuntimeFailures = browserRuntime.snapshot();
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await writeFile(
+        resolve(evidenceDirectory, 'portfolio-record-hydration-proof.json'),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            routes: ['/positions'],
+            viewport: { width: 390, height: 844 },
+            keyboardTarget: 'Current view Positions',
+            browserRuntimeFailures,
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+    }
+    await browserRuntime.assertStylesAreHeadManaged();
+    browserRuntime.assertClean();
   });
 
   test('transactions keep settlement applicability truthful across screen, detail, export, and evidence', async ({ page, request }) => {
