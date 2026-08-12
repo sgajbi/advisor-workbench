@@ -21,7 +21,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | Production container | Official Debian Bookworm slim Node image | Immutable digest, standalone output, non-root runtime |
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
-| Direct dependency admission | 14 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
+| Direct dependency admission | 16 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
 | Scale validation dependency | Official NGINX stable `1.30.3` Alpine `3.23` slim image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
 
 The versioned source is
@@ -36,7 +36,7 @@ The direct dependency source is
 | Boundary | Governed dependencies | Containment and exit posture |
 | --- | --- | --- |
 | Framework core | Next.js, React, React DOM | Strategic coupling; replacement requires an architecture RFC and staged product migration |
-| Design system | MUI, Emotion React, Emotion Styled | Business composition stays in Workbench components; migrate through the design-system facade |
+| Design system | MUI, the official MUI Next.js adapter, and Emotion | Business composition stays in Workbench components; the root adapter keeps streamed server styles in the document head; migrate through the design-system facade |
 | Server state | TanStack React Query | Query keys, source refresh, and failure rules stay in feature-owned hooks over Gateway contracts |
 | Dense records | AG Grid Community and React adapter | Grid registration and behavior stay behind portfolio grid frames and design-system utilities |
 | Analytics charts | Apache ECharts and React adapter | Rendering stays behind `WorkbenchECharts`; financial models and labels remain Workbench-owned |
@@ -67,6 +67,9 @@ must be valid HTTPS URLs with a usable host; prefix-shaped placeholders do not s
    the production `npm ci`, cannot pass protected lanes until its license, stewardship, stable
    lifecycle, business purpose, architecture containment, exit path, owner, and review date are
    recorded in the same issue-backed change.
+8. The root App Router boundary uses MUI's supported server-rendering cache provider; production
+   browser proof rejects Emotion styles in the document body, blanket hydration suppression, and
+   unexpected console or page errors.
 
 ## Production And Scaling Posture
 
@@ -166,3 +169,6 @@ durable execution record.
 12. [SPDX license expressions](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/)
 13. [NGINX HTTP load-balancing guidance](https://nginx.org/en/docs/http/load_balancing.html)
 14. [Official NGINX container image](https://hub.docker.com/_/nginx)
+15. [MUI Next.js integration](https://mui.com/material-ui/integrations/nextjs/)
+16. [Next.js hydration-error guidance](https://nextjs.org/docs/messages/react-hydration-error)
+17. [React hydrateRoot guidance](https://react.dev/reference/react-dom/client/hydrateRoot)

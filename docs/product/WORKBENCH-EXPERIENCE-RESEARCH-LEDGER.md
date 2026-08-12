@@ -3871,3 +3871,62 @@ The isolated production-browser fixture proves exactly one server read plus one 
 recovery read, stable terminal UI evidence, business copy, and the My-book handoff. The canonical
 Portfolio Review screen guide changes because its state/recovery and validation truth changes; no
 Gateway, API, OpenAPI, central platform context, or technology-stack claim changes.
+
+## Portfolio Record Production Hydration Reliability
+
+### Business and engineering job
+
+An advisor must receive a stable first render before acting on a portfolio record screen. Server
+HTML, client hydration, and source-backed refreshes must not replace the document tree, lose focus,
+or hide a runtime error behind a visually correct screen.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-12:
+
+1. [MUI's Next.js integration guidance](https://mui.com/material-ui/integrations/nextjs/) recommends
+   `AppRouterCacheProvider` for App Router streaming so generated MUI styles are collected during
+   server rendering and appended to the document head instead of the body.
+2. [Next.js hydration-error guidance](https://nextjs.org/docs/messages/react-hydration-error)
+   identifies incorrect CSS-in-JS configuration as a mismatch cause and requires the initial
+   server and client trees to remain equal.
+3. [React hydrateRoot guidance](https://react.dev/reference/react-dom/client/hydrateRoot) describes
+   `suppressHydrationWarning` as a one-level escape hatch for an unavoidable difference, not a
+   document-root rendering policy.
+
+### Adopted decisions
+
+1. Use the stable MUI 7 Next.js adapter at the single root App Router boundary, paired with the
+   exact existing Emotion cache line. Keep business screens unaware of the framework adapter.
+2. Remove root-level hydration suppression and assert that it cannot return.
+3. Treat unexpected browser console errors and uncaught page errors as production-regression
+   failures. Retain the route, viewport, keyboard target, and empty failure array as machine-readable
+   proof.
+4. Make the owned portfolio fixture answer the shell capability contract successfully instead of
+   allowlisting its 404. This keeps the browser proof source-backed and exercises the asynchronous
+   navigation transition truthfully.
+5. Govern both direct dependencies through the blocking dependency-risk inventory, exact lockfile,
+   vulnerability audit, and existing MUI/design-system containment boundary.
+
+### Rejected decisions
+
+1. Keeping `suppressHydrationWarning` on `<body>` or applying it to individual portfolio screens.
+2. Hiding React error 418, filtering console failures, or accepting a visibly correct screen as
+   evidence while the browser replaces server-rendered content.
+3. Disabling server rendering for the shell or portfolio records, because that would reduce first
+   render quality and avoid rather than correct the integration boundary.
+4. Adding screen-local Emotion caches, provider copies, or CSS workarounds.
+5. Upgrading Next.js, React, or MUI major versions in a hydration correction; the selected adapter
+   is stable and compatible with the governed Next 15, React 19, and MUI 7 foundation.
+
+### Validation and publication decision
+
+Workbench #677 owns implementation. Before correction, optimized standalone HTML placed 16
+Emotion style elements inside the document body. After correction, the same structural probe found
+three managed styles in the head, zero in the body, and no root suppression flag. Optimized
+standalone Playwright proof passes Cashflow at 1440, 1024, 768, and 519 pixels plus Positions at
+390 pixels; both routes record empty browser-runtime failure arrays and the compact Positions
+navigation retains keyboard focus. No Gateway/API/OpenAPI contract changed. The technology-risk
+wiki and repository context change because root rendering and direct dependency truth changed; no
+business screen guide changes because screen purpose, source authority, actions, and terminology
+remain unchanged.
