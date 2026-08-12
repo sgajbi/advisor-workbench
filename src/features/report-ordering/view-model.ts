@@ -32,6 +32,7 @@ export type ReportOrderingViewModel = {
   mode: ReportOrderingMode | null;
   configuration: ReportOrderingConfiguration;
   readiness: ReportOrderingReadiness;
+  batchReadiness: ReportOrderingReadiness;
   eligibleFamilies: ReportFamily[];
   workflowManagedFamilies: ReportFamily[];
   outputChoices: Array<{
@@ -70,7 +71,7 @@ export function createReportOrderingConfiguration(
   context: { asOfDate: string; reportingCurrency: string },
 ): ReportOrderingConfiguration {
   const family = firstEligibleFamily(response);
-  const mode = family ? firstOrderableMode(family) : null;
+  const mode = family ? firstSupportedMode(family) : null;
   const outputFormat = resolveReadyOutputFormat(family, mode);
 
   return {
@@ -94,9 +95,9 @@ export function selectReportOrderingFamily(
     (candidate) =>
       candidate.reportFamilyId === familyId &&
       candidate.eligibility.state === "ready" &&
-      firstOrderableMode(candidate),
+      firstSupportedMode(candidate),
   );
-  const mode = family ? firstOrderableMode(family) : null;
+  const mode = family ? firstSupportedMode(family) : null;
   if (!family || !mode) {
     return current;
   }
@@ -117,17 +118,30 @@ export function buildReportOrderingViewModel(
   configuration: ReportOrderingConfiguration,
 ): ReportOrderingViewModel {
   const eligibleFamilies = response.reportFamilies.filter(
-    (family) => family.eligibility.state === "ready" && firstOrderableMode(family),
+    (family) => family.eligibility.state === "ready" && firstSupportedMode(family),
   );
   const workflowManagedFamilies = response.reportFamilies.filter(
-    (family) => family.eligibility.state === "ready" && !firstOrderableMode(family),
+    (family) => family.eligibility.state === "ready" && !firstSupportedMode(family),
   );
   const family =
     eligibleFamilies.find((candidate) => candidate.reportFamilyId === configuration.familyId) ??
     null;
   const mode =
     family?.orderingModes.find((candidate) => candidate.modeId === configuration.modeId) ?? null;
-  const readiness = evaluateReadiness(response, family, mode, configuration);
+  const readiness = evaluateReadiness(
+    response,
+    family,
+    findSinglePortfolioMode(family),
+    configuration,
+    "single_portfolio",
+  );
+  const batchReadiness = evaluateReadiness(
+    response,
+    family,
+    findPortfolioReviewBatchMode(family),
+    configuration,
+    "explicit_portfolio_batch",
+  );
   const sectionChoices = family
     ? family.sections
         .slice()
@@ -140,6 +154,7 @@ export function buildReportOrderingViewModel(
     mode,
     configuration,
     readiness,
+    batchReadiness,
     eligibleFamilies,
     workflowManagedFamilies,
     outputChoices: (family?.outputFormats ?? []).map(toOutputChoice),
@@ -161,10 +176,7 @@ export function applyReportScopeReadiness(
   if (scopeMode === "single_portfolio") {
     return model;
   }
-  const issues = [...model.readiness.issues];
-  if (!findPortfolioReviewBatchMode(model.family)) {
-    issues.push("Portfolio bundle ordering is not currently published for this report.");
-  }
+  const issues = [...model.batchReadiness.issues];
   if (portfolioSelectionState !== "ready") {
     issues.push(
       portfolioSelectionState === "error"
@@ -244,6 +256,7 @@ function evaluateReadiness(
   family: ReportFamily | null,
   mode: ReportOrderingMode | null,
   configuration: ReportOrderingConfiguration,
+  scopeMode: ReportOrderingScopeMode,
 ): ReportOrderingReadiness {
   const issues: string[] = [];
   if (response.catalogueAvailability.state === "unavailable") {
@@ -257,14 +270,12 @@ function evaluateReadiness(
   } else if (family.availability.state === "unavailable") {
     issues.push(family.availability.message);
   }
-  if (!mode || !mode.interactive || mode.eligibility.state !== "ready") {
-    issues.push("No interactive ordering method is available for this report.");
-  } else if (
-    mode.submission?.capabilityId !== "reporting.portfolio_review.single" ||
-    mode.submission.path !== "/api/v1/reports/portfolio-reviews" ||
-    mode.submission.state !== "ready"
-  ) {
-    issues.push("The selected report cannot currently be submitted from Workbench.");
+  if (scopeMode === "single_portfolio") {
+    if (!mode) {
+      issues.push("Single-portfolio ordering is not currently available for this report.");
+    }
+  } else if (!mode) {
+    issues.push("Portfolio bundle ordering is not currently published for this report.");
   }
   if (!isBusinessDate(configuration.asOfDate)) {
     issues.push("Select a valid report date.");
@@ -329,7 +340,7 @@ function evaluateReadiness(
 function firstEligibleFamily(response: ReportOrderingResponse): ReportFamily | null {
   return (
     response.reportFamilies.find(
-      (family) => family.eligibility.state === "ready" && firstOrderableMode(family),
+      (family) => family.eligibility.state === "ready" && firstSupportedMode(family),
     ) ?? null
   );
 }
@@ -341,10 +352,11 @@ function defaultSelectedSectionIds(family: ReportFamily): string[] {
     .map((section) => section.sectionId);
 }
 
-function firstOrderableMode(family: ReportFamily): ReportOrderingMode | null {
+function findSinglePortfolioMode(family: ReportFamily | null): ReportOrderingMode | null {
   return (
-    family.orderingModes.find(
+    family?.orderingModes.find(
       (mode) =>
+        mode.modeId === "single_portfolio" &&
         mode.interactive &&
         mode.eligibility.state === "ready" &&
         mode.submission?.capabilityId === "reporting.portfolio_review.single" &&
@@ -352,6 +364,10 @@ function firstOrderableMode(family: ReportFamily): ReportOrderingMode | null {
         mode.submission.state === "ready",
     ) ?? null
   );
+}
+
+function firstSupportedMode(family: ReportFamily): ReportOrderingMode | null {
+  return findSinglePortfolioMode(family) ?? findPortfolioReviewBatchMode(family);
 }
 
 function resolveReadyOutputFormat(

@@ -262,6 +262,36 @@ describe("report ordering view model", () => {
     ).toEqual(expect.objectContaining({ canSubmit: false }));
   });
 
+  it("keeps bundle readiness independent when single-portfolio ordering is unavailable", () => {
+    const payload = buildReportOrderingResponse();
+    const singleMode = payload.reportFamilies[0].orderingModes[0];
+    singleMode.interactive = false;
+    singleMode.eligibility.state = "unavailable";
+    singleMode.eligibility.reasonCode = "single_portfolio_unavailable";
+    singleMode.submission.state = "unavailable";
+    singleMode.submission.reasonCode = "single_portfolio_unavailable";
+    const response = parseReportOrderingResponse(payload);
+    const configuration = createReportOrderingConfiguration(response, {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
+    const baseModel = buildReportOrderingViewModel(response, configuration);
+
+    expect(baseModel.family?.reportFamilyId).toBe("portfolio_review");
+    expect(baseModel.readiness.issues).toContain(
+      "Single-portfolio ordering is not currently available for this report.",
+    );
+    expect(
+      applyReportScopeReadiness(baseModel, "explicit_portfolio_batch", [
+        "PB_SG_GLOBAL_BAL_001",
+        "PB_SG_INCOME_002",
+      ]),
+    ).toEqual(expect.objectContaining({
+      canSubmit: true,
+      readiness: expect.objectContaining({ state: "ready", issues: [] }),
+    }));
+  });
+
   it("accepts only the governed selection-required batch capability posture", () => {
     const payload = buildReportOrderingResponse();
     const mode = payload.reportFamilies[0].orderingModes[1];
