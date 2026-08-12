@@ -214,7 +214,7 @@ export function buildReportBatchStatus() {
     region: "APAC",
     materialized_portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
     as_of_date: "2026-04-22",
-    requested_output_formats: ["pdf"],
+    requested_output_formats: ["json"],
     reporting_currency: "SGD",
     status: "completed_with_failures",
     item_count: 2,

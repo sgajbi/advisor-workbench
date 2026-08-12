@@ -145,6 +145,14 @@ function PortfolioBookSelection({
   }, [asOfDate, book.response, currentPortfolioId, onSelectionChange, selectedPortfolioIds.length]);
   useEffect(() => {
     if (!book.response) return;
+    if (
+      !disabled &&
+      selectedPortfolioIds.length > 0 &&
+      book.response.page.total_count === 0
+    ) {
+      onSelectionChange([]);
+      return;
+    }
     const currentItems = new Map(book.response.items.map((item) => [item.portfolio_id, item]));
     if (disabled || selectedPortfolioIds.length === 0) return;
     const retainedPortfolioIds = selectedPortfolioIds.filter((portfolioId) => {
