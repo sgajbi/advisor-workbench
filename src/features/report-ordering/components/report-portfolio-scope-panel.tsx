@@ -118,6 +118,7 @@ function PortfolioBookSelection({
   const [filter, setFilter] = useState("");
   const [offset, setOffset] = useState(0);
   const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 });
+  const confirmedPageOffsetByPortfolioRef = useRef(new Map<string, number>());
   useEffect(() => {
     onBookStateChange(book.error ? "error" : book.response && !book.loading ? "ready" : "loading");
   }, [book.error, book.loading, book.response, onBookStateChange]);
@@ -126,6 +127,7 @@ function PortfolioBookSelection({
     setFilter("");
     setOffset(0);
     initialSelectionKeyRef.current = "";
+    confirmedPageOffsetByPortfolioRef.current.clear();
   }, [asOfDate]);
   useEffect(() => {
     if (
@@ -144,16 +146,22 @@ function PortfolioBookSelection({
     }
   }, [asOfDate, book.response, currentPortfolioId, onSelectionChange, selectedPortfolioIds.length]);
   useEffect(() => {
-    if (!book.response || disabled || selectedPortfolioIds.length === 0) return;
-    const inactivePortfolioIds = new Set(
-      book.response.items
-        .filter((item) => item.status !== "ACTIVE")
-        .map((item) => item.portfolio_id),
-    );
-    if (!selectedPortfolioIds.some((portfolioId) => inactivePortfolioIds.has(portfolioId))) return;
-    onSelectionChange(
-      selectedPortfolioIds.filter((portfolioId) => !inactivePortfolioIds.has(portfolioId)),
-    );
+    if (!book.response) return;
+    const pageOffset = book.response.page.offset;
+    const currentItems = new Map(book.response.items.map((item) => [item.portfolio_id, item]));
+    for (const item of book.response.items) {
+      if (item.status === "ACTIVE") {
+        confirmedPageOffsetByPortfolioRef.current.set(item.portfolio_id, pageOffset);
+      }
+    }
+    if (disabled || selectedPortfolioIds.length === 0) return;
+    const retainedPortfolioIds = selectedPortfolioIds.filter((portfolioId) => {
+      const currentItem = currentItems.get(portfolioId);
+      if (currentItem) return currentItem.status === "ACTIVE";
+      return confirmedPageOffsetByPortfolioRef.current.get(portfolioId) !== pageOffset;
+    });
+    if (retainedPortfolioIds.length === selectedPortfolioIds.length) return;
+    onSelectionChange(retainedPortfolioIds);
   }, [book.response, disabled, onSelectionChange, selectedPortfolioIds]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {

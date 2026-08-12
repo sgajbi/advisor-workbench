@@ -297,6 +297,23 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
   });
 
+  it("removes a selected portfolio that disappears from its confirmed book page", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+
+    advisorBookMock.mockReturnValue(buildAdvisorBookResult({ includeCurrentPortfolio: false }));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+
+    await waitFor(() => expect(screen.getByText("1 selected")).toBeInTheDocument());
+    expect(screen.queryByRole("checkbox", { name: /Global Balanced Mandate/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Portfolio Bundle" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeDisabled();
+  });
+
   it("locks the reviewed portfolio bundle while its source submission is pending", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
