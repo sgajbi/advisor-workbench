@@ -2,9 +2,9 @@
   "$schema": "./workbench-dependency-risk-inventory.v1.schema.json",
   "schemaVersion": "lotus-workbench.dependency-risk-inventory.v1",
   "inventoryId": "lotus-workbench-direct-production-dependencies",
-  "inventoryVersion": "1.0.0",
+  "inventoryVersion": "1.1.0",
   "governedByIssue": "https://github.com/sgajbi/lotus-workbench/issues/618",
-  "reviewedOn": "2026-08-10",
+  "reviewedOn": "2026-08-12",
   "nextReviewBy": "2026-11-10",
   "admissionMode": "blocking",
   "reviewOwner": "workbench-architecture-maintainers",
@@ -22,6 +22,48 @@
     "MIT"
   ],
   "dependencies": [
+    {
+      "name": "@emotion/cache",
+      "version": "11.14.0",
+      "technologyState": "approved_default",
+      "purpose": "Provides the deterministic Emotion cache used by the official MUI App Router server-rendering integration.",
+      "ownershipBoundary": "Workbench owns cache placement and hydration invariants; Emotion owns style serialization and cache mechanics.",
+      "architecturalRole": "design_system",
+      "criticality": "high",
+      "containmentBoundary": "Consumed only by the MUI Next.js integration at the root application boundary, not by business screens.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace only with the paired MUI styling-engine or framework integration while preserving head-managed SSR style and hydration proof.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@emotion/cache/v/11.14.0"
+      },
+      "stewardship": {
+        "steward": "Emotion maintainers",
+        "repositoryUrl": "https://github.com/emotion-js/emotion",
+        "securityChannelUrl": "https://github.com/emotion-js/emotion/security/advisories"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/emotion-js/emotion/releases"
+      },
+      "maturity": {
+        "rationale": "Stable official Emotion cache package required by MUI's documented Next.js App Router integration.",
+        "adoptionEvidenceUrls": [
+          "https://mui.com/material-ui/integrations/nextjs/",
+          "https://emotion.sh/docs/@emotion/cache"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-12",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
     {
       "name": "@emotion/react",
       "version": "11.14.0",
@@ -186,6 +228,48 @@
       "review": {
         "owner": "workbench-architecture-maintainers",
         "reviewedOn": "2026-08-10",
+        "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@mui/material-nextjs",
+      "version": "7.3.10",
+      "technologyState": "approved_default",
+      "purpose": "Collects MUI and Emotion styles during Next.js App Router streaming so server-rendered styles are managed in the document head.",
+      "ownershipBoundary": "Workbench owns root-provider composition and browser proof; MUI owns the supported Next.js cache-provider adapter.",
+      "architecturalRole": "design_system",
+      "criticality": "high",
+      "containmentBoundary": "Imported once by the root App Router layout and kept outside feature and business composition modules.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Replace only with MUI's supported successor or a reviewed repository adapter that proves identical SSR style placement and hydration behavior.",
+        "switchingCost": "moderate"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@mui/material-nextjs/v/7.3.10"
+      },
+      "stewardship": {
+        "steward": "MUI Core maintainers",
+        "repositoryUrl": "https://github.com/mui/material-ui",
+        "securityChannelUrl": "https://github.com/mui/material-ui/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://github.com/mui/material-ui/releases/tag/v7.3.10"
+      },
+      "maturity": {
+        "rationale": "Official stable MUI adapter for long-lived Next.js App Router server rendering, version-compatible with the governed Next 15, React 19, and MUI 7 foundation.",
+        "adoptionEvidenceUrls": [
+          "https://mui.com/material-ui/integrations/nextjs/",
+          "https://www.npmjs.com/package/@mui/material-nextjs/v/7.3.10"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-12",
         "nextReviewBy": "2026-11-10"
       },
       "exception": null

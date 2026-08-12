@@ -12,16 +12,17 @@ function readJson(path: string) {
 }
 
 function loadEvidence() {
+  const inventory = readJson(
+    "docs/architecture/workbench-dependency-risk-inventory.v1.json"
+  );
   return {
     packageJson: readJson("package.json"),
     packageLock: readJson("package-lock.json"),
-    inventory: readJson(
-      "docs/architecture/workbench-dependency-risk-inventory.v1.json"
-    ),
+    inventory,
     schema: readJson(
       "docs/architecture/workbench-dependency-risk-inventory.v1.schema.json"
     ),
-    today: "2026-08-10",
+    today: inventory.reviewedOn,
   };
 }
 
@@ -146,10 +147,15 @@ describe("direct production dependency risk inventory", () => {
     const evidence = loadEvidence();
     evidence.packageJson.dependencies.zod = "^4.1.12";
     dependency(evidence, "zod").version = "4.2.0-rc.1";
+    const zodIndex = evidence.inventory.dependencies.findIndex(
+      (candidate: { name?: string }) => candidate.name === "zod"
+    );
 
     expect(validateDependencyRiskInventory(evidence)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("dependencies[13].version must be an exact stable semantic version"),
+        expect.stringContaining(
+          `dependencies[${zodIndex}].version must be an exact stable semantic version`
+        ),
         expect.stringContaining("zod must use an exact stable manifest version"),
       ])
     );

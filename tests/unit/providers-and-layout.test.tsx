@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { useQueryClient } from "@tanstack/react-query";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { describe, expect, it, vi } from "vitest";
 
 import RootLayout from "@/app/layout";
@@ -44,7 +45,9 @@ describe("RootLayout", () => {
 
     const body = tree.props.children;
     expect(body.type).toBe("body");
-    expect(body.props.suppressHydrationWarning).toBe(true);
+    expect(body.props.suppressHydrationWarning).toBeUndefined();
+    expect(body.props.children.type).toBe(AppRouterCacheProvider);
+    expect(body.props.children.props.children.type).toBe(Providers);
 
     render(body.props.children);
 

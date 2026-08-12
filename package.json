@@ -69,10 +69,12 @@
     "auto:refresh:pas": "powershell -ExecutionPolicy Bypass -File scripts/automation/Service-Refresh.ps1 -ProjectPath C:/Users/Sandeep/projects/lotus-core -Services"
   },
   "dependencies": {
+    "@emotion/cache": "11.14.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@hookform/resolvers": "5.2.2",
     "@mui/material": "7.3.4",
+    "@mui/material-nextjs": "7.3.10",
     "@tanstack/react-query": "5.90.5",
     "ag-grid-community": "34.3.1",
     "ag-grid-react": "34.3.1",
