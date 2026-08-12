@@ -145,6 +145,8 @@ export function ReportOrderingWorkspace({
                   scopeMode === "explicit_portfolio_batch" ? (
                     <ReportBatchStatusPanel
                       status={workflow.batchStatus}
+                      acceptedHandle={workflow.submittedBatchHandle}
+                      requestedOutputFormats={workflow.batchRequestedOutputFormats}
                       error={workflow.batchStatusError}
                       onRefresh={() => void workflow.refreshBatchStatus()}
                     />

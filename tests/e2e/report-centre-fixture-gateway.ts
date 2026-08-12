@@ -107,7 +107,16 @@ export async function startReportCentreFixtureGateway({
     }
 
     if (requestUrl.pathname === "/api/v1/report-batches" && request.method === "POST") {
-      sendJson(response, buildReportBatchHandle(), 202);
+      const idempotencyKey = request.headers["idempotency-key"];
+      if (typeof idempotencyKey !== "string" || !idempotencyKey.trim()) {
+        sendJson(response, { detail: "A reviewed idempotency key is required." }, 400);
+        return;
+      }
+      sendJson(
+        response,
+        { ...buildReportBatchHandle(), idempotency_key: idempotencyKey },
+        202,
+      );
       return;
     }
 

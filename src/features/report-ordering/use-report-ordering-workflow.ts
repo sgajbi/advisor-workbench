@@ -98,8 +98,16 @@ export function useReportOrderingWorkflow({
   const activePortfolioIdRef = useRef(portfolioId);
   const activeBatchIdRef = useRef<string | null>(null);
   const activeBatchIntentRef = useRef<ActiveBatchIntent | null>(null);
+  const workspaceGenerationRef = useRef(0);
   const batchStatusRequestSequenceRef = useRef(0);
   const historyRequestSequenceRef = useRef(0);
+
+  const isActiveWorkspaceGeneration = useCallback(
+    (expectedPortfolioId: string, expectedGeneration: number) =>
+      activePortfolioIdRef.current === expectedPortfolioId &&
+      workspaceGenerationRef.current === expectedGeneration,
+    [],
+  );
 
   const loadBatchStatus = useCallback(async (batchId: string) => {
     const requestSequence = ++batchStatusRequestSequenceRef.current;
@@ -175,13 +183,14 @@ export function useReportOrderingWorkflow({
   }, [batchStatus, batchStatusError, loadBatchStatus, submittedBatchHandle]);
 
   const loadHistory = useCallback(async () => {
+    const workspaceGeneration = workspaceGenerationRef.current;
     const requestSequence = ++historyRequestSequenceRef.current;
     setHistoryState("loading");
     setHistoryError(null);
     try {
       const response = await listPortfolioReviewOrders(portfolioId);
       if (
-        activePortfolioIdRef.current !== portfolioId ||
+        !isActiveWorkspaceGeneration(portfolioId, workspaceGeneration) ||
         historyRequestSequenceRef.current !== requestSequence
       ) {
         return;
@@ -190,7 +199,7 @@ export function useReportOrderingWorkflow({
       setHistoryState("ready");
     } catch (error) {
       if (
-        activePortfolioIdRef.current !== portfolioId ||
+        !isActiveWorkspaceGeneration(portfolioId, workspaceGeneration) ||
         historyRequestSequenceRef.current !== requestSequence
       ) {
         return;
@@ -199,15 +208,16 @@ export function useReportOrderingWorkflow({
       setHistoryState(isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error");
       setHistoryError(historyErrorCopy(error));
     }
-  }, [portfolioId]);
+  }, [isActiveWorkspaceGeneration, portfolioId]);
 
   const loadCatalogue = useCallback(
     async (resetConfiguration: boolean) => {
+      const workspaceGeneration = workspaceGenerationRef.current;
       setCatalogueState("loading");
       setCatalogueError(null);
       try {
         const response = await getReportOrderingOptions(portfolioId);
-        if (activePortfolioIdRef.current !== portfolioId) {
+        if (!isActiveWorkspaceGeneration(portfolioId, workspaceGeneration)) {
           return;
         }
         const nextSourceFingerprint = JSON.stringify(response);
@@ -226,7 +236,7 @@ export function useReportOrderingWorkflow({
         );
         setCatalogueState("ready");
       } catch (error) {
-        if (activePortfolioIdRef.current !== portfolioId) {
+        if (!isActiveWorkspaceGeneration(portfolioId, workspaceGeneration)) {
           return;
         }
         setCatalogue(null);
@@ -238,7 +248,7 @@ export function useReportOrderingWorkflow({
         setCatalogueError(catalogueErrorCopy(error));
       }
     },
-    [asOfDate, portfolioId, reportingCurrency],
+    [asOfDate, isActiveWorkspaceGeneration, portfolioId, reportingCurrency],
   );
 
   useEffect(() => {
@@ -256,6 +266,7 @@ export function useReportOrderingWorkflow({
       void loadHistory();
     }, 0);
     return () => {
+      workspaceGenerationRef.current += 1;
       window.clearTimeout(timer);
     };
   }, [loadCatalogue, loadHistory, portfolioId]);
@@ -407,6 +418,7 @@ export function useReportOrderingWorkflow({
       return false;
     }
 
+    const submissionWorkspaceGeneration = workspaceGenerationRef.current;
     setSubmissionProgress({ portfolioId, state: "submitting", error: null });
     try {
       const sharedOrder = {
@@ -433,7 +445,7 @@ export function useReportOrderingWorkflow({
             portfolioIds: [...selectedPortfolioIds].sort(),
           })
         : await submitPortfolioReviewOrder({ ...sharedOrder, portfolioId });
-      if (activePortfolioIdRef.current !== portfolioId) {
+      if (!isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration)) {
         return false;
       }
       if (scopeMode === "explicit_portfolio_batch") {
@@ -457,7 +469,10 @@ export function useReportOrderingWorkflow({
         activeBatchIdRef.current = batchHandle.batch_id;
         setSubmittedBatchHandle(batchHandle);
         await loadBatchStatus(batchHandle.batch_id);
-        if (activeBatchIdRef.current !== batchHandle.batch_id) {
+        if (
+          !isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration) ||
+          activeBatchIdRef.current !== batchHandle.batch_id
+        ) {
           return false;
         }
       } else {
@@ -470,7 +485,7 @@ export function useReportOrderingWorkflow({
       if (scopeMode === "single_portfolio") await loadHistory();
       return true;
     } catch (error) {
-      if (activePortfolioIdRef.current !== portfolioId) {
+      if (!isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration)) {
         return false;
       }
       setSubmissionProgress({
@@ -482,6 +497,7 @@ export function useReportOrderingWorkflow({
     }
   }, [
     configuration,
+    isActiveWorkspaceGeneration,
     loadHistory,
     loadBatchStatus,
     model?.canSubmit,
@@ -530,6 +546,9 @@ export function useReportOrderingWorkflow({
     submittedBatchHandle,
     batchStatus,
     batchStatusError,
+    batchRequestedOutputFormats: submittedBatchHandle
+      ? activeBatchIntentRef.current?.requestedOutputFormats ?? []
+      : [],
     supportReference: submittedBatchHandle?.batch_id ?? submittedHandle?.report_job_id ?? null,
     screenState,
     preflightReviewed,

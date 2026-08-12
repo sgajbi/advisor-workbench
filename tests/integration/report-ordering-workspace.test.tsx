@@ -85,6 +85,51 @@ function buildAdvisorBookResult({
   };
 }
 
+function buildRenderSupportability({
+  state = "unavailable",
+  supportedOutputFormats = ["json"],
+}: {
+  state?: "ready" | "degraded" | "unavailable";
+  supportedOutputFormats?: string[];
+} = {}) {
+  return {
+    feature_key: "portfolio_review_render",
+    state,
+    reason: state === "ready" ? "render_ready" : `render_${state}`,
+    freshness_bucket: "current",
+    deterministic_output_supported: state !== "unavailable",
+    render_store_ready: state !== "unavailable",
+    template_registry_ready: true,
+    default_output_format: "json",
+    supported_output_formats: supportedOutputFormats,
+  };
+}
+
+function buildPdfReadyOrderingResponse() {
+  const options = buildReportOrderingResponse();
+  const pdfOutput = options.reportFamilies[0].outputFormats.find(
+    (output) => output.formatId === "pdf",
+  );
+  if (pdfOutput) {
+    pdfOutput.state = "ready";
+    pdfOutput.reasonCode = "governed_pdf_ready";
+  }
+  return options;
+}
+
+function mockAcceptedBatchRenderSupport(
+  renderSupportability: ReturnType<typeof buildRenderSupportability>,
+) {
+  submitBatchMock.mockImplementation(async (order) => {
+    const handle = {
+      ...buildReportBatchHandle(),
+      idempotency_key: order.idempotencyKey,
+      render_supportability: renderSupportability,
+    };
+    return parseReportBatchHandle(handle);
+  });
+}
+
 const optionsMock = vi.mocked(getReportOrderingOptions);
 const historyMock = vi.mocked(listPortfolioReviewOrders);
 const submitMock = vi.mocked(submitPortfolioReviewOrder);
@@ -222,6 +267,11 @@ describe("ReportOrderingWorkspace", () => {
     expect(await screen.findByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
     expect(screen.getByText("Report data complete")).toBeInTheDocument();
     expect(screen.getByText("Needs retry")).toBeInTheDocument();
+    const completion = screen.getByRole("progressbar", { name: "Portfolio bundle completion" });
+    expect(completion).toHaveAttribute("aria-valuenow", "1");
+    expect(completion).toHaveAttribute("aria-valuemax", "2");
+    expect(within(screen.getByLabelText("Portfolio bundle summary")).getByText("50%"))
+      .toBeInTheDocument();
     expect(submitBatchMock).toHaveBeenCalledWith(expect.objectContaining({
       portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
       idempotencyKey: expect.stringMatching(/^workbench-report-order-/),
@@ -510,36 +560,50 @@ describe("ReportOrderingWorkspace", () => {
     expect(within(summary).getByText("Cancelled").parentElement).toHaveTextContent("Cancelled1");
     expect(screen.getByRole("progressbar", { name: "Portfolio bundle completion" })).toHaveAttribute(
       "aria-valuenow",
-      "2",
+      "1",
     );
-    expect(within(summary).getByText("100%")).toBeInTheDocument();
+    expect(within(summary).getByText("50%")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toHaveTextContent("Cancelled");
   });
 
+  it("reports 100% completion only when every portfolio report succeeds", async () => {
+    const status = buildReportBatchStatus();
+    (status as { status_counts: Record<string, number> }).status_counts = { succeeded: 2 };
+    status.status = "completed";
+    status.items[1] = {
+      ...status.items[1],
+      status: "succeeded",
+      report_job_id: "rjob_2",
+      retry_eligible: false,
+      next_retry_at: null,
+      last_error_category: null,
+      last_error_summary: null,
+      completed_at: "2026-04-22T09:01:00Z",
+    };
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    const summary = await screen.findByLabelText("Portfolio bundle summary");
+    const completion = screen.getByRole("progressbar", { name: "Portfolio bundle completion" });
+    expect(completion).toHaveAttribute("aria-valuenow", "2");
+    expect(completion).toHaveAttribute("aria-valuemax", "2");
+    expect(within(summary).getByText("100%")).toBeInTheDocument();
+  });
+
   it("keeps unavailable governed output explicit after report data completes", async () => {
-    const options = buildReportOrderingResponse();
-    const pdfOutput = options.reportFamilies[0].outputFormats.find(
-      (output) => output.formatId === "pdf",
-    );
-    if (pdfOutput) {
-      pdfOutput.state = "ready";
-      pdfOutput.reasonCode = "governed_pdf_ready";
-    }
-    optionsMock.mockResolvedValue(parseReportOrderingResponse(options));
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(buildPdfReadyOrderingResponse()));
     const status = {
       ...buildReportBatchStatus(),
       requested_output_formats: ["pdf"],
-      render_supportability: {
-        feature_key: "portfolio_review_render",
-        state: "unavailable",
-        reason: "render_store_unavailable",
-        freshness_bucket: "current",
-        deterministic_output_supported: false,
-        render_store_ready: false,
-        template_registry_ready: true,
-        default_output_format: "json",
-        supported_output_formats: ["json"],
-      },
+      render_supportability: buildRenderSupportability(),
     };
     batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
@@ -561,17 +625,7 @@ describe("ReportOrderingWorkspace", () => {
   it("does not apply document-renderer failure copy to a supported structured-data output", async () => {
     const status = {
       ...buildReportBatchStatus(),
-      render_supportability: {
-        feature_key: "portfolio_review_render",
-        state: "unavailable",
-        reason: "render_store_unavailable",
-        freshness_bucket: "current",
-        deterministic_output_supported: false,
-        render_store_ready: false,
-        template_registry_ready: true,
-        default_output_format: "json",
-        supported_output_formats: ["json"],
-      },
+      render_supportability: buildRenderSupportability(),
     };
     batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
@@ -587,6 +641,114 @@ describe("ReportOrderingWorkspace", () => {
       await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Requested output unavailable")).not.toBeInTheDocument();
+  });
+
+  it("retains accepted-handle output limitations when initial outcomes are unavailable", async () => {
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(buildPdfReadyOrderingResponse()));
+    mockAcceptedBatchRenderSupport(buildRenderSupportability());
+    const recoveredStatus = {
+      ...buildReportBatchStatus(),
+      requested_output_formats: ["pdf"],
+      render_supportability: buildRenderSupportability({
+        state: "ready",
+        supportedOutputFormats: ["json", "pdf"],
+      }),
+    };
+    batchStatusMock
+      .mockRejectedValueOnce(new Error("status unavailable"))
+      .mockResolvedValueOnce(parseReportBatchStatus(recoveredStatus));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Governed PDF document/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
+    ).toBeInTheDocument();
+    const supportPosture = screen.getByLabelText("Portfolio bundle support posture");
+    expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
+  });
+
+  it("retains accepted-handle limitations when status omits nullable support posture", async () => {
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(buildPdfReadyOrderingResponse()));
+    mockAcceptedBatchRenderSupport(buildRenderSupportability({
+      state: "degraded",
+      supportedOutputFormats: ["json", "pdf"],
+    }));
+    const status = buildReportBatchStatus();
+    status.requested_output_formats = ["pdf"];
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Governed PDF document/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    expect(within(supportPosture).getByText("Requested output has limitations")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
+  });
+
+  it("lets newer status support posture supersede acceptance-time limitations", async () => {
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(buildPdfReadyOrderingResponse()));
+    mockAcceptedBatchRenderSupport(buildRenderSupportability());
+    const status = {
+      ...buildReportBatchStatus(),
+      requested_output_formats: ["pdf"],
+      render_supportability: buildRenderSupportability({
+        state: "ready",
+        supportedOutputFormats: ["json", "pdf"],
+      }),
+    };
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Governed PDF document/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
+  });
+
+  it("does not mislabel structured data from acceptance-time document limitations", async () => {
+    mockAcceptedBatchRenderSupport(buildRenderSupportability());
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(buildReportBatchStatus()));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
   });
 
   it("shows degraded source reporting support without hiding portfolio outcomes", async () => {
@@ -643,6 +805,46 @@ describe("ReportOrderingWorkspace", () => {
 
     expect(screen.queryByRole("heading", { name: "Portfolio bundle accepted" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+  });
+
+  it("rejects a late portfolio-bundle acceptance after A-to-B-to-A workspace navigation", async () => {
+    let resolveSubmission:
+      | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
+      | null = null;
+    submitBatchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmission = resolve;
+      }),
+    );
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await screen.findByRole("heading", { name: "Submitting portfolio bundle" });
+
+    view.rerender(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+      />,
+    );
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
+
+    await act(async () => {
+      const handle = buildReportBatchHandle();
+      handle.idempotency_key = submitBatchMock.mock.calls[0][0].idempotencyKey;
+      resolveSubmission?.(parseReportBatchHandle(handle));
+    });
+
+    expect(screen.queryByRole("heading", { name: "Portfolio bundle accepted" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Portfolio bundle not accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+    expect(batchStatusMock).not.toHaveBeenCalled();
   });
 
   it("surfaces a paused source batch separately from portfolio item progress", async () => {
