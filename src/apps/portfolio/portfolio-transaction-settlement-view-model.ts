@@ -31,11 +31,6 @@ type SettlementStateInput = Pick<
   "component_type" | "settlement_status"
 >;
 
-const CASH_SETTLEMENT_COMPONENT_TYPES = new Set([
-  "FX_CASH_SETTLEMENT_BUY",
-  "FX_CASH_SETTLEMENT_SELL",
-]);
-
 export function buildPortfolioTransactionSettlementState(
   transaction: SettlementStateInput,
 ): PortfolioTransactionSettlementState {
@@ -59,7 +54,7 @@ export function buildPortfolioTransactionSettlementState(
     };
   }
 
-  if (CASH_SETTLEMENT_COMPONENT_TYPES.has(normalizeSourceValue(transaction.component_type))) {
+  if (isCashSettlementComponentType(transaction.component_type)) {
     return {
       kind: "not_reported",
       label: "Not reported",
@@ -146,6 +141,14 @@ export function buildPortfolioTransactionSettlementSummary(
 
 function normalizeSourceValue(value: string | null | undefined): string {
   return value?.trim().toUpperCase() ?? "";
+}
+
+function isCashSettlementComponentType(value: string | null | undefined): boolean {
+  const normalized = normalizeSourceValue(value);
+  return (
+    normalized === "FX_CASH_SETTLEMENT_BUY" ||
+    normalized === "FX_CASH_SETTLEMENT_SELL"
+  );
 }
 
 function countState(
