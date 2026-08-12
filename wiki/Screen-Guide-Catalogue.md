@@ -8,8 +8,8 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Advisor Book and Portfolio Review have passed
-the complete guide standard; the remaining 34 dedicated guides are explicit work under
+screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, and Report
+Centre have passed the complete guide standard; the remaining 33 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -148,13 +148,14 @@ reporting or service contracts.
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Report Centre | `/reports` | Active | Guide planned — #605 | Gateway and Report |
+| [Report Centre](Report-Centre-Screen-Guide) | `/reports` | Active | Guide available | Gateway and Report |
 | Data-Product Discovery | `/data-products` | Active | Guide planned — #605 | Gateway and Lotus domain services |
 
-The Report Centre guide will cover available report definitions, configuration choices, ordering
-or generation posture, archive state, and failure recovery only where currently implemented. The
-Data-Product Discovery guide will explain ownership, trust posture, and live availability without
-treating catalogue metadata as proof that a downstream business workflow is ready.
+The Report Centre guide covers approved report choices, reviewed single-portfolio requests,
+source-backed portfolio-bundle selection, separate per-portfolio outcomes, archive and delivery
+boundaries, and failure recovery only where currently implemented. The Data-Product Discovery
+guide will explain ownership, trust posture, and live availability without treating catalogue
+metadata as proof that a downstream business workflow is ready.
 
 ## Workflow Use
 
