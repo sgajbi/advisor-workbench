@@ -113,6 +113,7 @@ const DEFAULT_REPORTING_CALLER_CONTEXT = {
 
 const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
 const REPORTING_AUTH_MODE_ENV = "WORKBENCH_REPORTING_AUTH_MODE";
+const ADVISOR_BOOK_READ_CAPABILITY = "advisor.book.read";
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
@@ -295,6 +296,9 @@ export function applyReportOrderingRouteCallerContextHeaders(
   headers.set("X-Booking-Center-Code", context.bookingCenterCode);
   headers.set("X-Role", role);
   headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
+  if (request.method === "POST" && request.upstreamPath === "api/v1/report-batches") {
+    headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
+  }
 
   return { status: "applied", mode: authorityMode };
 }
@@ -311,7 +315,9 @@ function isReportOrderingWorkspaceRoute(method: string, upstreamPath: string): b
   return (
     (method === "GET" && upstreamPath === "api/v1/report-ordering/options") ||
     (method === "POST" && upstreamPath === "api/v1/reports/portfolio-reviews") ||
-    (method === "GET" && upstreamPath === "api/v1/report-jobs")
+    (method === "GET" && upstreamPath === "api/v1/report-jobs") ||
+    (method === "POST" && upstreamPath === "api/v1/report-batches") ||
+    (method === "GET" && /^api\/v1\/report-batches\/[^/]+$/.test(upstreamPath))
   );
 }
 
@@ -351,13 +357,45 @@ function validateReportingWorkspaceRequest(
       : "reporting_scope_not_entitled";
   }
 
-  const submittedPortfolioIds = readSubmittedPortfolioIds(request.bodyText);
-  if (!submittedPortfolioIds || submittedPortfolioIds.length !== 1) {
+  if (
+    request.method === "GET" &&
+    /^api\/v1\/report-batches\/[^/]+$/.test(request.upstreamPath)
+  ) {
+    return "ready";
+  }
+
+  const submittedPortfolioIds =
+    request.upstreamPath === "api/v1/report-batches"
+      ? readBatchPortfolioIds(request.bodyText)
+      : readSubmittedPortfolioIds(request.bodyText);
+  const exactlyOnePortfolio = request.upstreamPath !== "api/v1/report-batches";
+  if (!submittedPortfolioIds || (exactlyOnePortfolio && submittedPortfolioIds.length !== 1)) {
     return "invalid_reporting_request";
   }
   return submittedPortfolioIds.every((portfolioId) => entitledPortfolioIds.has(portfolioId))
     ? "ready"
     : "reporting_scope_not_entitled";
+}
+
+function readBatchPortfolioIds(bodyText: string | undefined): string[] | null {
+  if (!bodyText) {
+    return null;
+  }
+  try {
+    const body = JSON.parse(bodyText) as Record<string, unknown>;
+    const portfolioIds = body.portfolio_ids;
+    if (
+      !Array.isArray(portfolioIds) ||
+      portfolioIds.length === 0 ||
+      portfolioIds.some((portfolioId) => typeof portfolioId !== "string" || !portfolioId.trim())
+    ) {
+      return null;
+    }
+    const normalized = portfolioIds.map((portfolioId) => String(portfolioId).trim());
+    return new Set(normalized).size === normalized.length ? normalized : null;
+  } catch {
+    return null;
+  }
 }
 
 function readSubmittedPortfolioIds(bodyText: string | undefined): string[] | null {

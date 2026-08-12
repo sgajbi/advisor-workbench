@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  getPortfolioReviewBatchStatus,
   getReportOrderingOptions,
   listPortfolioReviewOrders,
+  submitPortfolioReviewBatch,
   submitPortfolioReviewOrder,
 } from "@/features/report-ordering/api";
 import {
@@ -10,6 +12,8 @@ import {
   resetAnalyticsUiMetricEvents,
 } from "@/features/analytics-observability/metrics";
 import {
+  buildReportBatchHandle,
+  buildReportBatchStatus,
   buildReportJobListResponse,
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
@@ -151,5 +155,47 @@ describe("report ordering API", () => {
     expect(metrics).toContain("reporting.portfolio-review.history");
     expect(metrics).not.toContain("PB_SG_GLOBAL_BAL_001");
     expect(metrics).not.toContain("rjob_1");
+  });
+
+  it("submits an explicit portfolio selection without browser-authored candidate authority", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      new Response(JSON.stringify(buildReportBatchHandle()), { status: 202 })));
+
+    await submitPortfolioReviewBatch({
+      portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+      asOfDate: "2026-04-22",
+      outputFormat: "pdf",
+      reportingCurrency: "SGD",
+      allocationDimensions: [],
+      sections: ["CLIENT_PROFILE", "OVERVIEW"],
+      idempotencyKey: "batch_intent_1",
+    });
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    const body = JSON.parse(String(init?.body));
+    expect(String(url)).toBe("/api/bff/api/v1/report-batches");
+    expect((init?.headers as Headers).get("Idempotency-Key")).toBe("batch_intent_1");
+    expect(body).toEqual({
+      selector_mode: "explicit_portfolio_list",
+      portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+      as_of_date: "2026-04-22",
+      requested_output_formats: ["pdf"],
+      reporting_currency: "SGD",
+      options: { sections: ["CLIENT_PROFILE", "OVERVIEW"] },
+    });
+    expect(body).not.toHaveProperty("source_candidates");
+  });
+
+  it("loads source-owned portfolio outcomes for a known report batch", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      new Response(JSON.stringify(buildReportBatchStatus()), { status: 200 })));
+
+    const response = await getPortfolioReviewBatchStatus("rbch_1");
+
+    expect(response.status).toBe("completed_with_failures");
+    expect(response.items).toHaveLength(2);
+    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe(
+      "/api/bff/api/v1/report-batches/rbch_1",
+    );
   });
 });

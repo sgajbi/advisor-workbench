@@ -154,6 +154,16 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
     operation: "reporting.portfolio-review.history",
   },
   {
+    route: "workbench.reporting",
+    panel: "portfolio-review-batch",
+    operation: "reporting.portfolio-review.batch.submit",
+  },
+  {
+    route: "workbench.reporting",
+    panel: "portfolio-review-batch",
+    operation: "reporting.portfolio-review.batch.status",
+  },
+  {
     route: "workbench.recommendations",
     panel: "idea-candidate-detail",
     operation: "idea.candidate.review-action",

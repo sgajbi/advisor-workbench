@@ -174,3 +174,61 @@ export function buildReportJobListResponse() {
     ],
   };
 }
+
+export function buildReportBatchHandle() {
+  return {
+    batch_id: "rbch_1",
+    status: "materialized",
+    status_url: "/api/v1/report-batches/rbch_1",
+    idempotency_key: "batch_intent_1",
+    item_count: 2,
+    supportability: null,
+    render_supportability: null,
+  };
+}
+
+export function buildReportBatchStatus() {
+  return {
+    batch_id: "rbch_1",
+    selector_mode: "explicit_portfolio_list",
+    tenant_id: "tenant-sg",
+    region: "APAC",
+    materialized_portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
+    as_of_date: "2026-04-22",
+    requested_output_formats: ["pdf"],
+    reporting_currency: "SGD",
+    status: "completed_with_failures",
+    item_count: 2,
+    status_counts: { succeeded: 1, failed_retryable: 1 },
+    items: [
+      {
+        batch_item_id: "rbit_1", item_position: 1,
+        portfolio_id: "PB_SG_GLOBAL_BAL_001", status: "succeeded",
+        report_job_id: "rjob_1", attempt_count: 1, retry_eligible: false,
+        next_retry_at: null, last_error_category: null, last_error_summary: null,
+        created_at: "2026-04-22T09:00:00Z", started_at: "2026-04-22T09:00:01Z",
+        completed_at: "2026-04-22T09:01:00Z", cancelled_at: null,
+      },
+      {
+        batch_item_id: "rbit_2", item_position: 2,
+        portfolio_id: "PB_SG_INCOME_002", status: "failed_retryable",
+        report_job_id: null, attempt_count: 1, retry_eligible: true,
+        next_retry_at: "2026-04-22T09:05:00Z",
+        last_error_category: "source_unavailable",
+        last_error_summary: "Portfolio evidence is temporarily unavailable.",
+        created_at: "2026-04-22T09:00:00Z", started_at: "2026-04-22T09:00:01Z",
+        completed_at: null, cancelled_at: null,
+      },
+    ],
+    created_at: "2026-04-22T09:00:00Z",
+    updated_at: "2026-04-22T09:01:00Z",
+    started_at: "2026-04-22T09:00:01Z",
+    completed_at: "2026-04-22T09:01:00Z",
+    cancelled_at: null,
+    failed_at: null,
+    correlation_id: "corr_batch_1",
+    trace_id: "trace_batch_1",
+    supportability: null,
+    render_supportability: null,
+  };
+}

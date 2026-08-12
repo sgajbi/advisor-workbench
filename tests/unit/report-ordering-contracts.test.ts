@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  parseReportBatchHandle,
+  parseReportBatchStatus,
   parseReportJobHandle,
   parseReportJobListResponse,
   parseReportOrderingResponse,
 } from "@/features/report-ordering/contracts";
 import {
+  buildReportBatchHandle,
+  buildReportBatchStatus,
   buildReportJobListResponse,
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
@@ -74,5 +78,18 @@ describe("report ordering contracts", () => {
         correlationId: "",
       }),
     );
+  });
+
+  it("parses durable batch acceptance and per-portfolio source outcomes", () => {
+    expect(parseReportBatchHandle(buildReportBatchHandle()).item_count).toBe(2);
+    const status = parseReportBatchStatus(buildReportBatchStatus());
+    expect(status.status).toBe("completed_with_failures");
+    expect(status.items.map((item) => item.status)).toEqual(["succeeded", "failed_retryable"]);
+  });
+
+  it("fails closed when a batch status invents an unsupported item state", () => {
+    const response = buildReportBatchStatus();
+    response.items[0].status = "emailed_to_client";
+    expect(() => parseReportBatchStatus(response)).toThrow();
   });
 });

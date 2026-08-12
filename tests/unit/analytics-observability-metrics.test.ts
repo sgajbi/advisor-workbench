@@ -309,6 +309,8 @@ describe("analytics UI observability metrics", () => {
         "portfolio-review-history",
         "reporting.portfolio-review.history",
       ],
+      ["workbench.reporting", "portfolio-review-batch", "reporting.portfolio-review.batch.submit"],
+      ["workbench.reporting", "portfolio-review-batch", "reporting.portfolio-review.batch.status"],
       [
         "workbench.recommendations",
         "idea-candidate-detail",
