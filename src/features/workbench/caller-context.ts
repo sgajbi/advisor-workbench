@@ -114,6 +114,11 @@ const DEFAULT_REPORTING_CALLER_CONTEXT = {
 const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
 const REPORTING_AUTH_MODE_ENV = "WORKBENCH_REPORTING_AUTH_MODE";
 const ADVISOR_BOOK_READ_CAPABILITY = "advisor.book.read";
+const SUPPORTED_ADVISOR_BOOK_ROLES = new Set([
+  "ADVISOR",
+  "RELATIONSHIP_MANAGER",
+  "PORTFOLIO_MANAGER",
+]);
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
@@ -156,6 +161,27 @@ export function resolveDefaultCallerContext() {
     bookingCenterCode: defaultCallerContextValue("X-Booking-Center-Code"),
     role: defaultCallerContextValue("X-Role"),
   };
+}
+
+export function resolveAdvisorBookDevelopmentContext() {
+  const defaults = resolveDefaultCallerContext();
+  const context = {
+    actorId: process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID?.trim() || "PM_SG_001",
+    callerApplication: defaults.callerApplication,
+    tenantId: process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID?.trim() || defaults.tenantId,
+    region: process.env.WORKBENCH_ADVISOR_BOOK_REGION?.trim() || defaults.region,
+    bookingCenterCode:
+      process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE?.trim() || "Singapore",
+    role: process.env.WORKBENCH_ADVISOR_BOOK_ROLE?.trim() || "ADVISOR",
+  };
+
+  if (
+    Object.values(context).some((value) => !value) ||
+    !SUPPORTED_ADVISOR_BOOK_ROLES.has(context.role)
+  ) {
+    return null;
+  }
+  return context;
 }
 
 export function resolveDefaultDpmContext() {
@@ -288,15 +314,22 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "rejected", reason: requestPosture };
   }
 
-  const context = resolveDefaultCallerContext();
+  const isBatchSubmission =
+    request.method === "POST" && request.upstreamPath === "api/v1/report-batches";
+  const context = isBatchSubmission
+    ? resolveAdvisorBookDevelopmentContext()
+    : resolveDefaultCallerContext();
+  if (!context) {
+    return { status: "rejected", reason: "invalid_reporting_configuration" };
+  }
   headers.set("X-Actor-Id", context.actorId);
   headers.set("X-Caller-Application", context.callerApplication);
   headers.set("X-Tenant-Id", context.tenantId);
   headers.set("X-Region", context.region);
   headers.set("X-Booking-Center-Code", context.bookingCenterCode);
-  headers.set("X-Role", role);
+  headers.set("X-Role", isBatchSubmission ? context.role : role);
   headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
-  if (request.method === "POST" && request.upstreamPath === "api/v1/report-batches") {
+  if (isBatchSubmission) {
     headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
   }
 
