@@ -479,6 +479,67 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toHaveTextContent("Cancelled");
   });
 
+  it("keeps unavailable governed output explicit after report data completes", async () => {
+    const status = {
+      ...buildReportBatchStatus(),
+      render_supportability: {
+        feature_key: "portfolio_review_render",
+        state: "unavailable",
+        reason: "render_store_unavailable",
+        freshness_bucket: "current",
+        deterministic_output_supported: false,
+        render_store_ready: false,
+        template_registry_ready: true,
+        default_output_format: "json",
+        supported_output_formats: ["json"],
+      },
+    };
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const unavailableOutputSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(unavailableOutputSubmit).toBeEnabled());
+    fireEvent.click(unavailableOutputSubmit);
+
+    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
+    expect(supportPosture).toHaveTextContent("nothing has been archived or delivered");
+    expect(screen.getByText("Report data complete")).toBeInTheDocument();
+  });
+
+  it("shows degraded source reporting support without hiding portfolio outcomes", async () => {
+    const status = {
+      ...buildReportBatchStatus(),
+      supportability: {
+        feature_key: "portfolio_review_batch",
+        state: "degraded",
+        reason: "partial_reporting_support",
+        freshness_bucket: "current",
+        evidence_feature_count: 2,
+        ready_evidence_feature_count: 1,
+        degraded_evidence_feature_count: 1,
+        workflow_count: 1,
+        ready_workflow_count: 0,
+      },
+    };
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const degradedSupportSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(degradedSupportSubmit).toBeEnabled());
+    fireEvent.click(degradedSupportSubmit);
+
+    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    expect(within(supportPosture).getByText("Reporting support has limitations")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
+  });
+
   it("clears accepted bundle posture when portfolio navigation ends its monitoring context", async () => {
     const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
