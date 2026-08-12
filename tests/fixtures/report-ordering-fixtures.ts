@@ -42,6 +42,25 @@ export function buildReportOrderingResponse() {
               reasonCode: "single_portfolio_ordering_ready",
             },
           },
+          {
+            modeId: "explicit_portfolio_batch",
+            businessLabel: "Portfolio bundle",
+            description: "Create the same report separately for selected portfolios in your book.",
+            defaultOutputFormat: "json",
+            interactive: true,
+            eligibility: {
+              state: "partial",
+              reasonCode: "explicit_portfolio_selection_required",
+              message: "Select the portfolios to include before submitting the report bundle.",
+            },
+            submission: {
+              capabilityId: "reporting.portfolio_review.explicit_batch",
+              method: "POST",
+              path: "/api/v1/report-batches",
+              state: "partial",
+              reasonCode: "explicit_portfolio_selection_required",
+            },
+          },
         ],
         outputFormats: [
           {

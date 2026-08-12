@@ -2,7 +2,6 @@
 
 import { ActionButton, DefinitionList, Panel, SemanticBadge } from "@/design-system";
 
-import type { ReportJobHandle } from "../contracts";
 import type { ReportOrderingReadinessState } from "../report-ordering-screen-state";
 import type { ReportOrderingViewModel } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
@@ -13,7 +12,9 @@ export function ReportReadinessRail({
   preflightReviewed,
   canSubmitReviewedRequest,
   submissionState,
-  submittedHandle,
+  supportReference,
+  scopeLabel,
+  isPortfolioBundle,
   onReview,
   onSubmit,
   onStartAnother,
@@ -23,7 +24,9 @@ export function ReportReadinessRail({
   preflightReviewed: boolean;
   canSubmitReviewedRequest: boolean;
   submissionState: "idle" | "submitting" | "accepted" | "error";
-  submittedHandle: ReportJobHandle | null;
+  supportReference: string | null;
+  scopeLabel: string;
+  isPortfolioBundle: boolean;
   onReview: () => void;
   onSubmit: () => void;
   onStartAnother: () => void;
@@ -35,6 +38,9 @@ export function ReportReadinessRail({
   const validationIssues = screenState.showValidationSummary
     ? model?.readiness.issues ?? []
     : [];
+  const displayTitle = isPortfolioBundle
+    ? bundleStatusTitle(screenState.kind, screenState.title)
+    : screenState.title;
 
   return (
     <div className={styles.readinessStack}>
@@ -52,7 +58,7 @@ export function ReportReadinessRail({
           <div className={styles.railHeading}>
             <div>
               <span className={styles.eyebrow}>Request readiness</span>
-              <h2>{screenState.title}</h2>
+              <h2>{displayTitle}</h2>
             </div>
             <SemanticBadge tone={screenState.tone} emphasis="strong">
               {screenState.badgeLabel}
@@ -78,7 +84,7 @@ export function ReportReadinessRail({
             className={styles.readinessFacts}
             items={[
               { label: "Report", value: model.family?.businessLabel ?? "Not selected" },
-              { label: "Scope", value: "Selected portfolio" },
+              { label: "Scope", value: scopeLabel },
               { label: "Report date", value: model.configuration.asOfDate || "Not selected" },
               { label: "Output", value: selectedOutput?.label ?? "Not selected" },
               { label: "Sections", value: `${selectedSections.length} selected` },
@@ -94,7 +100,11 @@ export function ReportReadinessRail({
               onClick={onReview}
               disabled={!model?.canSubmit || submissionState === "submitting"}
             >
-              {preflightReviewed ? "Reviewed" : "Review Request"}
+              {preflightReviewed
+                ? "Reviewed"
+                : isPortfolioBundle
+                  ? "Review Portfolio Bundle"
+                  : "Review Request"}
             </ActionButton>
             <ActionButton
               priority="primary"
@@ -104,8 +114,8 @@ export function ReportReadinessRail({
               {submissionState === "submitting"
                 ? "Submitting…"
                 : submissionState === "error"
-                  ? "Retry Report Request"
-                  : "Submit Report Request"}
+                  ? isPortfolioBundle ? "Retry Portfolio Bundle" : "Retry Report Request"
+                  : isPortfolioBundle ? "Submit Portfolio Bundle" : "Submit Report Request"}
             </ActionButton>
             {!preflightReviewed && model?.canSubmit ? (
               <small>Review the current setup before submitting.</small>
@@ -122,10 +132,10 @@ export function ReportReadinessRail({
           </div>
         ) : null}
 
-        {screenState.kind === "accepted" && submittedHandle ? (
+        {screenState.kind === "accepted" && supportReference ? (
           <details className={styles.supportDisclosure}>
             <summary>Support reference</summary>
-            <code>{submittedHandle.report_job_id}</code>
+            <code>{supportReference}</code>
           </details>
         ) : null}
 
@@ -143,4 +153,11 @@ export function ReportReadinessRail({
       </Panel>
     </div>
   );
+}
+
+function bundleStatusTitle(kind: ReportOrderingReadinessState["kind"], fallback: string): string {
+  if (kind === "accepted") return "Portfolio bundle accepted";
+  if (kind === "submitting") return "Submitting portfolio bundle";
+  if (kind === "not_accepted") return "Portfolio bundle not accepted";
+  return fallback;
 }

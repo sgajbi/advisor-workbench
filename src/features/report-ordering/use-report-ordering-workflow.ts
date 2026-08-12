@@ -5,11 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import {
+  getPortfolioReviewBatchStatus,
   getReportOrderingOptions,
   listPortfolioReviewOrders,
+  submitPortfolioReviewBatch,
   submitPortfolioReviewOrder,
 } from "./api";
 import type {
+  ReportBatchHandle,
+  ReportBatchStatus,
   ReportJobHandle,
   ReportJobListResponse,
   ReportOrderingResponse,
@@ -20,16 +24,19 @@ import {
   type ReportOrderingSubmissionState,
 } from "./report-ordering-screen-state";
 import {
+  applyReportScopeReadiness,
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
   selectReportOrderingFamily,
   toReportRequestRows,
   type ReportOrderingConfiguration,
+  type ReportOrderingScopeMode,
 } from "./view-model";
 
 type ReviewedIntent = {
   portfolioId: string;
+  scopeFingerprint: string;
   configurationFingerprint: string;
   sourceFingerprint: string;
   idempotencyKey: string;
@@ -47,10 +54,14 @@ export function useReportOrderingWorkflow({
   portfolioId,
   asOfDate,
   reportingCurrency,
+  scopeMode = "single_portfolio",
+  selectedPortfolioIds = [portfolioId],
 }: {
   portfolioId: string;
   asOfDate: string;
   reportingCurrency: string;
+  scopeMode?: ReportOrderingScopeMode;
+  selectedPortfolioIds?: string[];
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
   const [catalogueState, setCatalogueState] =
@@ -71,9 +82,34 @@ export function useReportOrderingWorkflow({
   const [submittedHandlesByPortfolio, setSubmittedHandlesByPortfolio] = useState<
     Record<string, ReportJobHandle>
   >({});
+  const [submittedBatchHandle, setSubmittedBatchHandle] = useState<ReportBatchHandle | null>(null);
+  const [batchStatus, setBatchStatus] = useState<ReportBatchStatus | null>(null);
+  const [batchStatusError, setBatchStatusError] = useState<string | null>(null);
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
   const historyRequestSequenceRef = useRef(0);
+
+  const loadBatchStatus = useCallback(async (batchId: string) => {
+    setBatchStatusError(null);
+    try {
+      setBatchStatus(await getPortfolioReviewBatchStatus(batchId));
+      return true;
+    } catch {
+      setBatchStatus(null);
+      setBatchStatusError("The bundle was accepted, but current portfolio outcomes could not be loaded.");
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!submittedBatchHandle || !batchStatus || isTerminalBatchStatus(batchStatus.status)) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void loadBatchStatus(submittedBatchHandle.batch_id);
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [batchStatus, loadBatchStatus, submittedBatchHandle]);
 
   const loadHistory = useCallback(async () => {
     const requestSequence = ++historyRequestSequenceRef.current;
@@ -145,6 +181,9 @@ export function useReportOrderingWorkflow({
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
     sourceFingerprintRef.current = "";
+    setSubmittedBatchHandle(null);
+    setBatchStatus(null);
+    setBatchStatusError(null);
     const timer = window.setTimeout(() => {
       void loadCatalogue(true);
       void loadHistory();
@@ -154,12 +193,18 @@ export function useReportOrderingWorkflow({
     };
   }, [loadCatalogue, loadHistory, portfolioId]);
 
-  const model = useMemo(
+  const baseModel = useMemo(
     () =>
       catalogue && configuration
         ? buildReportOrderingViewModel(catalogue, configuration)
         : null,
     [catalogue, configuration],
+  );
+  const model = useMemo(
+    () => baseModel
+      ? applyReportScopeReadiness(baseModel, scopeMode, selectedPortfolioIds)
+      : null,
+    [baseModel, scopeMode, selectedPortfolioIds],
   );
   const publishedConfigurationFieldIds = useMemo(
     () =>
@@ -170,20 +215,26 @@ export function useReportOrderingWorkflow({
     ? configurationFingerprint(configuration)
     : "";
   const currentSourceFingerprint = catalogue ? JSON.stringify(catalogue) : "";
+  const currentScopeFingerprint = JSON.stringify({
+    scopeMode,
+    portfolioIds: [...selectedPortfolioIds].sort(),
+  });
   const activeReviewedIntent =
     reviewedIntent?.portfolioId === portfolioId ? reviewedIntent : null;
   const preflightReviewed = Boolean(
     activeReviewedIntent &&
       activeReviewedIntent.configurationFingerprint === currentConfigurationFingerprint &&
-      activeReviewedIntent.sourceFingerprint === currentSourceFingerprint,
+      activeReviewedIntent.sourceFingerprint === currentSourceFingerprint &&
+      activeReviewedIntent.scopeFingerprint === currentScopeFingerprint,
   );
   const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
   const activeSubmissionProgress =
     submissionProgress.portfolioId === portfolioId
       ? submissionProgress
       : { portfolioId, state: "idle" as const, error: null };
-  const submissionState = submittedHandle ? "accepted" : activeSubmissionProgress.state;
-  const submissionError = submittedHandle ? null : activeSubmissionProgress.error;
+  const acceptedHandle = scopeMode === "explicit_portfolio_batch" ? submittedBatchHandle : submittedHandle;
+  const submissionState = acceptedHandle ? "accepted" : activeSubmissionProgress.state;
+  const submissionError = acceptedHandle ? null : activeSubmissionProgress.error;
   const screenState = useMemo(
     () =>
       buildReportOrderingScreenState({
@@ -254,6 +305,7 @@ export function useReportOrderingWorkflow({
       }
       return {
         portfolioId,
+        scopeFingerprint: currentScopeFingerprint,
         configurationFingerprint: fingerprint,
         sourceFingerprint: sourceFingerprintRef.current,
         idempotencyKey: createReportOrderIntentKey(),
@@ -265,7 +317,7 @@ export function useReportOrderingWorkflow({
         : { portfolioId, state: "idle", error: null },
     );
     return true;
-  }, [configuration, model?.canSubmit, portfolioId]);
+  }, [configuration, currentScopeFingerprint, model?.canSubmit, portfolioId]);
 
   const submitRequest = useCallback(async () => {
     if (
@@ -273,15 +325,15 @@ export function useReportOrderingWorkflow({
       !model?.canSubmit ||
       !activeReviewedIntent ||
       activeReviewedIntent.configurationFingerprint !== configurationFingerprint(configuration) ||
-      activeReviewedIntent.sourceFingerprint !== sourceFingerprintRef.current
+      activeReviewedIntent.sourceFingerprint !== sourceFingerprintRef.current ||
+      activeReviewedIntent.scopeFingerprint !== currentScopeFingerprint
     ) {
       return false;
     }
 
     setSubmissionProgress({ portfolioId, state: "submitting", error: null });
     try {
-      const handle = await submitPortfolioReviewOrder({
-        portfolioId,
+      const sharedOrder = {
         asOfDate: configuration.asOfDate,
         outputFormat: configuration.outputFormat,
         ...(publishedConfigurationFieldIds.has("reporting_currency") &&
@@ -298,16 +350,25 @@ export function useReportOrderingWorkflow({
           : {}),
         sections: configuration.selectedSections,
         idempotencyKey: activeReviewedIntent.idempotencyKey,
-      });
+      };
+      const handle = scopeMode === "explicit_portfolio_batch"
+        ? await submitPortfolioReviewBatch({ ...sharedOrder, portfolioIds: selectedPortfolioIds })
+        : await submitPortfolioReviewOrder({ ...sharedOrder, portfolioId });
       if (activePortfolioIdRef.current !== portfolioId) {
         return false;
       }
-      setSubmittedHandlesByPortfolio((current) => ({
-        ...current,
-        [portfolioId]: handle,
-      }));
+      if (scopeMode === "explicit_portfolio_batch") {
+        const batchHandle = handle as ReportBatchHandle;
+        setSubmittedBatchHandle(batchHandle);
+        await loadBatchStatus(batchHandle.batch_id);
+      } else {
+        setSubmittedHandlesByPortfolio((current) => ({
+          ...current,
+          [portfolioId]: handle as ReportJobHandle,
+        }));
+      }
       setSubmissionProgress({ portfolioId, state: "accepted", error: null });
-      await loadHistory();
+      if (scopeMode === "single_portfolio") await loadHistory();
       return true;
     } catch (error) {
       if (activePortfolioIdRef.current !== portfolioId) {
@@ -323,14 +384,18 @@ export function useReportOrderingWorkflow({
   }, [
     configuration,
     loadHistory,
+    loadBatchStatus,
     model?.canSubmit,
     portfolioId,
     publishedConfigurationFieldIds,
     activeReviewedIntent,
+    currentScopeFingerprint,
+    scopeMode,
+    selectedPortfolioIds,
   ]);
 
   const startAnotherReport = useCallback(() => {
-    if (!submittedHandle) {
+    if (!acceptedHandle) {
       return false;
     }
 
@@ -340,9 +405,12 @@ export function useReportOrderingWorkflow({
       return next;
     });
     setReviewedIntent(null);
+    setSubmittedBatchHandle(null);
+    setBatchStatus(null);
+    setBatchStatusError(null);
     setSubmissionProgress({ portfolioId, state: "idle", error: null });
     return true;
-  }, [portfolioId, submittedHandle]);
+  }, [acceptedHandle, portfolioId]);
 
   return {
     catalogue,
@@ -357,6 +425,10 @@ export function useReportOrderingWorkflow({
     submissionState,
     submissionError,
     submittedHandle,
+    submittedBatchHandle,
+    batchStatus,
+    batchStatusError,
+    supportReference: submittedBatchHandle?.batch_id ?? submittedHandle?.report_job_id ?? null,
     screenState,
     preflightReviewed,
     canSubmitReviewedRequest:
@@ -370,6 +442,9 @@ export function useReportOrderingWorkflow({
     startAnotherReport,
     refreshCatalogue: () => loadCatalogue(false),
     refreshHistory: loadHistory,
+    refreshBatchStatus: () => submittedBatchHandle
+      ? loadBatchStatus(submittedBatchHandle.batch_id)
+      : Promise.resolve(false),
   };
 }
 
@@ -397,4 +472,11 @@ function submissionErrorCopy(error: unknown): string {
   return isWorkbenchPermissionBlockedError(error)
     ? "This report request is no longer permitted for the selected portfolio."
     : "The report request was not accepted. Your reviewed setup is preserved for a safe retry.";
+}
+
+function isTerminalBatchStatus(status: ReportBatchStatus["status"]): boolean {
+  return status === "completed" ||
+    status === "completed_with_failures" ||
+    status === "failed" ||
+    status === "cancelled";
 }

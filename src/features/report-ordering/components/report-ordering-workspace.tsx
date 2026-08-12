@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import {
@@ -15,10 +15,13 @@ import {
 } from "@/design-system";
 
 import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
+import { findPortfolioReviewBatchMode, type ReportOrderingScopeMode } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
+import { ReportBatchStatusPanel } from "./report-batch-status";
 import { ReportConfigurationPanel } from "./report-configuration-panel";
 import { ReportReadinessRail } from "./report-readiness-rail";
 import { ReportRequestHistory } from "./report-request-history";
+import { ReportPortfolioScopePanel } from "./report-portfolio-scope-panel";
 
 export function ReportOrderingWorkspace({
   portfolio,
@@ -30,15 +33,34 @@ export function ReportOrderingWorkspace({
     baseCurrency: string;
   };
 }) {
+  const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
+  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState([portfolio.portfolioId]);
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
     reportingCurrency: portfolio.baseCurrency,
+    scopeMode,
+    selectedPortfolioIds,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
   const focusIntentRef = useRef(0);
+  const selectionDateRef = useRef(portfolio.asOfDate);
   const workspaceState = workflow.screenState.workspace;
+  const batchAvailable = Boolean(findPortfolioReviewBatchMode(workflow.model?.family ?? null));
+
+  useEffect(() => {
+    setScopeMode("single_portfolio");
+    setSelectedPortfolioIds([portfolio.portfolioId]);
+    selectionDateRef.current = portfolio.asOfDate;
+  }, [portfolio.asOfDate, portfolio.portfolioId]);
+
+  useEffect(() => {
+    const configurationDate = workflow.configuration?.asOfDate;
+    if (!configurationDate || configurationDate === selectionDateRef.current) return;
+    selectionDateRef.current = configurationDate;
+    setSelectedPortfolioIds([portfolio.portfolioId]);
+  }, [portfolio.portfolioId, workflow.configuration?.asOfDate]);
 
   function focusReadiness() {
     requestAnimationFrame(() => readinessRef.current?.focus());
@@ -114,7 +136,13 @@ export function ReportOrderingWorkspace({
                     }
                   />
                 ) : workspaceState.kind === "accepted" ? (
-                  requestHistory
+                  scopeMode === "explicit_portfolio_batch" ? (
+                    <ReportBatchStatusPanel
+                      status={workflow.batchStatus}
+                      error={workflow.batchStatusError}
+                      onRefresh={() => void workflow.refreshBatchStatus()}
+                    />
+                  ) : requestHistory
                 ) : workflow.configuration ? (
                   <>
                     <div
@@ -124,6 +152,14 @@ export function ReportOrderingWorkspace({
                       aria-label="Report configuration"
                       className={styles.focusTarget}
                     >
+                      <ReportPortfolioScopePanel
+                        asOfDate={workflow.configuration.asOfDate}
+                        scopeMode={scopeMode}
+                        batchAvailable={batchAvailable}
+                        selectedPortfolioIds={selectedPortfolioIds}
+                        onScopeModeChange={setScopeMode}
+                        onSelectionChange={setSelectedPortfolioIds}
+                      />
                       <ReportConfigurationPanel
                         model={workspaceState.model}
                         configuration={workflow.configuration}
@@ -152,7 +188,11 @@ export function ReportOrderingWorkspace({
                   preflightReviewed={workflow.preflightReviewed}
                   canSubmitReviewedRequest={workflow.canSubmitReviewedRequest}
                   submissionState={workflow.submissionState}
-                  submittedHandle={workflow.submittedHandle}
+                  supportReference={workflow.supportReference}
+                  scopeLabel={scopeMode === "explicit_portfolio_batch"
+                    ? `${selectedPortfolioIds.length} selected portfolios`
+                    : "Selected portfolio"}
+                  isPortfolioBundle={scopeMode === "explicit_portfolio_batch"}
                   onReview={() => {
                     workflow.reviewRequest();
                     focusReadiness();

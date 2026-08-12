@@ -18,6 +18,8 @@ export type ReportOrderingConfiguration = {
   outputFormat: "json" | "pdf";
 };
 
+export type ReportOrderingScopeMode = "single_portfolio" | "explicit_portfolio_batch";
+
 export type ReportOrderingReadiness = {
   state: "ready" | "partial" | "blocked";
   title: string;
@@ -148,6 +150,63 @@ export function buildReportOrderingViewModel(
       : "Client release posture is unavailable.",
     canSubmit: readiness.state === "ready",
   };
+}
+
+export function applyReportScopeReadiness(
+  model: ReportOrderingViewModel,
+  scopeMode: ReportOrderingScopeMode,
+  selectedPortfolioIds: string[],
+): ReportOrderingViewModel {
+  if (scopeMode === "single_portfolio") {
+    return model;
+  }
+  const issues = [...model.readiness.issues];
+  if (!findPortfolioReviewBatchMode(model.family)) {
+    issues.push("Portfolio bundle ordering is not currently published for this report.");
+  }
+  if (selectedPortfolioIds.length < 2) {
+    issues.push("Select at least two portfolios from your book for a portfolio bundle.");
+  }
+  if (issues.length === 0) {
+    return {
+      ...model,
+      readiness: {
+        state: "ready",
+        title: "Bundle ready for review",
+        detail: `${selectedPortfolioIds.length} portfolios will be verified by Gateway before report creation.`,
+        issues: [],
+      },
+      canSubmit: true,
+    };
+  }
+  return {
+    ...model,
+    readiness: {
+      state: "blocked",
+      title: "Complete the portfolio bundle",
+      detail: "Resolve the highlighted items before reviewing this report bundle.",
+      issues: [...new Set(issues)],
+    },
+    canSubmit: false,
+  };
+}
+
+export function findPortfolioReviewBatchMode(
+  family: ReportFamily | null,
+): ReportOrderingMode | null {
+  return family?.orderingModes.find(
+    (mode) =>
+      mode.modeId === "explicit_portfolio_batch" &&
+      mode.interactive &&
+      mode.eligibility.state !== "unavailable" &&
+      mode.eligibility.state !== "permission_blocked" &&
+      mode.eligibility.state !== "unsupported" &&
+      mode.submission?.capabilityId === "reporting.portfolio_review.explicit_batch" &&
+      mode.submission.path === "/api/v1/report-batches" &&
+      mode.submission.state !== "unavailable" &&
+      mode.submission.state !== "permission_blocked" &&
+      mode.submission.state !== "unsupported",
+  ) ?? null;
 }
 
 export function configurationFingerprint(configuration: ReportOrderingConfiguration): string {

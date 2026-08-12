@@ -67,10 +67,127 @@
 }
 
 .familyGrid,
-.outputGrid {
+.outputGrid,
+.scopeModeGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.scopeBoundary {
+  margin: 10px 0 0;
+  color: #66737f;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.bookSelection {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e4e8ed;
+}
+
+.bookSelectionHeader,
+.bookSelectionTools,
+.portfolioSelectionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bookSelectionHeader h3 {
+  margin: 0;
+  color: #25323d;
+  font-size: 0.92rem;
+}
+
+.bookSelectionHeader p {
+  margin: 4px 0 0;
+  color: #66737f;
+  font-size: 0.78rem;
+}
+
+.bookSearch {
+  display: grid;
+  flex: 1 1 360px;
+  max-width: 520px;
+  gap: 5px;
+}
+
+.selectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.portfolioSelectionList {
+  display: grid;
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #d9dfe6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.portfolioSelectionRow {
+  min-width: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e7eaee;
+  cursor: pointer;
+}
+
+.portfolioSelectionRow:last-child {
+  border-bottom: 0;
+}
+
+.portfolioSelectionRow:hover {
+  background: #f6f9fb;
+}
+
+.portfolioSelectionRow:has(input:focus-visible) {
+  outline: 2px solid #315d8a;
+  outline-offset: -2px;
+}
+
+.portfolioSelectionRowDisabled {
+  cursor: not-allowed;
+  color: #6b7781;
+  background: #f7f8fa;
+}
+
+.portfolioSelectionIdentity {
+  display: grid;
+  flex: 1 1 280px;
+  min-width: 0;
+  gap: 3px;
+}
+
+.portfolioSelectionIdentity strong {
+  color: #25323d;
+  font-size: 0.8rem;
+}
+
+.portfolioSelectionIdentity small,
+.portfolioSelectionFacts {
+  color: #66737f;
+  font-size: 0.72rem;
+}
+
+.portfolioSelectionFacts {
+  display: grid;
+  flex: 0 1 190px;
+  gap: 3px;
+}
+
+.selectionAnnouncement {
+  margin: 0;
+  color: #40515e;
+  font-size: 0.78rem;
+  font-weight: 650;
 }
 
 .choiceCard,
@@ -431,6 +548,7 @@
   .fieldGrid,
   .familyGrid,
   .outputGrid,
+  .scopeModeGrid,
   .workflowManagedGrid,
   .sectionChoiceGrid {
     grid-template-columns: 1fr;
@@ -456,6 +574,24 @@
   .choiceCard,
   .sectionChoice {
     padding: 10px;
+  }
+
+  .bookSelectionHeader,
+  .bookSelectionTools,
+  .portfolioSelectionRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bookSearch,
+  .portfolioSelectionIdentity,
+  .portfolioSelectionFacts {
+    width: 100%;
+    max-width: none;
+  }
+
+  .selectionActions {
+    justify-content: flex-start;
   }
 }
 
