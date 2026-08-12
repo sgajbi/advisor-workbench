@@ -438,7 +438,10 @@ export function useReportOrderingWorkflow({
       }
       if (scopeMode === "explicit_portfolio_batch") {
         const batchHandle = handle as ReportBatchHandle;
-        if (batchHandle.idempotency_key !== activeReviewedIntent.idempotencyKey) {
+        if (
+          batchHandle.idempotency_key !== activeReviewedIntent.idempotencyKey ||
+          batchHandle.item_count !== selectedPortfolioIds.length
+        ) {
           throw new Error("The accepted bundle did not match the reviewed request intent.");
         }
         activeBatchIntentRef.current = {
