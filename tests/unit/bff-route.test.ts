@@ -21,7 +21,6 @@ describe("BFF proxy route", () => {
     "WORKBENCH_IDEA_CALLER_ROLES",
     "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_IDEA_AUTH_MODE",
-    "WORKBENCH_REPORTING_CALLER_ROLE",
     "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_REPORTING_AUTH_MODE",
     "WORKBENCH_ADVISOR_BOOK_AUTH_MODE",
@@ -1202,6 +1201,11 @@ describe("BFF proxy route", () => {
   });
 
   it("forwards an entitled portfolio-review submission with its body intact", async () => {
+    process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID = "RM_CH_007";
+    process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID = "tenant-ch";
+    process.env.WORKBENCH_ADVISOR_BOOK_REGION = "EMEA";
+    process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
+    process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"status":"accepted"}', { status: 202 }));
     const body = JSON.stringify({
@@ -1230,7 +1234,12 @@ describe("BFF proxy route", () => {
     const [, upstreamInit] = fetchMock.mock.calls[0];
     const upstreamHeaders = upstreamInit?.headers as Headers;
     expect(upstreamInit?.body).toBe(body);
-    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("RM_CH_007");
+    expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
+    expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
+    expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
+    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
