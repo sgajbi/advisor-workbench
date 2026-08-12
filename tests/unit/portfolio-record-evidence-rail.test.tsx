@@ -108,9 +108,13 @@ describe("PortfolioRecordEvidenceRail", () => {
 
     expect(screen.getByText("Core Banking")).toBeInTheDocument();
     expect(screen.getByText("2 events available in the review window")).toBeInTheDocument();
-    expect(screen.getByText("1 settled event of 2 events")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ledger settlement state").closest(".portfolio-record-source-item"),
+    ).toHaveTextContent(
+      "1 settlement status requires review; 1 settlement status settled",
+    );
     expect(screen.getByText("1 component type represented in the current window")).toBeInTheDocument();
-    expect(screen.getByText("Review")).toBeInTheDocument();
+    expect(screen.getByText("Review required")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Transactions" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Positions" })).toHaveAttribute(
       "href",
