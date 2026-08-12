@@ -480,6 +480,48 @@ describe("ReportOrderingWorkspace", () => {
   });
 
   it("keeps unavailable governed output explicit after report data completes", async () => {
+    const options = buildReportOrderingResponse();
+    const pdfOutput = options.reportFamilies[0].outputFormats.find(
+      (output) => output.formatId === "pdf",
+    );
+    if (pdfOutput) {
+      pdfOutput.state = "ready";
+      pdfOutput.reasonCode = "governed_pdf_ready";
+    }
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(options));
+    const status = {
+      ...buildReportBatchStatus(),
+      requested_output_formats: ["pdf"],
+      render_supportability: {
+        feature_key: "portfolio_review_render",
+        state: "unavailable",
+        reason: "render_store_unavailable",
+        freshness_bucket: "current",
+        deterministic_output_supported: false,
+        render_store_ready: false,
+        template_registry_ready: true,
+        default_output_format: "json",
+        supported_output_formats: ["json"],
+      },
+    };
+    batchStatusMock.mockResolvedValue(parseReportBatchStatus(status));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Governed PDF document/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const unavailableOutputSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(unavailableOutputSubmit).toBeEnabled());
+    fireEvent.click(unavailableOutputSubmit);
+
+    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
+    expect(supportPosture).toHaveTextContent("nothing has been archived or delivered");
+    expect(screen.getByText("Report data complete")).toBeInTheDocument();
+  });
+
+  it("does not apply document-renderer failure copy to a supported structured-data output", async () => {
     const status = {
       ...buildReportBatchStatus(),
       render_supportability: {
@@ -500,14 +542,14 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
     fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
-    const unavailableOutputSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
-    await waitFor(() => expect(unavailableOutputSubmit).toBeEnabled());
-    fireEvent.click(unavailableOutputSubmit);
+    const structuredDataSubmit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(structuredDataSubmit).toBeEnabled());
+    fireEvent.click(structuredDataSubmit);
 
-    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
-    expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
-    expect(supportPosture).toHaveTextContent("nothing has been archived or delivered");
-    expect(screen.getByText("Report data complete")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Requested output unavailable")).not.toBeInTheDocument();
   });
 
   it("shows degraded source reporting support without hiding portfolio outcomes", async () => {

@@ -122,10 +122,14 @@ function batchSupportPosture(status: ReportBatchStatus) {
       (outputFormat) => !status.render_supportability?.supported_output_formats.includes(outputFormat),
     ),
   );
+  const governedDocumentRequested = status.requested_output_formats.some(
+    (outputFormat) => outputFormat.toLocaleLowerCase() !== "json",
+  );
   if (
-    renderState === "unavailable" ||
-    status.render_supportability?.deterministic_output_supported === false ||
-    requestedOutputUnsupported
+    requestedOutputUnsupported ||
+    (governedDocumentRequested &&
+      (renderState === "unavailable" ||
+        status.render_supportability?.deterministic_output_supported === false))
   ) {
     return {
       kind: "unavailable" as const,
@@ -133,7 +137,7 @@ function batchSupportPosture(status: ReportBatchStatus) {
       body: "Portfolio report data may be complete, but Reporting cannot currently create the requested governed output. Refresh after output services recover; nothing has been archived or delivered.",
     };
   }
-  if (renderState === "degraded") {
+  if (governedDocumentRequested && renderState === "degraded") {
     return {
       kind: "partial" as const,
       title: "Requested output has limitations",
