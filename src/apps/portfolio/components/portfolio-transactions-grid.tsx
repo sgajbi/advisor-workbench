@@ -361,7 +361,7 @@ function PortfolioTransactionsGridBody({
           ) : null,
       }),
     ],
-    [baseCurrency, gridDensity, onRowSelect, showExpandedColumns]
+    [baseCurrency, onRowSelect, showExpandedColumns]
   );
 
   const settlementSummary = buildPortfolioTransactionSettlementSummary(filteredTransactions);
