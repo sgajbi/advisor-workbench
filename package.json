@@ -43,6 +43,7 @@
     "test:e2e": "playwright test",
     "test:e2e:performance:populated": "node scripts/testing/run-performance-smoke-scenario.mjs populated",
     "test:e2e:performance:unavailable": "node scripts/testing/run-performance-smoke-scenario.mjs unavailable",
+    "test:e2e:performance:refresh-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs refresh-integrity --grep \"refresh failure\"",
     "test:e2e:portfolio:cashflow": "node scripts/testing/run-portfolio-smoke-scenario.mjs cashflow",
     "test:e2e:portfolio:income-activity": "node scripts/testing/run-portfolio-smoke-scenario.mjs income-activity",
     "test:e2e:portfolio:review-matrix": "node scripts/testing/run-portfolio-smoke-scenario.mjs review-matrix",
