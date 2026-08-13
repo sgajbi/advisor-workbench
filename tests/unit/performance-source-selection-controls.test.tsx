@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PerformanceSourceSelectionControls from "../../src/apps/performance/components/performance-source-selection-controls";
@@ -138,5 +138,53 @@ describe("PerformanceSourceSelectionControls", () => {
     expect(screen.getByLabelText("Frequency")).toBeDisabled();
     expect(screen.getByLabelText("Benchmark")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Updating..." })).toBeDisabled();
+  });
+
+  it("restores source-select focus after confirmation when the user has not moved", async () => {
+    const onRequestChange = vi.fn();
+    const { rerender } = render(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+    const benchmark = await screen.findByLabelText("Benchmark");
+    act(() => benchmark.focus());
+    fireEvent.change(benchmark, { target: { value: "BMK_PRIVATE_BANK" } });
+
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        isUpdating
+        onRequestChange={onRequestChange}
+      />,
+    );
+    act(() => benchmark.blur());
+    rerender(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+
+    await waitFor(() => expect(benchmark).toHaveFocus());
+  });
+
+  it("does not steal focus when the user moves during source confirmation", async () => {
+    const onRequestChange = vi.fn();
+    const { rerender } = render(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+    const benchmark = await screen.findByLabelText("Benchmark");
+    fireEvent.change(benchmark, { target: { value: "BMK_PRIVATE_BANK" } });
+
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        isUpdating
+        onRequestChange={onRequestChange}
+      />,
+    );
+    const fromDate = screen.getByLabelText("From");
+    act(() => fromDate.focus());
+    rerender(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+
+    await waitFor(() => expect(fromDate).toHaveFocus());
   });
 });

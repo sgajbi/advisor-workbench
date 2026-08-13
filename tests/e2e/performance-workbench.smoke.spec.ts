@@ -29,7 +29,8 @@ test.beforeAll(async () => {
     scenario !== 'unavailable' &&
     scenario !== 'refresh-integrity' &&
     scenario !== 'trend-integrity' &&
-    scenario !== 'horizon-integrity'
+    scenario !== 'horizon-integrity' &&
+    scenario !== 'analysis-controls'
   ) {
     return;
   }
@@ -654,6 +655,93 @@ test.describe('Performance workbench smoke', () => {
     const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(900);
     expect(trendMetrics.width).toBeGreaterThan(800);
+  });
+
+  test('Analysis source controls confirm horizon and benchmark without a mode change', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'analysis-controls',
+      'This deterministic journey requires the analysis-controls fixture.',
+    );
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1800, height: 1200 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const analysisTab = page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Performance Analysis/i });
+    await analysisTab.click();
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
+
+    const sourceSelection = page.getByRole('group', {
+      name: 'Performance Analysis source selection',
+    });
+    await expect(sourceSelection).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Return-path presentation' })).toHaveCount(0);
+    await expect(page.getByRole('radiogroup', { name: 'Return view' })).toHaveCount(0);
+
+    const threeYearHorizon = sourceSelection.getByRole('radio', { name: '3Y' });
+    await threeYearHorizon.focus();
+    await expect(threeYearHorizon).toBeFocused();
+    await threeYearHorizon.click();
+
+    const refreshStatus = page.getByTestId('workbench-refresh-status');
+    await expect(refreshStatus).toHaveAttribute('data-state', 'pending');
+    await expect(refreshStatus).toContainText('Confirming the selected performance view');
+    await expect(sourceSelection.getByRole('radio', { name: 'YTD' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await expect(refreshStatus).toHaveAttribute('data-state', 'confirmed');
+    await expect(threeYearHorizon).toHaveAttribute('aria-checked', 'true');
+    await expect(threeYearHorizon).toBeFocused();
+    await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
+
+    const benchmark = sourceSelection.getByLabel('Benchmark');
+    await benchmark.focus();
+    await benchmark.selectOption('BMK_PRIVATE_BANK');
+    await expect(refreshStatus).toHaveAttribute('data-state', 'pending');
+    await expect(benchmark).toBeDisabled();
+    await expect(refreshStatus).toHaveAttribute('data-state', 'confirmed');
+    await expect(benchmark).toHaveValue('BMK_PRIVATE_BANK');
+    await expect(benchmark).toBeFocused();
+    await expect.poll(() => new URL(page.url()).searchParams.get('benchmark')).toBe(
+      'BMK_PRIVATE_BANK',
+    );
+    await expect(page.getByText('Private Bank Composite', { exact: true })).toBeVisible();
+    await expect(analysisTab).toHaveAttribute('aria-current', 'page');
+
+    for (const width of [1800, 1280, 1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await sourceSelection.scrollIntoViewIfNeeded();
+      await expect(sourceSelection).toBeVisible();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    for (const [name, touchTarget] of [
+      ['3Y horizon', threeYearHorizon],
+      ['Benchmark', benchmark],
+      ['Apply', sourceSelection.getByRole('button', { name: 'Apply' })],
+    ] as const) {
+      const bounds = await touchTarget.boundingBox();
+      expect(bounds?.height, `${name} touch target height`).toBeGreaterThanOrEqual(44);
+    }
+
+    await page.screenshot({
+      path: 'output/playwright/issue-681-performance-analysis-controls-narrow.png',
+      fullPage: false,
+    });
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('attribution history failure remains explicit until source retry succeeds', async ({

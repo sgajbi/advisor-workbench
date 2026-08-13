@@ -7,3 +7,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+@media (max-width: 640px) {
+  .controls :global([data-workbench-choice-option]),
+  .controls :global(.MuiInputBase-root),
+  .controls :global(.performance-analysis-apply-button) {
+    min-height: 44px;
+  }
+
+  .controls :global(.MuiInputBase-input) {
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+}

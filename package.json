@@ -46,6 +46,7 @@
     "test:e2e:performance:refresh-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs refresh-integrity --grep \"refresh failure\"",
     "test:e2e:performance:trend-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs trend-integrity --grep \"attribution history failure\"",
     "test:e2e:performance:horizon-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs horizon-integrity --grep \"horizon comparison failure\"",
+    "test:e2e:performance:analysis-controls": "node scripts/testing/run-performance-smoke-scenario.mjs analysis-controls --grep \"Analysis source controls\"",
     "test:e2e:portfolio:cashflow": "node scripts/testing/run-portfolio-smoke-scenario.mjs cashflow",
     "test:e2e:portfolio:income-activity": "node scripts/testing/run-portfolio-smoke-scenario.mjs income-activity",
     "test:e2e:portfolio:review-matrix": "node scripts/testing/run-portfolio-smoke-scenario.mjs review-matrix",
