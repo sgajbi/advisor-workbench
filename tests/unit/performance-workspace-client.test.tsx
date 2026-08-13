@@ -31,6 +31,15 @@ vi.mock("../../src/features/workbench/api", () => ({
     getSummaryClientMock(...args),
   getWorkbenchPerformanceWorkspaceDetailsClient: (...args: unknown[]) =>
     getDetailsClientMock(...args),
+  getWorkbenchApiErrorStatus: (error: unknown) =>
+    typeof error === "object" && error !== null && "status" in error
+      ? Number((error as { status: number }).status)
+      : null,
+  isWorkbenchPermissionBlockedError: (error: unknown) =>
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    [401, 403].includes(Number((error as { status: number }).status)),
 }));
 
 vi.mock("../../src/apps/performance/components/performance-workspace-view", () => ({
@@ -42,6 +51,9 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
     onRequestChange,
     isUpdating,
     isDetailsPending,
+    refreshStatus,
+    onRetryRefresh,
+    loadIssue,
   }: {
     workspace: WorkbenchPerformanceWorkspace | null;
     mode: string;
@@ -59,6 +71,15 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
     }) => void;
     isUpdating?: boolean;
     isDetailsPending?: boolean;
+    refreshStatus?: {
+      kind: "pending" | "confirmed" | "failed";
+      scope: "summary" | "details";
+      requestedContext: string;
+      confirmedContext: string;
+      status?: number;
+    } | null;
+    onRetryRefresh?: () => void;
+    loadIssue?: { state: string; status?: number } | null;
   }) => (
     <div>
       <div data-testid="mode">{mode}</div>
@@ -81,6 +102,11 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       </div>
       <div data-testid="updating">{String(Boolean(isUpdating))}</div>
       <div data-testid="details-pending">{String(Boolean(isDetailsPending))}</div>
+      <div data-testid="refresh-kind">{refreshStatus?.kind ?? "none"}</div>
+      <div data-testid="refresh-scope">{refreshStatus?.scope ?? "none"}</div>
+      <div data-testid="refresh-requested">{refreshStatus?.requestedContext ?? "none"}</div>
+      <div data-testid="refresh-confirmed">{refreshStatus?.confirmedContext ?? "none"}</div>
+      <div data-testid="load-issue">{loadIssue?.state ?? "none"}</div>
       <button type="button" onClick={() => onRequestChange?.({ period: "3Y" })}>
         Switch 3Y
       </button>
@@ -98,6 +124,9 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       </button>
       <button type="button" onClick={() => onModeChange?.("risk")}>
         Switch Risk Mode
+      </button>
+      <button type="button" onClick={() => onRetryRefresh?.()}>
+        Retry Selection
       </button>
     </div>
   ),
@@ -647,10 +676,13 @@ describe("PerformanceWorkspaceClient", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("period")).toHaveTextContent("YTD");
       expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
       expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("true");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("pending");
+      expect(screen.getByTestId("refresh-requested")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("YTD");
     });
 
     await act(async () => {
@@ -683,6 +715,182 @@ describe("PerformanceWorkspaceClient", () => {
     await waitFor(() => {
       expect(screen.getByTestId("return")).toHaveTextContent("18.4");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("3Y");
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Analysis Mode" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
+    });
+  });
+
+  it("retains source-confirmed summary labels after a rejected selection and commits a successful retry atomically", async () => {
+    const failedRequest = Object.assign(new Error("Performance summary unavailable"), {
+      status: 503,
+    });
+    const threeYearSummary = buildSummary({
+      period: "3Y",
+      report_start_date: "2023-03-28",
+      net_performance: {
+        ...buildSummary().net_performance,
+        portfolio_return_pct: 18.4,
+      },
+    });
+    const threeYearDetails = buildDetails({
+      period: "3Y",
+      report_start_date: "2023-03-28",
+      net_chart: [
+        {
+          ...buildDetails().net_chart[0],
+          label: "2026-03",
+          cumulative_portfolio_return_pct: 18.4,
+        },
+      ],
+    });
+
+    getSummaryClientMock
+      .mockRejectedValueOnce(failedRequest)
+      .mockResolvedValueOnce(threeYearSummary);
+    getDetailsClientMock.mockResolvedValueOnce(threeYearDetails);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+      expect(screen.getByTestId("refresh-scope")).toHaveTextContent("summary");
+      expect(screen.getByTestId("refresh-requested")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("YTD");
+      expect(screen.getByTestId("period")).toHaveTextContent("YTD");
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+    expect(replaceMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Retry Selection" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("return")).toHaveTextContent("18.4");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&period=3Y&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+  });
+
+  it("keeps confirmed analytical detail after a rejected dimension change instead of loading forever", async () => {
+    const failedRequest = Object.assign(new Error("Performance details unavailable"), {
+      status: 502,
+    });
+    getDetailsClientMock
+      .mockRejectedValueOnce(failedRequest)
+      .mockResolvedValueOnce(
+        buildDetails({
+          contribution_dimension: "sector",
+          segment: "sector",
+        })
+      );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Contribution Segment" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+      expect(screen.getByTestId("refresh-scope")).toHaveTextContent("details");
+      expect(screen.getByTestId("refresh-requested")).toHaveTextContent(
+        "Sector contribution"
+      );
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+    });
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Retry Selection" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("refresh-requested")).toHaveTextContent("Sector contribution");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("Sector contribution");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=sector&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+  });
+
+  it("fails closed when a refreshed performance selection becomes permission-blocked", async () => {
+    getSummaryClientMock.mockRejectedValueOnce(
+      Object.assign(new Error("Forbidden"), { status: 403 })
+    );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("return")).toHaveTextContent("none");
+      expect(screen.getByTestId("load-issue")).toHaveTextContent("permission_blocked");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
     });
   });
 

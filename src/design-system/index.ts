@@ -113,6 +113,10 @@ export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-s
 export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
 export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
+export {
+  default as WorkbenchRefreshStatus,
+  type WorkbenchRefreshStatusKind,
+} from "./components/workbench-refresh-status";
 export { default as WorkbenchToolbarGroup } from "./components/workbench-toolbar-group";
 export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-toolbar-placeholder";
 export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";

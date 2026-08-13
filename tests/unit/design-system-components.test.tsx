@@ -45,6 +45,7 @@ import {
   WorkbenchDeferredSection,
   WorkbenchChoiceGroup,
   WorkbenchInlineRefreshNote,
+  WorkbenchRefreshStatus,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchPageHeader,
@@ -1081,6 +1082,72 @@ describe("design-system components", () => {
     const refreshNote = screen.getByRole("status");
     expect(refreshNote).toHaveClass("workbench-inline-refresh-note");
     expect(refreshNote).toHaveTextContent("Refreshing transactions…");
+  });
+
+  it("keeps pending refresh context programmatically available without a recovery action", () => {
+    render(
+      <WorkbenchRefreshStatus
+        kind="pending"
+        eyebrow="Updating source analysis"
+        title="Confirming the selected performance view"
+        message="The source-confirmed view remains available."
+        requestedContext="3Y"
+        confirmedContext="YTD · NET returns"
+      />
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveAttribute("aria-atomic", "true");
+    expect(within(status).getByText("Requested")).toBeInTheDocument();
+    expect(within(status).getByText("3Y")).toBeInTheDocument();
+    expect(within(status).getByText("Source-confirmed")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Retry performance selection/i }))
+      .not.toBeInTheDocument();
+  });
+
+  it("announces failed refreshes and exposes one bounded retry action", () => {
+    const onRetry = vi.fn();
+    render(
+      <WorkbenchRefreshStatus
+        kind="failed"
+        eyebrow="Selection not applied"
+        title="Performance selection could not be confirmed"
+        message="The last source-confirmed view remains in place."
+        requestedContext="3Y"
+        confirmedContext="YTD · NET returns"
+        onRetry={onRetry}
+      />
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+    const retry = within(alert).getByRole("button", {
+      name: "Retry performance selection",
+    });
+    expect(retry).toHaveTextContent("Retry selection");
+    fireEvent.click(retry);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces a source-confirmed refresh without exposing a recovery action", () => {
+    render(
+      <WorkbenchRefreshStatus
+        kind="confirmed"
+        eyebrow="Source analysis updated"
+        title="Performance selection confirmed"
+        message="The requested selection is now source-confirmed."
+        requestedContext="3Y"
+        confirmedContext="3Y · NET returns"
+      />
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveAttribute("data-state", "confirmed");
+    expect(within(status).getAllByText("3Y", { exact: false })).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: /Retry performance selection/i }))
+      .not.toBeInTheDocument();
   });
 
   it("can defer content without rendering a duplicate wrapper header", async () => {
