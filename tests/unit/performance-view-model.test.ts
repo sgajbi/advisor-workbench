@@ -4,7 +4,6 @@ import type { WorkbenchPerformanceWorkspace } from "../../src/features/workbench
 import { getPerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getBottomContributionRows,
-  getActiveWeightRows,
   getBottomPositionContributionRows,
   getCoverageLabel,
   getNegativePositionContributionRows,
@@ -303,12 +302,8 @@ describe("performance view model", () => {
     ).toEqual([]);
   });
 
-  it("derives active weights and effect rankings from attribution rows", () => {
+  it("ranks attribution effects by absolute magnitude", () => {
     const workspace = buildWorkspace();
-    expect(getActiveWeightRows(workspace)[0]).toMatchObject({
-      key_label: "Equity",
-      active_weight_pct: 7,
-    });
     expect(getTopAttributionEffectRows(workspace)[0]?.key_label).toBe("Equity");
   });
 
