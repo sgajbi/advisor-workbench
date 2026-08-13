@@ -609,12 +609,14 @@ describe("PerformanceAnalyticsPage", () => {
       "Analysis Snapshot"
     );
     expect(screen.queryByLabelText("Analysis evidence gaps")).not.toBeInTheDocument();
-    expect(await screen.findByText("Attribution Over Time")).toBeInTheDocument();
+    expect(await screen.findByText("Attribution Observation")).toBeInTheDocument();
     expect(screen.queryByLabelText("Performance analysis mode intro")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Performance analysis context")).not.toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-trend-shell.workbench-chart-shell")).toBeTruthy();
     expect(screen.queryByLabelText("Attribution trend context")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Attribution trend summary strip")).toBeInTheDocument();
+    expect(screen.getByLabelText("Attribution observation table")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Attribution over time chart" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();

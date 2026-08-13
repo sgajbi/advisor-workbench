@@ -20,9 +20,7 @@ describe("Performance smoke scenario launcher", () => {
   });
 
   it("binds the BFF to the owned loopback fixture and directly owns Playwright", () => {
-    expect(source).toContain(
-      'new Set(["populated", "unavailable", "refresh-integrity"])',
-    );
+    expect(source).toContain('"trend-integrity"');
     expect(source).toContain("BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`");
     expect(source).not.toContain("BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`");
     expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "performance"');
@@ -34,7 +32,13 @@ describe("Performance smoke scenario launcher", () => {
   it("admits the deterministic refresh-integrity scenario", () => {
     expect(source).toContain('"refresh-integrity"');
     expect(source).toContain(
-      'Performance smoke scenario must be populated, unavailable, or refresh-integrity.',
+      'Performance smoke scenario must be populated, unavailable, refresh-integrity, or trend-integrity.',
+    );
+  });
+
+  it("publishes deterministic attribution-history integrity proof", () => {
+    expect(packageJson.scripts["test:e2e:performance:trend-integrity"]).toContain(
+      'trend-integrity --grep "attribution history failure"',
     );
   });
 });

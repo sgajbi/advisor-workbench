@@ -1,28 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { EChartsOption } from "echarts";
 
-import {
-  AnalyticsTable,
-  ScreenStatePanel,
-  WorkbenchChartShell,
-  WorkbenchECharts,
-  WorkbenchSummaryMetricStrip,
-} from "@/design-system";
+import { AnalyticsTable, ActionButton, ScreenStatePanel, WorkbenchChartShell, WorkbenchECharts, WorkbenchSummaryMetricStrip } from "@/design-system";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
-import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
-import type {
-  WorkbenchPerformanceAttributionTrend,
-} from "@/features/workbench/types";
-
 import { formatLabel } from "../formatters";
 import { buildPerformanceAttributionTrendTableModel } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
-import {
-  getAttributionTrendUnavailableBody,
-  getAttributionTrendSummaryItems,
-} from "./performance-attribution-presentations";
+import { getAttributionTrendUnavailableBody, getAttributionTrendSummaryItems } from "./performance-attribution-presentations";
+import { usePerformanceAttributionTrend } from "./use-performance-attribution-trend";
+import styles from "./performance-attribution-trend-panel.module.css";
 
 type Props = {
   portfolioId: string;
@@ -48,10 +36,7 @@ const ATTRIBUTION_CHART_TEXT = {
   axisSize: Number.parseFloat(lotusThemeTokens.typography.size.textXs),
   legendWeight: lotusThemeTokens.typography.variant.cardTitle.weight,
   axisWeight: lotusThemeTokens.typography.variant.label.weight,
-  tooltipPadding: [
-    Number.parseInt(lotusThemeTokens.spacing.step3, 10),
-    Number.parseInt(lotusThemeTokens.spacing.step4, 10),
-  ] as [number, number],
+  tooltipPadding: [Number.parseInt(lotusThemeTokens.spacing.step3, 10), Number.parseInt(lotusThemeTokens.spacing.step4, 10)] as [number, number],
 };
 
 export default function PerformanceAttributionTrendPanel({
@@ -65,34 +50,9 @@ export default function PerformanceAttributionTrendPanel({
   reportEndDate,
   onRequestChange,
 }: Props) {
-  const [trend, setTrend] = useState<WorkbenchPerformanceAttributionTrend | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const requestIdRef = useRef(0);
-  const cacheRef = useRef<Map<string, WorkbenchPerformanceAttributionTrend>>(new Map());
-
-  useEffect(() => {
-    const cacheKey = JSON.stringify({
+  const request = useMemo(
+    () => ({
       portfolioId,
-      period,
-      chartFrequency,
-      attributionDimension,
-      detailBasis,
-      benchmark: benchmark ?? null,
-      reportStartDate: reportStartDate ?? null,
-      reportEndDate: reportEndDate ?? null,
-    });
-    const cached = cacheRef.current.get(cacheKey);
-    if (cached) {
-      setTrend(cached);
-      setIsLoading(false);
-      return;
-    }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setIsLoading(true);
-
-    void getWorkbenchPerformanceAttributionTrendClient(portfolioId, {
       period,
       chartFrequency,
       attributionDimension,
@@ -100,67 +60,25 @@ export default function PerformanceAttributionTrendPanel({
       benchmark,
       reportStartDate,
       reportEndDate,
-    })
-      .then((result) => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        cacheRef.current.set(cacheKey, result);
-        setTrend(result);
-      })
-      .catch(() => {
-        if (requestIdRef.current !== requestId) {
-          return;
-        }
-        setTrend({
-          correlation_id: "",
-          contract_version: "v1",
-          portfolio_id: portfolioId,
-          as_of_date: "",
-          period,
-          report_start_date: reportStartDate ?? "",
-          report_end_date: reportEndDate ?? "",
-          chart_frequency: chartFrequency,
-          detail_basis: detailBasis,
-          attribution_dimension: attributionDimension,
-          requested_chart_frequency_supported: true,
-          requested_attribution_dimension_supported: true,
-          benchmark_code: benchmark ?? null,
-          rows: [],
-          warnings: [],
-          partial_failures: [],
-        });
-      })
-      .finally(() => {
-        if (requestIdRef.current === requestId) {
-          setIsLoading(false);
-        }
-      });
-  }, [
-    attributionDimension,
-    benchmark,
-    chartFrequency,
-    detailBasis,
-    period,
-    portfolioId,
-    reportEndDate,
-    reportStartDate,
-  ]);
+    }),
+    [attributionDimension, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate],
+  );
+  const { state, refresh } = usePerformanceAttributionTrend(request);
+  const trend = state.status === "ready" ? state.trend : null;
   const rows = trend?.rows ?? null;
+  const isSingleObservation = rows?.length === 1;
+  const isMultiObservation = (rows?.length ?? 0) > 1;
+  const evidenceState =
+    state.status === "ready" ? (isMultiObservation ? "multi-observation" : isSingleObservation ? "single-observation" : "empty") : state.status;
 
   const chartOption = useMemo<EChartsOption | null>(() => {
-    if (!rows || rows.length === 0) {
+    if (!isMultiObservation || !rows) {
       return null;
     }
 
     return {
       animation: false,
-      color: [
-        ATTRIBUTION_TREND_COLORS.allocation,
-        ATTRIBUTION_TREND_COLORS.selection,
-        ATTRIBUTION_TREND_COLORS.interaction,
-        ATTRIBUTION_TREND_COLORS.total,
-      ],
+      color: [ATTRIBUTION_TREND_COLORS.allocation, ATTRIBUTION_TREND_COLORS.selection, ATTRIBUTION_TREND_COLORS.interaction, ATTRIBUTION_TREND_COLORS.total],
       grid: {
         left: 54,
         right: 24,
@@ -191,8 +109,7 @@ export default function PerformanceAttributionTrendPanel({
           fontSize: ATTRIBUTION_CHART_TEXT.legendSize,
           fontWeight: ATTRIBUTION_CHART_TEXT.legendWeight,
         },
-        valueFormatter: (value: unknown) =>
-          typeof value === "number" ? `${value.toFixed(2)}%` : "",
+        valueFormatter: (value: unknown) => (typeof value === "number" ? `${value.toFixed(2)}%` : ""),
       },
       xAxis: {
         type: "category",
@@ -269,26 +186,16 @@ export default function PerformanceAttributionTrendPanel({
         },
       ],
     };
-  }, [rows]);
+  }, [isMultiObservation, rows]);
 
-  const tableModel = useMemo(
-    () => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }),
-    [rows]
-  );
-  const metricItems = useMemo(
-    () => getAttributionTrendSummaryItems(trend),
-    [trend]
-  );
+  const tableModel = useMemo(() => buildPerformanceAttributionTrendTableModel({ rows: rows ?? [] }), [rows]);
+  const metricItems = useMemo(() => getAttributionTrendSummaryItems(trend), [trend]);
   const normalizationMessages: string[] = [];
   if (trend?.requested_chart_frequency_supported === false) {
-    normalizationMessages.push(
-      `frequency reset to ${formatLabel(trend.chart_frequency)}`
-    );
+    normalizationMessages.push(`frequency reset to ${formatLabel(trend.chart_frequency)}`);
   }
   if (trend?.requested_attribution_dimension_supported === false) {
-    normalizationMessages.push(
-      `segment reset to ${formatLabel(trend.attribution_dimension)}`
-    );
+    normalizationMessages.push(`segment reset to ${formatLabel(trend.attribution_dimension)}`);
   }
 
   useEffect(() => {
@@ -297,16 +204,10 @@ export default function PerformanceAttributionTrendPanel({
     }
 
     const patch: PerformanceWorkspaceRequestPatch = {};
-    if (
-      trend.requested_chart_frequency_supported === false &&
-      trend.chart_frequency !== chartFrequency
-    ) {
+    if (trend.requested_chart_frequency_supported === false && trend.chart_frequency !== chartFrequency) {
       patch.chartFrequency = trend.chart_frequency;
     }
-    if (
-      trend.requested_attribution_dimension_supported === false &&
-      trend.attribution_dimension !== attributionDimension
-    ) {
+    if (trend.requested_attribution_dimension_supported === false && trend.attribution_dimension !== attributionDimension) {
       patch.attributionDimension = trend.attribution_dimension;
     }
 
@@ -317,12 +218,24 @@ export default function PerformanceAttributionTrendPanel({
 
   return (
     <WorkbenchChartShell
-      title="Attribution Over Time"
+      title={isSingleObservation ? "Attribution Observation" : "Attribution Over Time"}
       className="performance-analysis-module performance-analysis-trend-shell performance-workspace-panel"
       actions={
-        <span className="performance-analysis-shell-action">
-          {trend?.chart_frequency ?? chartFrequency}
-        </span>
+        <div className={styles.actions}>
+          <span className={`performance-analysis-shell-action ${styles.frequency}`}>{trend?.chart_frequency ?? chartFrequency}</span>
+          <ActionButton
+            priority="quiet"
+            className={styles.refresh}
+            aria-disabled={state.status === "loading" || state.status === "permission_blocked"}
+            onClick={() => {
+              if (state.status !== "loading" && state.status !== "permission_blocked") {
+                refresh();
+              }
+            }}
+          >
+            {state.status === "loading" ? "Refreshing…" : state.status === "permission_blocked" ? "History restricted" : "Refresh history"}
+          </ActionButton>
+        </div>
       }
       metricStrip={
         metricItems.length ? (
@@ -335,57 +248,76 @@ export default function PerformanceAttributionTrendPanel({
         ) : undefined
       }
     >
-      {normalizationMessages.length > 0 ? (
-        <div
-          className="performance-control-normalization-note"
-          role="status"
-          aria-label="Attribution trend normalization"
-        >
-          <p className="performance-control-normalization-note-title">Selection adjusted</p>
-          <p className="performance-control-normalization-note-message">
-            Unsupported controls were replaced with supported defaults: {normalizationMessages.join(" • ")}.
-          </p>
-        </div>
-      ) : null}
-      {isLoading ? (
-        <ScreenStatePanel
-          kind="loading"
-          title="Loading attribution trend"
-          body="Loading attribution effect trend."
-          surface="analysis"
-        />
-      ) : chartOption ? (
-        <>
-          <div
-            className="performance-chart-library-frame"
-            role="img"
-            aria-label="Attribution over time chart"
-          >
-            <WorkbenchECharts
-              option={chartOption}
-              style={{ width: "100%", height: "344px" }}
-              opts={{ renderer: "svg" }}
-              notMerge
-              lazyUpdate
+      <div className={styles.evidence} data-testid="attribution-trend-evidence" data-state={evidenceState} data-observation-count={rows?.length ?? 0}>
+        {normalizationMessages.length > 0 ? (
+          <div className="performance-control-normalization-note" role="status" aria-label="Attribution trend normalization">
+            <p className="performance-control-normalization-note-title">Selection adjusted</p>
+            <p className="performance-control-normalization-note-message">
+              Unsupported controls were replaced with supported defaults: {normalizationMessages.join(" • ")}.
+            </p>
+          </div>
+        ) : null}
+        {state.status === "loading" ? (
+          <ScreenStatePanel kind="loading" title="Loading attribution trend" body="Loading attribution effect trend." surface="analysis" />
+        ) : state.status === "permission_blocked" ? (
+          <div role="alert" aria-live="assertive" aria-atomic="true">
+            <ScreenStatePanel
+              kind="permission_blocked"
+              title="Attribution history restricted"
+              body="Your current access does not permit this attribution-history request. Other source-confirmed performance detail remains available."
+              hint={state.httpStatus ? `Source response ${state.httpStatus}.` : undefined}
+              surface="analysis"
             />
           </div>
-          <AnalyticsTable
-            ariaLabel="Attribution trend table"
-            columns={tableModel.columns}
-            rows={tableModel.rows}
-            density="compact"
-            variant="analysis"
-            className="performance-analysis-table performance-attribution-trend-table"
-          />
-        </>
-      ) : (
-        <ScreenStatePanel
-          kind="unavailable"
-          title="Attribution trend unavailable"
-          body={getAttributionTrendUnavailableBody(trend)}
-          surface="analysis"
-        />
-      )}
+        ) : state.status === "error" ? (
+          <div role="alert" aria-live="assertive" aria-atomic="true">
+            <ScreenStatePanel
+              kind="error"
+              title="Attribution history could not be refreshed"
+              body="The source request did not complete. The selected performance detail remains available, but attribution history is not confirmed."
+              hint={
+                state.httpStatus
+                  ? `Source response ${state.httpStatus}. Use Refresh history to retry this exact selection.`
+                  : "Use Refresh history to retry this exact selection."
+              }
+              surface="analysis"
+            />
+          </div>
+        ) : chartOption ? (
+          <>
+            <div className="performance-chart-library-frame" role="img" aria-label="Attribution over time chart">
+              <WorkbenchECharts option={chartOption} style={{ width: "100%", height: "344px" }} opts={{ renderer: "svg" }} notMerge lazyUpdate />
+            </div>
+            <AnalyticsTable
+              ariaLabel="Attribution trend table"
+              columns={tableModel.columns}
+              rows={tableModel.rows}
+              density="compact"
+              variant="analysis"
+              className="performance-analysis-table performance-attribution-trend-table"
+            />
+          </>
+        ) : isSingleObservation ? (
+          <section className={styles.singleObservation} aria-label="Single published attribution observation">
+            <div className={styles.singleObservationNotice}>
+              <strong>One published observation</strong>
+              <span>
+                {rows?.[0]?.period_label ?? "Selected period"} is available as exact evidence. A time trend requires at least two published observations.
+              </span>
+            </div>
+            <AnalyticsTable
+              ariaLabel="Attribution observation table"
+              columns={tableModel.columns}
+              rows={tableModel.rows}
+              density="compact"
+              variant="analysis"
+              className="performance-analysis-table performance-attribution-trend-table"
+            />
+          </section>
+        ) : (
+          <ScreenStatePanel kind="unavailable" title="Attribution trend unavailable" body={getAttributionTrendUnavailableBody(trend)} surface="analysis" />
+        )}
+      </div>
     </WorkbenchChartShell>
   );
 }

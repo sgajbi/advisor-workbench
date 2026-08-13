@@ -27,7 +27,8 @@ test.beforeAll(async () => {
   if (
     scenario !== 'populated' &&
     scenario !== 'unavailable' &&
-    scenario !== 'refresh-integrity'
+    scenario !== 'refresh-integrity' &&
+    scenario !== 'trend-integrity'
   ) {
     return;
   }
@@ -541,7 +542,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(detailRetry).toBeFocused();
     await detailRetry.click();
     await expect(detailsFailure).toHaveAttribute('data-state', 'confirmed');
-    await expect(detailsFailure).toContainText('Analytical detail confirmed');
+    await expect(detailsFailure).toContainText('Contribution and attribution detail confirmed');
     await expect(contributionSegment).toContainText('Sector');
     await expect.poll(
       () => new URL(page.url()).searchParams.get('contributionDimension'),
@@ -590,9 +591,11 @@ test.describe('Performance workbench smoke', () => {
     const analysisStage = page.locator('.performance-analysis-stage');
     await expect(analysisStage).toBeVisible({ timeout: 15000 });
 
-    await expect(
-      page.getByRole('heading', { name: /^Attribution Over Time$/i })
-    ).toBeVisible({ timeout: 15000 });
+    const trendEvidence = page.getByTestId('attribution-trend-evidence');
+    await expect(trendEvidence).toBeVisible({ timeout: 15_000 });
+    await expect(trendEvidence).not.toHaveAttribute('data-state', 'loading');
+    const trendEvidenceState = await trendEvidence.getAttribute('data-state');
+    expect(['single-observation', 'multi-observation']).toContain(trendEvidenceState);
     await expect(
       page.getByRole('heading', { name: /^Attribution Detail$/i })
     ).toBeVisible({ timeout: 15000 });
@@ -605,12 +608,16 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Attribution trend summary strip')).toBeVisible({
       timeout: 30000,
     });
-    await expect(page.getByRole('img', { name: /^Attribution over time chart$/i })).toBeVisible({
-      timeout: 30000,
-    });
-    await expect(page.getByLabel('Attribution trend table')).toBeVisible({
-      timeout: 30000,
-    });
+    if (trendEvidenceState === 'single-observation') {
+      await expect(page.getByRole('heading', { name: 'Attribution Observation' })).toBeVisible();
+      await expect(trendEvidence).toHaveAttribute('data-observation-count', '1');
+      await expect(page.getByLabel('Attribution observation table')).toBeVisible();
+      await expect(page.getByRole('img', { name: 'Attribution over time chart' })).toHaveCount(0);
+    } else {
+      await expect(page.getByRole('heading', { name: 'Attribution Over Time' })).toBeVisible();
+      await expect(page.getByRole('img', { name: 'Attribution over time chart' })).toBeVisible();
+      await expect(page.getByLabel('Attribution trend table')).toBeVisible();
+    }
     const attributionTrendStrip = page.getByLabel('Attribution trend summary strip');
     await expect(attributionTrendStrip.getByText('Total Effect', { exact: true })).toBeVisible();
     await expect(attributionTrendStrip.getByText('Cumulative Total', { exact: true })).toBeVisible();
@@ -643,11 +650,73 @@ test.describe('Performance workbench smoke', () => {
       }
     }
 
-    await expect(page.getByLabel('Attribution trend table')).toBeVisible();
-
     const trendMetrics = await measureElement(trendShell);
     expect(trendMetrics.height).toBeLessThanOrEqual(900);
     expect(trendMetrics.width).toBeGreaterThan(800);
+  });
+
+  test('attribution history failure remains explicit until source retry succeeds', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'trend-integrity',
+      'This deterministic journey requires the trend-integrity fixture.',
+    );
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const analysisTab = page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Performance Analysis/i });
+    await analysisTab.click();
+
+    const evidence = page.getByTestId('attribution-trend-evidence');
+    await expect(evidence).toHaveAttribute('data-state', 'error', { timeout: 30_000 });
+    await expect(evidence.getByRole('alert')).toContainText(
+      'Attribution history could not be refreshed',
+    );
+    await expect(evidence).toContainText('Source response 503');
+    await expect(evidence).not.toContainText('Attribution trend unavailable');
+
+    const refresh = page.getByRole('button', { name: 'Refresh history' });
+    await refresh.focus();
+    await expect(refresh).toBeFocused();
+    await refresh.click();
+    await expect(page.getByRole('button', { name: 'Refreshing…' })).toBeFocused();
+    await expect(evidence).toHaveAttribute('data-state', 'single-observation');
+    await expect(evidence).toHaveAttribute('data-observation-count', '1');
+    await expect(page.getByRole('button', { name: 'Refresh history' })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Attribution Observation' })).toBeVisible();
+    await expect(page.getByLabel('Attribution observation table')).toBeVisible();
+    await expect(page.getByText('One published observation')).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Attribution over time chart' })).toHaveCount(0);
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await evidence.scrollIntoViewIfNeeded();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    await page.screenshot({
+      path: 'output/playwright/issue-682-attribution-observation-narrow.png',
+      fullPage: false,
+    });
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([
+      expect.objectContaining({
+        source: 'console',
+        message: expect.stringContaining('503 (Service Unavailable)'),
+        url: expect.stringContaining('/performance/attribution-trend?'),
+      }),
+    ]);
   });
 
   test('advisor brief discloses AI, evidence, review, and client-use posture accessibly', async ({
