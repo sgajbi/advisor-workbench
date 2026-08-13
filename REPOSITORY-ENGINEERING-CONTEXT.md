@@ -1044,6 +1044,12 @@ Most relevant current governance:
     protected from hover overrides across primary, secondary, and quiet priorities. When migrating
     a shared primitive out of legacy global CSS, remove duplicate selectors and ratchet the governed
     global line and normalized-byte budgets in the same issue-backed change.
+12. Dead presentation cleanup requires an exact production, test, and selector consumer map. Delete
+    an unreachable React owner, its dead-only tests, and its orphaned selectors in one issue-backed
+    slice; preserve active selector arms that share combined declarations, retain tests that prove
+    the active architecture does not regress to the retired path, lower the exact CSS ratchet, and
+    prohibit the retired selector family from returning. Do not migrate CSS for a component with no
+    production consumer.
 
 ## Context Maintenance Rule
 
