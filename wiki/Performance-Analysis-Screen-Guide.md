@@ -83,7 +83,8 @@ advice approval, or client-publication authority.
   the exact selection, becomes natively unavailable while pending, and restores keyboard focus
   after the request settles.
 - Fences obsolete attribution-history completions so a slower earlier selection cannot overwrite a
-  newer one, and caches only successful source responses.
+  newer one, caches only successful source responses, and evicts matching history after a later
+  access denial.
 
 ## Decisions And Actions
 

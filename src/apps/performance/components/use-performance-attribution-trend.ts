@@ -92,8 +92,12 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
           return;
         }
         const errorEvidence = getWorkbenchApiErrorEvidence(error);
+        const permissionBlocked = isWorkbenchPermissionBlockedError(error);
+        if (permissionBlocked) {
+          cacheRef.current.delete(requestKey);
+        }
         setState({
-          status: isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error",
+          status: permissionBlocked ? "permission_blocked" : "error",
           trend: null,
           httpStatus: errorEvidence ? Number(errorEvidence.value) : null,
         });
