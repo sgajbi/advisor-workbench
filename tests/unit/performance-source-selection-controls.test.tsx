@@ -18,6 +18,8 @@ const benchmarkOptions = [
   },
 ];
 
+const baseCapabilities = buildPerformanceCapabilities();
+
 const baseProps = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
   period: "YTD",
@@ -29,7 +31,14 @@ const baseProps = {
   benchmarkOptions,
   reportStartDate: "2026-01-01",
   reportEndDate: "2026-04-14",
-  capabilities: buildPerformanceCapabilities(),
+  capabilities: {
+    ...baseCapabilities,
+    returnPath: {
+      ...baseCapabilities.returnPath,
+      earliestAvailableDate: "2023-01-01",
+      latestAvailableDate: "2026-04-14",
+    },
+  },
   isUpdating: false,
   ariaLabel: "Performance Analysis source selection",
 };
@@ -98,6 +107,44 @@ describe("PerformanceSourceSelectionControls", () => {
       reportStartDate: "2026-02-01",
       reportEndDate: "2026-03-31",
     });
+  });
+
+  it("preserves the source-published date range after confirming a shorter explicit window", async () => {
+    const capabilities = buildPerformanceCapabilities();
+    const sourceRange = {
+      ...capabilities,
+      returnPath: {
+        ...capabilities.returnPath,
+        earliestAvailableDate: "2023-01-01",
+        latestAvailableDate: "2026-04-14",
+      },
+    };
+    const { rerender } = render(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        capabilities={sourceRange}
+        onRequestChange={vi.fn()}
+      />,
+    );
+
+    const fromDate = await screen.findByLabelText("From");
+    const toDate = screen.getByLabelText("To");
+    expect(fromDate).toHaveAttribute("min", "2023-01-01");
+    expect(toDate).toHaveAttribute("max", "2026-04-14");
+
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        reportStartDate="2026-02-01"
+        reportEndDate="2026-03-31"
+        capabilities={sourceRange}
+        onRequestChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("To")).toHaveAttribute("max", "2026-04-14");
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-04-10" } });
+    expect(screen.getByLabelText("To")).toHaveValue("2026-04-10");
   });
 
   it("disables unsupported frequencies from the source capability contract", async () => {
