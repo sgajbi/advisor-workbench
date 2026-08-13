@@ -1,9 +1,10 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceMultiHorizonPanel from "../../src/apps/performance/components/performance-multi-horizon-panel";
 import type { WorkbenchPerformanceHorizonComparison } from "../../src/features/workbench/types";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 import { buildPerformanceHorizonComparison } from "../fixtures/performance-workspace-fixtures";
 
 const getHorizonComparisonClientMock = vi.fn();
@@ -185,6 +186,13 @@ describe("PerformanceMultiHorizonPanel", () => {
             active_return_pct: 0.5,
             annualized_return_pct: 5.4,
           },
+          {
+            period: "1Y",
+            portfolio_return_pct: 6.4,
+            benchmark_return_pct: 5.9,
+            active_return_pct: 0.5,
+            annualized_return_pct: 6.4,
+          },
         ],
       })
     );
@@ -199,9 +207,9 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-      await waitFor(() => {
-        expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    });
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
 
     view.rerender(
@@ -245,9 +253,11 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
-    });
+    expect(await screen.findByText("One published horizon")).toBeInTheDocument();
+    expect(screen.getByText(/A comparison requires at least two published horizons/)).toBeInTheDocument();
+    expect(screen.getByText("Return evidence")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon returns")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Horizon visual mode" })).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
   });
 
@@ -293,15 +303,103 @@ describe("PerformanceMultiHorizonPanel", () => {
       />
     );
 
-    expect(
-      await screen.findByLabelText("Horizon comparison unavailable state")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Horizon comparison is unavailable for this mandate")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("No published horizon comparison")).toBeInTheDocument();
+    expect(screen.getByText(/source returned no horizon observations/)).toBeInTheDocument();
     expect(screen.queryByText("Still available")).not.toBeInTheDocument();
     expect(screen.queryByText("Needs source support")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Multi-horizon return table")).not.toBeInTheDocument();
+  });
+
+  it("keeps request failure distinct from source-confirmed absence and retries the exact selection", async () => {
+    getHorizonComparisonClientMock
+      .mockRejectedValueOnce(new WorkbenchApiError("performance horizon comparison", 503))
+      .mockResolvedValueOnce(buildHorizonComparison());
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    const failure = await screen.findByRole("alert");
+    expect(failure).toHaveTextContent("Horizon comparison could not be refreshed");
+    expect(failure).toHaveTextContent("Source response 503");
+    expect(screen.queryByText("No published horizon comparison")).not.toBeInTheDocument();
+
+    const refresh = screen.getByRole("button", { name: "Refresh comparison" });
+    refresh.focus();
+    fireEvent.click(refresh);
+
+    expect(screen.getByRole("button", { name: "Refreshing…" })).toBeDisabled();
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh comparison" })).toHaveFocus();
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(2);
+    expect(getHorizonComparisonClientMock.mock.calls[1]).toEqual(
+      getHorizonComparisonClientMock.mock.calls[0],
+    );
+  });
+
+  it("fails permission blocks closed without exposing a retry", async () => {
+    getHorizonComparisonClientMock.mockRejectedValue(
+      new WorkbenchApiError("performance horizon comparison", 403),
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />
+    );
+
+    const failure = await screen.findByRole("alert");
+    expect(failure).toHaveTextContent("Horizon comparison restricted");
+    expect(failure).toHaveTextContent("Source response 403");
+    expect(screen.getByRole("button", { name: "Comparison restricted" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Refresh comparison" })).not.toBeInTheDocument();
+  });
+
+  it("does not move retry focus back after the advisor continues elsewhere", async () => {
+    let resolveRetry: ((value: WorkbenchPerformanceHorizonComparison) => void) | undefined;
+    getHorizonComparisonClientMock
+      .mockRejectedValueOnce(new WorkbenchApiError("performance horizon comparison", 503))
+      .mockImplementationOnce(
+        () => new Promise<WorkbenchPerformanceHorizonComparison>((resolve) => {
+          resolveRetry = resolve;
+        }),
+      );
+
+    render(
+      <>
+        <PerformanceMultiHorizonPanel
+          portfolioId="PF_1001"
+          period="YTD"
+          detailBasis="NET"
+          benchmark="BMK_GLOBAL_BALANCED_60_40"
+          chartFrequency="monthly"
+        />
+        <button type="button">Continue review</button>
+      </>,
+    );
+
+    const refresh = await screen.findByRole("button", { name: "Refresh comparison" });
+    refresh.focus();
+    fireEvent.click(refresh);
+    const continueReview = screen.getByRole("button", { name: "Continue review" });
+    continueReview.focus();
+    await act(async () => {
+      resolveRetry?.(buildHorizonComparison());
+      await Promise.resolve();
+    });
+
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(continueReview).toHaveFocus();
   });
 
   it("pushes the resolved horizon frequency back through the shared request handler", async () => {
