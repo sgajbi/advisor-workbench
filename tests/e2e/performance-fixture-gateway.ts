@@ -19,7 +19,8 @@ export type PerformanceFixtureGatewayScenario =
   | 'unavailable'
   | 'refresh-integrity'
   | 'trend-integrity'
-  | 'horizon-integrity';
+  | 'horizon-integrity'
+  | 'analysis-controls';
 
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
@@ -79,12 +80,19 @@ export async function startPerformanceFixtureGateway({
         sendJson(response, { code: 'performance_summary_temporarily_unavailable' }, 503);
         return;
       }
-      sendJson(
-        response,
-        buildSummaryResponse(portfolioId, scenario, requestUrl),
-        200,
-        'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
-      );
+      const summaryResponse = buildSummaryResponse(portfolioId, scenario, requestUrl);
+      const sendSummary = () =>
+        sendJson(
+          response,
+          summaryResponse,
+          200,
+          'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
+        );
+      if (scenario === 'analysis-controls' && isChangedSourceSelection(requestUrl)) {
+        setTimeout(sendSummary, 250);
+      } else {
+        sendSummary();
+      }
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/details')) {
@@ -96,12 +104,19 @@ export async function startPerformanceFixtureGateway({
         sendJson(response, { code: 'performance_details_temporarily_unavailable' }, 502);
         return;
       }
-      sendJson(
-        response,
-        buildDetailsResponse(portfolioId, scenario, requestUrl),
-        200,
-        'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
-      );
+      const detailsResponse = buildDetailsResponse(portfolioId, scenario, requestUrl);
+      const sendDetails = () =>
+        sendJson(
+          response,
+          detailsResponse,
+          200,
+          'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
+        );
+      if (scenario === 'analysis-controls' && isChangedSourceSelection(requestUrl)) {
+        setTimeout(sendDetails, 250);
+      } else {
+        sendDetails();
+      }
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/horizon-comparison')) {
@@ -124,7 +139,7 @@ export async function startPerformanceFixtureGateway({
       }
       sendJson(
         response,
-        scenario === 'populated'
+        scenario !== 'unavailable'
           ? horizon
           : {
               ...horizon,
@@ -275,6 +290,7 @@ function buildSummaryResponse(
     return applyRequestedSummaryContext(
       {
         ...summary,
+        benchmark_options: buildFixtureBenchmarkOptions(summary.benchmark_options),
         capabilities: buildPopulatedCapabilities(summary.capabilities),
         evidence_view: summary.evidence_view
           ? { ...summary.evidence_view, state: 'supported', reason: null }
@@ -329,9 +345,11 @@ function applyRequestedSummaryContext(
   requestUrl: URL,
 ): WorkbenchPerformanceWorkspaceSummary {
   const period = requestUrl.searchParams.get('period') ?? summary.period;
+  const benchmarkCode = requestUrl.searchParams.get('benchmark_code') ?? summary.benchmark_code;
   return {
     ...summary,
     period,
+    benchmark_code: benchmarkCode,
     report_start_date: period === '3Y' ? '2023-03-28' : summary.report_start_date,
   };
 }
@@ -345,14 +363,40 @@ function applyRequestedDetailContext(
     requestUrl.searchParams.get('contribution_dimension') ?? details.contribution_dimension;
   const attributionDimension =
     requestUrl.searchParams.get('attribution_dimension') ?? details.attribution_dimension;
+  const benchmarkCode = requestUrl.searchParams.get('benchmark_code') ?? details.benchmark_code;
   return {
     ...details,
     period,
+    benchmark_code: benchmarkCode,
     report_start_date: period === '3Y' ? '2023-03-28' : details.report_start_date,
     contribution_dimension: contributionDimension,
     attribution_dimension: attributionDimension,
     segment: contributionDimension,
   };
+}
+
+function buildFixtureBenchmarkOptions(
+  options: WorkbenchPerformanceWorkspaceSummary['benchmark_options'],
+) {
+  return [
+    ...(options ?? []),
+    {
+      benchmark_code: 'BMK_PRIVATE_BANK',
+      benchmark_name: 'Private Bank Composite',
+      benchmark_currency: 'USD',
+      benchmark_type: 'composite',
+      benchmark_family: 'private_bank_reference',
+      benchmark_provider: 'LOTUS_DEMO',
+      is_assigned: false,
+    },
+  ];
+}
+
+function isChangedSourceSelection(requestUrl: URL) {
+  return (
+    requestUrl.searchParams.get('period') === '3Y' ||
+    requestUrl.searchParams.get('benchmark_code') === 'BMK_PRIVATE_BANK'
+  );
 }
 
 function buildPopulatedCapabilities(

@@ -13,6 +13,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
       "refresh-integrity",
       "trend-integrity",
       "horizon-integrity",
+      "analysis-controls",
     ]),
   },
   {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { TextField } from "@mui/material";
 
 import { ActionButton, FieldLabel, Text, WorkbenchChoiceGroup } from "@/design-system";
@@ -61,6 +61,8 @@ export default function PerformanceSourceSelectionControls({
   onRequestChange,
 }: PerformanceSourceSelectionControlsProps) {
   const isHydrated = useClientMounted();
+  const focusRestoreTargetRef = useRef<HTMLElement | null>(null);
+  const wasUpdatingRef = useRef(isUpdating);
   const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
     sourceStartDate: reportStartDate,
     sourceEndDate: reportEndDate,
@@ -78,7 +80,26 @@ export default function PerformanceSourceSelectionControls({
         };
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
 
-  function updateSelection(patch: PerformanceControlPatch) {
+  useEffect(() => {
+    const updateCompleted = wasUpdatingRef.current && !isUpdating;
+    wasUpdatingRef.current = isUpdating;
+    if (!updateCompleted) {
+      return;
+    }
+
+    const target = focusRestoreTargetRef.current;
+    focusRestoreTargetRef.current = null;
+    const activeElement = document.activeElement;
+    if (
+      target?.isConnected &&
+      (activeElement === document.body || activeElement === document.documentElement)
+    ) {
+      target.focus();
+    }
+  }, [isUpdating]);
+
+  function updateSelection(patch: PerformanceControlPatch, focusRestoreTarget?: HTMLElement) {
+    focusRestoreTargetRef.current = focusRestoreTarget ?? null;
     onRequestChange(
       buildPerformanceControlSelectionPatch({
         patch,
@@ -100,11 +121,15 @@ export default function PerformanceSourceSelectionControls({
     if (!activeDateDraft.fromDate || !activeDateDraft.toDate) {
       return;
     }
-    updateSelection({
-      period: "EXPLICIT",
-      reportStartDate: activeDateDraft.fromDate,
-      reportEndDate: activeDateDraft.toDate,
-    });
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    updateSelection(
+      {
+        period: "EXPLICIT",
+        reportStartDate: activeDateDraft.fromDate,
+        reportEndDate: activeDateDraft.toDate,
+      },
+      submitter instanceof HTMLElement ? submitter : undefined,
+    );
   }
 
   if (!isHydrated) {
@@ -242,7 +267,9 @@ export default function PerformanceSourceSelectionControls({
             select
             size="small"
             value={chartFrequency}
-            onChange={(event) => updateSelection({ chartFrequency: event.target.value })}
+            onChange={(event) =>
+              updateSelection({ chartFrequency: event.target.value }, event.currentTarget)
+            }
             disabled={isUpdating}
             sx={selectControlSx}
             SelectProps={{ native: true }}
@@ -270,7 +297,12 @@ export default function PerformanceSourceSelectionControls({
             select
             size="small"
             value={benchmark ?? ""}
-            onChange={(event) => updateSelection({ benchmark: event.target.value || undefined })}
+            onChange={(event) =>
+              updateSelection(
+                { benchmark: event.target.value || undefined },
+                event.currentTarget,
+              )
+            }
             disabled={isUpdating}
             sx={selectControlSx}
             SelectProps={{ native: true }}
