@@ -7,7 +7,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     mode: "performance",
     portEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE_PORT",
     scenarioEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE",
-    scenarios: new Set(["populated", "unavailable"]),
+    scenarios: new Set(["populated", "unavailable", "refresh-integrity"]),
   },
   {
     mode: "report-centre",

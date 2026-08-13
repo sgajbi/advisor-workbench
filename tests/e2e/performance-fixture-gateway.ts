@@ -12,8 +12,12 @@ import {
   buildPerformanceWorkspaceDetails,
   buildPerformanceWorkspaceSummary,
 } from '../fixtures/performance-workspace-fixtures';
+import { fallbackNormalizedCapabilities } from '../../src/features/platform-capabilities/api';
 
-export type PerformanceFixtureGatewayScenario = 'populated' | 'unavailable';
+export type PerformanceFixtureGatewayScenario =
+  | 'populated'
+  | 'unavailable'
+  | 'refresh-integrity';
 
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
@@ -27,6 +31,8 @@ export async function startPerformanceFixtureGateway({
   port: number;
   scenario: PerformanceFixtureGatewayScenario;
 }): Promise<PerformanceFixtureGateway> {
+  let summaryRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
+  let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
     const portfolioId = resolvePortfolioId(requestUrl.pathname);
@@ -43,24 +49,55 @@ export async function startPerformanceFixtureGateway({
       return;
     }
 
+    if (requestUrl.pathname === '/api/v1/platform/capabilities') {
+      sendJson(response, {
+        data: {
+          consumerSystem: requestUrl.searchParams.get('consumerSystem') ?? 'UI',
+          tenantId: requestUrl.searchParams.get('tenantId') ?? 'default',
+          contractVersion: 'v1',
+          sources: {},
+          partialFailure: false,
+          errors: [],
+          normalized: fallbackNormalizedCapabilities(),
+        },
+      });
+      return;
+    }
+
     if (!portfolioId) {
       sendJson(response, { code: 'fixture_route_not_found' }, 404);
       return;
     }
 
     if (requestUrl.pathname.endsWith('/performance/summary')) {
+      if (
+        requestUrl.searchParams.get('period') === '3Y' &&
+        summaryRefreshFailuresRemaining > 0
+      ) {
+        summaryRefreshFailuresRemaining -= 1;
+        sendJson(response, { code: 'performance_summary_temporarily_unavailable' }, 503);
+        return;
+      }
       sendJson(
         response,
-        buildSummaryResponse(portfolioId, scenario),
+        buildSummaryResponse(portfolioId, scenario, requestUrl),
         200,
         'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
       );
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/details')) {
+      if (
+        requestUrl.searchParams.get('contribution_dimension') === 'sector' &&
+        detailsRefreshFailuresRemaining > 0
+      ) {
+        detailsRefreshFailuresRemaining -= 1;
+        sendJson(response, { code: 'performance_details_temporarily_unavailable' }, 502);
+        return;
+      }
       sendJson(
         response,
-        buildDetailsResponse(portfolioId, scenario),
+        buildDetailsResponse(portfolioId, scenario, requestUrl),
         200,
         'perf-reference;dur=1, perf-benchmark;dur=1, perf-summary;dur=1',
       );
@@ -193,6 +230,7 @@ function buildAdvisorBriefResponse(portfolioId: string): WorkbenchPerformanceAdv
 function buildSummaryResponse(
   portfolioId: string,
   scenario: PerformanceFixtureGatewayScenario,
+  requestUrl: URL,
 ): WorkbenchPerformanceWorkspaceSummary {
   const summary = buildPerformanceWorkspaceSummary(
     portfolioId,
@@ -200,14 +238,14 @@ function buildSummaryResponse(
       ? { unassignedBenchmark: true, unavailableSummarySeries: true }
       : undefined,
   );
-  if (scenario === 'populated') {
-    return {
+  if (scenario !== 'unavailable') {
+    return applyRequestedSummaryContext({
       ...summary,
       capabilities: buildPopulatedCapabilities(summary.capabilities),
       evidence_view: summary.evidence_view
         ? { ...summary.evidence_view, state: 'supported', reason: null }
         : null,
-    };
+    }, requestUrl);
   }
   return {
     ...summary,
@@ -221,6 +259,7 @@ function buildSummaryResponse(
 function buildDetailsResponse(
   portfolioId: string,
   scenario: PerformanceFixtureGatewayScenario,
+  requestUrl: URL,
 ): WorkbenchPerformanceWorkspaceDetails {
   const details = buildPerformanceWorkspaceDetails(
     portfolioId,
@@ -228,14 +267,14 @@ function buildDetailsResponse(
       ? { unassignedBenchmark: true, unavailableSummarySeries: true }
       : undefined,
   );
-  if (scenario === 'populated') {
-    return {
+  if (scenario !== 'unavailable') {
+    return applyRequestedDetailContext({
       ...details,
       capabilities: buildPopulatedCapabilities(details.capabilities),
       evidence_view: details.evidence_view
         ? { ...details.evidence_view, state: 'supported', reason: null }
         : null,
-    };
+    }, requestUrl);
   }
   return {
     ...details,
@@ -243,6 +282,37 @@ function buildDetailsResponse(
     net_chart: [],
     gross_chart: [],
     contribution: null,
+  };
+}
+
+function applyRequestedSummaryContext(
+  summary: WorkbenchPerformanceWorkspaceSummary,
+  requestUrl: URL,
+): WorkbenchPerformanceWorkspaceSummary {
+  const period = requestUrl.searchParams.get('period') ?? summary.period;
+  return {
+    ...summary,
+    period,
+    report_start_date: period === '3Y' ? '2023-03-28' : summary.report_start_date,
+  };
+}
+
+function applyRequestedDetailContext(
+  details: WorkbenchPerformanceWorkspaceDetails,
+  requestUrl: URL,
+): WorkbenchPerformanceWorkspaceDetails {
+  const period = requestUrl.searchParams.get('period') ?? details.period;
+  const contributionDimension =
+    requestUrl.searchParams.get('contribution_dimension') ?? details.contribution_dimension;
+  const attributionDimension =
+    requestUrl.searchParams.get('attribution_dimension') ?? details.attribution_dimension;
+  return {
+    ...details,
+    period,
+    report_start_date: period === '3Y' ? '2023-03-28' : details.report_start_date,
+    contribution_dimension: contributionDimension,
+    attribution_dimension: attributionDimension,
+    segment: contributionDimension,
   };
 }
 

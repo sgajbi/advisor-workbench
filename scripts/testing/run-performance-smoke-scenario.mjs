@@ -3,11 +3,13 @@ import { spawn } from "node:child_process";
 
 const scenario = process.argv[2];
 const forwardedArguments = process.argv.slice(3);
-const supportedScenarios = new Set(["populated", "unavailable"]);
+const supportedScenarios = new Set(["populated", "unavailable", "refresh-integrity"]);
 const fixturePort = Number.parseInt(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? "18100", 10);
 
 if (!supportedScenarios.has(scenario)) {
-  throw new Error("Performance smoke scenario must be populated or unavailable.");
+  throw new Error(
+    "Performance smoke scenario must be populated, unavailable, or refresh-integrity.",
+  );
 }
 if (!Number.isInteger(fixturePort) || fixturePort < 1024 || fixturePort > 65535) {
   throw new Error("PERFORMANCE_E2E_FIXTURE_PORT must be an unprivileged TCP port.");

@@ -16,6 +16,7 @@ import {
   parseServerTimingDuration,
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
+import { observeBrowserRuntimeFailures } from './browser-runtime-reliability';
 
 test.describe.configure({ mode: 'default' });
 
@@ -23,7 +24,11 @@ let fixtureGateway: PerformanceFixtureGateway | null = null;
 
 test.beforeAll(async () => {
   const scenario = process.env.PERFORMANCE_E2E_FIXTURE;
-  if (scenario !== 'populated' && scenario !== 'unavailable') {
+  if (
+    scenario !== 'populated' &&
+    scenario !== 'unavailable' &&
+    scenario !== 'refresh-integrity'
+  ) {
     return;
   }
   const port = Number(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? '18100');
@@ -427,6 +432,142 @@ test.describe('Performance workbench smoke', () => {
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
+  });
+
+  test('refresh failure keeps source-confirmed performance context and recovers without stale labels', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'refresh-integrity',
+      'This deterministic journey requires the refresh-integrity fixture.',
+    );
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const horizon = page.getByRole('radiogroup', { name: 'Horizon' });
+    await expect(horizon.getByRole('radio', { name: 'YTD' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await horizon.getByRole('radio', { name: '3Y' }).click();
+
+    const summaryFailure = page.getByTestId('workbench-refresh-status');
+    await expect(summaryFailure).toContainText('Performance selection could not be confirmed');
+    await expect(summaryFailure).toContainText('Requested3Y');
+    await expect(summaryFailure).toContainText('Source-confirmedYTD · NET returns');
+    await expect(summaryFailure).toContainText('HTTP 503');
+    await expect(horizon.getByRole('radio', { name: 'YTD' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(new URL(page.url()).searchParams.get('period')).toBe('YTD');
+
+    const summaryRetry = summaryFailure.getByRole('button', {
+      name: 'Retry performance selection',
+    });
+    await summaryRetry.focus();
+    await expect(summaryRetry).toBeFocused();
+    await summaryRetry.click();
+    const summaryConfirmation = page.getByTestId('workbench-refresh-status');
+    await expect(summaryConfirmation).toHaveAttribute('data-state', 'confirmed');
+    await expect(summaryConfirmation).toContainText('Performance selection confirmed');
+    await expect(horizon.getByRole('radio', { name: '3Y' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
+
+    const analysisTab = page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisNavigation = page.waitForResponse(
+      (response) =>
+        response.url().includes('/performance?') &&
+        response.url().includes('mode=analysis') &&
+        response.headers()['content-type']?.includes('text/x-component') === true,
+      { timeout: 30_000 },
+    );
+    await Promise.all([analysisNavigation, analysisTab.click()]);
+    await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('analysis');
+    const performanceDrivers = page.locator('#performance-drivers');
+    await performanceDrivers.scrollIntoViewIfNeeded();
+    await expect(performanceDrivers).toBeVisible({ timeout: 30_000 });
+    const contributionSegment = page.locator('[aria-label="Contribution Segment"]');
+    await expect(contributionSegment).toBeVisible({ timeout: 30_000 });
+    await contributionSegment.click();
+    await page.getByRole('option', { name: 'Sector' }).click();
+
+    const detailsFailure = page.getByTestId('workbench-refresh-status');
+    await expect(detailsFailure).toContainText('Analytical detail could not be confirmed');
+    await expect(detailsFailure).toContainText('RequestedSector contribution');
+    await expect(detailsFailure).toContainText('HTTP 502');
+    await expect(contributionSegment).toContainText('Asset Class');
+    await detailsFailure.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: 'output/playwright/issue-679-performance-refresh-failure-desktop.png',
+      fullPage: false,
+    });
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await expect(detailsFailure).toBeVisible();
+      await detailsFailure.scrollIntoViewIfNeeded();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+      if (width === 519) {
+        await page.screenshot({
+          path: 'output/playwright/issue-679-performance-refresh-failure-narrow.png',
+          fullPage: false,
+        });
+      }
+    }
+
+    const detailRetry = detailsFailure.getByRole('button', {
+      name: 'Retry performance selection',
+    });
+    await detailRetry.focus();
+    await expect(detailRetry).toBeFocused();
+    await detailRetry.click();
+    await expect(detailsFailure).toHaveAttribute('data-state', 'confirmed');
+    await expect(detailsFailure).toContainText('Analytical detail confirmed');
+    await expect(contributionSegment).toContainText('Sector');
+    await expect.poll(
+      () => new URL(page.url()).searchParams.get('contributionDimension'),
+    ).toBe('sector');
+    await detailsFailure.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: 'output/playwright/issue-679-performance-refresh-confirmed-narrow.png',
+      fullPage: false,
+    });
+    await runtime.assertStylesAreHeadManaged();
+    const expectedFailureSignals = runtime.snapshot();
+    expect(
+      expectedFailureSignals,
+      'The failure journey must emit only the two deliberately exercised BFF errors.',
+    ).toHaveLength(2);
+    expect(expectedFailureSignals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'console',
+          message: expect.stringContaining('503 (Service Unavailable)'),
+          url: expect.stringContaining('/performance/summary?period=3Y'),
+        }),
+        expect.objectContaining({
+          source: 'console',
+          message: expect.stringContaining('502 (Bad Gateway)'),
+          url: expect.stringContaining(
+            '/performance/details?period=3Y&chart_frequency=monthly&contribution_dimension=sector',
+          ),
+        }),
+      ]),
+    );
   });
 
   test('analysis mode renders live attribution analytics', async ({ page, request }) => {
