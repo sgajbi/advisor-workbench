@@ -261,9 +261,10 @@ describe("PerformanceChartPanel", () => {
     expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(6);
+    expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(5);
     expect(screen.getByRole("radiogroup", { name: "Horizon" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Return-path presentation" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();

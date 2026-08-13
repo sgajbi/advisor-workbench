@@ -1,79 +1,118 @@
 "use client";
 
-import type { FormEvent, ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { TextField } from "@mui/material";
 
-import {
-  ActionButton,
-  FieldLabel,
-  Text,
-  WorkbenchChoiceGroup,
-} from "@/design-system";
+import { ActionButton, FieldLabel, Text, WorkbenchChoiceGroup } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
-import type {
-  PerformanceChartViewMode,
-  PerformanceControlPatch,
+import {
+  buildPerformanceControlSelectionPatch,
+  buildResolvedBenchmarkOptions,
+  type PerformanceControlPatch,
 } from "./performance-chart-panel-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
 import choiceStyles from "./performance-choice-groups.module.css";
+import styles from "./performance-source-selection-controls.module.css";
 
-type PerformanceAnalysisControlBarProps = {
+type PerformanceSourceSelectionControlsProps = {
+  portfolioId: string;
   period: string;
   detailBasis: string;
+  contributionDimension: string;
+  attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
-  resolvedBenchmarkOptions: PerformanceBenchmarkOptionView[];
-  fromDate: string;
-  toDate: string;
-  maxEndDate?: string;
-  minEndDate?: string;
-  chartViewMode: PerformanceChartViewMode;
-  hasBenchmarkSeries: boolean;
-  hasActiveSeries: boolean;
+  benchmarkOptions: PerformanceBenchmarkOptionView[];
+  reportStartDate: string;
+  reportEndDate: string;
   capabilities: PerformanceWorkspaceCapabilities;
   isUpdating: boolean;
+  ariaLabel: string;
   onRequestChange: (patch: PerformanceControlPatch) => void;
-  onApplyExplicitDates: (event: FormEvent<HTMLFormElement>) => void;
-  onFromDateChange: (value: string) => void;
-  onToDateChange: (value: string) => void;
-  onChartViewModeChange: (value: PerformanceChartViewMode) => void;
 };
 
-export default function PerformanceAnalysisControlBar({
+type ExplicitDateDraft = {
+  sourceStartDate: string;
+  sourceEndDate: string;
+  fromDate: string;
+  toDate: string;
+};
+
+export default function PerformanceSourceSelectionControls({
+  portfolioId,
   period,
   detailBasis,
+  contributionDimension,
+  attributionDimension,
   chartFrequency,
   benchmark,
-  resolvedBenchmarkOptions,
-  fromDate,
-  toDate,
-  maxEndDate,
-  minEndDate,
-  chartViewMode,
-  hasBenchmarkSeries,
-  hasActiveSeries,
+  benchmarkOptions,
+  reportStartDate,
+  reportEndDate,
   capabilities,
   isUpdating,
+  ariaLabel,
   onRequestChange,
-  onApplyExplicitDates,
-  onFromDateChange,
-  onToDateChange,
-  onChartViewModeChange,
-}: PerformanceAnalysisControlBarProps) {
+}: PerformanceSourceSelectionControlsProps) {
   const isHydrated = useClientMounted();
+  const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
+    sourceStartDate: reportStartDate,
+    sourceEndDate: reportEndDate,
+    fromDate: reportStartDate,
+    toDate: reportEndDate,
+  });
+  const activeDateDraft =
+    dateDraft.sourceStartDate === reportStartDate && dateDraft.sourceEndDate === reportEndDate
+      ? dateDraft
+      : {
+          sourceStartDate: reportStartDate,
+          sourceEndDate: reportEndDate,
+          fromDate: reportStartDate,
+          toDate: reportEndDate,
+        };
+  const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
+
+  function updateSelection(patch: PerformanceControlPatch) {
+    onRequestChange(
+      buildPerformanceControlSelectionPatch({
+        patch,
+        portfolioId,
+        period,
+        detailBasis,
+        contributionDimension,
+        attributionDimension,
+        chartFrequency,
+        benchmark,
+        reportStartDate,
+        reportEndDate,
+      }),
+    );
+  }
+
+  function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activeDateDraft.fromDate || !activeDateDraft.toDate) {
+      return;
+    }
+    updateSelection({
+      period: "EXPLICIT",
+      reportStartDate: activeDateDraft.fromDate,
+      reportEndDate: activeDateDraft.toDate,
+    });
+  }
 
   if (!isHydrated) {
     return (
       <div
-        className="performance-analysis-control-bar"
+        className={`performance-analysis-control-bar ${styles.controls}`}
         role="group"
-        aria-label="Analysis control bar"
+        aria-label={ariaLabel}
         aria-busy="true"
       >
         <ControlCluster className="performance-analysis-control-cluster-selection">
@@ -83,25 +122,17 @@ export default function PerformanceAnalysisControlBar({
           <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
             <StaticControlValue>{detailBasis}</StaticControlValue>
           </ControlSlot>
-          <ControlSlot label="View" className="performance-analysis-control-slot-view">
-            <StaticControlValue>{chartViewMode}</StaticControlValue>
-          </ControlSlot>
         </ControlCluster>
         <ControlCluster className="performance-analysis-control-cluster-window">
           <ControlSlot label="Window" className="performance-analysis-control-slot-dates">
-            <StaticControlValue>
-              {fromDate} to {toDate}
-            </StaticControlValue>
+            <StaticControlValue>{reportStartDate} to {reportEndDate}</StaticControlValue>
           </ControlSlot>
         </ControlCluster>
         <ControlCluster className="performance-analysis-control-cluster-comparison">
           <ControlSlot label="Frequency" className="performance-analysis-control-slot-frequency">
             <StaticControlValue>{chartFrequency}</StaticControlValue>
           </ControlSlot>
-          <ControlSlot
-            label="Benchmark"
-            className="performance-analysis-control-slot-benchmark-select"
-          >
+          <ControlSlot label="Benchmark" className="performance-analysis-control-slot-benchmark-select">
             <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
           </ControlSlot>
         </ControlCluster>
@@ -110,13 +141,17 @@ export default function PerformanceAnalysisControlBar({
   }
 
   return (
-    <div className="performance-analysis-control-bar" role="group" aria-label="Analysis control bar">
+    <div
+      className={`performance-analysis-control-bar ${styles.controls}`}
+      role="group"
+      aria-label={ariaLabel}
+    >
       <ControlCluster className="performance-analysis-control-cluster-selection">
         <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
           <WorkbenchChoiceGroup
             value={period}
             onChange={(value) =>
-              onRequestChange({
+              updateSelection({
                 period: value,
                 reportStartDate: undefined,
                 reportEndDate: undefined,
@@ -136,11 +171,7 @@ export default function PerformanceAnalysisControlBar({
         <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
           <WorkbenchChoiceGroup
             value={detailBasis}
-            onChange={(value) =>
-              onRequestChange({
-                detailBasis: value,
-              })
-            }
+            onChange={(value) => updateSelection({ detailBasis: value })}
             ariaLabel="Basis"
             className={choiceStyles.horizon}
             density="compact"
@@ -151,34 +182,12 @@ export default function PerformanceAnalysisControlBar({
             }))}
           />
         </ControlSlot>
-
-        <ControlSlot label="View" className="performance-analysis-control-slot-view">
-          <WorkbenchChoiceGroup
-            ariaLabel="Return view"
-            className={choiceStyles.horizon}
-            density="compact"
-            value={chartViewMode}
-            onChange={onChartViewModeChange}
-            options={[
-              { key: "combined", label: "Combined", disabled: !hasBenchmarkSeries },
-              { key: "absolute", label: "Absolute" },
-              {
-                key: "relative",
-                label: "Relative",
-                disabled: !hasActiveSeries,
-                title: hasActiveSeries
-                  ? undefined
-                  : "Relative comparison requires benchmark-relative observations.",
-              },
-            ]}
-          />
-        </ControlSlot>
       </ControlCluster>
 
       <ControlCluster className="performance-analysis-control-cluster-window">
         <form
           className="performance-analysis-control-slot performance-analysis-control-slot-dates"
-          onSubmit={onApplyExplicitDates}
+          onSubmit={applyExplicitDates}
         >
           <FieldLabel>Window</FieldLabel>
           <div className="performance-analysis-date-row">
@@ -186,29 +195,33 @@ export default function PerformanceAnalysisControlBar({
               <TextField
                 size="small"
                 type="date"
-                value={fromDate}
+                value={activeDateDraft.fromDate}
                 slotProps={{
                   htmlInput: {
                     "aria-label": "From",
-                    max: toDate || maxEndDate,
+                    max: activeDateDraft.toDate || reportEndDate,
                     suppressHydrationWarning: true,
                   },
                 }}
-                onChange={(event) => onFromDateChange(event.currentTarget.value)}
+                onChange={(event) =>
+                  setDateDraft({ ...activeDateDraft, fromDate: event.currentTarget.value })
+                }
               />
               <TextField
                 size="small"
                 type="date"
-                value={toDate}
+                value={activeDateDraft.toDate}
                 slotProps={{
                   htmlInput: {
                     "aria-label": "To",
-                    min: fromDate || minEndDate,
-                    max: maxEndDate,
+                    min: activeDateDraft.fromDate || reportStartDate,
+                    max: reportEndDate,
                     suppressHydrationWarning: true,
                   },
                 }}
-                onChange={(event) => onToDateChange(event.currentTarget.value)}
+                onChange={(event) =>
+                  setDateDraft({ ...activeDateDraft, toDate: event.currentTarget.value })
+                }
               />
             </div>
             <ActionButton
@@ -229,11 +242,7 @@ export default function PerformanceAnalysisControlBar({
             select
             size="small"
             value={chartFrequency}
-            onChange={(event) =>
-              onRequestChange({
-                chartFrequency: event.target.value,
-              })
-            }
+            onChange={(event) => updateSelection({ chartFrequency: event.target.value })}
             disabled={isUpdating}
             sx={selectControlSx}
             SelectProps={{ native: true }}
@@ -248,9 +257,7 @@ export default function PerformanceAnalysisControlBar({
               <option
                 key={option.value}
                 value={option.value}
-                disabled={
-                  !isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)
-                }
+                disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
               >
                 {option.label}
               </option>
@@ -258,19 +265,12 @@ export default function PerformanceAnalysisControlBar({
           </TextField>
         </ControlSlot>
 
-        <ControlSlot
-          label="Benchmark"
-          className="performance-analysis-control-slot-benchmark-select"
-        >
+        <ControlSlot label="Benchmark" className="performance-analysis-control-slot-benchmark-select">
           <TextField
             select
             size="small"
             value={benchmark ?? ""}
-            onChange={(event) =>
-              onRequestChange({
-                benchmark: event.target.value || undefined,
-              })
-            }
+            onChange={(event) => updateSelection({ benchmark: event.target.value || undefined })}
             disabled={isUpdating}
             sx={selectControlSx}
             SelectProps={{ native: true }}
@@ -293,13 +293,7 @@ export default function PerformanceAnalysisControlBar({
   );
 }
 
-function ControlCluster({
-  className,
-  children,
-}: {
-  className: string;
-  children: ReactNode;
-}) {
+function ControlCluster({ className, children }: { className: string; children: ReactNode }) {
   return <div className={`performance-analysis-control-cluster ${className}`}>{children}</div>;
 }
 

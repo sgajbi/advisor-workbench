@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   WorkbenchChartShell,
@@ -14,7 +14,6 @@ import type {
 } from "@/features/workbench/types";
 
 import { buildPerformanceReturnPathTableModel } from "./performance-analytics-table-models";
-import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceObservationTrail from "./performance-observation-trail";
 import PerformanceReturnPathChartStage from "./performance-return-path-chart-stage";
@@ -29,8 +28,10 @@ import {
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
+import PerformanceReturnViewControl from "./performance-return-view-control";
+import returnViewStyles from "./performance-return-view-control.module.css";
+import PerformanceSourceSelectionControls from "./performance-source-selection-controls";
 import {
-  buildPerformanceControlSelectionPatch,
   buildChartLegendItems,
   buildResolvedBenchmarkOptions,
   buildReturnDecisionItems,
@@ -42,13 +43,6 @@ import {
   type PerformanceChartViewMode,
   type PerformanceControlPatch,
 } from "./performance-chart-panel-helpers";
-
-type ExplicitDateDraft = {
-  sourceStartDate: string;
-  sourceEndDate: string;
-  fromDate: string;
-  toDate: string;
-};
 
 type PerformanceChartPanelProps = {
   title: string;
@@ -104,8 +98,6 @@ function PerformanceChartPanelBody({
   benchmarkOptions = [],
   moneyWeightedReturn,
   reportingCurrency,
-  reportStartDate,
-  reportEndDate,
   capabilities,
   onRequestChange,
   isUpdating = false,
@@ -113,24 +105,6 @@ function PerformanceChartPanelBody({
   id,
   resolvedReportDates,
 }: PerformanceChartPanelProps & { resolvedReportDates: ResolvedReportDates }) {
-  const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
-    sourceStartDate: resolvedReportDates.startDate,
-    sourceEndDate: resolvedReportDates.endDate,
-    fromDate: resolvedReportDates.startDate,
-    toDate: resolvedReportDates.endDate,
-  });
-  const activeDateDraft =
-    dateDraft.sourceStartDate === resolvedReportDates.startDate &&
-    dateDraft.sourceEndDate === resolvedReportDates.endDate
-      ? dateDraft
-      : {
-          sourceStartDate: resolvedReportDates.startDate,
-          sourceEndDate: resolvedReportDates.endDate,
-          fromDate: resolvedReportDates.startDate,
-          toDate: resolvedReportDates.endDate,
-        };
-  const fromDate = activeDateDraft.fromDate;
-  const toDate = activeDateDraft.toDate;
   const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
   const hasActiveSeries = hasActiveReturnSeries(points);
   const [preferredChartViewMode, setPreferredChartViewMode] = useState<PerformanceChartViewMode>(
@@ -190,49 +164,6 @@ function PerformanceChartPanelBody({
     [chartViewMode, hasBenchmarkSeries, points]
   );
 
-  function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!fromDate || !toDate) {
-      return;
-    }
-    onRequestChange({
-      period: "EXPLICIT",
-      reportStartDate: fromDate,
-      reportEndDate: toDate,
-    });
-  }
-
-  function updateFromDate(value: string) {
-    setDateDraft({
-      ...activeDateDraft,
-      fromDate: value,
-    });
-  }
-
-  function updateToDate(value: string) {
-    setDateDraft({
-      ...activeDateDraft,
-      toDate: value,
-    });
-  }
-
-  function updateSelection(patch: PerformanceControlPatch) {
-    onRequestChange(
-      buildPerformanceControlSelectionPatch({
-        patch,
-      portfolioId,
-      period,
-      detailBasis,
-      contributionDimension,
-      attributionDimension,
-      chartFrequency,
-      benchmark,
-      reportStartDate,
-      reportEndDate,
-      })
-    );
-  }
-
   const { summaryItems, outcomeItems } = buildReturnDecisionItems(
     returnPathPresentation,
     hasRenderableReturnPath
@@ -268,27 +199,30 @@ function PerformanceChartPanelBody({
       bodyClassName="performance-return-path-body"
       contextRow={topContext}
       toolbar={
-        <PerformanceAnalysisControlBar
-          period={period}
-          detailBasis={detailBasis}
-          chartFrequency={chartFrequency}
-          benchmark={benchmark}
-          resolvedBenchmarkOptions={resolvedBenchmarkOptions}
-          fromDate={fromDate}
-          toDate={toDate}
-          maxEndDate={resolvedReportDates.endDate}
-          minEndDate={resolvedReportDates.startDate}
-          chartViewMode={chartViewMode}
-          hasBenchmarkSeries={hasBenchmarkSeries}
-          hasActiveSeries={hasActiveSeries}
-          capabilities={capabilities}
-          isUpdating={isUpdating}
-          onRequestChange={updateSelection}
-          onApplyExplicitDates={applyExplicitDates}
-          onFromDateChange={updateFromDate}
-          onToDateChange={updateToDate}
-          onChartViewModeChange={setPreferredChartViewMode}
-        />
+        <div className={returnViewStyles.toolbar}>
+          <PerformanceSourceSelectionControls
+            portfolioId={portfolioId}
+            period={period}
+            detailBasis={detailBasis}
+            contributionDimension={contributionDimension}
+            attributionDimension={attributionDimension}
+            chartFrequency={chartFrequency}
+            benchmark={benchmark}
+            benchmarkOptions={benchmarkOptions}
+            reportStartDate={resolvedReportDates.startDate}
+            reportEndDate={resolvedReportDates.endDate}
+            capabilities={capabilities}
+            isUpdating={isUpdating}
+            ariaLabel="Performance source selection"
+            onRequestChange={onRequestChange}
+          />
+          <PerformanceReturnViewControl
+            value={chartViewMode}
+            hasBenchmarkSeries={hasBenchmarkSeries}
+            hasActiveSeries={hasActiveSeries}
+            onChange={setPreferredChartViewMode}
+          />
+        </div>
       }
       loadingState={
         isDetailsPending ? (

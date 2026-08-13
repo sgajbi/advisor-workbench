@@ -1,0 +1,9 @@
+.controls :global(.performance-analysis-control-cluster-selection) {
+  grid-template-columns: minmax(15rem, 1.25fr) minmax(9rem, 0.72fr);
+}
+
+@media (max-width: 980px) {
+  .controls :global(.performance-analysis-control-cluster-selection) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

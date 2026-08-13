@@ -583,7 +583,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     const returnDecisionReadout = screen.getByLabelText("Return decision readout");
-    const controlBar = screen.getByLabelText("Analysis control bar");
+    const controlBar = screen.getByLabelText("Performance source selection");
     const chart = screen.getByRole("img", { name: "Net Return Path chart" });
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(
@@ -605,6 +605,17 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
 
     expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
+    const sourceSelection = await screen.findByRole("group", {
+      name: "Performance Analysis source selection",
+    });
+    expect(within(sourceSelection).getByRole("radiogroup", { name: "Horizon" })).toBeVisible();
+    expect(within(sourceSelection).getByRole("radiogroup", { name: "Basis" })).toBeVisible();
+    expect(within(sourceSelection).getByLabelText("From")).toBeVisible();
+    expect(within(sourceSelection).getByLabelText("To")).toBeVisible();
+    expect(within(sourceSelection).getByLabelText("Frequency")).toBeVisible();
+    expect(within(sourceSelection).getByLabelText("Benchmark")).toBeVisible();
+    expect(screen.queryByRole("group", { name: "Return-path presentation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Return view" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Analysis decision summary")).toHaveTextContent(
       "Analysis Snapshot"
     );

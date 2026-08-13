@@ -2,6 +2,7 @@ import PerformanceAnalysisDecisionSummary from "./performance-analysis-decision-
 import PerformanceAnalysisAttributionSection from "./performance-analysis-attribution-section";
 import PerformanceAnalysisContributionSection from "./performance-analysis-contribution-section";
 import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
+import PerformanceSourceSelectionControls from "./performance-source-selection-controls";
 import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 
@@ -23,6 +24,22 @@ export default function PerformanceAnalysisMode({
       intro={null}
       shellClassName="performance-analysis-shell"
     >
+      <PerformanceSourceSelectionControls
+        portfolioId={workspace.portfolio.portfolio_id}
+        period={period}
+        detailBasis={detailBasis}
+        contributionDimension={contributionDimension}
+        attributionDimension={attributionDimension}
+        chartFrequency={chartFrequency}
+        benchmark={workspace.benchmark_code ?? benchmark}
+        benchmarkOptions={workspace.benchmark_options ?? []}
+        reportStartDate={workspace.report_start_date}
+        reportEndDate={workspace.report_end_date}
+        capabilities={capabilities}
+        isUpdating={isUpdating}
+        ariaLabel="Performance Analysis source selection"
+        onRequestChange={onRequestChange ?? (() => undefined)}
+      />
       <PerformanceAnalysisDecisionSummary
         workspace={workspace}
         detailBasis={detailBasis}
