@@ -79,6 +79,8 @@ export default function PerformanceSourceSelectionControls({
           toDate: reportEndDate,
         };
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
+  const availableStartDate = capabilities.returnPath.earliestAvailableDate;
+  const availableEndDate = capabilities.returnPath.latestAvailableDate;
 
   useEffect(() => {
     const updateCompleted = wasUpdatingRef.current && !isUpdating;
@@ -224,6 +226,7 @@ export default function PerformanceSourceSelectionControls({
                 slotProps={{
                   htmlInput: {
                     "aria-label": "From",
+                    min: availableStartDate,
                     max: activeDateDraft.toDate || reportEndDate,
                     suppressHydrationWarning: true,
                   },
@@ -240,7 +243,7 @@ export default function PerformanceSourceSelectionControls({
                   htmlInput: {
                     "aria-label": "To",
                     min: activeDateDraft.fromDate || reportStartDate,
-                    max: reportEndDate,
+                    max: availableEndDate,
                     suppressHydrationWarning: true,
                   },
                 }}
