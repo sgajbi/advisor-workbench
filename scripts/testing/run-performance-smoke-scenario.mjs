@@ -3,12 +3,12 @@ import { spawn } from "node:child_process";
 
 const scenario = process.argv[2];
 const forwardedArguments = process.argv.slice(3);
-const supportedScenarios = new Set(["populated", "unavailable", "refresh-integrity"]);
+const supportedScenarios = new Set(["populated", "unavailable", "refresh-integrity", "trend-integrity"]);
 const fixturePort = Number.parseInt(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? "18100", 10);
 
 if (!supportedScenarios.has(scenario)) {
   throw new Error(
-    "Performance smoke scenario must be populated, unavailable, or refresh-integrity.",
+    "Performance smoke scenario must be populated, unavailable, refresh-integrity, or trend-integrity.",
   );
 }
 if (!Number.isInteger(fixturePort) || fixturePort < 1024 || fixturePort > 65535) {

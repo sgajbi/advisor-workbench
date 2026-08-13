@@ -193,7 +193,7 @@ describe("PerformanceWorkspaceView", () => {
     });
 
     const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("Analytical detail could not be confirmed");
+    expect(alert).toHaveTextContent("Contribution and attribution detail could not be confirmed");
     expect(alert).toHaveTextContent("Source request returned HTTP 502");
     const retry = screen.getByRole("button", { name: "Retry performance selection" });
     fireEvent.click(retry);

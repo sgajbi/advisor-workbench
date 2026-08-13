@@ -971,10 +971,41 @@ export async function validatePerformanceAnalysisPanel(
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
-  await expect(
-    page.getByRole("heading", { name: "Attribution Over Time" }),
-  ).toBeVisible({
-    timeout: timeoutMs,
+  const attributionTrendEvidence = page.getByTestId("attribution-trend-evidence");
+  await expect(attributionTrendEvidence).toBeVisible({ timeout: timeoutMs });
+  await expect(attributionTrendEvidence).not.toHaveAttribute("data-state", "loading");
+  const attributionTrendPosture = await attributionTrendEvidence.getAttribute("data-state");
+  if (attributionTrendPosture === "multi-observation") {
+    await expect(
+      page.getByRole("heading", { name: "Attribution Over Time", exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+    await expect(
+      page.getByRole("img", { name: "Attribution over time chart", exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+    await assertTableHasRows(
+      page.locator('table[aria-label="Attribution trend table"]'),
+      2,
+      "Attribution trend table",
+    );
+  } else if (attributionTrendPosture === "single-observation") {
+    await expect(attributionTrendEvidence).toHaveAttribute("data-observation-count", "1");
+    await expect(
+      page.getByRole("heading", { name: "Attribution Observation", exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+    await assertTableHasRows(
+      page.locator('table[aria-label="Attribution observation table"]'),
+      1,
+      "Attribution observation table",
+    );
+  } else {
+    throw new Error(
+      `Performance Analysis attribution history must be source-confirmed evidence, received ${attributionTrendPosture ?? "missing"}.`,
+    );
+  }
+  recordUiCheck({
+    description: "Attribution history evidence",
+    kind: "supportability",
+    posture: attributionTrendPosture,
   });
   await expect(
     page.getByRole("heading", { name: "Attribution Detail", exact: true }),

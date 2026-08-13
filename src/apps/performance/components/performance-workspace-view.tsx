@@ -186,13 +186,7 @@ export default function PerformanceWorkspaceView({
               {refreshStatus ? (
                 <WorkbenchRefreshStatus
                   kind={refreshStatus.kind}
-                  eyebrow={
-                    refreshStatus.kind === "pending"
-                      ? "Updating source analysis"
-                      : refreshStatus.kind === "confirmed"
-                        ? "Source analysis updated"
-                      : "Selection not applied"
-                  }
+                  eyebrow={getRefreshStatusEyebrow(refreshStatus)}
                   title={getRefreshStatusTitle(refreshStatus)}
                   message={getRefreshStatusMessage(refreshStatus)}
                   requestedContext={refreshStatus.requestedContext}
@@ -243,18 +237,36 @@ function getRefreshStatusTitle(
   if (refreshStatus.kind === "pending") {
     return refreshStatus.scope === "summary"
       ? "Confirming the selected performance view"
-      : "Confirming the selected analytical detail";
+      : "Confirming contribution and attribution detail";
   }
 
   if (refreshStatus.kind === "confirmed") {
     return refreshStatus.scope === "summary"
       ? "Performance selection confirmed"
-      : "Analytical detail confirmed";
+      : "Contribution and attribution detail confirmed";
   }
 
   return refreshStatus.scope === "summary"
     ? "Performance selection could not be confirmed"
-    : "Analytical detail could not be confirmed";
+    : "Contribution and attribution detail could not be confirmed";
+}
+
+function getRefreshStatusEyebrow(
+  refreshStatus: NonNullable<PerformanceWorkspaceViewProps["refreshStatus"]>
+) {
+  if (refreshStatus.kind === "failed") {
+    return "Selection not applied";
+  }
+
+  if (refreshStatus.scope === "summary") {
+    return refreshStatus.kind === "pending"
+      ? "Updating source analysis"
+      : "Source analysis updated";
+  }
+
+  return refreshStatus.kind === "pending"
+    ? "Updating source detail"
+    : "Source detail updated";
 }
 
 function getRefreshStatusMessage(
@@ -264,9 +276,10 @@ function getRefreshStatusMessage(
     return "The source-confirmed view remains labelled with its original context until the requested selection is available.";
   }
 
-
   if (refreshStatus.kind === "confirmed") {
-    return "The requested selection is now source-confirmed and has been applied to the performance view.";
+    return refreshStatus.scope === "summary"
+      ? "The requested selection is now source-confirmed and has been applied to the performance view."
+      : "The requested contribution and attribution detail is source-confirmed. Historical attribution shows its own source status in Analysis.";
   }
 
   const supportSuffix = refreshStatus.status

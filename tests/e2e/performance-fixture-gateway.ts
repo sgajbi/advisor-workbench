@@ -15,9 +15,7 @@ import {
 import { fallbackNormalizedCapabilities } from '../../src/features/platform-capabilities/api';
 
 export type PerformanceFixtureGatewayScenario =
-  | 'populated'
-  | 'unavailable'
-  | 'refresh-integrity';
+  'populated' | 'unavailable' | 'refresh-integrity' | 'trend-integrity';
 
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
@@ -33,6 +31,7 @@ export async function startPerformanceFixtureGateway({
 }): Promise<PerformanceFixtureGateway> {
   let summaryRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
+  let trendRefreshFailuresRemaining = scenario === 'trend-integrity' ? 1 : 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
     const portfolioId = resolvePortfolioId(requestUrl.pathname);
@@ -70,10 +69,7 @@ export async function startPerformanceFixtureGateway({
     }
 
     if (requestUrl.pathname.endsWith('/performance/summary')) {
-      if (
-        requestUrl.searchParams.get('period') === '3Y' &&
-        summaryRefreshFailuresRemaining > 0
-      ) {
+      if (requestUrl.searchParams.get('period') === '3Y' && summaryRefreshFailuresRemaining > 0) {
         summaryRefreshFailuresRemaining -= 1;
         sendJson(response, { code: 'performance_summary_temporarily_unavailable' }, 503);
         return;
@@ -121,6 +117,22 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/attribution-trend')) {
+      if (trendRefreshFailuresRemaining > 0) {
+        trendRefreshFailuresRemaining -= 1;
+        sendJson(response, { code: 'performance_attribution_trend_temporarily_unavailable' }, 503);
+        return;
+      }
+      if (scenario === 'trend-integrity') {
+        setTimeout(() => {
+          sendJson(
+            response,
+            buildPerformanceAttributionTrend(portfolioId),
+            200,
+            'perf-reference;dur=1, perf-benchmark;dur=1, perf-attribution;dur=1',
+          );
+        }, 250);
+        return;
+      }
       sendJson(
         response,
         buildPerformanceAttributionTrend(portfolioId),
@@ -239,13 +251,16 @@ function buildSummaryResponse(
       : undefined,
   );
   if (scenario !== 'unavailable') {
-    return applyRequestedSummaryContext({
-      ...summary,
-      capabilities: buildPopulatedCapabilities(summary.capabilities),
-      evidence_view: summary.evidence_view
-        ? { ...summary.evidence_view, state: 'supported', reason: null }
-        : null,
-    }, requestUrl);
+    return applyRequestedSummaryContext(
+      {
+        ...summary,
+        capabilities: buildPopulatedCapabilities(summary.capabilities),
+        evidence_view: summary.evidence_view
+          ? { ...summary.evidence_view, state: 'supported', reason: null }
+          : null,
+      },
+      requestUrl,
+    );
   }
   return {
     ...summary,
@@ -268,13 +283,16 @@ function buildDetailsResponse(
       : undefined,
   );
   if (scenario !== 'unavailable') {
-    return applyRequestedDetailContext({
-      ...details,
-      capabilities: buildPopulatedCapabilities(details.capabilities),
-      evidence_view: details.evidence_view
-        ? { ...details.evidence_view, state: 'supported', reason: null }
-        : null,
-    }, requestUrl);
+    return applyRequestedDetailContext(
+      {
+        ...details,
+        capabilities: buildPopulatedCapabilities(details.capabilities),
+        evidence_view: details.evidence_view
+          ? { ...details.evidence_view, state: 'supported', reason: null }
+          : null,
+      },
+      requestUrl,
+    );
   }
   return {
     ...details,
