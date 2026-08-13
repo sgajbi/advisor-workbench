@@ -288,21 +288,24 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByText("1–2 of 150 portfolios")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next portfolios" }));
 
-    expect(advisorBookMock).toHaveBeenCalledWith(expect.objectContaining({
-      asOfDate: "2026-04-22",
-      offset: 100,
-      limit: 100,
-    }));
+    expect(advisorBookMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        asOfDate: "2026-04-22",
+        offset: 100,
+        limit: 100,
+      }),
+      { recoverOutOfRange: true },
+    );
   });
 
   it("returns to an available book page when the current page falls outside a smaller source book", async () => {
-    advisorBookMock.mockImplementation(({ offset }) => {
+    advisorBookMock.mockImplementation(({ offset }, options) => {
       const result = buildAdvisorBookResult();
-      result.response.page.offset = offset ?? 0;
-      if (offset === 100) {
-        result.response.items = [];
+      if (offset === 100 && options?.recoverOutOfRange) {
+        result.response.page.offset = 0;
         result.response.page.total_count = 2;
-        result.response.page.returned_count = 0;
+      } else {
+        result.response.page.offset = offset ?? 0;
       }
       return result;
     });
@@ -312,10 +315,10 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
     fireEvent.click(screen.getByRole("button", { name: "Next portfolios" }));
 
-    await waitFor(() => expect(advisorBookMock).toHaveBeenLastCalledWith(expect.objectContaining({
-      offset: 0,
-      limit: 100,
-    })));
+    await waitFor(() => expect(advisorBookMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ offset: 100, limit: 100 }),
+      { recoverOutOfRange: true },
+    ));
     expect(screen.getByRole("checkbox", { name: /Global Balanced Mandate/ })).toBeInTheDocument();
     expect(screen.queryByText("No portfolios available")).not.toBeInTheDocument();
   });
@@ -845,6 +848,80 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.queryByRole("heading", { name: "Portfolio bundle not accepted" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
     expect(batchStatusMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a late report acceptance after A-to-B-to-A workspace navigation", async () => {
+    let resolveSubmission:
+      | ((value: Awaited<ReturnType<typeof submitPortfolioReviewOrder>>) => void)
+      | null = null;
+    submitMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubmission = resolve;
+      }),
+    );
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await screen.findByRole("heading", { name: "Submitting report request" });
+
+    view.rerender(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+      />,
+    );
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
+
+    await act(async () => {
+      resolveSubmission?.({
+        report_request_id: "rrq_old",
+        report_job_id: "rjob_old",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_old",
+        idempotency_key: submitMock.mock.calls[0][0].idempotencyKey,
+      });
+    });
+
+    expect(screen.queryByRole("heading", { name: "Report request accepted" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Report request not accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+  });
+
+  it("rejects a late report failure after A-to-B-to-A workspace navigation", async () => {
+    let rejectSubmission: ((reason: Error) => void) | null = null;
+    submitMock.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectSubmission = reject;
+      }),
+    );
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    await screen.findByRole("heading", { name: "Submitting report request" });
+
+    view.rerender(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+      />,
+    );
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
+
+    await act(async () => {
+      rejectSubmission?.(new Error("late source rejection"));
+    });
+
+    expect(screen.queryByRole("heading", { name: "Report request accepted" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Report request not accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
   });
 
   it("surfaces a paused source batch separately from portfolio item progress", async () => {

@@ -12,7 +12,10 @@ type AdvisorBookLoadState = {
   error: unknown;
 };
 
-export function useAdvisorBook(query: AdvisorBookQuery) {
+export function useAdvisorBook(
+  query: AdvisorBookQuery,
+  options: { recoverOutOfRange?: boolean } = {},
+) {
   const {
     asOfDate,
     clientId,
@@ -58,7 +61,7 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
       error: null,
     }));
     try {
-      const nextResponse = await getAdvisorBook({
+      let nextResponse = await getAdvisorBook({
         asOfDate,
         clientId,
         mandateType,
@@ -67,6 +70,27 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
         offset,
         limit,
       });
+      if (
+        options.recoverOutOfRange &&
+        nextResponse.items.length === 0 &&
+        nextResponse.page.total_count > 0 &&
+        nextResponse.page.offset >= nextResponse.page.total_count
+      ) {
+        if (requestId !== requestSequence.current) {
+          return;
+        }
+        nextResponse = await getAdvisorBook({
+          asOfDate,
+          clientId,
+          mandateType,
+          sortBy,
+          sortOrder,
+          offset:
+            Math.floor((nextResponse.page.total_count - 1) / nextResponse.page.limit) *
+            nextResponse.page.limit,
+          limit: nextResponse.page.limit,
+        });
+      }
       if (requestId === requestSequence.current) {
         setLoadState({
           requestKey,
@@ -85,7 +109,17 @@ export function useAdvisorBook(query: AdvisorBookQuery) {
         });
       }
     }
-  }, [asOfDate, clientId, limit, mandateType, offset, requestKey, sortBy, sortOrder]);
+  }, [
+    asOfDate,
+    clientId,
+    limit,
+    mandateType,
+    offset,
+    options.recoverOutOfRange,
+    requestKey,
+    sortBy,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

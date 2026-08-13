@@ -55,6 +55,14 @@ type ActiveBatchIntent = {
   reportingCurrency: string | null;
 };
 
+type BatchWorkspaceState = {
+  portfolioId: string;
+  handle: ReportBatchHandle | null;
+  intent: ActiveBatchIntent | null;
+  status: ReportBatchStatus | null;
+  error: string | null;
+};
+
 type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
 
 export function useReportOrderingWorkflow({
@@ -91,16 +99,33 @@ export function useReportOrderingWorkflow({
   const [submittedHandlesByPortfolio, setSubmittedHandlesByPortfolio] = useState<
     Record<string, ReportJobHandle>
   >({});
-  const [submittedBatchHandle, setSubmittedBatchHandle] = useState<ReportBatchHandle | null>(null);
-  const [batchStatus, setBatchStatus] = useState<ReportBatchStatus | null>(null);
-  const [batchStatusError, setBatchStatusError] = useState<string | null>(null);
+  const [batchWorkspaceState, setBatchWorkspaceState] = useState<BatchWorkspaceState>({
+    portfolioId,
+    handle: null,
+    intent: null,
+    status: null,
+    error: null,
+  });
   const sourceFingerprintRef = useRef<string>("");
   const activePortfolioIdRef = useRef(portfolioId);
   const activeBatchIdRef = useRef<string | null>(null);
-  const activeBatchIntentRef = useRef<ActiveBatchIntent | null>(null);
   const workspaceGenerationRef = useRef(0);
   const batchStatusRequestSequenceRef = useRef(0);
   const historyRequestSequenceRef = useRef(0);
+  const activeBatchWorkspaceState: BatchWorkspaceState =
+    batchWorkspaceState.portfolioId === portfolioId
+      ? batchWorkspaceState
+      : {
+          portfolioId,
+          handle: null,
+          intent: null,
+          status: null,
+          error: null,
+        };
+  const submittedBatchHandle = activeBatchWorkspaceState.handle;
+  const activeBatchIntent = activeBatchWorkspaceState.intent;
+  const batchStatus = activeBatchWorkspaceState.status;
+  const batchStatusError = activeBatchWorkspaceState.error;
 
   const isActiveWorkspaceGeneration = useCallback(
     (expectedPortfolioId: string, expectedGeneration: number) =>
@@ -109,9 +134,26 @@ export function useReportOrderingWorkflow({
     [],
   );
 
-  const loadBatchStatus = useCallback(async (batchId: string) => {
+  const updateBatchWorkspace = useCallback(
+    (
+      batchId: string,
+      update: (current: BatchWorkspaceState) => BatchWorkspaceState,
+    ) => {
+      setBatchWorkspaceState((current) =>
+        current.portfolioId === portfolioId && current.handle?.batch_id === batchId
+          ? update(current)
+          : current,
+      );
+    },
+    [portfolioId],
+  );
+
+  const loadBatchStatus = useCallback(async (
+    batchId: string,
+    expectedIntent: ActiveBatchIntent,
+  ) => {
     const requestSequence = ++batchStatusRequestSequenceRef.current;
-    setBatchStatusError(null);
+    updateBatchWorkspace(batchId, (current) => ({ ...current, error: null }));
     try {
       const response = await getPortfolioReviewBatchStatus(batchId);
       if (
@@ -121,40 +163,48 @@ export function useReportOrderingWorkflow({
         return false;
       }
       if (response.batch_id !== batchId) {
-        setBatchStatusError(
-          "The bundle was accepted, but the returned portfolio outcomes did not match this request.",
-        );
+        updateBatchWorkspace(batchId, (current) => ({
+          ...current,
+          error:
+            "The bundle was accepted, but the returned portfolio outcomes did not match this request.",
+        }));
         return false;
       }
-      const activeBatchIntent = activeBatchIntentRef.current;
       const returnedPortfolioIds = [...response.materialized_portfolio_ids].sort();
       if (
-        !activeBatchIntent ||
-        activeBatchIntent.portfolioIds.length !== returnedPortfolioIds.length ||
-        activeBatchIntent.portfolioIds.some(
+        expectedIntent.portfolioIds.length !== returnedPortfolioIds.length ||
+        expectedIntent.portfolioIds.some(
           (portfolioId, index) => portfolioId !== returnedPortfolioIds[index],
         )
       ) {
-        setBatchStatusError(
-          "The bundle was accepted, but the returned portfolios did not match the reviewed selection.",
-        );
+        updateBatchWorkspace(batchId, (current) => ({
+          ...current,
+          error:
+            "The bundle was accepted, but the returned portfolios did not match the reviewed selection.",
+        }));
         return false;
       }
       const returnedOutputFormats = [...response.requested_output_formats].sort();
       if (
-        response.as_of_date !== activeBatchIntent.asOfDate ||
-        activeBatchIntent.requestedOutputFormats.length !== returnedOutputFormats.length ||
-        activeBatchIntent.requestedOutputFormats.some(
+        response.as_of_date !== expectedIntent.asOfDate ||
+        expectedIntent.requestedOutputFormats.length !== returnedOutputFormats.length ||
+        expectedIntent.requestedOutputFormats.some(
           (outputFormat, index) => outputFormat !== returnedOutputFormats[index],
         ) ||
-        response.reporting_currency !== activeBatchIntent.reportingCurrency
+        response.reporting_currency !== expectedIntent.reportingCurrency
       ) {
-        setBatchStatusError(
-          "The bundle was accepted, but the returned report setup did not match the reviewed request.",
-        );
+        updateBatchWorkspace(batchId, (current) => ({
+          ...current,
+          error:
+            "The bundle was accepted, but the returned report setup did not match the reviewed request.",
+        }));
         return false;
       }
-      setBatchStatus(response);
+      updateBatchWorkspace(batchId, (current) => ({
+        ...current,
+        status: response,
+        error: null,
+      }));
       return true;
     } catch {
       if (
@@ -163,24 +213,28 @@ export function useReportOrderingWorkflow({
       ) {
         return false;
       }
-      setBatchStatusError("The bundle was accepted, but current portfolio outcomes could not be loaded.");
+      updateBatchWorkspace(batchId, (current) => ({
+        ...current,
+        error: "The bundle was accepted, but current portfolio outcomes could not be loaded.",
+      }));
       return false;
     }
-  }, []);
+  }, [updateBatchWorkspace]);
 
   useEffect(() => {
     if (
       !submittedBatchHandle ||
+      !activeBatchIntent ||
       (batchStatus && isTerminalBatchStatus(batchStatus.status)) ||
       (!batchStatus && !batchStatusError)
     ) {
       return;
     }
     const timer = window.setTimeout(() => {
-      void loadBatchStatus(submittedBatchHandle.batch_id);
+      void loadBatchStatus(submittedBatchHandle.batch_id, activeBatchIntent);
     }, batchStatusError ? 10_000 : 5_000);
     return () => window.clearTimeout(timer);
-  }, [batchStatus, batchStatusError, loadBatchStatus, submittedBatchHandle]);
+  }, [activeBatchIntent, batchStatus, batchStatusError, loadBatchStatus, submittedBatchHandle]);
 
   const loadHistory = useCallback(async () => {
     const workspaceGeneration = workspaceGenerationRef.current;
@@ -254,13 +308,8 @@ export function useReportOrderingWorkflow({
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
     activeBatchIdRef.current = null;
-    activeBatchIntentRef.current = null;
     batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
-    setSubmittedBatchHandle(null);
-    setBatchStatus(null);
-    setBatchStatusError(null);
-    setSubmissionProgress({ portfolioId, state: "idle", error: null });
     const timer = window.setTimeout(() => {
       void loadCatalogue(true);
       void loadHistory();
@@ -456,7 +505,7 @@ export function useReportOrderingWorkflow({
         ) {
           throw new Error("The accepted bundle did not match the reviewed request intent.");
         }
-        activeBatchIntentRef.current = {
+        const batchIntent: ActiveBatchIntent = {
           portfolioIds: [...selectedPortfolioIds].sort(),
           asOfDate: configuration.asOfDate,
           requestedOutputFormats: [configuration.outputFormat],
@@ -467,8 +516,14 @@ export function useReportOrderingWorkflow({
               : null,
         };
         activeBatchIdRef.current = batchHandle.batch_id;
-        setSubmittedBatchHandle(batchHandle);
-        await loadBatchStatus(batchHandle.batch_id);
+        setBatchWorkspaceState({
+          portfolioId,
+          handle: batchHandle,
+          intent: batchIntent,
+          status: null,
+          error: null,
+        });
+        await loadBatchStatus(batchHandle.batch_id, batchIntent);
         if (
           !isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration) ||
           activeBatchIdRef.current !== batchHandle.batch_id
@@ -521,11 +576,14 @@ export function useReportOrderingWorkflow({
     });
     setReviewedIntent(null);
     activeBatchIdRef.current = null;
-    activeBatchIntentRef.current = null;
     batchStatusRequestSequenceRef.current += 1;
-    setSubmittedBatchHandle(null);
-    setBatchStatus(null);
-    setBatchStatusError(null);
+    setBatchWorkspaceState({
+      portfolioId,
+      handle: null,
+      intent: null,
+      status: null,
+      error: null,
+    });
     setSubmissionProgress({ portfolioId, state: "idle", error: null });
     return true;
   }, [acceptedHandle, portfolioId]);
@@ -546,9 +604,10 @@ export function useReportOrderingWorkflow({
     submittedBatchHandle,
     batchStatus,
     batchStatusError,
-    batchRequestedOutputFormats: submittedBatchHandle
-      ? activeBatchIntentRef.current?.requestedOutputFormats ?? []
-      : [],
+    batchRequestedOutputFormats:
+      submittedBatchHandle && activeBatchIntent
+        ? activeBatchIntent.requestedOutputFormats
+        : [],
     supportReference: submittedBatchHandle?.batch_id ?? submittedHandle?.report_job_id ?? null,
     screenState,
     preflightReviewed,
@@ -563,8 +622,8 @@ export function useReportOrderingWorkflow({
     startAnotherReport,
     refreshCatalogue: () => loadCatalogue(false),
     refreshHistory: loadHistory,
-    refreshBatchStatus: () => submittedBatchHandle
-      ? loadBatchStatus(submittedBatchHandle.batch_id)
+    refreshBatchStatus: () => submittedBatchHandle && activeBatchIntent
+      ? loadBatchStatus(submittedBatchHandle.batch_id, activeBatchIntent)
       : Promise.resolve(false),
   };
 }
