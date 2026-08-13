@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  WorkbenchLoadingState,
-} from "@/design-system";
-import type {
-  PerformanceBenchmarkOptionView,
-} from "@/features/workbench/types";
+import { ActionButton, ScreenStatePanel } from "@/design-system";
+import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
 import { formatLabel } from "../formatters";
 import {
@@ -18,11 +14,11 @@ import {
   type PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
-import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceHorizonComparisonDisclosure from "./performance-horizon-comparison-disclosure";
 import { usePerformanceHorizonComparison } from "./performance-horizon-comparison-state";
 import PerformanceHorizonComparisonMatrix from "./performance-horizon-comparison-matrix";
 import PerformanceHorizonComparisonToolbar from "./performance-horizon-comparison-toolbar";
+import styles from "./performance-multi-horizon-panel.module.css";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
 
@@ -50,17 +46,34 @@ export default function PerformanceMultiHorizonPanel({
   const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
   const [visualMode, setVisualMode] = useState<PerformanceHorizonVisualMode>("absolute");
-  const { comparison, isLoading } = usePerformanceHorizonComparison({
-    portfolioId,
-    period,
-    detailBasis,
-    benchmark,
-    chartFrequency,
-    reportStartDate,
-    reportEndDate,
-    benchmarkOptions,
-  });
+  const request = useMemo(
+    () => ({
+      portfolioId,
+      period,
+      detailBasis,
+      benchmark,
+      chartFrequency,
+      reportStartDate,
+      reportEndDate,
+    }),
+    [benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate],
+  );
+  const { state, refresh, requestKey } = usePerformanceHorizonComparison(request);
+  const refreshButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreRefreshFocusRequestKeyRef = useRef<string | null>(null);
+  const comparison = state.status === "ready" ? state.comparison : null;
   const rows = comparison?.rows ?? null;
+  const observationCount = rows?.length ?? 0;
+  const isSingleObservation = observationCount === 1;
+  const isMultiObservation = observationCount > 1;
+  const evidenceState =
+    state.status === "ready"
+      ? isMultiObservation
+        ? "multi-observation"
+        : isSingleObservation
+          ? "single-observation"
+          : "empty"
+      : state.status;
   const reportingCurrency = comparison?.reporting_currency ?? "USD";
   const normalizationNotice =
     comparison?.requested_chart_frequency_supported === false
@@ -86,8 +99,31 @@ export default function PerformanceMultiHorizonPanel({
     onRequestChange?.({ chartFrequency: comparison.chart_frequency });
   }, [chartFrequency, comparison, onRequestChange]);
 
+  useEffect(() => {
+    if (
+      restoreRefreshFocusRequestKeyRef.current &&
+      restoreRefreshFocusRequestKeyRef.current !== requestKey
+    ) {
+      restoreRefreshFocusRequestKeyRef.current = null;
+    }
+    if (state.status === "loading" || !restoreRefreshFocusRequestKeyRef.current) {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    const shouldRestore =
+      restoreRefreshFocusRequestKeyRef.current === requestKey &&
+      (activeElement === document.body || activeElement === refreshButtonRef.current);
+    restoreRefreshFocusRequestKeyRef.current = null;
+    if (shouldRestore) {
+      refreshButtonRef.current?.focus();
+    }
+  }, [requestKey, state.status]);
+
   const selectedPeriodRow =
-    rows?.find((row) => row.period === period) ?? rows?.find((row) => row.period === "YTD") ?? rows?.[0];
+    rows?.find((row) => row.period === period) ??
+    rows?.find((row) => row.period === "YTD") ??
+    rows?.[0];
   const presentation = getPerformanceHorizonPresentation({
     benchmark,
     benchmarkOptions: resolvedBenchmarkOptions,
@@ -100,81 +136,148 @@ export default function PerformanceMultiHorizonPanel({
   );
   const resolvedVisualMode =
     visualMode === "relative" && !hasRelativeVisual ? "absolute" : visualMode;
-  const tableModel = useMemo(() => {
-    return buildPerformanceHorizonTableModel({
+  const tableModel = useMemo(
+    () => buildPerformanceHorizonTableModel({
       rows: rows ?? [],
       reportingCurrency,
       tableView,
       basisView,
       selectedPeriodLabel: presentation.selectedPeriodLabel,
-    });
-  }, [basisView, presentation.selectedPeriodLabel, reportingCurrency, rows, tableView]);
+    }),
+    [basisView, presentation.selectedPeriodLabel, reportingCurrency, rows, tableView],
+  );
   const visualCards = useMemo(
-    () =>
-      buildPerformanceHorizonVisualModel({
-        rows: rows ?? [],
-        basisView,
-        visualMode: resolvedVisualMode,
-      }),
-    [basisView, resolvedVisualMode, rows]
+    () => buildPerformanceHorizonVisualModel({
+      rows: rows ?? [],
+      basisView,
+      visualMode: resolvedVisualMode,
+    }),
+    [basisView, resolvedVisualMode, rows],
   );
 
   return (
     <PerformanceSummaryDriverModule
       title={presentation.frame.title}
       subtitle={presentation.frame.subtitle}
-      actions={null}
+      actions={
+        <div className={styles.actions}>
+          <span className={styles.frequency}>{comparison?.chart_frequency ?? chartFrequency}</span>
+          <ActionButton
+            ref={refreshButtonRef}
+            priority="quiet"
+            className={styles.refresh}
+            disabled={state.status === "loading" || state.status === "permission_blocked"}
+            onClick={() => {
+              restoreRefreshFocusRequestKeyRef.current =
+                document.activeElement === refreshButtonRef.current ? requestKey : null;
+              refresh();
+            }}
+          >
+            {state.status === "loading"
+              ? "Refreshing…"
+              : state.status === "permission_blocked"
+                ? "Comparison restricted"
+                : "Refresh comparison"}
+          </ActionButton>
+        </div>
+      }
     >
-      {isLoading ? (
-        <WorkbenchLoadingState
-          className="performance-horizon-loading-state"
-          title="Loading horizon comparison"
-          message={presentation.loadingBody}
-          rows={4}
-        />
-      ) : rows && rows.length > 0 ? (
-        <>
-          {normalizationNotice ? (
-            <div
-              className="performance-control-normalization-note"
-              role="status"
-              aria-label="Horizon comparison normalization"
-            >
-              <p className="performance-control-normalization-note-title">
-                {normalizationNotice.title}
-              </p>
-              <p className="performance-control-normalization-note-message">
-                {normalizationNotice.message}
-              </p>
-            </div>
-          ) : null}
-          <div className="performance-horizon-review-bar">
-            <PerformanceHorizonComparisonToolbar
-              tableView={tableView}
-              basisView={basisView}
-              visualMode={resolvedVisualMode}
-              hasRelativeVisual={hasRelativeVisual}
-              onTableViewChange={setTableView}
-              onBasisViewChange={setBasisView}
-              onVisualModeChange={setVisualMode}
+      <div
+        className={styles.evidence}
+        data-testid="horizon-comparison-evidence"
+        data-state={evidenceState}
+        data-observation-count={observationCount}
+      >
+        {state.status === "loading" ? (
+          <ScreenStatePanel
+            kind="loading"
+            title="Loading horizon comparison"
+            body={presentation.loadingBody}
+            surface="analysis"
+            rows={4}
+          />
+        ) : state.status === "permission_blocked" ? (
+          <div role="alert" aria-live="assertive" aria-atomic="true">
+            <ScreenStatePanel
+              kind="permission_blocked"
+              title="Horizon comparison restricted"
+              body="Your current access does not permit this horizon request. Other source-confirmed performance evidence remains available."
+              hint={state.httpStatus ? `Source response ${state.httpStatus}.` : undefined}
+              surface="analysis"
             />
           </div>
-          <div className="performance-horizon-panel-body">
-            <PerformanceHorizonComparisonMatrix cards={visualCards} visualMode={resolvedVisualMode} />
-            <PerformanceHorizonComparisonDisclosure tableModel={tableModel} />
+        ) : state.status === "error" ? (
+          <div role="alert" aria-live="assertive" aria-atomic="true">
+            <ScreenStatePanel
+              kind="error"
+              title="Horizon comparison could not be refreshed"
+              body="The source request did not complete. No comparison has been inferred from unavailable evidence."
+              hint={
+                state.httpStatus
+                  ? `Source response ${state.httpStatus}. Use Refresh comparison to retry this exact selection.`
+                  : "Use Refresh comparison to retry this exact selection."
+              }
+              surface="analysis"
+            />
           </div>
-        </>
-      ) : (
-        <PerformanceAnalyticalUnavailableState
-          ariaLabel="Horizon comparison unavailable state"
-          status="unavailable"
-          kicker={null}
-          compact
-          title="Horizon comparison is unavailable for this mandate"
-          body={presentation.emptyBody}
-          contextItems={[]}
-        />
-      )}
+        ) : rows && rows.length > 0 ? (
+          <>
+            {normalizationNotice ? (
+              <div
+                className="performance-control-normalization-note"
+                role="status"
+                aria-label="Horizon comparison normalization"
+              >
+                <p className="performance-control-normalization-note-title">
+                  {normalizationNotice.title}
+                </p>
+                <p className="performance-control-normalization-note-message">
+                  {normalizationNotice.message}
+                </p>
+              </div>
+            ) : null}
+            {isSingleObservation ? (
+              <div className={styles.singleObservationNotice} role="status">
+                <strong>One published horizon</strong>
+                <span>
+                  {rows[0].period} is available as exact return evidence. A comparison requires at least two published horizons.
+                </span>
+              </div>
+            ) : null}
+            <div className="performance-horizon-review-bar">
+              <PerformanceHorizonComparisonToolbar
+                tableView={tableView}
+                basisView={basisView}
+                visualMode={resolvedVisualMode}
+                hasRelativeVisual={hasRelativeVisual}
+                showVisualMode={isMultiObservation}
+                onTableViewChange={setTableView}
+                onBasisViewChange={setBasisView}
+                onVisualModeChange={setVisualMode}
+              />
+            </div>
+            <div className="performance-horizon-panel-body">
+              {isMultiObservation ? (
+                <PerformanceHorizonComparisonMatrix
+                  cards={visualCards}
+                  visualMode={resolvedVisualMode}
+                />
+              ) : null}
+              <PerformanceHorizonComparisonDisclosure
+                tableModel={tableModel}
+                observationCount={observationCount}
+              />
+            </div>
+          </>
+        ) : (
+          <ScreenStatePanel
+            kind="unavailable"
+            title="No published horizon comparison"
+            body="The source returned no horizon observations for this selection. No portfolio or benchmark result has been inferred."
+            surface="analysis"
+          />
+        )}
+      </div>
     </PerformanceSummaryDriverModule>
   );
 }

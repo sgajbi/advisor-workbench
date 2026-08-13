@@ -12,6 +12,7 @@ type PerformanceHorizonComparisonToolbarProps = {
   basisView: PerformanceHorizonBasisView;
   visualMode: PerformanceHorizonVisualMode;
   hasRelativeVisual: boolean;
+  showVisualMode?: boolean;
   onTableViewChange: (value: PerformanceHorizonTableView) => void;
   onBasisViewChange: (value: PerformanceHorizonBasisView) => void;
   onVisualModeChange: (value: PerformanceHorizonVisualMode) => void;
@@ -22,6 +23,7 @@ export default function PerformanceHorizonComparisonToolbar({
   basisView,
   visualMode,
   hasRelativeVisual,
+  showVisualMode = true,
   onTableViewChange,
   onBasisViewChange,
   onVisualModeChange,
@@ -52,25 +54,27 @@ export default function PerformanceHorizonComparisonToolbar({
           { key: "gross", label: "Gross" },
         ]}
       />
-      <WorkbenchChoiceGroup
-        ariaLabel="Horizon visual mode"
-        className={choiceStyles.horizon}
-        density="compact"
-        value={visualMode}
-        onChange={onVisualModeChange}
-        options={[
-          { key: "absolute", label: "Absolute" },
-          {
-            key: "relative",
-            label: "Relative",
-            disabled: !hasRelativeVisual,
-            title: hasRelativeVisual
-              ? undefined
-              : "Relative view requires active return observations.",
-          },
-          { key: "basis", label: "Basis" },
-        ]}
-      />
+      {showVisualMode ? (
+        <WorkbenchChoiceGroup
+          ariaLabel="Horizon visual mode"
+          className={choiceStyles.horizon}
+          density="compact"
+          value={visualMode}
+          onChange={onVisualModeChange}
+          options={[
+            { key: "absolute", label: "Absolute" },
+            {
+              key: "relative",
+              label: "Relative",
+              disabled: !hasRelativeVisual,
+              title: hasRelativeVisual
+                ? undefined
+                : "Relative view requires active return observations.",
+            },
+            { key: "basis", label: "Basis" },
+          ]}
+        />
+      ) : null}
     </WorkbenchSummaryToolbar>
   );
 }
