@@ -4144,3 +4144,72 @@ same request, and then renders four source observations with no page overflow at
 pixels. Performance Summary, Supported Features, repository context, and the review ledger change.
 Gateway/API/OpenAPI, source calculations, dependencies, global CSS, runtime topology, advice,
 trade, approval, and report-publication authority do not.
+
+## Self-Contained Performance Analysis Source Controls
+
+### Business and engineering job
+
+An advisor investigating portfolio drivers must be able to change the question's governing
+horizon, return basis, review window, observation frequency, and benchmark without leaving the
+Analysis workflow. The selection must stay connected to source-confirmed analytics and must not
+turn a local control into calculation or benchmark authority.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-14:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes a connected portfolio experience using common portfolio language and interactive
+   analysis to improve advisor efficiency. The applicable pattern is keeping portfolio context and
+   analysis together during investigation.
+2. [BlackRock Aladdin portfolio management](https://www.blackrock.com/institutions/en-us/investment-capabilities/technolgy/aladdin-portfolio-management-software)
+   describes interactive analytics across portfolio lenses from a consistent data source. The
+   applicable pattern is reusable governing context across views, not duplicated view-local
+   request logic.
+3. [W3C WCAG 2.2 status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires dynamic state to be available without forced focus movement. The applicable pattern is
+   a programmatic pending/confirmed status with predictable keyboard continuity.
+
+These sources inform connected workflow, reuse, and accessible state only. Lotus retains its own
+visual system, private-banking language, source contracts, and capability boundaries; the research
+does not substantiate competitor-superiority claims.
+
+### Adopted decisions
+
+1. Separate horizon, basis, explicit review window, frequency, and benchmark from the return chart
+   and render one shared source-selection component in Summary and Analysis.
+2. Keep Absolute, Relative, and Combined as Overview-only return-path presentation preferences;
+   they do not change source attribution context.
+3. Route every governing change through one complete request-shaping path and the existing
+   requested/pending/failed/source-confirmed transaction. Keep prior evidence under prior labels
+   until controls, Review Context, analytics, and URL can commit together.
+4. Keep source capability and benchmark options authoritative; do not create browser defaults or
+   calculations.
+5. Restore native control focus after source settlement only when the browser moved focus to the
+   document and the advisor has not continued elsewhere.
+6. Retain compact desktop workstation density while enforcing measured 44px touch targets at the
+   narrow breakpoint.
+7. Prove direct 3Y and Private Bank Composite selection in Analysis through an owned optimized
+   production journey at 1800, 1280, 1024, 768, and 519 pixels.
+
+### Rejected decisions
+
+1. Requiring an Overview round-trip for each Analysis context change.
+2. Copying the existing toolbar into Analysis or maintaining two request-shaping paths.
+3. Exposing return-view presentation as though it were attribution source context.
+4. Optimistically changing controls, Review Context, analytics, or URL before Gateway success.
+5. Forcing focus onto status copy, reclaiming focus after the user moves, or weakening focus proof.
+6. Increasing all desktop controls to mobile dimensions or adding a new UI, state, notification, or
+   CSS dependency for this bounded workflow.
+
+### Validation and publication decision
+
+Workbench #681 owns implementation and #605 retains the wider guide campaign. Focused tests prove
+one shared request-shaping path, Overview-only return presentation, Analysis control presence,
+pending locks, focus restoration, and no focus theft. The isolated optimized-production
+`PB_SG_GLOBAL_BAL_001` journey proves direct horizon and benchmark confirmation without a mode
+change, canonical URL and Review Context truth, five governed widths, 44px narrow targets, no
+overflow, head-managed styles, and no runtime failures. The Analysis guide, supported-feature
+truth, screen registry/catalogue, review ledger, and repository context change. Gateway/API/OpenAPI,
+source calculations, dependencies, global CSS, runtime topology, advice, trade, approval, and
+report-publication authority do not.

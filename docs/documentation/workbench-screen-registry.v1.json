@@ -441,7 +441,8 @@
       "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-performance"],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
-        "src/apps/performance/components/performance-workspace-view.tsx"
+        "src/apps/performance/components/performance-workspace-view.tsx",
+        "src/apps/performance/components/performance-source-selection-controls.tsx"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",
@@ -463,7 +464,8 @@
       "sourceOwners": ["lotus-gateway", "lotus-performance"],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
-        "src/apps/performance/components/performance-workspace-view.tsx"
+        "src/apps/performance/components/performance-workspace-view.tsx",
+        "src/apps/performance/components/performance-source-selection-controls.tsx"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",

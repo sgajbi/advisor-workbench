@@ -965,6 +965,15 @@ Important validation expectations:
     retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison reuses the same shared
     source-confirmed resource lifecycle; use `npm run test:e2e:performance:horizon-integrity` for
     its explicit failure, exact retry, focus, cardinality, and narrow-reflow proof.
+26. Source-selection controls belong beside every Performance decision view that they govern.
+    Summary and Analysis must reuse one component and one complete request-shaping path for horizon,
+    basis, explicit review window, frequency, and benchmark. Keep return-view presentation local to
+    the Summary return-path module and analytical segment selection local to Analysis. Preserve the
+    last confirmed evidence and labels while a new selection is pending or failed; restore the
+    initiating control after settlement only when the user has not moved elsewhere. At narrow
+    widths, source-changing controls must retain a measured 44px touch target without reducing
+    desktop workstation density. Use `npm run test:e2e:performance:analysis-controls` for the owned
+    direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
 
 ### Visual Review Gate
 
