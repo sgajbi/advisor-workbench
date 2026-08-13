@@ -402,6 +402,101 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(continueReview).toHaveFocus();
   });
 
+  it("does not let an obsolete horizon request replace a newer selection", async () => {
+    let resolveObsolete: ((value: WorkbenchPerformanceHorizonComparison) => void) | undefined;
+    getHorizonComparisonClientMock
+      .mockImplementationOnce(
+        () => new Promise<WorkbenchPerformanceHorizonComparison>((resolve) => {
+          resolveObsolete = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(
+        buildHorizonComparison({
+          period: "3M",
+          rows: [
+            {
+              period: "3M",
+              portfolio_return_pct: 2.1,
+              benchmark_return_pct: 1.9,
+              active_return_pct: 0.2,
+              annualized_return_pct: 8.4,
+            },
+          ],
+        }),
+      );
+
+    const view = render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />,
+    );
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="3M"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />,
+    );
+
+    expect(await screen.findByText(/3M is available as exact return evidence/)).toBeInTheDocument();
+    await act(async () => {
+      resolveObsolete?.(buildHorizonComparison());
+      await Promise.resolve();
+    });
+    expect(screen.getByText(/3M is available as exact return evidence/)).toBeInTheDocument();
+    expect(screen.queryByText(/YTD is available as exact return evidence/)).not.toBeInTheDocument();
+  });
+
+  it("revokes cached horizon evidence after a later permission denial", async () => {
+    getHorizonComparisonClientMock
+      .mockResolvedValueOnce(buildHorizonComparison())
+      .mockRejectedValueOnce(new WorkbenchApiError("performance horizon comparison", 403))
+      .mockResolvedValueOnce(buildHorizonComparison({ period: "3M" }))
+      .mockRejectedValueOnce(new WorkbenchApiError("performance horizon comparison", 403));
+
+    const view = render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />,
+    );
+    await screen.findByLabelText("Multi-horizon returns");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh comparison" }));
+    await screen.findByText("Horizon comparison restricted");
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="3M"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />,
+    );
+    await screen.findByLabelText("Multi-horizon returns");
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        chartFrequency="monthly"
+      />,
+    );
+
+    await screen.findByText("Horizon comparison restricted");
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(4);
+  });
+
   it("pushes the resolved horizon frequency back through the shared request handler", async () => {
     const onRequestChange = vi.fn();
     getHorizonComparisonClientMock.mockResolvedValue(
