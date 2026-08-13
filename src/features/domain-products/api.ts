@@ -140,12 +140,6 @@ export type DomainProductTrustCertificationData = {
   issues: DomainProductTrustIssue[];
 };
 
-export type DomainProductDiscoveryData = {
-  catalog: DomainProductCatalogData;
-  dependencyGraph: DomainProductGraphData;
-  trustCertification: DomainProductTrustCertificationData;
-};
-
 type GatewayEnvelope<T> = {
   data: T;
 };
@@ -190,18 +184,18 @@ async function fetchGatewayData<T>(
   );
 }
 
-export async function getDomainProductDiscovery(): Promise<DomainProductDiscoveryData> {
-  const [catalog, dependencyGraph, trustCertification] = await Promise.all([
-    fetchGatewayData<DomainProductCatalogData>("/domain-products/catalog"),
-    fetchGatewayData<DomainProductGraphData>("/domain-products/dependency-graph"),
-    fetchGatewayData<DomainProductTrustCertificationData>(
-      "/domain-products/trust-certification"
-    ),
-  ]);
+export async function getDomainProductCatalog(): Promise<DomainProductCatalogData> {
+  return await fetchGatewayData<DomainProductCatalogData>("/domain-products/catalog");
+}
 
-  return {
-    catalog,
-    dependencyGraph,
-    trustCertification,
-  };
+export async function getDomainProductDependencyGraph(): Promise<DomainProductGraphData> {
+  return await fetchGatewayData<DomainProductGraphData>(
+    "/domain-products/dependency-graph"
+  );
+}
+
+export async function getDomainProductTrustCertification(): Promise<DomainProductTrustCertificationData> {
+  return await fetchGatewayData<DomainProductTrustCertificationData>(
+    "/domain-products/trust-certification"
+  );
 }
