@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getDomainProductDiscovery } from "../../src/features/domain-products/api";
+import {
+  getDomainProductCatalog,
+  getDomainProductDependencyGraph,
+  getDomainProductTrustCertification,
+} from "../../src/features/domain-products/api";
 import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
@@ -91,11 +95,15 @@ describe("domain product discovery api", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const discovery = await getDomainProductDiscovery();
+    const [catalog, dependencyGraph, trustCertification] = await Promise.all([
+      getDomainProductCatalog(),
+      getDomainProductDependencyGraph(),
+      getDomainProductTrustCertification(),
+    ]);
 
-    expect(discovery.catalog.products[0].producerRepository).toBe("lotus-core");
-    expect(discovery.dependencyGraph.contractId).toBe("lotus-domain-product-dependency-graph");
-    expect(discovery.trustCertification.trustPosture).toBe("certified");
+    expect(catalog.products[0].producerRepository).toBe("lotus-core");
+    expect(dependencyGraph.contractId).toBe("lotus-domain-product-dependency-graph");
+    expect(trustCertification.trustPosture).toBe("certified");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/bff/api/v1/domain-products/catalog?consumerSystem=lotus-workbench",
       { cache: "no-store" }
@@ -128,7 +136,7 @@ describe("domain product discovery api", () => {
       vi.fn(async () => new Response("catalog missing", { status: 503 }))
     );
 
-    await expect(getDomainProductDiscovery()).rejects.toThrow(
+    await expect(getDomainProductCatalog()).rejects.toThrow(
       "Domain product discovery fetch failed (503): catalog missing"
     );
 
