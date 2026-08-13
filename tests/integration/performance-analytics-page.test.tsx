@@ -1351,7 +1351,9 @@ describe("PerformanceAnalyticsPage", () => {
         screen.getByText("Return history is unavailable for the selected window")
       ).toBeInTheDocument();
     });
-    expect(await screen.findByLabelText("Horizon comparison unavailable state")).toBeInTheDocument();
+    const horizonEvidence = await screen.findByTestId("horizon-comparison-evidence");
+    expect(horizonEvidence).toHaveAttribute("data-state", "empty");
+    expect(horizonEvidence).toHaveTextContent("No published horizon comparison");
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
@@ -1425,7 +1427,7 @@ describe("PerformanceAnalyticsPage", () => {
       ],
       deferredExpectations: [
         "Return history is unavailable for the selected window",
-        "Horizon comparison is unavailable for this mandate",
+        "No published horizon comparison",
       ],
       absentTexts: ["Relative Segment Context Partial"],
     },
