@@ -250,6 +250,23 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(screen.getByRole("button", { name: "History restricted" })).toBeDisabled();
   });
 
+  it("consumes a manual refresh once and reuses its confirmed cache after returning to the selection", async () => {
+    getTrendMock.mockResolvedValue(buildTrendContract());
+
+    const { rerender } = render(<PerformanceAttributionTrendPanel {...buildProps()} />);
+
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh history" }));
+    await waitFor(() => expect(getTrendMock).toHaveBeenCalledTimes(2));
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps({ period: "3M" })} />);
+    await waitFor(() => expect(getTrendMock).toHaveBeenCalledTimes(3));
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps()} />);
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    await waitFor(() => expect(getTrendMock).toHaveBeenCalledTimes(3));
+  });
+
   it("does not let an obsolete request replace newer trend evidence", async () => {
     let resolveObsolete!: (value: ReturnType<typeof buildTrendContract>) => void;
     getTrendMock

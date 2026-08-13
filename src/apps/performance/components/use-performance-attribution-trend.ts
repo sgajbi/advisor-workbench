@@ -50,10 +50,17 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
     httpStatus: null,
   });
   const latestRequestIdRef = useRef(0);
+  const consumedRefreshSequenceRef = useRef(0);
   const cacheRef = useRef<Map<string, WorkbenchPerformanceAttributionTrend>>(new Map());
-  const forceRefresh = refreshRequest.requestKey === requestKey;
 
   useEffect(() => {
+    const forceRefresh =
+      refreshRequest.requestKey === requestKey &&
+      refreshRequest.sequence > consumedRefreshSequenceRef.current;
+    if (forceRefresh) {
+      consumedRefreshSequenceRef.current = refreshRequest.sequence;
+    }
+
     const cached = cacheRef.current.get(requestKey);
     if (cached && !forceRefresh) {
       setState({ status: "ready", trend: cached, httpStatus: null });
@@ -97,7 +104,7 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
         latestRequestIdRef.current += 1;
       }
     };
-  }, [forceRefresh, refreshRequest.sequence, request, requestKey]);
+  }, [refreshRequest.requestKey, refreshRequest.sequence, request, requestKey]);
 
   const refresh = useCallback(() => {
     setRefreshRequest((current) => ({
