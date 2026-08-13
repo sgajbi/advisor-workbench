@@ -1,0 +1,212 @@
+# Performance Summary
+
+Performance Summary is the selected portfolio's benchmark-aware return review. It gives a client
+advisor or portfolio manager one controlled reading path from reporting scope and return basis to
+portfolio outcome, benchmark-relative result, multi-horizon context, and the positions or segments
+that contributed most. It does not calculate performance in the browser, select an investment
+strategy, approve a recommendation, or publish a client report.
+
+## Current Scope
+
+| Screen posture | Current truth |
+| --- | --- |
+| Canonical route | `/performance?portfolioId={portfolio_id}`; Summary is the default mode, while explicit `mode=summary` is accepted as an equivalent entry |
+| Navigation | **Performance** in the global workspace navigation, then **Performance Overview** in the selected-portfolio rail |
+| Supported scope | One Gateway-backed portfolio, one source-confirmed reporting window, return basis, frequency, and benchmark selection |
+| Primary reading order | Reporting scope, portfolio and benchmark return, active return, return path, horizon comparison, then contributor leadership |
+| Primary next action | Explain the confirmed outcome, investigate a source limitation, continue to Performance Analysis, or prepare an internal Advisor Brief |
+
+The current screen is portfolio-scoped. It does not aggregate a relationship, household, advisor
+book, team book, or multiple mandates. Advisor Book owns portfolio selection; changing the selected
+portfolio requests a new Workbench context.
+
+## Business Purpose
+
+Performance Summary helps an advisor or portfolio manager answer five bounded questions:
+
+1. What reporting window, basis, frequency, currency, and benchmark define the result?
+2. How did the portfolio perform, and what was the benchmark-relative outcome?
+3. How did the return develop through the selected window rather than only at the end point?
+4. How does the selected outcome compare with other source-supported horizons?
+5. Which positions or segments are the leading positive and negative contributors, and is the
+   evidence complete enough to explain?
+
+The screen is designed for rapid preparation before a portfolio review or client conversation.
+Exact source facts, capability posture, warnings, and limitations take precedence over decorative
+scores or browser-authored conclusions.
+
+## Who Uses This Screen
+
+- **Client advisors and relationship managers** establish a source-backed performance narrative
+  before a client or mandate review.
+- **Portfolio managers and investment specialists** review absolute and benchmark-relative outcome,
+  return path, horizon context, and contributor concentration before deeper attribution analysis.
+- **Investment operations and performance support teams** investigate unavailable calculations,
+  source limitations, benchmark posture, and reporting-scope mismatches.
+- **Product, control, and support teams** distinguish a presentation defect from a Gateway or
+  Performance source-contract defect using the visible confirmed context and support evidence.
+
+These uses do not imply production entitlement, client-delivery approval, performance sign-off,
+investment suitability, or supervisory authority.
+
+## Workflow Position
+
+1. Enter from [Advisor Book](Advisor-Book-Workflow),
+   [Portfolio Review](Portfolio-Review-Screen-Guide), or another selected-portfolio record screen.
+2. Confirm portfolio, reporting window, net or gross basis, observation frequency, reporting
+   currency, and assigned or selected benchmark.
+3. Read portfolio return, benchmark return, active return, annualised or money-weighted measures
+   only when the source contract supports them.
+4. Review the plotted return path and exact period evidence rather than inferring values from chart
+   geometry.
+5. Compare supported horizons and identify leading positive and negative contributors.
+6. Continue to Performance Analysis for attribution and contribution diagnostics, Advisor Brief for
+   an internal working narrative, Risk Review for downside context, or Evidence for calculation and
+   lineage support.
+
+Changing an analytical selection is a read-only request. The visible selection and URL become
+current only after the matching summary and detail contracts both confirm the requested context.
+
+## Implemented Capabilities
+
+- Presents source-returned portfolio, benchmark, active, annualised, and money-weighted performance
+  only when the selected contract publishes usable evidence.
+- Supports source-admitted standard or explicit reporting windows, net or gross basis, monthly or
+  supported alternative frequency, and available benchmark choices.
+- Plots the source-returned portfolio, benchmark, and active return path with accessible chart and
+  exact-value evidence.
+- Requests a Gateway-owned horizon-comparison contract for side-by-side supported periods.
+- Shows leading positive and negative position or segment contributors from confirmed detail data.
+- Preserves capability, warning, partial-failure, benchmark, calculation, and lineage posture
+  without manufacturing unavailable analytics.
+- Treats a selection change as one atomic decision-context transaction: requested labels, figures,
+  and URL are committed together only after the source confirms summary and detail.
+- Keeps the prior source-confirmed result visibly labelled with its original context during a
+  refresh or failure and offers an explicit source retry after failure.
+- Announces pending and failed refresh states without moving focus, locks conflicting controls
+  while confirmation is pending, and reflows the recovery card without page overflow at governed
+  tablet and narrow widths.
+
+## Decisions And Actions
+
+| User decision or action | Required evidence or gate | Persisted business change |
+| --- | --- | --- |
+| Explain portfolio outcome | Confirmed reporting scope, basis, portfolio return, currency, and available benchmark evidence | None; read-only review |
+| Interpret benchmark-relative outcome | Confirmed benchmark identity and source-returned portfolio, benchmark, and active return | None |
+| Change reporting selection | Source-supported period or date window, basis, frequency, and benchmark | None; requests new analytics |
+| Compare horizons | Usable source-owned horizon-comparison response | None |
+| Identify contributor leadership | Confirmed contribution detail and source capability | None; Workbench does not recommend a trade |
+| Retry an unconfirmed selection | Explicit failed refresh with retained requested and confirmed contexts | None; re-contacts Gateway and Performance authority |
+| Continue to deeper review | Available selected-portfolio Performance mode | None from Summary |
+
+Viewing, changing controls, or retrying does not create a recommendation, proposal, report order,
+client communication, portfolio instruction, trade, order, execution, settlement, or approval.
+
+## Information And Source Authority
+
+| Business fact or action | Workbench boundary | Source authority |
+| --- | --- | --- |
+| Portfolio identity, base currency, booking context, and selected mandate | Formats the selected workspace and navigation context | Gateway over Core portfolio contracts |
+| Reporting window, return basis, frequency, benchmark options, portfolio return, benchmark return, active return, annualised return, and cash-flow-aware return | Validates and presents the returned contract; does not recalculate performance | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/summary`, composing Core portfolio/reference/benchmark context with Performance analytics |
+| Return-path observations and source capability posture | Selects and charts returned observations without interpolating missing values | Gateway performance details contract |
+| Contribution rows, dimensions, coverage, attribution support, warnings, and partial failures | Builds decision-focused ranking and status presentation from returned evidence | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
+| Multi-horizon comparison | Presents exact source-returned horizon rows and limitations | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` |
+| Pending, failed, requested, and source-confirmed selection context | Owns the browser transaction state; never relabels retained source data | Workbench over the matching Gateway responses |
+| Retry | Repeats the exact failed selection through the Workbench BFF | Gateway and Performance |
+
+Workbench uses the BFF and Gateway. It does not call Performance or Core directly. Shared contract
+detail remains in [API Surface](API-Surface), and ownership flow remains in
+[Integrations](Integrations).
+
+## Screen States And Recovery
+
+| State | What the user sees | Recovery posture |
+| --- | --- | --- |
+| Initial loading | Bounded workspace loading with no fabricated performance result | Wait for the selected portfolio contract |
+| Ready | Confirmed scope, headline outcome, return path, horizon context, contributors, and supportability | Continue the review |
+| Selection pending | Requested and source-confirmed contexts shown separately; prior figures keep their confirmed labels and controls are locked | Wait for both summary and detail confirmation |
+| Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
+| Partial or limited | Usable facts remain visible with named capability, warning, or partial-failure evidence | Qualify the discussion and investigate the named source limitation |
+| Normalised selection | Workbench explains that the source resolved a different supported analytical option | Use the displayed source-confirmed option |
+| Unavailable | Performance data is absent and the workspace states that the contract did not resolve | Re-establish supported portfolio/source context or follow the approved support process |
+| Permission blocked | Explicit access-restricted state without restricted entitlement detail | Use an entitled role or contact platform support |
+
+A failed refresh never converts prior analytics into the requested context. Retry success commits
+summary, detail, controls, and URL together; another failure leaves the confirmed view unchanged.
+
+## Workbench Boundaries
+
+Performance Summary deliberately does not:
+
+- calculate time-weighted, money-weighted, annualised, benchmark, active, contribution, attribution,
+  smoothing, fee, currency, or residual economics in the browser,
+- substitute zero for a missing metric, infer a benchmark assignment, interpolate a return path, or
+  treat a capability flag as calculation evidence,
+- turn a contributor ranking into a recommendation, target, suitability conclusion, rebalance,
+  transaction, order, execution, or client instruction,
+- treat an internal Advisor Brief, screenshot, test fixture, or competitor feature description as
+  source authority,
+- claim advisor-book aggregation, household performance, composite reporting, official performance
+  sign-off, client-ready publication, production entitlement, or bank certification,
+- expose source codes or implementation topology as the primary language of the business workflow.
+
+Official wealth-platform research informed the integrated decision context, cross-horizon review,
+and evidence-first recovery pattern. Lotus does not copy another product's layout, wording, visual
+identity, calculations, or unsupported capability, and this guide is not a claim of competitor
+superiority.
+
+## Adjacent Handoffs
+
+- [Advisor Book](Advisor-Book-Workflow) owns source-backed own-book portfolio selection.
+- [Portfolio Review](Portfolio-Review-Screen-Guide) owns the daily selected-mandate checkpoint.
+- Performance Analysis owns detailed attribution, contribution, and benchmark-relative diagnostics.
+- Performance Advisor Brief owns the internal working narrative and its separate review controls.
+- Risk Review owns downside, concentration, and rolling-risk interpretation.
+- Performance Evidence owns calculation, lineage, coverage, and limitation inspection.
+- [Report Centre](Report-Centre-Screen-Guide) owns reviewed report ordering and source-owned report
+  lifecycle; Summary does not publish a report.
+- Performance operations own source calculation repair and official performance-control processes.
+
+## Evidence And Validation
+
+- Focused state tests prove pending, summary failure, detail failure, exact retry, permission block,
+  stale-response fencing, and atomic source-confirmed commit behavior.
+- Shared-component tests prove polite pending and success announcement, assertive failure
+  announcement, exact requested/confirmed context, native retry behavior, and responsive ownership;
+  browser proof verifies the retry receives focus before activation without unexpected focus movement.
+- The owned optimized-production browser journey uses `PB_SG_GLOBAL_BAL_001`; it deliberately
+  receives a 503 for a 3Y summary and a 502 for Sector detail, proves YTD and Asset Class remain
+  source-confirmed, retries each request, and then proves 3Y and Sector become current together with
+  the URL.
+- The browser proof admits only the two deliberate BFF error signals, rejects any other console or
+  page error, keeps Emotion styles head-managed, and verifies no page overflow at 1024, 768, and
+  519 pixels.
+- The existing populated and unavailable Performance scenarios remain the regression proof for
+  complete and degraded source contracts. Canonical live validation remains the release evidence
+  for the governed front-office stack.
+- Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
+  controls.
+
+Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
+governed validation sequence.
+
+## First Support Step
+
+Confirm the selected portfolio, visible reporting window, net or gross basis, observation
+frequency, benchmark, and whether the screen says **Updating source analysis**, **Selection not
+applied**, **Partial**, **Unavailable**, or **Access restricted**. If a failed-selection card is
+present, record its requested context, source-confirmed context, and HTTP status without copying
+client data or raw payloads into an unapproved channel, then retry once through the provided control.
+
+## Related Documentation
+
+- [Screen Guide Catalogue](Screen-Guide-Catalogue)
+- [Advisor Book](Advisor-Book-Workflow)
+- [Portfolio Review](Portfolio-Review-Screen-Guide)
+- [Report Centre](Report-Centre-Screen-Guide)
+- [Supported Features](Supported-Features)
+- [API Surface](API-Surface)
+- [Integrations](Integrations)
+- [Validation and CI](Validation-and-CI)
+- [Operations Runbook](Operations-Runbook)
+- [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)

@@ -9,8 +9,8 @@ to find its operating guide.
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
-Transactions, Income And Activity, Projected Cash Movement, and Report Centre have passed the
-complete guide standard; the remaining 29 dedicated guides are explicit work under
+Transactions, Income And Activity, Projected Cash Movement, Performance Summary, and Report Centre
+have passed the complete guide standard; the remaining 28 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -70,7 +70,7 @@ single Performance Advisor Brief surface and guide.
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Performance Summary | `/performance?mode=summary` | Active | Guide planned — #605 | Gateway and Performance |
+| [Performance Summary](Performance-Summary-Screen-Guide) | `/performance?mode=summary` | Active | Guide available | Gateway, Core, and Performance |
 | Performance Analysis | `/performance?mode=analysis` | Runtime-gated | Guide planned — #605 | Gateway and Performance |
 | Performance Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway, Performance, and Lotus AI |
 | Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |

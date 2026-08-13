@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 7,
-      coverageExceptions: 29,
-      unmappedGuides: 29,
+      mappedGuides: 8,
+      coverageExceptions: 28,
+      unmappedGuides: 28,
     });
   });
 
@@ -159,6 +159,36 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("bars for dated net movement from the cumulative movement line");
     expect(guide).toContain("does not:\n\n- calculate opening cash");
     expect(guide).toContain("not a claim of bank approval or\ncompetitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Performance Summary to one source-confirmed analytical guide", () => {
+    const registry = loadRegistry();
+    const performanceSummary = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "performance-summary",
+    );
+
+    expect(performanceSummary).toMatchObject({
+      routePattern: "/performance",
+      mode: "summary",
+      wikiSlug: "Performance-Summary-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-core", "lotus-performance"],
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/performance-workbench.smoke.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Performance-Summary-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("one atomic decision-context transaction");
+    expect(guide).toContain("failed refresh never converts prior analytics");
+    expect(guide).toContain("composing Core portfolio/reference/benchmark context");
+    expect(guide).toContain("does not:\n\n- calculate time-weighted");
+    expect(guide).toContain("not a claim of competitor\nsuperiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

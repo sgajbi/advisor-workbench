@@ -942,6 +942,15 @@ Important validation expectations:
     provenance fails closed. When Idea candidate detail does not expose a source hash, Workbench
     proof must verify the available candidate id, policy, queue evaluation timestamp, source
     signal, and detail source-ref evidence and record the hash as an explicit non-claim.
+24. Performance analytical selections are source-confirmed transactions. Keep requested controls
+    separate from the rendered summary/details and URL until every contract required by the selected
+    view succeeds. If a refresh fails, retain usable prior evidence only under its prior labels,
+    expose the requested and confirmed contexts plus an exact source retry, and announce pending,
+    failure, and successful confirmation without moving focus. Fence obsolete completions, lock
+    conflicting controls while pending, and keep permission blocks fail-closed. Do not partially
+    publish summary, detail, normalized controls, or query state; do not invent fallback analytics.
+    Use `npm run test:e2e:performance:refresh-integrity` for the owned optimized-production failure
+    and recovery journey.
 
 ### Visual Review Gate
 
