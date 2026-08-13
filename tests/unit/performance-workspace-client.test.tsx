@@ -864,6 +864,106 @@ describe("PerformanceWorkspaceClient", () => {
     );
   });
 
+  it("distinguishes an advisor request from the source-normalized analytical context", async () => {
+    getDetailsClientMock.mockResolvedValueOnce(
+      buildDetails({
+        contribution_dimension: "asset_class",
+        requested_contribution_dimension_supported: false,
+      })
+    );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Contribution Segment" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("refresh-requested")).toHaveTextContent("Sector contribution");
+      expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent(
+        "Asset Class contribution"
+      );
+    });
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+  });
+
+  it("keeps the latest workspace mode in the URL when a slow refresh completes", async () => {
+    let resolveThreeYearSummary:
+      | ((value: WorkbenchPerformanceWorkspaceSummary) => void)
+      | null = null;
+    let resolveThreeYearDetails:
+      | ((value: WorkbenchPerformanceWorkspaceDetails) => void)
+      | null = null;
+    const threeYearSummaryPromise = new Promise<WorkbenchPerformanceWorkspaceSummary>((resolve) => {
+      resolveThreeYearSummary = resolve;
+    });
+    const threeYearDetailsPromise = new Promise<WorkbenchPerformanceWorkspaceDetails>((resolve) => {
+      resolveThreeYearDetails = resolve;
+    });
+    getSummaryClientMock.mockImplementationOnce(() => threeYearSummaryPromise);
+    getDetailsClientMock.mockImplementationOnce(() => threeYearDetailsPromise);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+      screen.getByRole("button", { name: "Switch Analysis Mode" }).click();
+    });
+
+    await act(async () => {
+      resolveThreeYearSummary?.(
+        buildSummary({
+          period: "3Y",
+          report_start_date: "2023-03-28",
+        })
+      );
+      resolveThreeYearDetails?.(
+        buildDetails({
+          period: "3Y",
+          report_start_date: "2023-03-28",
+        })
+      );
+      await Promise.all([threeYearSummaryPromise, threeYearDetailsPromise]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
+      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+    });
+    expect(replaceMock).toHaveBeenLastCalledWith(
+      "/performance?portfolioId=PF_1001&mode=analysis&period=3Y&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false }
+    );
+  });
+
   it("fails closed when a refreshed performance selection becomes permission-blocked", async () => {
     getSummaryClientMock.mockRejectedValueOnce(
       Object.assign(new Error("Forbidden"), { status: 403 })

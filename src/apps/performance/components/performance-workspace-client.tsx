@@ -139,6 +139,7 @@ export default function PerformanceWorkspaceClient({
     initialDetails ?? null
   );
   const [mode, setMode] = useState<PerformanceWorkspaceMode>(initialMode);
+  const modeRef = useRef<PerformanceWorkspaceMode>(initialMode);
   const [controls, setControls] = useState<PerformanceControlState | null>(
     initialControls
   );
@@ -353,11 +354,11 @@ export default function PerformanceWorkspaceClient({
       setRefreshFailure(null);
       setRefreshConfirmation({
         scope: initialScope,
-        requestedControls: resolvedDetails.controls,
-        confirmedControls,
+        requestedControls,
+        confirmedControls: resolvedDetails.controls,
       });
       startTransition(() => {
-        router.replace(buildPerformanceHref({ ...resolvedDetails.controls, mode }), {
+        router.replace(buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }), {
           scroll: false,
         });
       });
@@ -411,9 +412,12 @@ export default function PerformanceWorkspaceClient({
         setControls(resolvedDetails.controls);
         if (buildPerformanceHref(resolvedDetails.controls) !== buildPerformanceHref(controls)) {
           startTransition(() => {
-            router.replace(buildPerformanceHref({ ...resolvedDetails.controls, mode }), {
-              scroll: false,
-            });
+            router.replace(
+              buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }),
+              {
+                scroll: false,
+              }
+            );
           });
         }
       })
@@ -455,6 +459,7 @@ export default function PerformanceWorkspaceClient({
       benchmark={controls?.benchmark}
       onModeChange={(nextMode) => {
         setRefreshConfirmation(null);
+        modeRef.current = nextMode;
         setMode(nextMode);
         if (!controls) {
           return;
@@ -556,12 +561,11 @@ function buildRefreshStatus(
     scope: refresh.scope,
     requestedContext: describeRequestedContext(
       refresh.confirmedControls,
-      refresh.requestedControls
+      refresh.requestedControls,
+      refresh.scope
     ),
     confirmedContext: describeConfirmedContext(
-      refreshConfirmation
-        ? refreshConfirmation.requestedControls
-        : refresh.confirmedControls,
+      refresh.confirmedControls,
       refresh.scope
     ),
     status: refreshFailure?.status,
@@ -570,7 +574,8 @@ function buildRefreshStatus(
 
 function describeRequestedContext(
   confirmedControls: PerformanceControlState,
-  requestedControls: PerformanceControlState
+  requestedControls: PerformanceControlState,
+  scope?: PerformanceRefreshScope
 ): string {
   const changedContext: string[] = [];
   if (
@@ -603,7 +608,7 @@ function describeRequestedContext(
       `${formatControlLabel(requestedControls.attributionDimension)} attribution`
     );
   }
-  return changedContext.join(" · ") || describeConfirmedContext(requestedControls);
+  return changedContext.join(" · ") || describeConfirmedContext(requestedControls, scope);
 }
 
 function describeConfirmedContext(
