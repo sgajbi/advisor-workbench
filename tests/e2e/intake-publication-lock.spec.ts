@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
+import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
+
 const BFF_BASE_PATH = "/api/bff/api/v1";
 
 test("keeps the reviewed intake immutable until source publication is confirmed", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
+  const browserRuntime = observeBrowserRuntimeFailures(page);
 
   let releasePublication!: () => void;
   const publicationGate = new Promise<void>((resolve) => {
@@ -52,9 +56,7 @@ test("keeps the reviewed intake immutable until source publication is confirmed"
 
     if (path === `${BFF_BASE_PATH}/platform/capabilities`) {
       await route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({ code: "shell_bootstrap_unavailable" }),
+        json: buildPlatformCapabilitiesFixture(),
       });
       return;
     }
@@ -63,7 +65,10 @@ test("keeps the reviewed intake immutable until source publication is confirmed"
   });
 
   await page.goto("/intake", { waitUntil: "domcontentloaded" });
+  const taskChooser = page.getByRole("region", { name: "Choose an intake request" });
+  await expect(taskChooser).toHaveAttribute("data-ready", "true");
   await page.getByRole("button", { name: /Create portfolio record/i }).click();
+  await expect(page.getByRole("region", { name: "Intake request editor" })).toBeVisible();
 
   const values: Array<[string, string]> = [
     ["New portfolio code", "PORT_001"],
@@ -107,4 +112,5 @@ test("keeps the reviewed intake immutable until source publication is confirmed"
   await expect(requestControl).toBeFocused();
   await expect(page.getByText("Correlation corr-intake-browser-001")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Reviewed request published" })).toBeVisible();
+  browserRuntime.assertClean();
 });

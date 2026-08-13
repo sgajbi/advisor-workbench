@@ -3,7 +3,13 @@ import { SectionBlock } from "@/design-system";
 import { INTAKE_TASKS, type IntakeTask } from "../draft";
 import styles from "../intake-workspace.module.css";
 
-export function IntakeTaskSelector({ onSelect }: { onSelect: (task: IntakeTask) => void }) {
+export function IntakeTaskSelector({
+  isReady,
+  onSelect,
+}: {
+  isReady: boolean;
+  onSelect: (task: IntakeTask) => void;
+}) {
   return (
     <SectionBlock
       title="Start an intake request"
@@ -15,6 +21,7 @@ export function IntakeTaskSelector({ onSelect }: { onSelect: (task: IntakeTask) 
             <button
               type="button"
               className={styles.taskCard}
+              disabled={!isReady}
               onClick={() => onSelect(task.task)}
             >
               <span className={styles.taskAudience}>{task.audience}</span>
