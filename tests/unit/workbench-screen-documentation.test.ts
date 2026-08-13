@@ -203,6 +203,9 @@ describe("Workbench screen documentation governance", () => {
       mode: "analysis",
       wikiSlug: "Performance-Analysis-Screen-Guide",
       sourceOwners: ["lotus-gateway", "lotus-performance"],
+      implementationEvidence: expect.arrayContaining([
+        "src/apps/performance/components/performance-source-selection-controls.tsx",
+      ]),
       runtimeEvidence: expect.arrayContaining([
         "scripts/live/validation/browser-workflows.mjs",
         "tests/e2e/performance-workbench.smoke.spec.ts",
@@ -219,6 +222,8 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("does not imply that the independent history request succeeded");
     expect(guide).toContain("convert a failed request into zero rows");
     expect(guide).toContain("native pending disablement and post-request focus restoration");
+    expect(guide).toContain("same reusable selection component and request-shaping path");
+    expect(guide).toContain("44px narrow touch targets");
     expect(guide).toContain("does not\ncopy another product's layout");
     expect(validate(registry).errors).toEqual([]);
   });

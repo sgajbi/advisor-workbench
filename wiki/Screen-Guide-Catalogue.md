@@ -76,6 +76,10 @@ single Performance Advisor Brief surface and guide.
 | Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 | Performance Evidence | `/performance?mode=evidence` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 
+Performance Summary and Performance Analysis share one source-selection surface for horizon,
+basis, explicit review window, frequency, and benchmark. Return-view presentation remains local to
+Summary, while attribution and contribution segment controls remain local to Analysis.
+
 The future guides will separate calculated facts from Workbench presentation, state benchmark and
 as-of-date posture, and describe partial, unavailable, stale, and evidence-recovery states without
 inventing figures in the browser.

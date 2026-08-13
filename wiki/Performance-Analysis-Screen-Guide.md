@@ -17,11 +17,10 @@ turn incomplete evidence into an investment conclusion.
 | Primary reading order | Analysis snapshot, attribution history evidence, attribution detail, then contribution drivers |
 | Primary next action | Explain a confirmed driver, qualify a limitation, change an available segment, or continue to evidence review |
 
-The current mode inherits its reporting window, return basis, frequency, and benchmark from the
-confirmed Performance workspace context. Contribution and attribution segment controls are
-available inside the analytical panels. A more self-contained Analysis control bar is planned under
-[issue #681](https://github.com/sgajbi/lotus-workbench/issues/681); this guide does not describe that
-future design as implemented.
+The current mode exposes horizon, return basis, explicit review window, observation frequency, and
+benchmark beside the analysis they govern. Overview and Analysis reuse the same source-selection
+component and request-shaping path. **Absolute**, **Relative**, and **Combined** remain return-chart
+presentation choices in Overview and deliberately do not appear as attribution source selectors.
 
 ## Business Purpose
 
@@ -54,21 +53,29 @@ advice approval, or client-publication authority.
 
 ## Workflow Position
 
-1. Enter from Performance Summary after confirming the portfolio, reporting scope, basis,
-   frequency, and benchmark.
-2. Read the Analysis Snapshot as orientation, not as a substitute for exact detail.
-3. Inspect historical attribution. A chart appears only when at least two source observations exist;
+1. Open Performance Analysis for the selected portfolio and confirm horizon, basis, review window,
+   frequency, and benchmark in the primary workspace.
+2. Change the governing source context directly when a different analytical question is required;
+   remain in Analysis while Workbench requests and confirms the matching source view.
+3. Read the Analysis Snapshot as orientation, not as a substitute for exact detail.
+4. Inspect historical attribution. A chart appears only when at least two source observations exist;
    one observation remains exact tabular evidence.
-4. Review allocation, selection, interaction, total, active-return, and residual evidence at the
+5. Review allocation, selection, interaction, total, active-return, and residual evidence at the
    available attribution level.
-5. Review leading positive and negative contribution at position or segment level.
-6. Continue to Performance Evidence when calculation, lineage, coverage, or limitation support is
-   required; return to Summary when the reporting context must change.
+6. Review leading positive and negative contribution at position or segment level.
+7. Continue to Performance Evidence when calculation, lineage, coverage, or limitation support is
+   required; use Summary when the headline outcome or return path is the next business question.
 
 ## Implemented Capabilities
 
 - Presents Gateway-backed contribution and attribution detail without calculating effects in the
   browser.
+- Exposes source-backed horizon, basis, explicit review window, frequency, and benchmark directly
+  in Analysis through the same reusable selection component and request-shaping path as Overview.
+- Keeps the prior confirmed view under its original labels while a new selection is pending or
+  failed; commits controls, Review Context, analytics, and canonical URL only after source success.
+- Locks conflicting source changes while pending, announces pending and confirmation without moving
+  focus, and restores the initiating control only when the user has not moved to another task.
 - Supports source-admitted attribution and contribution segment changes and explains source
   normalisation when a requested segment is not supported.
 - Presents exact allocation, selection, interaction, total, active-return, residual, exposure, and
@@ -96,6 +103,7 @@ advice approval, or client-publication authority.
 | Use one observation as evidence | Exactly one source-published observation; no trend inference | None |
 | Change contribution or attribution segment | Source-admitted segment returned for the same confirmed workspace context | None; requests new analytics |
 | Retry historical attribution | Explicit recoverable history failure | None; re-contacts source authority |
+| Change horizon, basis, review window, frequency, or benchmark | Source-supported option and successful matching summary/detail transaction | None; confirms a new analytical view and canonical URL |
 | Escalate an evidence limitation | Named unavailable, partial, warning, access, or failure posture | None from Workbench |
 
 Analysis does not create a recommendation, proposal, report order, portfolio instruction, trade,
@@ -106,6 +114,7 @@ order, execution, settlement, approval, or client communication.
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
 | Selected portfolio and confirmed reporting context | Preserves and presents the current Performance workspace selection | Gateway-selected portfolio context and Performance analytics |
+| Requested source selection and confirmed analytical view | Keeps requested context separate, locks conflicting controls, and publishes the new controls, evidence, Review Context, and URL atomically after success | Gateway summary and details contracts over Core context and Performance analytics |
 | Contribution positions, segments, coverage, and rankings | Groups and formats returned detail without inventing missing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Attribution levels, effects, exposures, residual, status, warnings, and partial failures | Presents returned analytical evidence and its qualifications | Gateway performance details contract over Performance authority |
 | Historical attribution observations and source supportability | Chooses a truthful zero-, one-, or multi-observation presentation | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/attribution-trend` over Performance authority |
@@ -119,6 +128,9 @@ remains in [API Surface](API-Surface), and ownership flow remains in [Integratio
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Loading | Bounded analysis loading with no fabricated effects | Wait for the selected request |
+| Source selection pending | Prior evidence remains under its prior labels; requested context and confirmation progress are announced | Wait for the matching source contracts; conflicting source controls remain locked |
+| Source selection failed | Prior confirmed evidence remains labelled, with requested versus confirmed context and exact retry | Retry the same selection or continue using only the prior confirmed view |
+| Source selection confirmed | Controls, Review Context, analytics, and URL identify one matching source-confirmed context | Continue the investigation without a mode change |
 | Ready, multiple observations | Exact history chart and table plus attribution and contribution detail | Continue the analysis |
 | Ready, one observation | **Attribution Observation**, exact table, and a visible no-trend qualification | Use the observation without inferring a pattern |
 | Ready, no observations | Source-confirmed unavailable explanation | Qualify the review using the returned reason or evidence posture |
@@ -150,8 +162,8 @@ copy another product's layout, visual identity, wording, calculations, or unsupp
 
 ## Adjacent Handoffs
 
-- [Performance Summary](Performance-Summary-Screen-Guide) owns reporting-scope and headline-outcome
-  confirmation.
+- [Performance Summary](Performance-Summary-Screen-Guide) presents headline outcome and return path;
+  it shares the same source-selection contract with Analysis.
 - Performance Evidence owns deeper calculation, lineage, coverage, and limitation inspection.
 - Performance Advisor Brief owns the separately reviewed internal working narrative.
 - Risk Review owns downside and risk interpretation.
@@ -172,6 +184,10 @@ copy another product's layout, visual identity, wording, calculations, or unsupp
 - Browser proof verifies native pending disablement and post-request focus restoration,
   head-managed styles, the single expected BFF error, and
   no page overflow at 1024, 768, and 519 pixels.
+- The owned optimized-production Analysis-controls journey changes horizon and benchmark without a
+  mode hop, proves pending then source-confirmed status, canonical URL and Review Context truth,
+  stable focus, 44px narrow touch targets, head-managed styles, and no overflow at 1800, 1280,
+  1024, 768, and 519 pixels.
 - Canonical live validation accepts only source-confirmed one- or multi-observation evidence and
   records the exact evidence posture in machine-readable UI checks.
 
@@ -180,8 +196,10 @@ governed validation sequence.
 
 ## First Support Step
 
-Confirm the selected portfolio, reporting window, return basis, frequency, benchmark, contribution
-segment, and attribution segment. Then record whether history shows multiple observations, one
+Confirm the selected portfolio, horizon, reporting window, return basis, frequency, benchmark,
+contribution segment, and attribution segment. If a source selection fails, record its requested
+and last-confirmed contexts and retry only through the visible exact-selection action. Then record
+whether history shows multiple observations, one
 observation, source-confirmed unavailability, a partial limitation, **Attribution history could not
 be refreshed**, or **Attribution history restricted**. Retry once only through **Refresh history**;
 do not copy client data or raw payloads into an unapproved channel.
