@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 9,
-      coverageExceptions: 27,
-      unmappedGuides: 27,
+      mappedGuides: 10,
+      coverageExceptions: 26,
+      unmappedGuides: 26,
     });
   });
 
@@ -159,6 +159,37 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("bars for dated net movement from the cumulative movement line");
     expect(guide).toContain("does not:\n\n- calculate opening cash");
     expect(guide).toContain("not a claim of bank approval or\ncompetitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Portfolio Intake to one review-controlled source-backed business guide", () => {
+    const registry = loadRegistry();
+    const portfolioIntake = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "portfolio-intake",
+    );
+
+    expect(portfolioIntake).toMatchObject({
+      routePattern: "/intake",
+      wikiSlug: "Portfolio-Intake-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-core"],
+      runtimeEvidence: [
+        "tests/e2e/intake-first-action-readiness.spec.ts",
+        "tests/e2e/intake-publication-lock.spec.ts",
+        "tests/e2e/intake-record-preview.spec.ts",
+      ],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Portfolio-Intake-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("first advisor action is\naccepted without a second click");
+    expect(guide).toContain("six independent business tasks");
+    expect(guide).toContain("same reviewed\n   intent or return to editing");
+    expect(guide).toContain("does not:\n\n- activate or approve a portfolio");
+    expect(guide).toContain("does not copy another\nproduct's visual identity");
     expect(validate(registry).errors).toEqual([]);
   });
 

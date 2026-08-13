@@ -354,16 +354,20 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "Portfolio-Intake-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-core"],
-      "implementationEvidence": ["src/app/intake/page.tsx"],
-      "runtimeEvidence": [],
+      "implementationEvidence": [
+        "src/app/intake/page.tsx",
+        "src/features/intake/components/intake-workspace.tsx",
+        "src/features/intake/use-intake-workflow.ts"
+      ],
+      "runtimeEvidence": [
+        "tests/e2e/intake-first-action-readiness.spec.ts",
+        "tests/e2e/intake-publication-lock.spec.ts",
+        "tests/e2e/intake-record-preview.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "portfolio-records-and-intake-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "data-product-discovery",

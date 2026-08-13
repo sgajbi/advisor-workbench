@@ -26,6 +26,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Income And Activity](Income-And-Activity-Screen-Guide)
 - Expected inflows, outflows, largest outflow, and source-backed projection evidence:
   [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
+- Review-controlled portfolio, position, activity, reference-data, price, and file publication:
+  [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -84,6 +86,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
+- [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
 - [Performance Analysis](Performance-Analysis-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
