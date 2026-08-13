@@ -138,32 +138,6 @@ export function getNegativePositionContributionRows(
     .slice(0, count);
 }
 
-export function getActiveWeightRows(
-  workspace: WorkbenchPerformanceWorkspace,
-  count = 8
-): Array<
-  AttributionRowView & {
-    active_weight_pct: number;
-  }
-> {
-  const rows = workspace.attribution?.levels?.[0]?.rows ?? [];
-  return rows
-    .filter(
-      (row) =>
-        row.portfolio_weight_avg_pct !== null &&
-        row.portfolio_weight_avg_pct !== undefined &&
-        row.benchmark_weight_avg_pct !== null &&
-        row.benchmark_weight_avg_pct !== undefined
-    )
-    .map((row) => ({
-      ...row,
-      active_weight_pct:
-        (row.portfolio_weight_avg_pct ?? 0) - (row.benchmark_weight_avg_pct ?? 0),
-    }))
-    .sort((left, right) => Math.abs(right.active_weight_pct) - Math.abs(left.active_weight_pct))
-    .slice(0, count);
-}
-
 export function getTopAttributionEffectRows(
   workspace: WorkbenchPerformanceWorkspace,
   count = 8

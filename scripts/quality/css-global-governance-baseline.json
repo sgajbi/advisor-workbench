@@ -5,6 +5,9 @@
     "intake-operation-tabs",
     "lotus-mode-tabs",
     "mode-tabs",
+    "performance-analysis-drilldown",
+    "performance-analysis-insight-pane",
+    "performance-analysis-level-",
     "performance-risk-compact-segmented-control",
     "performance-risk-rolling-window-toolbar",
     "performance-risk-window-toolbar",
@@ -64,8 +67,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 13652,
-      "maxBytes": 300164
+      "maxLines": 13594,
+      "maxBytes": 298896
     }
   ]
 }
