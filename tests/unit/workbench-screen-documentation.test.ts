@@ -218,7 +218,7 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("one published observation");
     expect(guide).toContain("does not imply that the independent history request succeeded");
     expect(guide).toContain("convert a failed request into zero rows");
-    expect(guide).toContain("focus continuity");
+    expect(guide).toContain("native pending disablement and post-request focus restoration");
     expect(guide).toContain("does not\ncopy another product's layout");
     expect(validate(registry).errors).toEqual([]);
   });
