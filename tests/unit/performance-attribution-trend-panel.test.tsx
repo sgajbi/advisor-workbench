@@ -229,11 +229,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     refresh.focus();
     fireEvent.click(refresh);
 
-    expect(screen.getByRole("button", { name: "Refreshing…" })).toHaveFocus();
-    expect(screen.getByRole("button", { name: "Refreshing…" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: "Refreshing…" })).toBeDisabled();
     expect(
       await screen.findByRole("heading", { name: "Attribution Observation" }),
     ).toBeInTheDocument();
@@ -251,10 +247,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(failure).toHaveTextContent("Attribution history restricted");
     expect(failure).toHaveTextContent("Source response 403");
     expect(screen.queryByRole("button", { name: "Refresh history" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "History restricted" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: "History restricted" })).toBeDisabled();
   });
 
   it("does not let an obsolete request replace newer trend evidence", async () => {

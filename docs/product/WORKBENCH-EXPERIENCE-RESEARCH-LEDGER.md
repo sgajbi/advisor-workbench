@@ -4052,8 +4052,9 @@ capabilities, and the research does not support a claim of competitor superiorit
    business-facing.
 4. Require at least two observations for a trend chart. Preserve one observation as exact tabular
    evidence with an explicit no-trend qualification.
-5. Keep one recovery action mounted through failure, pending, and success so focus does not jump;
-   retry the exact request and disclose source response status as secondary support evidence.
+5. Keep one recovery action mounted through failure, pending, and success; disable it natively
+   while the request is pending, restore focus after the request settles, retry the exact request,
+   and disclose source response status as secondary support evidence.
 6. Validate the negative path against the real Workbench BFF using one deliberate 503 and reject
    any additional console or page failure.
 

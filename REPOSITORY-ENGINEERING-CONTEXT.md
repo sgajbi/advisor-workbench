@@ -957,7 +957,8 @@ Important validation expectations:
     from permission block and valid absence, and provide an exact source retry when recovery is
     implemented. Evidence cardinality governs presentation: one observation remains exact tabular
     evidence and cannot be drawn as a trend; a time-series chart requires at least two observations.
-    Keep the recovery action mounted so keyboard focus remains stable, and expose a stable
+    Keep the recovery action mounted, disable it natively while pending, restore keyboard focus
+    after the request settles, and expose a stable
     machine-readable evidence state in addition to business copy. Use
     `npm run test:e2e:performance:trend-integrity` for the owned attribution-history failure,
     retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison has the same known
