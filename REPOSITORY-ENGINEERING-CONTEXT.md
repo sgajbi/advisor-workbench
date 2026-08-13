@@ -53,7 +53,11 @@ Current repository posture:
    task or business defaults, treats portfolio creation, opening positions, transactions,
    instruments, price observations, and CSV import as independent requests, and submits only an
    explicitly reviewed payload through Gateway `/api/v1/intake/portfolio-bundle` via the Workbench
-   BFF. Material edits invalidate review. File selection parses locally and joins the same review
+   BFF. Server-rendered task actions must remain natively disabled and the chooser must report busy
+   until client readiness is committed; the first ready click must open the exact task without a
+   second attempt. `tests/e2e/intake-first-action-readiness.spec.ts` owns desktop and 390px
+   optimized-production proof for Create Portfolio and Import File. Material edits invalidate
+   review. File selection parses locally and joins the same review
    boundary without mutating. Once publication starts, the reviewed payload and idempotency intent
    remain immutable until the source outcome returns: publication-affecting controls are natively
    disabled while the exact reviewed details and progress state remain visible. A source failure

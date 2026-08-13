@@ -53,7 +53,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | [Transactions](Transactions-Screen-Guide) | `/transactions` | Active | Guide available | Gateway and Core |
 | [Income And Activity](Income-And-Activity-Screen-Guide) | `/income` | Active | Guide available | Gateway and Core |
 | [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide) | `/cashflow` | Active | Guide available | Gateway and Core |
-| Portfolio Intake | `/intake` | Active | Guide planned — #605 | Gateway and Core |
+| [Portfolio Intake](Portfolio-Intake-Screen-Guide) | `/intake` | Active | Guide available | Gateway and Core |
 
 The `client-context` advisory mode resolves to Portfolio Review. It is an alias, not an additional
 client profile or suitability screen, and it reuses the canonical Portfolio Review guide.

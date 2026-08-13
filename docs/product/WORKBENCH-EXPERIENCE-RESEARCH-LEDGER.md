@@ -2760,6 +2760,9 @@ product data model, compliance decisions, automation, or unsupported source capa
     at a time in source order, and give every family independent range, page, and previous/next
     controls. Preserve one complete normalized publication payload: review pagination must never
     truncate, reorder, or repurpose source data.
+13. Keep server-rendered task actions natively disabled and expose the chooser as busy until the
+    client has committed its interaction handlers. Accept the first ready action without relying
+    on a repeated click, timeout, retry loop, or optimistic task state.
 
 ### Rejected decisions
 
@@ -2791,6 +2794,12 @@ Issue #581 proves the operational file path above, at, and below the ten-record 
 isolated production-browser proof covers desktop, tablet, and narrow viewports; keyboard paging;
 bounded rendered-card count; independent family state; exact source order; and one complete
 Gateway-envelope publication containing every imported row.
+Issue #627 proves the page-readiness boundary from server HTML through the first committed task
+transition. Focused optimized-production evidence covers Create Portfolio and Import File at
+desktop and 390px, requires native-disabled server actions, accepts one ready click, verifies the
+correct editor and no horizontal overflow, and permits no console or page errors. The dedicated
+Portfolio Intake screen guide removes the corresponding #605 exception and records the complete
+business workflow, source authority, degraded states, boundaries, handoffs, and support posture.
 Repository context, historical RFC truth, review ledgers, and Supported Features change in the same
 issue and must be published from main after merge.
 
