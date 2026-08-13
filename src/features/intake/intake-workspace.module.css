@@ -70,10 +70,15 @@
   height: 100%;
 }
 
-.taskCard:hover {
+.taskCard:not(:disabled):hover {
   border-color: #7891a9;
   box-shadow: 0 4px 12px rgb(34 55 74 / 8%);
   transform: translateY(-1px);
+}
+
+.taskCard:disabled {
+  cursor: progress;
+  opacity: 0.72;
 }
 
 .taskCard:focus-visible {

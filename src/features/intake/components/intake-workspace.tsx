@@ -11,6 +11,7 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
+import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 
 import { INTAKE_TASKS } from "../draft";
 import styles from "../intake-workspace.module.css";
@@ -20,6 +21,7 @@ import { IntakeReviewRail } from "./intake-review-rail";
 import { IntakeTaskSelector } from "./intake-task-selector";
 
 export function IntakeWorkspace() {
+  const isClientReady = useClientMounted();
   const workflow = useIntakeWorkflow();
   const chooserRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -101,9 +103,11 @@ export function IntakeWorkspace() {
                     tabIndex={-1}
                     role="region"
                     aria-label="Choose an intake request"
+                    aria-busy={!isClientReady}
+                    data-ready={isClientReady}
                     className={styles.focusTarget}
                   >
-                    <IntakeTaskSelector onSelect={selectTask} />
+                    <IntakeTaskSelector isReady={isClientReady} onSelect={selectTask} />
                   </div>
                 ) : workflow.receipt ? (
                   <SectionBlock

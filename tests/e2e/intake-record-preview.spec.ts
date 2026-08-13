@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
+import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
+
 const BFF_BASE_PATH = "/api/bff/api/v1";
 const RECORD_COUNT = 21;
 const PREVIEW_PAGE_SIZE = 10;
@@ -7,6 +10,7 @@ const PREVIEW_PAGE_SIZE = 10;
 test("keeps operational file review bounded, complete, and responsive", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 900 });
+  const browserRuntime = observeBrowserRuntimeFailures(page);
 
   const publishedPayloads: Record<string, unknown>[] = [];
   await page.route(`**${BFF_BASE_PATH}/**`, async (route) => {
@@ -39,9 +43,7 @@ test("keeps operational file review bounded, complete, and responsive", async ({
 
     if (path === `${BFF_BASE_PATH}/platform/capabilities`) {
       await route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({ code: "shell_bootstrap_unavailable" }),
+        json: buildPlatformCapabilitiesFixture(),
       });
       return;
     }
@@ -50,7 +52,10 @@ test("keeps operational file review bounded, complete, and responsive", async ({
   });
 
   await page.goto("/intake", { waitUntil: "domcontentloaded" });
+  const taskChooser = page.getByRole("region", { name: "Choose an intake request" });
+  await expect(taskChooser).toHaveAttribute("data-ready", "true");
   await page.getByRole("button", { name: /Import an intake file/i }).click();
+  await expect(page.getByRole("region", { name: "Intake request editor" })).toBeVisible();
   await page.getByLabel("Supported CSV intake file").setInputFiles({
     name: "operational-intake.csv",
     mimeType: "text/csv",
@@ -98,6 +103,7 @@ test("keeps operational file review bounded, complete, and responsive", async ({
   await page.getByRole("button", { name: "Publish reviewed request" }).click();
   await expect(page.getByText("Publication confirmed")).toBeVisible();
   expect(publishedPayloads).toHaveLength(1);
+  browserRuntime.assertClean();
   const [publishedEnvelope] = publishedPayloads;
   expect(Object.keys(publishedEnvelope)).toEqual(["body"]);
   const publishedPayload = publishedEnvelope.body as Record<string, unknown>;
