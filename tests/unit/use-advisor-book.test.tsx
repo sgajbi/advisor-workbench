@@ -59,4 +59,39 @@ describe("useAdvisorBook", () => {
     expect(result.current.response).toEqual({ correlation_id: "recovered" });
     expect(result.current.error).toBeNull();
   });
+
+  it("recovers one out-of-range source page before publishing ready state", async () => {
+    getAdvisorBookMock
+      .mockResolvedValueOnce({
+        items: [],
+        page: { total_count: 2, offset: 100, limit: 100 },
+      })
+      .mockResolvedValueOnce({
+        items: [{ portfolio_id: "PB_SG_GLOBAL_BAL_001" }],
+        page: { total_count: 2, offset: 0, limit: 100 },
+      });
+
+    const { result } = renderHook(() =>
+      useAdvisorBook(
+        { asOfDate: "2026-04-22", offset: 100, limit: 100 },
+        { recoverOutOfRange: true },
+      ),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(getAdvisorBookMock).toHaveBeenNthCalledWith(2, {
+      asOfDate: "2026-04-22",
+      clientId: undefined,
+      mandateType: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      offset: 0,
+      limit: 100,
+    });
+    expect(result.current.response).toEqual({
+      items: [{ portfolio_id: "PB_SG_GLOBAL_BAL_001" }],
+      page: { total_count: 2, offset: 0, limit: 100 },
+    });
+    expect(result.current.error).toBeNull();
+  });
 });

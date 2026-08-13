@@ -61,6 +61,7 @@ export function ReportPortfolioScopePanel({
       ) : null}
       {scopeMode === "explicit_portfolio_batch" ? (
         <PortfolioBookSelection
+          key={`${currentPortfolioId}:${asOfDate}`}
           currentPortfolioId={currentPortfolioId}
           asOfDate={asOfDate}
           disabled={disabled}
@@ -117,16 +118,14 @@ function PortfolioBookSelection({
 }) {
   const [filter, setFilter] = useState("");
   const [offset, setOffset] = useState(0);
-  const book = useAdvisorBook({ asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 });
+  const book = useAdvisorBook(
+    { asOfDate, sortBy: "client_id", sortOrder: "asc", offset, limit: 100 },
+    { recoverOutOfRange: true },
+  );
   useEffect(() => {
     onBookStateChange(book.error ? "error" : book.response && !book.loading ? "ready" : "loading");
   }, [book.error, book.loading, book.response, onBookStateChange]);
   const initialSelectionKeyRef = useRef("");
-  useEffect(() => {
-    setFilter("");
-    setOffset(0);
-    initialSelectionKeyRef.current = "";
-  }, [asOfDate]);
   useEffect(() => {
     if (
       !book.response ||
@@ -162,18 +161,6 @@ function PortfolioBookSelection({
     if (retainedPortfolioIds.length === selectedPortfolioIds.length) return;
     onSelectionChange(retainedPortfolioIds);
   }, [book.response, disabled, onSelectionChange, selectedPortfolioIds]);
-  const pageOutOfRange = Boolean(
-    book.response &&
-    book.response.items.length === 0 &&
-    book.response.page.total_count > 0 &&
-    book.response.page.offset >= book.response.page.total_count,
-  );
-  useEffect(() => {
-    if (!pageOutOfRange || !book.response) return;
-    const { limit, total_count: totalCount } = book.response.page;
-    setFilter("");
-    setOffset(Math.floor((totalCount - 1) / limit) * limit);
-  }, [book.response, pageOutOfRange]);
   const selected = useMemo(() => new Set(selectedPortfolioIds), [selectedPortfolioIds]);
   const visibleItems = useMemo(() => {
     const query = filter.trim().toLocaleLowerCase();
@@ -209,7 +196,7 @@ function PortfolioBookSelection({
           {selected.size} selected
         </SemanticBadge>
       </div>
-      {book.loading || pageOutOfRange ? (
+      {book.loading ? (
         <ScreenStatePanel kind="loading" title="Loading your book" body="Checking source-confirmed portfolio assignments." rows={4} />
       ) : book.error ? (
         <ScreenStatePanel

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import {
@@ -15,7 +15,11 @@ import {
 } from "@/design-system";
 
 import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
-import { findPortfolioReviewBatchMode, type ReportOrderingScopeMode } from "../view-model";
+import {
+  findPortfolioReviewBatchMode,
+  type ReportOrderingConfiguration,
+  type ReportOrderingScopeMode,
+} from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 import { ReportBatchStatusPanel } from "./report-batch-status";
 import { ReportConfigurationPanel } from "./report-configuration-panel";
@@ -23,16 +27,23 @@ import { ReportReadinessRail } from "./report-readiness-rail";
 import { ReportRequestHistory } from "./report-request-history";
 import { ReportPortfolioScopePanel } from "./report-portfolio-scope-panel";
 
-export function ReportOrderingWorkspace({
-  portfolio,
-}: {
-  portfolio: {
-    portfolioId: string;
-    displayName: string;
-    asOfDate: string;
-    baseCurrency: string;
-  };
-}) {
+type ReportOrderingPortfolio = {
+  portfolioId: string;
+  displayName: string;
+  asOfDate: string;
+  baseCurrency: string;
+};
+
+export function ReportOrderingWorkspace({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
+  return (
+    <ReportOrderingWorkspaceSession
+      key={`${portfolio.portfolioId}:${portfolio.asOfDate}`}
+      portfolio={portfolio}
+    />
+  );
+}
+
+function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
   const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
   const [portfolioSelectionState, setPortfolioSelectionState] =
@@ -48,25 +59,20 @@ export function ReportOrderingWorkspace({
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
   const focusIntentRef = useRef(0);
-  const selectionDateRef = useRef(portfolio.asOfDate);
   const workspaceState = workflow.screenState.workspace;
   const batchAvailable = Boolean(findPortfolioReviewBatchMode(workflow.model?.family ?? null));
   const configurationLocked = workflow.submissionState === "submitting";
 
-  useEffect(() => {
-    setScopeMode("single_portfolio");
-    setSelectedPortfolioIds([]);
-    setPortfolioSelectionState("loading");
-    selectionDateRef.current = portfolio.asOfDate;
-  }, [portfolio.asOfDate, portfolio.portfolioId]);
-
-  useEffect(() => {
-    const configurationDate = workflow.configuration?.asOfDate;
-    if (!configurationDate || configurationDate === selectionDateRef.current) return;
-    selectionDateRef.current = configurationDate;
-    setSelectedPortfolioIds([]);
-    setPortfolioSelectionState("loading");
-  }, [portfolio.portfolioId, workflow.configuration?.asOfDate]);
+  function updateConfiguration(patch: Partial<ReportOrderingConfiguration>) {
+    if (
+      patch.asOfDate !== undefined &&
+      patch.asOfDate !== workflow.configuration?.asOfDate
+    ) {
+      setSelectedPortfolioIds([]);
+      setPortfolioSelectionState("loading");
+    }
+    workflow.updateConfiguration(patch);
+  }
 
   function focusReadiness() {
     requestAnimationFrame(() => readinessRef.current?.focus());
@@ -179,7 +185,7 @@ export function ReportOrderingWorkspace({
                         model={workspaceState.model}
                         configuration={workflow.configuration}
                         disabled={configurationLocked}
-                        updateConfiguration={workflow.updateConfiguration}
+                        updateConfiguration={updateConfiguration}
                         toggleSection={workflow.toggleSection}
                       />
                     </div>
