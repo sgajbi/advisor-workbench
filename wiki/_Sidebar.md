@@ -9,6 +9,7 @@
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
+- [Performance Summary](Performance-Summary-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

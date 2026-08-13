@@ -3930,3 +3930,86 @@ navigation retains keyboard focus. No Gateway/API/OpenAPI contract changed. The 
 wiki and repository context change because root rendering and direct dependency truth changed; no
 business screen guide changes because screen purpose, source authority, actions, and terminology
 remain unchanged.
+
+## Performance Source-Confirmed Selection Integrity
+
+### Business and engineering job
+
+An advisor changing a Performance horizon, reporting basis, frequency, benchmark, or analytical
+dimension must be able to distinguish a requested view from the analytics the source has actually
+confirmed. A transient source failure must not relabel retained figures, certify a new URL, leave a
+detail module loading indefinitely, discard useful prior evidence, or require the advisor to rebuild
+the analytical request manually.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-13:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes connected portfolio analytics, common portfolio language, exception-based review, and
+   advisor efficiency. The applicable pattern is one coherent decision context with failures treated
+   as visible exceptions, not a silent change in the meaning of retained analytics.
+2. [BlackRock Aladdin Accounting](https://www.blackrock.com/aladdin/platforms/products/aladdin-accounting)
+   emphasizes consistent performance data, quality controls, reconciliation, and controlled returns
+   across operating users. This supports binding every displayed measure to an explicit confirmed
+   reporting scope.
+3. [Morningstar Direct Advisory Suite reporting](https://www.morningstar.com/business/products/direct-advisory-suite/reports)
+   presents performance reporting as a clear interactive advisor communication workflow. This
+   supports keeping the selected analytical context legible when an interaction cannot be applied.
+4. [W3C WCAG 2.2 status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important dynamic state changes to be available to assistive technology without moving
+   focus. [Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html),
+   [focus visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html), and
+   [target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) inform the
+   responsive recovery card and retry control.
+
+These sources inform workflow coherence, evidence integrity, state semantics, and accessibility
+only. Lotus does not copy another product's layout, visual identity, wording, calculations, or
+unsupported capabilities, and the review does not substantiate a claim of competitor superiority.
+
+### Adopted decisions
+
+1. Keep confirmed controls and analytics in one committed state. Requested controls live in a
+   separate typed pending or failed transaction until matching summary and detail responses succeed.
+2. Commit resolved summary, resolved detail, normalized controls, cache identity, and URL atomically.
+   A summary-changing request does not partially publish if its dependent detail request fails.
+3. Retain useful prior analytics during refresh and failure only under their original confirmed
+   labels. Name the requested context separately and show source HTTP status only as secondary
+   support evidence.
+4. Fence obsolete request completion with the existing monotonic sequence; exact retry reuses the
+   failed request, while a return to the confirmed selection cancels the pending intent.
+5. Fail permission blocks closed, but treat recoverable transport/source failure as a persistent
+   in-context exception with a single source retry. Lock conflicting controls while any selection
+   transaction is pending.
+6. Add one reusable design-system refresh-status component with polite pending semantics, assertive
+   failure semantics, stable UI evidence, component-owned CSS, visible focus, a minimum 44-pixel
+   retry target, and one-column narrow reflow. No global CSS, dependency, framework, Gateway route,
+   runtime service, or deployment topology changes.
+7. Prove failure behavior through the real Workbench BFF against an owned contract-valid fixture.
+   Require exactly the deliberate 503 and 502 browser signals and reject every additional console
+   or page error rather than broadly allowlisting failure noise.
+
+### Rejected decisions
+
+1. Optimistically changing the selected labels or URL before source confirmation.
+2. Clearing all prior analytics for every transient failure or substituting zeros, fallback figures,
+   another period, or browser-calculated results.
+3. Treating summary and detail as independently publishable parts of one user selection when that
+   can combine incompatible reporting contexts.
+4. Retaining a spinner after details failure, using a transient toast as the only evidence, moving
+   focus to announce status, or increasing timeouts to hide the missing recovery state.
+5. Letting a general browser-runtime check ignore all failed resources. The owned scenario asserts
+   the two expected endpoints and status codes exactly and still fails on any unrelated error.
+6. Adding state-management, notification, design-system, or CSS utility dependencies for a bounded
+   transaction model that React and the existing Workbench primitives already support.
+
+### Validation and publication decision
+
+Workbench #679 owns implementation and #605 owns complete screen-guide coverage. Focused tests prove
+pending, both failure scopes, exact retry, cached success, superseded completion, cancellation, and
+permission-blocked behavior. The optimized-production `PB_SG_GLOBAL_BAL_001` journey proves retained
+YTD and Asset Class context through deliberate 3Y-summary and Sector-detail failures, atomic retry
+success, URL truth, responsive reflow, head-managed styles, and exactly two expected BFF error
+signals. The Performance Summary guide, supported-feature truth, codebase review ledger, and
+repository context change; Gateway/API/OpenAPI, source calculations, dependencies, and global CSS do
+not.

@@ -70,6 +70,11 @@ promote dormant labels into product ownership just because historical route file
 ## Current contract notes
 
 - risk is currently served through `/performance` route mode selection, not a separate top-level URL
+- Performance Summary composes Gateway
+  `/api/v1/workbench/{portfolio_id}/performance/summary`, `/details`, and
+  `/horizon-comparison` contracts; browser requests use the internal
+  `/api/bff/api/v1/workbench/{portfolio_id}/performance/*` proxy and never call Core or Performance
+  services directly
 - data-product discovery is served through `/data-products` and consumes gateway
   `/api/v1/domain-products/*` APIs through the internal BFF only
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
