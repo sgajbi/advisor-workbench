@@ -98,9 +98,9 @@ Current repository posture:
    `A -> B -> A` navigation cannot make an obsolete completion current again. If batch outcome
    refresh is unavailable or returns no support posture, retain the accepted handle's last
    source-confirmed format support evidence; replace it only with an explicit newer source posture.
-   Treat each portfolio-and-source-date combination as a distinct render-owned Report Centre
-   session: reset local configuration, selection, focus, and workflow state through a keyed
-   boundary rather than synchronous reset Effects. Date changes initiated inside the session clear
+   Treat each portfolio, source date, and reporting-currency combination as a distinct render-owned
+   Report Centre session: reset local configuration, selection, focus, and workflow state through a
+   keyed boundary rather than synchronous reset Effects. Date changes initiated inside the session clear
    selection in the initiating event. Keep accepted batch handle, requested output formats,
    lifecycle status, and error together in portfolio-keyed React state; refs may fence obsolete
    asynchronous completions but must not provide render evidence. Advisor Book owns one bounded

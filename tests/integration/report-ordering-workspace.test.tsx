@@ -810,6 +810,28 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
   });
 
+  it("clears accepted bundle posture when source reporting currency changes", async () => {
+    const view = render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
+    const submit = screen.getByRole("button", { name: "Submit Portfolio Bundle" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    expect(
+      await screen.findByRole("heading", { name: "Portfolio bundle accepted" }),
+    ).toBeInTheDocument();
+
+    view.rerender(
+      <ReportOrderingWorkspace portfolio={{ ...portfolio, baseCurrency: "USD" }} />,
+    );
+    await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
+
+    expect(screen.queryByRole("heading", { name: "Portfolio bundle accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+  });
+
   it("rejects a late portfolio-bundle acceptance after A-to-B-to-A workspace navigation", async () => {
     let resolveSubmission:
       | ((value: Awaited<ReturnType<typeof submitPortfolioReviewBatch>>) => void)
