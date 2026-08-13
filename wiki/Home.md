@@ -28,6 +28,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
+- Source-backed contribution, attribution, and historical-evidence review:
+  [Performance Analysis](Performance-Analysis-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
@@ -83,6 +85,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
+- [Performance Analysis](Performance-Analysis-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)
