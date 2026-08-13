@@ -28,7 +28,8 @@ test.beforeAll(async () => {
     scenario !== 'populated' &&
     scenario !== 'unavailable' &&
     scenario !== 'refresh-integrity' &&
-    scenario !== 'trend-integrity'
+    scenario !== 'trend-integrity' &&
+    scenario !== 'horizon-integrity'
   ) {
     return;
   }
@@ -715,6 +716,79 @@ test.describe('Performance workbench smoke', () => {
         source: 'console',
         message: expect.stringContaining('503 (Service Unavailable)'),
         url: expect.stringContaining('/performance/attribution-trend?'),
+      }),
+    ]);
+  });
+
+  test('horizon comparison failure remains explicit until exact source retry succeeds', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'horizon-integrity',
+      'This deterministic journey requires the horizon-integrity fixture.',
+    );
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const evidence = page.getByTestId('horizon-comparison-evidence');
+    await expect(evidence).toHaveAttribute('data-state', 'error', { timeout: 30_000 });
+    await expect(evidence.getByRole('alert')).toContainText(
+      'Horizon comparison could not be refreshed',
+    );
+    await expect(evidence).toContainText('Source response 503');
+    await expect(evidence).not.toContainText('No published horizon comparison');
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await evidence.scrollIntoViewIfNeeded();
+      await expect(evidence).toBeVisible();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
+    await page.screenshot({
+      path: 'output/playwright/issue-683-horizon-comparison-failure-narrow.png',
+      fullPage: false,
+    });
+
+    const refresh = page.getByRole('button', { name: 'Refresh comparison' });
+    await refresh.focus();
+    await expect(refresh).toBeFocused();
+    await refresh.click();
+    await expect(page.getByRole('button', { name: 'Refreshing…' })).toBeDisabled();
+    await expect(evidence).toHaveAttribute('data-state', 'multi-observation');
+    await expect(evidence).toHaveAttribute('data-observation-count', '4');
+    await expect(page.getByRole('button', { name: 'Refresh comparison' })).toBeFocused();
+    await expect(page.getByLabel('Multi-horizon returns')).toBeVisible();
+    await expect(page.getByRole('radiogroup', { name: 'Horizon visual mode' })).toBeVisible();
+
+    for (const width of [1024, 768, 519]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await evidence.scrollIntoViewIfNeeded();
+      await expect(evidence).toBeVisible();
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    await page.screenshot({
+      path: 'output/playwright/issue-683-horizon-comparison-recovered-narrow.png',
+      fullPage: false,
+    });
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([
+      expect.objectContaining({
+        source: 'console',
+        message: expect.stringContaining('503 (Service Unavailable)'),
+        url: expect.stringContaining('/performance/horizon-comparison?'),
       }),
     ]);
   });

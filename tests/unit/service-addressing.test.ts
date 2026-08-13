@@ -91,6 +91,15 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18100");
   });
 
+  it("allows the exact process-owned Performance horizon-integrity fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18100/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "performance";
+    process.env.PERFORMANCE_E2E_FIXTURE = "horizon-integrity";
+    process.env.PERFORMANCE_E2E_FIXTURE_PORT = "18100";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18100");
+  });
+
   it("allows only the exact process-owned Report Centre fixture loopback", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:18101/";
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "report-centre";

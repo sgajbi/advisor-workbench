@@ -15,7 +15,11 @@ import {
 import { fallbackNormalizedCapabilities } from '../../src/features/platform-capabilities/api';
 
 export type PerformanceFixtureGatewayScenario =
-  'populated' | 'unavailable' | 'refresh-integrity' | 'trend-integrity';
+  | 'populated'
+  | 'unavailable'
+  | 'refresh-integrity'
+  | 'trend-integrity'
+  | 'horizon-integrity';
 
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
@@ -32,6 +36,7 @@ export async function startPerformanceFixtureGateway({
   let summaryRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let trendRefreshFailuresRemaining = scenario === 'trend-integrity' ? 1 : 0;
+  let horizonRefreshFailuresRemaining = scenario === 'horizon-integrity' ? 1 : 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
     const portfolioId = resolvePortfolioId(requestUrl.pathname);
@@ -100,7 +105,23 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/horizon-comparison')) {
+      if (horizonRefreshFailuresRemaining > 0) {
+        horizonRefreshFailuresRemaining -= 1;
+        sendJson(response, { code: 'performance_horizon_comparison_temporarily_unavailable' }, 503);
+        return;
+      }
       const horizon = buildPerformanceHorizonComparison(portfolioId);
+      if (scenario === 'horizon-integrity') {
+        setTimeout(() => {
+          sendJson(
+            response,
+            horizon,
+            200,
+            'perf-reference;dur=1, perf-benchmark;dur=1, perf-horizon;dur=1',
+          );
+        }, 250);
+        return;
+      }
       sendJson(
         response,
         scenario === 'populated'
