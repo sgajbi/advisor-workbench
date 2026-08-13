@@ -14,6 +14,14 @@ export type PerformanceWorkspaceLoadIssue = {
   status?: number;
 };
 
+export type PerformanceWorkspaceRefreshStatus = {
+  kind: "pending" | "confirmed" | "failed";
+  scope: "summary" | "details";
+  requestedContext: string;
+  confirmedContext: string;
+  status?: number;
+};
+
 export type PerformanceWorkspaceRequestPatch = {
   portfolioId?: string;
   period?: string;
@@ -117,6 +125,7 @@ export type PerformanceRiskModeProps = PerformanceWorkspaceControls & {
 export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   loadIssue?: PerformanceWorkspaceLoadIssue | null;
+  refreshStatus?: PerformanceWorkspaceRefreshStatus | null;
   mode: PerformanceWorkspaceMode;
   period: string;
   detailBasis: string;
@@ -126,6 +135,7 @@ export type PerformanceWorkspaceViewProps = {
   benchmark?: string;
   onModeChange: (mode: PerformanceWorkspaceMode) => void;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
+  onRetryRefresh?: () => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;
 };

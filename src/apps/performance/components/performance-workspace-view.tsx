@@ -1,6 +1,7 @@
 import {
   MainWithSideRailLayout,
   Panel,
+  WorkbenchRefreshStatus,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
@@ -43,6 +44,7 @@ import {
 export default function PerformanceWorkspaceView({
   workspace,
   loadIssue,
+  refreshStatus,
   mode,
   period,
   detailBasis,
@@ -52,6 +54,7 @@ export default function PerformanceWorkspaceView({
   benchmark,
   onModeChange,
   onRequestChange,
+  onRetryRefresh,
   isUpdating = false,
   isDetailsPending = false,
 }: PerformanceWorkspaceViewProps) {
@@ -180,6 +183,25 @@ export default function PerformanceWorkspaceView({
             title={workspaceTitle}
           >
             <WorkbenchSectionStack className="performance-page-sections">
+              {refreshStatus ? (
+                <WorkbenchRefreshStatus
+                  kind={refreshStatus.kind}
+                  eyebrow={
+                    refreshStatus.kind === "pending"
+                      ? "Updating source analysis"
+                      : refreshStatus.kind === "confirmed"
+                        ? "Source analysis updated"
+                      : "Selection not applied"
+                  }
+                  title={getRefreshStatusTitle(refreshStatus)}
+                  message={getRefreshStatusMessage(refreshStatus)}
+                  requestedContext={refreshStatus.requestedContext}
+                  confirmedContext={refreshStatus.confirmedContext}
+                  onRetry={refreshStatus.kind === "failed" ? onRetryRefresh : undefined}
+                  retrying={false}
+                  className="performance-refresh-status"
+                />
+              ) : null}
               {controlNormalizationNotice ? (
                 <div
                   className="performance-control-normalization-note"
@@ -213,6 +235,44 @@ export default function PerformanceWorkspaceView({
       }
     />
   );
+}
+
+function getRefreshStatusTitle(
+  refreshStatus: NonNullable<PerformanceWorkspaceViewProps["refreshStatus"]>
+) {
+  if (refreshStatus.kind === "pending") {
+    return refreshStatus.scope === "summary"
+      ? "Confirming the selected performance view"
+      : "Confirming the selected analytical detail";
+  }
+
+  if (refreshStatus.kind === "confirmed") {
+    return refreshStatus.scope === "summary"
+      ? "Performance selection confirmed"
+      : "Analytical detail confirmed";
+  }
+
+  return refreshStatus.scope === "summary"
+    ? "Performance selection could not be confirmed"
+    : "Analytical detail could not be confirmed";
+}
+
+function getRefreshStatusMessage(
+  refreshStatus: NonNullable<PerformanceWorkspaceViewProps["refreshStatus"]>
+) {
+  if (refreshStatus.kind === "pending") {
+    return "The source-confirmed view remains labelled with its original context until the requested selection is available.";
+  }
+
+
+  if (refreshStatus.kind === "confirmed") {
+    return "The requested selection is now source-confirmed and has been applied to the performance view.";
+  }
+
+  const supportSuffix = refreshStatus.status
+    ? ` Source request returned HTTP ${refreshStatus.status}.`
+    : "";
+  return `The requested selection was not applied. The last source-confirmed performance view remains in place.${supportSuffix}`;
 }
 
 const PERFORMANCE_SURFACE_ITEMS: Array<{

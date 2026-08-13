@@ -957,10 +957,17 @@ describe("PerformanceAnalyticsPage", () => {
         if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
-        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
-          return { ok: true, json: async () => rawWorkspace } as Response;
-        }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...rawWorkspace,
+              attribution_dimension: "asset_class",
+              requested_attribution_dimension_supported: true,
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
@@ -1044,10 +1051,17 @@ describe("PerformanceAnalyticsPage", () => {
         if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
-        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
-          return { ok: true, json: async () => rawWorkspace } as Response;
-        }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...rawWorkspace,
+              chart_frequency: "monthly",
+              requested_chart_frequency_supported: true,
+            }),
+          } as Response;
+        }
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {

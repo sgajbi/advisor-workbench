@@ -37,10 +37,14 @@ describe("PerformanceWorkspaceView", () => {
     mode = "summary",
     workspace = buildSupportedPerformanceScenario().workspace,
     isDetailsPending = false,
+    refreshStatus = null,
+    onRetryRefresh,
   }: {
     mode?: PerformanceWorkspaceMode;
     workspace?: ReturnType<typeof buildSupportedPerformanceScenario>["workspace"];
     isDetailsPending?: boolean;
+    refreshStatus?: React.ComponentProps<typeof PerformanceWorkspaceView>["refreshStatus"];
+    onRetryRefresh?: () => void;
   }) {
     function Harness() {
       const [selectedMode, setSelectedMode] = React.useState<PerformanceWorkspaceMode>(mode);
@@ -56,6 +60,8 @@ describe("PerformanceWorkspaceView", () => {
           chartFrequency="monthly"
           onModeChange={setSelectedMode}
           isDetailsPending={isDetailsPending}
+          refreshStatus={refreshStatus}
+          onRetryRefresh={onRetryRefresh}
         />
       );
     }
@@ -150,6 +156,65 @@ describe("PerformanceWorkspaceView", () => {
     expect(normalizationNotice).toHaveTextContent(
       "attribution view reset to Asset Class"
     );
+  });
+
+  it("keeps a pending selection separate from the source-confirmed performance context", () => {
+    renderWorkspaceView({
+      refreshStatus: {
+        kind: "pending",
+        scope: "summary",
+        requestedContext: "3Y",
+        confirmedContext: "YTD · NET returns · Monthly observations",
+      },
+    });
+
+    const status = screen.getByRole("status", {
+      name: "",
+    });
+    expect(status).toHaveTextContent("Confirming the selected performance view");
+    expect(status).toHaveTextContent("Requested3Y");
+    expect(status).toHaveTextContent(
+      "Source-confirmedYTD · NET returns · Monthly observations"
+    );
+    expect(screen.getByText("Summary Mode Panel")).toBeInTheDocument();
+  });
+
+  it("presents a failed detail selection as a recoverable business exception", () => {
+    const onRetryRefresh = vi.fn();
+    renderWorkspaceView({
+      refreshStatus: {
+        kind: "failed",
+        scope: "details",
+        requestedContext: "Sector contribution",
+        confirmedContext: "YTD · NET returns · Monthly observations",
+        status: 502,
+      },
+      onRetryRefresh,
+    });
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Analytical detail could not be confirmed");
+    expect(alert).toHaveTextContent("Source request returned HTTP 502");
+    const retry = screen.getByRole("button", { name: "Retry performance selection" });
+    fireEvent.click(retry);
+    expect(onRetryRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces that a successful refresh is now source-confirmed", () => {
+    renderWorkspaceView({
+      refreshStatus: {
+        kind: "confirmed",
+        scope: "summary",
+        requestedContext: "3Y",
+        confirmedContext: "3Y · NET returns · Monthly observations",
+      },
+    });
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Performance selection confirmed");
+    expect(status).toHaveTextContent("now source-confirmed");
+    expect(screen.queryByRole("button", { name: "Retry performance selection" }))
+      .not.toBeInTheDocument();
   });
 
   it("switches between summary, analysis, risk, and evidence modes", async () => {
