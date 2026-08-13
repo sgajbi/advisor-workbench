@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAttributionTrendPanel from "../../src/apps/performance/components/performance-attribution-trend-panel";
@@ -282,6 +282,36 @@ describe("PerformanceAttributionTrendPanel", () => {
 
     rerender(<PerformanceAttributionTrendPanel {...buildProps({ period: "3M" })} />);
     await screen.findByRole("heading", { name: "Attribution Observation" });
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps()} />);
+    await screen.findByText("Attribution history restricted");
+    expect(getTrendMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("purges cached history when an obsolete refresh is permission-blocked", async () => {
+    let rejectObsoleteRefresh!: (error: Error) => void;
+    getTrendMock
+      .mockResolvedValueOnce(buildTrendContract())
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectObsoleteRefresh = reject;
+        }),
+      )
+      .mockResolvedValueOnce(buildTrendContract({ period: "3M" }))
+      .mockRejectedValueOnce(new WorkbenchApiError("performance attribution trend", 403));
+
+    const { rerender } = render(<PerformanceAttributionTrendPanel {...buildProps()} />);
+
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh history" }));
+    await waitFor(() => expect(getTrendMock).toHaveBeenCalledTimes(2));
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps({ period: "3M" })} />);
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    await act(async () => {
+      rejectObsoleteRefresh(new WorkbenchApiError("performance attribution trend", 403));
+      await Promise.resolve();
+    });
 
     rerender(<PerformanceAttributionTrendPanel {...buildProps()} />);
     await screen.findByText("Attribution history restricted");
