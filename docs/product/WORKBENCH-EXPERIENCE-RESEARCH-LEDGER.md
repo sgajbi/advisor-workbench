@@ -4078,3 +4078,69 @@ viewports. The complete Performance Analysis guide, API surface, supported-featu
 repository context, and codebase review ledger change. Gateway/API/OpenAPI, source calculations,
 dependencies, global CSS, runtime topology, advice, trade, approval, and report-publication
 authority do not. Workbench #683 and #684 durably own the adjacent false-empty and dead-code patterns.
+
+## Performance Horizon Comparison Evidence Integrity
+
+### Business and engineering job
+
+An advisor comparing return horizons must know whether the source published no horizons, one exact
+period, or a real comparison. A Gateway failure or access restriction must never be presented as a
+successful empty comparison, and recovery must repeat the exact analytical request without
+disrupting the advisor's next task.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-14:
+
+1. [Morningstar Direct portfolio management](https://www.morningstar.com/business/products/direct/portfolio-management-tool)
+   connects portfolio comparison and attribution to understanding the effect of holdings and
+   allocation decisions. The applicable pattern is exact comparable evidence, not a decorative
+   chart when only one period exists.
+2. [BlackRock Aladdin Risk](https://www.blackrock.com/aladdin/platforms/products/aladdin-risk)
+   describes a comprehensive, integrated view of portfolio risk, performance, attribution, and
+   positioning. The applicable pattern is coherent source context across analytical views rather
+   than treating a failed module as an empty result.
+3. [W3C WCAG 2.2 status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires dynamic waiting, result, and error messages to be programmatically available without
+   taking focus. [Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) supports
+   retaining logical keyboard operation when recovery content changes.
+
+These sources inform evidence hierarchy, state semantics, and accessible recovery only. Lotus does
+not copy another product's layout, visual identity, wording, calculations, or unsupported
+capabilities, and the research does not substantiate competitor-superiority claims.
+
+### Adopted decisions
+
+1. Reuse one typed, generic source-confirmed resource lifecycle for independently fetched
+   Attribution History and Horizon Comparison instead of copying request/cache/retry logic.
+2. Cache only successful source responses, fence obsolete UI completion, and revoke the matching
+   cache after any permission denial even when that denial is obsolete for the visible selection.
+3. Keep failure, permission restriction, source-confirmed absence, one observation, and multiple
+   observations machine-readable and visibly distinct.
+4. Present one horizon as exact table evidence and reserve comparison graphics for two or more
+   published horizons.
+5. Keep one quiet **Refresh comparison** action mounted, disable it natively while pending, repeat
+   the exact request, and restore focus only if the user has not moved to another task.
+6. Prove both negative and recovered states through the Workbench BFF at 1024, 768, and 519 pixels;
+   admit only the deliberate 503 and fail on unrelated console or page errors.
+
+### Rejected decisions
+
+1. Fabricating an empty v1 response, blank correlation id, supported flag, dates, benchmark, or
+   reporting context in the browser after rejection.
+2. Using the same unavailable copy for source-confirmed zero rows and failed retrieval.
+3. Rendering one period with visual comparison controls that imply cross-horizon evidence.
+4. Adding another page-local cache, toast, state library, CSS utility, or framework dependency.
+5. Automatically moving focus to the alert or reclaiming focus after the advisor continues to
+   another control.
+
+### Validation and publication decision
+
+Workbench #683 owns implementation. Focused tests prove exact-key caching, zero/single/multiple
+cardinality, explicit failure, permission block, exact retry, native pending state, retained focus,
+and no forced focus after the user moves on. The optimized-production `PB_SG_GLOBAL_BAL_001`
+scenario deliberately receives a 503, proves the error is not described as no data, retries the
+same request, and then renders four source observations with no page overflow at 1024, 768, and 519
+pixels. Performance Summary, Supported Features, repository context, and the review ledger change.
+Gateway/API/OpenAPI, source calculations, dependencies, global CSS, runtime topology, advice,
+trade, approval, and report-publication authority do not.

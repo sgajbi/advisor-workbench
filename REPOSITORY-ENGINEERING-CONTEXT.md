@@ -962,8 +962,9 @@ Important validation expectations:
     after the request settles, and expose a stable
     machine-readable evidence state in addition to business copy. Use
     `npm run test:e2e:performance:trend-integrity` for the owned attribution-history failure,
-    retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison has the same known
-    false-empty pattern under Workbench #683 and must reuse this state model when fixed.
+    retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison reuses the same shared
+    source-confirmed resource lifecycle; use `npm run test:e2e:performance:horizon-integrity` for
+    its explicit failure, exact retry, focus, cardinality, and narrow-reflow proof.
 
 ### Visual Review Gate
 
