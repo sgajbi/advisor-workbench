@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const repositoryRoot = join(__dirname, "..", "..");
 const governedLintCommand =
-  "npm run quality:runtime-support && npm run quality:runtime-state && npm run quality:dependency-risk && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:eslint";
+  "npm run quality:runtime-support && npm run quality:runtime-state && npm run quality:dependency-risk && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:react-compiler && npm run lint:eslint";
 const governedTimeoutsByJob = new Map([
   [
     "e2e-smoke",
@@ -105,7 +105,7 @@ describe("dependency security governance", () => {
     expect(eslintConfig).toContain("intentionalUnusedValuePattern");
   });
 
-  it("keeps React Compiler linting as an explicit report-only evaluator", () => {
+  it("keeps React Compiler compatibility in the blocking lint chain", () => {
     const packageJson = JSON.parse(readRepositoryFile("package.json")) as {
       scripts?: Record<string, string>;
     };
@@ -115,7 +115,7 @@ describe("dependency security governance", () => {
     expect(packageJson.scripts?.["lint:react-compiler"]).toBe(
       "eslint src --config eslint.react-compiler.config.mjs --max-warnings=0",
     );
-    expect(packageJson.scripts?.lint).not.toContain("react-compiler");
+    expect(packageJson.scripts?.lint).toContain("npm run lint:react-compiler");
     expect(eslintConfig).not.toContain("reactHooks.configs.recommended.rules,");
     expect(compilerConfig).toContain('import baseConfig from "./eslint.config.mjs";');
     expect(compilerConfig).toContain('import reactHooks from "eslint-plugin-react-hooks";');

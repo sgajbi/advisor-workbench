@@ -4222,3 +4222,60 @@ overflow, head-managed styles, and no runtime failures. The Analysis guide, supp
 truth, screen registry/catalogue, review ledger, and repository context change. Gateway/API/OpenAPI,
 source calculations, dependencies, global CSS, runtime topology, advice, trade, approval, and
 report-publication authority do not.
+
+## Render-Pure Portfolio And Report Centre State Ownership
+
+### Business problem
+
+Portfolio and Report Centre state must change atomically with the advisor's selected portfolio and
+source date. A screen that briefly renders a previous selection, accepted report posture, or output
+intent under a new context can misstate which client work is being reviewed even when a later Effect
+corrects it.
+
+### Current-product research
+
+Research was reviewed on 2026-08-14 against the nine exact React Compiler findings:
+
+1. [React: You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
+   explains that resetting state after a prop change in an Effect first renders stale state and
+   recommends a keyed inner component when the prop identifies a conceptually different workspace.
+2. [React `refs` lint](https://react.dev/reference/eslint-plugin-react-hooks/lints/refs) requires
+   render output to use props and state rather than mutable ref values that React does not track.
+3. [React `set-state-in-effect` lint](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect)
+   rejects synchronous Effect state that forces a cascading render when state can be derived,
+   keyed, or changed by the initiating event.
+
+### Adopted decisions
+
+1. Key the Report Centre session by portfolio id and source date so configuration, portfolio-book
+   selection, focus, and workflow state never render across conceptual workspaces.
+2. Clear selection for an advisor-initiated date change in that event; keep Effects for source
+   synchronization and asynchronous lifecycle fencing.
+3. Co-locate accepted batch handle, reviewed output formats, source status, and error as one
+   portfolio-keyed render state. Refs retain only non-visual async fencing responsibilities.
+4. Move invalid Advisor Book page recovery into its reusable source hook and permit one bounded
+   retry at the last valid page before publishing ready state.
+5. Promote the deterministic zero-finding compiler command into the existing fast blocking lint
+   chain with no suppressions or allowlist.
+
+### Rejected decisions
+
+1. Moving the existing reset setters among Effects, because the stale render and cascading update
+   remain.
+2. Reading accepted output intent from a ref while mirroring only part of the lifecycle in state,
+   because render evidence would still have split ownership.
+3. Correcting invalid paging only in the Report Centre component, because every other Advisor Book
+   consumer would need to rediscover the same source race.
+4. Enabling the React Compiler runtime, changing report contracts, or changing business copy as
+   part of a render-purity correction.
+5. Adding a compiler suppression, source exclusion, or accepted-finding baseline.
+
+### Validation and publication decision
+
+Workbench #688 owns this correction. The exact command moves from nine findings to zero; 73 focused
+Portfolio, Advisor Book, workflow, and rendered-workspace tests prove source-key initialization,
+bounded paging recovery, accepted output posture, and stale A→B→A completion rejection. The
+blocking-lint governance test proves both the compiler entrypoint and its inclusion in `npm run
+lint`. Repository context and the review ledger change because state ownership and CI truth changed.
+No business feature, visual composition, Gateway/API/OpenAPI contract, CSS, source calculation,
+runtime topology, README, or wiki truth changed.
