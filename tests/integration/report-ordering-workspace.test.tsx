@@ -829,7 +829,9 @@ describe("ReportOrderingWorkspace", () => {
     await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
 
     expect(screen.queryByRole("heading", { name: "Portfolio bundle accepted" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Approved report" }),
+    ).toBeInTheDocument();
   });
 
   it("rejects a late portfolio-bundle acceptance after A-to-B-to-A workspace navigation", async () => {
