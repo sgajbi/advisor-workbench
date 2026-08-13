@@ -88,14 +88,14 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
         setState({ status: "ready", trend, httpStatus: null });
       })
       .catch((error: unknown) => {
-        if (latestRequestIdRef.current !== requestId) {
-          return;
-        }
-        const errorEvidence = getWorkbenchApiErrorEvidence(error);
         const permissionBlocked = isWorkbenchPermissionBlockedError(error);
         if (permissionBlocked) {
           cacheRef.current.delete(requestKey);
         }
+        if (latestRequestIdRef.current !== requestId) {
+          return;
+        }
+        const errorEvidence = getWorkbenchApiErrorEvidence(error);
         setState({
           status: permissionBlocked ? "permission_blocked" : "error",
           trend: null,
