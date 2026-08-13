@@ -68,13 +68,13 @@ export default function PortfolioWorkspaceClient({
     sourceKey: initialWorkspaceSourceKey,
     workspace: initialWorkspace,
   });
-  const shellRequestRef = useRef<ShellRequestState>({
+  const initialShellRequestState: ShellRequestState = {
     sourceKey: initialWorkspaceSourceKey,
     status: initialWorkspace ? "loaded" : "idle",
-  });
-  const [shellRequestState, setShellRequestState] = useState<ShellRequestState>(
-    shellRequestRef.current,
-  );
+  };
+  const shellRequestRef = useRef<ShellRequestState>(initialShellRequestState);
+  const [shellRequestState, setShellRequestState] =
+    useState<ShellRequestState>(initialShellRequestState);
   const workspaceState =
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
       ? workspaceDraft.workspace
