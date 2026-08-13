@@ -4013,3 +4013,67 @@ success, URL truth, responsive reflow, head-managed styles, and exactly two expe
 signals. The Performance Summary guide, supported-feature truth, codebase review ledger, and
 repository context change; Gateway/API/OpenAPI, source calculations, dependencies, and global CSS do
 not.
+
+## Performance Analysis Evidence Cardinality And Recovery
+
+### Business and engineering job
+
+An advisor investigating performance drivers must be able to distinguish a real historical pattern
+from one observation, valid source-confirmed absence, an access restriction, and a failed source
+request. Confirmation of contribution and attribution detail must not silently certify a separate
+history request that did not succeed.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-14:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes connected portfolio analytics, common portfolio language, and interactive workflows
+   intended to improve advisor efficiency. The applicable pattern is a coherent investigation path
+   whose analytical evidence stays connected to the selected portfolio context.
+2. [BlackRock Aladdin Accounting](https://www.blackrock.com/aladdin/platforms/products/aladdin-accounting)
+   emphasizes consistent performance data, reconciliation, and controlled operating information.
+   This supports explicit source state rather than browser-authored success or empty evidence.
+3. [W3C WCAG 2.2 status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important dynamic outcomes to be available to assistive technology without taking
+   focus; [Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) supports
+   retaining the user's recovery control through pending and completion.
+
+These sources inform evidence hierarchy, state semantics, and accessible recovery only. Lotus does
+not copy another product's layout, visual identity, wording, calculations, or unsupported
+capabilities, and the research does not support a claim of competitor superiority.
+
+### Adopted decisions
+
+1. Give historical attribution its own typed loading, ready, recoverable-error, and
+   permission-blocked state rather than deriving posture from the detail transaction.
+2. Cache only source-confirmed success and fence obsolete completion with a monotonic request id.
+3. Expose a stable machine-readable state and observation count while keeping the visible copy
+   business-facing.
+4. Require at least two observations for a trend chart. Preserve one observation as exact tabular
+   evidence with an explicit no-trend qualification.
+5. Keep one recovery action mounted through failure, pending, and success so focus does not jump;
+   retry the exact request and disclose source response status as secondary support evidence.
+6. Validate the negative path against the real Workbench BFF using one deliberate 503 and reject
+   any additional console or page failure.
+
+### Rejected decisions
+
+1. Converting request rejection into a supported response with empty rows or blank source identity.
+2. Using generic unavailable copy for both valid absence and transport/source failure.
+3. Drawing one observation as a time series or filling missing periods in the browser.
+4. Treating the detail confirmation message as proof that independent history succeeded.
+5. Moving focus to an alert, removing the retry control during pending, or depending on transient
+   toast copy as the automation contract.
+6. Adding another state, chart, notification, or CSS dependency for a bounded panel lifecycle.
+
+### Validation and publication decision
+
+Workbench #682 owns implementation and #605 owns guide coverage. Focused tests prove multi-,
+single-, zero-, failed, permission-blocked, exact-retry, focus, and stale-request behavior. The
+optimized-production `PB_SG_GLOBAL_BAL_001` scenario proves a deliberate 503 remains explicit until
+source retry succeeds, then renders one exact observation without a chart at governed narrow
+viewports. The complete Performance Analysis guide, API surface, supported-feature truth,
+repository context, and codebase review ledger change. Gateway/API/OpenAPI, source calculations,
+dependencies, global CSS, runtime topology, advice, trade, approval, and report-publication
+authority do not. Workbench #683 and #684 durably own the adjacent false-empty and dead-code patterns.

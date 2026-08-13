@@ -951,6 +951,17 @@ Important validation expectations:
     publish summary, detail, normalized controls, or query state; do not invent fallback analytics.
     Use `npm run test:e2e:performance:refresh-integrity` for the owned optimized-production failure
     and recovery journey.
+25. Independently fetched analytical panels own independent source state. Never convert a rejected
+    request into a supported empty response, blank correlation id, or generic unavailable posture.
+    Cache only source-confirmed success, fence obsolete completions, distinguish recoverable error
+    from permission block and valid absence, and provide an exact source retry when recovery is
+    implemented. Evidence cardinality governs presentation: one observation remains exact tabular
+    evidence and cannot be drawn as a trend; a time-series chart requires at least two observations.
+    Keep the recovery action mounted so keyboard focus remains stable, and expose a stable
+    machine-readable evidence state in addition to business copy. Use
+    `npm run test:e2e:performance:trend-integrity` for the owned attribution-history failure,
+    retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison has the same known
+    false-empty pattern under Workbench #683 and must reuse this state model when fixed.
 
 ### Visual Review Gate
 

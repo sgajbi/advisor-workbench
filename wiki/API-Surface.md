@@ -75,6 +75,10 @@ promote dormant labels into product ownership just because historical route file
   `/horizon-comparison` contracts; browser requests use the internal
   `/api/bff/api/v1/workbench/{portfolio_id}/performance/*` proxy and never call Core or Performance
   services directly
+- Performance Analysis consumes the same Gateway `/details` family plus
+  `/api/v1/workbench/{portfolio_id}/performance/attribution-trend`; the browser uses
+  `/api/bff/api/v1/...` and keeps history retrieval failure distinct from a source-confirmed empty
+  response
 - data-product discovery is served through `/data-products` and consumes gateway
   `/api/v1/domain-products/*` APIs through the internal BFF only
 - internal browser-to-gateway traffic can flow through `/api/bff/*`

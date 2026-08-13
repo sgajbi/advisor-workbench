@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 8,
-      coverageExceptions: 28,
-      unmappedGuides: 28,
+      mappedGuides: 9,
+      coverageExceptions: 27,
+      unmappedGuides: 27,
     });
   });
 
@@ -189,6 +189,37 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("composing Core portfolio/reference/benchmark context");
     expect(guide).toContain("does not:\n\n- calculate time-weighted");
     expect(guide).toContain("not a claim of competitor\nsuperiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Performance Analysis to one evidence-cardinality-safe business guide", () => {
+    const registry = loadRegistry();
+    const performanceAnalysis = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "performance-analysis",
+    );
+
+    expect(performanceAnalysis).toMatchObject({
+      routePattern: "/performance",
+      mode: "analysis",
+      wikiSlug: "Performance-Analysis-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-performance"],
+      runtimeEvidence: expect.arrayContaining([
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/performance-workbench.smoke.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Performance-Analysis-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("one published observation");
+    expect(guide).toContain("does not imply that the independent history request succeeded");
+    expect(guide).toContain("convert a failed request into zero rows");
+    expect(guide).toContain("focus continuity");
+    expect(guide).toContain("does not\ncopy another product's layout");
     expect(validate(registry).errors).toEqual([]);
   });
 
