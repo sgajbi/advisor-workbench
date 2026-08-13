@@ -1,191 +1,238 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import {
-  SectionBlock,
+  ActionButton,
+  ScreenStatePanel,
   SemanticBadge,
-  Text,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
+  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 
 import {
-  DomainProduct,
-  DomainProductDiscoveryData,
-  DomainProductTrustCertification,
-  getDomainProductDiscovery,
+  type DomainProductCatalogData,
+  type DomainProductGraphData,
+  type DomainProductTrustCertificationData,
+  getDomainProductCatalog,
+  getDomainProductDependencyGraph,
+  getDomainProductTrustCertification,
 } from "./api";
-
-type DiscoveryState =
-  | { kind: "loading" }
-  | { kind: "ready"; data: DomainProductDiscoveryData }
-  | { kind: "error"; message: string };
-
-type TrustTone = "success" | "warn" | "danger" | "default";
+import {
+  ApprovedUseSection,
+  ProductCatalogueSection,
+} from "./domain-product-catalogue-sections";
+import styles from "./domain-product-discovery.module.css";
+import {
+  DependencyGraphSection,
+  TrustSection,
+} from "./domain-product-source-sections";
+import {
+  formatDateTime,
+  formatStateLabel,
+  getTrustAvailability,
+  getTrustTone,
+} from "./presentation";
 
 export default function DomainProductDiscoveryClient() {
-  const [state, setState] = useState<DiscoveryState>({ kind: "loading" });
+  const catalogQuery = useQuery({
+    queryKey: ["domain-product-catalog"],
+    queryFn: getDomainProductCatalog,
+    ...workbenchStrictQueryDefaults,
+  });
+  const dependencyGraphQuery = useQuery({
+    queryKey: ["domain-product-dependency-graph"],
+    queryFn: getDomainProductDependencyGraph,
+    ...workbenchStrictQueryDefaults,
+  });
+  const trustCertificationQuery = useQuery({
+    queryKey: ["domain-product-trust-certification"],
+    queryFn: getDomainProductTrustCertification,
+    ...workbenchStrictQueryDefaults,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    getDomainProductDiscovery()
-      .then((data) => {
-        if (!cancelled) {
-          setState({ kind: "ready", data });
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setState({
-            kind: "error",
-            message: error instanceof Error ? error.message : "Domain product discovery failed.",
-          });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (state.kind === "loading") {
+  if (catalogQuery.isLoading && !catalogQuery.data) {
     return (
-      <DiscoveryFrame trustBadge={<SemanticBadge>Loading</SemanticBadge>}>
-        <SectionBlock title="Loading Domain Products">
-          <div className="domain-products-loading" role="status">
-            Loading governed catalog and trust certification from gateway.
-          </div>
-        </SectionBlock>
+      <DiscoveryFrame trustBadge={<SemanticBadge>Checking assurance</SemanticBadge>}>
+        <ScreenStatePanel
+          kind="loading"
+          title="Loading the data product catalogue"
+          body="Confirming the governed products available to the Workbench."
+          rows={5}
+        />
       </DiscoveryFrame>
     );
   }
 
-  if (state.kind === "error") {
+  if (catalogQuery.error && !catalogQuery.data) {
     return (
-      <DiscoveryFrame trustBadge={<SemanticBadge tone="danger">Unavailable</SemanticBadge>}>
-        <SectionBlock title="Discovery Unavailable">
-          <div className="domain-products-state domain-products-state-danger" role="alert">
-            {state.message}
-          </div>
-        </SectionBlock>
+      <DiscoveryFrame trustBadge={<SemanticBadge tone="danger">Catalogue unavailable</SemanticBadge>}>
+        <ScreenStatePanel
+          kind="error"
+          title="The data product catalogue is temporarily unavailable"
+          body="Product ownership and approved-use evidence cannot be confirmed. No substitute catalogue has been shown."
+          hint="Retry when the governed catalogue service is available."
+          action={
+            <ActionButton onClick={() => void catalogQuery.refetch()}>
+              Retry catalogue
+            </ActionButton>
+          }
+        />
       </DiscoveryFrame>
     );
   }
 
-  return <ReadyDiscovery data={state.data} />;
+  if (!catalogQuery.data) return null;
+
+  return (
+    <ReadyDiscovery
+      catalog={catalogQuery.data}
+      dependencyGraph={dependencyGraphQuery.data}
+      dependencyGraphError={Boolean(dependencyGraphQuery.error)}
+      dependencyGraphLoading={dependencyGraphQuery.isLoading}
+      dependencyGraphRefreshing={dependencyGraphQuery.isFetching}
+      onRefreshDependencyGraph={() => void dependencyGraphQuery.refetch()}
+      trustCertification={trustCertificationQuery.data}
+      trustCertificationError={Boolean(trustCertificationQuery.error)}
+      trustCertificationLoading={trustCertificationQuery.isLoading}
+      trustCertificationRefreshing={trustCertificationQuery.isFetching}
+      onRefreshTrustCertification={() => void trustCertificationQuery.refetch()}
+    />
+  );
 }
 
-function ReadyDiscovery({ data }: { data: DomainProductDiscoveryData }) {
-  const trustByProductId = useMemo(() => {
-    return new Map(
-      data.trustCertification.productCertifications.map((certification) => [
-        certification.productId,
-        certification,
-      ])
-    );
-  }, [data.trustCertification.productCertifications]);
-
-  const trustTone = getTrustTone(data.trustCertification.trustPosture);
-  const products = data.catalog.products;
-  const hasProducts = products.length > 0;
-  const hasPartialTrust =
-    !data.trustCertification.trustAvailable ||
-    data.trustCertification.trustPosture !== "certified" ||
-    data.trustCertification.productCertifications.some(
-      (certification) =>
-        certification.certificationState !== "certified" ||
-        certification.freshnessState === "stale" ||
-        certification.blocked === true
-    );
+function ReadyDiscovery({
+  catalog,
+  dependencyGraph,
+  dependencyGraphError,
+  dependencyGraphLoading,
+  dependencyGraphRefreshing,
+  onRefreshDependencyGraph,
+  trustCertification,
+  trustCertificationError,
+  trustCertificationLoading,
+  trustCertificationRefreshing,
+  onRefreshTrustCertification,
+}: {
+  catalog: DomainProductCatalogData;
+  dependencyGraph: DomainProductGraphData | undefined;
+  dependencyGraphError: boolean;
+  dependencyGraphLoading: boolean;
+  dependencyGraphRefreshing: boolean;
+  onRefreshDependencyGraph: () => void;
+  trustCertification: DomainProductTrustCertificationData | undefined;
+  trustCertificationError: boolean;
+  trustCertificationLoading: boolean;
+  trustCertificationRefreshing: boolean;
+  onRefreshTrustCertification: () => void;
+}) {
+  const trustByProductId = useMemo(
+    () =>
+      new Map(
+        trustCertification?.productCertifications.map((certification) => [
+          certification.productId,
+          certification,
+        ]) ?? []
+      ),
+    [trustCertification?.productCertifications]
+  );
+  const trustAvailability = getTrustAvailability({
+    data: trustCertification,
+    loading: trustCertificationLoading,
+    hasError: trustCertificationError,
+  });
+  const trustTone = trustCertification
+    ? getTrustTone(trustCertification.trustPosture)
+    : trustCertificationError
+      ? "warn"
+      : "default";
+  const trustLabel = trustCertification
+    ? formatStateLabel(trustCertification.trustPosture)
+    : trustCertificationError
+      ? "Assurance unavailable"
+      : "Checking assurance";
+  const certifiedCount = trustCertification?.trustAvailable
+    ? (trustCertification.summary?.certifiedSnapshotCount ?? 0)
+    : undefined;
 
   return (
     <DiscoveryFrame
       trustBadge={
         <SemanticBadge tone={trustTone} emphasis="strong">
-          {formatStateLabel(data.trustCertification.trustPosture)}
+          {trustLabel}
         </SemanticBadge>
       }
     >
-      {!hasProducts ? (
-        <SectionBlock title="No Governed Products">
-          <div className="domain-products-state">
-            Gateway returned an empty domain-product catalog for lotus-workbench.
-          </div>
-        </SectionBlock>
-      ) : null}
-
-      {hasPartialTrust ? (
-        <SectionBlock
-          title="Trust Attention"
-          actions={<SemanticBadge tone={trustTone}>RFC-0087</SemanticBadge>}
-        >
-          <TrustAttention data={data} />
-        </SectionBlock>
-      ) : null}
-
-      <section className="domain-products-overview" aria-label="Domain product summary">
-        <SummaryTile label="Products" value={data.catalog.productCount} />
-        <SummaryTile label="Consumers" value={data.catalog.consumers.length} />
-        <SummaryTile label="Dependencies" value={data.catalog.dependencyCount} />
-        <SummaryTile
-          label="Certified"
-          value={data.trustCertification.summary?.certifiedSnapshotCount ?? 0}
-        />
-      </section>
-
-      <SectionBlock
-        title="Governed Product Catalog"
-        subtitle="Producer-owned contracts surfaced through gateway."
-      >
-        <div className="domain-products-grid">
-          {products.map((product) => (
-            <ProductCard
-              key={product.productId}
-              product={product}
-              trust={trustByProductId.get(product.productId)}
-            />
-          ))}
+      <div className={styles.sourceContext} aria-label="Catalogue source context">
+        <div>
+          <span>Catalogue status</span>
+          <strong>Source confirmed</strong>
         </div>
-      </SectionBlock>
-
-      <SectionBlock
-        title="Consumer Dependency Catalog"
-        subtitle="Approved consumers and declared dependencies."
-      >
-        <div className="domain-products-dependencies">
-          {data.catalog.consumers.map((consumer) => (
-            <div key={consumer.consumerRepository} className="domain-products-row">
-              <div>
-                <Text variant="label">{consumer.consumerRepository}</Text>
-                <Text variant="secondary">{consumer.sourcePath}</Text>
-              </div>
-              <div className="domain-products-chip-row">
-                {consumer.dependencies.map((dependency) => (
-                  <SemanticBadge key={dependency.dependencyId}>
-                    {dependency.productName} {dependency.requiredProductVersion}
-                  </SemanticBadge>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div>
+          <span>Published</span>
+          <strong>{formatDateTime(catalog.generatedAtUtc)}</strong>
         </div>
-      </SectionBlock>
-
-      <SectionBlock title="Dependency Graph" subtitle="Gateway-rendered impact posture.">
-        <div className="domain-products-graph">
-          <SummaryTile label="Graph nodes" value={data.dependencyGraph.nodeCount} />
-          <SummaryTile label="Graph edges" value={data.dependencyGraph.edgeCount} />
-          <SummaryTile
-            label="Fail-closed edges"
-            value={
-              data.dependencyGraph.edges.filter((edge) => edge.failurePosture === "fail_closed")
-                .length
-            }
-          />
+        <div>
+          <span>Contract</span>
+          <strong>{catalog.contractVersion}</strong>
         </div>
-      </SectionBlock>
+        <span className={styles.sourceReference}>Gateway · {catalog.correlationId}</span>
+      </div>
+
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Data product catalogue summary"
+        items={[
+          {
+            key: "products",
+            label: "Available products",
+            value: catalog.productCount,
+            support: "Governed product contracts",
+          },
+          {
+            key: "consumers",
+            label: "Approved consumers",
+            value: catalog.consumers.length,
+            support: "Declared consuming systems",
+          },
+          {
+            key: "dependencies",
+            label: "Dependencies",
+            value: catalog.dependencyCount,
+            support: "Declared source relationships",
+          },
+          {
+            key: "certified",
+            label: "Assurance confirmed",
+            value: certifiedCount ?? "—",
+            support: certifiedCount === undefined ? "Live assurance unavailable" : "Current certifications",
+            unavailable: certifiedCount === undefined,
+          },
+        ]}
+      />
+
+      <ProductCatalogueSection
+        products={catalog.products}
+        trustByProductId={trustByProductId}
+        trustAvailability={trustAvailability}
+      />
+      <TrustSection
+        data={trustCertification}
+        hasError={trustCertificationError}
+        isLoading={trustCertificationLoading}
+        isRefreshing={trustCertificationRefreshing}
+        onRefresh={onRefreshTrustCertification}
+      />
+      <ApprovedUseSection consumers={catalog.consumers} />
+      <DependencyGraphSection
+        data={dependencyGraph}
+        hasError={dependencyGraphError}
+        isLoading={dependencyGraphLoading}
+        isRefreshing={dependencyGraphRefreshing}
+        onRefresh={onRefreshDependencyGraph}
+      />
     </DiscoveryFrame>
   );
 }
@@ -198,10 +245,10 @@ function DiscoveryFrame({
   children: React.ReactNode;
 }) {
   return (
-    <main className="page-container domain-products-page">
+    <main className={styles.page}>
       <WorkbenchPageFrame
-        title="Domain Product Discovery"
-        subtitle="Review governed data products, consumers, dependencies, and live trust posture from gateway."
+        title="Data Product Catalogue"
+        subtitle="Find governed data products, confirm accountable ownership and assess whether the evidence is fit for use."
         actions={
           <>
             {trustBadge}
@@ -213,108 +260,4 @@ function DiscoveryFrame({
       </WorkbenchPageFrame>
     </main>
   );
-}
-
-function TrustAttention({ data }: { data: DomainProductDiscoveryData }) {
-  if (!data.trustCertification.trustAvailable) {
-    return (
-      <div className="domain-products-state domain-products-state-warn">
-        {data.trustCertification.unavailableReason ??
-          "Live trust certification has not been generated."}
-      </div>
-    );
-  }
-
-  const issues = data.trustCertification.issues;
-  if (issues.length === 0) {
-    return (
-      <div className="domain-products-state domain-products-state-warn">
-        Trust posture is {formatStateLabel(data.trustCertification.trustPosture)}.
-      </div>
-    );
-  }
-
-  return (
-    <div className="domain-products-issues">
-      {issues.map((issue) => (
-        <div key={`${issue.productId}:${issue.code}:${issue.detail}`} className="domain-products-row">
-          <div>
-            <Text variant="label">{issue.code}</Text>
-            <Text variant="secondary">{issue.productId}</Text>
-          </div>
-          <Text variant="secondary">{issue.detail}</Text>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProductCard({
-  product,
-  trust,
-}: {
-  product: DomainProduct;
-  trust: DomainProductTrustCertification | undefined;
-}) {
-  const trustState = trust?.certificationState ?? "unavailable";
-  const trustTone = getTrustTone(trustState);
-
-  return (
-    <article className="domain-products-card">
-      <div className="domain-products-card-header">
-        <div>
-          <Text variant="label">{product.producerRepository}</Text>
-          <h2>{product.productName}</h2>
-          <Text variant="secondary">{product.productVersion}</Text>
-        </div>
-        <SemanticBadge tone={trustTone}>{formatStateLabel(trustState)}</SemanticBadge>
-      </div>
-      <dl className="domain-products-facts">
-        <div>
-          <dt>Lifecycle</dt>
-          <dd>{product.lifecycleStatus}</dd>
-        </div>
-        <div>
-          <dt>Owner</dt>
-          <dd>{product.ownerRepository}</dd>
-        </div>
-        <div>
-          <dt>Approved consumers</dt>
-          <dd>{product.approvedConsumers.join(", ") || "none"}</dd>
-        </div>
-        <div>
-          <dt>Freshness</dt>
-          <dd>{trust?.freshnessState ?? "unavailable"}</dd>
-        </div>
-        <div>
-          <dt>Completeness</dt>
-          <dd>{trust?.completenessStatus ?? "unavailable"}</dd>
-        </div>
-        <div>
-          <dt>Lineage</dt>
-          <dd>{trust?.lineageMaterialized ? "materialized" : "unavailable"}</dd>
-        </div>
-      </dl>
-    </article>
-  );
-}
-
-function SummaryTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="domain-products-summary-tile">
-      <Text variant="label">{label}</Text>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function getTrustTone(state: string): TrustTone {
-  if (state === "certified") return "success";
-  if (state === "attention_required" || state === "unavailable") return "warn";
-  if (state === "blocked") return "danger";
-  return "default";
-}
-
-function formatStateLabel(state: string): string {
-  return state.replaceAll("_", " ");
 }

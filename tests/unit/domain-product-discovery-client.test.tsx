@@ -1,151 +1,197 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import DomainProductDiscoveryClient from "../../src/features/domain-products/domain-product-discovery-client";
-import type { DomainProductDiscoveryData } from "../../src/features/domain-products/api";
+import type {
+  DomainProductCatalogData,
+  DomainProductGraphData,
+  DomainProductTrustCertificationData,
+} from "../../src/features/domain-products/api";
 
-const getDomainProductDiscoveryMock = vi.fn();
+const getDomainProductCatalogMock = vi.fn();
+const getDomainProductDependencyGraphMock = vi.fn();
+const getDomainProductTrustCertificationMock = vi.fn();
 
 vi.mock("../../src/features/domain-products/api", async () => {
   const actual = await vi.importActual("../../src/features/domain-products/api");
   return {
     ...(actual as object),
-    getDomainProductDiscovery: () => getDomainProductDiscoveryMock(),
+    getDomainProductCatalog: () => getDomainProductCatalogMock(),
+    getDomainProductDependencyGraph: () => getDomainProductDependencyGraphMock(),
+    getDomainProductTrustCertification: () => getDomainProductTrustCertificationMock(),
   };
 });
 
 describe("DomainProductDiscoveryClient", () => {
   beforeEach(() => {
-    getDomainProductDiscoveryMock.mockReset();
-  });
-
-  it("renders real catalog, dependency, and certified trust facts", async () => {
-    getDomainProductDiscoveryMock.mockResolvedValue(buildDiscovery());
-
-    render(<DomainProductDiscoveryClient />);
-
-    expect(
-      screen.getByText("Loading governed catalog and trust certification from gateway.")
-    ).toBeInTheDocument();
-
-    expect(await screen.findByText("PortfolioStateSnapshot")).toBeInTheDocument();
-    expect(screen.getAllByText("lotus-core").length).toBeGreaterThan(0);
-    expect(screen.getByText("lotus-workbench, lotus-risk")).toBeInTheDocument();
-    expect(screen.getByText("materialized")).toBeInTheDocument();
-    expect(screen.getByText("RiskMetricsReport v1")).toBeInTheDocument();
-    expect(screen.getByText("Fail-closed edges")).toBeInTheDocument();
-  });
-
-  it("renders unavailable trust without inventing certification", async () => {
-    getDomainProductDiscoveryMock.mockResolvedValue(
-      buildDiscovery({
-        trustAvailable: false,
-        trustPosture: "unavailable",
-        unavailableReason: "Platform live trust certification artifact is unavailable.",
-        summary: null,
-        productCertifications: [],
-      })
-    );
-
-    render(<DomainProductDiscoveryClient />);
-
-    await waitFor(() => {
-      expect(screen.getByText("Trust Attention")).toBeInTheDocument();
-    });
-
-    expect(
-      screen.getByText("Platform live trust certification artifact is unavailable.")
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("unavailable").length).toBeGreaterThan(0);
-  });
-
-  it("renders stale trust issue details as partial truth", async () => {
-    getDomainProductDiscoveryMock.mockResolvedValue(
-      buildDiscovery({
-        trustPosture: "attention_required",
-        summary: {
-          certificationState: "attention_required",
-          telemetrySnapshotCount: 1,
-          certifiedSnapshotCount: 0,
-          attentionRequiredCount: 1,
-          issueCount: 1,
-        },
-        productCertifications: [
-          {
-            productId: "lotus-core:PortfolioStateSnapshot:v1",
-            producerRepository: "lotus-core",
-            productName: "PortfolioStateSnapshot",
-            productVersion: "v1",
-            sourceRepository: "lotus-core",
-            telemetryPath: "contracts/trust-telemetry/portfolio-state.telemetry.v1.json",
-            emittedAtUtc: "2026-04-19T00:00:00Z",
-            certificationState: "attention_required",
-            freshnessState: "stale",
-            completenessStatus: "complete",
-            reconciliationStatus: "reconciled",
-            dataQualityStatus: "quality_passed",
-            lineageMaterialized: true,
-            blocked: false,
-            issueCount: 1,
-          },
-        ],
-        issues: [
-          {
-            code: "freshness_not_current",
-            severity: "warning",
-            productId: "lotus-core:PortfolioStateSnapshot:v1",
-            detail: "Freshness state is stale.",
-          },
-        ],
-      })
-    );
-
-    render(<DomainProductDiscoveryClient />);
-
-    await waitFor(() => {
-      expect(screen.getByText("freshness_not_current")).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("Freshness state is stale.")).toBeInTheDocument();
-    expect(screen.getAllByText("attention required").length).toBeGreaterThan(0);
-  });
-
-  it("renders the empty catalog state", async () => {
+    getDomainProductCatalogMock.mockReset();
+    getDomainProductDependencyGraphMock.mockReset();
+    getDomainProductTrustCertificationMock.mockReset();
     const discovery = buildDiscovery();
-    getDomainProductDiscoveryMock.mockResolvedValue({
-      ...discovery,
-      catalog: {
-        ...discovery.catalog,
-        productCount: 0,
-        products: [],
-      },
-    });
+    getDomainProductCatalogMock.mockResolvedValue(discovery.catalog);
+    getDomainProductDependencyGraphMock.mockResolvedValue(discovery.dependencyGraph);
+    getDomainProductTrustCertificationMock.mockResolvedValue(discovery.trustCertification);
+  });
 
-    render(<DomainProductDiscoveryClient />);
+  it("renders the catalogue, approved use, dependency impact, and confirmed assurance", async () => {
+    renderDiscovery();
+
+    expect(screen.getByText("Loading the data product catalogue")).toBeInTheDocument();
+    expect(await screen.findByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Lotus workbench, Lotus risk")).toBeInTheDocument();
+    expect(screen.getByText("Risk Metrics Report v1")).toBeInTheDocument();
+    expect(screen.getByText("Fail-closed relationships")).toBeInTheDocument();
+    expect(screen.getByText(/Live assurance confirmed/)).toBeInTheDocument();
+    expect(screen.getByText("Available", { selector: "dd" })).toBeInTheDocument();
+  });
+
+  it("keeps the catalogue usable when the assurance source fails", async () => {
+    getDomainProductTrustCertificationMock.mockRejectedValue(
+      new Error("503 trust telemetry path unavailable")
+    );
+
+    renderDiscovery();
+
+    expect(await screen.findByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Live assurance is temporarily unavailable")).toBeInTheDocument();
+    expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/503 trust telemetry/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry assurance" })).toBeInTheDocument();
+  });
+
+  it("recovers assurance in place and preserves focus on its source control", async () => {
+    const discovery = buildDiscovery();
+    getDomainProductTrustCertificationMock
+      .mockRejectedValueOnce(new Error("trust unavailable"))
+      .mockResolvedValueOnce(discovery.trustCertification);
+    renderDiscovery();
+
+    const retry = await screen.findByRole("button", { name: "Retry assurance" });
+    retry.focus();
+    fireEvent.click(retry);
+
+    expect(retry).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByText(/Live assurance confirmed/)).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Refresh assurance" })).toHaveFocus();
+    expect(screen.queryByText("Live assurance is temporarily unavailable")).not.toBeInTheDocument();
+  });
+
+  it("keeps the catalogue usable when dependency impact fails and supports recovery", async () => {
+    const discovery = buildDiscovery();
+    getDomainProductDependencyGraphMock
+      .mockRejectedValueOnce(new Error("dependency graph unavailable"))
+      .mockResolvedValueOnce(discovery.dependencyGraph);
+    renderDiscovery();
+
+    expect(await screen.findByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Dependency impact is temporarily unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("dependency graph unavailable")).not.toBeInTheDocument();
+
+    const retry = screen.getByRole("button", { name: "Retry impact evidence" });
+    retry.focus();
+    fireEvent.click(retry);
 
     await waitFor(() => {
-      expect(screen.getByText("No Governed Products")).toBeInTheDocument();
+      expect(screen.getByText("Fail-closed relationships")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Refresh impact evidence" })).toHaveFocus();
+  });
+
+  it("retains earlier assurance visibly when a refresh fails", async () => {
+    const discovery = buildDiscovery();
+    getDomainProductTrustCertificationMock
+      .mockResolvedValueOnce(discovery.trustCertification)
+      .mockRejectedValueOnce(new Error("refresh failed"));
+    renderDiscovery();
+
+    const refresh = await screen.findByRole("button", { name: "Refresh assurance" });
+    fireEvent.click(refresh);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("The latest assurance refresh did not complete")
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.queryByText("refresh failed")).not.toBeInTheDocument();
+  });
+
+  it("renders source-owned unavailable assurance without inventing certification", async () => {
+    const discovery = buildDiscovery();
+    getDomainProductTrustCertificationMock.mockResolvedValue({
+      ...discovery.trustCertification,
+      trustAvailable: false,
+      trustPosture: "unavailable",
+      unavailableReason: "Live assurance has not yet been published for this catalogue.",
+      summary: null,
+      productCertifications: [],
     });
 
+    renderDiscovery();
+
     expect(
-      screen.getByText("Gateway returned an empty domain-product catalog for lotus-workbench.")
+      await screen.findByText("Live assurance has not been confirmed")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Live assurance has not yet been published for this catalogue.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByText("0", { selector: ".workbench-summary-metric-value" })).not.toBeInTheDocument();
+  });
+
+  it("renders the empty catalogue state", async () => {
+    const discovery = buildDiscovery();
+    getDomainProductCatalogMock.mockResolvedValue({
+      ...discovery.catalog,
+      productCount: 0,
+      products: [],
+    });
+
+    renderDiscovery();
+
+    expect(await screen.findByText("No data products are available")).toBeInTheDocument();
+    expect(
+      screen.getByText("The governed catalogue returned no products for the Workbench.")
     ).toBeInTheDocument();
   });
 
-  it("renders gateway errors truthfully", async () => {
-    getDomainProductDiscoveryMock.mockRejectedValue(new Error("gateway unavailable"));
+  it("blocks discovery with business-safe copy when the catalogue fails", async () => {
+    getDomainProductCatalogMock.mockRejectedValue(
+      new Error("Domain product discovery fetch failed (503): internal path missing")
+    );
 
-    render(<DomainProductDiscoveryClient />);
+    renderDiscovery();
 
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("gateway unavailable");
-    });
+    expect(
+      await screen.findByText("The data product catalogue is temporarily unavailable")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry catalogue" })).toBeInTheDocument();
+    expect(screen.queryByText(/internal path missing/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Portfolio State Snapshot")).not.toBeInTheDocument();
   });
 });
 
-function buildDiscovery(
-  trustOverrides: Partial<DomainProductDiscoveryData["trustCertification"]> = {}
-): DomainProductDiscoveryData {
+function renderDiscovery() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <DomainProductDiscoveryClient />
+    </QueryClientProvider>
+  );
+}
+
+function buildDiscovery(): {
+  catalog: DomainProductCatalogData;
+  dependencyGraph: DomainProductGraphData;
+  trustCertification: DomainProductTrustCertificationData;
+} {
   return {
     catalog: {
       consumerSystem: "lotus-workbench",
@@ -258,7 +304,6 @@ function buildDiscovery(
         },
       ],
       issues: [],
-      ...trustOverrides,
     },
   };
 }
