@@ -190,9 +190,9 @@ describe("dependency security governance", () => {
       packages?: Record<string, { version?: string; integrity?: string }>;
     };
 
-    expect(packageJson.overrides?.nanoid).toBe("3.3.17");
+    expect(packageJson.overrides?.nanoid).toBe("3.3.18");
     expect(packageLock.packages?.["node_modules/nanoid"]).toMatchObject({
-      version: "3.3.17",
+      version: "3.3.18",
       integrity:
         "sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g==",
     });
