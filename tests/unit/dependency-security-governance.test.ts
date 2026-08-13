@@ -194,7 +194,7 @@ describe("dependency security governance", () => {
     expect(packageLock.packages?.["node_modules/nanoid"]).toMatchObject({
       version: "3.3.18",
       integrity:
-        "sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g==",
+        "sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==",
     });
   });
 
