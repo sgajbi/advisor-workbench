@@ -129,4 +129,46 @@ describe("PerformanceAnalysisControlBar", () => {
       screen.getByRole("option", { name: "Quarterly" })
     ).toBeDisabled();
   });
+
+  it("locks every source-changing selection while an analytical refresh is pending", () => {
+    render(
+      <PerformanceAnalysisControlBar
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        benchmark="BMK_GLOBAL_BALANCED_60_40"
+        resolvedBenchmarkOptions={[
+          {
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            benchmark_name: "Global Balanced 60/40",
+            is_assigned: true,
+          },
+        ]}
+        fromDate="2026-01-01"
+        toDate="2026-04-14"
+        maxEndDate="2026-04-14"
+        minEndDate="2026-01-01"
+        chartViewMode="absolute"
+        hasBenchmarkSeries
+        hasActiveSeries
+        capabilities={buildPerformanceCapabilities()}
+        isUpdating
+        onRequestChange={vi.fn()}
+        onApplyExplicitDates={(event) => event.preventDefault()}
+        onFromDateChange={vi.fn()}
+        onToDateChange={vi.fn()}
+        onChartViewModeChange={vi.fn()}
+      />
+    );
+
+    for (const option of ["YTD", "3Y", "NET", "GROSS"]) {
+      expect(screen.getByRole("radio", { name: option })).toHaveAttribute(
+        "aria-disabled",
+        "true"
+      );
+    }
+    expect(screen.getByLabelText("Frequency")).toBeDisabled();
+    expect(screen.getByLabelText("Benchmark")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Updating..." })).toBeDisabled();
+  });
 });

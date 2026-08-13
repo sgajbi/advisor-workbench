@@ -288,12 +288,22 @@ export default function PerformanceWorkspaceClient({
     const nextControls = applyPerformanceControlPatch(controls, patch);
     const sameSummary = buildSummaryCacheKey(nextControls) === buildSummaryCacheKey(controls);
     const sameDetails = buildDetailsCacheKey(nextControls) === buildDetailsCacheKey(controls);
-    if (sameSummary && sameDetails && pendingRefresh) {
-      requestSequenceRef.current += 1;
-      setPendingRefresh(null);
-      setRefreshFailure(null);
-      setRefreshConfirmation(null);
-      return;
+    if (pendingRefresh) {
+      const repeatsPendingRequest =
+        buildSummaryCacheKey(nextControls) ===
+          buildSummaryCacheKey(pendingRefresh.requestedControls) &&
+        buildDetailsCacheKey(nextControls) ===
+          buildDetailsCacheKey(pendingRefresh.requestedControls);
+      if (repeatsPendingRequest) {
+        return;
+      }
+      if (sameSummary && sameDetails) {
+        requestSequenceRef.current += 1;
+        setPendingRefresh(null);
+        setRefreshFailure(null);
+        setRefreshConfirmation(null);
+        return;
+      }
     }
     if (sameSummary && sameDetails && detailsStatus === "ready" && !refreshFailure) {
       return;

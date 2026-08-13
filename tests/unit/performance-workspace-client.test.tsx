@@ -686,6 +686,12 @@ describe("PerformanceWorkspaceClient", () => {
     });
 
     await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+    expect(getSummaryClientMock).toHaveBeenCalledTimes(1);
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
       resolveThreeYearSummary?.(
         buildSummary({
           period: "3Y",
