@@ -128,7 +128,7 @@ export default function PerformanceAnalysisControlBar({
             options={PERIOD_OPTIONS.map((option) => ({
               key: option,
               label: option,
-              disabled: isUpdating && option === period,
+              disabled: isUpdating,
             }))}
           />
         </ControlSlot>
@@ -147,7 +147,7 @@ export default function PerformanceAnalysisControlBar({
             options={BASIS_OPTIONS.map((option) => ({
               key: option,
               label: option,
-              disabled: isUpdating && option === detailBasis,
+              disabled: isUpdating,
             }))}
           />
         </ControlSlot>
