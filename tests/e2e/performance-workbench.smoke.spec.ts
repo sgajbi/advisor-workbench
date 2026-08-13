@@ -509,7 +509,9 @@ test.describe('Performance workbench smoke', () => {
     await page.getByRole('option', { name: 'Sector' }).click();
 
     const detailsFailure = page.getByTestId('workbench-refresh-status');
-    await expect(detailsFailure).toContainText('Analytical detail could not be confirmed');
+    await expect(detailsFailure).toContainText(
+      'Contribution and attribution detail could not be confirmed',
+    );
     await expect(detailsFailure).toContainText('RequestedSector contribution');
     await expect(detailsFailure).toContainText('HTTP 502');
     await expect(contributionSegment).toBeFocused();
