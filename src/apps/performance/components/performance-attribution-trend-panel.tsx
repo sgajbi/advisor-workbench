@@ -63,9 +63,9 @@ export default function PerformanceAttributionTrendPanel({
     }),
     [attributionDimension, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate],
   );
-  const { state, refresh } = usePerformanceAttributionTrend(request);
+  const { state, refresh, requestKey } = usePerformanceAttributionTrend(request);
   const refreshButtonRef = useRef<HTMLButtonElement>(null);
-  const restoreRefreshFocusRef = useRef(false);
+  const restoreRefreshFocusRequestKeyRef = useRef<string | null>(null);
   const trend = state.status === "ready" ? state.trend : null;
   const rows = trend?.rows ?? null;
   const isSingleObservation = rows?.length === 1;
@@ -219,13 +219,26 @@ export default function PerformanceAttributionTrendPanel({
   }, [attributionDimension, chartFrequency, onRequestChange, trend]);
 
   useEffect(() => {
-    if (state.status === "loading" || !restoreRefreshFocusRef.current) {
+    if (
+      restoreRefreshFocusRequestKeyRef.current &&
+      restoreRefreshFocusRequestKeyRef.current !== requestKey
+    ) {
+      restoreRefreshFocusRequestKeyRef.current = null;
+    }
+
+    if (state.status === "loading" || !restoreRefreshFocusRequestKeyRef.current) {
       return;
     }
 
-    restoreRefreshFocusRef.current = false;
-    refreshButtonRef.current?.focus();
-  }, [state.status]);
+    const activeElement = document.activeElement;
+    const shouldRestore =
+      restoreRefreshFocusRequestKeyRef.current === requestKey &&
+      (activeElement === document.body || activeElement === refreshButtonRef.current);
+    restoreRefreshFocusRequestKeyRef.current = null;
+    if (shouldRestore) {
+      refreshButtonRef.current?.focus();
+    }
+  }, [requestKey, state.status]);
 
   return (
     <WorkbenchChartShell
@@ -240,7 +253,8 @@ export default function PerformanceAttributionTrendPanel({
             className={styles.refresh}
             disabled={state.status === "loading" || state.status === "permission_blocked"}
             onClick={() => {
-              restoreRefreshFocusRef.current = document.activeElement === refreshButtonRef.current;
+              restoreRefreshFocusRequestKeyRef.current =
+                document.activeElement === refreshButtonRef.current ? requestKey : null;
               refresh();
             }}
           >

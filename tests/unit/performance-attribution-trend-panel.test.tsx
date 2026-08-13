@@ -267,6 +267,56 @@ describe("PerformanceAttributionTrendPanel", () => {
     await waitFor(() => expect(getTrendMock).toHaveBeenCalledTimes(3));
   });
 
+  it("purges confirmed cached history when a later refresh is permission-blocked", async () => {
+    getTrendMock
+      .mockResolvedValueOnce(buildTrendContract())
+      .mockRejectedValueOnce(new WorkbenchApiError("performance attribution trend", 403))
+      .mockResolvedValueOnce(buildTrendContract({ period: "3M" }))
+      .mockRejectedValueOnce(new WorkbenchApiError("performance attribution trend", 403));
+
+    const { rerender } = render(<PerformanceAttributionTrendPanel {...buildProps()} />);
+
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh history" }));
+    await screen.findByText("Attribution history restricted");
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps({ period: "3M" })} />);
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+
+    rerender(<PerformanceAttributionTrendPanel {...buildProps()} />);
+    await screen.findByText("Attribution history restricted");
+    expect(getTrendMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("does not restore refresh focus after the user moves to another control", async () => {
+    let resolveRetry: ((value: ReturnType<typeof buildTrendContract>) => void) | undefined;
+    getTrendMock
+      .mockRejectedValueOnce(new WorkbenchApiError("performance attribution trend", 503))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve;
+          }),
+      );
+
+    render(
+      <>
+        <PerformanceAttributionTrendPanel {...buildProps()} />
+        <button type="button">Continue review</button>
+      </>,
+    );
+
+    const refresh = await screen.findByRole("button", { name: "Refresh history" });
+    refresh.focus();
+    fireEvent.click(refresh);
+    const continueReview = screen.getByRole("button", { name: "Continue review" });
+    continueReview.focus();
+    resolveRetry?.(buildTrendContract());
+
+    await screen.findByRole("heading", { name: "Attribution Observation" });
+    expect(continueReview).toHaveFocus();
+  });
+
   it("does not let an obsolete request replace newer trend evidence", async () => {
     let resolveObsolete!: (value: ReturnType<typeof buildTrendContract>) => void;
     getTrendMock

@@ -953,8 +953,9 @@ Important validation expectations:
     and recovery journey.
 25. Independently fetched analytical panels own independent source state. Never convert a rejected
     request into a supported empty response, blank correlation id, or generic unavailable posture.
-    Cache only source-confirmed success, fence obsolete completions, distinguish recoverable error
-    from permission block and valid absence, and provide an exact source retry when recovery is
+    Cache only source-confirmed success, evict matching cached evidence after a permission denial,
+    fence obsolete completions, distinguish recoverable error from permission block and valid
+    absence, and provide an exact source retry when recovery is
     implemented. Evidence cardinality governs presentation: one observation remains exact tabular
     evidence and cannot be drawn as a trend; a time-series chart requires at least two observations.
     Keep the recovery action mounted, disable it natively while pending, restore keyboard focus
