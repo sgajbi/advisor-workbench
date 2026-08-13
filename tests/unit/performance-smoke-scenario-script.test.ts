@@ -29,10 +29,14 @@ describe("Performance smoke scenario launcher", () => {
     expect(source).toContain('child.kill(signal)');
   });
 
-  it("admits the deterministic refresh-integrity scenario", () => {
+  it("admits the deterministic source-integrity scenarios", () => {
     expect(source).toContain('"refresh-integrity"');
+    expect(source).toContain('"horizon-integrity"');
     expect(source).toContain(
-      'Performance smoke scenario must be populated, unavailable, refresh-integrity, or trend-integrity.',
+      'Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, or horizon-integrity.',
+    );
+    expect(packageJson.scripts["test:e2e:performance:horizon-integrity"]).toContain(
+      "run-performance-smoke-scenario.mjs horizon-integrity",
     );
   });
 
