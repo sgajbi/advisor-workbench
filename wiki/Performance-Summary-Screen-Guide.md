@@ -76,6 +76,8 @@ current only after the matching summary and detail contracts both confirm the re
 - Plots the source-returned portfolio, benchmark, and active return path with accessible chart and
   exact-value evidence.
 - Requests a Gateway-owned horizon-comparison contract for side-by-side supported periods.
+- Distinguishes no published horizons, one exact horizon, and a true multi-horizon comparison;
+  one horizon remains table evidence and is not presented as a comparison graphic.
 - Shows leading positive and negative position or segment contributors from confirmed detail data.
 - Preserves capability, warning, partial-failure, benchmark, calculation, and lineage posture
   without manufacturing unavailable analytics.
@@ -86,6 +88,9 @@ current only after the matching summary and detail contracts both confirm the re
 - Announces pending and failed refresh states without moving focus, locks conflicting controls
   while confirmation is pending, and reflows the recovery card without page overflow at governed
   tablet and narrow widths.
+- Gives Horizon Comparison an independent source state and persistent **Refresh comparison** action:
+  a failed request stays distinct from source-confirmed absence, permission denial remains
+  fail-closed, and exact retry preserves the advisor's current keyboard task.
 
 ## Decisions And Actions
 
@@ -95,6 +100,7 @@ current only after the matching summary and detail contracts both confirm the re
 | Interpret benchmark-relative outcome | Confirmed benchmark identity and source-returned portfolio, benchmark, and active return | None |
 | Change reporting selection | Source-supported period or date window, basis, frequency, and benchmark | None; requests new analytics |
 | Compare horizons | Usable source-owned horizon-comparison response | None |
+| Retry horizon comparison | Explicit recoverable horizon-source failure | None; repeats the exact Gateway request |
 | Identify contributor leadership | Confirmed contribution detail and source capability | None; Workbench does not recommend a trade |
 | Retry an unconfirmed selection | Explicit failed refresh with retained requested and confirmed contexts | None; re-contacts Gateway and Performance authority |
 | Continue to deeper review | Available selected-portfolio Performance mode | None from Summary |
@@ -110,7 +116,8 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | Reporting window, return basis, frequency, benchmark options, portfolio return, benchmark return, active return, annualised return, and cash-flow-aware return | Validates and presents the returned contract; does not recalculate performance | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/summary`, composing Core portfolio/reference/benchmark context with Performance analytics |
 | Return-path observations and source capability posture | Selects and charts returned observations without interpolating missing values | Gateway performance details contract |
 | Contribution rows, dimensions, coverage, attribution support, warnings, and partial failures | Builds decision-focused ranking and status presentation from returned evidence | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
-| Multi-horizon comparison | Presents exact source-returned horizon rows and limitations | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` |
+| Zero, one, or multiple horizon observations | Chooses a truthful empty, exact-table, or comparison presentation without manufacturing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` over Performance authority |
+| Horizon loading, failure, permission block, exact retry, success-only cache, and obsolete-request fencing | Owns browser request state independently from Summary selection confirmation | Workbench over the matching Gateway response |
 | Pending, failed, requested, and source-confirmed selection context | Owns the browser transaction state; never relabels retained source data | Workbench over the matching Gateway responses |
 | Retry | Repeats the exact failed selection through the Workbench BFF | Gateway and Performance |
 
@@ -128,6 +135,10 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
 | Partial or limited | Usable facts remain visible with named capability, warning, or partial-failure evidence | Qualify the discussion and investigate the named source limitation |
 | Normalised selection | Workbench explains that the source resolved a different supported analytical option | Use the displayed source-confirmed option |
+| Horizon request failed | Persistent **Horizon comparison could not be refreshed**, source response status when known, and **Refresh comparison** | Retry the exact request; do not interpret failure as no data |
+| Horizon permission blocked | **Horizon comparison restricted** without restricted detail or stale cached evidence | Use an entitled role or approved support path |
+| No published horizons | Source-confirmed statement that no horizon observations were returned | Do not infer portfolio or benchmark outcome |
+| One published horizon | Exact table with a visible qualification that comparison requires at least two horizons | Use the returned period as point evidence only |
 | Unavailable | Performance data is absent and the workspace states that the contract did not resolve | Re-establish supported portfolio/source context or follow the approved support process |
 | Permission blocked | Explicit access-restricted state without restricted entitlement detail | Use an entitled role or contact platform support |
 
@@ -181,6 +192,11 @@ superiority.
 - The browser proof admits only the two deliberate BFF error signals, rejects any other console or
   page error, keeps Emotion styles head-managed, and verifies no page overflow at 1024, 768, and
   519 pixels.
+- A separate optimized-production `PB_SG_GLOBAL_BAL_001` journey deliberately receives a 503 from
+  Horizon Comparison, proves failure is not rendered as source-confirmed absence, retries the exact
+  selection with stable focus, and then proves four published horizons. It validates failure and
+  recovered layout at 1024, 768, and 519 pixels with no page overflow and exactly one admitted BFF
+  error.
 - The existing populated and unavailable Performance scenarios remain the regression proof for
   complete and degraded source contracts. Canonical live validation remains the release evidence
   for the governed front-office stack.
@@ -194,9 +210,11 @@ governed validation sequence.
 
 Confirm the selected portfolio, visible reporting window, net or gross basis, observation
 frequency, benchmark, and whether the screen says **Updating source analysis**, **Selection not
-applied**, **Partial**, **Unavailable**, or **Access restricted**. If a failed-selection card is
-present, record its requested context, source-confirmed context, and HTTP status without copying
-client data or raw payloads into an unapproved channel, then retry once through the provided control.
+applied**, **Horizon comparison could not be refreshed**, **Partial**, **Unavailable**, or **Access
+restricted**. If a failed-selection card is present, record its requested context,
+source-confirmed context, and HTTP status. For Horizon Comparison, record the selected period,
+basis, frequency, and benchmark. Do not copy client data or raw payloads into an unapproved
+channel; retry once through the matching in-context control.
 
 ## Related Documentation
 
