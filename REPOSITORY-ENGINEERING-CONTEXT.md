@@ -98,6 +98,14 @@ Current repository posture:
    `A -> B -> A` navigation cannot make an obsolete completion current again. If batch outcome
    refresh is unavailable or returns no support posture, retain the accepted handle's last
    source-confirmed format support evidence; replace it only with an explicit newer source posture.
+   Treat each portfolio-and-source-date combination as a distinct render-owned Report Centre
+   session: reset local configuration, selection, focus, and workflow state through a keyed
+   boundary rather than synchronous reset Effects. Date changes initiated inside the session clear
+   selection in the initiating event. Keep accepted batch handle, requested output formats,
+   lifecycle status, and error together in portfolio-keyed React state; refs may fence obsolete
+   asynchronous completions but must not provide render evidence. Advisor Book owns one bounded
+   source retry to the last valid page before publishing ready state when a shrinking book makes a
+   requested offset invalid.
    Output readiness is source-owned by format; structured data may be ready while governed PDF
    creation is unavailable. Report-data completion does not imply archive, advisor approval, client
    delivery, or communication. The Workbench BFF strips browser reporting authority headers and
@@ -660,8 +668,9 @@ Dependency-security and lint-governance rules:
    Core Web Vitals, and stable React Hooks correctness rules (`rules-of-hooks` and
    `exhaustive-deps`) remain enforced on browser-delivered code. Tests, live validators, scripts,
    and configuration files are also scanned by the root ESLint gate under the shared TypeScript/JS
-   rules; do not exclude those trees to make lint pass. Broader React Compiler lint-rule adoption
-   is tracked separately and must not be smuggled into unrelated PRs.
+   rules; do not exclude those trees to make lint pass. The React Compiler compatibility rules are
+   also blocking for production source through `npm run lint:react-compiler`; fix render purity at
+   the state-ownership boundary and do not add suppressions or exclude source paths.
 5. `next build` is not the lint authority. Keep `make check` and protected CI ordered as
    `security -> lint -> typecheck -> coverage -> build`; the production build may skip Next's
    duplicate build-time ESLint integration because the repository-owned root ESLint gate has already
@@ -787,12 +796,12 @@ Important validation expectations:
 1. unit and integration behavior is validated through Vitest coverage,
 2. dependency security rejects high/critical findings across the complete graph and
    moderate-or-higher findings in browser-delivered production dependencies,
-3. `npm run lint` runs runtime/dependency-risk governance and CSS global governance before the flat ESLint CLI gate
-   (`npm run lint:eslint`) with stable React Hooks correctness rules (`rules-of-hooks` and
-   `exhaustive-deps`) for source files. `npm run lint:react-compiler` is a
-   separate report-only evaluator for the broader `eslint-plugin-react-hooks` recommended rule set,
-   including React Compiler compatibility rules; do not promote it to blocking until the current
-   finding families are refactored and the governance test/context are updated,
+3. `npm run lint` runs runtime/dependency-risk governance, CSS global governance, and the
+   production-source React Compiler compatibility gate before the root flat ESLint CLI gate
+   (`npm run lint:eslint`). The root gate retains stable React Hooks correctness rules
+   (`rules-of-hooks` and `exhaustive-deps`) for source files and repository-wide shared rules. The
+   compiler gate uses the broader recommended React Hooks rules over `src`, fails on any finding,
+   and has no suppression or allowlist policy,
 4. browser smoke is validated through Playwright; use `PLAYWRIGHT_PORT=<free-port>` when a shared
    stack or another worktree owns port `3000`. An explicit port must bind the production server,
    readiness probe, and browser base URL to the same listener and must disable existing-server
