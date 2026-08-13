@@ -37,7 +37,7 @@ type ReportOrderingPortfolio = {
 export function ReportOrderingWorkspace({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
   return (
     <ReportOrderingWorkspaceSession
-      key={`${portfolio.portfolioId}:${portfolio.asOfDate}`}
+      key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.baseCurrency}`}
       portfolio={portfolio}
     />
   );

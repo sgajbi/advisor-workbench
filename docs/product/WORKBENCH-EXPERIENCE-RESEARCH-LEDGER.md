@@ -4247,8 +4247,9 @@ Research was reviewed on 2026-08-14 against the nine exact React Compiler findin
 
 ### Adopted decisions
 
-1. Key the Report Centre session by portfolio id and source date so configuration, portfolio-book
-   selection, focus, and workflow state never render across conceptual workspaces.
+1. Key the Report Centre session by portfolio id, source date, and reporting currency so
+   configuration, portfolio-book selection, focus, and workflow state never render across
+   conceptual workspaces.
 2. Clear selection for an advisor-initiated date change in that event; keep Effects for source
    synchronization and asynchronous lifecycle fencing.
 3. Co-locate accepted batch handle, reviewed output formats, source status, and error as one
