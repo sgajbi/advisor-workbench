@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalysisSegmentToolbar from "../../src/apps/performance/components/performance-analysis-segment-toolbar";
@@ -27,5 +27,29 @@ describe("PerformanceAnalysisSegmentToolbar", () => {
     ).toBe(false);
 
     consoleError.mockRestore();
+  });
+
+  it("returns focus to the segment control after its source refresh settles", () => {
+    const onChange = vi.fn();
+    const properties = {
+      ariaLabel: "Contribution dimension",
+      value: "asset_class",
+      options: ["asset_class", "sector"],
+      isOptionSupported: () => true,
+      onChange,
+    } as const;
+    const { rerender } = render(<PerformanceAnalysisSegmentToolbar {...properties} />);
+    const segmentControl = screen.getByRole("combobox", {
+      name: "Contribution dimension",
+    });
+
+    fireEvent.mouseDown(segmentControl);
+    fireEvent.click(screen.getByRole("option", { name: "Sector" }));
+    expect(onChange).toHaveBeenCalledWith("sector");
+
+    rerender(<PerformanceAnalysisSegmentToolbar {...properties} disabled />);
+    rerender(<PerformanceAnalysisSegmentToolbar {...properties} />);
+
+    expect(segmentControl).toHaveFocus();
   });
 });
