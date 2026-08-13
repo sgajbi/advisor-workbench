@@ -53,6 +53,16 @@ posture, exact-value table handling, and directional amount treatment are owned 
 `WorkbenchSummaryMetricStrip`; feature-local breakpoints must not duplicate or override that
 primitive. The `portfolio-income-activity` selector family is retired from governed global CSS.
 
+Performance Analysis dead-path removal follows an even stricter rule: presentation with no
+production React consumer has no CSS owner and must be deleted rather than migrated. Issue #684
+removed the unused level-section, drilldown-workspace, and insight-pane components together with
+their selector families, while preserving the active detail-pane and ranked-panel declarations
+that previously shared combined rules. The `performance-analysis-level-*`,
+`performance-analysis-drilldown*`, and `performance-analysis-insight-pane*` families are forbidden
+from returning to governed global CSS. A future workflow must use the active Analysis architecture
+or establish a new issue-backed owner and validation contract; it must not revive an unreachable
+alternative layout.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.
