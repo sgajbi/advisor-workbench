@@ -80,7 +80,8 @@ advice approval, or client-publication authority.
 - Keeps valid source-confirmed empty evidence distinct from recoverable request failure and
   permission-blocked posture.
 - Offers one persistent **Refresh history** action after a recoverable history failure; it repeats
-  the exact selection and retains keyboard focus through pending and successful states.
+  the exact selection, becomes natively unavailable while pending, and restores keyboard focus
+  after the request settles.
 - Fences obsolete attribution-history completions so a slower earlier selection cannot overwrite a
   newer one, and caches only successful source responses.
 
@@ -160,14 +161,15 @@ copy another product's layout, visual identity, wording, calculations, or unsupp
 ## Evidence And Validation
 
 - Focused component tests prove multi-, single-, and zero-observation presentation; recoverable 503
-  failure versus valid absence; permission-blocked posture; exact retry; focus continuity; and stale
+  failure versus valid absence; permission-blocked posture; exact retry; focus restoration; and stale
   request fencing.
 - Integration tests prove the Analysis mode uses the one-observation contract without rendering a
   false trend chart and keeps detail confirmation separate from historical evidence.
 - The owned optimized-production `PB_SG_GLOBAL_BAL_001` journey deliberately receives a 503 for
   historical attribution, proves explicit failure instead of no data, retries the same selection,
   and then proves one exact observation with no chart.
-- Browser proof verifies focus continuity, head-managed styles, the single expected BFF error, and
+- Browser proof verifies native pending disablement and post-request focus restoration,
+  head-managed styles, the single expected BFF error, and
   no page overflow at 1024, 768, and 519 pixels.
 - Canonical live validation accepts only source-confirmed one- or multi-observation evidence and
   records the exact evidence posture in machine-readable UI checks.

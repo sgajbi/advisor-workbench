@@ -686,7 +686,7 @@ test.describe('Performance workbench smoke', () => {
     await refresh.focus();
     await expect(refresh).toBeFocused();
     await refresh.click();
-    await expect(page.getByRole('button', { name: 'Refreshing…' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Refreshing…' })).toBeDisabled();
     await expect(evidence).toHaveAttribute('data-state', 'single-observation');
     await expect(evidence).toHaveAttribute('data-observation-count', '1');
     await expect(page.getByRole('button', { name: 'Refresh history' })).toBeFocused();
