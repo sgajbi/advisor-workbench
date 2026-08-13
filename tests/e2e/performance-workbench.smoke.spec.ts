@@ -453,13 +453,15 @@ test.describe('Performance workbench smoke', () => {
       'aria-checked',
       'true',
     );
-    await horizon.getByRole('radio', { name: '3Y' }).click();
+    const requestedHorizon = horizon.getByRole('radio', { name: '3Y' });
+    await requestedHorizon.click();
 
     const summaryFailure = page.getByTestId('workbench-refresh-status');
     await expect(summaryFailure).toContainText('Performance selection could not be confirmed');
     await expect(summaryFailure).toContainText('Requested3Y');
     await expect(summaryFailure).toContainText('Source-confirmedYTD · NET returns');
     await expect(summaryFailure).toContainText('HTTP 503');
+    await expect(requestedHorizon).toBeFocused();
     await expect(horizon.getByRole('radio', { name: 'YTD' })).toHaveAttribute(
       'aria-checked',
       'true',
@@ -496,7 +498,9 @@ test.describe('Performance workbench smoke', () => {
     const performanceDrivers = page.locator('#performance-drivers');
     await performanceDrivers.scrollIntoViewIfNeeded();
     await expect(performanceDrivers).toBeVisible({ timeout: 30_000 });
-    const contributionSegment = page.locator('[aria-label="Contribution Segment"]');
+    const contributionSegment = page.getByRole('combobox', {
+      name: 'Contribution Segment',
+    });
     await expect(contributionSegment).toBeVisible({ timeout: 30_000 });
     await contributionSegment.click();
     await page.getByRole('option', { name: 'Sector' }).click();
@@ -505,6 +509,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(detailsFailure).toContainText('Analytical detail could not be confirmed');
     await expect(detailsFailure).toContainText('RequestedSector contribution');
     await expect(detailsFailure).toContainText('HTTP 502');
+    await expect(contributionSegment).toBeFocused();
     await expect(contributionSegment).toContainText('Asset Class');
     await detailsFailure.scrollIntoViewIfNeeded();
     await page.screenshot({

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { FormControl, MenuItem, Select } from "@mui/material";
 
 import { FieldLabel, WorkbenchSummaryToolbar } from "@/design-system";
@@ -24,15 +25,32 @@ export default function PerformanceAnalysisSegmentToolbar({
   onChange,
 }: PerformanceAnalysisSegmentToolbarProps) {
   const selectedValue = options.includes(value) ? value : "";
+  const controlRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef(false);
+  const wasDisabledRef = useRef(disabled);
+
+  useEffect(() => {
+    const pendingRefreshFinished = wasDisabledRef.current && !disabled;
+    wasDisabledRef.current = disabled;
+    if (!pendingRefreshFinished || !restoreFocusRef.current) {
+      return;
+    }
+
+    restoreFocusRef.current = false;
+    controlRef.current?.querySelector<HTMLElement>("[role='combobox']")?.focus();
+  }, [disabled]);
 
   return (
     <WorkbenchSummaryToolbar className="performance-analysis-toolbar">
-      <FormControl size="small" sx={{ minWidth: 180 }}>
+      <FormControl ref={controlRef} size="small" sx={{ minWidth: 180 }}>
         <FieldLabel>{fieldLabel}</FieldLabel>
         <Select
-          aria-label={ariaLabel}
+          inputProps={{ "aria-label": ariaLabel }}
           value={selectedValue}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => {
+            restoreFocusRef.current = true;
+            onChange(event.target.value);
+          }}
           disabled={disabled}
         >
           {options.map((option) => (
