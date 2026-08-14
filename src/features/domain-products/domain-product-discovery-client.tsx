@@ -52,9 +52,15 @@ export default function DomainProductDiscoveryClient() {
     queryFn: getDomainProductTrustCertification,
     ...workbenchStrictQueryDefaults,
   });
-  const catalogueChecking = catalogQuery.isFetching;
-  const catalogueFailed =
-    !catalogueChecking && (catalogQuery.isLoadingError || catalogQuery.isRefetchError);
+  const catalogueChecking = catalogQuery.isFetching || catalogQuery.fetchStatus === "paused";
+  const catalogueFailure = !catalogueChecking
+    ? catalogQuery.isLoadingError
+      ? "initial"
+      : catalogQuery.isRefetchError
+        ? "refresh"
+        : null
+    : null;
+  const catalogueFailed = catalogueFailure !== null;
   const catalogueConfirmed = Boolean(catalogQuery.data) && !catalogueChecking && !catalogueFailed;
   const trustHeader = getTrustHeaderPresentation({
     data: trustCertificationQuery.data,
@@ -78,7 +84,7 @@ export default function DomainProductDiscoveryClient() {
     >
       <CatalogueSourceContext
         catalog={catalogueConfirmed ? catalogQuery.data : undefined}
-        hasError={catalogueFailed}
+        failure={catalogueFailure}
         isChecking={catalogueChecking}
         onRefresh={() => catalogQuery.refetch()}
       />
@@ -117,16 +123,17 @@ export default function DomainProductDiscoveryClient() {
 
 function CatalogueSourceContext({
   catalog,
-  hasError,
+  failure,
   isChecking,
   onRefresh,
 }: {
   catalog: DomainProductCatalogData | undefined;
-  hasError: boolean;
+  failure: "initial" | "refresh" | null;
   isChecking: boolean;
   onRefresh: () => Promise<unknown>;
 }) {
   const refreshInFlight = useRef(false);
+  const hasError = failure !== null;
   const state = isChecking ? "checking" : hasError ? "failed" : "confirmed";
   const actionLabel = isChecking
     ? "Checking catalogue"
@@ -157,9 +164,11 @@ function CatalogueSourceContext({
         <strong>
           {isChecking
             ? "Checking required source"
-            : hasError
+            : failure === "refresh"
               ? "Catalogue refresh failed"
-              : "Source confirmed"}
+              : failure === "initial"
+                ? "Catalogue unavailable"
+                : "Source confirmed"}
         </strong>
       </div>
       <div>

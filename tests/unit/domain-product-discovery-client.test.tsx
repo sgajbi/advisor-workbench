@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { onlineManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -25,6 +25,7 @@ vi.mock("../../src/features/domain-products/api", async () => {
 
 describe("DomainProductDiscoveryClient", () => {
   beforeEach(() => {
+    onlineManager.setOnline(true);
     getDomainProductCatalogMock.mockReset();
     getDomainProductDependencyGraphMock.mockReset();
     getDomainProductTrustCertificationMock.mockReset();
@@ -198,6 +199,8 @@ describe("DomainProductDiscoveryClient", () => {
       await screen.findByText("The data product catalogue is temporarily unavailable")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry catalogue" })).toBeInTheDocument();
+    expect(screen.getAllByText("Catalogue unavailable")).toHaveLength(2);
+    expect(screen.queryByText("Catalogue refresh failed")).not.toBeInTheDocument();
     expect(screen.queryByText(/internal path missing/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Portfolio State Snapshot")).not.toBeInTheDocument();
   });
@@ -254,6 +257,33 @@ describe("DomainProductDiscoveryClient", () => {
     expect(screen.getByText("Source confirmed")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Refresh catalogue" })).toHaveFocus();
     expect(getDomainProductCatalogMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("withholds cached catalogue evidence while an offline refresh is paused", async () => {
+    const discovery = buildDiscovery();
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(["domain-product-catalog"], discovery.catalog, {
+      updatedAt: Date.now() - 31_000,
+    });
+    onlineManager.setOnline(false);
+
+    renderDiscovery(queryClient);
+
+    expect(
+      await screen.findByText("Checking the latest data product catalogue")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Checking catalogue" })).toHaveAttribute(
+      "aria-disabled",
+      "true"
+    );
+    expect(screen.queryByText("Source confirmed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Portfolio State Snapshot")).not.toBeInTheDocument();
+    expect(getDomainProductCatalogMock).not.toHaveBeenCalled();
+
+    onlineManager.setOnline(true);
+
+    expect(await screen.findByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Source confirmed")).toBeInTheDocument();
   });
 });
 

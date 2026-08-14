@@ -188,7 +188,10 @@ test("keeps catalogue evidence visible while optional sources fail and recover",
   );
 });
 
-test("blocks cached catalogue evidence until its required source recovers", async ({ page }) => {
+test("blocks cached catalogue evidence until its required source recovers", async ({
+  page,
+  context,
+}) => {
   const runtime = observeBrowserRuntimeFailures(page);
   await mockDomainProductSources(page, { failCatalogRefreshOnce: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -211,6 +214,22 @@ test("blocks cached catalogue evidence until its required source recovers", asyn
   await expect(retry).toBeFocused();
   await retry.click();
 
+  await expect(page.getByText("Source confirmed")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh catalogue" })).toBeFocused();
+
+  await context.setOffline(true);
+  await page.getByRole("button", { name: "Refresh catalogue" }).click();
+  await expect(page.getByText("Checking required source")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Checking catalogue" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Checking catalogue" })).toHaveAttribute(
+    "aria-disabled",
+    "true"
+  );
+  await expect(page.getByText("Source confirmed")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toHaveCount(0);
+
+  await context.setOffline(false);
   await expect(page.getByText("Source confirmed")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh catalogue" })).toBeFocused();
