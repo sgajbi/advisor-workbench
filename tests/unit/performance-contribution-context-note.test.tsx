@@ -324,6 +324,31 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).toHaveAttribute("data-tone", "review");
     expect(note).toHaveTextContent("Contribution evidence needs review");
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    expectEvidenceValue(
+      openCalculationEvidence(),
+      "Smoothing status",
+      "[padded value] APPLIED",
+    );
+  });
+
+  it("keeps an empty source status explicit while treating the evidence as incomplete", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...buildSourceBackedEvidence(contribution),
+            status: "",
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution calculation evidence is incomplete");
+    expectEvidenceValue(openCalculationEvidence(), "Source status", "[empty value]");
   });
 
   it("rejects a limitation reason that does not explain the declared unsupported economics", () => {

@@ -337,7 +337,7 @@ function buildContributionEvidenceItems(
   const smoothingEvidence = contribution.smoothing_evidence;
 
   return [
-    { label: "Source status", value: sourceEvidence?.status || "Not published" },
+    { label: "Source status", value: formatEvidenceScalar(sourceEvidence?.status) },
     { label: "Source reason codes", value: formatEvidenceList(sourceEvidence?.reason_codes) },
     { label: "Source contracts", value: formatEvidenceList(sourceEvidence?.source_contracts) },
     { label: "Available economics", value: formatEvidenceList(sourceEvidence?.available_economics) },
@@ -353,7 +353,7 @@ function buildContributionEvidenceItems(
     },
     {
       label: "Weighting basis",
-      value: contribution.weighting_scheme?.trim() || "Not published",
+      value: formatEvidenceScalar(contribution.weighting_scheme),
     },
     {
       label: "Market-value coverage",
@@ -367,7 +367,7 @@ function buildContributionEvidenceItems(
       label: "Portfolio return",
       value: formatExactEvidencePct(contribution.total_portfolio_return_pct),
     },
-    { label: "Smoothing status", value: smoothingEvidence?.status || "Not published" },
+    { label: "Smoothing status", value: formatEvidenceScalar(smoothingEvidence?.status) },
     { label: "Smoothing reason codes", value: formatEvidenceList(smoothingEvidence?.reason_codes) },
     {
       label: "Raw contribution",
@@ -429,13 +429,18 @@ function formatEvidenceList(values: string[] | undefined): string {
     : "None published";
 }
 
+function formatEvidenceScalar(value: string | null | undefined): string {
+  return value === null || value === undefined ? "Not published" : formatEvidenceListValue(value);
+}
+
 function formatEvidenceListValue(value: string): string {
   if (value.length === 0) {
     return "[empty value]";
   }
-  return value.trim().length === 0
-    ? `[blank value: ${value.length} whitespace characters]`
-    : value;
+  if (value.trim().length === 0) {
+    return `[blank value: ${value.length} whitespace characters]`;
+  }
+  return value === value.trim() ? value : `[padded value] ${value.trim()}`;
 }
 
 function formatExactEvidencePct(value: number | null | undefined): string {
