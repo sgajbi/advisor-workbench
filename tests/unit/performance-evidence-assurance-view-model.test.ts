@@ -165,7 +165,73 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       "fallback_internal_code"
     );
     expect(view.supportGroups.flatMap((group) => group.rows).map((row) => row.value)).toEqual(
-      expect.arrayContaining(["fallback_internal_code", "Source data window limited"])
+      expect.arrayContaining([
+        "fallback_internal_code",
+        "Source data window limited",
+        "source_internal_reason",
+      ])
+    );
+  });
+
+  it("accepts ready source aliases but gives stale freshness precedence", () => {
+    const ready = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_supportability: [
+          {
+            key: "source_calculation",
+            state: "ready",
+            freshness_bucket: "fresh",
+            source_service: "lotus-performance",
+          },
+        ],
+      })
+    );
+    const stale = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_supportability: [
+          {
+            key: "source_calculation",
+            state: "supported",
+            freshness_bucket: "stale",
+            source_service: "lotus-performance",
+            reason: "Source data window is stale.",
+          },
+        ],
+      })
+    );
+
+    expect(ready.state).toBe("ready");
+    expect(stale.state).toBe("attention");
+    expect(stale.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Source calculation evidence is not current",
+        tone: "danger",
+      })
+    );
+    const supportRows = stale.supportGroups.flatMap((group) => group.rows);
+    expect(supportRows).toEqual(
+      expect.arrayContaining([
+        { label: "Source 1", value: "lotus-performance" },
+        { label: "Source 1 freshness", value: "stale" },
+        { label: "Source 1 reason", value: "Source data window is stale." },
+      ])
+    );
+  });
+
+  it("reports an explicit exception when the evidence package is unavailable", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ state: "unavailable", reason: "Evidence source unavailable." })
+    );
+
+    expect(view.state).toBe("unavailable");
+    expect(view.metrics).toContainEqual(
+      expect.objectContaining({ label: "Review items", value: "1" })
+    );
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Evidence package unavailable", tone: "danger" })
     );
   });
 
