@@ -41,7 +41,7 @@ describe("PerformanceEvidenceMode", () => {
     expect(within(workspace).getByText("Incomplete evidence")).toBeInTheDocument();
     expect(within(workspace).getByRole("heading", { name: "Control exceptions" })).toBeInTheDocument();
     expect(within(workspace).getByText("Evidence package incomplete")).toBeInTheDocument();
-    expect(within(workspace).getByText("Supporting evidence still being prepared")).toBeInTheDocument();
+    expect(within(workspace).getByText("Portfolio performance summary evidence still being prepared")).toBeInTheDocument();
     expect(within(workspace).getByText("Portfolio performance summary")).toBeInTheDocument();
     expect(within(workspace).getByText("No supporting record is published for this calculation.")).toBeInTheDocument();
   });

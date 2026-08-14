@@ -126,8 +126,8 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions.map((item) => item.title)).toEqual(
       expect.arrayContaining([
         "Evidence package incomplete",
-        "Calculation still in progress",
-        "Supporting evidence still being prepared",
+        "Portfolio performance summary still in progress",
+        "Portfolio performance summary evidence still being prepared",
       ])
     );
     expect(view.calculations[0]).toMatchObject({
@@ -155,17 +155,17 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.posture).toBe("Attention required");
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ title: "Calculation did not complete", tone: "danger" }),
-        expect.objectContaining({ title: "Supporting evidence unavailable", tone: "danger" }),
+        expect.objectContaining({ title: "Portfolio performance summary did not complete", tone: "danger" }),
+        expect.objectContaining({ title: "Portfolio performance summary evidence unavailable", tone: "danger" }),
         expect.objectContaining({ title: "Performance input evidence is not current", tone: "danger" }),
       ])
     );
   });
 
   it.each([
-    ["failed", "attention", "Calculation stage did not complete", "danger", "Attention required", "danger"],
-    ["running", "incomplete", "Calculation stage still in progress", "warn", "In progress", "warn"],
-    ["unexpected", "incomplete", "Calculation stage status not reported", "warn", "Not confirmed", "default"],
+    ["failed", "attention", "Portfolio performance summary stage did not complete", "danger", "Attention required", "danger"],
+    ["running", "incomplete", "Portfolio performance summary stage still in progress", "warn", "In progress", "warn"],
+    ["unexpected", "incomplete", "Portfolio performance summary stage status not reported", "warn", "Not confirmed", "default"],
   ] as const)(
     "fails closed when a published calculation stage is %s",
     (
@@ -201,6 +201,35 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       expect(JSON.stringify(view.supportGroups)).toContain("internal_stage_code");
     }
   );
+
+  it("identifies each affected calculation in lifecycle review items", () => {
+    const summaryCalculation = {
+      ...evidence().calculations[0],
+      calculation_id: "calc-summary",
+      calculation_role: "workspace_summary",
+      execution_status: "failed",
+    };
+    const detailCalculation = {
+      ...evidence().calculations[0],
+      calculation_id: "calc-details",
+      calculation_role: "workspace_details",
+      execution_status: "failed",
+    };
+
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ calculations: [summaryCalculation, detailCalculation] })
+    );
+
+    expect(view.exceptions.map((item) => item.title)).toEqual(
+      expect.arrayContaining([
+        "Portfolio performance summary did not complete",
+        "Performance analysis detail did not complete",
+      ])
+    );
+    expect(JSON.stringify(view.exceptions)).not.toContain("calc-summary");
+    expect(JSON.stringify(view.exceptions)).not.toContain("calc-details");
+  });
 
   it("qualifies fallbacks, limitations, unsupported coverage, and partial source supportability", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
@@ -354,10 +383,24 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       expect.arrayContaining([
         "Assurance status not reported",
         "Performance input freshness not confirmed",
-        "Calculation status not reported",
-        "Supporting evidence not confirmed",
+        "Additional performance calculation 1 status not reported",
+        "Additional performance calculation 1 evidence not confirmed",
       ])
     );
+  });
+
+  it.each([
+    ["reporting date", { as_of_date: null }, "Reporting date not confirmed"],
+    ["review period", { period: null }, "Review period not confirmed"],
+    ["return basis", { basis: "unrecognised" }, "Return basis not confirmed"],
+  ] as const)("fails closed when %s is not confirmed", (_label, overrides, title) => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence(overrides)
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(expect.objectContaining({ title, tone: "warn" }));
   });
 
   it("fails closed when the source omits input freshness evidence", () => {

@@ -211,10 +211,7 @@ function buildCalculationAssurance(
   calculation: PerformanceCalculationEvidenceView,
   index: number
 ): PerformanceCalculationAssurance {
-  const role = CALCULATION_ROLE_PRESENTATION[normalise(calculation.calculation_role)] ?? {
-    title: `Additional performance calculation ${index + 1}`,
-    purpose: "Provides additional source-published calculation evidence for the selected view.",
-  };
+  const role = calculationRolePresentation(calculation, index);
   const calculationStatus = resolveCalculationLifecyclePresentation(calculation);
   const evidenceStatus = lifecyclePresentation(calculation.lineage_status, "evidence");
   const records = safeArray(calculation.artifacts).map((artifact, artifactIndex) =>
@@ -231,6 +228,16 @@ function buildCalculationAssurance(
     evidenceTone: evidenceStatus.tone,
     evidenceCount: records.length,
     records,
+  };
+}
+
+function calculationRolePresentation(
+  calculation: PerformanceCalculationEvidenceView,
+  index: number
+) {
+  return CALCULATION_ROLE_PRESENTATION[normalise(calculation.calculation_role)] ?? {
+    title: `Additional performance calculation ${index + 1}`,
+    purpose: "Provides additional source-published calculation evidence for the selected view.",
   };
 }
 
@@ -338,6 +345,34 @@ function buildExceptions(
     });
   }
 
+  if (!evidence.as_of_date?.trim()) {
+    exceptions.push({
+      key: "reporting-date-missing",
+      title: "Reporting date not confirmed",
+      detail: "The source did not identify the date covered by this assurance package.",
+      action: "Obtain source-confirmed reporting context before relying on the package.",
+      tone: "warn",
+    });
+  }
+  if (!evidence.period?.trim()) {
+    exceptions.push({
+      key: "review-period-missing",
+      title: "Review period not confirmed",
+      detail: "The source did not identify the performance period covered by this assurance package.",
+      action: "Obtain source-confirmed reporting context before relying on the package.",
+      tone: "warn",
+    });
+  }
+  if (!["gross", "net"].includes(normalise(evidence.basis))) {
+    exceptions.push({
+      key: "return-basis-missing",
+      title: "Return basis not confirmed",
+      detail: "The source did not publish a recognised gross- or net-of-fees basis for this package.",
+      action: "Confirm the applicable return basis before relying on the calculation evidence.",
+      tone: "warn",
+    });
+  }
+
   const calculations = safeArray(evidence.calculations);
   if (!calculations.length) {
     exceptions.push({
@@ -349,10 +384,29 @@ function buildExceptions(
     });
   }
   calculations.forEach((calculation, index) => {
-    appendLifecycleException(exceptions, calculation.execution_status, "calculation", index);
-    appendLifecycleException(exceptions, calculation.lineage_status, "evidence", index);
+    const calculationTitle = calculationRolePresentation(calculation, index).title;
+    appendLifecycleException(
+      exceptions,
+      calculation.execution_status,
+      "calculation",
+      index,
+      calculationTitle
+    );
+    appendLifecycleException(
+      exceptions,
+      calculation.lineage_status,
+      "evidence",
+      index,
+      calculationTitle
+    );
     safeArray(calculation.stage_statuses).forEach((stage, stageIndex) => {
-      appendStageLifecycleException(exceptions, stage.status, index, stageIndex);
+      appendStageLifecycleException(
+        exceptions,
+        stage.status,
+        index,
+        stageIndex,
+        calculationTitle
+      );
     });
     const artifacts = safeArray(calculation.artifacts);
     if (!artifacts.length) {
@@ -551,7 +605,8 @@ function appendLifecycleException(
   exceptions: PerformanceEvidenceException[],
   value: string | null | undefined,
   subject: "calculation" | "evidence",
-  index: number
+  index: number,
+  calculationTitle: string
 ) {
   const state = normalise(value);
   if (state === COMPLETE_STATUS) return;
@@ -562,15 +617,15 @@ function appendLifecycleException(
     title:
       subject === "calculation"
         ? failed
-          ? "Calculation did not complete"
+          ? `${calculationTitle} did not complete`
           : pending
-            ? "Calculation still in progress"
-            : "Calculation status not reported"
+            ? `${calculationTitle} still in progress`
+            : `${calculationTitle} status not reported`
         : failed
-          ? "Supporting evidence unavailable"
+          ? `${calculationTitle} evidence unavailable`
           : pending
-            ? "Supporting evidence still being prepared"
-            : "Supporting evidence not confirmed",
+            ? `${calculationTitle} evidence still being prepared`
+            : `${calculationTitle} evidence not confirmed`,
     detail:
       subject === "calculation"
         ? "The source has not confirmed a completed performance calculation for this item."
@@ -584,7 +639,8 @@ function appendStageLifecycleException(
   exceptions: PerformanceEvidenceException[],
   value: string | null | undefined,
   calculationIndex: number,
-  stageIndex: number
+  stageIndex: number,
+  calculationTitle: string
 ) {
   const state = normalise(value);
   if (state === COMPLETE_STATUS) return;
@@ -593,10 +649,10 @@ function appendStageLifecycleException(
   exceptions.push({
     key: `calculation-stage-${calculationIndex}-${stageIndex}`,
     title: failed
-      ? "Calculation stage did not complete"
+      ? `${calculationTitle} stage did not complete`
       : pending
-        ? "Calculation stage still in progress"
-        : "Calculation stage status not reported",
+        ? `${calculationTitle} stage still in progress`
+        : `${calculationTitle} stage status not reported`,
     detail: failed
       ? "A source calculation stage did not complete successfully."
       : pending
