@@ -10,8 +10,8 @@ to find its operating guide.
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
 Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Performance Summary,
-Performance Analysis, Report Centre, and Data Product Catalogue have passed the complete guide
-standard; the remaining 25 dedicated guides are explicit work under
+Performance Analysis, Performance Advisor Brief, Report Centre, and Data Product Catalogue have
+passed the complete guide standard; the remaining 24 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -73,7 +73,7 @@ single Performance Advisor Brief surface and guide.
 | --- | --- | --- | --- | --- |
 | [Performance Summary](Performance-Summary-Screen-Guide) | `/performance?mode=summary` | Active | Guide available | Gateway, Core, and Performance |
 | [Performance Analysis](Performance-Analysis-Screen-Guide) | `/performance?mode=analysis` | Runtime-gated | Guide available | Gateway and Performance |
-| Performance Advisor Brief | `/performance?mode=advisor` | Active | Guide planned — #605 | Gateway, Performance, and Lotus AI |
+| [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide) | `/performance?mode=advisor` | Active | Guide available | Gateway, Core, Performance, Advise, and Lotus AI |
 | Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 | Performance Evidence | `/performance?mode=evidence` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
 
@@ -81,7 +81,7 @@ Performance Summary and Performance Analysis share one source-selection surface 
 basis, explicit review window, frequency, and benchmark. Return-view presentation remains local to
 Summary, while attribution and contribution segment controls remain local to Analysis.
 
-The future guides will separate calculated facts from Workbench presentation, state benchmark and
+The remaining guides will separate calculated facts from Workbench presentation, state benchmark and
 as-of-date posture, and describe partial, unavailable, stale, and evidence-recovery states without
 inventing figures in the browser.
 

@@ -987,6 +987,17 @@ Important validation expectations:
     widths, source-changing controls must retain a measured 44px touch target without reducing
     desktop workstation density. Use `npm run test:e2e:performance:analysis-controls` for the owned
     direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
+27. Persisted Advisor Brief review is a source-confirmed internal decision transaction. Offer only
+    known actions admitted by the returned workflow, state each business consequence, require the
+    staff reference, rationale, and replacement lineage that the action needs, and provide a
+    distinct review-before-confirm step. Show pending, source-confirmed success, and explicit
+    failure without fabricating completion; retain entered values after failure and fence obsolete
+    responses. A terminal review state is not human-review evidence unless the returned contract
+    also publishes review history, a positive transition count, actor, and time. Keep generated
+    output internal-only, technical workflow evidence secondary, and client communication,
+    suitability, order, and execution authority blocked. Use
+    `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
+    confirmation, source-persistence, responsive, focus, and browser-runtime proof.
 
 ### Visual Review Gate
 

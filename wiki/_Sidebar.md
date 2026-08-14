@@ -12,6 +12,7 @@
 - [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
 - [Performance Analysis](Performance-Analysis-Screen-Guide)
+- [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)

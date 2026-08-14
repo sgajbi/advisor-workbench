@@ -79,6 +79,11 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/workbench/{portfolio_id}/performance/attribution-trend`; the browser uses
   `/api/bff/api/v1/...` and keeps history retrieval failure distinct from a source-confirmed empty
   response
+- Performance Advisor Brief consumes Gateway
+  `/api/v1/workbench/{portfolio_id}/performance/advisor-brief` and records only source-allowed
+  internal review decisions through `/performance/advisor-brief/review-actions`; browser requests
+  use `/api/bff/api/v1/...`, confirmation precedes the POST, and Workbench admits recorded human
+  review only from the returned actor, timestamp, transition count, and review-history evidence
 - Data Product Catalogue is served through `/data-products` and independently consumes Gateway
   `/api/v1/domain-products/catalog`, `/dependency-graph`, and `/trust-certification` through the
   internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;

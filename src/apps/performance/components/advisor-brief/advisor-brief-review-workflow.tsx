@@ -201,8 +201,7 @@ export default function AdvisorBriefReviewWorkflow({
                 disabled={isApplying}
               />
               <span className="performance-advisor-brief-review-helper">
-                Required by the current internal review record. Production identity remains governed
-                separately.
+                Use the bank staff reference required for this internal review record.
               </span>
             </label>
 

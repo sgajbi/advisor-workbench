@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 11,
-      coverageExceptions: 25,
-      unmappedGuides: 25,
+      mappedGuides: 12,
+      coverageExceptions: 24,
+      unmappedGuides: 24,
     });
   });
 
@@ -284,6 +284,51 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("same reusable selection component and request-shaping path");
     expect(guide).toContain("44px narrow touch targets");
     expect(guide).toContain("does not\ncopy another product's layout");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Performance Advisor Brief to one source-recorded internal-review guide", () => {
+    const registry = loadRegistry();
+    const advisorBrief = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "performance-advisor-brief",
+    );
+
+    expect(advisorBrief).toMatchObject({
+      routePattern: "/performance",
+      mode: "advisor",
+      wikiSlug: "Performance-Advisor-Brief-Screen-Guide",
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-core",
+        "lotus-performance",
+        "lotus-advise",
+        "lotus-ai",
+      ],
+      implementationEvidence: expect.arrayContaining([
+        "src/apps/performance/components/advisor-brief/advisor-brief-review-workflow.tsx",
+        "src/apps/performance/use-performance-advisor-brief.ts",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/performance-workbench.smoke.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Performance-Advisor-Brief-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain(
+      "success appears\n  only after Gateway and Lotus AI return source-owned persistence evidence",
+    );
+    expect(guide).toContain("does not approve client communication");
+    expect(guide).toContain("review-before-confirm");
+    expect(guide).toContain("does not:\n\n- calculate return");
+    expect(guide).toContain(
+      "a screenshot or fixture alone is not readiness, identity, entitlement, or client-use proof",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
