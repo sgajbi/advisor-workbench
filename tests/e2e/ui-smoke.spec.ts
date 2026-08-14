@@ -193,6 +193,12 @@ test.describe('UI smoke checks', () => {
         'page',
       );
 
+      await page.getByRole('link', { name: /Lotus Lotus/i }).click();
+      await expect(page).toHaveURL(/\/$/);
+      await expect(
+        page.getByRole('button', { name: /Switch workspace/i }),
+      ).toHaveAttribute('aria-expanded', 'false');
+
       await page.goto('/data-products', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
       const dataProductNavigation = page.getByRole('navigation', { name: 'Workspace Navigation' });

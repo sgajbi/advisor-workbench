@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import AppShell from "@/shell/app-shell";
+import AppShell, { AdvisorBookLinkLoading } from "@/shell/app-shell";
 import { buildAdvisorBookHref } from "@/shell/advisor-book-link";
 import LotusMark from "@/shell/lotus-mark";
 
@@ -63,6 +63,15 @@ describe("AppShell", () => {
     expect(screen.queryByText("Private Banker")).not.toBeInTheDocument();
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
   });
+
+  it("keeps My book non-actionable until its date-preserving link is ready", () => {
+    render(<AdvisorBookLinkLoading />);
+
+    expect(
+      screen.getByRole("status", { name: "Preparing My book navigation" }),
+    ).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("link", { name: /My book/i })).not.toBeInTheDocument();
+  });
 });
 
 describe("buildAdvisorBookHref", () => {
@@ -75,6 +84,7 @@ describe("buildAdvisorBookHref", () => {
   it("uses the advisor book default date when no review date is active", () => {
     expect(buildAdvisorBookHref(new URLSearchParams("mode=summary"))).toBe("/book");
   });
+
 });
 
 describe("LotusMark", () => {

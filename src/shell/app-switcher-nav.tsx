@@ -17,6 +17,7 @@ export default function AppSwitcherNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const routeContext = resolveShellRouteContext(pathname, searchParams);
+  const routeIdentity = `${pathname ?? ""}?${searchParams.toString()}`;
   const workspaceDescriptors =
     shellBootstrapSource === "contract"
       ? normalized.shellBootstrap.workspaces
@@ -41,6 +42,7 @@ export default function AppSwitcherNav() {
 
   return (
     <WorkspaceMenuNav
+      key={routeIdentity}
       items={items}
       ariaLabel="Workspace Navigation"
     />

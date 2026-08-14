@@ -221,4 +221,29 @@ describe("AppSwitcherNav", () => {
     ).toHaveTextContent("Checking availability");
     expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
   });
+
+  it("returns the workspace disclosure to closed when route context changes", () => {
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "fallback",
+      normalized: fallbackNormalizedCapabilities(),
+    });
+    usePathnameMock.mockReturnValue("/performance");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("mode=summary"));
+    const { rerender } = render(<AppSwitcherNav />);
+
+    const summaryTrigger = screen.getByRole("button", { name: /Switch workspace/i });
+    fireEvent.click(summaryTrigger);
+    expect(summaryTrigger).toHaveAttribute("aria-expanded", "true");
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("mode=risk"));
+    rerender(<AppSwitcherNav />);
+
+    expect(screen.getByRole("button", { name: /Switch workspace/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
 });

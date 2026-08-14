@@ -8,12 +8,17 @@ import AppSwitcherNav, { AppSwitcherNavLoading } from "./app-switcher-nav";
 import styles from "./app-shell.module.css";
 import LotusMark from "./lotus-mark";
 
-function AdvisorBookLinkLoading() {
+export function AdvisorBookLinkLoading() {
   return (
-    <Link href="/book" className={styles.bookLink}>
+    <div
+      className={styles.bookLink}
+      role="status"
+      aria-label="Preparing My book navigation"
+      aria-busy="true"
+    >
       <small>Advisor</small>
       <strong>My book</strong>
-    </Link>
+    </div>
   );
 }
 
