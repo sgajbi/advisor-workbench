@@ -4442,3 +4442,79 @@ Supported Features, review ledger, and repository context change. Canonical live
 required after both repository contracts merge. No dependency, calculation, direct source call,
 production identity, advice, client publication, trade, report-order, or service-topology authority
 changes.
+
+## Performance Evidence Calculation Assurance
+
+### Business job
+
+An advisor, portfolio manager, or performance-control user needs to establish whether the current
+performance result has complete calculation and lineage support, identify the exception that
+qualifies reliance, and open the relevant source-published record without scanning a technical
+payload or mistaking an artifact for approval.
+
+### Current-product research
+
+Research was reviewed on 2026-08-14 from primary industry and standards sources:
+
+1. [BlackRock Aladdin Accounting](https://www.blackrock.com/aladdin/platforms/products/aladdin-accounting)
+   describes exception-based processing, automated quality controls, validation, and official
+   accounting and performance workflows. Lotus adopts the exception-first operational hierarchy,
+   not BlackRock's product identity, breadth, certification, or official-record claims.
+2. [GIPS Standards Handbook for Firms](https://www.gipsstandards.org/standards/gips-standards-for-firms/gips-standards-handbook-for-firms/)
+   requires firms claiming compliance to maintain records supporting reported information and keep
+   presentations fair and not misleading. Lotus adopts the separation of result, substantiating
+   evidence, and qualification; Workbench does not claim GIPS compliance.
+3. [GIPS Tools](https://www.gipsstandards.org/resources/tools/) reinforces that verification,
+   policies, procedures, and records are governed disciplines rather than a UI badge. Lotus keeps
+   internal-review posture explicitly below verification or certification authority.
+4. [WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) and
+   [Name, Role, Value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html) support a
+   predictable semantic reading order and native disclosure whose state is programmatically
+   available.
+
+### Adopted decisions
+
+1. Replace the raw contract dump with one exception-first business flow: posture, current context,
+   calculation coverage, review items, supporting records, then optional technical detail.
+2. Require supported capability and package state, at least one calculation, confirmed execution,
+   confirmed lineage, and no exception before internal-review readiness. Unknowns fail closed.
+3. Keep calculation coverage, review-item count, and supporting-record count independent so one
+   positive dimension cannot imply another.
+4. Translate only known lifecycle and evidence dimensions; retain raw services, ids, versions,
+   stages, snapshots, source reasons, methodology, and routes in one collapsed support disclosure.
+5. Keep each exception tied to business impact and an actionable next step without inventing a
+   browser-owned refresh, waiver, or approval control.
+6. Route every source-published artifact through the returned Workbench/Gateway evidence or
+   document boundary and label archives distinctly.
+7. Move the selector family to a feature CSS Module, delete its global selectors, lower the exact
+   legacy-CSS ratchet, and prohibit the retired prefix from returning.
+8. Use native headings, regions, lists, definition lists, and disclosure behavior, with explicit
+   keyboard focus proof and responsive overflow proof.
+
+### Rejected decisions
+
+1. Treating `supported`, an empty exception list, a calculation id, a terminal-looking status, or
+   an artifact count alone as assurance readiness.
+2. Showing raw lifecycle codes, service names, RFC or contract vocabulary, paths, and identifiers
+   in the primary business scan.
+3. Inventing a control score, confidence percentage, official-performance badge, GIPS claim,
+   client-ready flag, audit completion, certification, or regulatory approval.
+4. Adding a local retry, evidence upload, rerun, waiver, archive, distribution, report-order,
+   client-send, trade, or approval action without owning-source contracts.
+5. Adding another state, component, styling, accessibility, or chart library; the existing typed
+   React, CSS Module, design-system, Vitest, and Playwright stack is sufficient and proven.
+6. Copying a competitor's layout, language, navigation, or visual identity instead of applying the
+   bounded exception-control principle to Lotus-owned source truth.
+
+### Validation and publication decision
+
+Workbench #699 owns this slice. Focused model and component tests prove readiness admission,
+partial, pending, failed, stale, unknown, fallback, limitation, source-supportability, empty,
+artifact, archive, business-language, and technical-containment behavior. Parent integration tests
+prove mode composition. An isolated optimized-production browser journey on owned ports proves the
+stable assurance state, exception and calculation regions, native disclosure, keyboard focus,
+1024/720/390 responsive reflow, and no horizontal page overflow. The canonical validator now
+records machine-readable assurance state rather than stale technical copy. The complete screen
+guide, API note, source registry, catalogue, navigation, Supported Features, architecture ledger,
+and repository context change. Gateway contracts, calculations, dependencies, authentication,
+production entitlements, and service topology do not change.

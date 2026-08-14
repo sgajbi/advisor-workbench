@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 12,
-      coverageExceptions: 24,
-      unmappedGuides: 24,
+      mappedGuides: 13,
+      coverageExceptions: 23,
+      unmappedGuides: 23,
     });
   });
 
@@ -284,6 +284,41 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("same reusable selection component and request-shaping path");
     expect(guide).toContain("44px narrow touch targets");
     expect(guide).toContain("does not\ncopy another product's layout");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Performance Evidence to one fail-closed calculation-assurance guide", () => {
+    const registry = loadRegistry();
+    const performanceEvidence = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "performance-evidence",
+    );
+
+    expect(performanceEvidence).toMatchObject({
+      routePattern: "/performance",
+      mode: "evidence",
+      wikiSlug: "Performance-Evidence-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-performance"],
+      implementationEvidence: expect.arrayContaining([
+        "src/apps/performance/evidence/performance-evidence-assurance-view-model.ts",
+        "src/apps/performance/evidence/performance-evidence-assurance-workspace.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/performance-workbench.smoke.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Performance-Evidence-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("exception-first workspace");
+    expect(guide).toContain("Missing or unfamiliar states fail closed");
+    expect(guide).toContain("has no screen-local retry action");
+    expect(guide).toContain("does not:\n\n- calculate or recalculate");
+    expect(guide).toContain("not a claim of\ncompetitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 
