@@ -300,7 +300,7 @@ export default function AdvisorBriefReviewWorkflow({
             <ActionButton
               ref={confirmButtonRef}
               priority="primary"
-              disabled={isApplying}
+              aria-disabled={isApplying}
               onClick={() => void confirmReviewAction()}
             >
               {isApplying ? "Recording decision…" : selectedDefinition.confirmLabel}

@@ -1,0 +1,35 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0 0.58rem;
+  border: 1px solid rgba(23, 32, 43, 0.08);
+  border-radius: 999px;
+  background: rgba(247, 249, 251, 0.92);
+  color: #506073;
+  font-family: var(--font-ui);
+  font-size: var(--type-badge-size);
+  font-variant-numeric: var(--type-financial-numeric);
+  font-weight: 700;
+  letter-spacing: var(--tracking-badge);
+  line-height: var(--type-badge-line-height);
+  text-transform: uppercase;
+}
+
+.strong {
+  border-color: rgba(87, 121, 157, 0.18);
+  background: rgba(236, 242, 247, 0.95);
+  color: #203446;
+}
+
+.success {
+  color: #45695a;
+}
+
+.warn {
+  color: #8e6232;
+}
+
+.danger {
+  color: #945760;
+}
