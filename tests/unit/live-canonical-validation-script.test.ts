@@ -3,6 +3,10 @@ import { join } from "node:path";
 
 const REPORT_CENTRE_CLASSIFICATION_PATTERN =
   /"reporting\.report_centre",\r?\n\s+reportCentreProof\.panelState,\r?\n\s+"lotus-report",/;
+
+function normalizeSourceNewlines(source: string): string {
+  return source.replace(/\r\n?/g, "\n");
+}
 const OWNERSHIP_MODULE = readFileSync(
   join(
     process.cwd(),
@@ -56,6 +60,15 @@ describe("canonical live validation script", () => {
       ].join(newline);
 
       expect(classification).toMatch(REPORT_CENTRE_CLASSIFICATION_PATTERN);
+    },
+  );
+
+  it.each(["\n", "\r\n"])(
+    "normalizes source text with %j newlines before source-order proof",
+    (newline) => {
+      expect(normalizeSourceNewlines(["first", "second"].join(newline))).toBe(
+        "first\nsecond",
+      );
     },
   );
 
@@ -920,14 +933,16 @@ describe("canonical live validation script", () => {
   });
 
   it("records explicit panel support classifications for demo evidence", () => {
-    const script = readFileSync(
-      join(
-        process.cwd(),
-        "scripts",
-        "live",
-        "validate-canonical-workbench-live.mjs",
+    const script = normalizeSourceNewlines(
+      readFileSync(
+        join(
+          process.cwd(),
+          "scripts",
+          "live",
+          "validate-canonical-workbench-live.mjs",
+        ),
+        "utf8",
       ),
-      "utf8",
     );
     const calculationModule = readFileSync(
       join(
