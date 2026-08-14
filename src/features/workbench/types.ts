@@ -389,13 +389,22 @@ export type PerformanceEvidenceUpstreamSnapshotView = {
 export type PerformanceCalculationEvidenceView = {
   calculation_role: string;
   calculation_id: string;
-  analytics_type: string;
-  execution_status: string;
+  analytics_type?: string | null;
+  execution_status?: string | null;
   execution_mode?: string | null;
-  lineage_status: string;
+  lineage_status?: string | null;
   stage_statuses: PerformanceEvidenceStageView[];
   upstream_snapshots: PerformanceEvidenceUpstreamSnapshotView[];
   artifacts: PerformanceEvidenceArtifactView[];
+  reason?: string | null;
+};
+
+export type PerformanceSourceSupportabilityView = {
+  key: string;
+  state: string;
+  reason?: string | null;
+  freshness_bucket?: string | null;
+  source_service?: string | null;
 };
 
 export type PerformanceEvidenceView = {
@@ -415,6 +424,7 @@ export type PerformanceEvidenceView = {
   generated_at?: string | null;
   reason?: string | null;
   calculations: PerformanceCalculationEvidenceView[];
+  source_supportability?: PerformanceSourceSupportabilityView[] | null;
 };
 
 export type PerformanceHorizonComparisonRow = {
