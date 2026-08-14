@@ -257,6 +257,7 @@ describe("live validation calculation sanity helpers", () => {
             source_service: "lotus-risk",
             operation: "risk.summary",
             state: "ready",
+            freshness_bucket: "fresh",
           },
         ],
       },
@@ -364,6 +365,74 @@ describe("live validation calculation sanity helpers", () => {
         services: ["lotus-risk"],
       }),
     ]);
+  });
+
+  it.each([
+    ["missing freshness", { state: "ready" }],
+    ["unknown supportability", { state: "unexpected", freshness_bucket: "fresh" }],
+  ])("fails source supportability closed for %s", (_label, sourceSupportability) => {
+    const summary = createSummary();
+
+    assertPerformanceCalculationSanity({
+      summary,
+      recordPanelClassification: createClassifier(summary),
+      performanceSummary: {
+        net_performance: {
+          portfolio_return_pct: 9.33,
+          benchmark_return_pct: 6.52,
+          active_return_pct: 2.81,
+        },
+        overview: {
+          market_value_base: 1_500_000,
+          cash_weight_pct: 12.4,
+          position_count: 18,
+        },
+        evidence_view: {
+          source_supportability: [
+            {
+              source_service: "lotus-performance",
+              operation: "performance.twr",
+              ...sourceSupportability,
+            },
+          ],
+        },
+      },
+      performanceDetails: {
+        net_chart: [{}, {}, {}, {}],
+        contribution: {
+          levels: [
+            {
+              rows: [{}, {}, {}, {}],
+              total_contribution_pct: 9.33,
+            },
+          ],
+        },
+        capabilities: {
+          attribution_detail: {
+            state: "supported",
+            fallback_available: false,
+          },
+        },
+        attribution: {
+          levels: [{ rows: [{}] }],
+        },
+      },
+    });
+
+    expect(summary.supportabilityChecks).toContainEqual(
+      expect.objectContaining({
+        panel: "performance.summary",
+        state: "partial",
+        itemCount: 1,
+        unconfirmedCount: 1,
+      })
+    );
+    expect(summary.panelClassifications).toContainEqual(
+      expect.objectContaining({
+        panel: "performance.summary",
+        sourceSupportabilityState: "partial",
+      })
+    );
   });
 
   it("fails risk attribution when the residual breaches the governed tolerance", () => {

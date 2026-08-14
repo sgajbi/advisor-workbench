@@ -326,6 +326,9 @@ function buildExceptions(
   calculations.forEach((calculation, index) => {
     appendLifecycleException(exceptions, calculation.execution_status, "calculation", index);
     appendLifecycleException(exceptions, calculation.lineage_status, "evidence", index);
+    safeArray(calculation.stage_statuses).forEach((stage, stageIndex) => {
+      appendStageLifecycleException(exceptions, stage.status, index, stageIndex);
+    });
     const artifacts = safeArray(calculation.artifacts);
     if (!artifacts.length) {
       exceptions.push({
@@ -539,6 +542,33 @@ function appendLifecycleException(
       subject === "calculation"
         ? "The source has not confirmed a completed performance calculation for this item."
         : "The source has not confirmed complete lineage and supporting records for this item.",
+    action: "Keep the affected result within internal review and obtain refreshed source evidence.",
+    tone: failed ? "danger" : "warn",
+  });
+}
+
+function appendStageLifecycleException(
+  exceptions: PerformanceEvidenceException[],
+  value: string | null | undefined,
+  calculationIndex: number,
+  stageIndex: number
+) {
+  const state = normalise(value);
+  if (state === COMPLETE_STATUS) return;
+  const failed = FAILED_STATUSES.includes(state);
+  const pending = PENDING_STATUSES.includes(state);
+  exceptions.push({
+    key: `calculation-stage-${calculationIndex}-${stageIndex}`,
+    title: failed
+      ? "Calculation stage did not complete"
+      : pending
+        ? "Calculation stage still in progress"
+        : "Calculation stage status not reported",
+    detail: failed
+      ? "A source calculation stage did not complete successfully."
+      : pending
+        ? "A source calculation stage has not completed yet."
+        : "The source published a calculation stage without a recognised completion state.",
     action: "Keep the affected result within internal review and obtain refreshed source evidence.",
     tone: failed ? "danger" : "warn",
   });

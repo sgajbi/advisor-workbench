@@ -162,6 +162,32 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it.each([
+    ["failed", "attention", "Calculation stage did not complete", "danger"],
+    ["running", "incomplete", "Calculation stage still in progress", "warn"],
+    ["unexpected", "incomplete", "Calculation stage status not reported", "warn"],
+  ] as const)(
+    "fails closed when a published calculation stage is %s",
+    (stageStatus, expectedState, expectedTitle, expectedTone) => {
+      const source = evidence();
+      source.calculations[0].stage_statuses = [
+        {
+          stage_name: "internal_stage_code",
+          status: stageStatus,
+        },
+      ];
+
+      const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+      expect(view.state).toBe(expectedState);
+      expect(view.exceptions).toContainEqual(
+        expect.objectContaining({ title: expectedTitle, tone: expectedTone })
+      );
+      expect(JSON.stringify(view.exceptions)).not.toContain("internal_stage_code");
+      expect(JSON.stringify(view.supportGroups)).toContain("internal_stage_code");
+    }
+  );
+
   it("qualifies fallbacks, limitations, unsupported coverage, and partial source supportability", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,

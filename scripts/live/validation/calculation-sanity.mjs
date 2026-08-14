@@ -83,7 +83,7 @@ function deriveContributionSourceEconomicsOwner(sourceEconomicsEvidence) {
 }
 
 function normalizeSupportabilityState(value) {
-  const normalized = typeof value === "string" ? value.toLowerCase() : "";
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
   if (["ready", "supported", "ok", "complete", "source_backed", "caller_supplied"].includes(normalized)) {
     return "ready";
   }
@@ -96,20 +96,35 @@ function normalizeSupportabilityState(value) {
   return "unknown";
 }
 
+function normalizeFreshnessState(value) {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (["current", "fresh"].includes(normalized)) {
+    return "fresh";
+  }
+  if (["expired", "stale"].includes(normalized)) {
+    return "stale";
+  }
+  return "unknown";
+}
+
 function summarizeSourceSupportability(items) {
   let staleCount = 0;
   let partialCount = 0;
   let actionRequiredCount = 0;
+  let unconfirmedCount = 0;
+  let itemCount = 0;
   const services = new Set();
 
   for (const item of items) {
     if (!item || typeof item !== "object") {
       continue;
     }
+    itemCount += 1;
     if (typeof item.source_service === "string" && item.source_service) {
       services.add(item.source_service);
     }
-    if (item.freshness_bucket === "stale") {
+    const freshnessState = normalizeFreshnessState(item.freshness_bucket);
+    if (freshnessState === "stale") {
       staleCount += 1;
     }
     const normalizedState = normalizeSupportabilityState(item.state ?? item.supportability_state);
@@ -119,20 +134,24 @@ function summarizeSourceSupportability(items) {
     if (normalizedState === "action_required") {
       actionRequiredCount += 1;
     }
+    if (normalizedState === "unknown" || freshnessState === "unknown") {
+      unconfirmedCount += 1;
+    }
   }
 
   return {
-    itemCount: items.length,
+    itemCount,
     services: [...services].sort(),
     staleCount,
     partialCount,
     actionRequiredCount,
+    unconfirmedCount,
     state:
       actionRequiredCount > 0
         ? "action_required"
-        : partialCount > 0 || staleCount > 0
+        : partialCount > 0 || staleCount > 0 || unconfirmedCount > 0
           ? "partial"
-          : items.length > 0
+          : itemCount > 0
             ? "ready"
             : "unknown",
   };
