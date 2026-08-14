@@ -1,5 +1,10 @@
 import type { ContributionSummaryView } from "@/features/workbench/types";
 
+import {
+  DEGRADED_ECONOMICS_VOCABULARY,
+  UNSUPPORTED_ECONOMICS_VOCABULARY,
+} from "./performance-contribution-evidence-vocabulary";
+
 const SOURCE_LIMITATION_REASON_CODES = [
   "COMPONENT_PNL_NOT_SOURCE_AUTHORED",
   "PERFORMANCE_COMPONENT_ECONOMICS_UNAVAILABLE",
@@ -13,15 +18,6 @@ const SOURCE_LINEAGE_REASON_CODES = [
   "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
   "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
 ] as const;
-
-const DEGRADED_ECONOMICS_REASON_CODES: Record<string, string> = {
-  performance_component_economics_unavailable:
-    "PERFORMANCE_COMPONENT_ECONOMICS_UNAVAILABLE",
-  unsupported_cash_flow_types: "UNSUPPORTED_SOURCE_CASH_FLOW_TYPES_PRESENT",
-  missing_classification: "UNCLASSIFIED_POSITION_ECONOMICS_PRESENT",
-  upstream_snapshot_lineage_not_embedded:
-    "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
-};
 
 const COMMON_SMOOTHING_RESIDUAL_CODES = [
   "RAW_CONTRIBUTION_DIFFERS_FROM_LINKED_RETURN",
@@ -103,17 +99,25 @@ function hasReasonEvidenceForDeclaredLimitations(
   degradedEconomics: string[],
   reasonCodes: string[],
 ): boolean {
-  const unsupportedEvidenceIsExplained =
-    unsupportedEconomics.length === 0 ||
-    reasonCodes.includes("COMPONENT_PNL_NOT_SOURCE_AUTHORED") ||
-    reasonCodes.includes("MISSING_FX") ||
-    reasonCodes.includes("MISSING_LOCAL_ECONOMICS");
-  const degradedEvidenceIsExplained = degradedEconomics.every((degradedItem) => {
-    const expectedReasonCode = DEGRADED_ECONOMICS_REASON_CODES[degradedItem];
-    return expectedReasonCode !== undefined && reasonCodes.includes(expectedReasonCode);
-  });
+  const expectedLimitationReasons = [
+    ...unsupportedEconomics.map(
+      (item) => UNSUPPORTED_ECONOMICS_VOCABULARY[item]?.reasonCode,
+    ),
+    ...degradedEconomics.map((item) => DEGRADED_ECONOMICS_VOCABULARY[item]?.reasonCode),
+  ];
+  if (
+    expectedLimitationReasons.some((reasonCode) => reasonCode === undefined) ||
+    expectedLimitationReasons.some((reasonCode) => !reasonCodes.includes(reasonCode))
+  ) {
+    return false;
+  }
 
-  return unsupportedEvidenceIsExplained && degradedEvidenceIsExplained;
+  const expectedReasonSet = new Set(
+    expectedLimitationReasons.filter((reasonCode): reasonCode is string => reasonCode !== undefined),
+  );
+  return SOURCE_LIMITATION_REASON_CODES.every(
+    (reasonCode) => !reasonCodes.includes(reasonCode) || expectedReasonSet.has(reasonCode),
+  );
 }
 
 function isSmoothingEvidenceConsistent(

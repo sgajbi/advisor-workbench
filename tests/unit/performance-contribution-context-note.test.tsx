@@ -237,6 +237,88 @@ describe("PerformanceContributionContextNote", () => {
     ).toBeInTheDocument();
   });
 
+  it("rejects a noncanonical source-status spelling instead of silently promoting it", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...buildSourceBackedEvidence(contribution),
+            status: "source_backed",
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence needs review");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    expectEvidenceValue(openCalculationEvidence(), "Source status", "source_backed");
+  });
+
+  it("rejects padded smoothing status evidence instead of silently canonicalizing it", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            status: " APPLIED ",
+          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence needs review");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
+  it("rejects a limitation reason that does not explain the declared unsupported economics", () => {
+    const contribution = buildContribution({
+      source_economics_evidence: {
+        status: "SOURCE_LIMITED",
+        reason_codes: ["MISSING_FX"],
+        source_contracts: ["PortfolioTimeseriesInput:v1", "PositionTimeseriesInput:v1"],
+        available_economics: ["portfolio_market_values", "position_market_values"],
+        unsupported_economics: ["income_pnl"],
+        degraded_economics: [],
+        source_snapshot_count: 2,
+      },
+    });
+    render(<PerformanceContributionContextNote contribution={contribution} />);
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is limited");
+  });
+
+  it("accepts the matching currency limitation reason for unavailable currency contribution", () => {
+    const contribution = buildContribution({
+      source_economics_evidence: {
+        status: "SOURCE_LIMITED",
+        reason_codes: ["MISSING_FX"],
+        source_contracts: ["PortfolioTimeseriesInput:v1", "PositionTimeseriesInput:v1"],
+        available_economics: ["local_contribution"],
+        unsupported_economics: ["fx_contribution"],
+        degraded_economics: [],
+        source_snapshot_count: 2,
+      },
+    });
+    render(<PerformanceContributionContextNote contribution={contribution} />);
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "limited");
+    expect(note).toHaveTextContent("Contribution coverage is limited");
+    expect(note).toHaveTextContent("Not source-authored: currency contribution.");
+  });
+
   it("rejects a source-backed status that carries a limiting source reason", () => {
     const contribution = buildContribution();
     render(
