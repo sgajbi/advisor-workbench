@@ -1251,8 +1251,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "hasAcceptedAdvisorBriefReviewPosture",
     );
-    expect(browserWorkflowModule).toContain("Supportability ACTION REQUIRED");
+    expect(browserWorkflowModule).toContain("Accepted for internal use");
     expect(browserWorkflowModule).toContain("Supportability READY");
+    expect(browserWorkflowModule).toContain("Recorded by");
+    expect(browserWorkflowModule).not.toContain(
+      'text.includes("Supportability ACTION REQUIRED")',
+    );
     expect(browserWorkflowModule).toContain('"Portfolio Review"');
     expect(browserWorkflowModule).toContain('"Portfolio decision review"');
     expect(browserWorkflowModule).toContain(
