@@ -154,8 +154,9 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
     expect(source).toContain("source-confirmed-existing-action");
     expect(source).toContain("accepted-by-another-reviewer");
-    expect(source).toContain('proofDetailBasis = "GROSS"');
-    expect(source).toContain("buildAdvisorBriefRoute(proofDetailBasis)");
+    expect(source).toContain('detailBasis: "GROSS"');
+    expect(source).toContain('chartFrequency: "quarterly"');
+    expect(source).toContain("buildAdvisorBriefRoute(proofQuery)");
     expect(source).toContain('getByLabel("Review decision")');
     expect(source).toContain('reviewDecision.selectOption("ACCEPT")');
     expect(source).toContain('getByLabel("Reviewer reference")');

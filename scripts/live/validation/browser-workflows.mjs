@@ -1117,10 +1117,11 @@ export async function validateAdvisorBriefPanel(
     performAcceptReviewActionProof = false,
   },
 ) {
-  const buildAdvisorBriefRoute = (detailBasis) =>
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=${detailBasis}&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`;
+  const buildAdvisorBriefRoute = ({ detailBasis, chartFrequency }) =>
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=${detailBasis}&chartFrequency=${chartFrequency}&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`;
+  let proofQuery = { detailBasis: "NET", chartFrequency: "monthly" };
   await page.goto(
-    buildAdvisorBriefRoute("NET"),
+    buildAdvisorBriefRoute(proofQuery),
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
@@ -1163,14 +1164,13 @@ export async function validateAdvisorBriefPanel(
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
     const expectedReviewer = "live.validator.ui";
-    let proofDetailBasis = "NET";
     let proofPosture = classifyAdvisorBriefAcceptProofPosture(
       await supportabilityRegion.innerText(),
       expectedReviewer,
     );
     if (proofPosture === "accepted-by-another-reviewer") {
-      proofDetailBasis = "GROSS";
-      await page.goto(buildAdvisorBriefRoute(proofDetailBasis), {
+      proofQuery = { detailBasis: "GROSS", chartFrequency: "quarterly" };
+      await page.goto(buildAdvisorBriefRoute(proofQuery), {
         waitUntil: "networkidle",
         timeout: timeoutMs,
       });
@@ -1236,9 +1236,13 @@ export async function validateAdvisorBriefPanel(
       proofSource: existingRecordedAccept
         ? "source-confirmed-existing-action"
         : "workbench-review-action",
-      detailBasis: proofDetailBasis,
+      detailBasis: proofQuery.detailBasis,
+      chartFrequency: proofQuery.chartFrequency,
     });
+    return proofQuery;
   }
+
+  return null;
 }
 
 export async function validateProposalNarrativePosturePanel(

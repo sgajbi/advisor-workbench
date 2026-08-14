@@ -2022,7 +2022,7 @@ async function run() {
       recordUiCheck: browserHelpers.recordUiCheck,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await validateAdvisorBriefPanel(page, {
+    const advisorBriefAcceptProofQuery = await validateAdvisorBriefPanel(page, {
       summary,
       workbenchBaseUrl,
       portfolioId,
@@ -2044,6 +2044,9 @@ async function run() {
       fetchJson,
       postJson,
       preRecordedAcceptReviewer: "live.validator.ui",
+      acceptDetailBasis: advisorBriefAcceptProofQuery?.detailBasis ?? "NET",
+      acceptChartFrequency:
+        advisorBriefAcceptProofQuery?.chartFrequency ?? "monthly",
     });
     await validateProposalNarrativePosturePanel(page, {
       summary,

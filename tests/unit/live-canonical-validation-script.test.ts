@@ -1260,6 +1260,8 @@ describe("canonical live validation script", () => {
     expect(advisorBriefBrowserProofIndex).toBeGreaterThan(-1);
     expect(advisorBriefApiProofIndex).toBeGreaterThan(advisorBriefBrowserProofIndex);
     expect(script).toContain('preRecordedAcceptReviewer: "live.validator.ui"');
+    expect(script).toContain("advisorBriefAcceptProofQuery?.detailBasis");
+    expect(script).toContain("advisorBriefAcceptProofQuery?.chartFrequency");
     expect(browserWorkflowModule).toContain("Advisor Talking Points");
     expect(browserWorkflowModule).not.toContain("Client Talking Points");
     expect(browserWorkflowModule).toContain(
