@@ -84,6 +84,13 @@ controls and do not occur on this screen.
 - Refreshes source-owned batch posture after acceptance and presents portfolio-report count,
   complete, in-progress, and attention measures plus each portfolio's lifecycle, attempts, and
   support reference.
+- Presents recent request history as a comparison table at workstation and tablet widths, then as
+  compact operational records at 760 pixels or narrower. Both presentations use the same
+  source-backed row: report identity, report date, requested time, lifecycle, lifecycle explanation,
+  and support reference are never removed for compact screens.
+- Keeps the compact support reference behind a native keyboard and touch disclosure with a
+  44-pixel target. The linear record avoids a nested horizontal hunt while the workstation table
+  retains column comparison where there is sufficient width.
 - Keeps loading, empty, restricted, degraded, unavailable, rejected, retryable, terminal, and
   partially complete states explicit.
 
@@ -123,6 +130,7 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | --- | --- | --- |
 | Loading | Dedicated catalogue, book, job, or outcome loading evidence | Wait for the source response; no fallback catalogue or fabricated result is substituted |
 | Ready | Approved choices, scope, complete request summary, review gate, and enabled actions | Confirm the portfolio/date context before review |
+| Compact request history | One record per request with lifecycle first, both dates visible, and support detail on demand | Open **Support reference** with keyboard or touch; no request field is omitted from the workstation table |
 | Empty catalogue | A source-confirmed absence of orderable reports | Do not submit; follow the first support step if reports are expected |
 | Empty or filtered book | No assigned portfolios, or no portfolios matching the current search | Revise the search; an empty own book cannot be replaced with the global portfolio list |
 | Restricted | A source or caller boundary prevents ordering | Verify governed role and scope; do not add browser headers to bypass it |
@@ -167,7 +175,9 @@ implemented behavior; it is not a claim of bank approval or competitor superiori
   outcome refresh, and unsupported-action absence.
 - `tests/e2e/report-centre-state.smoke.spec.ts` runs against a production Workbench build and proves
   recovery, restricted, empty, accepted, multi-portfolio outcome, keyboard, responsive-boundary,
-  mobile, contrast, and horizontal-overflow posture.
+  mobile, contrast, and horizontal-overflow posture. It directly proves recent-request lifecycle
+  and support access at 1024 and 519 pixels, keyboard disclosure focus, a 44-pixel compact target,
+  and no page-level horizontal overflow.
 - Diagnostic browser captures are written under `output/playwright/`; they are not demo-readiness
   evidence.
 - Canonical front-office validation uses `PB_SG_GLOBAL_BAL_001` for selected-portfolio reporting.

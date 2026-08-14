@@ -4732,3 +4732,71 @@ native keyboard disclosure, exact source values, focus stability, and internal/p
 `output/playwright/issue-712-performance-evidence-*`. The Performance Summary guide, repository
 context, review ledger, and CSS governance baseline change. Gateway/API/OpenAPI, calculation,
 dependency, authentication, and runtime topology truth do not.
+
+## Compact Operational History And Lifecycle Discoverability
+
+### Business job
+
+An advisor checking a report request on a compact or split-window screen must immediately see what
+was requested, the current source-owned lifecycle, when it was requested, and the exact support
+reference when operational follow-up is required. The user should not have to discover a hidden
+horizontal table gesture before learning whether a client-review report completed or needs action.
+
+### Current-product research
+
+Research was reviewed on 2026-08-15 from standards and official enterprise-product sources:
+
+1. [W3C Design System responsive tables](https://design-system.w3.org/styles/tables.html) preserves
+   native table structure when comparison remains primary and requires an overflow wrapper to be
+   keyboard-focusable and programmatically named. Lotus retains its semantic workstation table but
+   does not force that interaction onto a narrow five-field lifecycle record.
+2. [WCAG 2.2 Reflow understanding](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) permits
+   two-dimensional scrolling for genuine data tables while still requiring the surrounding page to
+   reflow. Lotus proves no page-level horizontal overflow and chooses a linear compact record where
+   row comparison is secondary to lifecycle comprehension.
+3. [Material Design card guidance](https://m2.material.io/components/cards/android) supports
+   expanding mobile card content within the page rather than introducing a second internal scroll
+   surface. Lotus adopts native progressive disclosure for the support reference, not Material's
+   product styling or identity.
+4. [Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth) frames
+   advisor technology around efficiency, book insight, next best action, and stronger client
+   engagement. Lotus applies that workflow test narrowly: current lifecycle and operational
+   follow-up must be visible before decorative detail.
+
+### Adopted decisions
+
+1. Keep the semantic five-column comparison table at workstation and tablet widths where all
+   lifecycle and support fields fit without clipping.
+2. At 760 pixels or narrower, render a compact operational record that leads with report identity and
+   lifecycle, keeps report date and requested time together, and places the exact support reference
+   in a native disclosure.
+3. Derive both presentations from the same `ReportRequestRow`; compact layout must not invent,
+   reinterpret, or remove source evidence.
+4. Make the support disclosure keyboard-operable with stable focus and a measured 44-pixel target.
+5. Create a reusable design-system operational-record primitive with component-owned CSS rather
+   than adding Report Centre selectors to the global layer.
+6. Preserve explicit loading, empty, restricted, and error states in the compact presentation and
+   keep the existing recovery actions.
+
+### Rejected decisions
+
+1. Silently clipping Lifecycle or Support, hiding a column on mobile, or reducing the text until the
+   workstation table happens to fit.
+2. Keeping horizontal scroll without a named focusable region and visible affordance.
+3. Copying a competitor's visual design, adding a card/table library, or changing the proven React,
+   CSS Module, Vitest, and Playwright stack for one responsive workflow.
+4. Changing Gateway mapping, Report lifecycle semantics, archive posture, client delivery,
+   identity, or authorization to solve a Workbench presentation defect.
+5. Generalizing every table into cards. Tables remain correct when cross-row and cross-column
+   comparison is the user's primary job.
+
+### Validation and publication decision
+
+Workbench #707 owns this slice. Focused design-system and history-state tests prove one complete row
+plus loading, empty, restricted, error, and recovery behavior; the existing Report Centre integration
+suite proves the underlying source workflow remains intact. The isolated optimized-production browser
+scenario proves the semantic table at 1024 pixels and compact record at 519 pixels, exact lifecycle and
+support access, keyboard disclosure focus, a 44-pixel target, and no page-level overflow. Reviewed
+diagnostic captures are stored under `output/playwright/diagnostic-report-centre-request-history-*`.
+The Report Centre guide, repository context, research ledger, and review ledger change. No Gateway,
+Report, OpenAPI, dependency, global CSS, runtime topology, identity, or entitlement truth changes.
