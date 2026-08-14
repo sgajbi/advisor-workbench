@@ -22,14 +22,14 @@ export type ContributionEvidencePresentation = {
   evidenceItems: ContributionEvidenceItem[];
 };
 
-const SOURCE_STATUSES = new Set(["SOURCE_BACKED", "SOURCE_LIMITED", "CALLER_SUPPLIED"]);
-const SMOOTHING_STATUSES = new Set([
+const SOURCE_STATUSES = ["SOURCE_BACKED", "SOURCE_LIMITED", "CALLER_SUPPLIED"] as const;
+const SMOOTHING_STATUSES = [
   "APPLIED",
   "NOT_REQUESTED",
   "INVALID_DOMAIN_FALLBACK",
   "NO_CONTRIBUTION_ROWS",
-]);
-const SOURCE_REASON_CODES = new Set([
+] as const;
+const SOURCE_REASON_CODES = [
   "STATELESS_CALLER_SUPPLIED_SOURCE_ECONOMICS",
   "LOTUS_CORE_ANALYTICS_INPUTS_USED",
   "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
@@ -41,8 +41,8 @@ const SOURCE_REASON_CODES = new Set([
   "UNCLASSIFIED_POSITION_ECONOMICS_PRESENT",
   "MISSING_FX",
   "MISSING_LOCAL_ECONOMICS",
-]);
-const SMOOTHING_REASON_CODES = new Set([
+] as const;
+const SMOOTHING_REASON_CODES = [
   "CARINO_FACTOR_APPLIED",
   "SMOOTHING_NOT_REQUESTED",
   "CARINO_INVALID_DAILY_LOG_DOMAIN",
@@ -50,7 +50,7 @@ const SMOOTHING_REASON_CODES = new Set([
   "SMOOTHED_CONTRIBUTION_RECONCILES",
   "RESIDUAL_ALLOCATED_TO_RECONCILE_PERIOD",
   "NO_CONTRIBUTION_ROWS",
-]);
+] as const;
 
 const UNSUPPORTED_ECONOMICS_LABELS: Record<string, string> = {
   income_pnl: "income effects",
@@ -89,8 +89,8 @@ export function getContributionEvidencePresentation(
     SMOOTHING_REASON_CODES,
   );
   const hasUnknownStatus =
-    (sourceStatus !== null && !SOURCE_STATUSES.has(sourceStatus)) ||
-    (smoothingStatus !== null && !SMOOTHING_STATUSES.has(smoothingStatus));
+    (sourceStatus !== null && !includesEvidenceValue(SOURCE_STATUSES, sourceStatus)) ||
+    (smoothingStatus !== null && !includesEvidenceValue(SMOOTHING_STATUSES, smoothingStatus));
   const hasUnknownEvidence =
     hasUnknownStatus || unknownSourceCodes.length > 0 || unknownSmoothingCodes.length > 0;
   const limitations = getContributionLimitations(contribution, {
@@ -290,10 +290,17 @@ function formatContributionWeightingScheme(weightingScheme?: string | null): str
   }
 }
 
-function getUnknownValues(values: string[] | undefined, knownValues: Set<string>): string[] {
+function getUnknownValues(
+  values: string[] | undefined,
+  knownValues: readonly string[],
+): string[] {
   return (values ?? [])
     .map((value) => value.trim())
-    .filter((value) => value.length > 0 && !knownValues.has(value));
+    .filter((value) => value.length > 0 && !includesEvidenceValue(knownValues, value));
+}
+
+function includesEvidenceValue(knownValues: readonly string[], value: string): boolean {
+  return knownValues.includes(value);
 }
 
 function normalizeEvidenceValue(value?: string | null): string | null {
