@@ -10,7 +10,7 @@ consolidated client, household, or book report.
 | Screen posture | Current truth |
 | --- | --- |
 | Canonical route | `/reports?portfolioId={portfolio_id}` |
-| Navigation | **Reports** within the shared portfolio context |
+| Navigation | **Reporting** in daily work within the shared portfolio context |
 | Supported scope | One selected portfolio, or at least two active portfolios explicitly selected from the current source-backed advisor book |
 | Evidence posture | Single-portfolio canonical runtime coverage plus production-browser bundle workflow and state-matrix proof; a multi-portfolio canonical seed remains required for certifying live bundle evidence |
 | Primary next action | Review the report setup, submit it through Gateway, then monitor source-owned portfolio outcomes |
@@ -52,7 +52,7 @@ delegated, supervisory, household, or unrestricted book access.
 ## Workflow Position
 
 1. Start from [Advisor Book](Advisor-Book-Workflow) or an established portfolio context.
-2. Open **Reports** and confirm the selected portfolio, business date, catalogue availability, and
+2. Open **Reporting** and confirm the selected portfolio, business date, catalogue availability, and
    output readiness.
 3. Choose **Selected portfolio** or **Portfolio bundle**. For a bundle, search and select at least
    two active portfolios returned by **My book**.

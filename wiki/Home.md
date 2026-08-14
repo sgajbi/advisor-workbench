@@ -68,7 +68,10 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   have bounded direct Gateway-backed queue/detail routes for
   RFC-0023 advisor narrative delivery posture, while the top-level shell `Proposal` entry remains
   disabled
-- shell navigation currently treats `Proposal` and `Advisory` as disabled capability-gated entries
+- the quiet global shell keeps **My book** and a capability-backed workspace switcher visible;
+  `Proposal` and `Advisory` remain disabled in that global capability posture
+- the selected-portfolio rail prioritizes five daily business domains, shows the active specialist
+  task once, and keeps the grouped specialist directory and alternative workflow steps on demand
 
 ## Most important commands
 

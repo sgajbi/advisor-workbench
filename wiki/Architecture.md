@@ -29,6 +29,23 @@ The versioned runtime, browser, support-lifecycle, and current scalability bound
 implemented evidence and explicit non-claims; architecture compatibility must not be presented as
 capacity or bank certification.
 
+## Navigation model
+
+Workbench separates three business contexts so the interface remains dense without becoming a
+feature catalogue:
+
+| Context | Visible by default | Ownership and boundary |
+| --- | --- | --- |
+| Advisor | **My book** | Global shell; preserves the active review date but does not infer team, delegate, or supervisory access |
+| Workspace | Current capability plus **Switch** | Global shell; normalized Gateway capability posture controls which entries are actionable |
+| Selected portfolio | Five daily-work domains, active specialist task, and current workflow step | Shared `PortfolioScreenRail`; secondary screens and alternative steps are disclosed on demand |
+
+The daily-work domains are **Portfolio review**, **Performance**, **Advice**, **Reporting**, and
+**Mandate management**. **All workspaces** groups specialist records, analysis, advice, and client
+service destinations without duplicating the active task. The same model reflows at desktop,
+tablet, and compact widths. Links remain semantic links; disclosure buttons close on Escape and
+restore focus. A route being implemented does not override a disabled global capability posture.
+
 ## Product-surface map
 
 - `Portfolio`
@@ -63,14 +80,15 @@ capacity or bank certification.
 
 ```mermaid
 flowchart LR
-  Shell[Application shell and navigation] --> Portfolio[Portfolio workspace]
+  Shell[Advisor context and capability switcher] --> Rail[Selected-portfolio task rail]
+  Rail --> Portfolio[Portfolio workspace]
   Shell --> Performance[Performance workspace]
   Performance --> Summary[Summary]
   Performance --> Analysis[Analysis]
   Performance --> AdvisorBrief[Advisor Brief]
   Performance --> Risk[Risk Review]
   Performance --> Evidence[Evidence]
-  Shell --> Cockpit[Advisor Cockpit]
+  Rail --> Cockpit[Advisor Cockpit]
 
   Portfolio --> Gateway[lotus-gateway]
   Summary --> Gateway

@@ -77,9 +77,10 @@ Boundary rules that matter:
    Proposals are a bounded direct advisory workspace surface for the Gateway-backed proposal queue
    and RFC-0023 advisor narrative delivery posture, while the top-level `Proposal` shell entry
    remains disabled pending broader product promotion.
-8. Top-level shell navigation is capability-gated: `Portfolio`, `Performance`, and `Risk` are
-   active, while `Proposal` and `Advisory` remain disabled in the current normalized shell
-   bootstrap contract.
+8. The top shell uses a capability-backed workspace switcher: `Portfolio`, `Performance`, and
+   `Risk` are actionable, while `Proposal` and `Advisory` remain visibly disabled in the current
+   normalized shell-bootstrap contract. The selected-portfolio rail separately prioritizes daily
+   business work and discloses specialist screens on demand.
 9. Canonical review-ready browser evidence comes from `npm run live:validate` artifacts under
    `output/playwright/live-canonical/`, not from ad hoc localhost screenshots.
 10. `/reports` is the portfolio-scoped Report Centre for firm-approved report selection, reviewed
@@ -110,10 +111,15 @@ Current main surfaces:
 
 Current shell navigation truth:
 
-- active:
+- capability-backed switcher entries currently active:
   `Portfolio`, `Performance`, `Risk`
 - currently disabled by capability posture:
   `Proposal`, `Advisory`
+- global advisor context:
+  `My book`, preserving an active review date when present
+- selected-portfolio daily work:
+  `Portfolio review`, `Performance`, `Advice`, `Reporting`, `Mandate management`; specialist
+  records and analysis remain available through `All workspaces`
 
 Current route posture:
 

@@ -958,6 +958,79 @@ Research was reviewed on 2026-07-19 from primary design and accessibility source
 No wiki source change is required. This is responsive behavior and accessibility hardening of the
 existing shared navigation, without a new route, capability, integration, or operator command.
 
+## Task-Aware Private Banking Navigation
+
+### Business job
+
+A client advisor needs to move from the whole book to one selected portfolio, complete the current
+review task, and reach specialist evidence without scanning the product's complete route inventory
+on every screen. Navigation must preserve portfolio and review-date context, distinguish global
+workspace switching from local portfolio work, and keep source-disabled capabilities
+non-actionable.
+
+### Current-product research
+
+Research was revalidated on 2026-08-15 from official product and design-system sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   emphasizes a connected whole-portfolio experience, exception-based review, and workflow
+   continuity. Those principles support stable portfolio context and a short daily-work path rather
+   than equal visual priority for every feature.
+2. [SAP Fiori launchpad shell bar](https://experience.sap.com/fiori-design-web/launchpad-shell-bar/)
+   separates persistent shell orientation from application content and treats product switching as
+   a deliberate shell action.
+3. [SAP Fiori side navigation](https://experience.sap.com/fiori-design-web/side-navigation/)
+   uses hierarchical, collapsible navigation to keep frequent destinations prominent while
+   retaining access to deeper application areas.
+4. [W3C disclosure navigation](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/)
+   retains semantic links, communicates expanded state, and supports Escape closure with focus
+   restoration.
+
+These sources inform information architecture and interaction quality only. Lotus does not copy a
+competitor's visual identity, wording, entitlement model, calculations, or unsupported features.
+
+### Adopted decisions
+
+1. Keep the top shell quiet: Lotus identity, **My book**, and one capability-backed workspace
+   switcher. Do not repeat the portfolio rail as a row of global pills.
+2. Keep five daily business domains visible in the selected-portfolio rail: Portfolio review,
+   Performance, Advice, Reporting, and Mandate management.
+3. Place an active specialist destination once under **Current task**; group the remaining
+   specialist destinations by business purpose under **All workspaces**.
+4. Show only the current workflow step by default and disclose alternative steps on demand.
+5. Preserve the active review date when returning to **My book** and preserve the selected
+   portfolio in every local destination.
+6. Keep capability-disabled global workspaces visible but non-actionable; availability remains a
+   Gateway shell-bootstrap decision, not a browser inference.
+7. Use ordinary links plus disclosure buttons. Escape closes nested disclosures and restores focus
+   to the initiating control.
+8. Reflow the same information architecture at desktop, tablet, and compact widths rather than
+   inventing a separate mobile product.
+
+### Rejected decisions
+
+1. A permanently visible flat catalogue of every application and every portfolio screen.
+2. Duplicate active destinations in daily work, specialist navigation, and workflow navigation.
+3. Browser-authored role, entitlement, notification, search, or workspace-availability state.
+4. A page-local select, hamburger implementation, or one-off navigation component for each screen.
+5. Decorative gold, oversized cards, or animation without a location, decision, or recovery
+   purpose.
+
+### Implementation and validation record
+
+Issue #705 introduces one pure navigation model, one shared portfolio-rail renderer, one shared
+workspace-switcher primitive, and review-date-preserving **My book** navigation. Focused component
+and model tests protect grouping, active-state de-duplication, disabled capability posture, and
+focus restoration. Optimized browser journeys cover Advisory Overview, Performance Summary, and
+Report Centre at 1440, 1024, and 519 pixels, including default destination counts, disclosure
+behavior, active workflow context, keyboard recovery, and horizontal-overflow checks.
+
+The same visual review identified two independent defects that this navigation slice does not hide:
+Performance Drivers desktop overlap is owned by #706, and compact Report Centre lifecycle-table
+discoverability is owned by #707. No Lotus-wide skill change is justified: the existing frontend,
+issue-discovery, wiki, and review-ledger skills already required the research, source truth,
+responsive browser inspection, issue capture, and durable documentation used here.
+
 ## Report Ordering
 
 ### Business job
