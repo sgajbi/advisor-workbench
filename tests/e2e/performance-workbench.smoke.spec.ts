@@ -982,6 +982,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(review).toContainText(
       'The brief was accepted for its permitted internal workflow use.',
     );
+    await expect(review.getByRole('status')).toBeFocused();
     await expect(review).toContainText('No further review decision is currently available');
     expect(reviewRequests).toEqual(['POST']);
 

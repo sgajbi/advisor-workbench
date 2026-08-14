@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ActionButton, SemanticBadge } from "@/design-system";
+import { ActionButton, SemanticBadge, type SemanticBadgeTone } from "@/design-system";
 import type { AdvisorBriefReviewFeedback } from "../../use-performance-advisor-brief";
 import type {
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -75,6 +75,7 @@ export default function AdvisorBriefReviewWorkflow({
   const [step, setStep] = useState<"edit" | "confirm">("edit");
   const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
   const reviewButtonRef = useRef<HTMLButtonElement | null>(null);
+  const feedbackRef = useRef<HTMLDivElement | null>(null);
   const allowedActions = workflowPackRun.allowed_review_actions.filter(isKnownReviewAction);
   const selectedDefinition = selectedAction ? REVIEW_ACTIONS[selectedAction] : null;
   const requiresReplacement =
@@ -91,6 +92,12 @@ export default function AdvisorBriefReviewWorkflow({
       confirmButtonRef.current?.focus();
     }
   }, [step]);
+
+  useEffect(() => {
+    if (feedback.state === "success") {
+      feedbackRef.current?.focus({ preventScroll: true });
+    }
+  }, [feedback.state]);
 
   const reviewStateLabel = useMemo(
     () => toBusinessStateLabel(workflowPackRun.review_state),
@@ -128,7 +135,7 @@ export default function AdvisorBriefReviewWorkflow({
       <div className="performance-advisor-brief-review-state-row">
         <span>Current review state</span>
         <SemanticBadge
-          tone={workflowPackRun.review_pending ? "warn" : "success"}
+          tone={getReviewStateTone(workflowPackRun)}
           emphasis="strong"
         >
           {reviewStateLabel}
@@ -137,9 +144,11 @@ export default function AdvisorBriefReviewWorkflow({
 
       {feedback.state !== "idle" ? (
         <div
+          ref={feedbackRef}
           className={`performance-advisor-brief-review-feedback performance-advisor-brief-review-feedback-${feedback.state}`}
           role={feedback.state === "failed" ? "alert" : "status"}
           aria-live={feedback.state === "failed" ? "assertive" : "polite"}
+          tabIndex={feedback.state === "success" ? -1 : undefined}
         >
           {feedback.message}
         </div>
@@ -302,4 +311,39 @@ function toBusinessStateLabel(value: string): string {
     .filter(Boolean)
     .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
     .join(" ");
+}
+
+function getReviewStateTone(
+  workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun
+): SemanticBadgeTone {
+  if (workflowPackRun.review_pending) {
+    return "warn";
+  }
+
+  switch (workflowPackRun.review_state.toUpperCase()) {
+    case "ACCEPTED":
+      return hasRecordedReviewEvidence(workflowPackRun) ? "success" : "default";
+    case "REJECTED":
+    case "ABANDONED":
+      return "danger";
+    case "AWAITING_REVIEW":
+      return "warn";
+    case "NOT_REVIEW_REQUIRED":
+    case "REVISED":
+    case "SUPERSEDED":
+    default:
+      return "default";
+  }
+}
+
+function hasRecordedReviewEvidence(
+  workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun
+): boolean {
+  return (
+    workflowPackRun.has_review_history === true &&
+    Boolean(workflowPackRun.latest_review_actor?.trim()) &&
+    Boolean(workflowPackRun.latest_review_event_at?.trim()) &&
+    typeof workflowPackRun.review_transition_count === "number" &&
+    workflowPackRun.review_transition_count > 0
+  );
 }
