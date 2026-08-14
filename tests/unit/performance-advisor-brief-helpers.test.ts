@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PerformanceAdvisorBriefViewModel } from "../../src/apps/performance/advisor-brief-view-model";
 import {
+  canCopyAdvisorBrief,
   dedupeAdvisorActions,
   toAdvisorNoteCopy,
 } from "../../src/apps/performance/components/advisor-brief/performance-advisor-brief-helpers";
@@ -66,5 +67,49 @@ describe("performance-advisor-brief helpers", () => {
     expect(note).toContain("- Open Return Path");
     expect(note).toContain("Risks / Exceptions");
     expect(note).toContain("- No material supportability exceptions are flagged.");
+  });
+
+  it("admits only current evidence with a usable internal review posture for copying", () => {
+    expect(canCopyAdvisorBrief(buildBrief())).toBe(true);
+    expect(
+      canCopyAdvisorBrief(
+        buildBrief({
+          aiDisclosure: {
+            ...buildBrief().aiDisclosure,
+            humanReview: { state: "rejected", sourceRecorded: true },
+          },
+        })
+      )
+    ).toBe(false);
+    expect(
+      canCopyAdvisorBrief(
+        buildBrief({
+          aiDisclosure: {
+            ...buildBrief().aiDisclosure,
+            availability: "stale",
+            freshness: { state: "stale" },
+          },
+        })
+      )
+    ).toBe(false);
+  });
+
+  it("labels blocked and historical note text without implying review is pending", () => {
+    const rejectedBrief = buildBrief({
+      aiDisclosure: {
+        ...buildBrief().aiDisclosure,
+        humanReview: { state: "rejected", sourceRecorded: true },
+      },
+    });
+    const historicalBrief = buildBrief({
+      aiDisclosure: {
+        ...buildBrief().aiDisclosure,
+        availability: "stale",
+      },
+    });
+
+    expect(toAdvisorNoteCopy(rejectedBrief)).toMatch(/^BLOCKED INTERNAL NOTE/);
+    expect(toAdvisorNoteCopy(historicalBrief)).toMatch(/^HISTORICAL INTERNAL NOTE/);
+    expect(toAdvisorNoteCopy(rejectedBrief)).not.toContain("Human review required");
   });
 });

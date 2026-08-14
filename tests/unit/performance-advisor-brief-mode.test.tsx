@@ -766,6 +766,61 @@ describe("PerformanceAdvisorBriefMode", () => {
     });
   });
 
+  it("rejects an HTTP-success response that does not prove the requested review transition", async () => {
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockResolvedValueOnce({
+      ...readyAdvisorBriefResponse,
+      correlation_id: "corr-advisor-brief-unconfirmed-review",
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        review_state: "AWAITING_REVIEW",
+        latest_review_event_at: null,
+        latest_review_actor: null,
+        review_transition_count: 0,
+        has_review_history: false,
+      },
+    });
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText("Review decision"), {
+      target: { value: "ACCEPT" },
+    });
+    fireEvent.change(screen.getByLabelText(/Reviewer reference/), {
+      target: { value: "advisor_1" },
+    });
+    fireEvent.change(screen.getByLabelText("Review rationale"), {
+      target: { value: "Evidence supports permitted internal use." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review decision" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm acceptance" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The review decision was not recorded"
+    );
+    expect(screen.getByLabelText("Status Awaiting Review")).toBeInTheDocument();
+    expect(screen.queryByText(/brief was accepted for its permitted internal workflow/i))
+      .not.toBeInTheDocument();
+  });
+
   it("requires replacement lineage input for revision actions before posting the bounded review action", async () => {
     vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
     vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue({
@@ -781,6 +836,10 @@ describe("PerformanceAdvisorBriefMode", () => {
       workflow_pack_run: {
         ...readyAdvisorBriefResponse.workflow_pack_run!,
         review_state: "REVISED",
+        latest_review_event_at: "2026-04-21T03:24:00Z",
+        latest_review_actor: "advisor_2",
+        review_transition_count: 1,
+        has_review_history: true,
         allowed_review_actions: [],
         supportability_status: "HISTORICAL",
         review_pending: false,
@@ -976,6 +1035,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
         "No further review decision is currently available"
       );
+      expect(screen.getByRole("button", { name: "Copy internal note" })).toBeDisabled();
     });
   });
 });

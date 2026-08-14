@@ -15,9 +15,28 @@ export function dedupeAdvisorActions(actions: PerformanceAdvisorBriefAction[]) {
   });
 }
 
+export function canCopyAdvisorBrief(brief: PerformanceAdvisorBriefViewModel): boolean {
+  const { aiDisclosure } = brief;
+  const reviewAdmitsInternalCopy =
+    aiDisclosure.humanReview.state === "review-required" ||
+    (aiDisclosure.humanReview.state === "reviewed" &&
+      aiDisclosure.humanReview.sourceRecorded);
+  const currentAvailability = !["stale", "unavailable"].includes(
+    aiDisclosure.availability
+  );
+
+  return (
+    brief.talkingPoints.length > 0 &&
+    aiDisclosure.evidence.state !== "missing" &&
+    aiDisclosure.freshness.state !== "stale" &&
+    currentAvailability &&
+    reviewAdmitsInternalCopy
+  );
+}
+
 export function toAdvisorNoteCopy(brief: PerformanceAdvisorBriefViewModel) {
   const sections = [
-    "INTERNAL WORKING NOTE — Human review required; not approved for client use.",
+    getAdvisorNoteBoundary(brief),
     "",
     brief.summary,
     "",
@@ -34,4 +53,26 @@ export function toAdvisorNoteCopy(brief: PerformanceAdvisorBriefViewModel) {
   ];
 
   return sections.join("\n");
+}
+
+function getAdvisorNoteBoundary(brief: PerformanceAdvisorBriefViewModel): string {
+  if (brief.aiDisclosure.humanReview.state === "rejected") {
+    return "BLOCKED INTERNAL NOTE — Source review rejected this brief; do not use or copy.";
+  }
+  if (
+    brief.aiDisclosure.availability === "stale" ||
+    brief.aiDisclosure.freshness.state === "stale"
+  ) {
+    return "HISTORICAL INTERNAL NOTE — This brief is superseded; do not use or copy.";
+  }
+  if (
+    brief.aiDisclosure.humanReview.state === "reviewed" &&
+    brief.aiDisclosure.humanReview.sourceRecorded
+  ) {
+    return "INTERNAL REVIEWED NOTE — Source-recorded human review; not approved for client use.";
+  }
+  if (brief.aiDisclosure.humanReview.state === "review-required") {
+    return "INTERNAL WORKING NOTE — Human review required; not approved for client use.";
+  }
+  return "BLOCKED INTERNAL NOTE — Review evidence is unavailable; do not use or copy.";
 }
