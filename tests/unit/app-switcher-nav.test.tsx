@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fallbackNormalizedCapabilities } from "../../src/features/platform-capabilities/api";
@@ -9,6 +9,10 @@ const usePlatformCapabilitiesMock = vi.fn();
 const usePathnameMock = vi.fn();
 const useSearchParamsMock = vi.fn();
 
+function openWorkspaceMenu() {
+  fireEvent.click(screen.getByRole("button", { name: /Switch workspace/i }));
+}
+
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -16,14 +20,22 @@ vi.mock("next/link", () => ({
     children,
     title,
     "aria-current": ariaCurrent,
+    "aria-label": ariaLabel,
   }: {
     href: string;
     className?: string;
     children: React.ReactNode;
     title?: string;
     "aria-current"?: "page" | undefined;
+    "aria-label"?: string;
   }) => (
-    <a href={href} className={className} title={title} aria-current={ariaCurrent}>
+    <a
+      href={href}
+      className={className}
+      title={title}
+      aria-current={ariaCurrent}
+      aria-label={ariaLabel}
+    >
       {children}
     </a>
   ),
@@ -93,6 +105,7 @@ describe("AppSwitcherNav", () => {
     render(<AppSwitcherNav />);
 
     expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
+    openWorkspaceMenu();
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute(
       "href",
       "/performance?mode=risk"
@@ -119,6 +132,7 @@ describe("AppSwitcherNav", () => {
     render(<AppSwitcherNav />);
 
     const navigation = screen.getByRole("navigation", { name: "Workspace Navigation" });
+    openWorkspaceMenu();
     expect(navigation.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute(
       "aria-current",
@@ -140,6 +154,7 @@ describe("AppSwitcherNav", () => {
     render(<AppSwitcherNav />);
 
     const navigation = screen.getByRole("navigation", { name: "Workspace Navigation" });
+    openWorkspaceMenu();
     expect(navigation.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
     expect(screen.queryByRole("link", { name: "Data Products" })).not.toBeInTheDocument();
   });
@@ -171,6 +186,7 @@ describe("AppSwitcherNav", () => {
 
     render(<AppSwitcherNav />);
 
+    openWorkspaceMenu();
     expect(screen.getByText("Proposal")).toHaveAttribute(
       "title",
       "Proposal availability could not be confirmed."
@@ -199,7 +215,10 @@ describe("AppSwitcherNav", () => {
     const { container } = render(<AppSwitcherNav />);
 
     expect(screen.queryByRole("navigation", { name: "Workspace Navigation" })).not.toBeInTheDocument();
-    expect(container.querySelector(".shell-workspace-tabs-skeleton")).toBeTruthy();
+    expect(container.querySelector(".shell-workspace-menu-loading")).toBeTruthy();
+    expect(
+      screen.getByRole("status", { name: "Checking workspace availability" }),
+    ).toHaveTextContent("Checking availability");
     expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
   });
 });

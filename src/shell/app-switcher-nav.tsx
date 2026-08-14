@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 
-import { WorkspaceTabNav } from "@/design-system";
+import { WorkspaceMenuNav } from "@/design-system";
 import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities/api";
 import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
 import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
@@ -24,7 +24,7 @@ export default function AppSwitcherNav() {
         : [];
 
   if (loading && shellBootstrapSource === "loading") {
-    return <div className="shell-workspace-tabs-skeleton" aria-hidden="true" />;
+    return <AppSwitcherNavLoading />;
   }
 
   const items = workspaceDescriptors.map((workspace) => {
@@ -39,11 +39,24 @@ export default function AppSwitcherNav() {
   });
 
   return (
-    <WorkspaceTabNav
+    <WorkspaceMenuNav
       items={items}
       ariaLabel="Workspace Navigation"
-      className="shell-workspace-tabs"
+      className="shell-workspace-menu"
     />
+  );
+}
+
+export function AppSwitcherNavLoading() {
+  return (
+    <div
+      className="shell-workspace-menu-loading"
+      role="status"
+      aria-label="Checking workspace availability"
+    >
+      <small>Workspace</small>
+      <strong>Checking availability</strong>
+    </div>
   );
 }
 

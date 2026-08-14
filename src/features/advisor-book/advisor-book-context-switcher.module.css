@@ -10,7 +10,6 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
@@ -20,17 +19,6 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.header a {
-  color: #fcdc9a;
-  font-size: 0.75rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.header a:hover {
-  text-decoration: underline;
 }
 
 .disclosure {

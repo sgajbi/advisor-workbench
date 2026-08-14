@@ -1,13 +1,13 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import AppShell from "@/shell/app-shell";
 import LotusMark from "@/shell/lotus-mark";
 
 vi.mock("next/link", () => ({
-  default: ({ href, className, children }: { href: string; className?: string; children: React.ReactNode }) => (
-    <a href={href} className={className}>
+  default: ({ href, className, children, "aria-label": ariaLabel }: { href: string; className?: string; children: React.ReactNode; "aria-label"?: string }) => (
+    <a href={href} className={className} aria-label={ariaLabel}>
       {children}
     </a>
   ),
@@ -48,7 +48,9 @@ describe("AppShell", () => {
 
     expect(screen.getByRole("link", { name: /Lotus/i })).toHaveAttribute("href", "/");
     expect(screen.getByText("Private Banking Workbench")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Advisor My book/i })).toHaveAttribute("href", "/book");
     expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Switch workspace/i }));
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");

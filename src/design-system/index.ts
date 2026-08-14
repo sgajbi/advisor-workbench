@@ -122,8 +122,8 @@ export { default as WorkbenchToolbarPlaceholder } from "./components/workbench-t
 export type { WorkbenchToolbarPlaceholderField } from "./components/workbench-toolbar-placeholder";
 export { default as WorkspaceCapabilityPanel } from "./components/workspace-capability-panel";
 export { default as WorkspaceStatusPanel } from "./components/workspace-status-panel";
-export { default as WorkspaceTabNav } from "./components/workspace-tab-nav";
-export type { WorkspaceTabNavItem } from "./components/workspace-tab-nav";
+export { default as WorkspaceMenuNav } from "./components/workspace-menu-nav";
+export type { WorkspaceMenuNavItem } from "./components/workspace-menu-nav";
 export {
   WorkbenchSummaryToolbar,
   WorkbenchSummaryVisualCard,
