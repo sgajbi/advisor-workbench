@@ -94,6 +94,63 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.context).toContainEqual({ label: "Benchmark", value: "Assigned" });
   });
 
+  it("distinguishes explicit review windows that share an end date", () => {
+    const explicitEvidence = evidence({
+      period: "EXPLICIT",
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-08-14",
+    });
+    const matchingSelection = {
+      period: "EXPLICIT",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-08-14",
+    };
+
+    expect(
+      buildPerformanceEvidenceAssuranceViewModel(
+        supportedCapability,
+        explicitEvidence,
+        matchingSelection
+      ).state
+    ).toBe("ready");
+
+    const mismatched = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      explicitEvidence,
+      { ...matchingSelection, reportStartDate: "2026-02-01" }
+    );
+    const mismatch = mismatched.exceptions.find(
+      (exception) => exception.key === "selection-context-mismatch"
+    );
+
+    expect(mismatched.state).toBe("attention");
+    expect(mismatch).toMatchObject({ tone: "danger" });
+    expect(mismatch?.detail).toContain("review start date");
+    expect(mismatch?.detail).not.toContain("2026-01-01");
+    expect(mismatch?.detail).not.toContain("2026-02-01");
+  });
+
+  it("fails closed when source evidence omits explicit review-window boundaries", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ period: "EXPLICIT" }),
+      {
+        period: "EXPLICIT",
+        reportStartDate: "2026-01-01",
+        reportEndDate: "2026-08-14",
+      }
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        key: "explicit-review-window-unconfirmed",
+        title: "Explicit review window not confirmed",
+        tone: "danger",
+      })
+    );
+  });
+
   it("fails closed when the source publishes no calculations", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,

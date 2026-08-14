@@ -1,10 +1,11 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceWorkspaceView from "../../src/apps/performance/components/performance-workspace-view";
 import {
   buildNormalizedControlsPerformanceScenario,
+  buildSupportedEvidencePerformanceScenario,
   buildSupportedPerformanceScenario,
   buildUnavailableAttributionPerformanceScenario,
   buildUnavailableEvidencePerformanceScenario,
@@ -33,6 +34,13 @@ vi.mock("../../src/apps/performance/components/performance-evidence-mode", () =>
 }));
 
 describe("PerformanceWorkspaceView", () => {
+  beforeEach(() => {
+    summaryModeMock.mockClear();
+    analysisModeMock.mockClear();
+    riskModeMock.mockClear();
+    evidenceModeMock.mockClear();
+  });
+
   function renderWorkspaceView({
     mode = "summary",
     workspace = buildSupportedPerformanceScenario().workspace,
@@ -99,6 +107,24 @@ describe("PerformanceWorkspaceView", () => {
 
     expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
+  });
+
+  it("passes the complete source-confirmed review window into evidence assurance", () => {
+    const scenario = buildSupportedEvidencePerformanceScenario();
+
+    renderWorkspaceView({ mode: "evidence", workspace: scenario.workspace });
+
+    expect(screen.getByText("Evidence Mode Panel")).toBeInTheDocument();
+    expect(evidenceModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      selection: {
+        asOfDate: scenario.workspace.as_of_date,
+        period: scenario.workspace.period,
+        reportStartDate: scenario.workspace.report_start_date,
+        reportEndDate: scenario.workspace.report_end_date,
+        basis: scenario.workspace.detail_basis,
+        benchmarkCode: scenario.workspace.benchmark_code,
+      },
+    });
   });
 
   it("disables unavailable evidence mode instead of mounting a dead panel", async () => {

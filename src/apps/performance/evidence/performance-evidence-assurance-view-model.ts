@@ -43,6 +43,8 @@ export type PerformanceEvidenceSupportGroup = {
 export type PerformanceEvidenceSelectionContext = {
   asOfDate: string;
   period: string;
+  reportStartDate?: string | null;
+  reportEndDate?: string | null;
   basis: string;
   benchmarkCode?: string | null;
 };
@@ -451,6 +453,28 @@ function buildExceptions(
       tone: "warn",
     });
   }
+  const explicitWindowSelected =
+    normalise(selection.period) === "explicit" || normalise(evidence.period) === "explicit";
+  const evidenceReportStartDate = evidence.report_start_date?.trim();
+  const evidenceReportEndDate = evidence.report_end_date?.trim();
+  const selectedReportStartDate = selection.reportStartDate?.trim();
+  const selectedReportEndDate = selection.reportEndDate?.trim();
+  if (
+    explicitWindowSelected &&
+    (!evidenceReportStartDate ||
+      !evidenceReportEndDate ||
+      !selectedReportStartDate ||
+      !selectedReportEndDate)
+  ) {
+    exceptions.push({
+      key: "explicit-review-window-unconfirmed",
+      title: "Explicit review window not confirmed",
+      detail:
+        "The source assurance package does not identify the same inclusive start and end boundaries as the active performance review.",
+      action: "Refresh the selected performance view and obtain evidence for the complete review window.",
+      tone: "danger",
+    });
+  }
   const mismatchedContext = [
     evidence.as_of_date?.trim() && evidence.as_of_date.trim() !== selection.asOfDate.trim()
       ? "reporting date"
@@ -464,6 +488,18 @@ function buildExceptions(
       : null,
     normalise(evidence.benchmark_code) !== normalise(selection.benchmarkCode)
       ? "benchmark assignment"
+      : null,
+    explicitWindowSelected &&
+    evidenceReportStartDate &&
+    selectedReportStartDate &&
+    evidenceReportStartDate !== selectedReportStartDate
+      ? "review start date"
+      : null,
+    explicitWindowSelected &&
+    evidenceReportEndDate &&
+    selectedReportEndDate &&
+    evidenceReportEndDate !== selectedReportEndDate
+      ? "review end date"
       : null,
   ].filter((item): item is string => Boolean(item));
   if (mismatchedContext.length) {
