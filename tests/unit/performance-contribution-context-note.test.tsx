@@ -179,6 +179,33 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
   });
 
+  it("keeps source-limited evidence review-only when market-value coverage is absent", () => {
+    render(
+      <PerformanceContributionContextNote
+        contribution={buildContribution({ coverage_mv_pct: null })}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution coverage cannot be confirmed");
+    expect(note).toHaveTextContent("Market-value coverage not published");
+  });
+
+  it("keeps invalid source-limited market-value coverage out of client-use guidance", () => {
+    render(
+      <PerformanceContributionContextNote
+        contribution={buildContribution({ coverage_mv_pct: 108 })}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution coverage cannot be confirmed");
+    expect(note).toHaveTextContent("Market-value coverage needs review");
+    expect(note).not.toHaveTextContent("108.00% of market value covered");
+  });
+
   it("fails closed when a future reason code is not recognized and preserves it verbatim", () => {
     const contribution = buildContribution();
     render(
@@ -313,6 +340,27 @@ describe("PerformanceContributionContextNote", () => {
     expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
       "Contribution evidence is inconsistent",
     );
+  });
+
+  it("rejects source-backed evidence with a material published smoothing residual", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            smoothing_residual_pct: 0.25,
+          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
   });
 
   it("rejects source-backed evidence when the top-level contribution has a material return gap", () => {

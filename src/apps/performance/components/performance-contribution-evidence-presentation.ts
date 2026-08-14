@@ -178,6 +178,16 @@ function getContributionEvidenceDecision({
       body: "The published calculation status does not agree with its supporting evidence. Do not use the driver explanation with a client until the source evidence has been reviewed.",
     };
   }
+  if (
+    (sourceStatus === "SOURCE_BACKED" || sourceStatus === "SOURCE_LIMITED") &&
+    coveragePosture === "unconfirmed"
+  ) {
+    return {
+      tone: "review",
+      title: "Contribution coverage cannot be confirmed",
+      body: "A reliable market-value coverage percentage was not published for this calculation. Review the calculation evidence before using the driver explanation with a client.",
+    };
+  }
   if (smoothingStatus === "INVALID_DOMAIN_FALLBACK") {
     return {
       tone: "limited",
@@ -204,13 +214,6 @@ function getContributionEvidenceDecision({
       tone: "review",
       title: "Contribution input provenance needs confirmation",
       body: "These figures rely on request-supplied inputs rather than the standard source-owned portfolio record. Confirm the input provenance before client use.",
-    };
-  }
-  if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "unconfirmed") {
-    return {
-      tone: "review",
-      title: "Contribution coverage cannot be confirmed",
-      body: "A reliable market-value coverage percentage was not published for this calculation. Review the calculation evidence before using the driver explanation with a client.",
     };
   }
   if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "limited") {
@@ -307,14 +310,23 @@ function getContributionLimitations(
 
 function buildContributionContext(contribution: ContributionSummaryView): string {
   const context = [
-    contribution.coverage_mv_pct === null || contribution.coverage_mv_pct === undefined
-      ? getContributionCoverageAssessment(contribution) ?? "Market-value coverage not published"
-      : `${formatPct(contribution.coverage_mv_pct)} of market value covered`,
+    formatContributionCoverageContext(contribution),
     formatContributionWeightingScheme(contribution.weighting_scheme),
     getContributionReconciliationAssessment(contribution) ?? "Reconciliation not published",
   ].filter((item): item is string => Boolean(item));
 
   return context.join(" • ");
+}
+
+function formatContributionCoverageContext(contribution: ContributionSummaryView): string {
+  const coverageMvPct = contribution.coverage_mv_pct;
+  if (coverageMvPct === null || coverageMvPct === undefined) {
+    return getContributionCoverageAssessment(contribution) ?? "Market-value coverage not published";
+  }
+  if (getContributionCoveragePosture(coverageMvPct) === "unconfirmed") {
+    return "Market-value coverage needs review";
+  }
+  return `${formatPct(coverageMvPct)} of market value covered`;
 }
 
 function buildContributionEvidenceItems(

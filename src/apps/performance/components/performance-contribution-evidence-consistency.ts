@@ -188,7 +188,8 @@ function isPublishedContributionReconciled(
   return (
     isWithinReconciliationTolerance(portfolioContribution, portfolioReturn) &&
     isWithinReconciliationTolerance(finalContribution, linkedReturn) &&
-    isWithinReconciliationTolerance(finalContribution, portfolioContribution)
+    isWithinReconciliationTolerance(finalContribution, portfolioContribution) &&
+    isWithinReconciliationTolerance(smoothingResidual, 0)
   );
 }
 
