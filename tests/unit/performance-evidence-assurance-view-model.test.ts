@@ -220,6 +220,33 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it.each([
+    ["missing", undefined],
+    ["unknown", "unknown"],
+  ] as const)("fails closed when ready source freshness is %s", (_label, freshnessBucket) => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_supportability: [
+          {
+            key: "source_calculation",
+            state: "supported",
+            freshness_bucket: freshnessBucket,
+            source_service: "lotus-performance",
+          },
+        ],
+      })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Source calculation freshness not confirmed",
+        tone: "warn",
+      })
+    );
+  });
+
   it("reports an explicit exception when the evidence package is unavailable", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
