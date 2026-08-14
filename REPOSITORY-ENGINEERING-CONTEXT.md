@@ -220,7 +220,9 @@ Current repository posture:
     `WorkspaceMenuNav` owns its disclosure, list, active, unavailable, and compact presentation in
     its design-system CSS Module; `AppShell` owns advisor-book and capability-loading presentation
     in its shell CSS Module. Keep both out of `workbench-shell.css`, whose governed baseline is
-    ratcheted to 885 lines after retiring the old tab-navigation selectors.
+    ratcheted to 885 lines after retiring the old tab-navigation selectors. Remove the complete
+    `workspace-tab-nav*` family from legacy global CSS with the retired component and keep its
+    selector prefix forbidden so dead compatibility styling cannot return.
     `WorkbenchChoiceGroup` similarly owns exclusive one-of-many business choices with radio-group
     semantics, while `ModeTabs` is reserved for controls with associated tab panels. Their shared
     interaction presentation belongs in design-system CSS Modules; consuming features may own only
