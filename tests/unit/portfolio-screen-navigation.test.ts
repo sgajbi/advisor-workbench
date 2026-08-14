@@ -76,7 +76,7 @@ describe("portfolio screen navigation", () => {
     ).toEqual([
       {
         key: "portfolio-records",
-        items: ["allocation", "positions", "transactions", "income", "cashflow"],
+        items: ["allocation", "positions", "transactions", "cashflow"],
       },
       { key: "analytics", items: ["risk"] },
       { key: "advice", items: ["proposal"] },
@@ -90,5 +90,19 @@ describe("portfolio screen navigation", () => {
     );
 
     expect(model.currentTask).toBeNull();
+  });
+
+  it("does not duplicate an active specialist task in the workspace directory", () => {
+    const model = buildPortfolioScreenNavigationModel(
+      "PB_SG_GLOBAL_BAL_001",
+      "income",
+    );
+
+    expect(model.currentTask?.key).toBe("income");
+    expect(
+      model.directoryGroups.flatMap((group) =>
+        group.items.map((item) => item.key),
+      ),
+    ).not.toContain("income");
   });
 });
