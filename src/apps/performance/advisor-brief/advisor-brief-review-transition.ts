@@ -54,7 +54,7 @@ export function isConfirmedAdvisorBriefReviewTransition({
     response.portfolio_id !== expectedPortfolioId ||
     run.run_id !== expectedRunId ||
     run.review_state !== EXPECTED_REVIEW_STATE[payload.action_type] ||
-    run.review_pending ||
+    run.review_pending !== false ||
     !hasRecordedAdvisorBriefReviewEvidence(run) ||
     !hasAdvancedReviewEvidence(run, previousRun) ||
     run.latest_review_actor?.trim() !== payload.reviewed_by.trim()
