@@ -725,6 +725,26 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.queryByRole("option", { name: "UNKNOWN_ACTION" })).not.toBeInTheDocument();
   });
 
+  it.each([null, undefined, { state: "AWAITING_REVIEW" }])(
+    "renders malformed review state %s as unavailable without exposing actions",
+    (reviewState) => {
+      render(
+        <AdvisorBriefReviewWorkflow
+          workflowPackRun={{
+            ...readyAdvisorBriefResponse.workflow_pack_run!,
+            review_state: reviewState as unknown as string,
+          }}
+          feedback={{ state: "idle", message: "" }}
+          isApplying={false}
+          onApply={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("Status Not reported")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Review decision")).not.toBeInTheDocument();
+    }
+  );
+
   it.each([null, undefined, { action: "ACCEPT" }])(
     "fails closed when the source action list drifts to %s",
     (sourceActions) => {

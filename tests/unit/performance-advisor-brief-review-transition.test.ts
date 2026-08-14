@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAdvisorBriefHumanReview } from "../../src/apps/performance/advisor-brief/advisor-brief-review-evidence";
+import {
+  buildAdvisorBriefHumanReview,
+  getAdvisorBriefReviewStateLabel,
+} from "../../src/apps/performance/advisor-brief/advisor-brief-review-evidence";
 import { isConfirmedAdvisorBriefReviewTransition } from "../../src/apps/performance/advisor-brief/advisor-brief-review-transition";
 import type {
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -143,6 +146,22 @@ describe("advisor brief review transition evidence", () => {
           review_pending: reviewPending as unknown as boolean,
         })
       ).toEqual({ state: "unavailable", sourceRecorded: false });
+    }
+  );
+
+  it.each([null, undefined, 42, { state: "ACCEPTED" }])(
+    "fails malformed review-state value %s closed to unavailable",
+    (reviewState) => {
+      const malformedRun = {
+        ...baseRun,
+        review_state: reviewState as unknown as string,
+      };
+
+      expect(buildAdvisorBriefHumanReview(malformedRun)).toEqual({
+        state: "unavailable",
+        sourceRecorded: false,
+      });
+      expect(getAdvisorBriefReviewStateLabel(reviewState)).toBe("Not reported");
     }
   );
 

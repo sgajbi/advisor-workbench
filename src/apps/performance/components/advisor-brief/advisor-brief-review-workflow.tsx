@@ -12,6 +12,7 @@ import type {
 import {
   buildAdvisorBriefHumanReview,
   getAdvisorBriefReviewStateLabel,
+  normalizeAdvisorBriefStateCode,
 } from "../../advisor-brief/advisor-brief-review-evidence";
 
 import PerformanceWorkspaceSection from "../performance-workspace-section";
@@ -84,8 +85,8 @@ export default function AdvisorBriefReviewWorkflow({
   const canRecordReviewDecision =
     humanReview.state === "review-required" &&
     workflowPackRun.review_pending === true &&
-    workflowPackRun.review_state.trim().toUpperCase() === "AWAITING_REVIEW" &&
-    workflowPackRun.runtime_state.trim().toUpperCase() === "COMPLETED" &&
+    normalizeAdvisorBriefStateCode(workflowPackRun.review_state) === "AWAITING_REVIEW" &&
+    normalizeAdvisorBriefStateCode(workflowPackRun.runtime_state) === "COMPLETED" &&
     workflowPackRun.superseded === false;
   const sourceAllowedActions = Array.isArray(workflowPackRun.allowed_review_actions)
     ? workflowPackRun.allowed_review_actions
@@ -324,7 +325,9 @@ function isKnownReviewAction(
 function getReviewStateTone(
   workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun
 ): SemanticBadgeTone {
-  const normalizedReviewState = workflowPackRun.review_state.toUpperCase();
+  const normalizedReviewState = normalizeAdvisorBriefStateCode(
+    workflowPackRun.review_state
+  );
   if (normalizedReviewState === "REJECTED" || normalizedReviewState === "ABANDONED") {
     return "danger";
   }
