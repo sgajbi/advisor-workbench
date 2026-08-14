@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPerformanceEvidenceAssuranceViewModel } from "../../src/apps/performance/evidence/performance-evidence-assurance-view-model";
+import {
+  buildPerformanceEvidenceAssuranceViewModel as buildAssuranceViewModel,
+  type PerformanceEvidenceSelectionContext,
+} from "../../src/apps/performance/evidence/performance-evidence-assurance-view-model";
 import type { PerformanceEvidenceView } from "../../src/features/workbench/types";
 import type { WorkspaceCapability } from "../../src/shell/workspace-capabilities";
 
@@ -8,6 +11,24 @@ const supportedCapability: WorkspaceCapability = {
   state: "supported",
   reason: "Source evidence can be reviewed.",
 };
+
+const selectedContext: PerformanceEvidenceSelectionContext = {
+  asOfDate: "2026-08-14",
+  period: "YTD",
+  basis: "NET",
+  benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+};
+
+function buildPerformanceEvidenceAssuranceViewModel(
+  capability: WorkspaceCapability,
+  sourceEvidence: PerformanceEvidenceView,
+  selectionOverrides: Partial<PerformanceEvidenceSelectionContext> = {}
+) {
+  return buildAssuranceViewModel(capability, sourceEvidence, {
+    ...selectedContext,
+    ...selectionOverrides,
+  });
+}
 
 function evidence(overrides: Partial<PerformanceEvidenceView> = {}): PerformanceEvidenceView {
   return {
@@ -463,6 +484,28 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions).toContainEqual(expect.objectContaining({ title, tone: "warn" }));
   });
 
+  it("rejects evidence that does not match the active source-confirmed selection", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        as_of_date: "2026-08-13",
+        period: "1Y",
+        basis: "GROSS",
+        benchmark_code: "BMK_OTHER",
+      })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Evidence context does not match the active selection",
+        detail: expect.stringContaining("reporting date, review period, return basis, benchmark assignment"),
+        tone: "danger",
+      })
+    );
+    expect(JSON.stringify(view.exceptions)).not.toContain("BMK_OTHER");
+  });
+
   it("fails closed when the source omits input freshness evidence", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
@@ -519,7 +562,8 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       evidence({
         benchmark_code: null,
         input_freshness: { performance: "fresh", benchmark: "unavailable" },
-      })
+      }),
+      { benchmarkCode: null }
     );
 
     expect(view.state).toBe("ready");
@@ -575,7 +619,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
           { ...evidence().calculations[0], artifacts: [] },
         ] as PerformanceEvidenceView["calculations"],
       },
-      "Supporting records not published",
+      "Portfolio performance summary supporting records not published",
     ],
   ] as const)("fails closed when %s evidence is absent", (_label, overrides, title) => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
@@ -663,7 +707,10 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
     );
     expect(view.exceptions).toContainEqual(
-      expect.objectContaining({ title: "Supporting record route unavailable", tone: "danger" })
+      expect.objectContaining({
+        title: "Portfolio performance summary supporting record 1 route unavailable",
+        tone: "danger",
+      })
     );
   });
 

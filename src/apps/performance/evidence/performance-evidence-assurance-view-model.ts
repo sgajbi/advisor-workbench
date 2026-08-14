@@ -40,6 +40,13 @@ export type PerformanceEvidenceSupportGroup = {
   rows: Array<{ label: string; value: string }>;
 };
 
+export type PerformanceEvidenceSelectionContext = {
+  asOfDate: string;
+  period: string;
+  basis: string;
+  benchmarkCode?: string | null;
+};
+
 export type PerformanceEvidenceAssuranceViewModel = {
   state: "ready" | "attention" | "incomplete" | "unavailable";
   posture: string;
@@ -103,10 +110,11 @@ const WORKBENCH_BFF_API_PREFIX = "/api/bff/api/v1/";
 
 export function buildPerformanceEvidenceAssuranceViewModel(
   capability: WorkspaceCapability,
-  evidence: PerformanceEvidenceView
+  evidence: PerformanceEvidenceView,
+  selection: PerformanceEvidenceSelectionContext
 ): PerformanceEvidenceAssuranceViewModel {
   const calculations = safeArray(evidence.calculations).map(buildCalculationAssurance);
-  const exceptions = buildExceptions(capability, evidence);
+  const exceptions = buildExceptions(capability, evidence, selection);
   const completeCalculations = calculations.filter(
     (calculation) =>
       calculation.calculationTone === "success" && calculation.evidenceTone === "success"
@@ -346,7 +354,8 @@ function buildEvidenceRecordHref(value: string | null | undefined): string | nul
 
 function buildExceptions(
   capability: WorkspaceCapability,
-  evidence: PerformanceEvidenceView
+  evidence: PerformanceEvidenceView,
+  selection: PerformanceEvidenceSelectionContext
 ): PerformanceEvidenceException[] {
   const exceptions: PerformanceEvidenceException[] = [];
   const evidenceState = normalise(evidence.state);
@@ -403,6 +412,32 @@ function buildExceptions(
       tone: "warn",
     });
   }
+  const mismatchedContext = [
+    evidence.as_of_date?.trim() && evidence.as_of_date.trim() !== selection.asOfDate.trim()
+      ? "reporting date"
+      : null,
+    evidence.period?.trim() && normalise(evidence.period) !== normalise(selection.period)
+      ? "review period"
+      : null,
+    ["gross", "net"].includes(normalise(evidence.basis)) &&
+    normalise(evidence.basis) !== normalise(selection.basis)
+      ? "return basis"
+      : null,
+    normalise(evidence.benchmark_code) !== normalise(selection.benchmarkCode)
+      ? "benchmark assignment"
+      : null,
+  ].filter((item): item is string => Boolean(item));
+  if (mismatchedContext.length) {
+    exceptions.push({
+      key: "selection-context-mismatch",
+      title: "Evidence context does not match the active selection",
+      detail: `The source evidence does not match the selected ${mismatchedContext.join(
+        ", "
+      )}.`,
+      action: "Refresh the selected performance view and obtain evidence for the confirmed context.",
+      tone: "danger",
+    });
+  }
 
   const calculations = safeArray(evidence.calculations);
   if (!calculations.length) {
@@ -452,7 +487,7 @@ function buildExceptions(
     if (!artifacts.length) {
       exceptions.push({
         key: `artifacts-${index}`,
-        title: "Supporting records not published",
+        title: `${calculationTitle} supporting records not published`,
         detail: "The source did not publish a supporting record for this calculation.",
         action: "Obtain the calculation record before relying on the assurance package.",
         tone: "warn",
@@ -462,7 +497,7 @@ function buildExceptions(
       if (buildEvidenceRecordHref(artifact.archive_document_download_url ?? artifact.url)) return;
       exceptions.push({
         key: `artifact-route-${index}-${artifactIndex}`,
-        title: "Supporting record route unavailable",
+        title: `${calculationTitle} supporting record ${artifactIndex + 1} route unavailable`,
         detail: "A source-published supporting record is not exposed through the Workbench evidence boundary.",
         action: "Use support details to identify the record and request a governed Gateway route before relying on it.",
         tone: "danger",

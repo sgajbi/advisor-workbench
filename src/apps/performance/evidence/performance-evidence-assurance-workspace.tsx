@@ -9,14 +9,17 @@ import type { PerformanceEvidenceView } from "@/features/workbench/types";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
 import { buildPerformanceEvidenceAssuranceViewModel } from "./performance-evidence-assurance-view-model";
+import type { PerformanceEvidenceSelectionContext } from "./performance-evidence-assurance-view-model";
 import styles from "./performance-evidence-assurance-workspace.module.css";
 
 export default function PerformanceEvidenceAssuranceWorkspace({
   capability,
   evidenceView,
+  selection,
 }: {
   capability: WorkspaceCapability;
   evidenceView?: PerformanceEvidenceView | null;
+  selection: PerformanceEvidenceSelectionContext;
 }) {
   const title = "Calculation assurance";
   const subtitle =
@@ -42,7 +45,7 @@ export default function PerformanceEvidenceAssuranceWorkspace({
     );
   }
 
-  const view = buildPerformanceEvidenceAssuranceViewModel(capability, evidenceView);
+  const view = buildPerformanceEvidenceAssuranceViewModel(capability, evidenceView, selection);
 
   return (
     <WorkbenchDataGridFrame
