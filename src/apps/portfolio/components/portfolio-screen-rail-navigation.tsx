@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { cx } from "@/design-system/utils/cx";
 import type {
@@ -43,6 +43,13 @@ export default function PortfolioScreenRailNavigation({
     (count, group) => count + group.items.length,
     0,
   );
+
+  useEffect(() => {
+    if (!expanded) {
+      setDirectoryExpanded(false);
+      setWorkflowExpanded(false);
+    }
+  }, [expanded]);
 
   function closeNestedNavigation() {
     setDirectoryExpanded(false);
