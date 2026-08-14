@@ -382,7 +382,7 @@ function buildExceptions(
   sourceSupportability.forEach((item, index) => {
     const state = normalise(item.state);
     const freshness = normalise(item.freshness_bucket);
-    if (freshness === "stale") {
+    if (STALE_STATES.includes(freshness)) {
       exceptions.push({
         key: `source-supportability-${item.key || index}`,
         title: "Source calculation evidence is not current",
@@ -392,7 +392,18 @@ function buildExceptions(
       });
       return;
     }
-    if (READY_SUPPORTABILITY_STATES.includes(state)) return;
+    if (READY_SUPPORTABILITY_STATES.includes(state)) {
+      if (!FRESH_STATES.includes(freshness)) {
+        exceptions.push({
+          key: `source-supportability-${item.key || index}`,
+          title: "Source calculation freshness not confirmed",
+          detail: "A ready source calculation does not include a recognised current freshness state.",
+          action: "Review the source reason in support details and obtain current source evidence.",
+          tone: "warn",
+        });
+      }
+      return;
+    }
     const actionRequired = ACTION_REQUIRED_SUPPORTABILITY_STATES.includes(state);
     exceptions.push({
       key: `source-supportability-${item.key || index}`,
