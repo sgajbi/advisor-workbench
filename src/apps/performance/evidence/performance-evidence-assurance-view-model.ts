@@ -43,7 +43,7 @@ export type PerformanceEvidenceSupportGroup = {
 
 export type PerformanceEvidenceSelectionContext = {
   asOfDate: string;
-  period: string;
+  period: string | null | undefined;
   reportStartDate?: string | null;
   reportEndDate?: string | null;
   basis: string;
@@ -435,7 +435,16 @@ function buildExceptions(
       tone: "danger",
     });
   }
-  if (selection.period.trim() && !parseCanonicalPerformancePeriod(selection.period)) {
+  const selectedPeriod = parseCanonicalPerformancePeriod(selection.period);
+  if (!normalise(selection.period)) {
+    exceptions.push({
+      key: "active-review-period-missing",
+      title: "Selected review period not confirmed",
+      detail: "The active performance workspace does not identify the review period in use.",
+      action: "Choose a supported review period and refresh the source-confirmed performance view.",
+      tone: "danger",
+    });
+  } else if (!selectedPeriod) {
     exceptions.push({
       key: "active-review-period-unrecognized",
       title: "Selected review period not supported",

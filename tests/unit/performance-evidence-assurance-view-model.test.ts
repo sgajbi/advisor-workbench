@@ -196,6 +196,29 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it.each([null, undefined, ""])(
+    "fails closed without throwing when the active workspace period is %s",
+    (period) => {
+      const view = buildPerformanceEvidenceAssuranceViewModel(
+        supportedCapability,
+        evidence(),
+        { period }
+      );
+
+      expect(view.state).toBe("attention");
+      expect(view.exceptions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: "active-review-period-missing",
+            title: "Selected review period not confirmed",
+            tone: "danger",
+          }),
+          expect.objectContaining({ key: "selection-context-mismatch", tone: "danger" }),
+        ])
+      );
+    }
+  );
+
   it.each(["MTD", "QTD", "YTD", "1Y", "3Y", "5Y", "SI"])(
     "admits matching canonical %s period evidence",
     (period) => {
