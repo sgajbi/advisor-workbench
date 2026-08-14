@@ -204,6 +204,76 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
   });
 
+  it("rejects source-backed evidence when final contribution does not reconcile to return", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            final_contribution_pct: 4.91,
+          },
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
+  it("rejects source-backed evidence when required reconciliation amounts are absent", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            final_contribution_pct: null,
+          },
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
+      "Contribution evidence is inconsistent",
+    );
+  });
+
+  it("rejects source-backed evidence when the top-level contribution has a material return gap", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          portfolio_contribution_pct: 5.1,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
+      "Contribution evidence is inconsistent",
+    );
+  });
+
   it("keeps missing evidence explicit instead of implying source completeness", () => {
     render(
       <PerformanceContributionContextNote

@@ -19,6 +19,8 @@ const COMMON_SMOOTHING_RESIDUAL_CODES = [
   "RESIDUAL_ALLOCATED_TO_RECONCILE_PERIOD",
 ] as const;
 
+const CONTRIBUTION_RECONCILIATION_TOLERANCE_PCT = 0.005;
+
 export function isContributionEvidenceConsistent(
   contribution: ContributionSummaryView,
   {
@@ -31,7 +33,8 @@ export function isContributionEvidenceConsistent(
 ): boolean {
   return (
     isSourceEvidenceConsistent(contribution, sourceStatus) &&
-    isSmoothingEvidenceConsistent(smoothingStatus, contribution.smoothing_evidence?.reason_codes)
+    isSmoothingEvidenceConsistent(smoothingStatus, contribution.smoothing_evidence?.reason_codes) &&
+    isPublishedContributionReconciled(contribution, smoothingStatus)
   );
 }
 
@@ -118,4 +121,45 @@ function hasOnlyExpectedReasons(
     publishedReasonCodes.includes(requiredReasonCode) &&
     publishedReasonCodes.every((reasonCode) => expectedReasonCodes.includes(reasonCode))
   );
+}
+
+function isPublishedContributionReconciled(
+  contribution: ContributionSummaryView,
+  smoothingStatus: string,
+): boolean {
+  if (smoothingStatus !== "APPLIED" && smoothingStatus !== "NOT_REQUESTED") {
+    return true;
+  }
+
+  const smoothingEvidence = contribution.smoothing_evidence;
+  const portfolioContribution = contribution.portfolio_contribution_pct;
+  const portfolioReturn = contribution.total_portfolio_return_pct;
+  const rawContribution = smoothingEvidence?.raw_contribution_pct;
+  const finalContribution = smoothingEvidence?.final_contribution_pct;
+  const linkedReturn = smoothingEvidence?.linked_return_pct;
+  const smoothingResidual = smoothingEvidence?.smoothing_residual_pct;
+  if (
+    !isFiniteNumber(portfolioContribution) ||
+    !isFiniteNumber(portfolioReturn) ||
+    !isFiniteNumber(rawContribution) ||
+    !isFiniteNumber(finalContribution) ||
+    !isFiniteNumber(linkedReturn) ||
+    !isFiniteNumber(smoothingResidual)
+  ) {
+    return false;
+  }
+
+  return (
+    isWithinReconciliationTolerance(portfolioContribution, portfolioReturn) &&
+    isWithinReconciliationTolerance(finalContribution, linkedReturn) &&
+    isWithinReconciliationTolerance(finalContribution, portfolioContribution)
+  );
+}
+
+function isFiniteNumber(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isWithinReconciliationTolerance(left: number, right: number): boolean {
+  return Math.abs(left - right) < CONTRIBUTION_RECONCILIATION_TOLERANCE_PCT;
 }
