@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
+import { hasRecordedAdvisorBriefReviewEvidence } from "./advisor-brief-review-evidence";
 import type {
   PerformanceAdvisorBriefAction,
   PerformanceAdvisorBriefItem,
@@ -192,12 +193,7 @@ function mapWorkflowReviewState(
 } {
   const actor = workflowPackRun?.latest_review_actor?.trim();
   const occurredAt = workflowPackRun?.latest_review_event_at?.trim();
-  const sourceRecorded =
-    workflowPackRun?.has_review_history === true &&
-    typeof workflowPackRun.review_transition_count === "number" &&
-    workflowPackRun.review_transition_count > 0 &&
-    Boolean(actor) &&
-    Boolean(occurredAt);
+  const sourceRecorded = hasRecordedAdvisorBriefReviewEvidence(workflowPackRun);
   const evidence = {
     sourceRecorded,
     ...(sourceRecorded && actor ? { actor } : {}),

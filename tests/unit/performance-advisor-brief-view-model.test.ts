@@ -568,6 +568,54 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     );
   });
 
+  it("fails human review closed when the source audit timestamp is malformed", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        workflow_pack_run: {
+          run_id: "packrun_advisor_brief_req-1",
+          runtime_state: "COMPLETED",
+          review_state: "ACCEPTED",
+          latest_review_event_at: "not-a-date",
+          latest_review_actor: "advisor_1",
+          review_transition_count: 1,
+          has_review_history: true,
+          allowed_review_actions: [],
+          supportability_status: "READY",
+          review_pending: false,
+          superseded: false,
+          workflow_authority_owner: "lotus-gateway",
+          current_summary_note: "Review decision recorded.",
+          findings: [],
+        },
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure.humanReview).toEqual({
+      state: "unavailable",
+      sourceRecorded: false,
+    });
+    expect(brief.supportability).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Human Review",
+          value: "ACCEPTED",
+          tone: "warn",
+          detail: "Supportability READY • Review audit details not published",
+        }),
+      ])
+    );
+  });
+
   it.each([
     [
       "packrun_advisor_brief_req-2",

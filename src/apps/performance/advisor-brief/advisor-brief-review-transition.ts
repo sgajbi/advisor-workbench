@@ -3,6 +3,8 @@ import type {
   WorkbenchPerformanceAdvisorBrief,
 } from "@/features/workbench/types";
 
+import { hasRecordedAdvisorBriefReviewEvidence } from "./advisor-brief-review-evidence";
+
 const EXPECTED_REVIEW_STATE = {
   ACCEPT: "ACCEPTED",
   REJECT: "REJECTED",
@@ -32,11 +34,8 @@ export function isConfirmedAdvisorBriefReviewTransition({
     response.portfolio_id !== expectedPortfolioId ||
     run.run_id !== expectedRunId ||
     run.review_state !== EXPECTED_REVIEW_STATE[payload.action_type] ||
-    run.has_review_history !== true ||
-    typeof run.review_transition_count !== "number" ||
-    run.review_transition_count <= 0 ||
-    run.latest_review_actor?.trim() !== payload.reviewed_by.trim() ||
-    !isValidUtcTimestamp(run.latest_review_event_at)
+    !hasRecordedAdvisorBriefReviewEvidence(run) ||
+    run.latest_review_actor?.trim() !== payload.reviewed_by.trim()
   ) {
     return false;
   }
@@ -50,15 +49,4 @@ export function isConfirmedAdvisorBriefReviewTransition({
   }
 
   return true;
-}
-
-function isValidUtcTimestamp(value: string | null | undefined): boolean {
-  const timestamp = value?.trim();
-  return Boolean(
-    timestamp &&
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(
-        timestamp
-      ) &&
-      Number.isFinite(Date.parse(timestamp))
-  );
 }
