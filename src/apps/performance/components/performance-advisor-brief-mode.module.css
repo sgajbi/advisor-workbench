@@ -106,47 +106,6 @@
   align-items: center;
 }
 
-.advisorBriefScope :global(.semantic-badge),
-.advisorBriefScope :global(.lotus-semantic-badge) {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.7rem;
-  padding: 0 0.58rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 999px;
-  background: rgba(247, 249, 251, 0.92);
-  font-family: var(--font-ui);
-  font-size: var(--type-badge-size);
-  font-weight: 700;
-  line-height: var(--type-badge-line-height);
-  letter-spacing: var(--tracking-badge);
-  text-transform: uppercase;
-  color: #506073;
-  font-variant-numeric: var(--type-financial-numeric);
-}
-
-.advisorBriefScope :global(.semantic-badge-strong),
-.advisorBriefScope :global(.lotus-semantic-badge-strong) {
-  border-color: rgba(87, 121, 157, 0.18);
-  background: rgba(236, 242, 247, 0.95);
-  color: #203446;
-}
-
-.advisorBriefScope :global(.semantic-badge-success),
-.advisorBriefScope :global(.lotus-semantic-badge-success) {
-  color: #45695a;
-}
-
-.advisorBriefScope :global(.semantic-badge-warn),
-.advisorBriefScope :global(.lotus-semantic-badge-warn) {
-  color: #8e6232;
-}
-
-.advisorBriefScope :global(.semantic-badge-danger),
-.advisorBriefScope :global(.lotus-semantic-badge-danger) {
-  color: #945760;
-}
-
 .advisorBriefScope :global(.performance-advisor-brief-body-grid) {
   display: grid;
   grid-template-columns: minmax(0, 1.72fr) minmax(21rem, 0.84fr);

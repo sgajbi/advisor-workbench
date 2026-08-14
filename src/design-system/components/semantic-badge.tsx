@@ -1,4 +1,5 @@
 import { cx } from "../utils/cx";
+import styles from "./semantic-badge.module.css";
 
 export type SemanticBadgeTone = "default" | "success" | "warn" | "danger";
 export type SemanticBadgeEmphasis = "subtle" | "strong";
@@ -23,9 +24,12 @@ export default function SemanticBadge({
       className={cx(
         "semantic-badge",
         "lotus-semantic-badge",
+        styles.base,
         `semantic-badge-${tone}`,
         `lotus-semantic-badge-${tone}`,
+        styles[tone],
         emphasis === "strong" && "semantic-badge-strong lotus-semantic-badge-strong",
+        emphasis === "strong" && styles.strong,
         className
       )}
       aria-label={label ? `Status ${label}` : undefined}

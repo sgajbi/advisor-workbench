@@ -1084,6 +1084,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       screen.getByText("The cited evidence does not support the narrative.")
     ).toBeInTheDocument();
     expect(screen.queryByText(/source review record was updated/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm rejection" })).toHaveFocus();
 
     fireEvent.click(screen.getByRole("button", { name: "Back to edit" }));
     expect(screen.getByLabelText(/Reviewer reference/)).toHaveValue("advisor_3");
