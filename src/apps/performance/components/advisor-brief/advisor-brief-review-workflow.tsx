@@ -10,8 +10,8 @@ import type {
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionType,
 } from "@/features/workbench/types";
 import {
+  buildAdvisorBriefHumanReview,
   getAdvisorBriefReviewStateLabel,
-  hasRecordedAdvisorBriefReviewEvidence,
 } from "../../advisor-brief/advisor-brief-review-evidence";
 
 import PerformanceWorkspaceSection from "../performance-workspace-section";
@@ -315,21 +315,11 @@ function getReviewStateTone(
   if (normalizedReviewState === "REJECTED" || normalizedReviewState === "ABANDONED") {
     return "danger";
   }
-  if (workflowPackRun.review_pending) {
+  const humanReview = buildAdvisorBriefHumanReview(workflowPackRun);
+  if (humanReview.state === "review-required") {
     return "warn";
   }
-
-  switch (normalizedReviewState) {
-    case "ACCEPTED":
-      return hasRecordedAdvisorBriefReviewEvidence(workflowPackRun)
-        ? "success"
-        : "default";
-    case "AWAITING_REVIEW":
-      return "warn";
-    case "NOT_REVIEW_REQUIRED":
-    case "REVISED":
-    case "SUPERSEDED":
-    default:
-      return "default";
-  }
+  return humanReview.state === "reviewed" && normalizedReviewState === "ACCEPTED"
+    ? "success"
+    : "default";
 }

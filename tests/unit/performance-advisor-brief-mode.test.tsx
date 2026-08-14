@@ -622,13 +622,17 @@ describe("PerformanceAdvisorBriefMode", () => {
   it.each([
     ["AWAITING_REVIEW", true, "Awaiting review", "warn"],
     ["ACCEPTED", false, "Accepted for internal use", "success"],
+    ["ACCEPTED", true, "Accepted for internal use", "default"],
     ["REJECTED", false, "Rejected", "danger"],
     ["REJECTED", true, "Rejected", "danger"],
     ["ABANDONED", false, "Withdrawn", "danger"],
     ["ABANDONED", true, "Withdrawn", "danger"],
     ["REVISED", false, "Revision requested", "default"],
+    ["REVISED", true, "Revision requested", "default"],
     ["SUPERSEDED", false, "Superseded", "default"],
     ["NOT_REVIEW_REQUIRED", false, "No review required", "default"],
+    ["NOT_REVIEW_REQUIRED", true, "No review required", "default"],
+    ["PENDING", true, "Not reported", "default"],
     ["UNRECOGNIZED", false, "Not reported", "default"],
   ])(
     "maps %s with pending=%s to the %s label and %s tone without optimistic severity",
