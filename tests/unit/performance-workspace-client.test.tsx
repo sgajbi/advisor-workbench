@@ -100,6 +100,9 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
         {workspace?.evidence_view?.calculations[0]?.upstream_snapshots[0]?.source_identifier ??
           "none"}
       </div>
+      <div data-testid="evidence-source-state">
+        {workspace?.evidence_view?.source_supportability?.[0]?.state ?? "none"}
+      </div>
       <div data-testid="updating">{String(Boolean(isUpdating))}</div>
       <div data-testid="details-pending">{String(Boolean(isDetailsPending))}</div>
       <div data-testid="refresh-kind">{refreshStatus?.kind ?? "none"}</div>
@@ -313,6 +316,15 @@ describe("PerformanceWorkspaceClient", () => {
           evidence_view: {
             state: "supported",
             reason: "Evidence contract available.",
+            source_supportability: [
+              {
+                key: "source_calculation",
+                state: "partial",
+                freshness_bucket: "stale",
+                source_service: "lotus-performance",
+                reason: "Source data window is stale.",
+              },
+            ],
             calculations: [
               {
                 calculation_role: "workspace_summary",
@@ -363,6 +375,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("evidence-artifact")).toHaveTextContent("request.json");
       expect(screen.getByTestId("evidence-stage")).toHaveTextContent("complete");
       expect(screen.getByTestId("evidence-upstream")).toHaveTextContent("PF_1001");
+      expect(screen.getByTestId("evidence-source-state")).toHaveTextContent("partial");
     });
   });
 
