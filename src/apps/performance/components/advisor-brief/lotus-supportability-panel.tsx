@@ -3,17 +3,17 @@ import PerformanceSupportabilitySummary from "../performance-supportability-summ
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem): boolean {
-  return item.label === "Generation Run" || item.label === "Human Review";
+  return item.label === "Brief Preparation" || item.label === "Human Review";
 }
 
 export default function LotusSupportabilityPanel({
   items,
   reviewNotes,
-  reviewActionForm,
+  supportDetails,
 }: {
   items: PerformanceAdvisorBriefSupportabilityItem[];
   reviewNotes: string[];
-  reviewActionForm?: React.ReactNode;
+  supportDetails: { label: string; value: string }[];
 }) {
   const readyCount = items.filter((item) => item.tone === "success").length;
   const workflowPackStateItems = items.filter(isWorkflowPackStateItem);
@@ -105,7 +105,19 @@ export default function LotusSupportabilityPanel({
           ))}
         </div>
       ) : null}
-      {reviewActionForm}
+      {supportDetails.length ? (
+        <details className="performance-advisor-brief-support-details">
+          <summary>Technical support details</summary>
+          <dl>
+            {supportDetails.map((detail) => (
+              <div key={`${detail.label}-${detail.value}`}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      ) : null}
     </PerformanceWorkspaceSection>
   );
 }

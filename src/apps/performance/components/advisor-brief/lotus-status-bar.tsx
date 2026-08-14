@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef, useState } from "react";
+
 import { ActionButton, SemanticBadge } from "@/design-system";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
 
@@ -34,16 +38,44 @@ export default function LotusStatusBar({
   status,
   noteText,
   onRefresh,
+  canCopy,
+  refreshing,
+  interactionBusy,
 }: {
   status: PerformanceAdvisorBriefStatus;
   noteText: string;
   onRefresh: () => void;
+  canCopy: boolean;
+  refreshing: boolean;
+  interactionBusy: boolean;
 }) {
+  const [copyState, setCopyState] = useState<"idle" | "copying" | "copied" | "failed">(
+    "idle"
+  );
+  const copyButtonRef = useRef<HTMLButtonElement | null>(null);
+  const copyAvailable =
+    canCopy &&
+    (status === "ready" || status === "partial") &&
+    noteText.trim().length > 0;
+
   async function handleCopyNote() {
-    if (!navigator.clipboard?.writeText) {
+    if (!copyAvailable || interactionBusy || copyState === "copying") {
       return;
     }
-    await navigator.clipboard.writeText(noteText);
+
+    setCopyState("copying");
+    if (!navigator.clipboard?.writeText) {
+      setCopyState("failed");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(noteText);
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    } finally {
+      copyButtonRef.current?.focus();
+    }
   }
 
   return (
@@ -56,8 +88,11 @@ export default function LotusStatusBar({
         >
           {getStatusLabel(status)}
         </SemanticBadge>
-        <SemanticBadge className="performance-advisor-brief-toolbar-chip">
-          Source-grounded
+        <SemanticBadge
+          tone={status === "ready" ? "success" : status === "partial" ? "warn" : "default"}
+          className="performance-advisor-brief-toolbar-chip"
+        >
+          {getEvidenceLabel(status)}
         </SemanticBadge>
         {status === "partial" ? (
           <SemanticBadge tone="warn" className="performance-advisor-brief-toolbar-chip">
@@ -66,11 +101,44 @@ export default function LotusStatusBar({
         ) : null}
       </div>
       <div className="lotus-status-bar-actions performance-advisor-brief-toolbar-actions">
-        <ActionButton onClick={onRefresh}>Refresh</ActionButton>
-        <ActionButton priority="primary" onClick={() => void handleCopyNote()}>
-          Copy Note
+        <ActionButton disabled={interactionBusy} onClick={onRefresh}>
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </ActionButton>
+        <ActionButton
+          ref={copyButtonRef}
+          priority="primary"
+          disabled={!copyAvailable || interactionBusy || copyState === "copying"}
+          onClick={() => void handleCopyNote()}
+        >
+          {copyState === "copying" ? "Copying…" : "Copy internal note"}
         </ActionButton>
       </div>
+      {copyState === "copied" ? (
+        <div className="performance-advisor-brief-copy-feedback" role="status" aria-live="polite">
+          Internal note copied. Review it before any client communication.
+        </div>
+      ) : copyState === "failed" ? (
+        <div className="performance-advisor-brief-copy-feedback" role="alert">
+          The internal note could not be copied. Select the brief text or try again.
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function getEvidenceLabel(status: PerformanceAdvisorBriefStatus): string {
+  switch (status) {
+    case "ready":
+      return "Evidence available";
+    case "partial":
+      return "Evidence partial";
+    case "loading":
+      return "Evidence checking";
+    case "empty":
+      return "No material evidence";
+    case "permission_blocked":
+      return "Evidence restricted";
+    case "unavailable":
+      return "Evidence unavailable";
+  }
 }

@@ -143,6 +143,10 @@ vi.mock("../../src/features/workbench/performance-api", () => ({
     workflow_pack_run: {
       ...readyAdvisorBriefResponse.workflow_pack_run,
       review_state: "ACCEPTED",
+      latest_review_event_at: "2026-04-21T03:22:00Z",
+      latest_review_actor: "advisor_1",
+      review_transition_count: 1,
+      has_review_history: true,
       allowed_review_actions: [],
       supportability_status: "READY",
       review_pending: false,
@@ -177,6 +181,10 @@ describe("PerformanceAdvisorBriefMode", () => {
       workflow_pack_run: {
         ...readyAdvisorBriefResponse.workflow_pack_run!,
         review_state: "ACCEPTED",
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        latest_review_actor: "advisor_1",
+        review_transition_count: 1,
+        has_review_history: true,
         allowed_review_actions: [],
         supportability_status: "READY",
         review_pending: false,
@@ -235,15 +243,17 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Review items");
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
-      expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
-      expect(supportability).toHaveTextContent("Authority lotus-gateway");
+      expect(supportability).toHaveTextContent("Brief Preparation");
       expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("AWAITING REVIEW");
       expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
       expect(supportability).toHaveTextContent("Workflow Progress");
       expect(supportability).toHaveTextContent("WAITING FOR REVIEW");
-      expect(supportability).toHaveTextContent("taskflow_advisor_brief_req-1");
-      expect(supportability).toHaveTextContent("Current task-flow step: generate_advisor_brief.");
+      expect(supportability).toHaveTextContent("Technical support details");
+      expect(supportability).toHaveTextContent("Brief run reference");
+      expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
+      expect(supportability).toHaveTextContent("Workflow authority");
+      expect(supportability).toHaveTextContent("lotus-gateway");
       expect(supportability).toHaveTextContent(
         "Run completed but still requires bounded human review before downstream use."
       );
@@ -255,9 +265,11 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
       "Gateway advisor brief is ready with source-grounded talking points."
     );
-    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
+    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent(
+      "Evidence available"
+    );
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copy Note" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy internal note" })).toBeInTheDocument();
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
@@ -537,19 +549,26 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief review actions")).toBeInTheDocument();
+      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Replacement run id")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Reviewed by"), {
+    fireEvent.change(screen.getByLabelText("Review decision"), {
+      target: { value: "ACCEPT" },
+    });
+    fireEvent.change(screen.getByLabelText(/Reviewer reference/), {
       target: { value: "advisor_1" },
     });
-    fireEvent.change(screen.getByLabelText("Review reason"), {
+    fireEvent.change(screen.getByLabelText("Review rationale"), {
       target: {
         value: "Advisor brief accepted for bounded downstream workflow use.",
       },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Accept Brief" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review decision" }));
+
+    expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).not.toHaveBeenCalled();
+    expect(screen.getByText("Accept for internal use")).toBeInTheDocument();
+    expect(screen.getAllByText(/does not approve client communication/i)).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm acceptance" }));
 
     await waitFor(() => {
       expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).toHaveBeenCalledWith(
@@ -571,27 +590,31 @@ describe("PerformanceAdvisorBriefMode", () => {
         }
       );
       const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("Generation Run");
+      expect(supportability).toHaveTextContent("Brief Preparation");
       expect(supportability).toHaveTextContent("COMPLETED");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
-      expect(supportability).toHaveTextContent("Authority lotus-gateway");
       expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
-      expect(supportability).toHaveTextContent("Supportability READY");
-      expect(supportability).toHaveTextContent(
-        "Handoff taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1 is ready for handoff for lotus-gateway."
-      );
+      expect(supportability).toHaveTextContent("Recorded by advisor_1");
+      expect(supportability).toHaveTextContent("Recorded 2026-04-21T03:22:00Z");
+      expect(supportability).toHaveTextContent("1 downstream workflow handoff record(s)");
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."
       );
       expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
         "Gateway advisor brief is ready with source-grounded talking points."
       );
-      expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+        "The brief was accepted for its permitted internal workflow use."
+      );
+      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+        "No further review decision is currently available"
+      );
     });
   });
 
   it("requires replacement lineage input for revision actions before posting the bounded review action", async () => {
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
     vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue({
       ...readyAdvisorBriefResponse,
       workflow_pack_run: {
@@ -635,27 +658,32 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief review actions")).toBeInTheDocument();
+      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText("Reviewed by"), {
+    fireEvent.change(screen.getByLabelText("Review decision"), {
+      target: { value: "REVISE" },
+    });
+    fireEvent.change(screen.getByLabelText(/Reviewer reference/), {
       target: { value: "advisor_2" },
     });
-    fireEvent.change(screen.getByLabelText("Review reason"), {
+    fireEvent.change(screen.getByLabelText("Review rationale"), {
       target: {
         value: "A replacement advisor brief run is available for downstream use.",
       },
     });
 
-    const reviseButton = screen.getByRole("button", { name: "Request Revision" });
+    const reviseButton = screen.getByRole("button", { name: "Review decision" });
     expect(reviseButton).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText("Replacement run id"), {
+    fireEvent.change(screen.getByLabelText("Replacement brief reference"), {
       target: { value: "packrun_advisor_brief_req-2" },
     });
 
     expect(reviseButton).toBeEnabled();
     fireEvent.click(reviseButton);
+    expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm revision request" }));
 
     await waitFor(() => {
       expect(postWorkbenchPerformanceAdvisorBriefReviewActionClient).toHaveBeenCalledWith(
@@ -682,9 +710,64 @@ describe("PerformanceAdvisorBriefMode", () => {
         "Run was revised in favor of a replacement advisor-brief run."
       );
       expect(supportability).toHaveTextContent(
-        "Superseded by workflow-pack run packrun_advisor_brief_req-2."
+        "A replacement brief is linked to this historical review record."
       );
     });
+  });
+
+  it("keeps the decision explicit and recoverable when source persistence fails", async () => {
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
+    vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockRejectedValueOnce(
+      new Error("Gateway review persistence failed")
+    );
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText("Review decision"), {
+      target: { value: "REJECT" },
+    });
+    fireEvent.change(screen.getByLabelText(/Reviewer reference/), {
+      target: { value: "advisor_3" },
+    });
+    fireEvent.change(screen.getByLabelText("Review rationale"), {
+      target: { value: "The cited evidence does not support the narrative." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review decision" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The review decision was not recorded. Keep the rationale in place and try again."
+    );
+    expect(screen.getByText("advisor_3")).toBeInTheDocument();
+    expect(
+      screen.getByText("The cited evidence does not support the narrative.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/source review record was updated/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to edit" }));
+    expect(screen.getByLabelText(/Reviewer reference/)).toHaveValue("advisor_3");
+    expect(screen.getByLabelText("Review rationale")).toHaveValue(
+      "The cited evidence does not support the narrative."
+    );
   });
 
   it("shows superseded workflow-pack lineage without treating the replaced run as active-ready posture", async () => {
@@ -729,15 +812,17 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("ACCEPTED");
       expect(supportability).toHaveTextContent(
-        "Supportability READY • Superseded by packrun_advisor_brief_req-2"
+        "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2"
       );
       expect(supportability).toHaveTextContent(
         "Run was superseded by a newer bounded advisor-brief run."
       );
       expect(supportability).toHaveTextContent(
-        "Superseded by workflow-pack run packrun_advisor_brief_req-2."
+        "A replacement brief is linked to this historical review record."
       );
-      expect(screen.queryByLabelText("Advisor brief review actions")).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+        "No further review decision is currently available"
+      );
     });
   });
 });

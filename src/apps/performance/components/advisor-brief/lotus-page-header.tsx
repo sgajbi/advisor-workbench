@@ -8,11 +8,17 @@ export default function LotusPageHeader({
   status,
   noteText,
   onRefresh,
+  canCopy,
+  refreshing,
+  interactionBusy,
 }: {
   summary: string;
   status: PerformanceAdvisorBriefStatus;
   noteText: string;
   onRefresh: () => void;
+  canCopy: boolean;
+  refreshing: boolean;
+  interactionBusy: boolean;
 }) {
   return (
     <header className="lotus-page-header performance-advisor-brief-header">
@@ -46,7 +52,14 @@ export default function LotusPageHeader({
         >
           {summary}
         </Text>
-        <LotusStatusBar status={status} noteText={noteText} onRefresh={onRefresh} />
+        <LotusStatusBar
+          status={status}
+          noteText={noteText}
+          onRefresh={onRefresh}
+          canCopy={canCopy}
+          refreshing={refreshing}
+          interactionBusy={interactionBusy}
+        />
       </div>
     </header>
   );
