@@ -168,6 +168,15 @@ function recordSourceSupportabilityCheck(summary, panel, owner, items) {
   return supportability;
 }
 
+function resolveReadyPanelStateFromSupportability(panel, supportability) {
+  if (supportability.state === "action_required") {
+    throw new Error(
+      `${panel} source supportability requires action and cannot be certified as ready.`
+    );
+  }
+  return supportability.state === "ready" ? "ready" : "partial";
+}
+
 export function assertPerformanceCalculationSanity({
   summary,
   performanceSummary,
@@ -250,16 +259,33 @@ export function assertPerformanceCalculationSanity({
     "lotus-gateway",
     readSourceSupportabilityItems(performanceSummary, performanceDetails)
   );
+  const performancePanelState = resolveReadyPanelStateFromSupportability(
+    "Performance",
+    performanceSupportability
+  );
 
-  recordPanelClassification("performance.summary", "ready", "lotus-performance", {
+  recordPanelClassification("performance.summary", performancePanelState, "lotus-performance", {
     returnPathRows: performanceDetails.net_chart.length,
     sourceSupportabilityState: performanceSupportability.state,
     sourceSupportabilityItems: performanceSupportability.itemCount,
+    reason:
+      performancePanelState === "partial"
+        ? "Gateway source supportability is not fully confirmed for the active performance selection."
+        : null,
   });
-  recordPanelClassification("performance.analysis.contribution", "ready", "lotus-performance", {
-    contributionRows: contributionRows.length,
-    sourceSupportabilityState: performanceSupportability.state,
-  });
+  recordPanelClassification(
+    "performance.analysis.contribution",
+    performancePanelState,
+    "lotus-performance",
+    {
+      contributionRows: contributionRows.length,
+      sourceSupportabilityState: performanceSupportability.state,
+      reason:
+        performancePanelState === "partial"
+          ? "Gateway source supportability is not fully confirmed for the active performance selection."
+          : null,
+    }
+  );
   recordPanelClassification(
     "performance.analysis.attribution",
     "partial",
