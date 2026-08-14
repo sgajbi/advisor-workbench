@@ -85,6 +85,8 @@ describe("advisor brief review transition evidence", () => {
       { run: { ...baseRun, latest_review_event_at: "2026-04-21T11:22:00+08:00" } },
     ],
     ["transition count", { run: { ...baseRun, review_transition_count: 0 } }],
+    ["fractional transition count", { run: { ...baseRun, review_transition_count: 0.5 } }],
+    ["non-finite transition count", { run: { ...baseRun, review_transition_count: Infinity } }],
     ["history flag", { run: { ...baseRun, has_review_history: false } }],
     ["pending posture", { run: { ...baseRun, review_pending: true } }],
     ["superseded posture", { run: { ...baseRun, superseded: true } }],

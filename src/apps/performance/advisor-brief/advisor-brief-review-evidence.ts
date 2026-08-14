@@ -90,11 +90,13 @@ export function isTerminalAdvisorBriefReviewState(
 export function hasRecordedAdvisorBriefReviewEvidence(
   evidence: AdvisorBriefReviewEvidence | null | undefined
 ): boolean {
+  const reviewTransitionCount = evidence?.review_transition_count;
   return (
     evidence?.has_review_history === true &&
     Boolean(evidence.latest_review_actor?.trim()) &&
-    typeof evidence.review_transition_count === "number" &&
-    evidence.review_transition_count > 0 &&
+    typeof reviewTransitionCount === "number" &&
+    Number.isInteger(reviewTransitionCount) &&
+    reviewTransitionCount > 0 &&
     isValidUtcReviewTimestamp(evidence.latest_review_event_at)
   );
 }

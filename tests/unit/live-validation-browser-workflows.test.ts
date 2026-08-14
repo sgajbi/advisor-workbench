@@ -94,13 +94,19 @@ describe("live validation browser workflow helpers", () => {
 
   it("reuses only the exact source-recorded browser acceptance on canonical reruns", () => {
     const recordedPosture =
-      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui Recorded 2026-04-21T03:22:00Z";
+      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui • Recorded 2026-04-21T03:22:00Z";
 
     expect(
       hasRecordedAdvisorBriefAcceptProof(recordedPosture, "live.validator.ui"),
     ).toBe(true);
     expect(
       hasRecordedAdvisorBriefAcceptProof(recordedPosture, "another.reviewer"),
+    ).toBe(false);
+    expect(
+      hasRecordedAdvisorBriefAcceptProof(
+        "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui2 • Recorded 2026-04-21T03:22:00Z",
+        "live.validator.ui",
+      ),
     ).toBe(false);
     expect(
       hasRecordedAdvisorBriefAcceptProof(

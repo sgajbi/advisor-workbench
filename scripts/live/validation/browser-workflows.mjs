@@ -31,11 +31,13 @@ export function hasAcceptedAdvisorBriefReviewPosture(text) {
 }
 
 export function hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer) {
+  const reviewer =
+    typeof expectedReviewer === "string" ? expectedReviewer.trim() : "";
+  const escapedReviewer = reviewer.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return (
     hasAcceptedAdvisorBriefReviewPosture(text) &&
-    typeof expectedReviewer === "string" &&
-    expectedReviewer.trim().length > 0 &&
-    text.includes(`Recorded by ${expectedReviewer.trim()} Recorded `)
+    reviewer.length > 0 &&
+    new RegExp(`Recorded\\s+by\\s+${escapedReviewer}(?=\\s|•|$)`).test(text)
   );
 }
 
