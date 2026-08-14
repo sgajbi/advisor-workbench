@@ -20,6 +20,17 @@ const EXPECTED_REVIEW_STATE = {
   string
 >;
 
+const EXPECTED_TASK_FLOW_POSTURE = {
+  ACCEPT: { flowStatus: "COMPLETED", supportabilityStatus: "READY" },
+  REJECT: { flowStatus: "FAILED", supportabilityStatus: "ACTION_REQUIRED" },
+  REVISE: { flowStatus: "SUPERSEDED", supportabilityStatus: "HISTORICAL" },
+  SUPERSEDE: { flowStatus: "SUPERSEDED", supportabilityStatus: "HISTORICAL" },
+  ABANDON: { flowStatus: "CANCELLED", supportabilityStatus: "ACTION_REQUIRED" },
+} satisfies Record<
+  WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest["action_type"],
+  { flowStatus: string; supportabilityStatus: string }
+>;
+
 export function isConfirmedAdvisorBriefReviewTransition({
   response,
   payload,
@@ -27,7 +38,10 @@ export function isConfirmedAdvisorBriefReviewTransition({
   expectedRunId,
   previousRun,
 }: {
-  response: Pick<WorkbenchPerformanceAdvisorBrief, "portfolio_id" | "workflow_pack_run">;
+  response: Pick<
+    WorkbenchPerformanceAdvisorBrief,
+    "portfolio_id" | "workflow_pack_run" | "workflow_pack_task_flow"
+  >;
   payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest;
   expectedPortfolioId: string;
   expectedRunId: string | null;
@@ -48,6 +62,12 @@ export function isConfirmedAdvisorBriefReviewTransition({
     return false;
   }
 
+  if (
+    !hasMatchingTaskFlowPosture(response, payload, expectedRunId, run.supportability_status)
+  ) {
+    return false;
+  }
+
   if (payload.action_type === "REVISE" || payload.action_type === "SUPERSEDE") {
     return (
       run.superseded === true &&
@@ -57,6 +77,57 @@ export function isConfirmedAdvisorBriefReviewTransition({
   }
 
   return run.superseded !== true && !run.replacement_run_id?.trim();
+}
+
+function hasMatchingTaskFlowPosture(
+  response: Pick<WorkbenchPerformanceAdvisorBrief, "workflow_pack_task_flow">,
+  payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
+  expectedRunId: string,
+  runSupportabilityStatus: string
+): boolean {
+  const taskFlow = response.workflow_pack_task_flow;
+  const expectedPosture = EXPECTED_TASK_FLOW_POSTURE[payload.action_type];
+  const runRefs = Array.isArray(taskFlow?.run_refs) ? taskFlow.run_refs : [];
+  const reviewStates =
+    taskFlow?.review_states &&
+    typeof taskFlow.review_states === "object" &&
+    !Array.isArray(taskFlow.review_states)
+      ? taskFlow.review_states
+      : {};
+  const handoffRefs = Array.isArray(taskFlow?.handoff_refs) ? taskFlow.handoff_refs : [];
+  const replacementLineage = Array.isArray(taskFlow?.replacement_lineage)
+    ? taskFlow.replacement_lineage
+    : [];
+
+  if (
+    !taskFlow?.task_flow_id?.trim() ||
+    !runRefs.includes(expectedRunId) ||
+    reviewStates[expectedRunId] !== EXPECTED_REVIEW_STATE[payload.action_type] ||
+    taskFlow.flow_status !== expectedPosture.flowStatus ||
+    taskFlow.supportability_status !== expectedPosture.supportabilityStatus ||
+    runSupportabilityStatus !== expectedPosture.supportabilityStatus
+  ) {
+    return false;
+  }
+
+  if (payload.action_type === "ACCEPT") {
+    return handoffRefs.some((handoff) => handoff?.status === "READY_FOR_HANDOFF");
+  }
+
+  if (payload.action_type === "REVISE" || payload.action_type === "SUPERSEDE") {
+    const replacementRunId = payload.replacement_run_id?.trim();
+    return Boolean(
+      replacementRunId &&
+        replacementLineage.some(
+          (lineage) =>
+            lineage?.superseded_run_id === expectedRunId &&
+            lineage.replacement_run_id === replacementRunId &&
+            lineage.review_action_ref === payload.action_type
+        )
+    );
+  }
+
+  return !handoffRefs.some((handoff) => handoff?.status === "READY_FOR_HANDOFF");
 }
 
 function hasAdvancedReviewEvidence(

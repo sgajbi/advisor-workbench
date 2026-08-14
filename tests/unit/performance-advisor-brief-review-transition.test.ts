@@ -5,6 +5,7 @@ import { isConfirmedAdvisorBriefReviewTransition } from "../../src/apps/performa
 import type {
   WorkbenchAdvisorBriefWorkflowPackRun,
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
+  WorkbenchAdvisorBriefWorkflowPackTaskFlow,
 } from "../../src/features/workbench/types";
 
 const baseRun: WorkbenchAdvisorBriefWorkflowPackRun = {
@@ -44,6 +45,27 @@ const awaitingRun: WorkbenchAdvisorBriefWorkflowPackRun = {
   current_summary_note: "Review required.",
 };
 
+const acceptedTaskFlow: WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
+  task_flow_id: "taskflow-advisor-brief-1",
+  workflow_pack_id: "advisor_brief.pack",
+  version: "v1",
+  flow_status: "COMPLETED",
+  current_step_id: null,
+  run_refs: [baseRun.run_id],
+  review_states: { [baseRun.run_id]: "ACCEPTED" },
+  supportability_status: "READY",
+  replacement_lineage: [],
+  handoff_refs: [
+    {
+      handoff_id: "handoff-advisor-brief-1",
+      owner_service: "lotus-gateway",
+      status: "READY_FOR_HANDOFF",
+      domain_ref: null,
+    },
+  ],
+  updated_at: "2026-04-21T03:22:00Z",
+};
+
 function isConfirmed({
   run = baseRun,
   payload = acceptPayload,
@@ -51,6 +73,7 @@ function isConfirmed({
   expectedPortfolioId = "PF_1001",
   expectedRunId = "packrun-advisor-brief-1",
   previousRun = awaitingRun,
+  taskFlow = acceptedTaskFlow,
 }: {
   run?: WorkbenchAdvisorBriefWorkflowPackRun;
   payload?: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest;
@@ -58,9 +81,14 @@ function isConfirmed({
   expectedPortfolioId?: string;
   expectedRunId?: string | null;
   previousRun?: WorkbenchAdvisorBriefWorkflowPackRun | null;
+  taskFlow?: WorkbenchAdvisorBriefWorkflowPackTaskFlow | null;
 } = {}) {
   return isConfirmedAdvisorBriefReviewTransition({
-    response: { portfolio_id: portfolioId, workflow_pack_run: run },
+    response: {
+      portfolio_id: portfolioId,
+      workflow_pack_run: run,
+      workflow_pack_task_flow: taskFlow,
+    },
     payload,
     expectedPortfolioId,
     expectedRunId,
@@ -146,15 +174,49 @@ describe("advisor brief review transition evidence", () => {
       review_state: "REVISED",
       superseded: true,
       replacement_run_id: "packrun-replacement-2",
+      supportability_status: "HISTORICAL",
+    };
+    const revisedTaskFlow: WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
+      ...acceptedTaskFlow,
+      flow_status: "SUPERSEDED",
+      review_states: { [baseRun.run_id]: "REVISED" },
+      supportability_status: "HISTORICAL",
+      handoff_refs: [],
+      replacement_lineage: [
+        {
+          superseded_run_id: baseRun.run_id,
+          replacement_run_id: "packrun-replacement-2",
+          review_action_ref: "REVISE",
+          reason: "A replacement brief is required.",
+        },
+      ],
     };
 
-    expect(isConfirmed({ run: revisedRun, payload })).toBe(true);
+    expect(isConfirmed({ run: revisedRun, payload, taskFlow: revisedTaskFlow })).toBe(true);
     expect(
       isConfirmed({
         run: { ...revisedRun, replacement_run_id: "packrun-other" },
         payload,
+        taskFlow: revisedTaskFlow,
       })
     ).toBe(false);
+  });
+
+  it.each([
+    ["missing task flow", null],
+    ["wrong run reference", { ...acceptedTaskFlow, run_refs: ["packrun-other"] }],
+    [
+      "stale review state",
+      { ...acceptedTaskFlow, review_states: { [baseRun.run_id]: "AWAITING_REVIEW" } },
+    ],
+    ["non-terminal flow", { ...acceptedTaskFlow, flow_status: "WAITING_FOR_REVIEW" }],
+    [
+      "non-ready supportability",
+      { ...acceptedTaskFlow, supportability_status: "ACTION_REQUIRED" },
+    ],
+    ["missing ready handoff", { ...acceptedTaskFlow, handoff_refs: [] }],
+  ])("rejects an accepted run with %s", (_label, taskFlow) => {
+    expect(isConfirmed({ taskFlow })).toBe(false);
   });
 
   it.each([
