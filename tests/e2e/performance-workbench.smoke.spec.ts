@@ -991,6 +991,12 @@ test.describe('Performance workbench smoke', () => {
     await expect(review).toContainText('No further review decision is currently available');
     expect(reviewRequests).toEqual(['POST']);
 
+    await page.reload();
+    await expect(review).toContainText('Accepted for internal use');
+    await expect(review).toContainText('No further review decision is currently available');
+    await expect(review.getByLabel('Review decision')).toHaveCount(0);
+    expect(reviewRequests).toEqual(['POST']);
+
     const disclosure = page.locator('details').filter({ hasText: 'How this was prepared' });
     await disclosure.locator('summary').click();
     await expect(disclosure).toContainText('Human review recorded');

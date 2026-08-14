@@ -31,24 +31,40 @@ const acceptPayload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest = {
   reason: "Evidence supports permitted internal use.",
 };
 
+const awaitingRun: WorkbenchAdvisorBriefWorkflowPackRun = {
+  ...baseRun,
+  review_state: "AWAITING_REVIEW",
+  latest_review_event_at: null,
+  latest_review_actor: null,
+  review_transition_count: 0,
+  has_review_history: false,
+  allowed_review_actions: ["ACCEPT", "REJECT"],
+  supportability_status: "ACTION_REQUIRED",
+  review_pending: true,
+  current_summary_note: "Review required.",
+};
+
 function isConfirmed({
   run = baseRun,
   payload = acceptPayload,
   portfolioId = "PF_1001",
   expectedPortfolioId = "PF_1001",
   expectedRunId = "packrun-advisor-brief-1",
+  previousRun = awaitingRun,
 }: {
   run?: WorkbenchAdvisorBriefWorkflowPackRun;
   payload?: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest;
   portfolioId?: string;
   expectedPortfolioId?: string;
   expectedRunId?: string | null;
+  previousRun?: WorkbenchAdvisorBriefWorkflowPackRun | null;
 } = {}) {
   return isConfirmedAdvisorBriefReviewTransition({
     response: { portfolio_id: portfolioId, workflow_pack_run: run },
     payload,
     expectedPortfolioId,
     expectedRunId,
+    previousRun,
   });
 }
 
@@ -139,5 +155,38 @@ describe("advisor brief review transition evidence", () => {
         payload,
       })
     ).toBe(false);
+  });
+
+  it.each([
+    [
+      "transition count",
+      { ...awaitingRun, review_transition_count: 1, has_review_history: true },
+    ],
+    [
+      "event time",
+      {
+        ...awaitingRun,
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        latest_review_actor: "advisor_previous",
+        review_transition_count: 0,
+        has_review_history: true,
+      },
+    ],
+  ])("rejects a response that does not advance the prior %s", (_label, previousRun) => {
+    expect(isConfirmed({ previousRun })).toBe(false);
+  });
+
+  it("accepts a response only when both prior count and event time advance", () => {
+    expect(
+      isConfirmed({
+        previousRun: {
+          ...awaitingRun,
+          latest_review_event_at: "2026-04-21T03:20:00Z",
+          latest_review_actor: "advisor_previous",
+          review_transition_count: 0,
+          has_review_history: true,
+        },
+      })
+    ).toBe(true);
   });
 });

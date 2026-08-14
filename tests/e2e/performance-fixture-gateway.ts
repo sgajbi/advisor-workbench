@@ -38,6 +38,7 @@ export async function startPerformanceFixtureGateway({
   let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let trendRefreshFailuresRemaining = scenario === 'trend-integrity' ? 1 : 0;
   let horizonRefreshFailuresRemaining = scenario === 'horizon-integrity' ? 1 : 0;
+  const reviewedAdvisorBriefs = new Map<string, WorkbenchPerformanceAdvisorBrief>();
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
     const portfolioId = resolvePortfolioId(requestUrl.pathname);
@@ -178,7 +179,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/advisor-brief')) {
-      sendJson(response, buildAdvisorBriefResponse(portfolioId));
+      sendJson(response, reviewedAdvisorBriefs.get(portfolioId) ?? buildAdvisorBriefResponse(portfolioId));
       return;
     }
     if (
@@ -192,7 +193,9 @@ export async function startPerformanceFixtureGateway({
           sendJson(response, { code: 'invalid_fixture_review_action' }, 422);
           return;
         }
-        sendJson(response, buildReviewedAdvisorBriefResponse(portfolioId, reviewedBy));
+        const reviewedBrief = buildReviewedAdvisorBriefResponse(portfolioId, reviewedBy);
+        reviewedAdvisorBriefs.set(portfolioId, reviewedBrief);
+        sendJson(response, reviewedBrief);
       });
       return;
     }
