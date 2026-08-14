@@ -44,10 +44,9 @@ export function buildAdvisorBriefHumanReview(
   const normalizedReviewState = workflowPackRun?.review_state.trim().toUpperCase();
 
   if (workflowPackRun?.review_pending === true) {
-    if (normalizedReviewState === "REJECTED" || normalizedReviewState === "ABANDONED") {
-      return { state: "unavailable", sourceRecorded: false };
-    }
-    return { state: "review-required", sourceRecorded: false };
+    return normalizedReviewState === "AWAITING_REVIEW"
+      ? { state: "review-required", sourceRecorded: false }
+      : { state: "unavailable", sourceRecorded: false };
   }
 
   switch (normalizedReviewState) {
@@ -67,8 +66,6 @@ export function buildAdvisorBriefHumanReview(
     case "NOT_REVIEW_REQUIRED":
       return { state: "not-required", sourceRecorded: false };
     case "AWAITING_REVIEW":
-    case "REVIEW_REQUIRED":
-    case "PENDING":
       return { state: "review-required", sourceRecorded: false };
     default:
       return { state: "unavailable", sourceRecorded: false };

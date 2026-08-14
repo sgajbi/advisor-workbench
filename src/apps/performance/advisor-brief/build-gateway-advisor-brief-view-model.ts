@@ -467,9 +467,14 @@ function normalizeWorkflowPackReviewValue(reviewState: string): string {
 function buildWorkflowPackRunDetail(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): string {
-  return workflowPackRun.review_pending
-    ? "Preparation complete; human review remains required"
-    : "Preparation record is available";
+  const humanReview = buildAdvisorBriefHumanReview(workflowPackRun);
+  if (humanReview.state === "review-required") {
+    return "Preparation complete; human review remains required";
+  }
+  if (humanReview.state === "unavailable") {
+    return "Preparation record is not usable because source review posture is incomplete or contradictory";
+  }
+  return "Preparation record is available";
 }
 
 function buildWorkflowPackReviewDetail(
