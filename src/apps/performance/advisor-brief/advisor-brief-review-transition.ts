@@ -49,5 +49,5 @@ export function isConfirmedAdvisorBriefReviewTransition({
     );
   }
 
-  return true;
+  return run.superseded !== true && !run.replacement_run_id?.trim();
 }
