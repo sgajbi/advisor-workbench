@@ -29,6 +29,7 @@ function buildBrief(
     risksAndExceptions: [],
     sourceMetrics: [],
     supportability: [],
+    supportDetails: [],
     reviewNotes: [],
     aiDisclosure: {
       scopeLabel: "Performance advisor brief",

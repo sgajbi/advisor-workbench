@@ -708,6 +708,10 @@ export type WorkbenchAdvisorBriefWorkflowPackRun = {
   run_id: string;
   runtime_state: string;
   review_state: string;
+  latest_review_event_at?: string | null;
+  latest_review_actor?: string | null;
+  review_transition_count?: number | null;
+  has_review_history?: boolean | null;
   allowed_review_actions: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType[];
   supportability_status: string;
   review_pending: boolean;

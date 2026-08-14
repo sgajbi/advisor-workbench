@@ -47,6 +47,11 @@ export type PerformanceAdvisorBriefSupportabilityItem = {
   detail?: string | null;
 };
 
+export type PerformanceAdvisorBriefSupportDetail = {
+  label: string;
+  value: string;
+};
+
 export type PerformanceAdvisorBriefViewModel = {
   status: PerformanceAdvisorBriefStatus;
   title: string;
@@ -56,6 +61,7 @@ export type PerformanceAdvisorBriefViewModel = {
   risksAndExceptions: PerformanceAdvisorBriefItem[];
   sourceMetrics: PerformanceAdvisorBriefMetric[];
   supportability: PerformanceAdvisorBriefSupportabilityItem[];
+  supportDetails: PerformanceAdvisorBriefSupportDetail[];
   reviewNotes: string[];
   aiDisclosure: AiAssistanceDisclosureModel;
 };

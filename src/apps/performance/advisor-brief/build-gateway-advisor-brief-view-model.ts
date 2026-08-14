@@ -55,6 +55,7 @@ export function buildGatewayAdvisorBriefViewModel(
       hasBackedRiskEvidence,
     }),
     supportability: normalizeGatewaySupportability(advisorBrief),
+    supportDetails: buildGatewaySupportDetails(advisorBrief),
     reviewNotes: buildGatewayReviewNotes(advisorBrief),
     aiDisclosure: buildGatewayAiDisclosure(advisorBrief),
   };
@@ -103,7 +104,9 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
   const isSuperseded = advisorBrief.workflow_pack_run?.superseded === true;
   const replacementRunId = advisorBrief.workflow_pack_run?.replacement_run_id?.trim();
   const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
-  const humanReview = mapWorkflowReviewState(workflowReviewState);
+  const humanReview = mapWorkflowReviewState(advisorBrief.workflow_pack_run);
+  const terminalReviewWithoutEvidence =
+    isTerminalWorkflowReviewState(workflowReviewState) && !humanReview.sourceRecorded;
   const diagnostics = [
     advisorBrief.workflow_pack_run?.run_id
       ? { label: "Workflow run", value: advisorBrief.workflow_pack_run.run_id }
@@ -121,12 +124,18 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     sourceRefs.length > 0
       ? { label: "Source references", value: String(sourceRefs.length) }
       : null,
+    humanReview.actor ? { label: "Review recorded by", value: humanReview.actor } : null,
+    humanReview.occurredAt
+      ? { label: "Review recorded", value: humanReview.occurredAt }
+      : null,
   ].filter((item): item is { label: string; value: string } => item !== null);
   const limitations = [
     ...advisorBrief.partial_failures.map((failure) => failure.detail),
     ...advisorBrief.warnings,
-    ...(humanReview.state === "reviewed"
-      ? ["Reviewer identity and review time were not published with this response."]
+    ...(terminalReviewWithoutEvidence
+      ? [
+          "The source reports a terminal review state but did not publish a complete reviewer, event-time, and history record.",
+        ]
       : []),
     ...(providerPosture === "untrusted"
       ? [
@@ -173,13 +182,40 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
   });
 }
 
-function mapWorkflowReviewState(reviewState: string | undefined) {
-  switch (reviewState) {
+function mapWorkflowReviewState(
+  workflowPackRun: WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]
+): {
+  state: "reviewed" | "rejected" | "review-required" | "unavailable";
+  sourceRecorded: boolean;
+  actor?: string;
+  occurredAt?: string;
+} {
+  const actor = workflowPackRun?.latest_review_actor?.trim();
+  const occurredAt = workflowPackRun?.latest_review_event_at?.trim();
+  const sourceRecorded =
+    workflowPackRun?.has_review_history === true &&
+    typeof workflowPackRun.review_transition_count === "number" &&
+    workflowPackRun.review_transition_count > 0 &&
+    Boolean(actor) &&
+    Boolean(occurredAt);
+  const evidence = {
+    sourceRecorded,
+    ...(sourceRecorded && actor ? { actor } : {}),
+    ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
+  };
+
+  switch (workflowPackRun?.review_state) {
     case "ACCEPTED":
-      return { state: "reviewed" as const, sourceRecorded: true };
+      return {
+        state: sourceRecorded ? ("reviewed" as const) : ("unavailable" as const),
+        ...evidence,
+      };
     case "REJECTED":
     case "ABANDONED":
-      return { state: "rejected" as const, sourceRecorded: true };
+      return {
+        state: sourceRecorded ? ("rejected" as const) : ("unavailable" as const),
+        ...evidence,
+      };
     case "AWAITING_REVIEW":
     case "REVIEW_REQUIRED":
     case "PENDING":
@@ -187,6 +223,10 @@ function mapWorkflowReviewState(reviewState: string | undefined) {
     default:
       return { state: "unavailable" as const, sourceRecorded: false };
   }
+}
+
+function isTerminalWorkflowReviewState(reviewState: string | undefined): boolean {
+  return reviewState === "ACCEPTED" || reviewState === "REJECTED" || reviewState === "ABANDONED";
 }
 
 function normalizeGatewaySupportability(
@@ -222,7 +262,7 @@ function normalizeGatewaySupportability(
   return [
     ...normalizedItems,
     {
-      label: "Generation Run",
+      label: "Brief Preparation",
       value: normalizeWorkflowPackRuntimeValue(advisorBrief.workflow_pack_run.runtime_state),
       tone: normalizeWorkflowPackRuntimeTone(advisorBrief.workflow_pack_run.runtime_state),
       detail: buildWorkflowPackRunDetail(advisorBrief.workflow_pack_run),
@@ -257,26 +297,21 @@ function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief)
           return `${severityPrefix}: ${finding.summary}`;
         }),
         workflowPackRun.replacement_run_id
-          ? `Superseded by workflow-pack run ${workflowPackRun.replacement_run_id}.`
+          ? "A replacement brief is linked to this historical review record."
           : null,
       ]
     : [];
   const taskFlowNotes = workflowPackTaskFlow
     ? [
-        `Task flow ${workflowPackTaskFlow.task_flow_id} is ${normalizeTaskFlowStatusValue(
+        `Workflow progress is ${normalizeTaskFlowStatusValue(
           workflowPackTaskFlow.flow_status
         ).toLowerCase()}.`,
-        workflowPackTaskFlow.current_step_id
-          ? `Current task-flow step: ${workflowPackTaskFlow.current_step_id}.`
+        workflowPackTaskFlow.replacement_lineage.length > 0
+          ? "Replacement lineage is available in support details."
           : null,
-        ...workflowPackTaskFlow.replacement_lineage.map(
-          (lineage) =>
-            `${lineage.review_action_ref}: task flow links ${lineage.superseded_run_id} to replacement run ${lineage.replacement_run_id}.`
-        ),
-        ...workflowPackTaskFlow.handoff_refs.map(
-          (handoff) =>
-            `Handoff ${handoff.handoff_id} is ${handoff.status.replaceAll("_", " ").toLowerCase()} for ${handoff.owner_service}.`
-        ),
+        workflowPackTaskFlow.handoff_refs.length > 0
+          ? `${workflowPackTaskFlow.handoff_refs.length} downstream workflow handoff record(s) are available.`
+          : null,
       ]
     : [];
 
@@ -290,6 +325,41 @@ function buildGatewayReviewNotes(advisorBrief: WorkbenchPerformanceAdvisorBrief)
       ].filter((note): note is string => Boolean(note))
     )
   );
+}
+
+function buildGatewaySupportDetails(
+  advisorBrief: WorkbenchPerformanceAdvisorBrief
+): PerformanceAdvisorBriefViewModel["supportDetails"] {
+  const workflowPackRun = advisorBrief.workflow_pack_run;
+  const taskFlow = advisorBrief.workflow_pack_task_flow;
+
+  return [
+    workflowPackRun ? { label: "Brief run reference", value: workflowPackRun.run_id } : null,
+    workflowPackRun
+      ? { label: "Workflow authority", value: workflowPackRun.workflow_authority_owner }
+      : null,
+    workflowPackRun?.replacement_run_id
+      ? { label: "Replacement brief reference", value: workflowPackRun.replacement_run_id }
+      : null,
+    taskFlow ? { label: "Task flow reference", value: taskFlow.task_flow_id } : null,
+    taskFlow
+      ? {
+          label: "Workflow pack",
+          value: `${taskFlow.workflow_pack_id}@${taskFlow.version}`,
+        }
+      : null,
+    taskFlow?.current_step_id
+      ? { label: "Current technical step", value: taskFlow.current_step_id }
+      : null,
+    ...(taskFlow?.replacement_lineage ?? []).map((lineage, index) => ({
+      label: `Replacement lineage ${index + 1}`,
+      value: `${lineage.superseded_run_id} → ${lineage.replacement_run_id}`,
+    })),
+    ...(taskFlow?.handoff_refs ?? []).map((handoff, index) => ({
+      label: `Handoff ${index + 1}`,
+      value: `${handoff.handoff_id} • ${handoff.owner_service} • ${handoff.status}`,
+    })),
+  ].filter((detail): detail is { label: string; value: string } => detail !== null);
 }
 
 function normalizeGatewaySourceMetrics({
@@ -436,15 +506,23 @@ function normalizeWorkflowPackReviewValue(reviewState: string): string {
 function buildWorkflowPackRunDetail(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): string {
-  return [workflowPackRun.run_id, `Authority ${workflowPackRun.workflow_authority_owner}`].join(
-    " • "
-  );
+  return workflowPackRun.review_pending
+    ? "Preparation complete; human review remains required"
+    : "Preparation record is available";
 }
 
 function buildWorkflowPackReviewDetail(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): string {
-  const detailParts = [`Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`];
+  const detailParts = [
+    `Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`,
+  ];
+  const reviewEvidence = mapWorkflowReviewState(workflowPackRun);
+  if (reviewEvidence.sourceRecorded) {
+    detailParts.push(`Recorded by ${reviewEvidence.actor}`, `Recorded ${reviewEvidence.occurredAt}`);
+  } else if (isTerminalWorkflowReviewState(workflowPackRun.review_state)) {
+    detailParts.push("Review audit details not published");
+  }
   if (workflowPackRun.superseded) {
     detailParts.push(
       workflowPackRun.replacement_run_id
@@ -483,8 +561,8 @@ function normalizeWorkflowPackReviewTone(
     return "danger";
   }
   if (
-    workflowPackRun.review_state === "ACCEPTED" ||
-    workflowPackRun.supportability_status === "READY"
+    workflowPackRun.review_state === "ACCEPTED" &&
+    mapWorkflowReviewState(workflowPackRun).sourceRecorded
   ) {
     return "success";
   }
@@ -512,12 +590,13 @@ function buildTaskFlowDetail(
   taskFlow: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_task_flow"]>
 ): string {
   const detailParts = [
-    taskFlow.task_flow_id,
-    `${taskFlow.workflow_pack_id}@${taskFlow.version}`,
     `Supportability ${normalizeTaskFlowStatusValue(taskFlow.supportability_status)}`,
   ];
   if (taskFlow.replacement_lineage.length > 0) {
-    detailParts.push(`${taskFlow.replacement_lineage.length} lineage edge(s)`);
+    detailParts.push(`${taskFlow.replacement_lineage.length} replacement record(s)`);
+  }
+  if (taskFlow.handoff_refs.length > 0) {
+    detailParts.push(`${taskFlow.handoff_refs.length} downstream handoff(s)`);
   }
   return detailParts.join(" • ");
 }

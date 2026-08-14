@@ -517,6 +517,57 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     },
   );
 
+  it("recognizes human review only from a complete source audit record", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        workflow_pack_run: {
+          run_id: "packrun_advisor_brief_req-1",
+          runtime_state: "COMPLETED",
+          review_state: "ACCEPTED",
+          latest_review_event_at: "2026-04-21T03:22:00Z",
+          latest_review_actor: "advisor_1",
+          review_transition_count: 1,
+          has_review_history: true,
+          allowed_review_actions: [],
+          supportability_status: "READY",
+          review_pending: false,
+          superseded: false,
+          workflow_authority_owner: "lotus-gateway",
+          current_summary_note: "Review decision recorded.",
+          findings: [],
+        },
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure.humanReview).toEqual({
+      state: "reviewed",
+      sourceRecorded: true,
+      actor: "advisor_1",
+      occurredAt: "2026-04-21T03:22:00Z",
+    });
+    expect(brief.supportability).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Human Review",
+          value: "ACCEPTED",
+          tone: "success",
+          detail:
+            "Supportability READY • Recorded by advisor_1 • Recorded 2026-04-21T03:22:00Z",
+        }),
+      ])
+    );
+  });
+
   it.each([
     [
       "packrun_advisor_brief_req-2",
@@ -1040,10 +1091,10 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         {
-          label: "Generation Run",
+          label: "Brief Preparation",
           value: "COMPLETED",
           tone: "success",
-          detail: "packrun_advisor_brief_req-1 • Authority lotus-gateway",
+          detail: "Preparation complete; human review remains required",
         },
         {
           label: "Human Review",
@@ -1055,7 +1106,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           label: "Workflow Progress",
           value: "WAITING FOR REVIEW",
           tone: "warn",
-          detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability ACTION REQUIRED",
+          detail: "Supportability ACTION REQUIRED",
         },
       ])
     );
@@ -1063,8 +1114,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining([
         "Run completed but still requires bounded human review before downstream use.",
         "ACTION REQUIRED: Run is awaiting review.",
-        "Task flow taskflow_advisor_brief_req-1 is waiting for review.",
-        "Current task-flow step: generate_advisor_brief.",
+        "Workflow progress is waiting for review.",
       ])
     );
     expect(brief.aiDisclosure).toEqual(
@@ -1076,6 +1126,14 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           { label: "Workflow run", value: "packrun_advisor_brief_req-1" },
         ]),
       }),
+    );
+    expect(brief.supportDetails).toEqual(
+      expect.arrayContaining([
+        { label: "Brief run reference", value: "packrun_advisor_brief_req-1" },
+        { label: "Workflow authority", value: "lotus-gateway" },
+        { label: "Task flow reference", value: "taskflow_advisor_brief_req-1" },
+        { label: "Current technical step", value: "generate_advisor_brief" },
+      ])
     );
   });
 
@@ -1166,24 +1224,33 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           label: "Human Review",
           value: "ACCEPTED",
           tone: "warn",
-          detail: "Supportability READY • Superseded by packrun_advisor_brief_req-2",
+          detail:
+            "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2",
         },
         {
           label: "Workflow Progress",
           value: "SUPERSEDED",
           tone: "warn",
-          detail: "taskflow_advisor_brief_req-1 • advisor_brief.pack@v1 • Supportability HISTORICAL • 1 lineage edge(s)",
+          detail:
+            "Supportability HISTORICAL • 1 replacement record(s) • 1 downstream handoff(s)",
         },
       ])
     );
     expect(brief.reviewNotes).toEqual(
       expect.arrayContaining([
         "Run was superseded by a newer bounded advisor-brief run.",
-        "Superseded by workflow-pack run packrun_advisor_brief_req-2.",
-        "Task flow taskflow_advisor_brief_req-1 is superseded.",
-        "SUPERSEDE: task flow links packrun_advisor_brief_req-1 to replacement run packrun_advisor_brief_req-2.",
-        "Handoff taskflow_advisor_brief_req-1_handoff_packrun_advisor_brief_req-1 is ready for handoff for lotus-gateway.",
+        "A replacement brief is linked to this historical review record.",
+        "Workflow progress is superseded.",
+        "Replacement lineage is available in support details.",
+        "1 downstream workflow handoff record(s) are available.",
       ])
+    );
+    expect(brief.aiDisclosure.humanReview).toEqual({
+      state: "unavailable",
+      sourceRecorded: false,
+    });
+    expect(brief.aiDisclosure.limitations).toContain(
+      "The source reports a terminal review state but did not publish a complete reviewer, event-time, and history record."
     );
   });
 });

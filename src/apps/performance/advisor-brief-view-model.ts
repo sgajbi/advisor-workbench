@@ -15,6 +15,7 @@ export type {
   PerformanceAdvisorBriefMetric,
   PerformanceAdvisorBriefStatus,
   PerformanceAdvisorBriefSupportabilityItem,
+  PerformanceAdvisorBriefSupportDetail,
   PerformanceAdvisorBriefTone,
   PerformanceAdvisorBriefViewModel,
 } from "./advisor-brief/advisor-brief-view-model-types";

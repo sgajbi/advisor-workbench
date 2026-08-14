@@ -223,6 +223,7 @@ export function buildFallbackAdvisorBriefViewModel({
       isDetailsPending,
     }),
     sourceMetrics,
+    supportDetails: [],
     reviewNotes: buildReviewNotes({
       capabilities,
       advisorBriefUnavailable,

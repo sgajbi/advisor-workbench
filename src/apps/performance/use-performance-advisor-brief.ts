@@ -24,6 +24,16 @@ type PerformanceAdvisorBriefRequest = {
   reportEndDate?: string;
 };
 
+export type AdvisorBriefReviewFeedback = {
+  state: "idle" | "pending" | "success" | "failed";
+  message: string;
+};
+
+const IDLE_REVIEW_FEEDBACK: AdvisorBriefReviewFeedback = {
+  state: "idle",
+  message: "",
+};
+
 export function usePerformanceAdvisorBrief({
   request,
 }: {
@@ -46,9 +56,12 @@ export function usePerformanceAdvisorBrief({
   const [advisorBriefPermissionBlocked, setAdvisorBriefPermissionBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isApplyingReviewAction, setIsApplyingReviewAction] = useState(false);
-  const [reviewActionError, setReviewActionError] = useState<string | null>(null);
+  const [reviewActionFeedback, setReviewActionFeedback] =
+    useState<AdvisorBriefReviewFeedback>(IDLE_REVIEW_FEEDBACK);
   const [refreshSequence, setRefreshSequence] = useState(0);
   const requestSequenceRef = useRef(0);
+  const reviewActionSequenceRef = useRef(0);
+  const activeRequestKeyRef = useRef("");
   const cacheRef = useRef<Map<string, WorkbenchPerformanceAdvisorBrief>>(new Map());
   const requestKey = useMemo(
     () =>
@@ -77,13 +90,16 @@ export function usePerformanceAdvisorBrief({
       reportStartDate,
     ]
   );
+  activeRequestKeyRef.current = requestKey;
 
   useEffect(() => {
+    reviewActionSequenceRef.current += 1;
+    setIsApplyingReviewAction(false);
     const cachedResponse = cacheRef.current.get(requestKey) ?? null;
     setAdvisorBrief(cachedResponse);
     setAdvisorBriefUnavailable(false);
     setAdvisorBriefPermissionBlocked(false);
-    setReviewActionError(null);
+    setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
 
     if (cachedResponse) {
       setIsLoading(false);
@@ -146,8 +162,14 @@ export function usePerformanceAdvisorBrief({
 
   const applyReviewAction = useCallback(
     async (payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest) => {
+      const actionRequestKey = requestKey;
+      const actionRequestId = reviewActionSequenceRef.current + 1;
+      reviewActionSequenceRef.current = actionRequestId;
       setIsApplyingReviewAction(true);
-      setReviewActionError(null);
+      setReviewActionFeedback({
+        state: "pending",
+        message: "Recording the human-review decision.",
+      });
 
       try {
         const response = await postWorkbenchPerformanceAdvisorBriefReviewActionClient(
@@ -165,18 +187,39 @@ export function usePerformanceAdvisorBrief({
           payload
         );
 
+        if (
+          reviewActionSequenceRef.current !== actionRequestId ||
+          activeRequestKeyRef.current !== actionRequestKey
+        ) {
+          return response;
+        }
+
         cacheRef.current.set(requestKey, response);
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
+        setReviewActionFeedback({
+          state: "success",
+          message: getReviewActionSuccessMessage(payload.action_type),
+        });
         return response;
-      } catch (error) {
-        setReviewActionError(
-          "Gateway could not record the bounded review action. Refresh the brief and try again."
-        );
+      } catch (error: unknown) {
+        if (
+          reviewActionSequenceRef.current === actionRequestId &&
+          activeRequestKeyRef.current === actionRequestKey
+        ) {
+          setReviewActionFeedback({
+            state: "failed",
+            message: isWorkbenchPermissionBlockedError(error)
+              ? "This review decision is not permitted for the current access context."
+              : "The review decision was not recorded. Keep the rationale in place and try again.",
+          });
+        }
         throw error;
       } finally {
-        setIsApplyingReviewAction(false);
+        if (reviewActionSequenceRef.current === actionRequestId) {
+          setIsApplyingReviewAction(false);
+        }
       }
     },
     [
@@ -199,8 +242,25 @@ export function usePerformanceAdvisorBrief({
     advisorBriefPermissionBlocked,
     isLoading,
     isApplyingReviewAction,
-    reviewActionError,
+    reviewActionFeedback,
     applyReviewAction,
     refresh,
   };
+}
+
+function getReviewActionSuccessMessage(
+  actionType: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest["action_type"]
+): string {
+  switch (actionType) {
+    case "ACCEPT":
+      return "The brief was accepted for its permitted internal workflow use.";
+    case "REJECT":
+      return "The brief was rejected and the source review record was updated.";
+    case "REVISE":
+      return "Revision was requested and the replacement brief reference was recorded.";
+    case "SUPERSEDE":
+      return "The brief was marked as superseded by the replacement brief.";
+    case "ABANDON":
+      return "The brief was withdrawn from further internal use.";
+  }
 }

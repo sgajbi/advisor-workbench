@@ -17,6 +17,8 @@ export function dedupeAdvisorActions(actions: PerformanceAdvisorBriefAction[]) {
 
 export function toAdvisorNoteCopy(brief: PerformanceAdvisorBriefViewModel) {
   const sections = [
+    "INTERNAL WORKING NOTE — Human review required; not approved for client use.",
+    "",
     brief.summary,
     "",
     "Advisor Talking Points",
