@@ -84,7 +84,7 @@ controls and do not occur on this screen.
 - Refreshes source-owned batch posture after acceptance and presents portfolio-report count,
   complete, in-progress, and attention measures plus each portfolio's lifecycle, attempts, and
   support reference.
-- Presents recent request history as a comparison table when the module owns at least 760 pixels of
+- Presents recent request history as a comparison table when the module owns at least 54rem of
   content width, then as compact operational records below that capacity. This follows the module,
   not the browser viewport, so three-rail advisor layouts do not force a clipped table. Both presentations use the same
   source-backed row: report identity, report date, requested time, lifecycle, lifecycle explanation,

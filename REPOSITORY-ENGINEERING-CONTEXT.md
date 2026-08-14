@@ -107,7 +107,7 @@ Current repository posture:
    source retry to the last valid page before publishing ready state when a shrinking book makes a
    requested offset invalid.
    Recent request history keeps one source-backed row model across responsive presentations. Use
-   the semantic comparison table when the Report Centre owns at least 760 pixels of content width;
+   the semantic comparison table when the Report Centre owns at least 54rem of content width;
    below that capacity, use the shared operational-record pattern so report identity, lifecycle explanation,
    report date, requested time, and keyboard/touch-accessible support reference remain discoverable
    without nested horizontal scrolling. Loading, empty, restricted, and error posture must remain
