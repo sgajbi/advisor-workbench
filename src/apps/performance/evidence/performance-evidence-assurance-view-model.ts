@@ -213,7 +213,7 @@ function buildCalculationAssurance(
 ): PerformanceCalculationAssurance {
   const role = calculationRolePresentation(calculation, index);
   const calculationStatus = resolveCalculationLifecyclePresentation(calculation);
-  const evidenceStatus = lifecyclePresentation(calculation.lineage_status, "evidence");
+  const evidenceStatus = resolveEvidenceLifecyclePresentation(calculation);
   const records = safeArray(calculation.artifacts).map((artifact, artifactIndex) =>
     buildRecord(artifact, artifactIndex)
   );
@@ -264,6 +264,37 @@ function resolveCalculationLifecyclePresentation(
   return tonePriority[stagePresentation.tone] > tonePriority[aggregate.tone]
     ? stagePresentation
     : aggregate;
+}
+
+function resolveEvidenceLifecyclePresentation(
+  calculation: PerformanceCalculationEvidenceView
+): { label: string; tone: PerformanceEvidenceTone } {
+  const lineage = lifecyclePresentation(calculation.lineage_status, "evidence");
+  if (lineage.tone !== "success") return lineage;
+
+  const artifacts = safeArray(calculation.artifacts);
+  if (!artifacts.length) return { label: "Not confirmed", tone: "default" };
+  if (
+    artifacts.some(
+      (artifact) =>
+        !buildEvidenceRecordHref(artifact.archive_document_download_url ?? artifact.url)
+    )
+  ) {
+    return { label: "Attention required", tone: "danger" };
+  }
+  const retrievalStates = safeArray(calculation.upstream_snapshots).map((snapshot) =>
+    classifyUpstreamRetrievalState(snapshot.retrieval_status)
+  );
+  if (retrievalStates.includes("failed")) {
+    return { label: "Attention required", tone: "danger" };
+  }
+  if (retrievalStates.includes("pending")) {
+    return { label: "In progress", tone: "warn" };
+  }
+  if (retrievalStates.includes("unknown")) {
+    return { label: "Not confirmed", tone: "default" };
+  }
+  return lineage;
 }
 
 function lifecyclePresentation(
@@ -405,6 +436,15 @@ function buildExceptions(
         stage.status,
         index,
         stageIndex,
+        calculationTitle
+      );
+    });
+    safeArray(calculation.upstream_snapshots).forEach((snapshot, snapshotIndex) => {
+      appendUpstreamRetrievalException(
+        exceptions,
+        snapshot.retrieval_status,
+        index,
+        snapshotIndex,
         calculationTitle
       );
     });
@@ -661,6 +701,49 @@ function appendStageLifecycleException(
     action: "Keep the affected result within internal review and obtain refreshed source evidence.",
     tone: failed ? "danger" : "warn",
   });
+}
+
+function appendUpstreamRetrievalException(
+  exceptions: PerformanceEvidenceException[],
+  value: string | null | undefined,
+  calculationIndex: number,
+  snapshotIndex: number,
+  calculationTitle: string
+) {
+  const state = classifyUpstreamRetrievalState(value);
+  if (state === "success") return;
+
+  const pending = state === "pending";
+  const failed = state === "failed";
+  exceptions.push({
+    key: `upstream-retrieval-${calculationIndex}-${snapshotIndex}`,
+    title: failed
+      ? `${calculationTitle} upstream evidence ${snapshotIndex + 1} unavailable`
+      : pending
+        ? `${calculationTitle} upstream evidence ${snapshotIndex + 1} retrieval in progress`
+        : `${calculationTitle} upstream evidence ${snapshotIndex + 1} status not confirmed`,
+    detail: failed
+      ? "The source reports that required upstream evidence could not be retrieved."
+      : pending
+        ? "The source has not completed retrieval of required upstream evidence."
+        : "The source did not publish a recognised upstream retrieval state.",
+    action: "Keep the affected result within internal review and obtain refreshed source evidence.",
+    tone: failed ? "danger" : "warn",
+  });
+}
+
+function classifyUpstreamRetrievalState(
+  value: string | null | undefined
+): "success" | "pending" | "failed" | "unknown" {
+  const state = normalise(value);
+  if (/^(2\d{2}|complete|completed|ok|retrieved|success|successful)$/.test(state)) {
+    return "success";
+  }
+  if (PENDING_STATUSES.includes(state)) return "pending";
+  if (/^(4\d{2}|5\d{2}|error)$/.test(state) || FAILED_STATUSES.includes(state)) {
+    return "failed";
+  }
+  return "unknown";
 }
 
 function buildSupportGroups(

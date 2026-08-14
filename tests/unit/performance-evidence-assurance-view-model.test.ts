@@ -231,6 +231,66 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(JSON.stringify(view.exceptions)).not.toContain("calc-details");
   });
 
+  it.each([
+    ["500", "attention", "Portfolio performance summary upstream evidence 1 unavailable", "danger", "Attention required", "danger"],
+    ["processing", "incomplete", "Portfolio performance summary upstream evidence 1 retrieval in progress", "warn", "In progress", "warn"],
+    ["unexpected", "incomplete", "Portfolio performance summary upstream evidence 1 status not confirmed", "warn", "Not confirmed", "default"],
+  ] as const)(
+    "fails closed when upstream retrieval reports %s",
+    (
+      retrievalStatus,
+      expectedState,
+      expectedTitle,
+      expectedTone,
+      expectedEvidenceStatus,
+      expectedEvidenceTone
+    ) => {
+      const source = evidence();
+      source.calculations[0].upstream_snapshots = [
+        {
+          upstream_endpoint: "/internal/source/path",
+          source_identifier: "internal-source-id",
+          as_of_date: "2026-08-14",
+          retrieval_status: retrievalStatus,
+        },
+      ];
+
+      const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+      expect(view.state).toBe(expectedState);
+      expect(view.exceptions).toContainEqual(
+        expect.objectContaining({ title: expectedTitle, tone: expectedTone })
+      );
+      expect(view.calculations[0]).toMatchObject({
+        evidenceStatus: expectedEvidenceStatus,
+        evidenceTone: expectedEvidenceTone,
+      });
+      expect(view.metrics).toContainEqual(
+        expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
+      );
+      expect(JSON.stringify(view.exceptions)).not.toContain("/internal/source/path");
+      expect(JSON.stringify(view.exceptions)).not.toContain("internal-source-id");
+      expect(JSON.stringify(view.supportGroups)).toContain("internal-source-id");
+    }
+  );
+
+  it("accepts an explicitly successful upstream retrieval", () => {
+    const source = evidence();
+    source.calculations[0].upstream_snapshots = [
+      {
+        upstream_endpoint: "/internal/source/path",
+        source_identifier: "internal-source-id",
+        as_of_date: "2026-08-14",
+        retrieval_status: "200",
+      },
+    ];
+
+    const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+    expect(view.state).toBe("ready");
+    expect(view.exceptions).toHaveLength(0);
+  });
+
   it("qualifies fallbacks, limitations, unsupported coverage, and partial source supportability", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
@@ -595,8 +655,31 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       label: "Calculation input record",
       href: null,
     });
+    expect(view.calculations[0]).toMatchObject({
+      evidenceStatus: "Attention required",
+      evidenceTone: "danger",
+    });
+    expect(view.metrics).toContainEqual(
+      expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
+    );
     expect(view.exceptions).toContainEqual(
       expect.objectContaining({ title: "Supporting record route unavailable", tone: "danger" })
+    );
+  });
+
+  it("does not confirm evidence coverage when no supporting record is published", () => {
+    const source = evidence();
+    source.calculations[0].artifacts = [];
+
+    const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+    expect(view.calculations[0]).toMatchObject({
+      evidenceStatus: "Not confirmed",
+      evidenceTone: "default",
+      evidenceCount: 0,
+    });
+    expect(view.metrics).toContainEqual(
+      expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
     );
   });
 });
