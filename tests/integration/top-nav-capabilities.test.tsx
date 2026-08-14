@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import TopNav from "../../src/app/top-nav";
@@ -34,8 +34,19 @@ describe("TopNav", () => {
     render(<TopNav />);
 
     expect(screen.queryByRole("link", { name: "Overview" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Switch workspace. Current workspace Performance",
+      }),
+    );
+
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
-    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("href", "/performance");
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute("href", "/performance?mode=risk");
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Advisory")).toHaveAttribute("aria-disabled", "true");
