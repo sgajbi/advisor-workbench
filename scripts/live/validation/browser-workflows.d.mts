@@ -15,6 +15,12 @@ export function createBrowserValidationHelpers(input: {
   panelRegistryById: Map<string, Pick<PanelRegistryEntry, "screenshotName" | "route">>;
 }): BrowserValidationHelpers;
 
+export function hasAcceptedAdvisorBriefReviewPosture(text: string): boolean;
+export function hasRecordedAdvisorBriefAcceptProof(
+  text: string,
+  expectedReviewer: string,
+): boolean;
+
 export function validatePortfolioPanels(
   page: BrowserValidationPage,
   options: Record<string, unknown>
