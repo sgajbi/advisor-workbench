@@ -418,6 +418,14 @@ function buildExceptions(
           action: "Refresh the source calculation before using the result for a current review.",
           tone: "danger",
         });
+      } else if (state === "unavailable") {
+        exceptions.push({
+          key: `freshness-${key}`,
+          title: `${label} unavailable`,
+          detail: "The source could not provide a selected input required by the evidence package.",
+          action: "Restore the required source input and obtain refreshed evidence before relying on the package.",
+          tone: "danger",
+        });
       } else {
         exceptions.push({
           key: `freshness-${key}`,

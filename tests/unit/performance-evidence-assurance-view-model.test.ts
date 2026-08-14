@@ -398,6 +398,18 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("escalates an explicitly unavailable selected input", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ input_freshness: { performance: "fresh", benchmark: "unavailable" } })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Benchmark input unavailable", tone: "danger" })
+    );
+  });
+
   it("does not require benchmark freshness when no benchmark is assigned", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
