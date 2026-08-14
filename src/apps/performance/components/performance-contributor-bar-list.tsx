@@ -1,4 +1,7 @@
 import type { PerformanceContributorRankedItem } from "./performance-summary-driver-helpers";
+import { cx } from "@/design-system/utils/cx";
+
+import styles from "./performance-contributor-bar-list.module.css";
 
 export default function PerformanceContributorBarList({
   title,
@@ -12,23 +15,26 @@ export default function PerformanceContributorBarList({
   emptyBody: string;
 }) {
   return (
-    <section className="performance-contributor-bar-list" aria-label={ariaLabel}>
-      <div className="performance-contributor-bar-list-header">
-        <strong className="performance-contributor-bar-list-title">{title}</strong>
+    <section className={styles.root} aria-label={ariaLabel}>
+      <div className={styles.header}>
+        <strong className={styles.title}>{title}</strong>
       </div>
       {items.length ? (
-        <div className="performance-contributor-bars">
+        <div className={styles.bars}>
           {items.map((item) => (
-            <div key={item.key} className="performance-contributor-bar-row">
-              <div className="performance-contributor-bar-copy">
+            <div key={item.key} className={styles.row}>
+              <div className={styles.copy}>
                 <strong>{item.title}</strong>
                 <span>{item.subtitle}</span>
               </div>
-              <div className="performance-contributor-bar-measure">
+              <div className={styles.measure}>
                 <span>{item.value}</span>
-                <div className="performance-contributor-bar-track" aria-hidden="true">
+                <div className={styles.track} aria-hidden="true">
                   <div
-                    className={`performance-contributor-bar-fill performance-contributor-bar-fill-${item.tone}`}
+                    className={cx(
+                      styles.fill,
+                      item.tone === "positive" ? styles.fillPositive : styles.fillNegative,
+                    )}
                     style={{ width: `${Math.max(item.magnitudePct, 4)}%` }}
                   />
                 </div>
@@ -37,7 +43,7 @@ export default function PerformanceContributorBarList({
           ))}
         </div>
       ) : (
-        <p className="performance-contributor-bar-empty">{emptyBody}</p>
+        <p className={styles.empty}>{emptyBody}</p>
       )}
     </section>
   );

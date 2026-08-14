@@ -7873,37 +7873,6 @@
   grid-column: 1 / -1;
 }
 
-.performance-contributors-panel {
-  display: grid;
-  gap: 0.5rem;
-  background: #ffffff;
-}
-
-.performance-contributors-panel-asymmetric {
-  grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.82fr);
-  grid-template-areas:
-    "primary side"
-    "disclosure disclosure";
-  align-items: start;
-  gap: 0.56rem;
-}
-
-.performance-contributors-panel-asymmetric > .performance-contributors-ranked-card:first-child {
-  grid-area: primary;
-}
-
-.performance-contributors-asymmetric-side {
-  grid-area: side;
-  display: grid;
-  gap: 0.56rem;
-  align-content: start;
-}
-
-.performance-contributors-panel-asymmetric > .performance-contributors-table-disclosure {
-  grid-area: disclosure;
-  margin-top: 0;
-}
-
 .performance-contributors-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -7911,131 +7880,6 @@
 .performance-contributors-table {
   border-radius: 10px;
   border-color: rgba(221, 226, 232, 0.9);
-}
-
-.performance-contributors-grid,
-.performance-contributors-compare-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.56rem;
-  align-items: start;
-}
-
-.performance-contributors-ranked-card {
-  display: grid;
-  min-width: 0;
-  align-self: start;
-}
-
-.performance-contributors-ranked-card-populated {
-  align-content: start;
-}
-
-.performance-contributors-ranked-card-empty {
-  align-content: stretch;
-}
-
-.performance-contributor-bar-list {
-  display: grid;
-  gap: 0.62rem;
-  padding: 0.74rem 0.78rem;
-  border: 1px solid rgba(32, 44, 61, 0.08);
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.74);
-}
-
-.performance-contributor-bar-list-header {
-  display: flex;
-  align-items: flex-start;
-}
-
-.performance-contributor-bar-list-title {
-  color: var(--brand-strong);
-  font-size: var(--workbench-analytic-heading-size);
-  line-height: 1.2;
-}
-
-.performance-contributor-bars {
-  display: grid;
-  gap: 0.48rem;
-}
-
-.performance-contributor-bar-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.42fr);
-  gap: 0.7rem;
-  align-items: center;
-  padding-bottom: 0.48rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-}
-
-.performance-contributor-bar-row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.performance-contributor-bar-copy {
-  display: grid;
-  gap: 0.16rem;
-  min-width: 0;
-}
-
-.performance-contributor-bar-copy strong {
-  color: var(--brand-strong);
-  font-size: var(--text-sm);
-  font-weight: 720;
-  line-height: 1.24;
-}
-
-.performance-contributor-bar-copy span {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  line-height: 1.28;
-}
-
-.performance-contributor-bar-measure {
-  display: grid;
-  gap: 0.22rem;
-  justify-items: end;
-  min-width: 0;
-}
-
-.performance-contributor-bar-measure > span {
-  color: var(--brand-strong);
-  font-size: var(--text-sm);
-  font-weight: 780;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.performance-contributor-bar-track {
-  width: 100%;
-  height: 0.34rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(221, 226, 232, 0.72);
-}
-
-.performance-contributor-bar-fill {
-  height: 100%;
-  border-radius: inherit;
-}
-
-.performance-contributor-bar-fill-positive {
-  background: #315d8a;
-}
-
-.performance-contributor-bar-fill-negative {
-  background: #8f3f45;
-}
-
-.performance-contributor-bar-empty {
-  margin: 0;
-  padding: 0.1rem 0;
-  max-width: 28ch;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
 }
 
 .performance-contributors-table-disclosure {
@@ -8083,7 +7927,6 @@
   line-height: 1.28;
 }
 
-.performance-contributors-grid > .workbench-summary-visual-card,
 .performance-horizon-bars > .workbench-summary-visual-card {
   height: 100%;
 }
@@ -10478,23 +10321,6 @@
     max-width: none;
   }
 
-  .performance-contributors-compare-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .performance-contributors-panel-asymmetric {
-    grid-template-columns: 1fr;
-  }
-
-  .performance-contributor-bar-row {
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
-    align-items: start;
-  }
-
-  .performance-contributor-bar-measure {
-    justify-items: start;
-  }
 }
 
 @media (max-width: 768px) {
@@ -10637,10 +10463,6 @@
   }
 
   .performance-detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .performance-contributors-grid {
     grid-template-columns: 1fr;
   }
 
