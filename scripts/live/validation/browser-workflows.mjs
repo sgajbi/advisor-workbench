@@ -1168,6 +1168,9 @@ export async function validateAdvisorBriefPanel(
         },
       )
       .toBe(true);
+    await expect(supportabilityRegion).toContainText("live.validator.ui", {
+      timeout: timeoutMs,
+    });
     summary.uiChecks.push({
       description: "Advisor brief ACCEPT review action",
       kind: "workflow-pack-review-action",

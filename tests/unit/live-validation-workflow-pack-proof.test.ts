@@ -25,6 +25,7 @@ const {
       timeoutMs: number,
       body: Record<string, unknown>,
     ) => Promise<unknown>;
+    preRecordedAcceptReviewer?: string;
   }) => Promise<void>;
 };
 
@@ -78,6 +79,7 @@ function createAdvisorBriefPayload({
   taskFlowStatus = "AWAITING_REVIEW",
   taskFlowSupportabilityStatus = "ACTION_REQUIRED",
   handoffStatus,
+  latestReviewActor,
 }: {
   runId: string;
   reviewState?: string;
@@ -90,6 +92,7 @@ function createAdvisorBriefPayload({
   taskFlowStatus?: string;
   taskFlowSupportabilityStatus?: string;
   handoffStatus?: string;
+  latestReviewActor?: string;
 }) {
   return {
     workflow_pack_run: {
@@ -102,6 +105,15 @@ function createAdvisorBriefPayload({
         : { supportability_status: supportabilityStatus }),
       ...(superseded === undefined ? {} : { superseded }),
       ...(replacementRunId === undefined ? {} : { replacement_run_id: replacementRunId }),
+      ...(latestReviewActor === undefined
+        ? {}
+        : {
+            latest_review_actor: latestReviewActor,
+            latest_review_event_at: "2026-04-21T03:22:00Z",
+            review_transition_count: 1,
+            has_review_history: true,
+            review_pending: false,
+          }),
     },
     workflow_pack_task_flow: createTaskFlow({
       taskFlowId,
@@ -178,6 +190,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
+            latestReviewActor: "live.validator.accept",
           });
         }
         if (body.action_type === "SUPERSEDE") {
@@ -257,6 +270,86 @@ describe("live validation workflow-pack proof", () => {
     ]);
   });
 
+  it("verifies the browser-recorded acceptance before continuing API lineage proof", async () => {
+    const summary = createSummary();
+    const postCalls: Array<{ url: string; body: Record<string, unknown> }> = [];
+    const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
+
+    await validateAdvisorBriefWorkflowPackReviewChain({
+      summary,
+      gatewayBaseUrl: "http://gateway.dev.lotus",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+      canonicalStartDate: "2025-03-31",
+      canonicalAsOfDate: "2026-04-10",
+      timeoutMs: 1000,
+      preRecordedAcceptReviewer: "live.validator.ui",
+      fetchJson: async (_summary: unknown, url: string) => {
+        if (
+          url.includes("detail_basis=NET") &&
+          url.includes("report_start_date=2025-03-31")
+        ) {
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-net",
+            reviewState: "ACCEPTED",
+            allowedReviewActions: [],
+            supportabilityStatus: "READY",
+            taskFlowId: "taskflow-explicit-net",
+            taskFlowStatus: "COMPLETED",
+            taskFlowSupportabilityStatus: "READY",
+            handoffStatus: "READY_FOR_HANDOFF",
+            latestReviewActor: "live.validator.ui",
+          });
+        }
+        return fetchAdvisorBriefPayload(url);
+      },
+      postJson: async (
+        _summary: unknown,
+        url: string,
+        _description: string,
+        _timeoutMs: number,
+        body: Record<string, unknown>
+      ) => {
+        postCalls.push({ url, body });
+        if (body.action_type === "SUPERSEDE") {
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-net",
+            reviewState: "SUPERSEDED",
+            supportabilityStatus: "HISTORICAL",
+            superseded: true,
+            replacementRunId: body.replacement_run_id,
+            taskFlowId: "taskflow-explicit-net",
+            taskFlowStatus: "SUPERSEDED",
+            taskFlowSupportabilityStatus: "HISTORICAL",
+          });
+        }
+        return createAdvisorBriefPayload({
+          runId: "packrun-explicit-gross",
+          reviewState: "REVISED",
+          supportabilityStatus: "HISTORICAL",
+          superseded: true,
+          replacementRunId: body.replacement_run_id,
+          taskFlowId: "taskflow-explicit-gross",
+          taskFlowStatus: "SUPERSEDED",
+          taskFlowSupportabilityStatus: "HISTORICAL",
+        });
+      },
+    });
+
+    expect(postCalls.map(({ body }) => body.action_type)).toEqual([
+      "SUPERSEDE",
+      "REVISE",
+    ]);
+    expect(summary.workflowPackChecks[0]).toEqual(
+      expect.objectContaining({
+        actionType: "ACCEPT",
+        sourceRunId: "packrun-explicit-net",
+        resultReviewState: "ACCEPTED",
+        proofSource: "source-confirmed-browser-action",
+      })
+    );
+  });
+
   it("accepts truthfully action-required accept posture when the run remains degraded", async () => {
     const summary = createSummary();
     const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
@@ -289,6 +382,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
+            latestReviewActor: "live.validator.accept",
           });
         }
         if (body.action_type === "SUPERSEDE") {
