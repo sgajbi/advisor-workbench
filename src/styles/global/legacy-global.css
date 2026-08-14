@@ -9703,7 +9703,6 @@
   line-height: 1.45;
 }
 
-.performance-contribution-context-note,
 .performance-analysis-contribution-context {
   display: grid;
   gap: 0.14rem;
@@ -9713,14 +9712,12 @@
   background: rgba(248, 250, 252, 0.96);
 }
 
-.performance-contribution-context-note strong,
 .performance-analysis-contribution-context strong {
   color: var(--brand-strong);
   font-size: var(--text-sm);
   line-height: 1.35;
 }
 
-.performance-contribution-context-note span,
 .performance-analysis-contribution-context span {
   color: var(--text-muted);
   font-size: var(--workbench-analytic-support-size);

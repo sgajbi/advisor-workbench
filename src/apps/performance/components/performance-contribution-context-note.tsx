@@ -1,64 +1,62 @@
 import type { ContributionSummaryView } from "@/features/workbench/types";
 
-import {
-  getContributionCoverageAssessment,
-  getContributionReconciliationAssessment,
-} from "./performance-workspace-view-helpers";
+import { cx } from "@/design-system/utils/cx";
 
-function formatContributionWeightingScheme(weightingScheme?: string | null) {
-  switch (weightingScheme?.trim().toUpperCase()) {
-    case "BOD":
-      return "BOD weighting";
-    case "EOD":
-      return "EOD weighting";
-    case "AVERAGE_WEIGHT":
-      return "Average weight";
-    default:
-      return weightingScheme?.trim() || null;
-  }
-}
-
-function formatContributionStatus(label: string, status?: string | null) {
-  const normalized = status?.trim();
-  return normalized ? `${label}: ${normalized}` : null;
-}
+import { getContributionEvidencePresentation } from "./performance-contribution-evidence-presentation";
+import PerformanceModuleDisclosure from "./performance-module-disclosure";
+import styles from "./performance-contribution-context-note.module.css";
 
 export default function PerformanceContributionContextNote({
   contribution,
-  className = "performance-contribution-context-note",
+  className,
   showReconciliation = true,
 }: {
   contribution: ContributionSummaryView;
   className?: string;
   showReconciliation?: boolean;
 }) {
-  const coverageText = [
-    getContributionCoverageAssessment(contribution) ?? "Coverage unavailable",
-    formatContributionWeightingScheme(contribution.weighting_scheme),
-  ]
-    .filter(Boolean)
-    .join(" • ");
-  const evidenceText = [
-    formatContributionStatus("Source economics", contribution.source_economics_evidence?.status),
-    formatContributionStatus("Smoothing", contribution.smoothing_evidence?.status),
-  ]
-    .filter(Boolean)
-    .join(" • ");
-  const sourceReasonText = contribution.source_economics_evidence?.reason_codes.length
-    ? `Source reasons: ${contribution.source_economics_evidence.reason_codes.join(", ")}`
-    : null;
+  const presentation = getContributionEvidencePresentation(contribution);
+  const evidenceItems = showReconciliation
+    ? presentation.evidenceItems
+    : presentation.evidenceItems.filter((item) => item.label !== "Reconciliation");
 
   return (
-    <div className={className} role="note">
-      <strong>{coverageText}</strong>
-      {evidenceText ? <span>{evidenceText}</span> : null}
-      {sourceReasonText ? <span>{sourceReasonText}</span> : null}
-      {showReconciliation ? (
-        <span>
-          {getContributionReconciliationAssessment(contribution) ??
-            "Contribution-to-return reconciliation unavailable for this selection."}
-        </span>
-      ) : null}
+    <div
+      className={cx(styles.root, className)}
+      data-tone={presentation.tone}
+      data-testid="performance-contribution-evidence"
+      role="note"
+    >
+      <div className={styles.decision}>
+        <span className={styles.eyebrow}>Advisor use</span>
+        <strong className={styles.title}>{presentation.title}</strong>
+        <p className={styles.body}>{presentation.body}</p>
+        <p className={styles.context}>{presentation.context}</p>
+        {presentation.limitations.length > 0 ? (
+          <ul className={styles.limitations} aria-label="Contribution evidence limitations">
+            {presentation.limitations.map((limitation) => (
+              <li key={limitation}>{limitation}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      <PerformanceModuleDisclosure
+        className={styles.disclosure}
+        summaryClassName={styles.summary}
+        titleClassName={styles.summaryTitle}
+        title="Calculation evidence"
+        meta={`${evidenceItems.length} evidence fields`}
+        metaClassName={styles.summaryMeta}
+      >
+        <dl className={styles.evidenceGrid} aria-label="Contribution calculation evidence">
+          {evidenceItems.map((item) => (
+            <div className={styles.evidenceItem} key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </PerformanceModuleDisclosure>
     </div>
   );
 }
