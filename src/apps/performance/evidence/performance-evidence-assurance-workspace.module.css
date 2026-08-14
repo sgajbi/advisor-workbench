@@ -295,6 +295,19 @@
   text-decoration: none;
 }
 
+.recordUnavailable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.42rem 0.58rem;
+  border: 1px solid rgb(137 56 49 / 20%);
+  border-radius: 8px;
+  background: rgb(137 56 49 / 5%);
+  color: #783c37;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
 .recordLink:hover {
   border-color: rgb(20 80 122 / 38%);
   background: #f5f9fc;

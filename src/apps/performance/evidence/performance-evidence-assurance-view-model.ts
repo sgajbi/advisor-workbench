@@ -18,7 +18,7 @@ export type PerformanceEvidenceException = {
 export type PerformanceEvidenceRecord = {
   key: string;
   label: string;
-  href: string;
+  href: string | null;
   support: string;
 };
 
@@ -78,6 +78,8 @@ const FAILED_STATUSES: readonly string[] = ["cancelled", "failed", "rejected", "
 const FRESH_STATES: readonly string[] = ["current", "fresh"];
 const STALE_STATES: readonly string[] = ["expired", "stale"];
 const UNAVAILABLE_STATES: readonly string[] = ["missing", "unavailable"];
+const GATEWAY_API_PREFIX = "/api/v1/";
+const WORKBENCH_BFF_API_PREFIX = "/api/bff/api/v1/";
 
 export function buildPerformanceEvidenceAssuranceViewModel(
   capability: WorkspaceCapability,
@@ -236,14 +238,27 @@ function buildRecord(
         : artifact.archive_document_id
           ? "Archived evidence document"
           : `Supporting record ${index + 1}`;
+  const href = buildEvidenceRecordHref(
+    artifact.archive_document_download_url ?? artifact.url
+  );
   return {
     key: `${artifact.artifact_name}-${index}`,
     label,
-    href: artifact.archive_document_download_url ?? artifact.url,
-    support: artifact.archive_document_id
-      ? "Open the governed archived document through the Workbench evidence boundary."
-      : "Open the source-published record for this calculation.",
+    href,
+    support: href
+      ? artifact.archive_document_id
+        ? "Open the governed archived document through the Workbench evidence boundary."
+        : "Open the source-published record through the Workbench evidence boundary."
+      : "This source-published route is not available through the Workbench evidence boundary.",
   };
+}
+
+function buildEvidenceRecordHref(value: string | null | undefined): string | null {
+  const route = value?.trim();
+  if (!route) return null;
+  if (route.startsWith(WORKBENCH_BFF_API_PREFIX)) return route;
+  if (route.startsWith(GATEWAY_API_PREFIX)) return `/api/bff${route}`;
+  return null;
 }
 
 function buildExceptions(
@@ -273,6 +288,16 @@ function buildExceptions(
   safeArray(evidence.calculations).forEach((calculation, index) => {
     appendLifecycleException(exceptions, calculation.execution_status, "calculation", index);
     appendLifecycleException(exceptions, calculation.lineage_status, "evidence", index);
+    safeArray(calculation.artifacts).forEach((artifact, artifactIndex) => {
+      if (buildEvidenceRecordHref(artifact.archive_document_download_url ?? artifact.url)) return;
+      exceptions.push({
+        key: `artifact-route-${index}-${artifactIndex}`,
+        title: "Supporting record route unavailable",
+        detail: "A source-published supporting record is not exposed through the Workbench evidence boundary.",
+        action: "Use support details to identify the record and request a governed Gateway route before relying on it.",
+        tone: "danger",
+      });
+    });
   });
 
   Object.entries(evidence.input_freshness ?? {}).forEach(([key, value]) => {

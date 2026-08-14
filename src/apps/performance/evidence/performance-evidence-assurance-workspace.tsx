@@ -172,10 +172,14 @@ export default function PerformanceEvidenceAssuranceWorkspace({
                       <ul className={styles.recordList} aria-label={`${calculation.title} supporting records`}>
                         {calculation.records.map((record) => (
                           <li key={record.key}>
-                            <a href={record.href} className={styles.recordLink}>
-                              <span>{record.label}</span>
-                              <span aria-hidden="true">↗</span>
-                            </a>
+                            {record.href ? (
+                              <a href={record.href} className={styles.recordLink}>
+                                <span>{record.label}</span>
+                                <span aria-hidden="true">↗</span>
+                              </a>
+                            ) : (
+                              <span className={styles.recordUnavailable}>{record.label}</span>
+                            )}
                             <span className={styles.recordSupport}>{record.support}</span>
                           </li>
                         ))}
