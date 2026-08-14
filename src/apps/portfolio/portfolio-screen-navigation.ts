@@ -184,7 +184,12 @@ export function buildPortfolioScreenNavigationModel(
     currentTask: activeItem?.primary ? null : activeItem,
     directoryGroups: PORTFOLIO_SCREEN_NAVIGATION_GROUPS.map((group) => ({
       ...group,
-      items: items.filter((item) => !item.primary && item.group === group.key),
+      items: items.filter(
+        (item) =>
+          !item.primary &&
+          item.group === group.key &&
+          item.key !== activeItem?.key,
+      ),
     })).filter((group) => group.items.length > 0),
   };
 }

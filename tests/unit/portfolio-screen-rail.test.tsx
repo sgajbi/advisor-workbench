@@ -161,6 +161,9 @@ describe("PortfolioScreenRail", () => {
     expect(screen.getByText("Portfolio records")).toBeInTheDocument();
     expect(screen.getByText("Analysis")).toBeInTheDocument();
     expect(screen.getByText("Advice and proposals")).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: /income and activity booked income/i }),
+    ).toHaveLength(1);
     const holdingsLink = screen.getByRole("link", { name: /holdings valuation/i });
     expect(holdingsLink).toHaveAttribute(
       "href",
