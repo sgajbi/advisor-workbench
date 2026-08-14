@@ -903,18 +903,6 @@ async function run() {
       advisorBrief.workflow_pack_run.supportability_status,
   });
 
-  await validateAdvisorBriefWorkflowPackReviewChain({
-    summary,
-    gatewayBaseUrl,
-    portfolioId,
-    benchmarkCode,
-    canonicalStartDate,
-    canonicalAsOfDate,
-    timeoutMs,
-    fetchJson,
-    postJson,
-  });
-
   const advisoryScenario =
     canonicalContract.advisoryProposalScenarios ??
     DEFAULT_CANONICAL_CONTRACT.advisoryProposalScenarios;
@@ -2044,6 +2032,18 @@ async function run() {
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
       performAcceptReviewActionProof: true,
+    });
+    await validateAdvisorBriefWorkflowPackReviewChain({
+      summary,
+      gatewayBaseUrl,
+      portfolioId,
+      benchmarkCode,
+      canonicalStartDate,
+      canonicalAsOfDate,
+      timeoutMs,
+      fetchJson,
+      postJson,
+      preRecordedAcceptReviewer: "live.validator.ui",
     });
     await validateProposalNarrativePosturePanel(page, {
       summary,

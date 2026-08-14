@@ -160,6 +160,32 @@ function assertAcceptedRunPosture(payload) {
   return run;
 }
 
+function assertAcceptedReviewAudit(run, expectedReviewer) {
+  if (run.review_pending !== false) {
+    throw new Error("Advisor brief ACCEPT proof did not clear review_pending.");
+  }
+  if (run.latest_review_actor !== expectedReviewer) {
+    throw new Error(
+      `Advisor brief ACCEPT proof returned reviewer '${String(
+        run.latest_review_actor
+      )}' instead of '${expectedReviewer}'.`
+    );
+  }
+  if (
+    run.has_review_history !== true ||
+    !Number.isInteger(run.review_transition_count) ||
+    run.review_transition_count < 1
+  ) {
+    throw new Error("Advisor brief ACCEPT proof returned no recorded review transition history.");
+  }
+  if (
+    typeof run.latest_review_event_at !== "string" ||
+    !Number.isFinite(Date.parse(run.latest_review_event_at))
+  ) {
+    throw new Error("Advisor brief ACCEPT proof returned no valid review event time.");
+  }
+}
+
 function isReviewActionAllowed(payload, actionType) {
   const run = assertWorkflowPackRunPresence(payload, `Advisor brief ${actionType} source run`);
   const allowedActions = Array.isArray(run.allowed_review_actions)
@@ -238,6 +264,7 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
   timeoutMs,
   fetchJson,
   postJson,
+  preRecordedAcceptReviewer = null,
 }) {
   const acceptQuery = buildAdvisorBriefWorkspaceQuery({
     period: "EXPLICIT",
@@ -254,22 +281,41 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     "Advisor brief ACCEPT source run",
     timeoutMs
   );
-  if (!isReviewActionAllowed(acceptSource, "ACCEPT")) {
+  const acceptSourceRun = assertWorkflowPackRunPresence(
+    acceptSource,
+    "Advisor brief ACCEPT source run"
+  );
+  let acceptedBrief;
+  let acceptedReviewer;
+  let proofSource;
+  if (isReviewActionAllowed(acceptSource, "ACCEPT")) {
+    acceptedReviewer = "live.validator.accept";
+    proofSource = "validator-api-action";
+    acceptedBrief = await postJson(
+      summary,
+      `${gatewayBaseUrl}${acceptRoute}`,
+      "Advisor brief ACCEPT review action",
+      timeoutMs,
+      {
+        action_type: "ACCEPT",
+        reviewed_by: acceptedReviewer,
+        reason: "Live canonical validator proving bounded ACCEPT review posture.",
+      }
+    );
+  } else if (
+    acceptSourceRun.review_state === "ACCEPTED" &&
+    typeof preRecordedAcceptReviewer === "string" &&
+    preRecordedAcceptReviewer.trim()
+  ) {
+    acceptedReviewer = preRecordedAcceptReviewer.trim();
+    proofSource = "source-confirmed-browser-action";
+    acceptedBrief = acceptSource;
+  } else {
     recordSkippedReviewAction(summary, acceptSource, "ACCEPT", acceptRoute);
     return;
   }
-  const acceptedBrief = await postJson(
-    summary,
-    `${gatewayBaseUrl}${acceptRoute}`,
-    "Advisor brief ACCEPT review action",
-    timeoutMs,
-    {
-      action_type: "ACCEPT",
-      reviewed_by: "live.validator.accept",
-      reason: "Live canonical validator proving bounded ACCEPT review posture.",
-    }
-  );
   const acceptedRun = assertAcceptedRunPosture(acceptedBrief);
+  assertAcceptedReviewAudit(acceptedRun, acceptedReviewer);
   const acceptedTaskFlow = assertAcceptedTaskFlowPosture(acceptedBrief, acceptedRun.run_id);
   recordWorkflowPackCheck(summary, {
     actionType: "ACCEPT",
@@ -280,6 +326,7 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     taskFlowSupportabilityStatus: acceptedTaskFlow.supportability_status,
     resultReviewState: acceptedRun.review_state,
     resultSupportabilityStatus: acceptedRun.supportability_status,
+    proofSource,
   });
 
   const supersedeOriginalQuery = buildAdvisorBriefWorkspaceQuery({

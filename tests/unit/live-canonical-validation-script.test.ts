@@ -1251,6 +1251,15 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Confirm acceptance");
     expect(browserWorkflowModule).not.toContain("Advisor brief review actions");
     expect(browserWorkflowModule).not.toContain("not-currently-allowed");
+    const advisorBriefBrowserProofIndex = script.indexOf(
+      "await validateAdvisorBriefPanel(page",
+    );
+    const advisorBriefApiProofIndex = script.indexOf(
+      "await validateAdvisorBriefWorkflowPackReviewChain",
+    );
+    expect(advisorBriefBrowserProofIndex).toBeGreaterThan(-1);
+    expect(advisorBriefApiProofIndex).toBeGreaterThan(advisorBriefBrowserProofIndex);
+    expect(script).toContain('preRecordedAcceptReviewer: "live.validator.ui"');
     expect(browserWorkflowModule).toContain("Advisor Talking Points");
     expect(browserWorkflowModule).not.toContain("Client Talking Points");
     expect(browserWorkflowModule).toContain(
