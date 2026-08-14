@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import styles from "./app-shell.module.css";
+
 type SearchParamsReader = Pick<URLSearchParams, "get">;
 
 export function buildAdvisorBookHref(searchParams: SearchParamsReader): string {
@@ -20,7 +22,7 @@ export default function AdvisorBookLink() {
   const searchParams = useSearchParams();
 
   return (
-    <Link href={buildAdvisorBookHref(searchParams)} className="shell-book-link">
+    <Link href={buildAdvisorBookHref(searchParams)} className={styles.bookLink}>
       <small>Advisor</small>
       <strong>My book</strong>
     </Link>

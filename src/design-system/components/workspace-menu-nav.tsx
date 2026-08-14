@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useId, useRef, useState } from "react";
 
 import { cx } from "../utils/cx";
+import styles from "./workspace-menu-nav.module.css";
 
 export type WorkspaceMenuNavItem = {
   key: string;
@@ -37,7 +38,7 @@ export default function WorkspaceMenuNav({
 
   return (
     <nav
-      className={cx("workspace-menu-nav", className)}
+      className={cx(styles.root, className)}
       aria-label={ariaLabel}
       data-current-workspace={activeItem?.key ?? "none"}
       onKeyDown={(event) => {
@@ -52,7 +53,7 @@ export default function WorkspaceMenuNav({
       <button
         ref={disclosureRef}
         type="button"
-        className="workspace-menu-trigger"
+        className={styles.trigger}
         aria-label={`Switch workspace. Current workspace ${activeItem?.label ?? "not selected"}`}
         aria-expanded={expanded}
         aria-controls={disclosureId}
@@ -67,19 +68,19 @@ export default function WorkspaceMenuNav({
 
       <div
         id={disclosureId}
-        className="workspace-menu-panel"
+        className={styles.panel}
         hidden={!expanded}
       >
-        <span className="workspace-menu-label">Available workspaces</span>
-        <div className="workspace-menu-list">
+        <span className={styles.label}>Available workspaces</span>
+        <div className={styles.list}>
           {items.map((item) =>
             item.disabled || !item.href ? (
               <span
                 key={item.key}
                 className={cx(
-                  "workspace-menu-link",
-                  item.active && "workspace-menu-link-active",
-                  "workspace-menu-link-disabled",
+                  styles.link,
+                  item.active && styles.linkActive,
+                  styles.linkDisabled,
                 )}
                 aria-disabled="true"
                 aria-current={item.active ? "page" : undefined}
@@ -94,8 +95,8 @@ export default function WorkspaceMenuNav({
                 href={item.href}
                 aria-label={item.label}
                 className={cx(
-                  "workspace-menu-link",
-                  item.active && "workspace-menu-link-active",
+                  styles.link,
+                  item.active && styles.linkActive,
                 )}
                 title={item.title}
                 aria-current={item.active ? "page" : undefined}

@@ -1,0 +1,83 @@
+.topbarActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.bookLink {
+  display: grid;
+  align-content: center;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.78rem;
+  border-left: 1px solid rgba(87, 121, 157, 0.28);
+  color: var(--brand-strong);
+}
+
+.bookLink small,
+.workspaceLoading small {
+  color: #60718a;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 760;
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.bookLink strong {
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.bookLink:hover {
+  color: #274d78;
+}
+
+.workspaceLoading {
+  width: 11.5rem;
+  height: 2.75rem;
+  display: grid;
+  align-content: center;
+  gap: 0.08rem;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid rgba(87, 121, 157, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.workspaceLoading strong {
+  color: #53657d;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+@media (max-width: 640px) {
+  .topbarMain {
+    padding-inline: 0.55rem;
+  }
+
+  .productContext {
+    display: none;
+  }
+
+  .topbarActions {
+    gap: 0.35rem;
+  }
+
+  .bookLink {
+    min-height: 2.65rem;
+    padding-inline: 0.52rem;
+  }
+
+  .bookLink small {
+    display: none;
+  }
+
+  .workspaceLoading {
+    min-width: 9.4rem;
+    width: 9.4rem;
+  }
+}
