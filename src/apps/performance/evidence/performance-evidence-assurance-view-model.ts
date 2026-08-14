@@ -699,6 +699,19 @@ function buildExceptions(
     const state = normalise(item.state);
     const freshness = normalise(item.freshness_bucket);
     const sourceReference = `${item.source_service || "source"}-${item.operation || item.key || "entry"}-${index}`;
+    if (
+      !item.source_service?.trim() ||
+      !(item.operation?.trim() || item.key?.trim())
+    ) {
+      exceptions.push({
+        key: `source-supportability-identity-${index}`,
+        title: "Source supportability identity not confirmed",
+        detail:
+          "A supportability assessment does not identify both its responsible source and calculation reference.",
+        action: "Obtain source-owned supportability evidence before relying on the assurance conclusion.",
+        tone: "warn",
+      });
+    }
     if (STALE_STATES.includes(freshness)) {
       exceptions.push({
         key: `source-supportability-${sourceReference}`,
