@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "delivery": "same-origin",
+  "forbiddenRuntimeHosts": [
+    "fonts.googleapis.com",
+    "fonts.gstatic.com"
+  ],
+  "families": [
+    {
+      "family": "Inter",
+      "role": "operational-ui",
+      "version": "4.1",
+      "license": "OFL-1.1",
+      "upstream": {
+        "repository": "https://github.com/rsms/inter",
+        "tag": "v4.1",
+        "commit": "e3a3d4c57d5ecc01453a575621882a384c1995a3"
+      },
+      "licenseFile": {
+        "path": "docs/licenses/fonts/Inter-OFL-1.1.txt",
+        "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+      },
+      "assets": [
+        {
+          "path": "src/assets/fonts/inter-variable-v4.1.woff2",
+          "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+          "style": "normal",
+          "weight": "100 900"
+        }
+      ]
+    },
+    {
+      "family": "Cormorant Garamond",
+      "role": "brand-display",
+      "version": "4.002",
+      "license": "OFL-1.1",
+      "upstream": {
+        "repository": "https://github.com/CatharsisFonts/Cormorant",
+        "tag": "v4.002",
+        "commit": "b149467f785bc38e5417b68faa2d32bac8d7db5f"
+      },
+      "licenseFile": {
+        "path": "docs/licenses/fonts/Cormorant-Garamond-OFL-1.1.txt",
+        "sha256": "60700d351cac4650c51f3f9db318d2a420f8b45052dba2715eb5fec41f0f6956"
+      },
+      "assets": [
+        {
+          "path": "src/assets/fonts/cormorant-garamond-semibold-v4.002.woff2",
+          "sha256": "af765967938cc1bd47f6de51c0b7992f22ebbd4b58f1fd8c1f37a3dbb80b26c3",
+          "style": "normal",
+          "weight": "600"
+        },
+        {
+          "path": "src/assets/fonts/cormorant-garamond-bold-v4.002.woff2",
+          "sha256": "1554453dd2014baa6ddcea1f8b363031cc04f1057e5140923f05eb6f94fedd17",
+          "style": "normal",
+          "weight": "700"
+        }
+      ]
+    },
+    {
+      "family": "IBM Plex Mono",
+      "role": "technical-evidence",
+      "version": "6.4.2",
+      "license": "OFL-1.1",
+      "upstream": {
+        "repository": "https://github.com/IBM/plex",
+        "tag": "v6.4.2",
+        "commit": "242c4cccd37e87985a5337815c99b960ef13c65c"
+      },
+      "licenseFile": {
+        "path": "docs/licenses/fonts/IBM-Plex-Mono-OFL-1.1.txt",
+        "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360"
+      },
+      "assets": [
+        {
+          "path": "src/assets/fonts/ibm-plex-mono-regular-v6.4.2.woff2",
+          "sha256": "49ce58b41a0e1cb921c0f58d9a5b8b96a2cc21437c7066f3ba4f24873076d131",
+          "style": "normal",
+          "weight": "400"
+        },
+        {
+          "path": "src/assets/fonts/ibm-plex-mono-medium-v6.4.2.woff2",
+          "sha256": "8c2c290cbd998fa1f647e4572aca6ebbd72589551b0f3f9f8bb8628fbb8219d5",
+          "style": "normal",
+          "weight": "500"
+        }
+      ]
+    }
+  ]
+}

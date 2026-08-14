@@ -45,9 +45,9 @@ export const lotusThemeTokens = {
   },
   typography: {
     fontFamily: {
-      ui: '"Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      display: '"Cormorant Garamond", Georgia, serif',
-      mono: '"IBM Plex Mono", ui-monospace, monospace',
+      ui: 'var(--font-lotus-ui-face), "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      display: "var(--font-lotus-display-face), Georgia, serif",
+      mono: 'var(--font-lotus-mono-face), "IBM Plex Mono", ui-monospace, monospace',
     },
     size: {
       text2xs: "0.6875rem",
