@@ -138,7 +138,7 @@ function getContributionEvidenceDecision({
     return {
       tone: "review",
       title: "Contribution coverage cannot be confirmed",
-      body: "Lotus did not receive source-economics evidence for this calculation. Review the calculation evidence before using the drivers in a client discussion.",
+      body: "Lotus did not receive governed portfolio evidence for this calculation. Review the calculation evidence before using the drivers in a client discussion.",
     };
   }
   if (hasIncompleteEvidence) {
@@ -182,8 +182,8 @@ function getContributionEvidenceDecision({
   if (sourceStatus === "CALLER_SUPPLIED") {
     return {
       tone: "review",
-      title: "Contribution input provenance needs confirmation",
-      body: "These figures rely on request-supplied inputs rather than the standard source-owned portfolio record. Confirm the input provenance before client use.",
+      title: "Contribution inputs need confirmation",
+      body: "These figures use request-supplied inputs rather than the governed portfolio record. Confirm the inputs before client use.",
     };
   }
   if (smoothingStatus === "INVALID_DOMAIN_FALLBACK") {
@@ -204,7 +204,7 @@ function getContributionEvidenceDecision({
     return {
       tone: "limited",
       title: "Contribution coverage is limited",
-      body: "The driver ranking uses the available source-owned portfolio economics, but the evidence has published limitations. Review the stated exclusions before using the explanation with a client.",
+      body: "The driver ranking uses the available governed portfolio data, but the calculation has published limitations. Review the stated exclusions before using the explanation with a client.",
     };
   }
   if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "limited") {
@@ -218,7 +218,7 @@ function getContributionEvidenceDecision({
     return {
       tone: "confirmed",
       title: "Contribution coverage is confirmed",
-      body: "The published driver view is supported by source-owned portfolio economics for the selected period. Use the displayed coverage and reconciliation when preparing the client explanation.",
+      body: "The published driver view is supported by governed portfolio data for the selected period. Use the displayed coverage and reconciliation when preparing the client explanation.",
     };
   }
   return {

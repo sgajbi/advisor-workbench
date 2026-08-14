@@ -343,7 +343,7 @@ describe("PerformanceContributionContextNote", () => {
 
     const note = screen.getByTestId("performance-contribution-evidence");
     expect(note).toHaveAttribute("data-tone", "review");
-    expect(note).toHaveTextContent("Contribution input provenance needs confirmation");
+    expect(note).toHaveTextContent("Contribution inputs need confirmation");
     expect(note).not.toHaveTextContent("Contribution evidence has a methodology limitation");
   });
 
@@ -519,7 +519,7 @@ describe("PerformanceContributionContextNote", () => {
     const note = screen.getByTestId("performance-contribution-evidence");
     expect(note).toHaveAttribute("data-tone", "review");
     expect(note).toHaveTextContent("Contribution coverage cannot be confirmed");
-    expect(note).toHaveTextContent("Lotus did not receive source-economics evidence");
+    expect(note).toHaveTextContent("Lotus did not receive governed portfolio evidence");
 
     const evidence = openCalculationEvidence();
     expect(within(evidence).getAllByText("Not published").length).toBeGreaterThanOrEqual(3);
