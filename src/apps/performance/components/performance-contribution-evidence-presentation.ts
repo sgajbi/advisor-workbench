@@ -6,6 +6,10 @@ import {
   type ContributionEvidenceInconsistency,
 } from "./performance-contribution-evidence-consistency";
 import {
+  DEGRADED_ECONOMICS_VOCABULARY,
+  UNSUPPORTED_ECONOMICS_VOCABULARY,
+} from "./performance-contribution-evidence-vocabulary";
+import {
   getContributionCoverageAssessment,
   getContributionReconciliationAssessment,
 } from "./performance-workspace-view-helpers";
@@ -58,37 +62,13 @@ const SMOOTHING_REASON_CODES = [
   "NO_CONTRIBUTION_ROWS",
 ] as const;
 
-const UNSUPPORTED_ECONOMICS_LABELS: Record<string, string> = {
-  income_pnl: "income effects",
-  fee_pnl: "fee effects",
-  tax_pnl: "tax effects",
-  price_pnl: "price effects",
-  fx_pnl: "currency effects",
-  realized_pnl: "realized gains and losses",
-  realized_capital_pnl: "realized capital gains and losses",
-  realized_fx_pnl: "realized currency gains and losses",
-  corporate_action_pnl: "corporate-action effects",
-  derivative_pnl: "derivative effects",
-  cash_pnl: "cash effects",
-  loan_pnl: "loan effects",
-  liability_pnl: "liability effects",
-  residual_pnl: "residual effects",
-};
-
-const DEGRADED_ECONOMICS_MESSAGES: Record<string, string> = {
-  performance_component_economics_unavailable:
-    "Component-level source economics are unavailable for this view.",
-  unsupported_cash_flow_types: "Some source cash-flow types are not fully supported.",
-  missing_classification: "Some holdings do not have a source-owned classification.",
-};
-
 export function getContributionEvidencePresentation(
   contribution: ContributionSummaryView,
 ): ContributionEvidencePresentation {
   const sourceEvidence = contribution.source_economics_evidence;
   const smoothingEvidence = contribution.smoothing_evidence;
-  const sourceStatus = normalizeEvidenceValue(sourceEvidence?.status);
-  const smoothingStatus = normalizeEvidenceValue(smoothingEvidence?.status);
+  const sourceStatus = getPublishedEvidenceValue(sourceEvidence?.status);
+  const smoothingStatus = getPublishedEvidenceValue(smoothingEvidence?.status);
   const hasIncompleteEvidence = sourceStatus === null || smoothingStatus === null;
   const unknownSourceCodes = getUnknownValues(sourceEvidence?.reason_codes, SOURCE_REASON_CODES);
   const unknownSmoothingCodes = getUnknownValues(
@@ -278,7 +258,7 @@ function getContributionLimitations(
   const limitations: string[] = [];
   const unsupportedEconomics = sourceEvidence?.unsupported_economics ?? [];
   const mappedUnsupported = unsupportedEconomics
-    .map((item) => UNSUPPORTED_ECONOMICS_LABELS[item])
+    .map((item) => UNSUPPORTED_ECONOMICS_VOCABULARY[item]?.label)
     .filter((item): item is string => Boolean(item));
 
   if (mappedUnsupported.length > 0) {
@@ -289,14 +269,16 @@ function getContributionLimitations(
   }
 
   for (const degradedItem of sourceEvidence?.degraded_economics ?? []) {
-    const message = DEGRADED_ECONOMICS_MESSAGES[degradedItem];
+    const message = DEGRADED_ECONOMICS_VOCABULARY[degradedItem]?.label;
     if (message && !limitations.includes(message)) {
       limitations.push(message);
     }
   }
   if (
     (sourceEvidence?.degraded_economics.length ?? 0) >
-    limitations.filter((item) => Object.values(DEGRADED_ECONOMICS_MESSAGES).includes(item)).length
+    limitations.filter((item) =>
+      Object.values(DEGRADED_ECONOMICS_VOCABULARY).some(({ label }) => label === item),
+    ).length
   ) {
     limitations.push("Additional source economics are degraded.");
   }
@@ -355,7 +337,7 @@ function buildContributionEvidenceItems(
   const smoothingEvidence = contribution.smoothing_evidence;
 
   return [
-    { label: "Source status", value: sourceEvidence?.status?.trim() || "Not published" },
+    { label: "Source status", value: sourceEvidence?.status || "Not published" },
     { label: "Source reason codes", value: formatEvidenceList(sourceEvidence?.reason_codes) },
     { label: "Source contracts", value: formatEvidenceList(sourceEvidence?.source_contracts) },
     { label: "Available economics", value: formatEvidenceList(sourceEvidence?.available_economics) },
@@ -373,7 +355,7 @@ function buildContributionEvidenceItems(
       label: "Weighting basis",
       value: contribution.weighting_scheme?.trim() || "Not published",
     },
-    { label: "Smoothing status", value: smoothingEvidence?.status?.trim() || "Not published" },
+    { label: "Smoothing status", value: smoothingEvidence?.status || "Not published" },
     { label: "Smoothing reason codes", value: formatEvidenceList(smoothingEvidence?.reason_codes) },
     {
       label: "Raw contribution",
@@ -418,7 +400,6 @@ function getUnknownValues(
   knownValues: readonly string[],
 ): string[] {
   return (values ?? [])
-    .map((value) => value.trim())
     .filter((value) => value.length > 0 && !includesEvidenceValue(knownValues, value));
 }
 
@@ -426,9 +407,8 @@ function includesEvidenceValue(knownValues: readonly string[], value: string): b
   return knownValues.includes(value);
 }
 
-function normalizeEvidenceValue(value?: string | null): string | null {
-  const normalized = value?.trim().toUpperCase();
-  return normalized || null;
+function getPublishedEvidenceValue(value?: string | null): string | null {
+  return value === null || value === undefined || value.length === 0 ? null : value;
 }
 
 function formatEvidenceList(values: string[] | undefined): string {
