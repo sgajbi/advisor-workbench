@@ -119,6 +119,61 @@ async function openPerformanceWorkbench(
   return { portfolioId, available: true };
 }
 
+async function expectContributorGroupsToRemainSeparate(page: Page) {
+  const contributors = page.getByTestId('performance-contributor-group-contributors');
+  const detractors = page.getByTestId('performance-contributor-group-detractors');
+  const contributorsHeading = contributors.getByText('Top Contributors', { exact: true });
+  const detractorsHeading = detractors.getByText('Top Detractors', { exact: true });
+
+  await expect(contributors).toBeVisible();
+  await expect(detractors).toBeVisible();
+
+  const [contributorsBox, detractorsBox, contributorsHeadingBox, detractorsHeadingBox] =
+    await Promise.all([
+      contributors.boundingBox(),
+      detractors.boundingBox(),
+      contributorsHeading.boundingBox(),
+      detractorsHeading.boundingBox(),
+    ]);
+
+  expect(contributorsBox).not.toBeNull();
+  expect(detractorsBox).not.toBeNull();
+  expect(contributorsHeadingBox).not.toBeNull();
+  expect(detractorsHeadingBox).not.toBeNull();
+  if (!contributorsBox || !detractorsBox || !contributorsHeadingBox || !detractorsHeadingBox) {
+    throw new Error('Performance contributor group geometry was not available.');
+  }
+
+  const tolerance = 1;
+  const contributorRight = contributorsBox.x + contributorsBox.width;
+  const detractorRight = detractorsBox.x + detractorsBox.width;
+  const contributorBottom = contributorsBox.y + contributorsBox.height;
+  const detractorBottom = detractorsBox.y + detractorsBox.height;
+  const horizontallySeparated =
+    contributorRight <= detractorsBox.x + tolerance ||
+    detractorRight <= contributorsBox.x + tolerance;
+  const verticallySeparated =
+    contributorBottom <= detractorsBox.y + tolerance ||
+    detractorBottom <= contributorsBox.y + tolerance;
+
+  expect(horizontallySeparated || verticallySeparated).toBe(true);
+
+  for (const [group, groupBox, headingBox] of [
+    [contributors, contributorsBox, contributorsHeadingBox],
+    [detractors, detractorsBox, detractorsHeadingBox],
+  ] as const) {
+    const overflow = await group.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(tolerance);
+    expect(headingBox.x).toBeGreaterThanOrEqual(groupBox.x - tolerance);
+    expect(headingBox.x + headingBox.width).toBeLessThanOrEqual(
+      groupBox.x + groupBox.width + tolerance,
+    );
+  }
+}
+
 async function openPerformanceWorkflowStep(
   page: Page,
   name: string | RegExp,
@@ -408,37 +463,7 @@ test.describe('Performance workbench smoke', () => {
       (rowBox?.x ?? horizonBox?.x ?? 0) + (rowBox?.width ?? horizonBox?.width ?? 0) + 1,
     );
 
-    const topContributorsHeading = page.getByText('Top Contributors', { exact: true });
-    const topDetractorsHeading = page.getByText('Top Detractors', { exact: true });
-    const topContributorsCard = topContributorsHeading.locator(
-      'xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]',
-    );
-    const topDetractorsCard = topDetractorsHeading.locator(
-      'xpath=ancestor::*[contains(@class, "performance-contributors-ranked-card")][1]',
-    );
-    const [contributorsHeadingBox, detractorsHeadingBox, contributorsBox, detractorsBox] =
-      await Promise.all([
-        topContributorsHeading.boundingBox(),
-        topDetractorsHeading.boundingBox(),
-        topContributorsCard.boundingBox(),
-        topDetractorsCard.boundingBox(),
-      ]);
-    expect(contributorsBox?.width ?? 0).toBeGreaterThan(180);
-    expect(detractorsBox?.width ?? 0).toBeGreaterThan(180);
-    expect((detractorsBox?.x ?? 0) - (contributorsBox?.x ?? 0)).toBeGreaterThan(160);
-    expect(Math.abs((contributorsBox?.y ?? 0) - (detractorsBox?.y ?? 9999))).toBeLessThanOrEqual(24);
-    expect(
-      Math.abs((contributorsHeadingBox?.y ?? 0) - (detractorsHeadingBox?.y ?? 9999)),
-    ).toBeLessThanOrEqual(4);
-    const driversRightEdge = (driversBox?.x ?? 0) + (driversBox?.width ?? 0);
-    for (const box of [
-      contributorsHeadingBox,
-      detractorsHeadingBox,
-      contributorsBox,
-      detractorsBox,
-    ]) {
-      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(driversRightEdge + 1);
-    }
+    await expectContributorGroupsToRemainSeparate(page);
 
     const chartMetrics = await measureElement(page.locator('.performance-chart-stage'));
     expect(chartMetrics.height).toBeLessThanOrEqual(1300);
@@ -459,6 +484,8 @@ test.describe('Performance workbench smoke', () => {
       await page.setViewportSize({ width, height: 1000 });
       await horizonChoices.scrollIntoViewIfNeeded();
       await expect(horizonChoices).toBeVisible();
+      await driversModule.scrollIntoViewIfNeeded();
+      await expectContributorGroupsToRemainSeparate(page);
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
