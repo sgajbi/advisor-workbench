@@ -79,6 +79,10 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/workbench/{portfolio_id}/performance/attribution-trend`; the browser uses
   `/api/bff/api/v1/...` and keeps history retrieval failure distinct from a source-confirmed empty
   response
+- Performance Evidence consumes the `evidence_view` projected by the Gateway
+  `/api/v1/workbench/{portfolio_id}/performance/{summary,details}` contracts. Source-published
+  artifacts remain on returned Gateway evidence or document routes, and the browser uses only the
+  `/api/bff/api/v1/...` boundary; Workbench does not call Performance or an archive service directly
 - Performance Advisor Brief consumes Gateway
   `/api/v1/workbench/{portfolio_id}/performance/advisor-brief` and records only source-allowed
   internal review decisions through `/performance/advisor-brief/review-actions`; browser requests

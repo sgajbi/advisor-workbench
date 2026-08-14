@@ -542,19 +542,20 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "runtime-capability-gated",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-risk"],
+      "wikiSlug": "Performance-Evidence-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-performance"],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
-        "src/apps/performance/components/performance-workspace-view.tsx"
+        "src/apps/performance/components/performance-workspace-view.tsx",
+        "src/apps/performance/evidence/performance-evidence-assurance-view-model.ts",
+        "src/apps/performance/evidence/performance-evidence-assurance-workspace.tsx"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/performance-workbench.smoke.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "performance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "performance-advisor-brief-alias",

@@ -32,6 +32,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
   [Performance Analysis](Performance-Analysis-Screen-Guide)
+- Exception-first calculation, lineage, coverage, and supporting-record review:
+  [Performance Evidence](Performance-Evidence-Screen-Guide)
 - Source-backed internal talking points, supportability, and confirmed human-review workflow:
   [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - Source-backed relationship-manager book flow:
@@ -94,6 +96,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
 - [Performance Analysis](Performance-Analysis-Screen-Guide)
+- [Performance Evidence](Performance-Evidence-Screen-Guide)
 - [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
