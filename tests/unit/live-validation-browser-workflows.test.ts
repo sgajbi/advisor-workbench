@@ -318,6 +318,7 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("Governed document creation is available.");
     expect(source).toContain("PDF creation is temporarily unavailable");
     expect(source).toContain("return reportCentreProof");
+    expect(source).not.toContain("screenshotRegisteredPanel");
   });
 
   it("resolves governed routes and records screenshot evidence with absolute paths", async () => {
