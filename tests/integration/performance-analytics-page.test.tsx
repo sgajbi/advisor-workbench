@@ -1264,7 +1264,7 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(evidenceTab);
 
     expect(document.querySelector("#performance-evidence.workbench-data-grid-frame")).toBeFalsy();
-    expect(document.querySelector(".performance-evidence-module")).toBeFalsy();
+    expect(screen.queryByTestId("performance-evidence-assurance")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence and Calculation Context")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });

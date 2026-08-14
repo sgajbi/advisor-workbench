@@ -48,6 +48,7 @@
     "test:e2e:performance:horizon-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs horizon-integrity --grep \"horizon comparison failure\"",
     "test:e2e:performance:analysis-controls": "node scripts/testing/run-performance-smoke-scenario.mjs analysis-controls --grep \"Analysis source controls\"",
     "test:e2e:performance:advisor-brief-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"Advisor Brief review transaction\"",
+    "test:e2e:performance:evidence-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"exception-first calculation assurance\"",
     "test:e2e:portfolio:cashflow": "node scripts/testing/run-portfolio-smoke-scenario.mjs cashflow",
     "test:e2e:portfolio:income-activity": "node scripts/testing/run-portfolio-smoke-scenario.mjs income-activity",
     "test:e2e:portfolio:review-matrix": "node scripts/testing/run-portfolio-smoke-scenario.mjs review-matrix",

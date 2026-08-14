@@ -306,7 +306,7 @@ test.describe('Performance workbench smoke', () => {
     }
 
     await expect(page.locator('.performance-analysis-stage')).toHaveCount(0);
-    await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+    await expect(page.getByTestId('performance-evidence-assurance')).toHaveCount(0);
     const workspaceRail = page.getByLabel('Performance surface navigation');
     await expect(
       workspaceRail.getByRole('button', { name: /^Performance Overview$/i }),
@@ -1137,7 +1137,7 @@ test.describe('Performance workbench smoke', () => {
     expect(moduleMetrics.height).toBeLessThan(1200);
   });
 
-  test('evidence mode renders the backed contract posture', async ({ page, request }) => {
+  test('evidence mode proves exception-first calculation assurance', async ({ page, request }, testInfo) => {
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPerformanceWorkbench(page, request);
@@ -1153,20 +1153,53 @@ test.describe('Performance workbench smoke', () => {
     if (posture.capabilities.evidence === 'unavailable') {
       await expect(evidenceTab).toBeDisabled();
       await expect(evidenceTab).toContainText('Unavailable');
-      await expect(page.locator('.performance-evidence-module')).toHaveCount(0);
+      await expect(page.getByTestId('performance-evidence-assurance')).toHaveCount(0);
       return;
     }
     await expect(evidenceTab).toBeEnabled();
     await evidenceTab.click();
     await expect(evidenceTab).toHaveAttribute('aria-current', 'page');
-    await expect(page.locator('.performance-evidence-module')).toBeVisible({ timeout: 15000 });
-    await expect(
-      page.getByRole('heading', { name: /^Evidence and Calculation Context$/i })
-    ).toBeVisible({ timeout: 15000 });
-    await expect(
-      page
-        .getByText('Evidence posture')
-        .or(page.getByText('Evidence partially available')),
-    ).toBeVisible();
+    const assurance = page.getByTestId('performance-evidence-assurance');
+    await expect(assurance).toBeVisible({ timeout: 15000 });
+    await expect(assurance).toHaveAttribute(
+      'data-assurance-state',
+      /^(ready|attention|incomplete|unavailable)$/,
+    );
+    await expect(page.getByRole('heading', { name: /^Calculation assurance$/i })).toBeVisible();
+    await expect(assurance.getByRole('heading', { name: /^Control exceptions$/i })).toBeVisible();
+    await expect(assurance.getByRole('heading', { name: /^Calculation coverage$/i })).toBeVisible();
+
+    const supportDetails = assurance.locator('details').filter({
+      hasText: 'Technical support details',
+    });
+    const supportSummary = supportDetails.locator('summary');
+    await expect(supportDetails).not.toHaveAttribute('open', '');
+    await expect(assurance.getByText('lotus-performance', { exact: true })).not.toBeVisible();
+
+    await supportSummary.focus();
+    await page.keyboard.press('Enter');
+    await expect(supportDetails).toHaveAttribute('open', '');
+    await expect(supportSummary).toBeFocused();
+    await expect(assurance.getByText('lotus-performance', { exact: true })).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(supportDetails).not.toHaveAttribute('open', '');
+    await expect(supportSummary).toBeFocused();
+
+    for (const viewport of [
+      { width: 1024, height: 1100 },
+      { width: 720, height: 1100 },
+      { width: 390, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(assurance).toBeVisible();
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+      await testInfo.attach(`calculation-assurance-${viewport.width}px`, {
+        body: await page.screenshot({ animations: 'disabled', fullPage: true }),
+        contentType: 'image/png',
+      });
+    }
   });
 });
