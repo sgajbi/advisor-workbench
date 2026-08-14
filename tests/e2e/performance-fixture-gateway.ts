@@ -231,6 +231,24 @@ function buildReviewedAdvisorBriefResponse(
       current_summary_note: 'Review decision recorded for permitted internal workflow use.',
       findings: [],
     },
+    workflow_pack_task_flow: {
+      ...brief.workflow_pack_task_flow!,
+      flow_status: 'COMPLETED',
+      current_step_id: null,
+      review_states: {
+        packrun_advisor_brief_e2e: 'ACCEPTED',
+      },
+      supportability_status: 'READY',
+      handoff_refs: [
+        {
+          handoff_id: 'taskflow_advisor_brief_e2e_handoff_packrun_advisor_brief_e2e',
+          owner_service: 'lotus-gateway',
+          status: 'READY_FOR_HANDOFF',
+          domain_ref: null,
+        },
+      ],
+      updated_at: '2026-04-21T03:22:00Z',
+    },
   };
 }
 
@@ -311,6 +329,21 @@ function buildAdvisorBriefResponse(portfolioId: string): WorkbenchPerformanceAdv
       current_summary_note: 'Human review is required before downstream use.',
       replacement_run_id: null,
       findings: [],
+    },
+    workflow_pack_task_flow: {
+      task_flow_id: 'taskflow_advisor_brief_e2e',
+      workflow_pack_id: 'advisor_brief.pack',
+      version: 'v1',
+      flow_status: 'WAITING_FOR_REVIEW',
+      current_step_id: 'generate_advisor_brief',
+      run_refs: ['packrun_advisor_brief_e2e'],
+      review_states: {
+        packrun_advisor_brief_e2e: 'AWAITING_REVIEW',
+      },
+      supportability_status: 'ACTION_REQUIRED',
+      replacement_lineage: [],
+      handoff_refs: [],
+      updated_at: '2026-04-21T03:00:00Z',
     },
     ai_audit: {
       task_id: 'explain.v1',

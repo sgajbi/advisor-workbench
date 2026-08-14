@@ -980,6 +980,24 @@ describe("PerformanceAdvisorBriefMode", () => {
         replacement_run_id: "packrun_advisor_brief_req-2",
         findings: [],
       },
+      workflow_pack_task_flow: {
+        ...readyAdvisorBriefResponse.workflow_pack_task_flow!,
+        flow_status: "SUPERSEDED",
+        current_step_id: null,
+        review_states: {
+          "packrun_advisor_brief_req-1": "REVISED",
+        },
+        supportability_status: "HISTORICAL",
+        replacement_lineage: [
+          {
+            superseded_run_id: "packrun_advisor_brief_req-1",
+            replacement_run_id: "packrun_advisor_brief_req-2",
+            review_action_ref: "REVISE",
+            reason: "A replacement advisor brief run is available for downstream use.",
+          },
+        ],
+        handoff_refs: [],
+      },
     });
 
     const workspace = buildSupportedPerformanceScenario().workspace;
