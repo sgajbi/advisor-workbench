@@ -732,7 +732,10 @@ describe("PerformanceAnalyticsPage", () => {
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
     });
-    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Source-grounded");
+    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Ready");
+    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent(
+      "Evidence available"
+    );
     expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );

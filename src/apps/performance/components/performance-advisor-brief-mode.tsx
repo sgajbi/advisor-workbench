@@ -25,7 +25,32 @@ import PerformanceWorkspaceSection from "./performance-workspace-section";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
 import styles from "./performance-advisor-brief-mode.module.css";
 
-export default function PerformanceAdvisorBriefMode({
+export default function PerformanceAdvisorBriefMode(props: PerformanceAdvisorBriefModeProps) {
+  const {
+    workspace,
+    period,
+    detailBasis,
+    contributionDimension,
+    attributionDimension,
+    chartFrequency,
+    benchmark,
+  } = props;
+  const sessionKey = JSON.stringify({
+    portfolioId: workspace.portfolio.portfolio_id,
+    period,
+    detailBasis,
+    contributionDimension,
+    attributionDimension,
+    chartFrequency,
+    benchmark: workspace.benchmark_code ?? benchmark ?? null,
+    reportStartDate: workspace.report_start_date,
+    reportEndDate: workspace.report_end_date,
+  });
+
+  return <PerformanceAdvisorBriefModeSession key={sessionKey} {...props} />;
+}
+
+function PerformanceAdvisorBriefModeSession({
   workspace,
   capabilities,
   period,
@@ -182,6 +207,7 @@ export default function PerformanceAdvisorBriefMode({
                 </PerformanceWorkspaceSection>
                 {index === 0 && workflowPackRun ? (
                   <AdvisorBriefReviewWorkflow
+                    key={`${workflowPackRun.run_id}:${workflowPackRun.review_state}`}
                     workflowPackRun={workflowPackRun}
                     feedback={reviewActionFeedback}
                     isApplying={isApplyingReviewAction}
