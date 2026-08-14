@@ -214,7 +214,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       evidence({
         source_supportability: [
           {
-            key: "source_calculation",
+            operation: "performance.attribution",
             state: "supported",
             freshness_bucket: "stale",
             source_service: "lotus-performance",
@@ -238,6 +238,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
         { label: "Source 1", value: "lotus-performance" },
         { label: "Source 1 freshness", value: "stale" },
         { label: "Source 1 reason", value: "Source data window is stale." },
+        { label: "Source 1 reference", value: "performance.attribution" },
       ])
     );
   });
