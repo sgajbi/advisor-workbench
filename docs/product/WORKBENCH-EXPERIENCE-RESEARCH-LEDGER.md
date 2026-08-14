@@ -4325,7 +4325,9 @@ Research was reviewed on 2026-08-14 from primary enterprise catalogue sources:
    retain **Source confirmed** language. Keep initial unavailability distinct from a failed refresh.
 4. Keep catalogue, assurance, and dependency refresh controls mounted, suppress duplicate refresh
    activation with `aria-disabled`, and announce checking, failure, and confirmation in stable live
-   regions so keyboard focus does not fall back to the document after recovery.
+   regions so keyboard focus does not fall back to the document after recovery. The shared
+   `ActionButton` primitive owns `aria-disabled` activation suppression plus disabled/hover styling;
+   feature handlers retain only their synchronous duplicate-request fence.
 5. Preserve earlier source-confirmed optional evidence after refresh failure only when it is
    explicitly labelled earlier evidence. A response that reports trust unavailable remains
    distinct from transport failure and never becomes a zero-certified success.

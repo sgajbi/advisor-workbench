@@ -18,14 +18,26 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(function A
     priority = "secondary",
     className,
     type = "button",
+    onClick,
+    "aria-disabled": ariaDisabled,
     ...buttonProps
   },
   ref,
 ) {
+  const isAriaDisabled = ariaDisabled === true || ariaDisabled === "true";
+
   return (
     <button
       ref={ref}
       {...buttonProps}
+      aria-disabled={ariaDisabled}
+      onClick={(event) => {
+        if (isAriaDisabled) {
+          event.preventDefault();
+          return;
+        }
+        onClick?.(event);
+      }}
       type={type}
       className={cx(
         "action-button",

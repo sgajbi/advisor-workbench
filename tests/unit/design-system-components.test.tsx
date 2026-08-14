@@ -338,6 +338,9 @@ describe("design-system components", () => {
         <ActionButton priority="quiet" disabled onClick={onDisabledClick}>
           Clear Selection
         </ActionButton>
+        <ActionButton aria-disabled="true" onClick={onDisabledClick}>
+          Checking Catalogue
+        </ActionButton>
         <ModeTabs
           idBase="workspace-modes"
           value="advisor"
@@ -367,6 +370,13 @@ describe("design-system components", () => {
     expect(screen.getByRole("button", { name: "Clear Selection" })).toHaveClass(
       "action-button-quiet"
     );
+    const ariaDisabledAction = screen.getByRole("button", { name: "Checking Catalogue" });
+    expect(ariaDisabledAction).toHaveAttribute("aria-disabled", "true");
+    expect(ariaDisabledAction).not.toBeDisabled();
+    ariaDisabledAction.focus();
+    fireEvent.click(ariaDisabledAction);
+    expect(ariaDisabledAction).toHaveFocus();
+    expect(onDisabledClick).not.toHaveBeenCalled();
     expect(screen.getByRole("tablist", { name: "Workspace modes" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Advisor Brief" })).toHaveAttribute(
       "data-state",
