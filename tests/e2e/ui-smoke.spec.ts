@@ -194,7 +194,7 @@ test.describe('UI smoke checks', () => {
       );
 
       await page.getByRole('link', { name: /Lotus Lotus/i }).click();
-      await expect(page).toHaveURL(/\/$/);
+      await expect(page).toHaveURL(/\/portfolio$/);
       await expect(
         page.getByRole('button', { name: /Switch workspace/i }),
       ).toHaveAttribute('aria-expanded', 'false');
