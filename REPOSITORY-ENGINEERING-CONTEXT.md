@@ -995,7 +995,12 @@ Important validation expectations:
     responses. A terminal review state is not human-review evidence unless the returned contract
     also publishes review history, a positive transition count, actor, and time. Keep generated
     output internal-only, technical workflow evidence secondary, and client communication,
-    suitability, order, and execution authority blocked. Use
+    suitability, order, and execution authority blocked. Map rejected and abandoned decisions as
+    blocking posture, keep unknown or incomplete terminal evidence neutral, and use positive tone
+    only for a complete source audit record. After a terminal source response, restore focus to the
+    source-confirmed status without scrolling the user's evidence context. The performance smoke
+    launcher must own an explicit isolated Workbench port so proof cannot reuse a stale shared
+    listener. Use
     `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
     confirmation, source-persistence, responsive, focus, and browser-runtime proof.
 
