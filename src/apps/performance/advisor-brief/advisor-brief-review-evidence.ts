@@ -26,8 +26,12 @@ type AdvisorBriefHumanReview = {
   occurredAt?: string;
 };
 
-export function getAdvisorBriefReviewStateLabel(value: string): string {
-  return REVIEW_STATE_LABELS[value.trim().toUpperCase()] ?? "Not reported";
+export function normalizeAdvisorBriefStateCode(value: unknown): string {
+  return typeof value === "string" ? value.trim().toUpperCase() : "";
+}
+
+export function getAdvisorBriefReviewStateLabel(value: unknown): string {
+  return REVIEW_STATE_LABELS[normalizeAdvisorBriefStateCode(value)] ?? "Not reported";
 }
 
 export function buildAdvisorBriefHumanReview(
@@ -41,7 +45,9 @@ export function buildAdvisorBriefHumanReview(
     ...(sourceRecorded && actor ? { actor } : {}),
     ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
   };
-  const normalizedReviewState = workflowPackRun?.review_state.trim().toUpperCase();
+  const normalizedReviewState = normalizeAdvisorBriefStateCode(
+    workflowPackRun?.review_state
+  );
 
   if (workflowPackRun?.review_pending === true) {
     return normalizedReviewState === "AWAITING_REVIEW"
@@ -79,14 +85,14 @@ export function buildAdvisorBriefHumanReview(
 export function isHistoricalAdvisorBriefReviewState(
   reviewState: string | null | undefined
 ): boolean {
-  const normalizedState = reviewState?.trim().toUpperCase();
+  const normalizedState = normalizeAdvisorBriefStateCode(reviewState);
   return normalizedState === "REVISED" || normalizedState === "SUPERSEDED";
 }
 
 export function isTerminalAdvisorBriefReviewState(
   reviewState: string | null | undefined
 ): boolean {
-  const normalizedState = reviewState?.trim().toUpperCase();
+  const normalizedState = normalizeAdvisorBriefStateCode(reviewState);
   return ["ACCEPTED", "REJECTED", "REVISED", "SUPERSEDED", "ABANDONED"].includes(
     normalizedState ?? ""
   );
