@@ -1066,8 +1066,9 @@ Most relevant current governance:
 13. Data Product Catalogue treats its catalogue as the required discovery source and live
     assurance plus dependency impact as independently recoverable evidence sources. Use separate
     strict query keys. Cached required-catalogue `data` is not current confirmation while a stale
-    refresh is checking or after it fails: withhold discovery, keep the catalogue recovery control
-    mounted, and recertify only after Gateway success. Retain confirmed catalogue facts during
+    refresh is fetching, paused offline, or has failed: withhold discovery, keep the catalogue
+    recovery control mounted, distinguish initial unavailability from refresh failure, and
+    recertify only after Gateway success. Retain confirmed catalogue facts during
     optional-source failure, label any retained earlier evidence, keep every recovery control
     mounted for focus stability, and never convert failure into a successful empty certification or
     graph. The browser consumes these contracts through Gateway only and does not read platform

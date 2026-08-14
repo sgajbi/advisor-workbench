@@ -4321,7 +4321,8 @@ Research was reviewed on 2026-08-14 from primary enterprise catalogue sources:
    evidence and never fabricates certification or graph totals.
 3. Treat required-catalogue first load, background checking, refetch failure, and confirmation as
    explicit states. Withhold cached catalogue content while its required refresh is checking or has
-   failed; cached `data` alone cannot retain **Source confirmed** language.
+   failed; `fetchStatus: paused` is still an outstanding check, and cached `data` alone cannot
+   retain **Source confirmed** language. Keep initial unavailability distinct from a failed refresh.
 4. Keep catalogue, assurance, and dependency refresh controls mounted, suppress duplicate refresh
    activation with `aria-disabled`, and announce checking, failure, and confirmation in stable live
    regions so keyboard focus does not fall back to the document after recovery.
