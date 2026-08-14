@@ -1,0 +1,44 @@
+.panel {
+  container-name: performance-contributors;
+  container-type: inline-size;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  background: #ffffff;
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.56rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.group {
+  display: grid;
+  min-width: 0;
+  align-self: start;
+}
+
+.groupPopulated {
+  align-content: start;
+}
+
+.groupEmpty {
+  align-content: stretch;
+}
+
+.disclosure {
+  margin-top: 0;
+}
+
+@container performance-contributors (min-width: 34rem) {
+  .groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .groupsAsymmetric {
+    grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.82fr);
+  }
+}

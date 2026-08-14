@@ -74,7 +74,18 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
     expect(screen.getByText("YTD Contribution Ranking")).toBeInTheDocument();
     expect(document.querySelector(".performance-summary-driver-module.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelector(".performance-contributors-compare-grid")).toBeTruthy();
+    expect(screen.getByTestId("performance-contributor-groups")).toHaveAttribute(
+      "data-layout",
+      "balanced",
+    );
+    expect(screen.getByTestId("performance-contributor-group-contributors")).toHaveAttribute(
+      "data-group-state",
+      "populated",
+    );
+    expect(screen.getByTestId("performance-contributor-group-detractors")).toHaveAttribute(
+      "data-group-state",
+      "populated",
+    );
     expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("AAPL");
     expect(screen.getByLabelText("Top Detractors impact bars")).toHaveTextContent("TLT");
     expect(screen.queryAllByText("Contribution to active return")).toHaveLength(0);
@@ -125,14 +136,16 @@ describe("PerformanceSummaryContributorsSection", () => {
       />
     );
 
-    expect(document.querySelector(".performance-contributors-panel-asymmetric")).toBeTruthy();
-    expect(document.querySelector(".performance-contributors-asymmetric-side")).toBeTruthy();
-
-    const cards = Array.from(document.querySelectorAll(".performance-contributors-ranked-card"));
-    expect(cards[0]).toHaveClass("performance-contributors-ranked-card-populated");
-    expect(cards[1]).toHaveClass("performance-contributors-ranked-card-empty");
+    const groups = screen.getByTestId("performance-contributor-groups");
+    const contributors = screen.getByTestId("performance-contributor-group-contributors");
+    const detractors = screen.getByTestId("performance-contributor-group-detractors");
+    expect(groups).toHaveAttribute("data-layout", "asymmetric");
+    expect(contributors).toHaveAttribute("data-group-state", "populated");
+    expect(detractors).toHaveAttribute("data-group-state", "empty");
+    expect(groups.children[0]).toBe(contributors);
+    expect(groups.children[1]).toBe(detractors);
     expect(screen.getByText("No detracting positions are exposed for the selected period.")).toBeInTheDocument();
-    expect(document.querySelector(".performance-contributors-panel-asymmetric > .performance-contributors-table-disclosure")).toBeTruthy();
+    expect(groups.parentElement?.querySelector(".performance-contributors-table-disclosure")).toBeTruthy();
   });
 
   it("renders a useful fallback when contribution detail is unavailable", () => {

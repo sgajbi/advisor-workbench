@@ -2,6 +2,7 @@ import {
   AnalyticsTable,
   WorkbenchLoadingState,
 } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 
 import PerformanceAnalyticalUnavailableState from "./performance-analytical-unavailable-state";
 import PerformanceContributionAggregateTable from "./performance-contribution-aggregate-table";
@@ -14,6 +15,7 @@ import {
   getPerformanceContributorsPresentation,
   type PerformanceContributorRankedItem,
 } from "./performance-summary-driver-helpers";
+import styles from "./performance-summary-contributors-section.module.css";
 
 export default function PerformanceSummaryContributorsSection({
   workspace,
@@ -62,15 +64,18 @@ export default function PerformanceSummaryContributorsSection({
     const primaryGroup = rankedContributorGroups.find((group) => group.hasItems) ?? rankedContributorGroups[0];
     const secondaryGroup =
       rankedContributorGroups.find((group) => group.key !== primaryGroup.key) ?? rankedContributorGroups[1];
+    const orderedContributorGroups = hasAsymmetricRanking
+      ? [primaryGroup, secondaryGroup]
+      : rankedContributorGroups;
     const instrumentDetailDisclosure = (
-        <PerformanceModuleDisclosure
-          className="performance-contributors-table-disclosure"
-          summaryClassName="performance-contributors-table-disclosure-summary"
-          titleClassName="performance-contributors-table-disclosure-title"
-          title={presentation.detailDisclosureTitle}
-        >
-          <AnalyticsTable
-            ariaLabel="Contributor instrument detail table"
+      <PerformanceModuleDisclosure
+        className={cx(styles.disclosure, "performance-contributors-table-disclosure")}
+        summaryClassName="performance-contributors-table-disclosure-summary"
+        titleClassName="performance-contributors-table-disclosure-title"
+        title={presentation.detailDisclosureTitle}
+      >
+        <AnalyticsTable
+          ariaLabel="Contributor instrument detail table"
           className="performance-contributors-table performance-chart-observation-table"
           density="compact"
           variant="observation"
@@ -80,21 +85,14 @@ export default function PerformanceSummaryContributorsSection({
       </PerformanceModuleDisclosure>
     );
 
-    content = hasAsymmetricRanking ? (
-      <div className="performance-contributors-panel performance-contributors-panel-asymmetric">
-        {renderRankedContributorCard(primaryGroup)}
-        <div className="performance-contributors-asymmetric-side">
-          {renderRankedContributorCard(secondaryGroup)}
-        </div>
-        {workspace.contribution ? (
-          <PerformanceContributionContextNote contribution={workspace.contribution} />
-        ) : null}
-        {instrumentDetailDisclosure}
-      </div>
-    ) : (
-      <div className="performance-contributors-panel">
-        <div className="performance-contributors-compare-grid">
-          {rankedContributorGroups.map((group) => renderRankedContributorCard(group))}
+    content = (
+      <div className={styles.panel}>
+        <div
+          className={cx(styles.groups, hasAsymmetricRanking && styles.groupsAsymmetric)}
+          data-testid="performance-contributor-groups"
+          data-layout={hasAsymmetricRanking ? "asymmetric" : "balanced"}
+        >
+          {orderedContributorGroups.map((group) => renderRankedContributorCard(group))}
         </div>
         {workspace.contribution ? (
           <PerformanceContributionContextNote contribution={workspace.contribution} />
@@ -104,7 +102,7 @@ export default function PerformanceSummaryContributorsSection({
     );
   } else if (presentation.mode === "partial") {
     content = (
-      <div className="performance-contributors-panel">
+      <div className={styles.panel}>
         <PerformanceAnalyticalUnavailableState
           ariaLabel="Contributor ranking partial state"
           status="partial"
@@ -197,14 +195,12 @@ function renderRankedContributorCard(group: {
   return (
     <section
       key={group.key}
-      className={[
-        "performance-contributors-ranked-card",
-        group.hasItems
-          ? "performance-contributors-ranked-card-populated"
-          : "performance-contributors-ranked-card-empty",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={cx(
+        styles.group,
+        group.hasItems ? styles.groupPopulated : styles.groupEmpty,
+      )}
+      data-testid={`performance-contributor-group-${group.key}`}
+      data-group-state={group.hasItems ? "populated" : "empty"}
     >
       <PerformanceContributorBarList
         title={group.title}
