@@ -2,12 +2,16 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAdvisorBriefMode from "../../src/apps/performance/components/performance-advisor-brief-mode";
+import AdvisorBriefReviewWorkflow from "../../src/apps/performance/components/advisor-brief/advisor-brief-review-workflow";
 import { getPerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
 } from "../../src/features/workbench/performance-api";
-import type { WorkbenchPerformanceAdvisorBrief } from "../../src/features/workbench/types";
+import type {
+  WorkbenchAdvisorBriefWorkflowPackRun,
+  WorkbenchPerformanceAdvisorBrief,
+} from "../../src/features/workbench/types";
 import { buildSupportedPerformanceScenario } from "../fixtures/performance-workspace-fixtures";
 
 const readyAdvisorBriefResponse: WorkbenchPerformanceAdvisorBrief = {
@@ -614,6 +618,63 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Review rationale")).toHaveValue("");
   });
 
+  it.each([
+    ["AWAITING_REVIEW", true, "warn"],
+    ["ACCEPTED", false, "success"],
+    ["REJECTED", false, "danger"],
+    ["ABANDONED", false, "danger"],
+    ["REVISED", false, "default"],
+    ["SUPERSEDED", false, "default"],
+    ["NOT_REVIEW_REQUIRED", false, "default"],
+    ["UNRECOGNIZED", false, "default"],
+  ])(
+    "maps %s with pending=%s to %s tone without optimistic severity",
+    (reviewState, reviewPending, expectedTone) => {
+      const workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun = {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        review_state: reviewState,
+        review_pending: reviewPending,
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        latest_review_actor: "advisor_1",
+        review_transition_count: 1,
+        has_review_history: true,
+      };
+
+      render(
+        <AdvisorBriefReviewWorkflow
+          workflowPackRun={workflowPackRun}
+          feedback={{ state: "idle", message: "" }}
+          isApplying={false}
+          onApply={vi.fn()}
+        />
+      );
+
+      expect(
+        screen.getByLabelText(
+          new RegExp(`Status ${reviewState.replaceAll("_", " ")}`, "i")
+        )
+      ).toHaveClass(`semantic-badge-${expectedTone}`);
+    }
+  );
+
+  it("keeps an accepted review neutral when source audit evidence is incomplete", () => {
+    render(
+      <AdvisorBriefReviewWorkflow
+        workflowPackRun={{
+          ...readyAdvisorBriefResponse.workflow_pack_run!,
+          review_state: "ACCEPTED",
+          review_pending: false,
+          allowed_review_actions: [],
+        }}
+        feedback={{ state: "idle", message: "" }}
+        isApplying={false}
+        onApply={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("Status Accepted")).toHaveClass("semantic-badge-default");
+  });
+
   it("records a bounded review action and refreshes the run posture in place", async () => {
     vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
     const workspace = buildSupportedPerformanceScenario().workspace;
@@ -700,6 +761,8 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
         "No further review decision is currently available"
       );
+      expect(within(screen.getByLabelText("Advisor brief human review")).getByRole("status"))
+        .toHaveFocus();
     });
   });
 
