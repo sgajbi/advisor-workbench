@@ -131,7 +131,7 @@ directly. Shared contract detail remains in [API Surface](API-Surface), and owne
 | Partial or limited | Usable evidence retained with named warnings, partial failures, or unavailable preparation dimensions | Qualify the discussion and investigate the named source |
 | Review confirmation | Exact decision consequence, staff reference, rationale, optional replacement, and prohibited downstream uses | Confirm or return to editing |
 | Recording review | Controls remain unavailable while the exact source request is pending; polite status feedback is announced | Wait for Gateway and Lotus AI completion |
-| Review recorded | Source-returned decision posture plus actor, timestamp, transition count, and review-history evidence | Continue only within the displayed internal boundary |
+| Review recorded | Source-returned decision posture plus actor, timestamp, transition count, and review-history evidence; focus remains on the source-confirmed status | Continue only within the displayed internal boundary |
 | Review failed | Persistent assertive failure feedback; entered decision information remains available | Correct the input or retry through the same control |
 | Permission blocked | Business-safe restricted posture without entitlement internals or stale success | Use an entitled approved path or contact platform support |
 | No allowed decision | Source workflow publishes no current action; no local action is invented | Inspect the recorded state and technical support disclosure |
