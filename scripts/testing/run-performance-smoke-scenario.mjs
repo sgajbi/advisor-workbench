@@ -10,6 +10,7 @@ const supportedScenarios = new Set([
   "trend-integrity",
   "horizon-integrity",
   "analysis-controls",
+  "unknown-period",
 ]);
 const fixturePort = Number.parseInt(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? "18100", 10);
 const workbenchPort = Number.parseInt(
@@ -19,7 +20,7 @@ const workbenchPort = Number.parseInt(
 
 if (!supportedScenarios.has(scenario)) {
   throw new Error(
-    "Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, horizon-integrity, or analysis-controls.",
+    "Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, horizon-integrity, analysis-controls, or unknown-period.",
   );
 }
 if (!Number.isInteger(fixturePort) || fixturePort < 1024 || fixturePort > 65535) {

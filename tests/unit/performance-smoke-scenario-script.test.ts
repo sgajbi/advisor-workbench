@@ -37,14 +37,18 @@ describe("Performance smoke scenario launcher", () => {
     expect(source).toContain('"refresh-integrity"');
     expect(source).toContain('"horizon-integrity"');
     expect(source).toContain('"analysis-controls"');
+    expect(source).toContain('"unknown-period"');
     expect(source).toContain(
-      'Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, horizon-integrity, or analysis-controls.',
+      'Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, horizon-integrity, analysis-controls, or unknown-period.',
     );
     expect(packageJson.scripts["test:e2e:performance:horizon-integrity"]).toContain(
       "run-performance-smoke-scenario.mjs horizon-integrity",
     );
     expect(packageJson.scripts["test:e2e:performance:analysis-controls"]).toContain(
       "run-performance-smoke-scenario.mjs analysis-controls",
+    );
+    expect(packageJson.scripts["test:e2e:performance:evidence-period-assurance"]).toContain(
+      'run-performance-smoke-scenario.mjs unknown-period --grep "fails closed on an unfamiliar source-confirmed period"',
     );
   });
 
