@@ -11565,8 +11565,6 @@
   --radius-control: 4px;
   --radius-tile: 6px;
   --radius-panel: 6px;
-  --font-display: var(--font-ui);
-  --font-mono: var(--font-ui);
   --type-workspace-title-size: 24px;
   --type-workspace-title-weight: 600;
   --type-workspace-title-line-height: 32px;

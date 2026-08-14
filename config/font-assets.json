@@ -46,12 +46,6 @@
       },
       "assets": [
         {
-          "path": "src/assets/fonts/cormorant-garamond-semibold-v4.002.woff2",
-          "sha256": "af765967938cc1bd47f6de51c0b7992f22ebbd4b58f1fd8c1f37a3dbb80b26c3",
-          "style": "normal",
-          "weight": "600"
-        },
-        {
           "path": "src/assets/fonts/cormorant-garamond-bold-v4.002.woff2",
           "sha256": "1554453dd2014baa6ddcea1f8b363031cc04f1057e5140923f05eb6f94fedd17",
           "style": "normal",

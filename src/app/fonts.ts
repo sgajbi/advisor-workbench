@@ -12,19 +12,10 @@ const inter = localFont({
 });
 
 const cormorantGaramond = localFont({
-  src: [
-    {
-      path: "../assets/fonts/cormorant-garamond-semibold-v4.002.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../assets/fonts/cormorant-garamond-bold-v4.002.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
+  src: "../assets/fonts/cormorant-garamond-bold-v4.002.woff2",
   variable: "--font-lotus-display-face",
+  weight: "700",
+  style: "normal",
   display: "swap",
   fallback: ["Georgia", "serif"],
   adjustFontFallback: "Times New Roman",
@@ -48,7 +39,7 @@ const ibmPlexMono = localFont({
   display: "swap",
   fallback: ["Consolas", "monospace"],
   adjustFontFallback: false,
-  preload: true,
+  preload: false,
 });
 
 export const lotusFontVariableClassNames = [
