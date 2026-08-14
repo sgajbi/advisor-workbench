@@ -110,7 +110,7 @@ trade, or execution action.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio, reporting window, return basis, and benchmark context | Presents the current source-confirmed Performance workspace context | Gateway Performance summary and detail contracts |
+| Portfolio, reporting window, return basis, and benchmark context | Presents the current source-confirmed Performance workspace context; unfamiliar source or active-workspace period codes fail closed instead of becoming review-ready | Gateway Performance summary and detail contracts; Workbench owns only its supported period vocabulary |
 | Evidence capability and package state | Admits only explicit states and fails closed on missing or unfamiliar values | Gateway over Performance authority |
 | Calculation lifecycle, execution mode, stage posture, and calculation reason | Maps known values to bounded business posture; does not infer completion | Performance evidence projected through Gateway |
 | Lineage, input freshness, upstream snapshots, methodology, coverage, fallback, limitation, and source supportability | Prioritises exceptions and keeps raw values in support detail | Performance evidence projected through Gateway |
@@ -180,6 +180,9 @@ Performance Evidence deliberately does not:
 - Optimized-production browser proof:
   `npm run test:e2e:performance:evidence-assurance`, backed by
   `tests/e2e/performance-workbench.smoke.spec.ts`.
+- Malformed-period browser proof:
+  `npm run test:e2e:performance:evidence-period-assurance`, proving that matching unfamiliar source
+  and workspace periods remain **Attention required** and cannot become demo-ready.
 - Canonical browser validation uses `PB_SG_GLOBAL_BAL_001` through
   `scripts/live/validation/browser-workflows.mjs` and records the machine-readable
   `data-assurance-state` plus governed panel screenshot.

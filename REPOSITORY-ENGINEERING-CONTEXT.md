@@ -1096,7 +1096,9 @@ Most relevant current governance:
     least one calculation, completed execution, completed lineage, and no source exception are all
     required before **Ready for internal review**. Keep calculation completion, lineage,
     supporting-record count, freshness, coverage, fallbacks, limitations, and source supportability
-    independent. Missing or unknown values remain unconfirmed; raw service names, lifecycle codes,
+    independent. Validate both source and active-workspace periods through the single canonical
+    vocabulary in `src/apps/performance/periods.ts`; matching unfamiliar values must still fail
+    closed. Missing or unknown values remain unconfirmed; raw service names, lifecycle codes,
     ids, versions, source reasons, upstream snapshots, methodology references, and artifact routes
     belong only in the collapsed support disclosure. Evidence mode remains read-only and owns no
     performance calculation, certification, client-release approval, or local retry authority.
