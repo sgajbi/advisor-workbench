@@ -203,7 +203,7 @@ function buildContext(evidence: PerformanceEvidenceView) {
     { label: "As of", value: displayValue(evidence.as_of_date) },
     { label: "Review period", value: displayValue(evidence.period) },
     { label: "Return basis", value: basisLabel(evidence.basis) },
-    { label: "Benchmark", value: displayValue(evidence.benchmark_code, "Not assigned") },
+    { label: "Benchmark", value: evidence.benchmark_code?.trim() ? "Assigned" : "Not assigned" },
   ];
 }
 
@@ -350,6 +350,8 @@ function buildExceptions(
 
   const inputFreshness = evidence.input_freshness ?? {};
   const inputFreshnessEntries = Object.entries(inputFreshness);
+  const requiredInputKeys: Array<keyof typeof REQUIRED_INPUT_LABELS> = ["performance"];
+  if (evidence.benchmark_code?.trim()) requiredInputKeys.push("benchmark");
   if (!inputFreshnessEntries.length) {
     exceptions.push({
       key: "input-freshness-missing",
@@ -359,8 +361,6 @@ function buildExceptions(
       tone: "warn",
     });
   } else {
-    const requiredInputKeys: Array<keyof typeof REQUIRED_INPUT_LABELS> = ["performance"];
-    if (evidence.benchmark_code?.trim()) requiredInputKeys.push("benchmark");
     requiredInputKeys.forEach((key) => {
       if (Object.hasOwn(inputFreshness, key)) return;
       const label = REQUIRED_INPUT_LABELS[key];
@@ -373,30 +373,35 @@ function buildExceptions(
       });
     });
   }
-  inputFreshnessEntries.forEach(([key, value]) => {
-    const state = normalise(value);
-    if (FRESH_STATES.includes(state)) return;
-    const label = DIMENSION_LABELS[normalise(key)] ?? "Required input";
-    if (STALE_STATES.includes(state)) {
-      exceptions.push({
-        key: `freshness-${key}`,
-        title: `${label} evidence is not current`,
-        detail: "The source reports that an input used by the evidence package is stale.",
-        action: "Refresh the source calculation before using the result for a current review.",
-        tone: "danger",
-      });
-    } else {
-      exceptions.push({
-        key: `freshness-${key}`,
-        title: `${label} freshness not confirmed`,
-        detail: UNAVAILABLE_STATES.includes(state)
-          ? "The source could not provide this input for the evidence package."
-          : "The source did not publish a recognised freshness state for this input.",
-        action: "Review the source limitation and supporting records before relying on the package.",
-        tone: "warn",
-      });
-    }
-  });
+  inputFreshnessEntries
+    .filter(([key]) => requiredInputKeys.includes(key as keyof typeof REQUIRED_INPUT_LABELS))
+    .forEach(([key, value]) => {
+      const state = normalise(value);
+      if (FRESH_STATES.includes(state)) return;
+      const label =
+        REQUIRED_INPUT_LABELS[key as keyof typeof REQUIRED_INPUT_LABELS] ??
+        DIMENSION_LABELS[normalise(key)] ??
+        "Required input";
+      if (STALE_STATES.includes(state)) {
+        exceptions.push({
+          key: `freshness-${key}`,
+          title: `${label} evidence is not current`,
+          detail: "The source reports that an input used by the evidence package is stale.",
+          action: "Refresh the source calculation before using the result for a current review.",
+          tone: "danger",
+        });
+      } else {
+        exceptions.push({
+          key: `freshness-${key}`,
+          title: `${label} freshness not confirmed`,
+          detail: UNAVAILABLE_STATES.includes(state)
+            ? "The source could not provide this input for the evidence package."
+            : "The source did not publish a recognised freshness state for this input.",
+          action: "Review the source limitation and supporting records before relying on the package.",
+          tone: "warn",
+        });
+      }
+    });
 
   const sourceSupportability = safeArray(evidence.source_supportability);
   if (!sourceSupportability.length) {
@@ -549,6 +554,7 @@ function buildSupportGroups(
     { label: "Gateway capability state", value: capability.state },
     { label: "Evidence reason", value: displayValue(evidence.reason ?? capability.reason) },
     { label: "Calculation scope", value: displayValue(evidence.calculation_scope) },
+    { label: "Benchmark code", value: displayValue(evidence.benchmark_code, "Not assigned") },
     { label: "Generated at", value: displayValue(evidence.generated_at) },
     ...safeStrings(evidence.source_services).map((value, index) => ({
       label: `Source service ${index + 1}`,
