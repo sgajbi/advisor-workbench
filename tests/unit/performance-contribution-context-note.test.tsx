@@ -411,6 +411,103 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).not.toHaveTextContent("Contribution coverage is limited");
   });
 
+  it.each([
+    [
+      "local_contribution",
+      {
+        portfolio_local_contribution_pct: null,
+        portfolio_fx_contribution_pct: 0.62,
+      },
+    ],
+    [
+      "fx_contribution",
+      {
+        portfolio_local_contribution_pct: 4.8,
+        portfolio_fx_contribution_pct: null,
+      },
+    ],
+  ] as const)(
+    "rejects %s availability when no corresponding value is published",
+    (availableEconomics, contributionTotals) => {
+      const contribution = buildContribution({
+        ...contributionTotals,
+        coverage_mv_pct: 100,
+        position_rows: [
+          {
+            position_id: "POS-1",
+            contribution_pct: 1,
+            weight_avg_pct: 20,
+            total_return_pct: 5,
+            local_contribution_pct: null,
+            fx_contribution_pct: null,
+          },
+        ],
+        levels: [
+          {
+            level: 1,
+            name: "Asset class",
+            rows: [
+              {
+                key_label: "Equity",
+                contribution_pct: 1,
+                weight_avg_pct: 20,
+                total_return_pct: 5,
+                local_contribution_pct: null,
+                fx_contribution_pct: null,
+                is_other: false,
+              },
+            ],
+            total_contribution_pct: 1,
+          },
+        ],
+        source_economics_evidence: {
+          ...buildSourceBackedEvidence(buildContribution()),
+          available_economics: [availableEconomics],
+        },
+      });
+      render(<PerformanceContributionContextNote contribution={contribution} />);
+
+      const note = screen.getByTestId("performance-contribution-evidence");
+      expect(note).toHaveAttribute("data-tone", "review");
+      expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+      expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    },
+  );
+
+  it("accepts declared local contribution when a corresponding level value is published", () => {
+    const contribution = buildContribution({
+      coverage_mv_pct: 100,
+      portfolio_local_contribution_pct: null,
+      levels: [
+        {
+          level: 1,
+          name: "Asset class",
+          rows: [
+            {
+              key_label: "Equity",
+              contribution_pct: 4.8,
+              weight_avg_pct: 80,
+              total_return_pct: 6,
+              local_contribution_pct: 4.8,
+              fx_contribution_pct: null,
+              is_other: false,
+            },
+          ],
+          total_contribution_pct: 4.8,
+        },
+      ],
+      source_economics_evidence: {
+        ...buildSourceBackedEvidence(buildContribution()),
+        available_economics: ["local_contribution"],
+      },
+    });
+    render(<PerformanceContributionContextNote contribution={contribution} />);
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "confirmed");
+    expect(note).toHaveTextContent("Contribution coverage is confirmed");
+  });
+
   it("rejects execution-only lineage as fully source-backed evidence", () => {
     const contribution = buildContribution();
     render(
