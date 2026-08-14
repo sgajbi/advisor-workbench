@@ -10,6 +10,7 @@
     "performance-analysis-insight-pane",
     "performance-analysis-level-",
     "performance-advisor-brief-",
+    "performance-evidence-",
     "performance-risk-compact-segmented-control",
     "performance-risk-rolling-window-toolbar",
     "performance-risk-window-toolbar",
@@ -69,8 +70,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 12618,
-      "maxBytes": 276576
+      "maxLines": 12541,
+      "maxBytes": 274848
     }
   ]
 }

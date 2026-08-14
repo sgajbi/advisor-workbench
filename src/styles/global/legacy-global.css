@@ -8201,70 +8201,6 @@
   margin-bottom: var(--space-1);
 }
 
-.performance-evidence-status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.performance-evidence-module {
-  gap: 0.7rem;
-  background: linear-gradient(180deg, rgba(249, 251, 253, 0.96), #ffffff 18%);
-}
-
-.performance-evidence-module .workbench-summary-card-subtitle {
-  max-width: 40ch;
-}
-
-.performance-evidence-status-item {
-  display: grid;
-  gap: 0.3rem;
-  min-width: 0;
-  padding: 0.72rem 0.76rem;
-  border: 1px solid rgba(23, 32, 43, 0.08);
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), #ffffff);
-}
-
-.performance-evidence-status-label {
-  color: var(--text-muted);
-  font-size: var(--workbench-analytic-label-size);
-  font-weight: 800;
-  letter-spacing: var(--workbench-analytic-label-tracking);
-  text-transform: uppercase;
-  line-height: 1.2;
-}
-
-.performance-evidence-status-body {
-  display: grid;
-  gap: 0.24rem;
-  align-content: start;
-}
-
-.performance-evidence-status-support {
-  color: var(--text-muted);
-  font-size: var(--workbench-analytic-fallback-size);
-  line-height: 1.35;
-}
-
-.performance-evidence-copy {
-  margin: 0;
-  font-size: 0.79rem;
-  line-height: 1.48;
-  max-width: 72ch;
-}
-
-.performance-evidence-archive-artifact {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.performance-evidence-archive-support {
-  color: var(--text-muted);
-  font-size: var(--workbench-analytic-fallback-size);
-  line-height: 1.35;
-}
-
 .report-batch-archive-retrieval {
   display: grid;
   gap: 0.65rem;
@@ -8308,9 +8244,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .performance-evidence-status-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
 }
 
 .performance-effect-strip {
@@ -8740,16 +8673,6 @@
   color: #536274;
   max-width: none;
   white-space: normal;
-}
-
-.performance-evidence-module-unavailable .workbench-data-grid-frame-body {
-  min-height: clamp(16rem, 34vh, 20rem);
-  display: grid;
-  align-content: start;
-}
-
-.performance-evidence-state-panel {
-  max-width: 42rem;
 }
 
 .performance-chart-library-frame.workbench-summary-visual {
