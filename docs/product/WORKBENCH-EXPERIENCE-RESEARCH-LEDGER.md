@@ -4765,9 +4765,9 @@ Research was reviewed on 2026-08-15 from standards and official enterprise-produ
 
 ### Adopted decisions
 
-1. Keep the semantic five-column comparison table at workstation and tablet widths where all
-   lifecycle and support fields fit without clipping.
-2. At 760 pixels or narrower, render a compact operational record that leads with report identity and
+1. Keep the semantic five-column comparison table when the history module owns at least 760 pixels
+   of content width and all lifecycle and support fields fit without clipping.
+2. Below that content capacity, render a compact operational record that leads with report identity and
    lifecycle, keeps report date and requested time together, and places the exact support reference
    in a native disclosure.
 3. Derive both presentations from the same `ReportRequestRow`; compact layout must not invent,
@@ -4777,6 +4777,8 @@ Research was reviewed on 2026-08-15 from standards and official enterprise-produ
    than adding Report Centre selectors to the global layer.
 6. Preserve explicit loading, empty, restricted, and error states in the compact presentation and
    keep the existing recovery actions.
+7. Preserve the last source-confirmed rows during background refresh and announce the refresh once
+   above both responsive presentations.
 
 ### Rejected decisions
 
@@ -4795,7 +4797,8 @@ Research was reviewed on 2026-08-15 from standards and official enterprise-produ
 Workbench #707 owns this slice. Focused design-system and history-state tests prove one complete row
 plus loading, empty, restricted, error, and recovery behavior; the existing Report Centre integration
 suite proves the underlying source workflow remains intact. The isolated optimized-production browser
-scenario proves the semantic table at 1024 pixels and compact record at 519 pixels, exact lifecycle and
+scenario proves the semantic table at a 1024-pixel tablet viewport, the compact record in a
+shell-constrained 1201-pixel workstation viewport and at 519 pixels, exact lifecycle and
 support access, keyboard disclosure focus, a 44-pixel target, and no page-level overflow. Reviewed
 diagnostic captures are stored under `output/playwright/diagnostic-report-centre-request-history-*`.
 The Report Centre guide, repository context, research ledger, and review ledger change. No Gateway,

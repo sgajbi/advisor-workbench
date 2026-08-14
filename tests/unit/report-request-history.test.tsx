@@ -54,6 +54,26 @@ describe("ReportRequestHistory", () => {
     expect(screen.getAllByText("No report requests yet")).toHaveLength(2);
   });
 
+  it("keeps previously confirmed records visible with one shared refresh status", () => {
+    renderHistory({ rows: [readyRow], state: "loading" });
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Refreshing recent requests. Previously confirmed lifecycle evidence remains visible.",
+    );
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeDisabled();
+    expect(
+      within(screen.getByRole("table", { name: "Recent portfolio report requests" })).getByText(
+        "Portfolio review",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(
+        screen.getByRole("list", { name: "Recent portfolio report request details" }),
+      ).getByText("Portfolio review"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Loading recent requests")).not.toBeInTheDocument();
+  });
+
   it.each([
     {
       state: "permission_blocked" as const,

@@ -273,7 +273,7 @@ test("tracks an accepted request and deliberately starts a second at constrained
   await captureDiagnosticScreenshot(page, "accepted-next-request-720");
 });
 
-test("keeps report lifecycle and support discoverable across tablet and compact layouts", async ({
+test("keeps report lifecycle and support discoverable across content-width changes", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1024, height: 1000 });
@@ -299,6 +299,18 @@ test("keeps report lifecycle and support discoverable across tablet and compact 
   await expect(workstationHistory.getByText("rjob_1", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
   await captureDiagnosticScreenshot(page, "request-history-tablet-1024");
+
+  await page.setViewportSize({ width: 1201, height: 1000 });
+  const shellConstrainedHistory = page.getByRole("list", {
+    name: "Recent portfolio report request details",
+  });
+  await expect(workstationHistory).not.toBeVisible();
+  await expect(shellConstrainedHistory).toBeVisible();
+  await expect(
+    shellConstrainedHistory.getByRole("article", { name: "Portfolio review" }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1201);
+  await captureDiagnosticScreenshot(page, "request-history-shell-constrained-1201");
 
   await page.setViewportSize({ width: 519, height: 1000 });
   const compactHistory = page.getByRole("list", {
