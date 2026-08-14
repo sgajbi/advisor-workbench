@@ -73,11 +73,11 @@ const DIMENSION_LABELS: Record<string, string> = {
 };
 
 const COMPLETE_STATUS = "complete";
-const PENDING_STATUSES = new Set(["accepted", "pending", "queued", "running", "processing"]);
-const FAILED_STATUSES = new Set(["cancelled", "failed", "rejected", "unavailable"]);
-const FRESH_STATES = new Set(["current", "fresh"]);
-const STALE_STATES = new Set(["expired", "stale"]);
-const UNAVAILABLE_STATES = new Set(["missing", "unavailable"]);
+const PENDING_STATUSES: readonly string[] = ["accepted", "pending", "queued", "running", "processing"];
+const FAILED_STATUSES: readonly string[] = ["cancelled", "failed", "rejected", "unavailable"];
+const FRESH_STATES: readonly string[] = ["current", "fresh"];
+const STALE_STATES: readonly string[] = ["expired", "stale"];
+const UNAVAILABLE_STATES: readonly string[] = ["missing", "unavailable"];
 
 export function buildPerformanceEvidenceAssuranceViewModel(
   capability: WorkspaceCapability,
@@ -218,8 +218,8 @@ function lifecyclePresentation(
 ): { label: string; tone: PerformanceEvidenceTone } {
   const state = normalise(value);
   if (state === COMPLETE_STATUS) return { label: "Confirmed", tone: "success" };
-  if (PENDING_STATUSES.has(state)) return { label: "In progress", tone: "warn" };
-  if (FAILED_STATUSES.has(state)) return { label: "Attention required", tone: "danger" };
+  if (PENDING_STATUSES.includes(state)) return { label: "In progress", tone: "warn" };
+  if (FAILED_STATUSES.includes(state)) return { label: "Attention required", tone: "danger" };
   return { label: subject === "calculation" ? "Not reported" : "Not confirmed", tone: "default" };
 }
 
@@ -277,9 +277,9 @@ function buildExceptions(
 
   Object.entries(evidence.input_freshness ?? {}).forEach(([key, value]) => {
     const state = normalise(value);
-    if (FRESH_STATES.has(state)) return;
+    if (FRESH_STATES.includes(state)) return;
     const label = DIMENSION_LABELS[normalise(key)] ?? "Required input";
-    if (STALE_STATES.has(state)) {
+    if (STALE_STATES.includes(state)) {
       exceptions.push({
         key: `freshness-${key}`,
         title: `${label} evidence is not current`,
@@ -291,7 +291,7 @@ function buildExceptions(
       exceptions.push({
         key: `freshness-${key}`,
         title: `${label} freshness not confirmed`,
-        detail: UNAVAILABLE_STATES.has(state)
+        detail: UNAVAILABLE_STATES.includes(state)
           ? "The source could not provide this input for the evidence package."
           : "The source did not publish a recognised freshness state for this input.",
         action: "Review the source limitation and supporting records before relying on the package.",
@@ -360,8 +360,8 @@ function appendLifecycleException(
 ) {
   const state = normalise(value);
   if (state === COMPLETE_STATUS) return;
-  const failed = FAILED_STATUSES.has(state);
-  const pending = PENDING_STATUSES.has(state);
+  const failed = FAILED_STATUSES.includes(state);
+  const pending = PENDING_STATUSES.includes(state);
   exceptions.push({
     key: `${subject}-${index}`,
     title:
