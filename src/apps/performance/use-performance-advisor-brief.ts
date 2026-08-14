@@ -167,6 +167,7 @@ export function usePerformanceAdvisorBrief({
             payload,
             expectedPortfolioId: portfolioId,
             expectedRunId: activeRunId,
+            previousRun: advisorBrief?.workflow_pack_run ?? null,
           })
         ) {
           throw new Error("Gateway did not confirm the requested advisor-brief review transition.");
@@ -198,6 +199,7 @@ export function usePerformanceAdvisorBrief({
     },
     [
       activeRunId,
+      advisorBrief,
       attributionDimension,
       benchmark,
       chartFrequency,

@@ -98,24 +98,24 @@ export function hasRecordedAdvisorBriefReviewEvidence(
     typeof reviewTransitionCount === "number" &&
     Number.isInteger(reviewTransitionCount) &&
     reviewTransitionCount > 0 &&
-    isValidUtcReviewTimestamp(evidence.latest_review_event_at)
+    parseAdvisorBriefReviewUtcTimestamp(evidence.latest_review_event_at) !== null
   );
 }
 
-function isValidUtcReviewTimestamp(
+export function parseAdvisorBriefReviewUtcTimestamp(
   value: string | null | undefined
-): boolean {
+): number | null {
   const timestamp = value?.trim();
   const match = timestamp?.match(
     /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|\+00:00)$/
   );
   if (!timestamp || !match) {
-    return false;
+    return null;
   }
 
   const parsedTimestamp = Date.parse(timestamp);
   if (!Number.isFinite(parsedTimestamp)) {
-    return false;
+    return null;
   }
 
   const parsedDate = new Date(parsedTimestamp);
@@ -127,5 +127,7 @@ function isValidUtcReviewTimestamp(
     parsedDate.getUTCHours() === Number(hour) &&
     parsedDate.getUTCMinutes() === Number(minute) &&
     parsedDate.getUTCSeconds() === Number(second)
-  );
+  )
+    ? parsedTimestamp
+    : null;
 }
