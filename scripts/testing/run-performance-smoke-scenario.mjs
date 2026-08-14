@@ -12,6 +12,10 @@ const supportedScenarios = new Set([
   "analysis-controls",
 ]);
 const fixturePort = Number.parseInt(process.env.PERFORMANCE_E2E_FIXTURE_PORT ?? "18100", 10);
+const workbenchPort = Number.parseInt(
+  process.env.PERFORMANCE_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? "31030",
+  10,
+);
 
 if (!supportedScenarios.has(scenario)) {
   throw new Error(
@@ -20,6 +24,9 @@ if (!supportedScenarios.has(scenario)) {
 }
 if (!Number.isInteger(fixturePort) || fixturePort < 1024 || fixturePort > 65535) {
   throw new Error("PERFORMANCE_E2E_FIXTURE_PORT must be an unprivileged TCP port.");
+}
+if (!Number.isInteger(workbenchPort) || workbenchPort < 1024 || workbenchPort > 65535) {
+  throw new Error("PERFORMANCE_E2E_WORKBENCH_PORT must be an unprivileged TCP port.");
 }
 
 const projectRoot = process.cwd();
@@ -47,6 +54,7 @@ const child = spawn(
       BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`,
       PERFORMANCE_E2E_FIXTURE: scenario,
       PERFORMANCE_E2E_FIXTURE_PORT: String(fixturePort),
+      PLAYWRIGHT_PORT: String(workbenchPort),
       WORKBENCH_E2E_FIXTURE_GATEWAY: "performance",
     },
   },
