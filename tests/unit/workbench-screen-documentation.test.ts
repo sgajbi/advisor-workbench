@@ -57,10 +57,38 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 10,
-      coverageExceptions: 26,
-      unmappedGuides: 26,
+      mappedGuides: 11,
+      coverageExceptions: 25,
+      unmappedGuides: 25,
     });
+  });
+
+  it("maps Data Product Catalogue to independent source and recovery evidence", () => {
+    const registry = loadRegistry();
+    const dataProductCatalogue = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "data-product-discovery",
+    );
+
+    expect(dataProductCatalogue).toMatchObject({
+      businessName: "Data Product Catalogue",
+      routePattern: "/data-products",
+      wikiSlug: "Data-Product-Catalogue-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-platform", "Lotus domain services"],
+      runtimeEvidence: ["tests/e2e/data-product-catalogue.spec.ts"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Data-Product-Catalogue-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("three independent Gateway reads");
+    expect(guide).toContain("optional-source failure never erases product identity");
+    expect(guide).toContain("no certified total is invented");
+    expect(guide).toContain("stable keyboard focus");
+    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(validate(registry).errors).toEqual([]);
   });
 
   it("maps Positions to one complete source-backed business guide", () => {

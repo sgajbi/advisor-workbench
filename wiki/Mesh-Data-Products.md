@@ -7,6 +7,7 @@
 ## Governed surface
 
 - Route: `/data-products`
+- Business operating guide: [Data Product Catalogue](Data-Product-Catalogue-Screen-Guide)
 - Integration boundary: Workbench BFF to `lotus-gateway`
 - Displayed facts: product identity, producer repository, lifecycle, approved consumers, dependencies, certification/trust state, and degraded states
 
@@ -16,7 +17,11 @@ Workbench consumes gateway APIs only. It must not read `lotus-platform/generated
 
 ## Operating rule
 
-Workbench discovery must show truthful loading, empty, partial, stale, blocked, unavailable, and error states. It must not show decorative mesh trust when gateway/platform certification evidence is missing.
+Workbench discovery must show truthful loading, empty, partial, stale, blocked, unavailable, and
+error states. Catalogue, assurance, and dependency reads are independent: an optional-source
+failure must not hide usable catalogue evidence, and retained earlier evidence must not be labelled
+current. Workbench must not show decorative mesh trust when Gateway or platform certification
+evidence is missing.
 
 ## Observability posture
 
