@@ -27,7 +27,8 @@
     "suite-panel",
     "suite-pipeline",
     "suite-tile",
-    "workbench-segmented-control"
+    "workbench-segmented-control",
+    "workspace-tab-nav"
   ],
   "entrypoint": {
     "path": "src/app/globals.css",
@@ -70,8 +71,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 12541,
-      "maxBytes": 274848
+      "maxLines": 12509,
+      "maxBytes": 274145
     }
   ]
 }
