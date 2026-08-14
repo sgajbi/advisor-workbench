@@ -56,7 +56,7 @@ export async function loadPerformanceSmokeSummary(
   portfolioId: string,
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
   const response = await request.get(
-    `http://127.0.0.1:3000${buildPerformanceSmokeSummaryPath(portfolioId)}`,
+    buildPerformanceSmokeSummaryPath(portfolioId),
     {
       headers: { 'cache-control': 'no-store' },
       timeout: 60_000,
