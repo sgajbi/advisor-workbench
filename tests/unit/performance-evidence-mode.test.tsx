@@ -31,6 +31,8 @@ function renderEvidenceMode(
         period: scenario.workspace.period,
         basis: scenario.workspace.detail_basis,
         benchmarkCode: scenario.workspace.benchmark_code,
+        contributionDimension: scenario.workspace.contribution_dimension,
+        attributionDimension: scenario.workspace.attribution_dimension,
       }}
     />
   );
