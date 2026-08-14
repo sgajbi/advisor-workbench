@@ -411,8 +411,7 @@ function getUnknownValues(
   values: string[] | undefined,
   knownValues: readonly string[],
 ): string[] {
-  return (values ?? [])
-    .filter((value) => value.length > 0 && !includesEvidenceValue(knownValues, value));
+  return (values ?? []).filter((value) => !includesEvidenceValue(knownValues, value));
 }
 
 function includesEvidenceValue(knownValues: readonly string[], value: string): boolean {
@@ -424,8 +423,19 @@ function getPublishedEvidenceValue(value?: string | null): string | null {
 }
 
 function formatEvidenceList(values: string[] | undefined): string {
-  const publishedValues = (values ?? []).filter((value) => value.length > 0);
-  return publishedValues.length > 0 ? publishedValues.join(", ") : "None published";
+  const publishedValues = values ?? [];
+  return publishedValues.length > 0
+    ? publishedValues.map(formatEvidenceListValue).join(", ")
+    : "None published";
+}
+
+function formatEvidenceListValue(value: string): string {
+  if (value.length === 0) {
+    return "[empty value]";
+  }
+  return value.trim().length === 0
+    ? `[blank value: ${value.length} whitespace characters]`
+    : value;
 }
 
 function formatExactEvidencePct(value: number | null | undefined): string {
