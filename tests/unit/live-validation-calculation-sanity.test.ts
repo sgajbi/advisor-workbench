@@ -102,7 +102,11 @@ describe("live validation calculation sanity helpers", () => {
     expect(summary.calculationChecks).toHaveLength(1);
     expect(summary.panelClassifications).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ panel: "performance.summary", state: "ready" }),
+        expect.objectContaining({ panel: "performance.summary", state: "partial" }),
+        expect.objectContaining({
+          panel: "performance.analysis.contribution",
+          state: "partial",
+        }),
         expect.objectContaining({
           panel: "performance.analysis.attribution",
           state: "partial",
@@ -430,9 +434,64 @@ describe("live validation calculation sanity helpers", () => {
     expect(summary.panelClassifications).toContainEqual(
       expect.objectContaining({
         panel: "performance.summary",
+        state: "partial",
         sourceSupportabilityState: "partial",
       })
     );
+  });
+
+  it("rejects performance certification when source supportability requires action", () => {
+    const summary = createSummary();
+
+    expect(() =>
+      assertPerformanceCalculationSanity({
+        summary,
+        recordPanelClassification: createClassifier(summary),
+        performanceSummary: {
+          net_performance: {
+            portfolio_return_pct: 9.33,
+            benchmark_return_pct: 6.52,
+            active_return_pct: 2.81,
+          },
+          overview: {
+            market_value_base: 1_500_000,
+            cash_weight_pct: 12.4,
+            position_count: 18,
+          },
+          evidence_view: {
+            source_supportability: [
+              {
+                source_service: "lotus-performance",
+                operation: "performance.twr",
+                state: "blocked",
+                freshness_bucket: "fresh",
+              },
+            ],
+          },
+        },
+        performanceDetails: {
+          net_chart: Array.from({ length: 24 }, () => ({})),
+          contribution: {
+            levels: [
+              {
+                rows: [{}, {}, {}, {}],
+                total_contribution_pct: 9.33,
+              },
+            ],
+          },
+          capabilities: {
+            attribution_detail: {
+              state: "supported",
+              fallback_available: false,
+            },
+          },
+          attribution: {
+            levels: [{ rows: [{}] }],
+          },
+        },
+      })
+    ).toThrow("Performance source supportability requires action and cannot be certified as ready.");
+    expect(summary.panelClassifications).toHaveLength(0);
   });
 
   it("fails risk attribution when the residual breaches the governed tolerance", () => {
