@@ -81,6 +81,28 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.state).toBe("incomplete");
     expect(view.posture).toBe("Incomplete evidence");
     expect(view.metrics[0].value).toBe("0 of 0");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Calculation evidence not reported", tone: "warn" })
+    );
+    expect(view.metrics).toContainEqual(
+      expect.objectContaining({ label: "Review items", value: "1" })
+    );
+  });
+
+  it("preserves attention precedence when calculations are absent", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ calculations: [], input_freshness: { performance: "stale" } })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.posture).toBe("Attention required");
+    expect(view.exceptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: "Calculation evidence not reported", tone: "warn" }),
+        expect.objectContaining({ title: "Required input evidence is not current", tone: "danger" }),
+      ])
+    );
   });
 
   it("makes pending calculation and lineage states explicit", () => {
