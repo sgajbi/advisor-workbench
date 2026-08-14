@@ -59,6 +59,11 @@ function openCalculationEvidence() {
   return screen.getByLabelText("Contribution calculation evidence");
 }
 
+function expectEvidenceValue(evidence: HTMLElement, label: string, value: string) {
+  const term = within(evidence).getByText(label);
+  expect(term.nextElementSibling).toHaveTextContent(value);
+}
+
 describe("PerformanceContributionContextNote", () => {
   it("leads with a confirmed advisor posture and keeps exact source evidence secondary", () => {
     render(
@@ -318,8 +323,17 @@ describe("PerformanceContributionContextNote", () => {
 
     const note = screen.getByTestId("performance-contribution-evidence");
     expect(note).toHaveAttribute("data-tone", "review");
-    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).toHaveTextContent("Contribution reconciliation needs review");
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    const decision = screen.getByText("Contribution reconciliation needs review").parentElement;
+    expect(decision).toHaveTextContent("Calculation values do not reconcile");
+    expect(decision).not.toHaveTextContent("Reconciles to return");
+
+    const evidence = openCalculationEvidence();
+    expectEvidenceValue(evidence, "Raw contribution", "5.31%");
+    expectEvidenceValue(evidence, "Final contribution", "4.91%");
+    expectEvidenceValue(evidence, "Linked return", "5.42%");
+    expectEvidenceValue(evidence, "Smoothing residual", "0%");
   });
 
   it("rejects source-backed evidence when required reconciliation amounts are absent", () => {
@@ -338,8 +352,9 @@ describe("PerformanceContributionContextNote", () => {
     );
 
     expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
-      "Contribution evidence is inconsistent",
+      "Contribution reconciliation needs review",
     );
+    expectEvidenceValue(openCalculationEvidence(), "Final contribution", "Not published");
   });
 
   it("rejects source-backed evidence with a material published smoothing residual", () => {
@@ -359,8 +374,9 @@ describe("PerformanceContributionContextNote", () => {
 
     const note = screen.getByTestId("performance-contribution-evidence");
     expect(note).toHaveAttribute("data-tone", "review");
-    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).toHaveTextContent("Contribution reconciliation needs review");
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    expectEvidenceValue(openCalculationEvidence(), "Smoothing residual", "0.25%");
   });
 
   it("rejects source-backed evidence when the top-level contribution has a material return gap", () => {
@@ -376,7 +392,7 @@ describe("PerformanceContributionContextNote", () => {
     );
 
     expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
-      "Contribution evidence is inconsistent",
+      "Contribution reconciliation needs review",
     );
   });
 
@@ -416,7 +432,7 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).toHaveAttribute("data-tone", "review");
     expect(note).toHaveTextContent("Contribution calculation evidence is incomplete");
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
-    expect(within(openCalculationEvidence()).getByText("Not published")).toBeInTheDocument();
+    expectEvidenceValue(openCalculationEvidence(), "Smoothing status", "Not published");
   });
 
   it("preserves an unfamiliar weighting basis in calculation evidence", () => {
