@@ -299,7 +299,18 @@ function resolveEvidenceLifecyclePresentation(
   ) {
     return { label: "Attention required", tone: "danger" };
   }
-  const retrievalStates = safeArray(calculation.upstream_snapshots).map((snapshot) =>
+  const upstreamSnapshots = safeArray(calculation.upstream_snapshots);
+  if (
+    upstreamSnapshots.some(
+      (snapshot) =>
+        !snapshot.upstream_endpoint?.trim() ||
+        !snapshot.source_identifier?.trim() ||
+        !snapshot.as_of_date?.trim()
+    )
+  ) {
+    return { label: "Not confirmed", tone: "default" };
+  }
+  const retrievalStates = upstreamSnapshots.map((snapshot) =>
     classifyUpstreamRetrievalState(snapshot.retrieval_status)
   );
   if (retrievalStates.includes("failed")) {

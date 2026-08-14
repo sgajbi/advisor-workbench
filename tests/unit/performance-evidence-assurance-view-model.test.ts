@@ -369,6 +369,36 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions).toHaveLength(0);
   });
 
+  it("excludes successful retrievals with incomplete upstream context from confirmed coverage", () => {
+    const source = evidence();
+    source.calculations[0].upstream_snapshots = [
+      {
+        upstream_endpoint: "/internal/source/path",
+        source_identifier: "",
+        as_of_date: "2026-08-14",
+        retrieval_status: "200",
+      },
+    ];
+
+    const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+    expect(view.state).toBe("incomplete");
+    expect(view.calculations[0]).toMatchObject({
+      evidenceStatus: "Not confirmed",
+      evidenceTone: "default",
+    });
+    expect(view.metrics).toContainEqual(
+      expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
+    );
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Portfolio performance summary upstream evidence 1 context not confirmed",
+        tone: "warn",
+      })
+    );
+    expect(JSON.stringify(view.exceptions)).not.toContain("/internal/source/path");
+  });
+
   it("qualifies fallbacks, limitations, unsupported coverage, and partial source supportability", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
