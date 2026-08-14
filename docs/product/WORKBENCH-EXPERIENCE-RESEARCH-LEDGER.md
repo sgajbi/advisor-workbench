@@ -4658,3 +4658,73 @@ desktop, tablet, and compact evidence is stored under `output/playwright/issue-7
 The Performance Summary guide, architecture wiki, repository context, and review ledger change;
 Gateway/API/OpenAPI, calculation, dependency, runtime topology, identity, and authorization truth do
 not.
+
+## Performance Contribution Business And Evidence Hierarchy
+
+### Business job
+
+An advisor needs to know whether contribution drivers are complete enough to explain, what is
+excluded, and whether additional review is required. Performance support still needs the exact
+status, source contracts, reason codes, methodology posture, and reconciliation evidence without
+forcing that implementation vocabulary into the advisor's primary scan.
+
+### Current-product research
+
+Research was reviewed on 2026-08-15 from primary regulatory, accessibility, and enterprise-design
+sources:
+
+1. [FCA Consumer Duty, PRIN 2A.5](https://handbook.fca.org.uk/handbook/prin2a?timeline=true)
+   requires communications to meet information needs, be likely to be understood, and equip
+   effective, timely, properly informed decisions. Lotus applies the clear decision hierarchy to
+   an internal advisor surface without claiming that this screen alone certifies regulatory
+   compliance.
+2. [FCA consumer-understanding good practice](https://www.fca.org.uk/publications/good-and-poor-practice/consumer-understanding-good-practice-areas-improvement)
+   states that simplification is not merely shorter copy; information must be organised so the user
+   can understand and act on what matters, while risks and limitations retain prominence.
+3. [SAP Fiori display guidance](https://experience.sap.com/fiori-design-web/explore_group/display/)
+   uses progressive disclosure for secondary analytical detail. Lotus adopts the business-first,
+   detail-on-demand principle, not SAP's layout, product identity, visual language, or capability.
+4. [WCAG 2.2 Name, Role, Value](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html)
+   supports a native disclosure whose state remains programmatically available; keyboard proof
+   keeps focus on the disclosure control after expansion.
+
+### Adopted decisions
+
+1. Derive the advisor conclusion and technical evidence from the same Gateway-owned contribution
+   object; do not maintain two competing interpretations.
+2. Translate `SOURCE_BACKED`, `SOURCE_LIMITED`, and `CALLER_SUPPLIED` into bounded business posture,
+   and surface invalid smoothing or absent contribution observations as methodology limitations.
+3. Lead with market-value coverage, weighting basis, reconciliation, client-use implication, and
+   known exclusions. Preserve every exact source status, reason code, contract, economics field,
+   snapshot count, smoothing status, and reconciliation value in **Calculation evidence**.
+4. Fail closed when a status or reason code is absent, inconsistent, or unknown. The business layer
+   stays neutral while the raw unknown value remains visible for support.
+5. Use a native disclosure and a container-aware definition grid: dense two-column evidence when
+   the module owns sufficient width, safe one-column evidence in a narrow three-rail workstation or
+   compact viewport.
+6. Move the live note styling beside its component, lower the exact global-CSS ratchet, and prohibit
+   the retired global selector from returning.
+
+### Rejected decisions
+
+1. Hiding raw evidence, converting unknown values to generic success, or replacing the exact reason
+   codes with browser-authored prose.
+2. Presenting implementation enums, contract identifiers, or service topology as the advisor's
+   primary decision language.
+3. Claiming client-ready, audited, certified, GIPS-compliant, complete, or suitable status from a
+   contribution evidence block.
+4. Adding a new component, disclosure, styling, state, or accessibility library when the existing
+   typed React, native HTML, CSS Module, Vitest, and Playwright stack owns the requirement.
+5. Changing Gateway mapping, Performance methodology, source codes, calculations, identity, or
+   entitlement posture to solve a Workbench presentation problem.
+
+### Validation and publication decision
+
+Workbench #712 owns this slice. A focused component matrix proves source-backed, source-limited,
+missing-evidence, unknown-code, and invalid-smoothing behavior; parent integration proves the same
+hierarchy in Performance Summary. The populated optimized-production journey proves business copy,
+native keyboard disclosure, exact source values, focus stability, and internal/page overflow at
+1440, 1024, 768, and 519 pixels. Reviewed screenshots are stored under
+`output/playwright/issue-712-performance-evidence-*`. The Performance Summary guide, repository
+context, review ledger, and CSS governance baseline change. Gateway/API/OpenAPI, calculation,
+dependency, authentication, and runtime topology truth do not.
