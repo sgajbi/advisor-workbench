@@ -128,6 +128,58 @@ describe("PortfolioScreenRail", () => {
     expect(navigation).toHaveAttribute("data-navigation-state", "collapsed");
   });
 
+  it("returns nested navigation to its closed default when the compact rail closes", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="advisory"
+        modeNavigationLabel="Advisory lifecycle navigation"
+        modeItems={[
+          {
+            key: "overview",
+            label: "Overview",
+            detail: "Advisor priorities",
+            active: true,
+            href: "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001",
+          },
+          {
+            key: "suitability",
+            label: "Suitability",
+            detail: "Mandate fit",
+            active: false,
+            href: "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=suitability",
+          },
+        ]}
+      />,
+    );
+
+    const railDisclosure = screen.getByRole("button", {
+      name: /current view overview/i,
+    });
+    fireEvent.click(railDisclosure);
+
+    const allWorkspaces = screen.getByRole("button", { name: /all workspaces/i });
+    const changeStep = screen.getByRole("button", {
+      name: /change workflow step/i,
+    });
+    fireEvent.click(allWorkspaces);
+    fireEvent.click(changeStep);
+
+    expect(allWorkspaces).toHaveAttribute("aria-expanded", "true");
+    expect(changeStep).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: /holdings valuation/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Suitability" })).toBeInTheDocument();
+
+    fireEvent.click(railDisclosure);
+    expect(railDisclosure).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(railDisclosure);
+    expect(allWorkspaces).toHaveAttribute("aria-expanded", "false");
+    expect(changeStep).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Suitability" })).not.toBeInTheDocument();
+  });
+
   it("closes on Escape and restores focus to the disclosure control", () => {
     render(
       <PortfolioScreenRail
