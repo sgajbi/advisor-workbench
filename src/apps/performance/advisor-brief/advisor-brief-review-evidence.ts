@@ -41,12 +41,16 @@ export function buildAdvisorBriefHumanReview(
     ...(sourceRecorded && actor ? { actor } : {}),
     ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
   };
+  const normalizedReviewState = workflowPackRun?.review_state.trim().toUpperCase();
 
   if (workflowPackRun?.review_pending === true) {
+    if (normalizedReviewState === "REJECTED" || normalizedReviewState === "ABANDONED") {
+      return { state: "unavailable", sourceRecorded: false };
+    }
     return { state: "review-required", sourceRecorded: false };
   }
 
-  switch (workflowPackRun?.review_state.trim().toUpperCase()) {
+  switch (normalizedReviewState) {
     case "ACCEPTED":
     case "REVISED":
     case "SUPERSEDED":
