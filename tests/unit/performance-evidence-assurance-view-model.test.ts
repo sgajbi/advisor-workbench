@@ -17,6 +17,8 @@ const selectedContext: PerformanceEvidenceSelectionContext = {
   period: "YTD",
   basis: "NET",
   benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+  contributionDimension: "asset_class",
+  attributionDimension: "asset_class",
 };
 
 function buildPerformanceEvidenceAssuranceViewModel(
@@ -431,6 +433,36 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
         "source_internal_reason",
       ])
     );
+  });
+
+  it("fails closed when source coverage omits the selected analytical dimensions", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        coverage: {
+          supported_dimensions: ["asset_class"],
+          unsupported_dimensions: [],
+        },
+      }),
+      {
+        contributionDimension: "issuer",
+        attributionDimension: "country",
+      }
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        key: "selected-dimension-coverage-unconfirmed",
+        title: "Selected analytical coverage not confirmed",
+        tone: "warn",
+      })
+    );
+    expect(
+      view.exceptions.find(
+        (exception) => exception.key === "selected-dimension-coverage-unconfirmed"
+      )?.detail
+    ).toContain("Issuer, Country");
   });
 
   it("accepts ready source aliases but gives stale freshness precedence", () => {

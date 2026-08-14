@@ -123,6 +123,8 @@ describe("PerformanceWorkspaceView", () => {
         reportEndDate: scenario.workspace.report_end_date,
         basis: scenario.workspace.detail_basis,
         benchmarkCode: scenario.workspace.benchmark_code,
+        contributionDimension: scenario.workspace.contribution_dimension,
+        attributionDimension: scenario.workspace.attribution_dimension,
       },
     });
   });

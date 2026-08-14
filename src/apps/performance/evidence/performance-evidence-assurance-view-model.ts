@@ -47,6 +47,8 @@ export type PerformanceEvidenceSelectionContext = {
   reportEndDate?: string | null;
   basis: string;
   benchmarkCode?: string | null;
+  contributionDimension: string;
+  attributionDimension: string;
 };
 
 export type PerformanceEvidenceAssuranceViewModel = {
@@ -786,6 +788,28 @@ function buildExceptions(
       title: "Evidence coverage not confirmed",
       detail: "The source did not publish the dimensional scope covered by this assurance package.",
       action: "Obtain source-confirmed coverage before applying the evidence conclusion.",
+      tone: "warn",
+    });
+  }
+  const supportedDimensionKeys = new Set(supportedDimensions.map(normalise));
+  const selectedDimensionsWithoutCoverage = Array.from(
+    new Set(
+      [selection.contributionDimension, selection.attributionDimension]
+        .map(normalise)
+        .filter(Boolean)
+    )
+  ).filter((dimension) => !supportedDimensionKeys.has(dimension));
+  if (selectedDimensionsWithoutCoverage.length) {
+    const knownLabels = selectedDimensionsWithoutCoverage
+      .map((dimension) => DIMENSION_LABELS[dimension])
+      .filter((label): label is string => Boolean(label));
+    exceptions.push({
+      key: "selected-dimension-coverage-unconfirmed",
+      title: "Selected analytical coverage not confirmed",
+      detail: knownLabels.length
+        ? `The source evidence does not confirm ${knownLabels.join(", ")} for the active performance review.`
+        : "The source evidence does not confirm every selected analytical breakdown for the active performance review.",
+      action: "Select a source-supported breakdown or obtain evidence for the current analytical view.",
       tone: "warn",
     });
   }

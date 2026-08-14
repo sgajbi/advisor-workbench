@@ -139,6 +139,8 @@ export default function PerformanceWorkspaceView({
         reportEndDate: workspace.report_end_date,
         basis: workspace.detail_basis,
         benchmarkCode: workspace.benchmark_code,
+        contributionDimension: workspace.contribution_dimension,
+        attributionDimension: workspace.attribution_dimension,
       }}
     />
   );
