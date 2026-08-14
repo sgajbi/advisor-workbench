@@ -1,4 +1,4 @@
-import { createServer, type Server } from 'node:http';
+import { createServer, type IncomingMessage, type Server } from 'node:http';
 
 import type {
   PerformanceComparativeSummary,
@@ -181,6 +181,21 @@ export async function startPerformanceFixtureGateway({
       sendJson(response, buildAdvisorBriefResponse(portfolioId));
       return;
     }
+    if (
+      request.method === 'POST' &&
+      requestUrl.pathname.endsWith('/performance/advisor-brief/review-actions')
+    ) {
+      void readJsonBody(request).then((body) => {
+        const reviewedBy = typeof body.reviewed_by === 'string' ? body.reviewed_by : '';
+        const actionType = body.action_type;
+        if (!reviewedBy || actionType !== 'ACCEPT') {
+          sendJson(response, { code: 'invalid_fixture_review_action' }, 422);
+          return;
+        }
+        sendJson(response, buildReviewedAdvisorBriefResponse(portfolioId, reviewedBy));
+      });
+      return;
+    }
 
     sendJson(response, { code: 'fixture_route_not_found' }, 404);
   });
@@ -190,6 +205,44 @@ export async function startPerformanceFixtureGateway({
     port,
     close: () => close(server),
   };
+}
+
+function buildReviewedAdvisorBriefResponse(
+  portfolioId: string,
+  reviewedBy: string,
+): WorkbenchPerformanceAdvisorBrief {
+  const brief = buildAdvisorBriefResponse(portfolioId);
+  return {
+    ...brief,
+    correlation_id: 'corr-advisor-brief-review-e2e',
+    workflow_pack_run: {
+      ...brief.workflow_pack_run!,
+      review_state: 'ACCEPTED',
+      latest_review_event_at: '2026-04-21T03:22:00Z',
+      latest_review_actor: reviewedBy,
+      review_transition_count: 1,
+      has_review_history: true,
+      allowed_review_actions: [],
+      supportability_status: 'READY',
+      review_pending: false,
+      current_summary_note: 'Review decision recorded for permitted internal workflow use.',
+      findings: [],
+    },
+  };
+}
+
+async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  if (chunks.length === 0) {
+    return {};
+  }
+  const parsed: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? (parsed as Record<string, unknown>)
+    : {};
 }
 
 function buildAdvisorBriefResponse(portfolioId: string): WorkbenchPerformanceAdvisorBrief {

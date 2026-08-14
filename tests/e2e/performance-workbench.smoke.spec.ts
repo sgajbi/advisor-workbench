@@ -56,7 +56,7 @@ test.afterAll(async () => {
 });
 
 async function resolveSmokePortfolioId(request: APIRequestContext) {
-  const response = await request.get('http://127.0.0.1:3000/api/bff/api/v1/lookups/portfolios?limit=8', {
+  const response = await request.get('/api/bff/api/v1/lookups/portfolios?limit=8', {
     timeout: 30000,
   });
   if (!response.ok()) {
@@ -936,6 +936,85 @@ test.describe('Performance workbench smoke', () => {
       path: 'output/playwright/diagnostic-ai-assistance-disclosure-532-narrow.png',
       fullPage: true,
     });
+  });
+
+  test('Advisor Brief review transaction requires confirmation and renders source-recorded proof', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    await page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Advisor Brief/i })
+      .click();
+
+    const review = page.getByLabel('Advisor brief human review');
+    await expect(review).toBeVisible();
+    await review.getByLabel('Review decision').selectOption('ACCEPT');
+    await review.getByLabel(/Reviewer reference/).fill('advisor_e2e');
+    await review
+      .getByLabel('Review rationale')
+      .fill('Source evidence and narrative are suitable for permitted internal use.');
+    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await page.screenshot({
+      path: 'output/playwright/issue-697-advisor-brief-review-desktop.png',
+      fullPage: true,
+    });
+
+    const reviewRequests: string[] = [];
+    page.on('request', (browserRequest) => {
+      if (browserRequest.url().includes('/performance/advisor-brief/review-actions')) {
+        reviewRequests.push(browserRequest.method());
+      }
+    });
+
+    await review.getByRole('button', { name: 'Review decision' }).click();
+    await expect(review.getByRole('button', { name: 'Confirm acceptance' })).toBeFocused();
+    expect(reviewRequests).toEqual([]);
+    await expect(review).toContainText('It does not approve client communication');
+
+    await review.getByRole('button', { name: 'Confirm acceptance' }).click();
+    await expect(review).toContainText(
+      'The brief was accepted for its permitted internal workflow use.',
+    );
+    await expect(review).toContainText('No further review decision is currently available');
+    expect(reviewRequests).toEqual(['POST']);
+
+    const disclosure = page.locator('details').filter({ hasText: 'How this was prepared' });
+    await disclosure.locator('summary').click();
+    await expect(disclosure).toContainText('Human review recorded');
+    await expect(disclosure).toContainText('advisor_e2e');
+    await expect(disclosure).toContainText('2026-04-21T03:22:00Z');
+    await expect(disclosure).toContainText('Not approved for client use');
+
+    const supportDetails = page.locator('details').filter({
+      hasText: 'Technical support details',
+    });
+    await expect(supportDetails).not.toHaveAttribute('open', '');
+
+    for (const width of [1440, 1024, 720, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await review.scrollIntoViewIfNeeded();
+      await expect(review).toBeVisible();
+      const overflow = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(2);
+    }
+
+    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await page.screenshot({
+      path: 'output/playwright/issue-697-advisor-brief-reviewed-narrow.png',
+      fullPage: true,
+    });
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('analysis contribution module renders live position detail cleanly', async ({ page, request }) => {
