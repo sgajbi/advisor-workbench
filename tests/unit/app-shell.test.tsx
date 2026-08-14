@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import AppShell from "@/shell/app-shell";
+import { buildAdvisorBookHref } from "@/shell/advisor-book-link";
 import LotusMark from "@/shell/lotus-mark";
 
 vi.mock("next/link", () => ({
@@ -61,6 +62,18 @@ describe("AppShell", () => {
     expect(screen.queryByText("Jordan Davis")).not.toBeInTheDocument();
     expect(screen.queryByText("Private Banker")).not.toBeInTheDocument();
     expect(screen.getByText("Portfolio workspace body")).toBeInTheDocument();
+  });
+});
+
+describe("buildAdvisorBookHref", () => {
+  it("preserves the active review date when returning to the advisor book", () => {
+    expect(buildAdvisorBookHref(new URLSearchParams("asOfDate=2026-04-22&mode=summary"))).toBe(
+      "/book?asOfDate=2026-04-22",
+    );
+  });
+
+  it("uses the advisor book default date when no review date is active", () => {
+    expect(buildAdvisorBookHref(new URLSearchParams("mode=summary"))).toBe("/book");
   });
 });
 
