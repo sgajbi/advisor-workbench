@@ -287,6 +287,7 @@ test("keeps report lifecycle and support discoverable across content-width chang
   const workstationHistory = page.getByRole("table", {
     name: "Recent portfolio report requests",
   });
+  const historyLayout = page.getByTestId("report-request-history-layout");
   await expect(workstationHistory).toBeVisible();
   await expect(workstationHistory.getByText("Report data complete")).toBeVisible();
   const workstationSupport = workstationHistory.getByText("Support reference", {
@@ -297,6 +298,25 @@ test("keeps report lifecycle and support discoverable across content-width chang
   await expect(workstationSupport).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(workstationHistory.getByText("rjob_1", { exact: true })).toBeVisible();
+  await historyLayout.evaluate((element) => {
+    element.style.width = "54rem";
+  });
+  await expect(workstationHistory).toBeVisible();
+  const workstationFrame = workstationHistory.locator("xpath=..");
+  expect(
+    await workstationFrame.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  await historyLayout.evaluate((element) => {
+    element.style.width = "calc(54rem - 1px)";
+  });
+  await expect(workstationHistory).not.toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Recent portfolio report request details" }),
+  ).toBeVisible();
+  await historyLayout.evaluate((element) => {
+    element.style.removeProperty("width");
+  });
+  await expect(workstationHistory).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
   await captureDiagnosticScreenshot(page, "request-history-tablet-1024");
 

@@ -4765,7 +4765,7 @@ Research was reviewed on 2026-08-15 from standards and official enterprise-produ
 
 ### Adopted decisions
 
-1. Keep the semantic five-column comparison table when the history module owns at least 760 pixels
+1. Keep the semantic five-column comparison table when the history module owns at least 54rem
    of content width and all lifecycle and support fields fit without clipping.
 2. Below that content capacity, render a compact operational record that leads with report identity and
    lifecycle, keeps report date and requested time together, and places the exact support reference

@@ -52,7 +52,7 @@ export function ReportRequestHistory({
           {isRefreshing ? (
             <WorkbenchInlineRefreshNote message="Refreshing recent requests. Previously confirmed lifecycle evidence remains visible." />
           ) : null}
-          <div className={styles.historyResponsive}>
+          <div className={styles.historyResponsive} data-testid="report-request-history-layout">
             <div className={styles.historyDesktop}>
               <AnalyticsTable
                 ariaLabel="Recent portfolio report requests"
