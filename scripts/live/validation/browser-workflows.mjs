@@ -838,7 +838,6 @@ export async function validateReportCentrePanel(
     portfolioId,
     timeoutMs,
     assertTableHasRows,
-    screenshotRegisteredPanel,
   },
 ) {
   await page.goto(`${workbenchBaseUrl}/reports?portfolioId=${portfolioId}`, {
@@ -900,7 +899,6 @@ export async function validateReportCentrePanel(
     1,
     "Recent portfolio report requests",
   );
-  await screenshotRegisteredPanel(page, "reporting.report_centre");
   return reportCentreProof;
 }
 

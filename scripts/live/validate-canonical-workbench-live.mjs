@@ -2001,6 +2001,10 @@ async function run() {
         reason: reportCentreProof.reason,
       },
     );
+    await browserHelpers.screenshotRegisteredPanel(
+      page,
+      "reporting.report_centre",
+    );
     await validatePerformanceSummaryPanel(page, {
       workbenchBaseUrl,
       portfolioId,

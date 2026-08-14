@@ -863,7 +863,10 @@ describe("canonical live validation script", () => {
     expect(panelGovernanceModule).toContain("Panel classification");
     expect(contractModule).toContain("allowedStates");
     expect(script).toContain("validateReportCentrePanel");
-    expect(browserWorkflowModule).toContain('"reporting.report_centre"');
+    expect(script).toContain('"reporting.report_centre"');
+    expect(browserWorkflowModule).not.toContain(
+      'screenshotRegisteredPanel(page, "reporting.report_centre")',
+    );
     expect(browserWorkflowModule).toContain('name: "Submit Report Request"');
     expect(browserWorkflowModule).toContain("Report request accepted");
     expect(browserWorkflowModule).not.toContain('name: "Request Accepted"');
@@ -961,11 +964,16 @@ describe("canonical live validation script", () => {
       '"reporting.report_centre"',
       reportWorkflowIndex,
     );
+    const reportScreenshotIndex = script.indexOf(
+      'await browserHelpers.screenshotRegisteredPanel(\n      page,\n      "reporting.report_centre",',
+      reportClassificationIndex,
+    );
     const finalAlignmentIndex = script.lastIndexOf(
       "panelGovernance.assertPanelSupportabilityAlignment()",
     );
     expect(reportWorkflowIndex).toBeGreaterThan(-1);
     expect(reportClassificationIndex).toBeGreaterThan(reportWorkflowIndex);
+    expect(reportScreenshotIndex).toBeGreaterThan(reportClassificationIndex);
     expect(finalAlignmentIndex).toBeGreaterThan(reportClassificationIndex);
     expect(script).toContain(
       "const reportCentreProof = await validateReportCentrePanel(page",
