@@ -246,13 +246,19 @@ function calculationRolePresentation(
 ) {
   return CALCULATION_ROLE_PRESENTATION[normalise(calculation.calculation_role)] ?? {
     title: `Additional performance calculation ${index + 1}`,
-    purpose: "Provides additional source-published calculation evidence for the selected view.",
+    purpose: "Business purpose not confirmed by the source.",
   };
 }
 
 function resolveCalculationLifecyclePresentation(
   calculation: PerformanceCalculationEvidenceView
 ): { label: string; tone: PerformanceEvidenceTone } {
+  if (
+    !calculation.calculation_id?.trim() ||
+    !CALCULATION_ROLE_PRESENTATION[normalise(calculation.calculation_role)]
+  ) {
+    return { label: "Not confirmed", tone: "default" };
+  }
   const aggregate = lifecyclePresentation(calculation.execution_status, "calculation");
   const stageStates = safeArray(calculation.stage_statuses).map((stage) => normalise(stage.status));
   if (!stageStates.length || stageStates.every((state) => state === COMPLETE_STATUS)) {
@@ -493,11 +499,11 @@ function buildExceptions(
         tone: "warn",
       });
     }
-    if (!calculation.calculation_role?.trim()) {
+    if (!CALCULATION_ROLE_PRESENTATION[normalise(calculation.calculation_role)]) {
       exceptions.push({
         key: `calculation-role-${index}`,
         title: `${calculationTitle} purpose not confirmed`,
-        detail: "The source did not identify the business purpose covered by this calculation evidence.",
+        detail: "The source did not publish a recognised business purpose for this calculation evidence.",
         action: "Obtain a source-confirmed calculation role before relying on this item.",
         tone: "warn",
       });
