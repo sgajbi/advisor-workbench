@@ -255,6 +255,35 @@ describe("PerformanceContributionContextNote", () => {
     ).toBeInTheDocument();
   });
 
+  it("fails closed and exposes an empty source reason-code entry", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...buildSourceBackedEvidence(contribution),
+            reason_codes: [
+              "LOTUS_CORE_ANALYTICS_INPUTS_USED",
+              "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
+              "",
+            ],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence needs review");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    expectEvidenceValue(
+      openCalculationEvidence(),
+      "Source reason codes",
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED, UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE, [empty value]",
+    );
+  });
+
   it("rejects a noncanonical source-status spelling instead of silently promoting it", () => {
     const contribution = buildContribution();
     render(
@@ -604,5 +633,37 @@ describe("PerformanceContributionContextNote", () => {
     const evidence = openCalculationEvidence();
     expect(within(evidence).getByText("INVALID_DOMAIN_FALLBACK")).toBeInTheDocument();
     expect(within(evidence).getByText("CARINO_INVALID_DAILY_LOG_DOMAIN")).toBeInTheDocument();
+  });
+
+  it("rejects a no-contribution-rows status when ranked rows are present", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          position_rows: [
+            {
+              position_id: "POSITION_1",
+              contribution_pct: 1.2,
+              weight_avg_pct: 20,
+              total_return_pct: 6,
+              local_contribution_pct: 1,
+              fx_contribution_pct: 0.2,
+            },
+          ],
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            status: "NO_CONTRIBUTION_ROWS",
+            reason_codes: ["NO_CONTRIBUTION_ROWS"],
+          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution observations are unavailable");
   });
 });

@@ -42,7 +42,11 @@ export function getContributionEvidenceInconsistency(
 ): ContributionEvidenceInconsistency | null {
   if (
     !isSourceEvidenceConsistent(contribution, sourceStatus) ||
-    !isSmoothingEvidenceConsistent(smoothingStatus, contribution.smoothing_evidence?.reason_codes)
+    !isSmoothingEvidenceConsistent(
+      contribution,
+      smoothingStatus,
+      contribution.smoothing_evidence?.reason_codes,
+    )
   ) {
     return "status_or_reason";
   }
@@ -121,6 +125,7 @@ function hasReasonEvidenceForDeclaredLimitations(
 }
 
 function isSmoothingEvidenceConsistent(
+  contribution: ContributionSummaryView,
   smoothingStatus: string,
   reasonCodes: string[] | undefined,
 ): boolean {
@@ -150,10 +155,14 @@ function isSmoothingEvidenceConsistent(
         "CARINO_INVALID_DAILY_LOG_DOMAIN",
       );
     case "NO_CONTRIBUTION_ROWS":
-      return hasOnlyExpectedReasons(
-        publishedReasonCodes,
-        ["NO_CONTRIBUTION_ROWS"],
-        "NO_CONTRIBUTION_ROWS",
+      return (
+        hasOnlyExpectedReasons(
+          publishedReasonCodes,
+          ["NO_CONTRIBUTION_ROWS"],
+          "NO_CONTRIBUTION_ROWS",
+        ) &&
+        contribution.position_rows.length === 0 &&
+        contribution.levels.every((level) => level.rows.length === 0)
       );
     default:
       return false;
