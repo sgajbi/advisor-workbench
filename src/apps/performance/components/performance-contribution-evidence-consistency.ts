@@ -149,7 +149,7 @@ function isSnapshotLineageConsistent(
   if (hasExecutionOnlyLineage) {
     return sourceSnapshotCount === 0;
   }
-  return true;
+  return sourceSnapshotCount > 0;
 }
 
 function hasReasonEvidenceForDeclaredLimitations(
@@ -238,7 +238,11 @@ function isPublishedContributionReconciled(
   contribution: ContributionSummaryView,
   smoothingStatus: string,
 ): boolean {
-  if (smoothingStatus !== "APPLIED" && smoothingStatus !== "NOT_REQUESTED") {
+  if (
+    smoothingStatus !== "APPLIED" &&
+    smoothingStatus !== "NOT_REQUESTED" &&
+    smoothingStatus !== "INVALID_DOMAIN_FALLBACK"
+  ) {
     return true;
   }
 

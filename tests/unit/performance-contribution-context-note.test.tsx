@@ -792,6 +792,50 @@ describe("PerformanceContributionContextNote", () => {
     expect(within(evidence).getByText("CARINO_INVALID_DAILY_LOG_DOMAIN")).toBeInTheDocument();
   });
 
+  it("rejects smoothing fallback guidance when its numeric evidence is incomplete", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            status: "INVALID_DOMAIN_FALLBACK",
+            reason_codes: ["CARINO_INVALID_DAILY_LOG_DOMAIN"],
+            final_contribution_pct: null,
+          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution reconciliation needs review");
+    expect(note).not.toHaveTextContent("Contribution evidence has a methodology limitation");
+    expectEvidenceValue(openCalculationEvidence(), "Final contribution", "Not published");
+  });
+
+  it("rejects source-limited evidence with neither snapshots nor execution-only lineage", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            source_snapshot_count: 0,
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is limited");
+  });
+
   it("rejects a no-contribution-rows status when ranked rows are present", () => {
     const contribution = buildContribution();
     render(
