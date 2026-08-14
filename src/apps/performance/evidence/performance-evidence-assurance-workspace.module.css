@@ -402,7 +402,7 @@
 }
 
 .supportGroup dd {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   line-height: 1.42;
 }
