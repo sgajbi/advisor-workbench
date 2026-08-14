@@ -108,6 +108,8 @@ and never reads platform files or domain services directly. Shared contract deta
 | Catalogue ready | Source context, business summary, products, approved use, assurance, and dependency impact | Confirm the publication time and intended use |
 | Empty catalogue | An explicit source-confirmed absence of products | Do not infer that products exist; follow the first support step if entries are expected |
 | Catalogue unavailable | A blocking business-safe error with no raw Gateway response and no product cards | Choose **Retry catalogue**; the full discovery surface remains unavailable until the catalogue succeeds |
+| Catalogue refresh checking | The source context remains visible, but cached product cards are withheld while the required catalogue is reconfirmed | Wait; **Source confirmed** returns only after Gateway success |
+| Catalogue refresh failure | A blocking error and the same focused **Retry catalogue** control; cached product cards and prior publication metadata are not presented as current | Retry the required source; no optional evidence can recertify the catalogue |
 | Assurance checking | Product cards remain visible with assurance fields marked **Checking** | Wait or keep reviewing catalogue facts that do not depend on assurance |
 | Assurance unavailable | Product cards and approved use remain visible; assurance fields show **Not available** and no certified total is invented | Choose **Retry assurance** or **Refresh assurance** |
 | Source-reported assurance unavailable | The source-owned reason and unavailable posture are shown | Do not interpret catalogue presence as certification |
@@ -149,11 +151,12 @@ superiority.
 - `tests/unit/domain-products-api.test.ts` proves the three independent BFF contract reads and
   bounded observability labels.
 - `tests/unit/domain-product-discovery-client.test.tsx` proves success, empty catalogue, blocking
-  catalogue failure, source-owned unavailable assurance, optional-source failure, retained earlier
-  evidence, recovery, safe copy, no fabricated certification, and stable focus.
+  catalogue failure, cached required-source refresh failure, duplicate-fenced retry, source-owned
+  unavailable assurance, optional-source failure, retained earlier evidence, recovery, safe copy,
+  no fabricated certification, and stable focus.
 - `tests/e2e/data-product-catalogue.spec.ts` runs against an optimized Workbench build and proves
-  desktop, tablet, narrow-screen, horizontal-overflow, console, partial-source failure, recovery,
-  and keyboard-focus posture.
+  desktop, tablet, narrow-screen, horizontal-overflow, console, required and optional source
+  failure, recovery, cached-evidence blocking, and keyboard-focus posture.
 - The focused production-browser command uses an isolated port and does not require or mutate the
   shared canonical stack.
 - Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the

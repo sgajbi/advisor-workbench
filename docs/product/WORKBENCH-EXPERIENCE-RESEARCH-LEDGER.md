@@ -4303,6 +4303,13 @@ Research was reviewed on 2026-08-14 from primary enterprise catalogue sources:
 3. [IBM data-product guidance](https://www.ibm.com/docs/en/watsonx/wdi/saas?topic=data-products)
    describes a catalogue organized around trustworthy, reusable products for a business need,
    with ownership and availability evidence supporting consumption decisions.
+4. [TanStack Query `useQuery` reference](https://tanstack.com/query/latest/docs/framework/react/reference/useQuery)
+   distinguishes first-load failure from `isRefetchError` and retains the last successful `data`
+   after a refetch failure. Cached data presence is therefore not proof that a required refresh
+   succeeded.
+5. [WCAG 2.2 status-message guidance](https://www.w3.org/WAI/WCAG22/Techniques/failures/F103.html)
+   requires dynamic progress, failure, and recovery messages to be programmatically determinable
+   without taking focus merely to announce the outcome.
 
 ### Adopted decisions
 
@@ -4312,13 +4319,16 @@ Research was reviewed on 2026-08-14 from primary enterprise catalogue sources:
 2. Read catalogue, trust certification, and dependency graph through three independent TanStack
    Query sources. The catalogue is required; optional source failure retains confirmed catalogue
    evidence and never fabricates certification or graph totals.
-3. Keep assurance and dependency refresh controls mounted, suppress duplicate refresh activation
-   with `aria-disabled`, and announce checking, failure, and confirmation in stable live regions so
-   keyboard focus does not fall back to the document after recovery.
-4. Preserve earlier source-confirmed optional evidence after refresh failure only when it is
+3. Treat required-catalogue first load, background checking, refetch failure, and confirmation as
+   explicit states. Withhold cached catalogue content while its required refresh is checking or has
+   failed; cached `data` alone cannot retain **Source confirmed** language.
+4. Keep catalogue, assurance, and dependency refresh controls mounted, suppress duplicate refresh
+   activation with `aria-disabled`, and announce checking, failure, and confirmation in stable live
+   regions so keyboard focus does not fall back to the document after recovery.
+5. Preserve earlier source-confirmed optional evidence after refresh failure only when it is
    explicitly labelled earlier evidence. A response that reports trust unavailable remains
    distinct from transport failure and never becomes a zero-certified success.
-5. Move every screen selector from legacy global CSS into a feature-owned module, lower the global
+6. Move every screen selector from legacy global CSS into a feature-owned module, lower the global
    CSS ratchet, and forbid the removed `domain-products-` selector prefix from returning.
 
 ### Rejected decisions
@@ -4343,3 +4353,12 @@ optimized-browser proof covers desktop, tablet, narrow-screen, overflow, deliber
 recovery, console, and keyboard posture without disturbing the shared stack. The screen registry,
 complete business guide, catalogue, API notes, mesh boundary, wiki navigation, and CSS governance
 change with the implementation. Gateway contracts and platform-generated artifacts are unchanged.
+
+Workbench #695 owns the late required-cache correction. The always-mounted catalogue source
+context now blocks discovery during required refresh and after refetch failure, exposes one real
+duplicate-fenced Gateway retry, preserves focus across checking and recovery, and recertifies the
+screen only after source success. Focused component proof covers initial failure, cached refetch
+failure, repeat activation, recovery, safe copy, and focus. Isolated optimized-browser proof covers
+the same path at narrow width with exact expected source-error evidence and no page overflow. The
+guide and repository context change because required-source state truth changed; Gateway/API,
+OpenAPI, authentication, platform artifacts, and the mature dependency stack do not.
