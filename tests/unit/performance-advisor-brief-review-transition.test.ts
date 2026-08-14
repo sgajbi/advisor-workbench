@@ -57,8 +57,15 @@ describe("advisor brief review transition evidence", () => {
     expect(isConfirmed()).toBe(true);
   });
 
-  it.each(["ACCEPTED", "REVISED", "NOT_REVIEW_REQUIRED"])(
-    "fails a contradictory pending %s read posture closed to review required",
+  it.each([
+    "ACCEPTED",
+    "REJECTED",
+    "REVISED",
+    "SUPERSEDED",
+    "ABANDONED",
+    "NOT_REVIEW_REQUIRED",
+  ])(
+    "fails a contradictory pending %s read posture closed to unavailable",
     (reviewState) => {
       expect(
         buildAdvisorBriefHumanReview({
@@ -66,18 +73,18 @@ describe("advisor brief review transition evidence", () => {
           review_state: reviewState,
           review_pending: true,
         })
-      ).toEqual({ state: "review-required", sourceRecorded: false });
+      ).toEqual({ state: "unavailable", sourceRecorded: false });
     }
   );
 
-  it.each(["REJECTED", "ABANDONED"])(
-    "fails a contradictory pending %s prohibition closed to unavailable",
+  it.each(["REVIEW_REQUIRED", "PENDING", "UNRECOGNIZED"])(
+    "fails unlabeled review-state alias %s closed to unavailable",
     (reviewState) => {
       expect(
         buildAdvisorBriefHumanReview({
           ...baseRun,
           review_state: reviewState,
-          review_pending: true,
+          review_pending: false,
         }),
       ).toEqual({ state: "unavailable", sourceRecorded: false });
     },

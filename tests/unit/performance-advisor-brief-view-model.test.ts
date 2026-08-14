@@ -617,9 +617,18 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     );
   });
 
-  it.each(["REJECTED", "ABANDONED"] as const)(
-    "blocks copy when source %s contradicts a pending review flag",
-    (reviewState) => {
+  it.each([
+    ["ACCEPTED", true],
+    ["REJECTED", true],
+    ["REVISED", true],
+    ["SUPERSEDED", true],
+    ["ABANDONED", true],
+    ["NOT_REVIEW_REQUIRED", true],
+    ["REVIEW_REQUIRED", false],
+    ["PENDING", false],
+  ] as const)(
+    "blocks copy when source review state %s has pending=%s without coherent governed posture",
+    (reviewState, reviewPending) => {
       const scenario = buildSupportedPerformanceScenario();
       const brief = buildPerformanceAdvisorBriefViewModel({
         workspace: scenario.workspace,
@@ -634,7 +643,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
             has_review_history: true,
             allowed_review_actions: [],
             supportability_status: "ACTION_REQUIRED",
-            review_pending: true,
+            review_pending: reviewPending,
             superseded: false,
             workflow_authority_owner: "lotus-gateway",
             current_summary_note: "Contradictory review posture.",
@@ -656,6 +665,15 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         sourceRecorded: false,
       });
       expect(canCopyAdvisorBrief(brief)).toBe(false);
+      expect(brief.supportability).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            label: "Brief Preparation",
+            detail:
+              "Preparation record is not usable because source review posture is incomplete or contradictory",
+          }),
+        ]),
+      );
     },
   );
 

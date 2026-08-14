@@ -877,7 +877,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     fireEvent.click(screen.getByRole("button", { name: "Confirm acceptance" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The review decision was not recorded"
+      "The review decision could not be confirmed. Refresh the brief to reconcile the latest source status before retrying."
     );
     expect(screen.getByLabelText("Status Awaiting review")).toBeInTheDocument();
     expect(screen.queryByText(/brief was accepted for its permitted internal workflow/i))
@@ -1030,7 +1030,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     fireEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The review decision was not recorded. Keep the rationale in place and try again."
+      "The review decision could not be confirmed. Refresh the brief to reconcile the latest source status before retrying."
     );
     expect(screen.getByText("advisor_3")).toBeInTheDocument();
     expect(

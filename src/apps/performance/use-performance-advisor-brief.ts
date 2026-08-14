@@ -186,7 +186,7 @@ export function usePerformanceAdvisorBrief({
             state: "failed",
             message: isWorkbenchPermissionBlockedError(error)
               ? "This review decision is not permitted for the current access context."
-              : "The review decision was not recorded. Keep the rationale in place and try again.",
+              : "The review decision could not be confirmed. Refresh the brief to reconcile the latest source status before retrying.",
           });
         }
         throw error;
