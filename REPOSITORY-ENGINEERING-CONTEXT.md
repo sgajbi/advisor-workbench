@@ -191,7 +191,15 @@ Current repository posture:
     OMS claims.
 16. Shared portfolio navigation is a product-shell responsibility, not a page-local styling
     concern. `PortfolioScreenRail` owns one dark, high-contrast context/navigation surface across
-    Portfolio, Performance, Manage, and Report Centre. At stacked-shell widths it presents
+    Portfolio, Performance, Manage, Advisory, and Report Centre. The rail prioritizes five daily
+    work domains—Portfolio review, Performance, Advice, Reporting, and Mandate management—then
+    exposes the active specialist task and a grouped **All workspaces** directory without
+    duplicating the current destination. When a workspace has modes, show the current workflow
+    step first and disclose alternative steps on demand. The global shell separately owns
+    **My book** and the capability-backed workspace switcher; it must not repeat a visible feature
+    catalogue, infer a role or entitlement in the browser, or make a capability-disabled entry
+    actionable. Returning to **My book** preserves a valid active `asOfDate` review context.
+    At stacked-shell widths the portfolio rail presents
     portfolio switching, the governed portfolio identifier, and the current business view as a
     compact header; the route list remains collapsed until requested, closes on Escape, and
     restores focus. The rail owns its internal spacing and must neutralize generic `Panel` padding
@@ -1047,6 +1055,10 @@ Most relevant current governance:
    portfolio and current-view context through the accessible disclosure behavior instead of
    rendering the full route list before the selected business task. Navigation remains semantic
    links, not an ARIA menu or a page-local select control.
+   The default rail is a task map, not a route inventory: daily work stays visible, the current
+   specialist task appears once, **All workspaces** owns grouped secondary destinations, and only
+   the current workflow step precedes its on-demand alternatives. Escape closes either nested
+   disclosure and restores focus to its trigger.
 8. Advisor-facing readiness and shell-workspace availability must use typed, category-specific
    exact mappings from supported source values to business posture. Open strings, nulls, unknown
    values, and values supplied under the wrong category fail closed as neutral `Not reported` or
@@ -1065,7 +1077,10 @@ Most relevant current governance:
     Allocation belongs to the Portfolio workspace. Data Product Catalogue is a cross-platform
     utility outside the five Gateway `shell-bootstrap.v1` advisor workspaces, so it deliberately
     renders no current workspace rather than inventing a sixth capability or selecting an unrelated
-    domain. Home, platform utility, workspace, and unmatched route scopes remain distinct.
+    domain. Home, platform utility, workspace, and unmatched route scopes remain distinct. Render
+    the normalized capability set through the shared workspace switcher, closed by default, with
+    unavailable entries visibly non-actionable; do not restore an always-visible row of workspace
+    pills or add shell-local availability logic.
 11. Shared interactive primitives own their base, priority, focus, hover, disabled, reduced-motion,
     and accessibility presentation beside the component. `ActionButton` keeps stable compatibility
     class names only for existing feature-level sizing and placement; global CSS must not regain its
