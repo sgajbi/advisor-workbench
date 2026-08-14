@@ -619,17 +619,17 @@ describe("PerformanceAdvisorBriefMode", () => {
   });
 
   it.each([
-    ["AWAITING_REVIEW", true, "warn"],
-    ["ACCEPTED", false, "success"],
-    ["REJECTED", false, "danger"],
-    ["ABANDONED", false, "danger"],
-    ["REVISED", false, "default"],
-    ["SUPERSEDED", false, "default"],
-    ["NOT_REVIEW_REQUIRED", false, "default"],
-    ["UNRECOGNIZED", false, "default"],
+    ["AWAITING_REVIEW", true, "Awaiting review", "warn"],
+    ["ACCEPTED", false, "Accepted for internal use", "success"],
+    ["REJECTED", false, "Rejected", "danger"],
+    ["ABANDONED", false, "Withdrawn", "danger"],
+    ["REVISED", false, "Revision requested", "default"],
+    ["SUPERSEDED", false, "Superseded", "default"],
+    ["NOT_REVIEW_REQUIRED", false, "No review required", "default"],
+    ["UNRECOGNIZED", false, "Not reported", "default"],
   ])(
-    "maps %s with pending=%s to %s tone without optimistic severity",
-    (reviewState, reviewPending, expectedTone) => {
+    "maps %s with pending=%s to the %s label and %s tone without optimistic severity",
+    (reviewState, reviewPending, expectedLabel, expectedTone) => {
       const workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun = {
         ...readyAdvisorBriefResponse.workflow_pack_run!,
         review_state: reviewState,
@@ -650,9 +650,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       );
 
       expect(
-        screen.getByLabelText(
-          new RegExp(`Status ${reviewState.replaceAll("_", " ")}`, "i")
-        )
+        screen.getByLabelText(`Status ${expectedLabel}`)
       ).toHaveClass(`semantic-badge-${expectedTone}`);
     }
   );
@@ -672,7 +670,9 @@ describe("PerformanceAdvisorBriefMode", () => {
       />
     );
 
-    expect(screen.getByLabelText("Status Accepted")).toHaveClass("semantic-badge-default");
+    expect(screen.getByLabelText("Status Accepted for internal use")).toHaveClass(
+      "semantic-badge-default"
+    );
   });
 
   it("records a bounded review action and refreshes the run posture in place", async () => {
@@ -816,7 +816,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The review decision was not recorded"
     );
-    expect(screen.getByLabelText("Status Awaiting Review")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Awaiting review")).toBeInTheDocument();
     expect(screen.queryByText(/brief was accepted for its permitted internal workflow/i))
       .not.toBeInTheDocument();
   });

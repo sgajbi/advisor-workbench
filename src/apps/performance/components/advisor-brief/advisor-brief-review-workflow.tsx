@@ -304,13 +304,18 @@ function isKnownReviewAction(
   return Object.hasOwn(REVIEW_ACTIONS, value);
 }
 
+const REVIEW_STATE_LABELS: Readonly<Record<string, string>> = {
+  ACCEPTED: "Accepted for internal use",
+  REJECTED: "Rejected",
+  REVISED: "Revision requested",
+  SUPERSEDED: "Superseded",
+  ABANDONED: "Withdrawn",
+  AWAITING_REVIEW: "Awaiting review",
+  NOT_REVIEW_REQUIRED: "No review required",
+};
+
 function toBusinessStateLabel(value: string): string {
-  return value
-    .toLowerCase()
-    .split("_")
-    .filter(Boolean)
-    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-    .join(" ");
+  return REVIEW_STATE_LABELS[value.toUpperCase()] ?? "Not reported";
 }
 
 function getReviewStateTone(
