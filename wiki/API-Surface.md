@@ -79,8 +79,11 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/workbench/{portfolio_id}/performance/attribution-trend`; the browser uses
   `/api/bff/api/v1/...` and keeps history retrieval failure distinct from a source-confirmed empty
   response
-- data-product discovery is served through `/data-products` and consumes gateway
-  `/api/v1/domain-products/*` APIs through the internal BFF only
+- Data Product Catalogue is served through `/data-products` and independently consumes Gateway
+  `/api/v1/domain-products/catalog`, `/dependency-graph`, and `/trust-certification` through the
+  internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;
+  assurance or graph failure leaves confirmed catalogue evidence available and does not authorize
+  a browser fallback or direct platform-artifact read.
 - internal browser-to-gateway traffic can flow through `/api/bff/*`
 - `/book` consumes `GET /api/v1/advisor-book/portfolios` through the Workbench BFF. The BFF
   replaces browser-supplied actor, tenant, region, booking-centre, role, and capability headers;

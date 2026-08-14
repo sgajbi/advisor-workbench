@@ -371,23 +371,25 @@
     },
     {
       "id": "data-product-discovery",
-      "businessName": "Data-Product Discovery",
+      "businessName": "Data Product Catalogue",
       "family": "platform",
       "routePattern": "/data-products",
       "mode": null,
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "Lotus domain services"],
-      "implementationEvidence": ["src/app/data-products/page.tsx"],
-      "runtimeEvidence": [],
+      "wikiSlug": "Data-Product-Catalogue-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-platform", "Lotus domain services"],
+      "implementationEvidence": [
+        "src/app/data-products/page.tsx",
+        "src/features/domain-products/api.ts",
+        "src/features/domain-products/domain-product-discovery-client.tsx",
+        "src/features/domain-products/domain-product-catalogue-sections.tsx",
+        "src/features/domain-products/domain-product-source-sections.tsx"
+      ],
+      "runtimeEvidence": ["tests/e2e/data-product-catalogue.spec.ts"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "reporting-and-data-product-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "report-centre",

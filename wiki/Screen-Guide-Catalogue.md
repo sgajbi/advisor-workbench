@@ -9,8 +9,9 @@ to find its operating guide.
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
-Transactions, Income And Activity, Projected Cash Movement, Performance Summary, Performance
-Analysis, and Report Centre have passed the complete guide standard; the remaining 27 dedicated guides are explicit work under
+Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Performance Summary,
+Performance Analysis, Report Centre, and Data Product Catalogue have passed the complete guide
+standard; the remaining 25 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -154,13 +155,14 @@ reporting or service contracts.
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | [Report Centre](Report-Centre-Screen-Guide) | `/reports` | Active | Guide available | Gateway and Report |
-| Data-Product Discovery | `/data-products` | Active | Guide planned — #605 | Gateway and Lotus domain services |
+| [Data Product Catalogue](Data-Product-Catalogue-Screen-Guide) | `/data-products` | Active | Guide available | Gateway, lotus-platform, and Lotus domain services |
 
 The Report Centre guide covers approved report choices, reviewed single-portfolio requests,
 source-backed portfolio-bundle selection, separate per-portfolio outcomes, archive and delivery
-boundaries, and failure recovery only where currently implemented. The Data-Product Discovery
-guide will explain ownership, trust posture, and live availability without treating catalogue
-metadata as proof that a downstream business workflow is ready.
+boundaries, and failure recovery only where currently implemented. The Data Product Catalogue
+guide covers accountable ownership, approved use, live assurance, dependency impact, and
+independent recovery without treating catalogue metadata as proof that a downstream business
+workflow is ready.
 
 ## Workflow Use
 

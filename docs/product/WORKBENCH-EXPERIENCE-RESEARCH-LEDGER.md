@@ -4280,3 +4280,66 @@ blocking-lint governance test proves both the compiler entrypoint and its inclus
 lint`. Repository context and the review ledger change because state ownership and CI truth changed.
 No business feature, visual composition, Gateway/API/OpenAPI contract, CSS, source calculation,
 runtime topology, README, or wiki truth changed.
+
+## Data Product Catalogue Resilience And Information Hierarchy
+
+### Business job
+
+Product owners, data stewards, operations teams, support teams, and investment specialists need to
+find a governed data product, understand who is accountable for it, and determine whether approved
+use, assurance, and downstream-impact evidence support the intended work. A secondary evidence
+outage must not erase a still-usable catalogue or encourage a local substitute.
+
+### Current-product research
+
+Research was reviewed on 2026-08-14 from primary enterprise catalogue sources:
+
+1. [Microsoft Purview Unified Catalog](https://learn.microsoft.com/en-us/purview/unified-catalog)
+   organizes governed discovery around business context, ownership, health, actions, search, and
+   lineage rather than leading with storage paths or service implementation.
+2. [Microsoft data-product management guidance](https://learn.microsoft.com/en-in/purview/unified-catalog-data-products-create-manage)
+   treats owner, lifecycle, update cadence, purpose, terms of use, and product health as product
+   management facts needed for discovery and review.
+3. [IBM data-product guidance](https://www.ibm.com/docs/en/watsonx/wdi/saas?topic=data-products)
+   describes a catalogue organized around trustworthy, reusable products for a business need,
+   with ownership and availability evidence supporting consumption decisions.
+
+### Adopted decisions
+
+1. Rename the visible surface from the technical **Domain Product Discovery** label to **Data
+   Product Catalogue** and lead with governed product identity, accountable source, approved use,
+   assurance, and downstream impact.
+2. Read catalogue, trust certification, and dependency graph through three independent TanStack
+   Query sources. The catalogue is required; optional source failure retains confirmed catalogue
+   evidence and never fabricates certification or graph totals.
+3. Keep assurance and dependency refresh controls mounted, suppress duplicate refresh activation
+   with `aria-disabled`, and announce checking, failure, and confirmation in stable live regions so
+   keyboard focus does not fall back to the document after recovery.
+4. Preserve earlier source-confirmed optional evidence after refresh failure only when it is
+   explicitly labelled earlier evidence. A response that reports trust unavailable remains
+   distinct from transport failure and never becomes a zero-certified success.
+5. Move every screen selector from legacy global CSS into a feature-owned module, lower the global
+   CSS ratchet, and forbid the removed `domain-products-` selector prefix from returning.
+
+### Rejected decisions
+
+1. Keeping one `Promise.all` aggregate, because assurance or graph failure would continue to hide
+   a usable catalogue.
+2. Catching optional-source failure and returning fabricated empty success payloads, because zero
+   relationships or certifications is a business fact that only the source may publish.
+3. Rendering raw HTTP status, artifact paths, or Gateway response text, because these do not give
+   a business user a safe recovery decision.
+4. Adding catalogue editing, access requests, search, AI summaries, or domain-service calls without
+   the corresponding source contract and operating authority.
+5. Adding another component or styling library; the proven Workbench design system, TanStack Query,
+   CSS Modules, Vitest, and Playwright already provide the required production pattern.
+
+### Validation and publication decision
+
+Workbench #693 owns the slice. Focused API and component proof covers independent reads, success,
+empty catalogue, blocking catalogue failure, source-reported unavailable assurance, optional-source
+failure and recovery, retained earlier evidence, business-safe copy, and focus stability. Isolated
+optimized-browser proof covers desktop, tablet, narrow-screen, overflow, deliberate source-error,
+recovery, console, and keyboard posture without disturbing the shared stack. The screen registry,
+complete business guide, catalogue, API notes, mesh boundary, wiki navigation, and CSS governance
+change with the implementation. Gateway contracts and platform-generated artifacts are unchanged.

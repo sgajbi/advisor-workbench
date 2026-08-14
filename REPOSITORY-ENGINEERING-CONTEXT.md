@@ -1046,7 +1046,7 @@ Most relevant current governance:
 10. Global workspace orientation is owned by the typed route context in
     `src/shell/app-registry.ts`. Match full route segments, cover every checked-in screen-registry
     entrypoint, and reuse canonical mode normalization instead of page-local or shell-local aliases.
-    Allocation belongs to the Portfolio workspace. Data-Product Discovery is a cross-platform
+    Allocation belongs to the Portfolio workspace. Data Product Catalogue is a cross-platform
     utility outside the five Gateway `shell-bootstrap.v1` advisor workspaces, so it deliberately
     renders no current workspace rather than inventing a sixth capability or selecting an unrelated
     domain. Home, platform utility, workspace, and unmatched route scopes remain distinct.
@@ -1063,6 +1063,12 @@ Most relevant current governance:
     the active architecture does not regress to the retired path, lower the exact CSS ratchet, and
     prohibit the retired selector family from returning. Do not migrate CSS for a component with no
     production consumer.
+13. Data Product Catalogue treats its catalogue as the required discovery source and live
+    assurance plus dependency impact as independently recoverable evidence sources. Use separate
+    strict query keys, retain confirmed catalogue facts during optional-source failure, label any
+    retained earlier evidence, keep recovery controls mounted for focus stability, and never
+    convert failure into a successful empty certification or graph. The browser consumes these
+    contracts through Gateway only and does not read platform artifacts directly.
 
 ## Context Maintenance Rule
 
@@ -1074,7 +1080,7 @@ Update this document when:
 4. dominant design-system or shell patterns change,
 5. current product-surface maturity or rollout posture materially changes,
 6. active versus legacy route posture changes.
-7. domain-product discovery route, gateway endpoint usage, or trust-state rendering changes.
+7. data-product catalogue route, Gateway endpoint usage, or trust-state rendering changes.
 
 ## Cross-Links
 

@@ -36,6 +36,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
   [Report Centre](Report-Centre-Screen-Guide)
+- Governed product ownership, approved use, live assurance, and dependency impact:
+  [Data Product Catalogue](Data-Product-Catalogue-Screen-Guide)
 - Governed business guide inventory for every active screen and mode:
   [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - Bank architecture and procurement evidence for the supported runtime baseline:
@@ -45,7 +47,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 
 - primary product client for Lotus
 - Portfolio and Performance are the most mature active front-office surfaces
-- `/data-products` provides gateway-backed domain-product discovery and live trust posture
+- `/data-products` provides a Gateway-backed data product catalogue whose assurance and dependency
+  evidence can fail and recover independently without hiding usable catalogue facts
 - `/book` provides Gateway-backed own-book portfolio membership and task-preserving portfolio
   context switching; richer team, delegate, supervisor, household, AUM, and attention scope is not
   claimed
@@ -92,6 +95,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)
+- [Data Product Catalogue](Data-Product-Catalogue-Screen-Guide)
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Architecture](Architecture)
 - [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support)
