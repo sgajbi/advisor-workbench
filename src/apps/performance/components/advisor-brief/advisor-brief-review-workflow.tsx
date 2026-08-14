@@ -87,14 +87,6 @@ export default function AdvisorBriefReviewWorkflow({
     !isApplying;
 
   useEffect(() => {
-    setSelectedAction("");
-    setReviewedBy("");
-    setReviewReason("");
-    setReplacementRunId("");
-    setStep("edit");
-  }, [workflowPackRun.run_id, workflowPackRun.review_state]);
-
-  useEffect(() => {
     if (step === "confirm") {
       confirmButtonRef.current?.focus();
     }

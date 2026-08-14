@@ -527,6 +527,93 @@ describe("PerformanceAdvisorBriefMode", () => {
     });
   });
 
+  it("starts a clean review session when the selected portfolio context changes", async () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    const nextWorkspace = {
+      ...workspace,
+      portfolio_id: "PF_2002",
+      portfolio: {
+        ...workspace.portfolio,
+        portfolio_id: "PF_2002",
+        client_id: "CIF_2002",
+      },
+    };
+    const nextResponse: WorkbenchPerformanceAdvisorBrief = {
+      ...readyAdvisorBriefResponse,
+      correlation_id: "corr-advisor-brief-next",
+      portfolio_id: "PF_2002",
+      portfolio: {
+        ...readyAdvisorBriefResponse.portfolio,
+        portfolio_id: "PF_2002",
+        client_id: "CIF_2002",
+      },
+      summary: "The next portfolio brief is source confirmed.",
+      workflow_pack_run: {
+        ...readyAdvisorBriefResponse.workflow_pack_run!,
+        run_id: "packrun_advisor_brief_req-2",
+      },
+    };
+
+    const { rerender } = render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText("Review decision"), {
+      target: { value: "ACCEPT" },
+    });
+    fireEvent.change(screen.getByLabelText(/Reviewer reference/), {
+      target: { value: "advisor_old" },
+    });
+    fireEvent.change(screen.getByLabelText("Review rationale"), {
+      target: { value: "This rationale belongs to the previous portfolio." },
+    });
+
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValueOnce(nextResponse);
+    rerender(
+      <PerformanceAdvisorBriefMode
+        workspace={nextWorkspace}
+        capabilities={getPerformanceWorkspaceCapabilities(nextWorkspace)}
+        period={nextWorkspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={nextWorkspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenLastCalledWith(
+        "PF_2002",
+        expect.any(Object)
+      );
+      expect(screen.getByText("The next portfolio brief is source confirmed.")).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Review decision")).toHaveValue("");
+    expect(screen.getByLabelText(/Reviewer reference/)).toHaveValue("");
+    expect(screen.getByLabelText("Review rationale")).toHaveValue("");
+  });
+
   it("records a bounded review action and refreshes the run posture in place", async () => {
     vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
     const workspace = buildSupportedPerformanceScenario().workspace;

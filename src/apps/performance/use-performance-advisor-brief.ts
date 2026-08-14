@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
@@ -61,54 +61,10 @@ export function usePerformanceAdvisorBrief({
   const [refreshSequence, setRefreshSequence] = useState(0);
   const requestSequenceRef = useRef(0);
   const reviewActionSequenceRef = useRef(0);
-  const activeRequestKeyRef = useRef("");
-  const cacheRef = useRef<Map<string, WorkbenchPerformanceAdvisorBrief>>(new Map());
-  const requestKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId,
-        period,
-        detailBasis,
-        contributionDimension,
-        attributionDimension,
-        chartFrequency,
-        benchmark,
-        reportStartDate,
-        reportEndDate,
-        refreshSequence,
-      }),
-    [
-      attributionDimension,
-      benchmark,
-      chartFrequency,
-      contributionDimension,
-      detailBasis,
-      period,
-      portfolioId,
-      refreshSequence,
-      reportEndDate,
-      reportStartDate,
-    ]
-  );
-  activeRequestKeyRef.current = requestKey;
 
   useEffect(() => {
-    reviewActionSequenceRef.current += 1;
-    setIsApplyingReviewAction(false);
-    const cachedResponse = cacheRef.current.get(requestKey) ?? null;
-    setAdvisorBrief(cachedResponse);
-    setAdvisorBriefUnavailable(false);
-    setAdvisorBriefPermissionBlocked(false);
-    setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
-
-    if (cachedResponse) {
-      setIsLoading(false);
-      return;
-    }
-
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
-    setIsLoading(true);
 
     void getWorkbenchPerformanceAdvisorBriefClient(portfolioId, {
       period,
@@ -124,7 +80,6 @@ export function usePerformanceAdvisorBrief({
         if (requestSequenceRef.current !== requestId) {
           return;
         }
-        cacheRef.current.set(requestKey, response);
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
@@ -143,6 +98,11 @@ export function usePerformanceAdvisorBrief({
         }
         setIsLoading(false);
       });
+
+    return () => {
+      requestSequenceRef.current += 1;
+      reviewActionSequenceRef.current += 1;
+    };
   }, [
     attributionDimension,
     benchmark,
@@ -151,18 +111,25 @@ export function usePerformanceAdvisorBrief({
     detailBasis,
     period,
     portfolioId,
-    requestKey,
+    refreshSequence,
     reportEndDate,
     reportStartDate,
   ]);
 
   const refresh = useCallback(() => {
+    requestSequenceRef.current += 1;
+    reviewActionSequenceRef.current += 1;
+    setAdvisorBrief(null);
+    setAdvisorBriefUnavailable(false);
+    setAdvisorBriefPermissionBlocked(false);
+    setIsLoading(true);
+    setIsApplyingReviewAction(false);
+    setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
     setRefreshSequence((current) => current + 1);
   }, []);
 
   const applyReviewAction = useCallback(
     async (payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest) => {
-      const actionRequestKey = requestKey;
       const actionRequestId = reviewActionSequenceRef.current + 1;
       reviewActionSequenceRef.current = actionRequestId;
       setIsApplyingReviewAction(true);
@@ -187,14 +154,10 @@ export function usePerformanceAdvisorBrief({
           payload
         );
 
-        if (
-          reviewActionSequenceRef.current !== actionRequestId ||
-          activeRequestKeyRef.current !== actionRequestKey
-        ) {
+        if (reviewActionSequenceRef.current !== actionRequestId) {
           return response;
         }
 
-        cacheRef.current.set(requestKey, response);
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
@@ -204,10 +167,7 @@ export function usePerformanceAdvisorBrief({
         });
         return response;
       } catch (error: unknown) {
-        if (
-          reviewActionSequenceRef.current === actionRequestId &&
-          activeRequestKeyRef.current === actionRequestKey
-        ) {
+        if (reviewActionSequenceRef.current === actionRequestId) {
           setReviewActionFeedback({
             state: "failed",
             message: isWorkbenchPermissionBlockedError(error)
@@ -230,7 +190,6 @@ export function usePerformanceAdvisorBrief({
       detailBasis,
       period,
       portfolioId,
-      requestKey,
       reportEndDate,
       reportStartDate,
     ]
