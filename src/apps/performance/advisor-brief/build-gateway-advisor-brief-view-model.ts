@@ -11,7 +11,12 @@ import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
-import { hasRecordedAdvisorBriefReviewEvidence } from "./advisor-brief-review-evidence";
+import {
+  buildAdvisorBriefHumanReview,
+  getAdvisorBriefReviewStateLabel,
+  isHistoricalAdvisorBriefReviewState,
+  isTerminalAdvisorBriefReviewState,
+} from "./advisor-brief-review-evidence";
 import type {
   PerformanceAdvisorBriefAction,
   PerformanceAdvisorBriefItem,
@@ -102,12 +107,14 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
   );
   const isSimulation = providerPosture === "deterministic";
   const isLive = providerPosture === "live" && hasPublishedAiProvenance;
-  const isSuperseded = advisorBrief.workflow_pack_run?.superseded === true;
+  const isSuperseded =
+    advisorBrief.workflow_pack_run?.superseded === true ||
+    isHistoricalAdvisorBriefReviewState(advisorBrief.workflow_pack_run?.review_state);
   const replacementRunId = advisorBrief.workflow_pack_run?.replacement_run_id?.trim();
   const workflowReviewState = advisorBrief.workflow_pack_run?.review_state;
-  const humanReview = mapWorkflowReviewState(advisorBrief.workflow_pack_run);
+  const humanReview = buildAdvisorBriefHumanReview(advisorBrief.workflow_pack_run);
   const terminalReviewWithoutEvidence =
-    isTerminalWorkflowReviewState(workflowReviewState) && !humanReview.sourceRecorded;
+    isTerminalAdvisorBriefReviewState(workflowReviewState) && !humanReview.sourceRecorded;
   const diagnostics = [
     advisorBrief.workflow_pack_run?.run_id
       ? { label: "Workflow run", value: advisorBrief.workflow_pack_run.run_id }
@@ -181,48 +188,6 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
     limitations,
     diagnostics,
   });
-}
-
-function mapWorkflowReviewState(
-  workflowPackRun: WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]
-): {
-  state: "reviewed" | "rejected" | "review-required" | "unavailable";
-  sourceRecorded: boolean;
-  actor?: string;
-  occurredAt?: string;
-} {
-  const actor = workflowPackRun?.latest_review_actor?.trim();
-  const occurredAt = workflowPackRun?.latest_review_event_at?.trim();
-  const sourceRecorded = hasRecordedAdvisorBriefReviewEvidence(workflowPackRun);
-  const evidence = {
-    sourceRecorded,
-    ...(sourceRecorded && actor ? { actor } : {}),
-    ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
-  };
-
-  switch (workflowPackRun?.review_state) {
-    case "ACCEPTED":
-      return {
-        state: sourceRecorded ? ("reviewed" as const) : ("unavailable" as const),
-        ...evidence,
-      };
-    case "REJECTED":
-    case "ABANDONED":
-      return {
-        state: sourceRecorded ? ("rejected" as const) : ("unavailable" as const),
-        ...evidence,
-      };
-    case "AWAITING_REVIEW":
-    case "REVIEW_REQUIRED":
-    case "PENDING":
-      return { state: "review-required" as const, sourceRecorded: false };
-    default:
-      return { state: "unavailable" as const, sourceRecorded: false };
-  }
-}
-
-function isTerminalWorkflowReviewState(reviewState: string | undefined): boolean {
-  return reviewState === "ACCEPTED" || reviewState === "REJECTED" || reviewState === "ABANDONED";
 }
 
 function normalizeGatewaySupportability(
@@ -496,7 +461,7 @@ function normalizeWorkflowPackRuntimeValue(runtimeState: string): string {
 }
 
 function normalizeWorkflowPackReviewValue(reviewState: string): string {
-  return reviewState.replaceAll("_", " ");
+  return getAdvisorBriefReviewStateLabel(reviewState);
 }
 
 function buildWorkflowPackRunDetail(
@@ -511,12 +476,12 @@ function buildWorkflowPackReviewDetail(
   workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
 ): string {
   const detailParts = [
-    `Supportability ${normalizeWorkflowPackReviewValue(workflowPackRun.supportability_status)}`,
+    `Supportability ${workflowPackRun.supportability_status.replaceAll("_", " ")}`,
   ];
-  const reviewEvidence = mapWorkflowReviewState(workflowPackRun);
+  const reviewEvidence = buildAdvisorBriefHumanReview(workflowPackRun);
   if (reviewEvidence.sourceRecorded) {
     detailParts.push(`Recorded by ${reviewEvidence.actor}`, `Recorded ${reviewEvidence.occurredAt}`);
-  } else if (isTerminalWorkflowReviewState(workflowPackRun.review_state)) {
+  } else if (isTerminalAdvisorBriefReviewState(workflowPackRun.review_state)) {
     detailParts.push("Review audit details not published");
   }
   if (workflowPackRun.superseded) {
@@ -558,7 +523,7 @@ function normalizeWorkflowPackReviewTone(
   }
   if (
     workflowPackRun.review_state === "ACCEPTED" &&
-    mapWorkflowReviewState(workflowPackRun).sourceRecorded
+    buildAdvisorBriefHumanReview(workflowPackRun).sourceRecorded
   ) {
     return "success";
   }

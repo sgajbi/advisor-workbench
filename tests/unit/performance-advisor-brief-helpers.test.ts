@@ -76,6 +76,16 @@ describe("performance-advisor-brief helpers", () => {
         buildBrief({
           aiDisclosure: {
             ...buildBrief().aiDisclosure,
+            humanReview: { state: "not-required", sourceRecorded: false },
+          },
+        })
+      )
+    ).toBe(true);
+    expect(
+      canCopyAdvisorBrief(
+        buildBrief({
+          aiDisclosure: {
+            ...buildBrief().aiDisclosure,
             humanReview: { state: "rejected", sourceRecorded: true },
           },
         })
@@ -111,5 +121,19 @@ describe("performance-advisor-brief helpers", () => {
     expect(toAdvisorNoteCopy(rejectedBrief)).toMatch(/^BLOCKED INTERNAL NOTE/);
     expect(toAdvisorNoteCopy(historicalBrief)).toMatch(/^HISTORICAL INTERNAL NOTE/);
     expect(toAdvisorNoteCopy(rejectedBrief)).not.toContain("Human review required");
+  });
+
+  it("labels a source-waived review as internal-only rather than blocked", () => {
+    const note = toAdvisorNoteCopy(
+      buildBrief({
+        aiDisclosure: {
+          ...buildBrief().aiDisclosure,
+          humanReview: { state: "not-required", sourceRecorded: false },
+        },
+      })
+    );
+
+    expect(note).toMatch(/^INTERNAL NOTE — The source reports human review is not required/);
+    expect(note).toContain("not approved for client use");
   });
 });

@@ -559,7 +559,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Human Review",
-          value: "ACCEPTED",
+          value: "Accepted for internal use",
           tone: "success",
           detail:
             "Supportability READY • Recorded by advisor_1 • Recorded 2026-04-21T03:22:00Z",
@@ -608,13 +608,77 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Human Review",
-          value: "ACCEPTED",
+          value: "Accepted for internal use",
           tone: "warn",
           detail: "Supportability READY • Review audit details not published",
         }),
       ])
     );
   });
+
+  it.each([
+    ["REVISED", true, "reviewed", true, "Revision requested", "stale"],
+    ["SUPERSEDED", true, "reviewed", true, "Superseded", "stale"],
+    ["NOT_REVIEW_REQUIRED", false, "not-required", false, "No review required", "live"],
+    ["UNRECOGNIZED", false, "unavailable", false, "Not reported", "live"],
+  ] as const)(
+    "maps %s to a coherent source review posture",
+    (
+      reviewState,
+      superseded,
+      expectedHumanReview,
+      expectedSourceRecorded,
+      expectedLabel,
+      expectedAvailability
+    ) => {
+      const scenario = buildSupportedPerformanceScenario();
+      const brief = buildPerformanceAdvisorBriefViewModel({
+        workspace: scenario.workspace,
+        advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+          ai_evidence: { source_refs: ["lotus-performance:advisor-brief"] },
+          workflow_pack_run: {
+            run_id: "packrun_advisor_brief_req-1",
+            runtime_state: "COMPLETED",
+            review_state: reviewState,
+            latest_review_event_at: "2026-04-21T03:22:00Z",
+            latest_review_actor: "advisor_1",
+            review_transition_count: 1,
+            has_review_history: true,
+            allowed_review_actions: [],
+            supportability_status: superseded ? "HISTORICAL" : "READY",
+            review_pending: false,
+            superseded,
+            workflow_authority_owner: "lotus-gateway",
+            current_summary_note: "Review decision recorded.",
+            replacement_run_id: superseded ? "packrun_advisor_brief_req-2" : null,
+            findings: [],
+          },
+        }),
+        capabilities: scenario.capabilities,
+        period: scenario.workspace.period,
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: scenario.workspace.benchmark_code ?? undefined,
+        isDetailsPending: false,
+      });
+
+      expect(brief.aiDisclosure.humanReview).toMatchObject({
+        state: expectedHumanReview,
+        sourceRecorded: expectedSourceRecorded,
+      });
+      expect(brief.aiDisclosure.availability).toBe(expectedAvailability);
+      expect(brief.supportability).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            label: "Human Review",
+            value: expectedLabel,
+          }),
+        ])
+      );
+    }
+  );
 
   it.each([
     [
@@ -1146,7 +1210,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         },
         {
           label: "Human Review",
-          value: "AWAITING REVIEW",
+          value: "Awaiting review",
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
         },
@@ -1270,7 +1334,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining([
         {
           label: "Human Review",
-          value: "ACCEPTED",
+          value: "Accepted for internal use",
           tone: "warn",
           detail:
             "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2",

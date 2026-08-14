@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAdvisorBriefMode from "../../src/apps/performance/components/performance-advisor-brief-mode";
 import AdvisorBriefReviewWorkflow from "../../src/apps/performance/components/advisor-brief/advisor-brief-review-workflow";
+import LotusStatusBar from "../../src/apps/performance/components/advisor-brief/lotus-status-bar";
 import { getPerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
@@ -249,7 +250,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Partial");
       expect(supportability).toHaveTextContent("Brief Preparation");
       expect(supportability).toHaveTextContent("Human Review");
-      expect(supportability).toHaveTextContent("AWAITING REVIEW");
+      expect(supportability).toHaveTextContent("Awaiting review");
       expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
       expect(supportability).toHaveTextContent("Workflow Progress");
       expect(supportability).toHaveTextContent("WAITING FOR REVIEW");
@@ -675,6 +676,42 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
   });
 
+  it("clears copy confirmation when the source note or copy posture changes", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const { rerender } = render(
+      <LotusStatusBar
+        status="ready"
+        noteText="INTERNAL WORKING NOTE"
+        onRefresh={vi.fn()}
+        canCopy
+        refreshing={false}
+        interactionBusy={false}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy internal note" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("INTERNAL WORKING NOTE"));
+    expect(screen.getByText(/Internal note copied/)).toBeInTheDocument();
+
+    rerender(
+      <LotusStatusBar
+        status="ready"
+        noteText="BLOCKED INTERNAL NOTE"
+        onRefresh={vi.fn()}
+        canCopy={false}
+        refreshing={false}
+        interactionBusy={false}
+      />
+    );
+
+    expect(screen.queryByText(/Internal note copied/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy internal note" })).toBeDisabled();
+  });
+
   it("keeps an accepted review neutral when its source event time is malformed", () => {
     render(
       <AdvisorBriefReviewWorkflow
@@ -769,7 +806,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("COMPLETED");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
       expect(supportability).toHaveTextContent("Human Review");
-      expect(supportability).toHaveTextContent("ACCEPTED");
+      expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent("Recorded by advisor_1");
       expect(supportability).toHaveTextContent("Recorded 2026-04-21T03:22:00Z");
       expect(supportability).toHaveTextContent("1 downstream workflow handoff record(s)");
@@ -1046,7 +1083,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     await waitFor(() => {
       const supportability = screen.getByLabelText("Advisor brief supportability");
       expect(supportability).toHaveTextContent("Human Review");
-      expect(supportability).toHaveTextContent("ACCEPTED");
+      expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent(
         "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2"
       );

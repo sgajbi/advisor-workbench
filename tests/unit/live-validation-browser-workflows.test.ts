@@ -59,22 +59,22 @@ describe("live validation browser workflow helpers", () => {
     ).toThrow("neither source rows nor a governed fallback state");
   });
 
-  it("accepts both ready and degraded accepted advisor-brief review posture", () => {
+  it("accepts only business-labelled advisor-brief review posture with source audit evidence", () => {
+    expect(
+      hasAcceptedAdvisorBriefReviewPosture(
+        "Human Review Accepted for internal use Supportability READY Recorded by advisor_1 Recorded 2026-04-21T03:22:00Z"
+      )
+    ).toBe(true);
     expect(
       hasAcceptedAdvisorBriefReviewPosture(
         "AI Review Supportability ACTION REQUIRED ACCEPTED partial evidence remains visible"
       )
-    ).toBe(true);
+    ).toBe(false);
     expect(
       hasAcceptedAdvisorBriefReviewPosture(
-        "AI Review Supportability READY ACCEPTED run accepted for bounded downstream workflow use"
+        "Human Review Accepted for internal use Supportability READY Review audit details not published"
       )
-    ).toBe(true);
-    expect(
-      hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Supportability READY ACCEPTED Task flow taskflow_advisor_brief is completed. Handoff taskflow_advisor_brief_handoff_packrun_advisor_brief is ready for handoff for lotus-gateway."
-      )
-    ).toBe(true);
+    ).toBe(false);
     expect(
       hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
     ).toBe(false);

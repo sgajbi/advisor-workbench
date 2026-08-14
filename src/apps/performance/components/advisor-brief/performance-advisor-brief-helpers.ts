@@ -18,6 +18,7 @@ export function dedupeAdvisorActions(actions: PerformanceAdvisorBriefAction[]) {
 export function canCopyAdvisorBrief(brief: PerformanceAdvisorBriefViewModel): boolean {
   const { aiDisclosure } = brief;
   const reviewAdmitsInternalCopy =
+    aiDisclosure.humanReview.state === "not-required" ||
     aiDisclosure.humanReview.state === "review-required" ||
     (aiDisclosure.humanReview.state === "reviewed" &&
       aiDisclosure.humanReview.sourceRecorded);
@@ -70,6 +71,9 @@ function getAdvisorNoteBoundary(brief: PerformanceAdvisorBriefViewModel): string
     brief.aiDisclosure.humanReview.sourceRecorded
   ) {
     return "INTERNAL REVIEWED NOTE — Source-recorded human review; not approved for client use.";
+  }
+  if (brief.aiDisclosure.humanReview.state === "not-required") {
+    return "INTERNAL NOTE — The source reports human review is not required; not approved for client use.";
   }
   if (brief.aiDisclosure.humanReview.state === "review-required") {
     return "INTERNAL WORKING NOTE — Human review required; not approved for client use.";
