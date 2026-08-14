@@ -26,7 +26,16 @@ export function hasAcceptedAdvisorBriefReviewPosture(text) {
     text.includes("Accepted for internal use") &&
     text.includes("Supportability READY") &&
     text.includes("Recorded by") &&
-    text.includes("Recorded ")
+    /Recorded\s+(?!by\b)\S+/i.test(text)
+  );
+}
+
+export function hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer) {
+  return (
+    hasAcceptedAdvisorBriefReviewPosture(text) &&
+    typeof expectedReviewer === "string" &&
+    expectedReviewer.trim().length > 0 &&
+    text.includes(`Recorded by ${expectedReviewer.trim()} Recorded `)
   );
 }
 
@@ -1138,37 +1147,45 @@ export async function validateAdvisorBriefPanel(
       "Advisor brief supportability",
     );
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
-    await reviewRegion.getByLabel("Review decision").selectOption("ACCEPT");
-    await reviewRegion
-      .getByLabel("Reviewer reference")
-      .fill("live.validator.ui");
-    await reviewRegion
-      .getByLabel("Review rationale")
-      .fill(
-        "Live canonical validator proving the Workbench ACCEPT review path.",
-      );
-    await reviewRegion
-      .getByRole("button", { name: "Review decision", exact: true })
-      .click();
-    const confirmAcceptance = reviewRegion.getByRole("button", {
-      name: "Confirm acceptance",
-      exact: true,
-    });
-    await expect(confirmAcceptance).toBeVisible({ timeout: timeoutMs });
-    await confirmAcceptance.click();
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
+    const expectedReviewer = "live.validator.ui";
+    const existingRecordedAccept = hasRecordedAdvisorBriefAcceptProof(
+      await supportabilityRegion.innerText(),
+      expectedReviewer,
+    );
+    if (!existingRecordedAccept) {
+      await reviewRegion.getByLabel("Review decision").selectOption("ACCEPT");
+      await reviewRegion
+        .getByLabel("Reviewer reference")
+        .fill(expectedReviewer);
+      await reviewRegion
+        .getByLabel("Review rationale")
+        .fill(
+          "Live canonical validator proving the Workbench ACCEPT review path.",
+        );
+      await reviewRegion
+        .getByRole("button", { name: "Review decision", exact: true })
+        .click();
+      const confirmAcceptance = reviewRegion.getByRole("button", {
+        name: "Confirm acceptance",
+        exact: true,
+      });
+      await expect(confirmAcceptance).toBeVisible({ timeout: timeoutMs });
+      await confirmAcceptance.click();
+    }
     await expect
       .poll(
         async () =>
-          hasAcceptedAdvisorBriefReviewPosture(
+          hasRecordedAdvisorBriefAcceptProof(
             await supportabilityRegion.innerText(),
+            expectedReviewer,
           ),
         {
           timeout: timeoutMs,
         },
       )
       .toBe(true);
-    await expect(supportabilityRegion).toContainText("live.validator.ui", {
+    await expect(supportabilityRegion).toContainText(expectedReviewer, {
       timeout: timeoutMs,
     });
     summary.uiChecks.push({
@@ -1176,6 +1193,9 @@ export async function validateAdvisorBriefPanel(
       kind: "workflow-pack-review-action",
       actionType: "ACCEPT",
       state: "accepted",
+      proofSource: existingRecordedAccept
+        ? "source-confirmed-existing-action"
+        : "workbench-review-action",
     });
   }
 }

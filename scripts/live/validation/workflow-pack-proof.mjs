@@ -160,13 +160,19 @@ function assertAcceptedRunPosture(payload) {
   return run;
 }
 
-function assertAcceptedReviewAudit(run, expectedReviewer) {
+function assertRecordedReviewAudit(run, { description, expectedReviewer = null }) {
   if (run.review_pending !== false) {
-    throw new Error("Advisor brief ACCEPT proof did not clear review_pending.");
+    throw new Error(`${description} did not clear review_pending.`);
   }
-  if (run.latest_review_actor !== expectedReviewer) {
+  if (
+    typeof run.latest_review_actor !== "string" ||
+    !run.latest_review_actor.trim()
+  ) {
+    throw new Error(`${description} returned no recorded reviewer.`);
+  }
+  if (expectedReviewer !== null && run.latest_review_actor !== expectedReviewer) {
     throw new Error(
-      `Advisor brief ACCEPT proof returned reviewer '${String(
+      `${description} returned reviewer '${String(
         run.latest_review_actor
       )}' instead of '${expectedReviewer}'.`
     );
@@ -176,13 +182,13 @@ function assertAcceptedReviewAudit(run, expectedReviewer) {
     !Number.isInteger(run.review_transition_count) ||
     run.review_transition_count < 1
   ) {
-    throw new Error("Advisor brief ACCEPT proof returned no recorded review transition history.");
+    throw new Error(`${description} returned no recorded review transition history.`);
   }
   if (
     typeof run.latest_review_event_at !== "string" ||
     !Number.isFinite(Date.parse(run.latest_review_event_at))
   ) {
-    throw new Error("Advisor brief ACCEPT proof returned no valid review event time.");
+    throw new Error(`${description} returned no valid review event time.`);
   }
 }
 
@@ -323,7 +329,10 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     return;
   }
   const acceptedRun = assertAcceptedRunPosture(acceptedBrief);
-  assertAcceptedReviewAudit(acceptedRun, acceptedReviewer);
+  assertRecordedReviewAudit(acceptedRun, {
+    description: "Advisor brief ACCEPT proof",
+    expectedReviewer: acceptedReviewer,
+  });
   const acceptedTaskFlow = assertAcceptedTaskFlowPosture(acceptedBrief, acceptedRun.run_id);
   recordWorkflowPackCheck(summary, {
     actionType: "ACCEPT",
@@ -417,6 +426,13 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     "SUPERSEDED",
     supersedeReplacementRun.run_id
   );
+  assertRecordedReviewAudit(supersededRun, {
+    description: "Advisor brief SUPERSEDED proof",
+    expectedReviewer:
+      supersedeProofSource === "validator-api-action"
+        ? "live.validator.supersede"
+        : null,
+  });
   const supersededTaskFlow = assertReplacementTaskFlowPosture(
     supersededBrief,
     "SUPERSEDED",
@@ -516,6 +532,13 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     "REVISED",
     reviseReplacementRun.run_id
   );
+  assertRecordedReviewAudit(revisedRun, {
+    description: "Advisor brief REVISED proof",
+    expectedReviewer:
+      reviseProofSource === "validator-api-action"
+        ? "live.validator.revise"
+        : null,
+  });
   const revisedTaskFlow = assertReplacementTaskFlowPosture(
     revisedBrief,
     "REVISED",

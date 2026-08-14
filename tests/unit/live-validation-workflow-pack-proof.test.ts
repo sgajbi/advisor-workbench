@@ -80,6 +80,7 @@ function createAdvisorBriefPayload({
   taskFlowSupportabilityStatus = "ACTION_REQUIRED",
   handoffStatus,
   latestReviewActor,
+  reviewAudit,
 }: {
   runId: string;
   reviewState?: string;
@@ -93,7 +94,25 @@ function createAdvisorBriefPayload({
   taskFlowSupportabilityStatus?: string;
   handoffStatus?: string;
   latestReviewActor?: string;
+  reviewAudit?: {
+    latest_review_actor?: unknown;
+    latest_review_event_at?: unknown;
+    review_transition_count?: unknown;
+    has_review_history?: unknown;
+    review_pending?: unknown;
+  };
 }) {
+  const resolvedReviewAudit =
+    reviewAudit ??
+    (latestReviewActor === undefined
+      ? undefined
+      : {
+          latest_review_actor: latestReviewActor,
+          latest_review_event_at: "2026-04-21T03:22:00Z",
+          review_transition_count: 1,
+          has_review_history: true,
+          review_pending: false,
+        });
   return {
     workflow_pack_run: {
       run_id: runId,
@@ -105,15 +124,7 @@ function createAdvisorBriefPayload({
         : { supportability_status: supportabilityStatus }),
       ...(superseded === undefined ? {} : { superseded }),
       ...(replacementRunId === undefined ? {} : { replacement_run_id: replacementRunId }),
-      ...(latestReviewActor === undefined
-        ? {}
-        : {
-            latest_review_actor: latestReviewActor,
-            latest_review_event_at: "2026-04-21T03:22:00Z",
-            review_transition_count: 1,
-            has_review_history: true,
-            review_pending: false,
-          }),
+      ...(resolvedReviewAudit ?? {}),
     },
     workflow_pack_task_flow: createTaskFlow({
       taskFlowId,
@@ -203,6 +214,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
+            latestReviewActor: "live.validator.supersede",
           });
         }
         return createAdvisorBriefPayload({
@@ -214,6 +226,7 @@ describe("live validation workflow-pack proof", () => {
           taskFlowId: "taskflow-explicit-gross",
           taskFlowStatus: "SUPERSEDED",
           taskFlowSupportabilityStatus: "HISTORICAL",
+          latestReviewActor: "live.validator.revise",
         });
       },
     });
@@ -305,6 +318,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
+            latestReviewActor: "live.validator.supersede",
           });
         }
         if (
@@ -321,6 +335,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-explicit-gross",
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
+            latestReviewActor: "live.validator.revise",
           });
         }
         if (
@@ -374,6 +389,108 @@ describe("live validation workflow-pack proof", () => {
     ]);
   });
 
+  it.each([
+    [
+      {
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no recorded reviewer",
+    ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: true,
+      },
+      "did not clear review_pending",
+    ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        review_transition_count: 0,
+        has_review_history: false,
+        review_pending: false,
+      },
+      "returned no recorded review transition history",
+    ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "not-a-time",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no valid review event time",
+    ],
+  ])(
+    "rejects stored replacement lineage without complete review audit evidence: %s",
+    async (reviewAudit, expectedError) => {
+      const summary = createSummary();
+
+      await expect(
+        validateAdvisorBriefWorkflowPackReviewChain({
+          summary,
+          gatewayBaseUrl: "http://gateway.dev.lotus",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+          canonicalStartDate: "2025-03-31",
+          canonicalAsOfDate: "2026-04-10",
+          timeoutMs: 1000,
+          preRecordedAcceptReviewer: "live.validator.ui",
+          fetchJson: async (_summary: unknown, url: string) => {
+            if (
+              url.includes("detail_basis=NET") &&
+              url.includes("report_start_date=2026-01-01")
+            ) {
+              return createAdvisorBriefPayload({
+                runId: "packrun-explicit-net",
+                reviewState: "SUPERSEDED",
+                allowedReviewActions: [],
+                supportabilityStatus: "HISTORICAL",
+                superseded: true,
+                replacementRunId: "packrun-explicit-gross",
+                taskFlowId: "taskflow-explicit-net",
+                taskFlowStatus: "SUPERSEDED",
+                taskFlowSupportabilityStatus: "HISTORICAL",
+                reviewAudit,
+              });
+            }
+            if (
+              url.includes("detail_basis=GROSS") &&
+              url.includes("report_start_date=2026-01-01")
+            ) {
+              return createAdvisorBriefPayload({
+                runId: "packrun-explicit-gross",
+                taskFlowId: "taskflow-explicit-gross",
+              });
+            }
+            return createAdvisorBriefPayload({
+              runId: "packrun-explicit-net",
+              reviewState: "ACCEPTED",
+              allowedReviewActions: [],
+              supportabilityStatus: "READY",
+              taskFlowId: "taskflow-explicit-net",
+              taskFlowStatus: "COMPLETED",
+              taskFlowSupportabilityStatus: "READY",
+              handoffStatus: "READY_FOR_HANDOFF",
+              latestReviewActor: "live.validator.ui",
+            });
+          },
+          postJson: async () => {
+            throw new Error("postJson should not run for stored lineage proof.");
+          },
+        }),
+      ).rejects.toThrow(expectedError);
+    },
+  );
+
   it("accepts truthfully action-required accept posture when the run remains degraded", async () => {
     const summary = createSummary();
     const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
@@ -419,6 +536,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
+            latestReviewActor: "live.validator.supersede",
           });
         }
         return createAdvisorBriefPayload({
@@ -430,6 +548,7 @@ describe("live validation workflow-pack proof", () => {
           taskFlowId: "taskflow-explicit-gross",
           taskFlowStatus: "SUPERSEDED",
           taskFlowSupportabilityStatus: "HISTORICAL",
+          latestReviewActor: "live.validator.revise",
         });
       },
     });

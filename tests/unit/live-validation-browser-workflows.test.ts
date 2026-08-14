@@ -10,6 +10,7 @@ const {
   classifyAttributionDetailEvidence,
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
+  hasRecordedAdvisorBriefAcceptProof,
   resolveHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
   validateAdvisoryJourneyScreens,
@@ -32,6 +33,10 @@ const {
     | "ready_empty_state";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+  hasRecordedAdvisorBriefAcceptProof: (
+    text: string,
+    expectedReviewer: string,
+  ) => boolean;
   resolveHighCashIdeaCandidateId: (
     candidateHref: string | null,
     workbenchBaseUrl: string,
@@ -78,7 +83,30 @@ describe("live validation browser workflow helpers", () => {
       )
     ).toBe(false);
     expect(
+      hasAcceptedAdvisorBriefReviewPosture(
+        "Human Review Accepted for internal use Supportability READY Recorded by advisor_1"
+      )
+    ).toBe(false);
+    expect(
       hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
+    ).toBe(false);
+  });
+
+  it("reuses only the exact source-recorded browser acceptance on canonical reruns", () => {
+    const recordedPosture =
+      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui Recorded 2026-04-21T03:22:00Z";
+
+    expect(
+      hasRecordedAdvisorBriefAcceptProof(recordedPosture, "live.validator.ui"),
+    ).toBe(true);
+    expect(
+      hasRecordedAdvisorBriefAcceptProof(recordedPosture, "another.reviewer"),
+    ).toBe(false);
+    expect(
+      hasRecordedAdvisorBriefAcceptProof(
+        "Human Review Accepted for internal use Supportability READY Review audit details not published",
+        "live.validator.ui",
+      ),
     ).toBe(false);
   });
 
@@ -86,6 +114,8 @@ describe("live validation browser workflow helpers", () => {
     const source = validateAdvisorBriefPanel.toString();
 
     expect(source).toContain('getByLabel("Advisor brief human review")');
+    expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
+    expect(source).toContain("source-confirmed-existing-action");
     expect(source).toContain('getByLabel("Review decision").selectOption("ACCEPT")');
     expect(source).toContain('getByLabel("Reviewer reference")');
     expect(source).toContain('getByLabel("Review rationale")');
