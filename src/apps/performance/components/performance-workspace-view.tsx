@@ -132,6 +132,12 @@ export default function PerformanceWorkspaceView({
     <PerformanceEvidenceMode
       capability={capabilities!.evidence}
       evidenceView={workspace.evidence_view ?? null}
+      selection={{
+        asOfDate: workspace.as_of_date,
+        period: workspace.period,
+        basis: workspace.detail_basis,
+        benchmarkCode: workspace.benchmark_code,
+      }}
     />
   );
 
