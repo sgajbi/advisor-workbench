@@ -87,8 +87,11 @@ export default function AdvisorBriefReviewWorkflow({
     workflowPackRun.review_state.trim().toUpperCase() === "AWAITING_REVIEW" &&
     workflowPackRun.runtime_state.trim().toUpperCase() === "COMPLETED" &&
     workflowPackRun.superseded === false;
+  const sourceAllowedActions = Array.isArray(workflowPackRun.allowed_review_actions)
+    ? workflowPackRun.allowed_review_actions
+    : [];
   const allowedActions = canRecordReviewDecision
-    ? workflowPackRun.allowed_review_actions.filter(isKnownReviewAction)
+    ? sourceAllowedActions.filter(isKnownReviewAction)
     : [];
   const selectedDefinition = selectedAction ? REVIEW_ACTIONS[selectedAction] : null;
   const requiresReplacement =
