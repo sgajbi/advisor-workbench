@@ -215,7 +215,7 @@ function buildCalculationAssurance(
     title: `Additional performance calculation ${index + 1}`,
     purpose: "Provides additional source-published calculation evidence for the selected view.",
   };
-  const calculationStatus = lifecyclePresentation(calculation.execution_status, "calculation");
+  const calculationStatus = resolveCalculationLifecyclePresentation(calculation);
   const evidenceStatus = lifecyclePresentation(calculation.lineage_status, "evidence");
   const records = safeArray(calculation.artifacts).map((artifact, artifactIndex) =>
     buildRecord(artifact, artifactIndex)
@@ -232,6 +232,31 @@ function buildCalculationAssurance(
     evidenceCount: records.length,
     records,
   };
+}
+
+function resolveCalculationLifecyclePresentation(
+  calculation: PerformanceCalculationEvidenceView
+): { label: string; tone: PerformanceEvidenceTone } {
+  const aggregate = lifecyclePresentation(calculation.execution_status, "calculation");
+  const stageStates = safeArray(calculation.stage_statuses).map((stage) => normalise(stage.status));
+  if (!stageStates.length || stageStates.every((state) => state === COMPLETE_STATUS)) {
+    return aggregate;
+  }
+
+  const stagePresentation = stageStates.some((state) => FAILED_STATUSES.includes(state))
+    ? { label: "Attention required", tone: "danger" as const }
+    : stageStates.some((state) => PENDING_STATUSES.includes(state))
+      ? { label: "In progress", tone: "warn" as const }
+      : { label: "Not confirmed", tone: "default" as const };
+  const tonePriority: Record<PerformanceEvidenceTone, number> = {
+    default: 1,
+    success: 0,
+    warn: 2,
+    danger: 3,
+  };
+  return tonePriority[stagePresentation.tone] > tonePriority[aggregate.tone]
+    ? stagePresentation
+    : aggregate;
 }
 
 function lifecyclePresentation(
