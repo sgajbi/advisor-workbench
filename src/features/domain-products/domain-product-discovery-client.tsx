@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -32,9 +32,8 @@ import {
 } from "./domain-product-source-sections";
 import {
   formatDateTime,
-  formatStateLabel,
   getTrustAvailability,
-  getTrustTone,
+  getTrustHeaderPresentation,
 } from "./presentation";
 
 export default function DomainProductDiscoveryClient() {
@@ -53,54 +52,137 @@ export default function DomainProductDiscoveryClient() {
     queryFn: getDomainProductTrustCertification,
     ...workbenchStrictQueryDefaults,
   });
+  const catalogueChecking = catalogQuery.isFetching;
+  const catalogueFailed =
+    !catalogueChecking && (catalogQuery.isLoadingError || catalogQuery.isRefetchError);
+  const catalogueConfirmed = Boolean(catalogQuery.data) && !catalogueChecking && !catalogueFailed;
+  const trustHeader = getTrustHeaderPresentation({
+    data: trustCertificationQuery.data,
+    hasError: trustCertificationQuery.isError,
+  });
 
-  if (catalogQuery.isLoading && !catalogQuery.data) {
-    return (
-      <DiscoveryFrame trustBadge={<SemanticBadge>Checking assurance</SemanticBadge>}>
+  return (
+    <DiscoveryFrame
+      trustBadge={
+        <SemanticBadge
+          tone={catalogueConfirmed ? trustHeader.tone : catalogueFailed ? "danger" : "default"}
+          emphasis="strong"
+        >
+          {catalogueConfirmed
+            ? trustHeader.label
+            : catalogueFailed
+              ? "Catalogue unavailable"
+              : "Checking catalogue"}
+        </SemanticBadge>
+      }
+    >
+      <CatalogueSourceContext
+        catalog={catalogueConfirmed ? catalogQuery.data : undefined}
+        hasError={catalogueFailed}
+        isChecking={catalogueChecking}
+        onRefresh={() => catalogQuery.refetch()}
+      />
+      {catalogueChecking ? (
         <ScreenStatePanel
           kind="loading"
-          title="Loading the data product catalogue"
-          body="Confirming the governed products available to the Workbench."
+          title={catalogQuery.data ? "Checking the latest data product catalogue" : "Loading the data product catalogue"}
+          body="Confirming the required governed product source before discovery is made available."
           rows={5}
         />
-      </DiscoveryFrame>
-    );
-  }
-
-  if (catalogQuery.error && !catalogQuery.data) {
-    return (
-      <DiscoveryFrame trustBadge={<SemanticBadge tone="danger">Catalogue unavailable</SemanticBadge>}>
+      ) : catalogueFailed || !catalogQuery.data ? (
         <ScreenStatePanel
           kind="error"
           title="The data product catalogue is temporarily unavailable"
-          body="Product ownership and approved-use evidence cannot be confirmed. No substitute catalogue has been shown."
-          hint="Retry when the governed catalogue service is available."
-          action={
-            <ActionButton onClick={() => void catalogQuery.refetch()}>
-              Retry catalogue
-            </ActionButton>
-          }
+          body="Product ownership and approved-use evidence cannot be confirmed. Cached or substitute catalogue entries have not been shown."
+          hint="Choose Retry catalogue in the source context when the governed catalogue service is available."
         />
-      </DiscoveryFrame>
-    );
+      ) : (
+        <ReadyDiscovery
+          catalog={catalogQuery.data}
+          dependencyGraph={dependencyGraphQuery.data}
+          dependencyGraphError={dependencyGraphQuery.isError}
+          dependencyGraphLoading={dependencyGraphQuery.isLoading}
+          dependencyGraphRefreshing={dependencyGraphQuery.isFetching}
+          onRefreshDependencyGraph={() => dependencyGraphQuery.refetch()}
+          trustCertification={trustCertificationQuery.data}
+          trustCertificationError={trustCertificationQuery.isError}
+          trustCertificationLoading={trustCertificationQuery.isLoading}
+          trustCertificationRefreshing={trustCertificationQuery.isFetching}
+          onRefreshTrustCertification={() => trustCertificationQuery.refetch()}
+        />
+      )}
+    </DiscoveryFrame>
+  );
+}
+
+function CatalogueSourceContext({
+  catalog,
+  hasError,
+  isChecking,
+  onRefresh,
+}: {
+  catalog: DomainProductCatalogData | undefined;
+  hasError: boolean;
+  isChecking: boolean;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const refreshInFlight = useRef(false);
+  const state = isChecking ? "checking" : hasError ? "failed" : "confirmed";
+  const actionLabel = isChecking
+    ? "Checking catalogue"
+    : hasError
+      ? "Retry catalogue"
+      : "Refresh catalogue";
+
+  async function refreshOnce() {
+    if (refreshInFlight.current || isChecking) return;
+    refreshInFlight.current = true;
+    try {
+      await onRefresh();
+    } finally {
+      refreshInFlight.current = false;
+    }
   }
 
-  if (!catalogQuery.data) return null;
-
   return (
-    <ReadyDiscovery
-      catalog={catalogQuery.data}
-      dependencyGraph={dependencyGraphQuery.data}
-      dependencyGraphError={Boolean(dependencyGraphQuery.error)}
-      dependencyGraphLoading={dependencyGraphQuery.isLoading}
-      dependencyGraphRefreshing={dependencyGraphQuery.isFetching}
-      onRefreshDependencyGraph={() => dependencyGraphQuery.refetch()}
-      trustCertification={trustCertificationQuery.data}
-      trustCertificationError={Boolean(trustCertificationQuery.error)}
-      trustCertificationLoading={trustCertificationQuery.isLoading}
-      trustCertificationRefreshing={trustCertificationQuery.isFetching}
-      onRefreshTrustCertification={() => trustCertificationQuery.refetch()}
-    />
+    <div
+      className={styles.sourceContext}
+      role={hasError ? "alert" : "status"}
+      aria-live={hasError ? "assertive" : "polite"}
+      aria-atomic="true"
+      data-state={state}
+    >
+      <div>
+        <span>Catalogue status</span>
+        <strong>
+          {isChecking
+            ? "Checking required source"
+            : hasError
+              ? "Catalogue refresh failed"
+              : "Source confirmed"}
+        </strong>
+      </div>
+      <div>
+        <span>Published</span>
+        <strong>{catalog ? formatDateTime(catalog.generatedAtUtc) : "Not confirmed"}</strong>
+      </div>
+      <div>
+        <span>Contract</span>
+        <strong>{catalog?.contractVersion ?? "Not confirmed"}</strong>
+      </div>
+      <span className={styles.sourceReference}>
+        {catalog ? `Gateway · ${catalog.correlationId}` : "Gateway confirmation required"}
+      </span>
+      <ActionButton
+        priority="quiet"
+        className={styles.sourceAction}
+        aria-disabled={isChecking}
+        onClick={() => void refreshOnce()}
+        aria-label={actionLabel}
+      >
+        {actionLabel}
+      </ActionButton>
+    </div>
   );
 }
 
@@ -145,48 +227,12 @@ function ReadyDiscovery({
     hasError: trustCertificationError,
   });
   const hasRetainedTrust = Boolean(trustCertification && trustCertificationError);
-  const trustTone = hasRetainedTrust
-    ? "warn"
-    : trustCertification
-      ? getTrustTone(trustCertification.trustPosture)
-      : trustCertificationError
-        ? "warn"
-        : "default";
-  const trustLabel = hasRetainedTrust
-    ? "Assurance refresh failed"
-    : trustCertification
-      ? formatStateLabel(trustCertification.trustPosture)
-      : trustCertificationError
-        ? "Assurance unavailable"
-        : "Checking assurance";
   const certifiedCount = trustCertification?.trustAvailable
     ? (trustCertification.summary?.certifiedSnapshotCount ?? 0)
     : undefined;
 
   return (
-    <DiscoveryFrame
-      trustBadge={
-        <SemanticBadge tone={trustTone} emphasis="strong">
-          {trustLabel}
-        </SemanticBadge>
-      }
-    >
-      <div className={styles.sourceContext} aria-label="Catalogue source context">
-        <div>
-          <span>Catalogue status</span>
-          <strong>Source confirmed</strong>
-        </div>
-        <div>
-          <span>Published</span>
-          <strong>{formatDateTime(catalog.generatedAtUtc)}</strong>
-        </div>
-        <div>
-          <span>Contract</span>
-          <strong>{catalog.contractVersion}</strong>
-        </div>
-        <span className={styles.sourceReference}>Gateway · {catalog.correlationId}</span>
-      </div>
-
+    <>
       <WorkbenchSummaryMetricStrip
         ariaLabel="Data product catalogue summary"
         items={[
@@ -242,7 +288,7 @@ function ReadyDiscovery({
         isRefreshing={dependencyGraphRefreshing}
         onRefresh={onRefreshDependencyGraph}
       />
-    </DiscoveryFrame>
+    </>
   );
 }
 

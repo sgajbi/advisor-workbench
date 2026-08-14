@@ -36,6 +36,10 @@
   overflow-wrap: anywhere;
 }
 
+.sourceAction {
+  flex: 0 0 auto;
+}
+
 .productGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

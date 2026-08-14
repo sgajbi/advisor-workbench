@@ -188,10 +188,57 @@ test("keeps catalogue evidence visible while optional sources fail and recover",
   );
 });
 
+test("blocks cached catalogue evidence until its required source recovers", async ({ page }) => {
+  const runtime = observeBrowserRuntimeFailures(page);
+  await mockDomainProductSources(page, { failCatalogRefreshOnce: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/data-products", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toBeVisible();
+
+  const refresh = page.getByRole("button", { name: "Refresh catalogue" });
+  await refresh.focus();
+  await refresh.click();
+
+  await expect(
+    page.getByText("The data product catalogue is temporarily unavailable")
+  ).toBeVisible();
+  await expect(page.getByText("Catalogue refresh failed")).toBeVisible();
+  await expect(page.getByText("Source confirmed")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toHaveCount(0);
+
+  const retry = page.getByRole("button", { name: "Retry catalogue" });
+  await expect(retry).toBeFocused();
+  await retry.click();
+
+  await expect(page.getByText("Source confirmed")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Portfolio State Snapshot" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh catalogue" })).toBeFocused();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+    )
+  ).toBe(true);
+
+  const expectedSourceFailures = runtime.snapshot();
+  expect(expectedSourceFailures).toHaveLength(1);
+  expect(expectedSourceFailures[0]).toEqual(
+    expect.objectContaining({
+      source: "console",
+      url: expect.stringContaining("/domain-products/catalog"),
+    })
+  );
+});
+
 async function mockDomainProductSources(
   page: Page,
-  options: { failTrustOnce?: boolean; failGraphOnce?: boolean } = {}
+  options: {
+    failCatalogRefreshOnce?: boolean;
+    failTrustOnce?: boolean;
+    failGraphOnce?: boolean;
+  } = {}
 ) {
+  let catalogRequests = 0;
   let trustRequests = 0;
   let graphRequests = 0;
 
@@ -199,6 +246,11 @@ async function mockDomainProductSources(
     await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
   });
   await page.route("**/api/bff/api/v1/domain-products/catalog?**", async (route) => {
+    catalogRequests += 1;
+    if (options.failCatalogRefreshOnce && catalogRequests === 2) {
+      await route.fulfill({ status: 503, body: "catalogue path unavailable" });
+      return;
+    }
     await route.fulfill({ json: { data: catalog } });
   });
   await page.route("**/api/bff/api/v1/domain-products/dependency-graph?**", async (route) => {

@@ -201,14 +201,71 @@ describe("DomainProductDiscoveryClient", () => {
     expect(screen.queryByText(/internal path missing/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Portfolio State Snapshot")).not.toBeInTheDocument();
   });
+
+  it("blocks cached catalogue evidence when its required-source refresh fails", async () => {
+    const discovery = buildDiscovery();
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(["domain-product-catalog"], discovery.catalog, {
+      updatedAt: Date.now() - 31_000,
+    });
+    getDomainProductCatalogMock.mockRejectedValueOnce(new Error("catalogue refresh failed"));
+
+    renderDiscovery(queryClient);
+
+    expect(
+      await screen.findByText("The data product catalogue is temporarily unavailable")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Catalogue refresh failed")).toBeInTheDocument();
+    expect(screen.getByText("Gateway confirmation required")).toBeInTheDocument();
+    expect(screen.queryByText("Source confirmed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Portfolio State Snapshot")).not.toBeInTheDocument();
+    expect(screen.queryByText("catalogue refresh failed", { selector: "p" })).not.toBeInTheDocument();
+  });
+
+  it("recovers cached catalogue failure in place, preserves focus, and fences repeat retry", async () => {
+    const discovery = buildDiscovery();
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(["domain-product-catalog"], discovery.catalog, {
+      updatedAt: Date.now() - 31_000,
+    });
+    let resolveCatalog!: (value: DomainProductCatalogData) => void;
+    const pendingCatalog = new Promise<DomainProductCatalogData>((resolve) => {
+      resolveCatalog = resolve;
+    });
+    getDomainProductCatalogMock
+      .mockRejectedValueOnce(new Error("catalogue refresh failed"))
+      .mockImplementationOnce(() => pendingCatalog);
+
+    renderDiscovery(queryClient);
+
+    const retry = await screen.findByRole("button", { name: "Retry catalogue" });
+    retry.focus();
+    fireEvent.click(retry);
+
+    const pendingControl = await screen.findByRole("button", { name: "Checking catalogue" });
+    expect(pendingControl).toHaveFocus();
+    expect(pendingControl).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(pendingControl);
+    expect(getDomainProductCatalogMock).toHaveBeenCalledTimes(2);
+
+    resolveCatalog(discovery.catalog);
+
+    expect(await screen.findByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Source confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh catalogue" })).toHaveFocus();
+    expect(getDomainProductCatalogMock).toHaveBeenCalledTimes(2);
+  });
 });
 
-function renderDiscovery() {
-  const queryClient = new QueryClient({
+function createQueryClient() {
+  return new QueryClient({
     defaultOptions: {
       queries: { retry: false },
     },
   });
+}
+
+function renderDiscovery(queryClient = createQueryClient()) {
   return render(
     <QueryClientProvider client={queryClient}>
       <DomainProductDiscoveryClient />
