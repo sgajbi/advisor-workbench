@@ -94,12 +94,12 @@ export default function DomainProductDiscoveryClient() {
       dependencyGraphError={Boolean(dependencyGraphQuery.error)}
       dependencyGraphLoading={dependencyGraphQuery.isLoading}
       dependencyGraphRefreshing={dependencyGraphQuery.isFetching}
-      onRefreshDependencyGraph={() => void dependencyGraphQuery.refetch()}
+      onRefreshDependencyGraph={() => dependencyGraphQuery.refetch()}
       trustCertification={trustCertificationQuery.data}
       trustCertificationError={Boolean(trustCertificationQuery.error)}
       trustCertificationLoading={trustCertificationQuery.isLoading}
       trustCertificationRefreshing={trustCertificationQuery.isFetching}
-      onRefreshTrustCertification={() => void trustCertificationQuery.refetch()}
+      onRefreshTrustCertification={() => trustCertificationQuery.refetch()}
     />
   );
 }
@@ -122,12 +122,12 @@ function ReadyDiscovery({
   dependencyGraphError: boolean;
   dependencyGraphLoading: boolean;
   dependencyGraphRefreshing: boolean;
-  onRefreshDependencyGraph: () => void;
+  onRefreshDependencyGraph: () => Promise<unknown>;
   trustCertification: DomainProductTrustCertificationData | undefined;
   trustCertificationError: boolean;
   trustCertificationLoading: boolean;
   trustCertificationRefreshing: boolean;
-  onRefreshTrustCertification: () => void;
+  onRefreshTrustCertification: () => Promise<unknown>;
 }) {
   const trustByProductId = useMemo(
     () =>

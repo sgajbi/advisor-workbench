@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import {
   ActionButton,
   ScreenStatePanel,
@@ -30,7 +32,7 @@ export function TrustSection({
   hasError: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
-  onRefresh: () => void;
+  onRefresh: () => Promise<unknown>;
 }) {
   const actionLabel = hasError && !data ? "Retry assurance" : "Refresh assurance";
 
@@ -39,16 +41,11 @@ export function TrustSection({
       title="Data assurance"
       subtitle="Live certification, freshness, completeness and lineage evidence."
       actions={
-        <ActionButton
-          priority="quiet"
-          aria-disabled={isRefreshing}
-          onClick={() => {
-            if (!isRefreshing) onRefresh();
-          }}
-          aria-label={actionLabel}
-        >
-          {isRefreshing ? "Checking…" : actionLabel}
-        </ActionButton>
+        <SourceRefreshAction
+          actionLabel={actionLabel}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
       }
     >
       <div className={styles.sourceStatus} role="status" aria-live="polite">
@@ -143,7 +140,7 @@ export function DependencyGraphSection({
   hasError: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
-  onRefresh: () => void;
+  onRefresh: () => Promise<unknown>;
 }) {
   const actionLabel = hasError && !data ? "Retry impact evidence" : "Refresh impact evidence";
 
@@ -152,16 +149,11 @@ export function DependencyGraphSection({
       title="Dependency impact"
       subtitle="Understand downstream reliance and fail-closed relationships before changing a product."
       actions={
-        <ActionButton
-          priority="quiet"
-          aria-disabled={isRefreshing}
-          onClick={() => {
-            if (!isRefreshing) onRefresh();
-          }}
-          aria-label={actionLabel}
-        >
-          {isRefreshing ? "Checking…" : actionLabel}
-        </ActionButton>
+        <SourceRefreshAction
+          actionLabel={actionLabel}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
       }
     >
       <div className={styles.sourceStatus} role="status" aria-live="polite">
@@ -197,6 +189,39 @@ export function DependencyGraphSection({
         />
       ) : null}
     </SectionBlock>
+  );
+}
+
+function SourceRefreshAction({
+  actionLabel,
+  isRefreshing,
+  onRefresh,
+}: {
+  actionLabel: string;
+  isRefreshing: boolean;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const refreshInFlight = useRef(false);
+
+  async function refreshOnce() {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    try {
+      await onRefresh();
+    } finally {
+      refreshInFlight.current = false;
+    }
+  }
+
+  return (
+    <ActionButton
+      priority="quiet"
+      aria-disabled={isRefreshing}
+      onClick={() => void refreshOnce()}
+      aria-label={actionLabel}
+    >
+      {isRefreshing ? "Checking…" : actionLabel}
+    </ActionButton>
   );
 }
 
