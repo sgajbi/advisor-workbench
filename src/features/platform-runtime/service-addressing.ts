@@ -14,6 +14,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
       "trend-integrity",
       "horizon-integrity",
       "analysis-controls",
+      "unknown-period",
     ]),
   },
   {

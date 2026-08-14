@@ -30,7 +30,8 @@ test.beforeAll(async () => {
     scenario !== 'refresh-integrity' &&
     scenario !== 'trend-integrity' &&
     scenario !== 'horizon-integrity' &&
-    scenario !== 'analysis-controls'
+    scenario !== 'analysis-controls' &&
+    scenario !== 'unknown-period'
   ) {
     return;
   }
@@ -1201,5 +1202,31 @@ test.describe('Performance workbench smoke', () => {
         contentType: 'image/png',
       });
     }
+  });
+
+  test('evidence mode fails closed on an unfamiliar source-confirmed period', async ({ page, request }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'unknown-period',
+      'Unknown-period proof requires the owned malformed-period fixture.',
+    );
+    test.setTimeout(60000);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const evidenceTab = page
+      .getByLabel('Performance surface navigation')
+      .getByRole('button', { name: /^Evidence/i });
+    await expect(evidenceTab).toBeEnabled();
+    await evidenceTab.click();
+
+    const assurance = page.getByTestId('performance-evidence-assurance');
+    await expect(assurance).toBeVisible({ timeout: 15000 });
+    await expect(assurance).toHaveAttribute('data-assurance-state', 'attention');
+    await expect(assurance.getByText('Review period not supported', { exact: true })).toBeVisible();
+    await expect(
+      assurance.getByText('Selected review period not supported', { exact: true })
+    ).toBeVisible();
+    await expect(assurance.getByText('Ready for internal review', { exact: true })).toHaveCount(0);
   });
 });

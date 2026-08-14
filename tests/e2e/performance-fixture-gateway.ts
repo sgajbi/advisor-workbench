@@ -20,7 +20,8 @@ export type PerformanceFixtureGatewayScenario =
   | 'refresh-integrity'
   | 'trend-integrity'
   | 'horizon-integrity'
-  | 'analysis-controls';
+  | 'analysis-controls'
+  | 'unknown-period';
 
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
@@ -376,7 +377,7 @@ function buildSummaryResponse(
       : undefined,
   );
   if (scenario !== 'unavailable') {
-    return applyRequestedSummaryContext(
+    const response = applyRequestedSummaryContext(
       {
         ...summary,
         benchmark_options: buildFixtureBenchmarkOptions(summary.benchmark_options),
@@ -387,6 +388,7 @@ function buildSummaryResponse(
       },
       requestUrl,
     );
+    return scenario === 'unknown-period' ? publishUnknownPeriod(response) : response;
   }
   return {
     ...summary,
@@ -409,7 +411,7 @@ function buildDetailsResponse(
       : undefined,
   );
   if (scenario !== 'unavailable') {
-    return applyRequestedDetailContext(
+    const response = applyRequestedDetailContext(
       {
         ...details,
         capabilities: buildPopulatedCapabilities(details.capabilities),
@@ -419,6 +421,7 @@ function buildDetailsResponse(
       },
       requestUrl,
     );
+    return scenario === 'unknown-period' ? publishUnknownPeriod(response) : response;
   }
   return {
     ...details,
@@ -426,6 +429,18 @@ function buildDetailsResponse(
     net_chart: [],
     gross_chart: [],
     contribution: null,
+  };
+}
+
+function publishUnknownPeriod<
+  T extends WorkbenchPerformanceWorkspaceSummary | WorkbenchPerformanceWorkspaceDetails,
+>(workspace: T): T {
+  return {
+    ...workspace,
+    period: 'FUTURE',
+    evidence_view: workspace.evidence_view
+      ? { ...workspace.evidence_view, period: 'FUTURE' }
+      : null,
   };
 }
 
