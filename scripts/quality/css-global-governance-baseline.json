@@ -39,10 +39,9 @@
   ],
   "entrypoint": {
     "path": "src/app/globals.css",
-    "maxLines": 7,
-    "maxBytes": 398,
+    "maxLines": 5,
+    "maxBytes": 227,
     "imports": [
-      "@import url(\"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap\");",
       "@import \"../styles/global/tokens.css\";",
       "@import \"../styles/global/legacy-feature-overrides.css\";",
       "@import \"../styles/global/base.css\";",
@@ -55,7 +54,7 @@
       "path": "src/styles/global/tokens.css",
       "owner": "design tokens and foundational custom properties",
       "maxLines": 164,
-      "maxBytes": 5641
+      "maxBytes": 5689
     },
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
