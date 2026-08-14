@@ -942,6 +942,11 @@ test.describe('Performance workbench smoke', () => {
     page,
     request,
   }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated' ||
+        process.env.WORKBENCH_E2E_FIXTURE_GATEWAY !== 'performance',
+      'This mutating journey requires the process-owned populated Performance fixture.',
+    );
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1440, height: 1100 });
     const runtime = observeBrowserRuntimeFailures(page);
