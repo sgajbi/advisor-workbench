@@ -25,12 +25,16 @@ export function canCopyAdvisorBrief(brief: PerformanceAdvisorBriefViewModel): bo
   const currentAvailability = !["stale", "unavailable"].includes(
     aiDisclosure.availability
   );
+  const preparationSupportsCopy = !["requested", "unavailable"].includes(
+    aiDisclosure.preparation
+  );
 
   return (
     brief.talkingPoints.length > 0 &&
     aiDisclosure.evidence.state !== "missing" &&
     aiDisclosure.freshness.state !== "stale" &&
     currentAvailability &&
+    preparationSupportsCopy &&
     reviewAdmitsInternalCopy
   );
 }

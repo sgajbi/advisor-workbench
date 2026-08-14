@@ -170,7 +170,25 @@ describe("advisor brief review transition evidence", () => {
     ["run", { run: { ...baseRun, run_id: "packrun-other" } }],
     ["state", { run: { ...baseRun, review_state: "AWAITING_REVIEW" } }],
     ["actor", { run: { ...baseRun, latest_review_actor: "advisor_other" } }],
+    [
+      "malformed actor",
+      {
+        run: {
+          ...baseRun,
+          latest_review_actor: 42 as unknown as string,
+        },
+      },
+    ],
     ["event time", { run: { ...baseRun, latest_review_event_at: "not-a-date" } }],
+    [
+      "malformed event time",
+      {
+        run: {
+          ...baseRun,
+          latest_review_event_at: { at: "2026-04-21T03:22:00Z" } as unknown as string,
+        },
+      },
+    ],
     [
       "calendar date",
       { run: { ...baseRun, latest_review_event_at: "2026-02-30T03:22:00Z" } },
@@ -269,6 +287,16 @@ describe("advisor brief review transition evidence", () => {
       {
         ...awaitingRun,
         latest_review_event_at: "2026-04-21T03:22:00Z",
+        latest_review_actor: "advisor_previous",
+        review_transition_count: 0,
+        has_review_history: true,
+      },
+    ],
+    [
+      "malformed prior event time",
+      {
+        ...awaitingRun,
+        latest_review_event_at: 42 as unknown as string,
         latest_review_actor: "advisor_previous",
         review_transition_count: 0,
         has_review_history: true,
