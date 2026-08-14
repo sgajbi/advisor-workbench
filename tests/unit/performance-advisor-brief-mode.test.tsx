@@ -682,6 +682,49 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
   });
 
+  it.each([
+    ["a terminal state", { review_state: "ACCEPTED", review_pending: false }],
+    ["a contradictory pending terminal state", { review_state: "ACCEPTED", review_pending: true }],
+    ["an unknown review state", { review_state: "UNRECOGNIZED", review_pending: false }],
+    ["a failed source run", { runtime_state: "FAILED" }],
+    ["a superseded source run", { superseded: true }],
+  ])("does not expose review decisions for %s even when stale actions are returned", (_, overrides) => {
+    render(
+      <AdvisorBriefReviewWorkflow
+        workflowPackRun={{
+          ...readyAdvisorBriefResponse.workflow_pack_run!,
+          allowed_review_actions: ["ACCEPT", "REJECT"],
+          ...overrides,
+        }}
+        feedback={{ state: "idle", message: "" }}
+        isApplying={false}
+        onApply={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByLabelText("Review decision")).not.toBeInTheDocument();
+    expect(screen.getByText(/No further review decision is currently available/)).toBeInTheDocument();
+  });
+
+  it("exposes only known source actions for a coherent completed review posture", () => {
+    render(
+      <AdvisorBriefReviewWorkflow
+        workflowPackRun={{
+          ...readyAdvisorBriefResponse.workflow_pack_run!,
+          allowed_review_actions: ["ACCEPT", "UNKNOWN_ACTION"] as unknown as
+            WorkbenchAdvisorBriefWorkflowPackRun["allowed_review_actions"],
+        }}
+        feedback={{ state: "idle", message: "" }}
+        isApplying={false}
+        onApply={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("Review decision")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Accept for internal use" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "UNKNOWN_ACTION" })).not.toBeInTheDocument();
+  });
+
   it("clears copy confirmation when the source note or copy posture changes", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
