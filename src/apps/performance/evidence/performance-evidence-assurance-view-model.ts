@@ -78,6 +78,22 @@ const FAILED_STATUSES: readonly string[] = ["cancelled", "failed", "rejected", "
 const FRESH_STATES: readonly string[] = ["current", "fresh"];
 const STALE_STATES: readonly string[] = ["expired", "stale"];
 const UNAVAILABLE_STATES: readonly string[] = ["missing", "unavailable"];
+const READY_SUPPORTABILITY_STATES: readonly string[] = [
+  "ready",
+  "supported",
+  "ok",
+  "complete",
+  "source_backed",
+  "caller_supplied",
+];
+const PARTIAL_SUPPORTABILITY_STATES: readonly string[] = ["partial", "stale", "source_limited"];
+const ACTION_REQUIRED_SUPPORTABILITY_STATES: readonly string[] = [
+  "blocked",
+  "degraded",
+  "unavailable",
+  "unsupported",
+  "action_required",
+];
 const GATEWAY_API_PREFIX = "/api/v1/";
 const WORKBENCH_BFF_API_PREFIX = "/api/bff/api/v1/";
 
@@ -275,7 +291,15 @@ function buildExceptions(
       action: "Review the affected calculation and keep the result within internal review.",
       tone: "warn",
     });
-  } else if (evidenceState !== "supported" && evidenceState !== "unavailable") {
+  } else if (evidenceState === "unavailable") {
+    exceptions.push({
+      key: "evidence-package-unavailable",
+      title: "Evidence package unavailable",
+      detail: "The source could not provide a usable calculation-assurance package for this selection.",
+      action: "Keep the result within internal review and obtain refreshed source evidence.",
+      tone: "danger",
+    });
+  } else if (evidenceState !== "supported") {
     exceptions.push({
       key: "evidence-state-not-reported",
       title: "Assurance status not reported",
@@ -327,16 +351,30 @@ function buildExceptions(
 
   safeArray(evidence.source_supportability).forEach((item, index) => {
     const state = normalise(item.state);
-    if (state === "supported") return;
+    const freshness = normalise(item.freshness_bucket);
+    if (freshness === "stale") {
+      exceptions.push({
+        key: `source-supportability-${item.key || index}`,
+        title: "Source calculation evidence is not current",
+        detail: "A source calculation required by this evidence package is stale.",
+        action: "Review the source reason in support details and obtain refreshed evidence.",
+        tone: "danger",
+      });
+      return;
+    }
+    if (READY_SUPPORTABILITY_STATES.includes(state)) return;
+    const actionRequired = ACTION_REQUIRED_SUPPORTABILITY_STATES.includes(state);
     exceptions.push({
       key: `source-supportability-${item.key || index}`,
-      title: state === "unavailable" ? "Source calculation unavailable" : "Source assurance qualified",
+      title: actionRequired ? "Source calculation unavailable" : "Source assurance qualified",
       detail:
-        state === "unavailable"
+        actionRequired
           ? "A source calculation required by this evidence package is unavailable."
-          : "A source calculation does not have fully supported assurance posture.",
+          : PARTIAL_SUPPORTABILITY_STATES.includes(state)
+            ? "A source calculation has qualified assurance posture."
+            : "The source calculation assurance posture is not recognised.",
       action: "Review the source reason in support details and obtain refreshed evidence.",
-      tone: state === "unavailable" ? "danger" : "warn",
+      tone: actionRequired ? "danger" : "warn",
     });
   });
 
@@ -435,6 +473,29 @@ function buildSupportGroups(
     })),
   ];
   groups.push({ key: "source-contract", title: "Source contract", rows: sourceRows });
+
+  const sourceSupportabilityRows = safeArray(evidence.source_supportability).flatMap(
+    (item, index) => [
+      {
+        label: `Source ${index + 1}`,
+        value: displayValue(item.source_service, "Not reported"),
+      },
+      { label: `Source ${index + 1} state`, value: displayValue(item.state) },
+      {
+        label: `Source ${index + 1} freshness`,
+        value: displayValue(item.freshness_bucket),
+      },
+      { label: `Source ${index + 1} reason`, value: displayValue(item.reason) },
+      { label: `Source ${index + 1} key`, value: displayValue(item.key) },
+    ]
+  );
+  if (sourceSupportabilityRows.length) {
+    groups.push({
+      key: "source-supportability",
+      title: "Source supportability",
+      rows: sourceSupportabilityRows,
+    });
+  }
 
   const scopeRows = [
     ...safeStrings(evidence.methodology_references).map((value, index) => ({
