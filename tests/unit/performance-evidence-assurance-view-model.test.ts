@@ -68,7 +68,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     });
     expect(view.calculations[0].records[0]).toMatchObject({
       label: "Calculation input record",
-      href: "/api/v1/evidence/request.json",
+      href: "/api/bff/api/v1/evidence/request.json",
     });
   });
 
@@ -248,5 +248,26 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       label: "Archived evidence document",
       href: "/api/bff/api/v1/documents/doc-1/download",
     });
+  });
+
+  it("fails closed when a supporting record is outside the governed Workbench boundary", () => {
+    const source = evidence();
+    source.calculations[0].artifacts = [
+      {
+        artifact_name: "request.json",
+        url: "javascript:alert('unsafe')",
+      },
+    ];
+
+    const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, source);
+
+    expect(view.state).toBe("attention");
+    expect(view.calculations[0].records[0]).toMatchObject({
+      label: "Calculation input record",
+      href: null,
+    });
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Supporting record route unavailable", tone: "danger" })
+    );
   });
 });

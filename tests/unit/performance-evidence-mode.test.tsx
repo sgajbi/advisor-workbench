@@ -63,7 +63,7 @@ describe("PerformanceEvidenceMode", () => {
     expect(within(workspace).getByText("Portfolio performance summary")).toBeInTheDocument();
     expect(within(workspace).getByRole("link", { name: "Calculation input record" })).toHaveAttribute(
       "href",
-      "/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json"
+      "/api/bff/api/v1/workbench/PF_1001/performance/evidence/artifacts/calc-workspace-summary/request.json"
     );
     expect(within(workspace).getByRole("heading", { name: "Evidence access" })).toBeInTheDocument();
     expect(within(workspace).getByText(/1 governed methodology reference is recorded/)).toBeInTheDocument();
@@ -113,6 +113,22 @@ describe("PerformanceEvidenceMode", () => {
 
     expect(screen.getByRole("link", { name: "Archived evidence document" })).toHaveAttribute("href", "/api/bff/api/v1/documents/doc_1/download");
     expect(screen.getByText("Open the governed archived document through the Workbench evidence boundary.")).toBeInTheDocument();
+  });
+
+  it("does not render an unsafe source route as an actionable link", () => {
+    const scenario = buildSupportedEvidencePerformanceScenario();
+    if (scenario.workspace.evidence_view) {
+      scenario.workspace.evidence_view.calculations[0].artifacts = [{
+        artifact_name: "request.json",
+        url: "https://performance.internal/evidence/request.json",
+      }];
+    }
+    render(<PerformanceEvidenceMode capability={scenario.capabilities.evidence} evidenceView={scenario.workspace.evidence_view} />);
+
+    expect(screen.getByRole("heading", { name: "Attention required" })).toBeInTheDocument();
+    expect(screen.getByText("Supporting record route unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Calculation input record" })).not.toBeInTheDocument();
+    expect(screen.getByText("This source-published route is not available through the Workbench evidence boundary.")).toBeInTheDocument();
   });
 
   it("renders limitations as a business exception and preserves exact support detail", () => {
