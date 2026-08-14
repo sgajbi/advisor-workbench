@@ -144,16 +144,21 @@ function ReadyDiscovery({
     loading: trustCertificationLoading,
     hasError: trustCertificationError,
   });
-  const trustTone = trustCertification
-    ? getTrustTone(trustCertification.trustPosture)
-    : trustCertificationError
-      ? "warn"
-      : "default";
-  const trustLabel = trustCertification
-    ? formatStateLabel(trustCertification.trustPosture)
-    : trustCertificationError
-      ? "Assurance unavailable"
-      : "Checking assurance";
+  const hasRetainedTrust = Boolean(trustCertification && trustCertificationError);
+  const trustTone = hasRetainedTrust
+    ? "warn"
+    : trustCertification
+      ? getTrustTone(trustCertification.trustPosture)
+      : trustCertificationError
+        ? "warn"
+        : "default";
+  const trustLabel = hasRetainedTrust
+    ? "Assurance refresh failed"
+    : trustCertification
+      ? formatStateLabel(trustCertification.trustPosture)
+      : trustCertificationError
+        ? "Assurance unavailable"
+        : "Checking assurance";
   const certifiedCount = trustCertification?.trustAvailable
     ? (trustCertification.summary?.certifiedSnapshotCount ?? 0)
     : undefined;
@@ -207,7 +212,11 @@ function ReadyDiscovery({
             key: "certified",
             label: "Assurance confirmed",
             value: certifiedCount ?? "—",
-            support: certifiedCount === undefined ? "Live assurance unavailable" : "Current certifications",
+            support: hasRetainedTrust
+              ? "Earlier source evidence"
+              : certifiedCount === undefined
+                ? "Live assurance unavailable"
+                : "Current certifications",
             unavailable: certifiedCount === undefined,
           },
         ]}

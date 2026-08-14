@@ -4,7 +4,7 @@ import type {
 } from "./api";
 
 export type TrustTone = "success" | "warn" | "danger" | "default";
-export type SourceAvailability = "checking" | "ready" | "unavailable";
+export type SourceAvailability = "checking" | "ready" | "retained" | "unavailable";
 
 export function getTrustAvailability({
   data,
@@ -16,6 +16,7 @@ export function getTrustAvailability({
   hasError: boolean;
 }): SourceAvailability {
   if (loading && !data) return "checking";
+  if (hasError && data?.trustAvailable) return "retained";
   if (hasError || !data?.trustAvailable) return "unavailable";
   return "ready";
 }
@@ -26,7 +27,8 @@ export function getProductTrustLabel(
 ): string {
   if (availability === "checking") return "Checking";
   if (availability === "unavailable" || !trust) return "Not available";
-  return formatStateLabel(trust.certificationState);
+  const trustLabel = formatStateLabel(trust.certificationState);
+  return availability === "retained" ? `${trustLabel} · earlier evidence` : trustLabel;
 }
 
 export function getEvidenceValue(
