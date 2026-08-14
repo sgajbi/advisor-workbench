@@ -1,6 +1,7 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 
 import type { AdvisorBookResponse } from "../../src/features/advisor-book/contracts";
+import { fallbackNormalizedCapabilities } from "../../src/features/platform-capabilities/api";
 import {
   buildReportBatchHandle,
   buildReportBatchStatus,
@@ -43,6 +44,21 @@ export async function startReportCentreFixtureGateway({
           portfolio_type: "ADVISORY",
           status: "ACTIVE",
         })),
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/v1/platform/capabilities") {
+      sendJson(response, {
+        data: {
+          consumerSystem: requestUrl.searchParams.get("consumerSystem") ?? "UI",
+          tenantId: requestUrl.searchParams.get("tenantId") ?? "default",
+          contractVersion: "v1",
+          sources: {},
+          partialFailure: false,
+          errors: [],
+          normalized: fallbackNormalizedCapabilities(),
+        },
       });
       return;
     }

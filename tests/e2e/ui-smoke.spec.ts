@@ -186,6 +186,7 @@ test.describe('UI smoke checks', () => {
 
       const allocationNavigation = page.getByRole('navigation', { name: 'Workspace Navigation' });
       await expect(allocationNavigation).toBeVisible({ timeout: 60000 });
+      await allocationNavigation.getByRole('button', { name: /Switch workspace/i }).click();
       await expect(allocationNavigation.locator('[aria-current="page"]')).toHaveCount(1);
       await expect(allocationNavigation.getByRole('link', { name: 'Portfolio' })).toHaveAttribute(
         'aria-current',
@@ -196,6 +197,7 @@ test.describe('UI smoke checks', () => {
 
       const dataProductNavigation = page.getByRole('navigation', { name: 'Workspace Navigation' });
       await expect(dataProductNavigation).toBeVisible({ timeout: 60000 });
+      await dataProductNavigation.getByRole('button', { name: /Switch workspace/i }).click();
       await expect(dataProductNavigation.locator('[aria-current="page"]')).toHaveCount(0);
       await expect(dataProductNavigation.getByRole('link', { name: 'Data Products' })).toHaveCount(0);
     }
