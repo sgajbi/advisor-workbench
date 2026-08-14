@@ -30,7 +30,11 @@ const COMMON_SMOOTHING_RESIDUAL_CODES = [
 
 const CONTRIBUTION_RECONCILIATION_TOLERANCE_PCT = 0.005;
 
-export function isContributionEvidenceConsistent(
+export type ContributionEvidenceInconsistency =
+  | "numeric_reconciliation"
+  | "status_or_reason";
+
+export function getContributionEvidenceInconsistency(
   contribution: ContributionSummaryView,
   {
     sourceStatus,
@@ -39,12 +43,16 @@ export function isContributionEvidenceConsistent(
     sourceStatus: string;
     smoothingStatus: string;
   },
-): boolean {
-  return (
-    isSourceEvidenceConsistent(contribution, sourceStatus) &&
-    isSmoothingEvidenceConsistent(smoothingStatus, contribution.smoothing_evidence?.reason_codes) &&
-    isPublishedContributionReconciled(contribution, smoothingStatus)
-  );
+): ContributionEvidenceInconsistency | null {
+  if (
+    !isSourceEvidenceConsistent(contribution, sourceStatus) ||
+    !isSmoothingEvidenceConsistent(smoothingStatus, contribution.smoothing_evidence?.reason_codes)
+  ) {
+    return "status_or_reason";
+  }
+  return isPublishedContributionReconciled(contribution, smoothingStatus)
+    ? null
+    : "numeric_reconciliation";
 }
 
 function isSourceEvidenceConsistent(

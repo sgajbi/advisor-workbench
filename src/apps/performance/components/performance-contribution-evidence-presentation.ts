@@ -1,7 +1,10 @@
 import type { ContributionSummaryView } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
-import { isContributionEvidenceConsistent } from "./performance-contribution-evidence-consistency";
+import {
+  getContributionEvidenceInconsistency,
+  type ContributionEvidenceInconsistency,
+} from "./performance-contribution-evidence-consistency";
 import {
   getContributionCoverageAssessment,
   getContributionReconciliationAssessment,
@@ -97,17 +100,18 @@ export function getContributionEvidencePresentation(
     (smoothingStatus !== null && !includesEvidenceValue(SMOOTHING_STATUSES, smoothingStatus));
   const hasUnknownEvidence =
     hasUnknownStatus || unknownSourceCodes.length > 0 || unknownSmoothingCodes.length > 0;
-  const hasInconsistentEvidence =
+  const evidenceInconsistency =
     !hasIncompleteEvidence &&
     sourceStatus !== null &&
-    smoothingStatus !== null &&
-    !isContributionEvidenceConsistent(contribution, {
-      sourceStatus,
-      smoothingStatus,
-    });
+    smoothingStatus !== null
+      ? getContributionEvidenceInconsistency(contribution, {
+          sourceStatus,
+          smoothingStatus,
+        })
+      : null;
   const limitations = getContributionLimitations(contribution, {
     hasUnknownEvidence,
-    hasInconsistentEvidence,
+    evidenceInconsistency,
     smoothingStatus,
   });
   const decision = getContributionEvidenceDecision({
@@ -116,7 +120,7 @@ export function getContributionEvidencePresentation(
     sourceStatus,
     smoothingStatus,
     hasUnknownEvidence,
-    hasInconsistentEvidence,
+    evidenceInconsistency,
     coveragePosture: getContributionCoveragePosture(contribution.coverage_mv_pct),
     hasDeclaredSourceLimitations: Boolean(
       sourceEvidence?.unsupported_economics.length || sourceEvidence?.degraded_economics.length,
@@ -125,7 +129,7 @@ export function getContributionEvidencePresentation(
 
   return {
     ...decision,
-    context: buildContributionContext(contribution),
+    context: buildContributionContext(contribution, evidenceInconsistency),
     limitations,
     evidenceItems: buildContributionEvidenceItems(contribution),
   };
@@ -137,7 +141,7 @@ function getContributionEvidenceDecision({
   sourceStatus,
   smoothingStatus,
   hasUnknownEvidence,
-  hasInconsistentEvidence,
+  evidenceInconsistency,
   coveragePosture,
   hasDeclaredSourceLimitations,
 }: {
@@ -146,7 +150,7 @@ function getContributionEvidenceDecision({
   sourceStatus: string | null;
   smoothingStatus: string | null;
   hasUnknownEvidence: boolean;
-  hasInconsistentEvidence: boolean;
+  evidenceInconsistency: ContributionEvidenceInconsistency | null;
   coveragePosture: ContributionCoveragePosture;
   hasDeclaredSourceLimitations: boolean;
 }): Pick<ContributionEvidencePresentation, "tone" | "title" | "body"> {
@@ -171,7 +175,14 @@ function getContributionEvidenceDecision({
       body: "Lotus received a source or methodology status it does not yet recognize. Do not assume the figures are complete; review the exact calculation evidence before use.",
     };
   }
-  if (hasInconsistentEvidence) {
+  if (evidenceInconsistency === "numeric_reconciliation") {
+    return {
+      tone: "review",
+      title: "Contribution reconciliation needs review",
+      body: "The published contribution, linked-return, or smoothing-residual amounts do not reconcile. Do not use the driver explanation with a client until the calculation evidence has been reviewed.",
+    };
+  }
+  if (evidenceInconsistency === "status_or_reason") {
     return {
       tone: "review",
       title: "Contribution evidence is inconsistent",
@@ -255,11 +266,11 @@ function getContributionLimitations(
   contribution: ContributionSummaryView,
   {
     hasUnknownEvidence,
-    hasInconsistentEvidence,
+    evidenceInconsistency,
     smoothingStatus,
   }: {
     hasUnknownEvidence: boolean;
-    hasInconsistentEvidence: boolean;
+    evidenceInconsistency: ContributionEvidenceInconsistency | null;
     smoothingStatus: string | null;
   },
 ): string[] {
@@ -301,18 +312,26 @@ function getContributionLimitations(
   if (hasUnknownEvidence) {
     limitations.push("Some published evidence is not recognized by this Workbench version.");
   }
-  if (hasInconsistentEvidence) {
+  if (evidenceInconsistency === "status_or_reason") {
     limitations.push("Published statuses and supporting reason codes do not agree.");
+  }
+  if (evidenceInconsistency === "numeric_reconciliation") {
+    limitations.push("Published contribution and return evidence does not reconcile.");
   }
 
   return [...new Set(limitations)];
 }
 
-function buildContributionContext(contribution: ContributionSummaryView): string {
+function buildContributionContext(
+  contribution: ContributionSummaryView,
+  evidenceInconsistency: ContributionEvidenceInconsistency | null,
+): string {
   const context = [
     formatContributionCoverageContext(contribution),
     formatContributionWeightingScheme(contribution.weighting_scheme),
-    getContributionReconciliationAssessment(contribution) ?? "Reconciliation not published",
+    evidenceInconsistency === "numeric_reconciliation"
+      ? "Calculation values do not reconcile"
+      : getContributionReconciliationAssessment(contribution) ?? "Reconciliation not published",
   ].filter((item): item is string => Boolean(item));
 
   return context.join(" • ");
@@ -357,6 +376,22 @@ function buildContributionEvidenceItems(
     { label: "Smoothing status", value: smoothingEvidence?.status?.trim() || "Not published" },
     { label: "Smoothing reason codes", value: formatEvidenceList(smoothingEvidence?.reason_codes) },
     {
+      label: "Raw contribution",
+      value: formatExactEvidencePct(smoothingEvidence?.raw_contribution_pct),
+    },
+    {
+      label: "Final contribution",
+      value: formatExactEvidencePct(smoothingEvidence?.final_contribution_pct),
+    },
+    {
+      label: "Linked return",
+      value: formatExactEvidencePct(smoothingEvidence?.linked_return_pct),
+    },
+    {
+      label: "Smoothing residual",
+      value: formatExactEvidencePct(smoothingEvidence?.smoothing_residual_pct),
+    },
+    {
       label: "Reconciliation",
       value:
         getContributionReconciliationAssessment(contribution) ??
@@ -399,6 +434,10 @@ function normalizeEvidenceValue(value?: string | null): string | null {
 function formatEvidenceList(values: string[] | undefined): string {
   const publishedValues = (values ?? []).filter((value) => value.length > 0);
   return publishedValues.length > 0 ? publishedValues.join(", ") : "None published";
+}
+
+function formatExactEvidencePct(value: number | null | undefined): string {
+  return typeof value === "number" && Number.isFinite(value) ? `${String(value)}%` : "Not published";
 }
 
 function formatBusinessList(values: string[]): string {
