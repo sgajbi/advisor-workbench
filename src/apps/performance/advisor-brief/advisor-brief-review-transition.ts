@@ -137,13 +137,23 @@ function hasAdvancedReviewEvidence(
   const responseCount = run.review_transition_count;
   const responseEventAt = parseAdvisorBriefReviewUtcTimestamp(run.latest_review_event_at);
   const previousCount = previousRun?.review_transition_count;
-  const previousEventAt = previousRun?.latest_review_event_at?.trim();
+  const previousEventValue = previousRun?.latest_review_event_at;
+  const previousEventAt =
+    typeof previousEventValue === "string"
+      ? previousEventValue.trim()
+      : previousEventValue === null || previousEventValue === undefined
+        ? ""
+        : null;
 
   if (
     typeof responseCount !== "number" ||
     !Number.isInteger(responseCount) ||
     responseEventAt === null
   ) {
+    return false;
+  }
+
+  if (previousEventAt === null) {
     return false;
   }
 

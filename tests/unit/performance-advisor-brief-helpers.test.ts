@@ -102,6 +102,27 @@ describe("performance-advisor-brief helpers", () => {
         })
       )
     ).toBe(false);
+    expect(
+      canCopyAdvisorBrief(
+        buildBrief({
+          aiDisclosure: {
+            ...buildBrief().aiDisclosure,
+            preparation: "unavailable",
+            availability: "partial",
+          },
+        })
+      )
+    ).toBe(false);
+    expect(
+      canCopyAdvisorBrief(
+        buildBrief({
+          aiDisclosure: {
+            ...buildBrief().aiDisclosure,
+            preparation: "requested",
+          },
+        })
+      )
+    ).toBe(false);
   });
 
   it("labels blocked and historical note text without implying review is pending", () => {

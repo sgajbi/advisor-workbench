@@ -38,8 +38,14 @@ export function buildAdvisorBriefHumanReview(
   workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun | null | undefined
 ): AdvisorBriefHumanReview {
   const sourceRecorded = hasRecordedAdvisorBriefReviewEvidence(workflowPackRun);
-  const actor = workflowPackRun?.latest_review_actor?.trim();
-  const occurredAt = workflowPackRun?.latest_review_event_at?.trim();
+  const actor =
+    typeof workflowPackRun?.latest_review_actor === "string"
+      ? workflowPackRun.latest_review_actor.trim()
+      : undefined;
+  const occurredAt =
+    typeof workflowPackRun?.latest_review_event_at === "string"
+      ? workflowPackRun.latest_review_event_at.trim()
+      : undefined;
   const recordedEvidence = {
     sourceRecorded,
     ...(sourceRecorded && actor ? { actor } : {}),
@@ -102,9 +108,13 @@ export function hasRecordedAdvisorBriefReviewEvidence(
   evidence: AdvisorBriefReviewEvidence | null | undefined
 ): boolean {
   const reviewTransitionCount = evidence?.review_transition_count;
+  const reviewActor =
+    typeof evidence?.latest_review_actor === "string"
+      ? evidence.latest_review_actor.trim()
+      : "";
   return (
     evidence?.has_review_history === true &&
-    Boolean(evidence.latest_review_actor?.trim()) &&
+    Boolean(reviewActor) &&
     typeof reviewTransitionCount === "number" &&
     Number.isInteger(reviewTransitionCount) &&
     reviewTransitionCount > 0 &&
@@ -115,7 +125,7 @@ export function hasRecordedAdvisorBriefReviewEvidence(
 export function parseAdvisorBriefReviewUtcTimestamp(
   value: string | null | undefined
 ): number | null {
-  const timestamp = value?.trim();
+  const timestamp = typeof value === "string" ? value.trim() : "";
   const match = timestamp?.match(
     /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|\+00:00)$/
   );
