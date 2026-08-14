@@ -170,4 +170,17 @@ describe("PerformanceEvidenceMode", () => {
     expect(screen.getByText("No calculation evidence reported")).toBeInTheDocument();
     expect(screen.getByText(/cannot be treated as assured/)).toBeInTheDocument();
   });
+
+  it("keeps an unfamiliar review period out of an internal-review-ready posture", () => {
+    const scenario = buildSupportedEvidencePerformanceScenario();
+    scenario.workspace.period = "FUTURE";
+    if (scenario.workspace.evidence_view) scenario.workspace.evidence_view.period = "FUTURE";
+    renderEvidenceMode(scenario);
+
+    const workspace = screen.getByTestId("performance-evidence-assurance");
+    expect(workspace).toHaveAttribute("data-assurance-state", "attention");
+    expect(within(workspace).getByText("Review period not supported")).toBeInTheDocument();
+    expect(within(workspace).getByText("Selected review period not supported")).toBeInTheDocument();
+    expect(within(workspace).queryByText("Ready for internal review")).not.toBeInTheDocument();
+  });
 });

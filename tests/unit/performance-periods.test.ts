@@ -1,6 +1,8 @@
 import {
   CANONICAL_PERFORMANCE_PERIOD_OPTIONS,
+  CANONICAL_PERFORMANCE_PERIODS,
   getPerformancePeriodDefinition,
+  parseCanonicalPerformancePeriod,
 } from "@/apps/performance/periods";
 
 describe("performance period vocabulary", () => {
@@ -20,6 +22,33 @@ describe("performance period vocabulary", () => {
     expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("THREE_YEAR");
     expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("FIVE_YEAR");
     expect(CANONICAL_PERFORMANCE_PERIOD_OPTIONS).not.toContain("ITD");
+  });
+
+  it("owns one canonical vocabulary for controls and source-confirmed review contexts", () => {
+    expect(CANONICAL_PERFORMANCE_PERIODS).toEqual([
+      "MTD",
+      "QTD",
+      "YTD",
+      "1Y",
+      "3Y",
+      "5Y",
+      "SI",
+      "EXPLICIT",
+    ]);
+    expect(CANONICAL_PERFORMANCE_PERIODS).toEqual(
+      expect.arrayContaining([...CANONICAL_PERFORMANCE_PERIOD_OPTIONS])
+    );
+  });
+
+  it.each([
+    ["YTD", "YTD"],
+    [" ytd ", "YTD"],
+    ["eXpLiCiT", "EXPLICIT"],
+    ["future", null],
+    ["", null],
+    [null, null],
+  ] as const)("parses %s as %s", (value, expected) => {
+    expect(parseCanonicalPerformancePeriod(value)).toBe(expected);
   });
 
   it("keeps YTD distinct from trailing 1Y semantics", () => {

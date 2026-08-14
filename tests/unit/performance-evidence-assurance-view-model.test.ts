@@ -153,6 +153,84 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("fails closed when matching source and workspace periods are unrecognized", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ period: "FUTURE" }),
+      { period: "future" }
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.posture).toBe("Attention required");
+    expect(view.exceptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "review-period-unrecognized",
+          title: "Review period not supported",
+          tone: "danger",
+        }),
+        expect.objectContaining({
+          key: "active-review-period-unrecognized",
+          title: "Selected review period not supported",
+          tone: "danger",
+        }),
+      ])
+    );
+    expect(view.exceptions).not.toContainEqual(
+      expect.objectContaining({ key: "selection-context-mismatch" })
+    );
+  });
+
+  it("fails closed when an unrecognized source period differs from the active selection", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ period: "FUTURE" })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.exceptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "review-period-unrecognized", tone: "danger" }),
+        expect.objectContaining({ key: "selection-context-mismatch", tone: "danger" }),
+      ])
+    );
+  });
+
+  it.each(["MTD", "QTD", "YTD", "1Y", "3Y", "5Y", "SI"])(
+    "admits matching canonical %s period evidence",
+    (period) => {
+      const view = buildPerformanceEvidenceAssuranceViewModel(
+        supportedCapability,
+        evidence({ period }),
+        { period: period.toLowerCase() }
+      );
+
+      expect(view.state).toBe("ready");
+      expect(view.exceptions).not.toContainEqual(
+        expect.objectContaining({ key: expect.stringContaining("period") })
+      );
+    }
+  );
+
+  it("admits a matching mixed-case explicit period with complete boundaries", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        period: "eXpLiCiT",
+        report_start_date: "2026-01-01",
+        report_end_date: "2026-08-14",
+      }),
+      {
+        period: "explicit",
+        reportStartDate: "2026-01-01",
+        reportEndDate: "2026-08-14",
+      }
+    );
+
+    expect(view.state).toBe("ready");
+    expect(view.exceptions).toHaveLength(0);
+  });
+
   it("fails closed when the source publishes no calculations", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,

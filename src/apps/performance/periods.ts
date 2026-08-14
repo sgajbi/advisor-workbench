@@ -7,8 +7,13 @@ export const CANONICAL_PERFORMANCE_PERIOD_OPTIONS = [
   "5Y",
 ] as const;
 
-export type CanonicalPerformancePeriod =
-  (typeof CANONICAL_PERFORMANCE_PERIOD_OPTIONS)[number] | "SI" | "EXPLICIT";
+export const CANONICAL_PERFORMANCE_PERIODS = [
+  ...CANONICAL_PERFORMANCE_PERIOD_OPTIONS,
+  "SI",
+  "EXPLICIT",
+] as const;
+
+export type CanonicalPerformancePeriod = (typeof CANONICAL_PERFORMANCE_PERIODS)[number];
 
 export type PerformancePeriodDefinition = {
   code: CanonicalPerformancePeriod;
@@ -81,4 +86,12 @@ export const PERFORMANCE_PERIOD_DEFINITIONS: Record<
 
 export function getPerformancePeriodDefinition(period: CanonicalPerformancePeriod) {
   return PERFORMANCE_PERIOD_DEFINITIONS[period];
+}
+
+export function parseCanonicalPerformancePeriod(
+  value: unknown
+): CanonicalPerformancePeriod | null {
+  if (typeof value !== "string") return null;
+  const candidate = value.trim().toUpperCase();
+  return CANONICAL_PERFORMANCE_PERIODS.find((period) => period === candidate) ?? null;
 }
