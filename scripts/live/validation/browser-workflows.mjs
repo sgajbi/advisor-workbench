@@ -1555,29 +1555,37 @@ export async function validateEvidencePanel(
   );
   await assertRailModeActive(page, /^Evidence/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Evidence and Calculation Context" }),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  const evidenceStatusStrip = page.getByLabel("Evidence support status");
+    page.getByRole("heading", { name: "Calculation assurance" }),
+  ).toBeVisible({ timeout: timeoutMs });
+  const assuranceWorkspace = page.getByTestId("performance-evidence-assurance");
   let screenshotState = "truthfully_degraded";
-  if (await evidenceStatusStrip.count()) {
-    await expect(evidenceStatusStrip).toBeVisible({ timeout: timeoutMs });
+  if (await assuranceWorkspace.count()) {
+    await expect(assuranceWorkspace).toBeVisible({ timeout: timeoutMs });
+    await expect(assuranceWorkspace).toHaveAttribute(
+      "data-assurance-state",
+      /^(ready|attention|incomplete|unavailable)$/,
+    );
+    await expect(
+      assuranceWorkspace.getByRole("heading", { name: "Control exceptions" }),
+    ).toBeVisible({ timeout: timeoutMs });
+    await expect(
+      assuranceWorkspace.getByRole("heading", { name: "Calculation coverage" }),
+    ).toBeVisible({ timeout: timeoutMs });
     summary.uiChecks.push({
-      description: "Evidence support status",
-      kind: "status-strip",
-      state: "supported",
+      description: "Calculation assurance source posture",
+      kind: "assurance-workspace",
+      state: await assuranceWorkspace.getAttribute("data-assurance-state"),
     });
     screenshotState = "demo_ready";
   } else {
     await expect(
-      page.getByText(/Evidence (partially available|unavailable)/),
+      page.getByRole("heading", { name: /Assurance (evidence incomplete|unavailable)/ }),
     ).toBeVisible({
       timeout: timeoutMs,
     });
     summary.uiChecks.push({
-      description: "Evidence support status",
-      kind: "status-strip",
+      description: "Calculation assurance source posture",
+      kind: "assurance-workspace",
       state: "degraded",
     });
   }
