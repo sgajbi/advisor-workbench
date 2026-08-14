@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildPerformanceAdvisorBriefViewModel } from "../../src/apps/performance/advisor-brief-view-model";
+import { canCopyAdvisorBrief } from "../../src/apps/performance/components/advisor-brief/performance-advisor-brief-helpers";
 import type {
   WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspace,
@@ -615,6 +616,48 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       ])
     );
   });
+
+  it.each(["REJECTED", "ABANDONED"] as const)(
+    "blocks copy when source %s contradicts a pending review flag",
+    (reviewState) => {
+      const scenario = buildSupportedPerformanceScenario();
+      const brief = buildPerformanceAdvisorBriefViewModel({
+        workspace: scenario.workspace,
+        advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+          workflow_pack_run: {
+            run_id: "packrun_advisor_brief_req-1",
+            runtime_state: "COMPLETED",
+            review_state: reviewState,
+            latest_review_event_at: "2026-04-21T03:22:00Z",
+            latest_review_actor: "advisor_1",
+            review_transition_count: 1,
+            has_review_history: true,
+            allowed_review_actions: [],
+            supportability_status: "ACTION_REQUIRED",
+            review_pending: true,
+            superseded: false,
+            workflow_authority_owner: "lotus-gateway",
+            current_summary_note: "Contradictory review posture.",
+            findings: [],
+          },
+        }),
+        capabilities: scenario.capabilities,
+        period: scenario.workspace.period,
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: scenario.workspace.benchmark_code ?? undefined,
+        isDetailsPending: false,
+      });
+
+      expect(brief.aiDisclosure.humanReview).toEqual({
+        state: "unavailable",
+        sourceRecorded: false,
+      });
+      expect(canCopyAdvisorBrief(brief)).toBe(false);
+    },
+  );
 
   it.each([
     ["REVISED", true, "reviewed", true, "Revision requested", "stale"],

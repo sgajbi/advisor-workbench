@@ -70,6 +70,19 @@ describe("advisor brief review transition evidence", () => {
     }
   );
 
+  it.each(["REJECTED", "ABANDONED"])(
+    "fails a contradictory pending %s prohibition closed to unavailable",
+    (reviewState) => {
+      expect(
+        buildAdvisorBriefHumanReview({
+          ...baseRun,
+          review_state: reviewState,
+          review_pending: true,
+        }),
+      ).toEqual({ state: "unavailable", sourceRecorded: false });
+    },
+  );
+
   it.each([
     ["portfolio", { portfolioId: "PF_OTHER" }],
     ["run", { run: { ...baseRun, run_id: "packrun-other" } }],
