@@ -24,6 +24,10 @@ describe("Performance smoke scenario launcher", () => {
     expect(source).toContain("BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`");
     expect(source).not.toContain("BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`");
     expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "performance"');
+    expect(source).toContain("PLAYWRIGHT_PORT: String(workbenchPort)");
+    expect(source).toContain(
+      'process.env.PERFORMANCE_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? "31030"',
+    );
     expect(source).toContain("spawn(");
     expect(source).toContain('shell: false');
     expect(source).toContain('child.kill(signal)');
