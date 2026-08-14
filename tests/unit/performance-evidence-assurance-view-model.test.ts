@@ -481,6 +481,36 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("rejects anonymous ready source-supportability assessments", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_supportability: [
+          {
+            state: "ready",
+            freshness_bucket: "fresh",
+          },
+        ],
+      })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.posture).toBe("Incomplete evidence");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        key: "source-supportability-identity-0",
+        title: "Source supportability identity not confirmed",
+        tone: "warn",
+      })
+    );
+    expect(view.supportGroups.flatMap((group) => group.rows)).toEqual(
+      expect.arrayContaining([
+        { label: "Source 1", value: "Not reported" },
+        { label: "Source 1 reference", value: "Not reported" },
+      ])
+    );
+  });
+
   it.each([
     ["missing", undefined],
     ["unknown", "unknown"],
