@@ -45,6 +45,7 @@ function createTaskFlow({
   flowStatus,
   supportabilityStatus,
   replacementRunId,
+  replacementLineage,
   handoffStatus,
 }: {
   taskFlowId: string;
@@ -53,6 +54,7 @@ function createTaskFlow({
   flowStatus: string;
   supportabilityStatus: string;
   replacementRunId?: unknown;
+  replacementLineage?: unknown[];
   handoffStatus?: string;
 }) {
   return {
@@ -64,7 +66,17 @@ function createTaskFlow({
     flow_status: flowStatus,
     supportability_status: supportabilityStatus,
     replacement_lineage:
-      replacementRunId === undefined ? [] : [{ replacement_run_id: replacementRunId }],
+      replacementLineage ??
+      (replacementRunId === undefined
+        ? []
+        : [
+            {
+              superseded_run_id: runId,
+              replacement_run_id: replacementRunId,
+              review_action_ref: reviewState === "REVISED" ? "REVISE" : "SUPERSEDE",
+              reason: "Canonical review replacement proof.",
+            },
+          ]),
     handoff_refs: handoffStatus === undefined ? [] : [{ status: handoffStatus }],
   };
 }
@@ -77,6 +89,7 @@ function createAdvisorBriefPayload({
   allowedReviewActions = ["ACCEPT", "REJECT", "REVISE", "SUPERSEDE", "ABANDON"],
   superseded,
   replacementRunId,
+  replacementLineage,
   taskFlowId,
   taskFlowStatus = "AWAITING_REVIEW",
   taskFlowSupportabilityStatus = "ACTION_REQUIRED",
@@ -91,6 +104,7 @@ function createAdvisorBriefPayload({
   allowedReviewActions?: string[];
   superseded?: boolean;
   replacementRunId?: unknown;
+  replacementLineage?: unknown[];
   taskFlowId: string;
   taskFlowStatus?: string;
   taskFlowSupportabilityStatus?: string;
@@ -135,6 +149,7 @@ function createAdvisorBriefPayload({
       flowStatus: taskFlowStatus,
       supportabilityStatus: taskFlowSupportabilityStatus,
       replacementRunId,
+      replacementLineage,
       handoffStatus,
     }),
   };
@@ -394,6 +409,100 @@ describe("live validation workflow-pack proof", () => {
       }),
     ]);
   });
+
+  it.each([
+    [
+      {
+        superseded_run_id: "packrun-other-source",
+        replacement_run_id: "packrun-explicit-gross",
+        review_action_ref: "SUPERSEDE",
+        reason: "Wrong source run.",
+      },
+      "from 'packrun-explicit-net' to 'packrun-explicit-gross' for action 'SUPERSEDE'",
+    ],
+    [
+      {
+        superseded_run_id: "packrun-explicit-net",
+        replacement_run_id: "packrun-other-replacement",
+        review_action_ref: "SUPERSEDE",
+        reason: "Wrong replacement run.",
+      },
+      "from 'packrun-explicit-net' to 'packrun-explicit-gross' for action 'SUPERSEDE'",
+    ],
+    [
+      {
+        superseded_run_id: "packrun-explicit-net",
+        replacement_run_id: "packrun-explicit-gross",
+        review_action_ref: "REVISE",
+        reason: "Wrong review action.",
+      },
+      "from 'packrun-explicit-net' to 'packrun-explicit-gross' for action 'SUPERSEDE'",
+    ],
+  ])(
+    "rejects stored replacement lineage when the task-flow edge is not exact: %s",
+    async (lineage, expectedError) => {
+      const summary = createSummary();
+
+      await expect(
+        validateAdvisorBriefWorkflowPackReviewChain({
+          summary,
+          gatewayBaseUrl: "http://gateway.dev.lotus",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
+          canonicalStartDate: "2025-03-31",
+          canonicalAsOfDate: "2026-04-10",
+          timeoutMs: 1000,
+          preRecordedAcceptReviewer: "live.validator.ui",
+          acceptDetailBasis: "GROSS",
+          acceptChartFrequency: "quarterly",
+          fetchJson: async (_summary: unknown, url: string) => {
+            if (
+              url.includes("detail_basis=GROSS") &&
+              url.includes("chart_frequency=quarterly") &&
+              url.includes("report_start_date=2025-03-31")
+            ) {
+              return createAdvisorBriefPayload({
+                runId: "packrun-browser-gross-quarterly",
+                reviewState: "ACCEPTED",
+                allowedReviewActions: [],
+                supportabilityStatus: "READY",
+                taskFlowId: "taskflow-browser-gross-quarterly",
+                taskFlowStatus: "COMPLETED",
+                taskFlowSupportabilityStatus: "READY",
+                handoffStatus: "READY_FOR_HANDOFF",
+                latestReviewActor: "live.validator.ui",
+              });
+            }
+            if (
+              url.includes("detail_basis=NET") &&
+              url.includes("report_start_date=2026-01-01")
+            ) {
+              return createAdvisorBriefPayload({
+                runId: "packrun-explicit-net",
+                reviewState: "SUPERSEDED",
+                allowedReviewActions: [],
+                supportabilityStatus: "HISTORICAL",
+                superseded: true,
+                replacementRunId: "packrun-explicit-gross",
+                replacementLineage: [lineage],
+                taskFlowId: "taskflow-explicit-net",
+                taskFlowStatus: "SUPERSEDED",
+                taskFlowSupportabilityStatus: "HISTORICAL",
+                latestReviewActor: "live.validator.supersede",
+              });
+            }
+            return createAdvisorBriefPayload({
+              runId: "packrun-explicit-gross",
+              taskFlowId: "taskflow-explicit-gross",
+            });
+          },
+          postJson: async () => {
+            throw new Error("postJson should not run for stored lineage proof.");
+          },
+        }),
+      ).rejects.toThrow(expectedError);
+    },
+  );
 
   it.each([
     [

@@ -106,6 +106,8 @@ function assertReplacementTaskFlowPosture(
   sourceRunId,
   replacementRunId
 ) {
+  const expectedActionType =
+    expectedReviewState === "REVISED" ? "REVISE" : "SUPERSEDE";
   const taskFlow = assertWorkflowPackTaskFlowPresence(
     payload,
     `Advisor brief ${expectedReviewState} review action`
@@ -134,9 +136,16 @@ function assertReplacementTaskFlowPosture(
   const lineageRefs = Array.isArray(taskFlow.replacement_lineage)
     ? taskFlow.replacement_lineage
     : [];
-  if (!lineageRefs.some((lineage) => lineage?.replacement_run_id === replacementRunId)) {
+  if (
+    !lineageRefs.some(
+      (lineage) =>
+        lineage?.superseded_run_id === sourceRunId &&
+        lineage.replacement_run_id === replacementRunId &&
+        lineage.review_action_ref === expectedActionType
+    )
+  ) {
     throw new Error(
-      `Advisor brief ${expectedReviewState} review action returned no task-flow replacement lineage edge for '${replacementRunId}'.`
+      `Advisor brief ${expectedReviewState} review action returned no exact task-flow replacement lineage edge from '${sourceRunId}' to '${replacementRunId}' for action '${expectedActionType}'.`
     );
   }
   return taskFlow;
