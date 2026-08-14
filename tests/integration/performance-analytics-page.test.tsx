@@ -523,12 +523,19 @@ describe("PerformanceAnalyticsPage", () => {
     ).toHaveAttribute("data-layout", "asymmetric");
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
-    expect(within(contributorsModule as HTMLElement).getByText("Source economics: SOURCE_LIMITED • Smoothing: APPLIED")).toBeInTheDocument();
-    expect(
-      within(contributorsModule as HTMLElement).getByText(
-        "Source reasons: LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
-      )
-    ).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText("Contribution coverage is limited")).toBeInTheDocument();
+    expect(within(contributorsModule as HTMLElement).getByText(
+      "Not source-authored: income effects and tax effects."
+    )).toBeInTheDocument();
+    fireEvent.click(within(contributorsModule as HTMLElement).getByText("Calculation evidence"));
+    const contributionEvidence = within(contributorsModule as HTMLElement).getByLabelText(
+      "Contribution calculation evidence"
+    );
+    expect(within(contributionEvidence).getByText("SOURCE_LIMITED")).toBeInTheDocument();
+    expect(within(contributionEvidence).getByText("APPLIED")).toBeInTheDocument();
+    expect(within(contributionEvidence).getByText(
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+    )).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByText("Instrument detail")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
