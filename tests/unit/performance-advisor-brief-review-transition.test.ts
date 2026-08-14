@@ -72,6 +72,7 @@ describe("advisor brief review transition evidence", () => {
     ],
     ["transition count", { run: { ...baseRun, review_transition_count: 0 } }],
     ["history flag", { run: { ...baseRun, has_review_history: false } }],
+    ["pending posture", { run: { ...baseRun, review_pending: true } }],
   ] as const)("rejects a mismatched or malformed %s", (_label, overrides) => {
     expect(isConfirmed(overrides)).toBe(false);
   });

@@ -1245,7 +1245,12 @@ describe("canonical live validation script", () => {
       'outcomeReviewPanel.getByText("Selected Review Detail")',
     );
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
-    expect(browserWorkflowModule).toContain("Accept Brief");
+    expect(browserWorkflowModule).toContain("Advisor brief human review");
+    expect(browserWorkflowModule).toContain('selectOption("ACCEPT")');
+    expect(browserWorkflowModule).toContain("Review decision");
+    expect(browserWorkflowModule).toContain("Confirm acceptance");
+    expect(browserWorkflowModule).not.toContain("Advisor brief review actions");
+    expect(browserWorkflowModule).not.toContain("not-currently-allowed");
     expect(browserWorkflowModule).toContain("Advisor Talking Points");
     expect(browserWorkflowModule).not.toContain("Client Talking Points");
     expect(browserWorkflowModule).toContain(

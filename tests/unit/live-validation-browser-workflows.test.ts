@@ -11,6 +11,7 @@ const {
   createBrowserValidationHelpers,
   hasAcceptedAdvisorBriefReviewPosture,
   resolveHighCashIdeaCandidateId,
+  validateAdvisorBriefPanel,
   validateAdvisoryJourneyScreens,
 } = browserWorkflowModule as unknown as {
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
@@ -35,6 +36,7 @@ const {
     candidateHref: string | null,
     workbenchBaseUrl: string,
   ) => string;
+  validateAdvisorBriefPanel: (...args: unknown[]) => Promise<void>;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
 };
 
@@ -78,6 +80,18 @@ describe("live validation browser workflow helpers", () => {
     expect(
       hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
     ).toBe(false);
+  });
+
+  it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
+    const source = validateAdvisorBriefPanel.toString();
+
+    expect(source).toContain('getByLabel("Advisor brief human review")');
+    expect(source).toContain('getByLabel("Review decision").selectOption("ACCEPT")');
+    expect(source).toContain('getByLabel("Reviewer reference")');
+    expect(source).toContain('getByLabel("Review rationale")');
+    expect(source).toContain('name: "Confirm acceptance"');
+    expect(source).not.toContain("Advisor brief review actions");
+    expect(source).not.toContain("not-currently-allowed");
   });
 
   it("validates the canonical contribution analysis default and segment views", () => {

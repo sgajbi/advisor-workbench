@@ -1133,28 +1133,29 @@ export async function validateAdvisorBriefPanel(
   await screenshotRegisteredPanel(page, "performance.advisor_brief");
 
   if (performAcceptReviewActionProof) {
-    const reviewRegion = page.getByLabel("Advisor brief review actions");
+    const reviewRegion = page.getByLabel("Advisor brief human review");
     const supportabilityRegion = page.getByLabel(
       "Advisor brief supportability",
     );
-    if ((await reviewRegion.count()) === 0) {
-      await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
-      summary.uiChecks.push({
-        description: "Advisor brief ACCEPT review action",
-        kind: "workflow-pack-review-action",
-        actionType: "ACCEPT",
-        state: "not-currently-allowed",
-      });
-      return;
-    }
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
-    await reviewRegion.getByLabel("Reviewed by").fill("live.validator.ui");
+    await reviewRegion.getByLabel("Review decision").selectOption("ACCEPT");
     await reviewRegion
-      .getByLabel("Review reason")
+      .getByLabel("Reviewer reference")
+      .fill("live.validator.ui");
+    await reviewRegion
+      .getByLabel("Review rationale")
       .fill(
         "Live canonical validator proving the Workbench ACCEPT review path.",
       );
-    await reviewRegion.getByRole("button", { name: "Accept Brief" }).click();
+    await reviewRegion
+      .getByRole("button", { name: "Review decision", exact: true })
+      .click();
+    const confirmAcceptance = reviewRegion.getByRole("button", {
+      name: "Confirm acceptance",
+      exact: true,
+    });
+    await expect(confirmAcceptance).toBeVisible({ timeout: timeoutMs });
+    await confirmAcceptance.click();
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
     await expect
       .poll(
