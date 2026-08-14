@@ -424,6 +424,27 @@ function buildExceptions(
       tone: "danger",
     });
   }
+  if (!safeStrings(evidence.source_services).length) {
+    exceptions.push({
+      key: "source-services-unconfirmed",
+      title: "Evidence source not confirmed",
+      detail: "The package does not identify the domain service responsible for its calculation evidence.",
+      action: "Obtain source-owned evidence before relying on the assurance conclusion.",
+      tone: "warn",
+    });
+  }
+  const calculationVersions = Object.entries(evidence.calculation_versions ?? {}).filter(
+    ([key, value]) => key.trim() && typeof value === "string" && value.trim()
+  );
+  if (!calculationVersions.length) {
+    exceptions.push({
+      key: "calculation-versions-unconfirmed",
+      title: "Calculation version not confirmed",
+      detail: "The package does not identify a governed contract or analytics version for its calculations.",
+      action: "Obtain versioned calculation evidence before relying on the assurance conclusion.",
+      tone: "warn",
+    });
+  }
   const mismatchedContext = [
     evidence.as_of_date?.trim() && evidence.as_of_date.trim() !== selection.asOfDate.trim()
       ? "reporting date"
@@ -463,6 +484,24 @@ function buildExceptions(
   }
   calculations.forEach((calculation, index) => {
     const calculationTitle = calculationRolePresentation(calculation, index).title;
+    if (!calculation.calculation_id?.trim()) {
+      exceptions.push({
+        key: `calculation-id-${index}`,
+        title: `${calculationTitle} reference not confirmed`,
+        detail: "The source did not publish a durable reference for this calculation.",
+        action: "Obtain source-owned calculation evidence before relying on this item.",
+        tone: "warn",
+      });
+    }
+    if (!calculation.calculation_role?.trim()) {
+      exceptions.push({
+        key: `calculation-role-${index}`,
+        title: `${calculationTitle} purpose not confirmed`,
+        detail: "The source did not identify the business purpose covered by this calculation evidence.",
+        action: "Obtain a source-confirmed calculation role before relying on this item.",
+        tone: "warn",
+      });
+    }
     appendLifecycleException(
       exceptions,
       calculation.execution_status,
@@ -487,6 +526,19 @@ function buildExceptions(
       );
     });
     safeArray(calculation.upstream_snapshots).forEach((snapshot, snapshotIndex) => {
+      if (
+        !snapshot.upstream_endpoint?.trim() ||
+        !snapshot.source_identifier?.trim() ||
+        !snapshot.as_of_date?.trim()
+      ) {
+        exceptions.push({
+          key: `upstream-context-${index}-${snapshotIndex}`,
+          title: `${calculationTitle} upstream evidence ${snapshotIndex + 1} context not confirmed`,
+          detail: "The source did not identify the upstream record, owner reference, and business date used by this calculation.",
+          action: "Obtain complete upstream evidence before relying on this calculation.",
+          tone: "warn",
+        });
+      }
       appendUpstreamRetrievalException(
         exceptions,
         snapshot.retrieval_status,
@@ -928,7 +980,10 @@ function safeArray<T>(value: T[] | null | undefined): T[] {
 }
 
 function safeStrings(value: string[] | null | undefined): string[] {
-  return safeArray(value).map((item) => item.trim()).filter(Boolean);
+  return safeArray(value)
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function dedupeByKey(items: PerformanceEvidenceException[]) {

@@ -504,6 +504,43 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(JSON.stringify(view.exceptions)).not.toContain("portfolio_report");
   });
 
+  it("fails closed when source-owned calculation provenance is incomplete", () => {
+    const calculation = evidence().calculations[0];
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_services: [],
+        calculation_versions: {},
+        calculations: [
+          {
+            ...calculation,
+            calculation_id: "",
+            calculation_role: "",
+            upstream_snapshots: [
+              {
+                upstream_endpoint: "",
+                source_identifier: "",
+                as_of_date: "",
+                retrieval_status: "200",
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions.map((item) => item.title)).toEqual(
+      expect.arrayContaining([
+        "Evidence source not confirmed",
+        "Calculation version not confirmed",
+        "Additional performance calculation 1 reference not confirmed",
+        "Additional performance calculation 1 purpose not confirmed",
+        "Additional performance calculation 1 upstream evidence 1 context not confirmed",
+      ])
+    );
+  });
+
   it("rejects evidence that does not match the active source-confirmed selection", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
