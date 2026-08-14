@@ -675,6 +675,30 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
   });
 
+  it("keeps an accepted review neutral when its source event time is malformed", () => {
+    render(
+      <AdvisorBriefReviewWorkflow
+        workflowPackRun={{
+          ...readyAdvisorBriefResponse.workflow_pack_run!,
+          review_state: "ACCEPTED",
+          review_pending: false,
+          latest_review_actor: "advisor_1",
+          latest_review_event_at: "not-a-date",
+          review_transition_count: 1,
+          has_review_history: true,
+          allowed_review_actions: [],
+        }}
+        feedback={{ state: "idle", message: "" }}
+        isApplying={false}
+        onApply={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("Status Accepted for internal use")).toHaveClass(
+      "semantic-badge-default"
+    );
+  });
+
   it("records a bounded review action and refreshes the run posture in place", async () => {
     vi.mocked(postWorkbenchPerformanceAdvisorBriefReviewActionClient).mockClear();
     const workspace = buildSupportedPerformanceScenario().workspace;

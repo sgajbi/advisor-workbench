@@ -9,6 +9,7 @@ import type {
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionType,
 } from "@/features/workbench/types";
+import { hasRecordedAdvisorBriefReviewEvidence } from "../../advisor-brief/advisor-brief-review-evidence";
 
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
@@ -327,7 +328,9 @@ function getReviewStateTone(
 
   switch (workflowPackRun.review_state.toUpperCase()) {
     case "ACCEPTED":
-      return hasRecordedReviewEvidence(workflowPackRun) ? "success" : "default";
+      return hasRecordedAdvisorBriefReviewEvidence(workflowPackRun)
+        ? "success"
+        : "default";
     case "REJECTED":
     case "ABANDONED":
       return "danger";
@@ -339,16 +342,4 @@ function getReviewStateTone(
     default:
       return "default";
   }
-}
-
-function hasRecordedReviewEvidence(
-  workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun
-): boolean {
-  return (
-    workflowPackRun.has_review_history === true &&
-    Boolean(workflowPackRun.latest_review_actor?.trim()) &&
-    Boolean(workflowPackRun.latest_review_event_at?.trim()) &&
-    typeof workflowPackRun.review_transition_count === "number" &&
-    workflowPackRun.review_transition_count > 0
-  );
 }

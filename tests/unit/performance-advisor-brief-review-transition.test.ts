@@ -62,6 +62,14 @@ describe("advisor brief review transition evidence", () => {
     ["state", { run: { ...baseRun, review_state: "AWAITING_REVIEW" } }],
     ["actor", { run: { ...baseRun, latest_review_actor: "advisor_other" } }],
     ["event time", { run: { ...baseRun, latest_review_event_at: "not-a-date" } }],
+    [
+      "calendar date",
+      { run: { ...baseRun, latest_review_event_at: "2026-02-30T03:22:00Z" } },
+    ],
+    [
+      "timezone",
+      { run: { ...baseRun, latest_review_event_at: "2026-04-21T11:22:00+08:00" } },
+    ],
     ["transition count", { run: { ...baseRun, review_transition_count: 0 } }],
     ["history flag", { run: { ...baseRun, has_review_history: false } }],
   ] as const)("rejects a mismatched or malformed %s", (_label, overrides) => {
