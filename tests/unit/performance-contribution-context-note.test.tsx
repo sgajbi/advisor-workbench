@@ -135,6 +135,75 @@ describe("PerformanceContributionContextNote", () => {
     ).toBeInTheDocument();
   });
 
+  it("rejects a source-backed status that carries a limiting source reason", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            reason_codes: [
+              "LOTUS_CORE_ANALYTICS_INPUTS_USED",
+              "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
+              "MISSING_FX",
+            ],
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).toHaveTextContent("Currency source economics are incomplete");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
+  it("requires source-backed lineage evidence before confirming coverage", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            reason_codes: [],
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
+      "Contribution evidence is inconsistent",
+    );
+  });
+
+  it("rejects smoothing reason codes that contradict the published smoothing status", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            status: "APPLIED",
+            reason_codes: ["CARINO_INVALID_DAILY_LOG_DOMAIN"],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
   it("keeps missing evidence explicit instead of implying source completeness", () => {
     render(
       <PerformanceContributionContextNote
