@@ -84,6 +84,7 @@ const REQUIRED_INPUT_LABELS = {
 } as const;
 
 const COMPLETE_STATUS = "complete";
+const PERFORMANCE_WORKSPACE_SCOPE = "performance_workspace";
 const PENDING_STATUSES: readonly string[] = ["accepted", "pending", "queued", "running", "processing"];
 const FAILED_STATUSES: readonly string[] = ["cancelled", "failed", "rejected", "unavailable"];
 const FRESH_STATES: readonly string[] = ["current", "fresh"];
@@ -410,6 +411,17 @@ function buildExceptions(
       detail: "The source did not publish a recognised gross- or net-of-fees basis for this package.",
       action: "Confirm the applicable return basis before relying on the calculation evidence.",
       tone: "warn",
+    });
+  }
+  if (normalise(evidence.calculation_scope) !== PERFORMANCE_WORKSPACE_SCOPE) {
+    exceptions.push({
+      key: "calculation-scope-unconfirmed",
+      title: "Calculation assurance scope not confirmed",
+      detail: evidence.calculation_scope?.trim()
+        ? "The source evidence package is not scoped to the active performance workspace."
+        : "The source did not identify this package as evidence for the active performance workspace.",
+      action: "Obtain a performance-workspace evidence package before relying on the assurance conclusion.",
+      tone: "danger",
     });
   }
   const mismatchedContext = [

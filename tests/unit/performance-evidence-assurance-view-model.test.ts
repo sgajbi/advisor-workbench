@@ -484,6 +484,26 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions).toContainEqual(expect.objectContaining({ title, tone: "warn" }));
   });
 
+  it.each([
+    ["missing", null],
+    ["different", "portfolio_report"],
+  ])("fails closed when calculation assurance scope is %s", (_label, calculationScope) => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ calculation_scope: calculationScope })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.posture).toBe("Attention required");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Calculation assurance scope not confirmed",
+        tone: "danger",
+      })
+    );
+    expect(JSON.stringify(view.exceptions)).not.toContain("portfolio_report");
+  });
+
   it("rejects evidence that does not match the active source-confirmed selection", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
