@@ -11,6 +11,7 @@
     "performance-analysis-level-",
     "performance-advisor-brief-",
     "performance-contributor-bar-",
+    "performance-contribution-context-note",
     "performance-contributors-asymmetric-side",
     "performance-contributors-compare-grid",
     "performance-contributors-grid",
@@ -77,8 +78,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 12331,
-      "maxBytes": 270478
+      "maxLines": 12328,
+      "maxBytes": 270346
     }
   ]
 }
