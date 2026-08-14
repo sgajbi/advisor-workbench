@@ -311,18 +311,19 @@ function isKnownReviewAction(
 function getReviewStateTone(
   workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun
 ): SemanticBadgeTone {
+  const normalizedReviewState = workflowPackRun.review_state.toUpperCase();
+  if (normalizedReviewState === "REJECTED" || normalizedReviewState === "ABANDONED") {
+    return "danger";
+  }
   if (workflowPackRun.review_pending) {
     return "warn";
   }
 
-  switch (workflowPackRun.review_state.toUpperCase()) {
+  switch (normalizedReviewState) {
     case "ACCEPTED":
       return hasRecordedAdvisorBriefReviewEvidence(workflowPackRun)
         ? "success"
         : "default";
-    case "REJECTED":
-    case "ABANDONED":
-      return "danger";
     case "AWAITING_REVIEW":
       return "warn";
     case "NOT_REVIEW_REQUIRED":
