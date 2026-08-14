@@ -4365,3 +4365,80 @@ failure, repeat activation, recovery, safe copy, and focus. Isolated optimized-b
 the same path at narrow width with exact expected source-error evidence and no page overflow. The
 guide and repository context change because required-source state truth changed; Gateway/API,
 OpenAPI, authentication, platform artifacts, and the mature dependency stack do not.
+
+## Performance Advisor Brief Review Workspace
+
+### Business job
+
+Client advisors need to turn a selected portfolio's performance evidence into a concise internal
+preparation narrative, understand its limitations, and record a bounded review decision without
+confusing generated material with approved client communication. The workflow must reduce meeting
+preparation effort while retaining source authority, review consequences, and recovery posture.
+
+### Current-product research
+
+Research was reviewed on 2026-08-14 from primary wealth-platform and accessibility sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   emphasizes a connected wealth ecosystem, whole-portfolio context, book insights, advisor
+   nudges, and timely actions. Lotus adopts the integrated evidence-to-action idea only within its
+   currently supported single-portfolio contract.
+2. [Salesforce Wealth Advisor Client Meeting Preparation](https://help.salesforce.com/s/articleView?id=ind.fsc_agent_financial_advisor_assistance_topic.htm&language=en_US&type=5)
+   organizes preparation around gathering and reviewing portfolio performance, client context,
+   goals, life events, and pending tasks. Lotus adopts the preparation job and concise hierarchy,
+   while not claiming unsupported household, goal, CRM, life-event, or task data.
+3. [WCAG 2.2 Error Prevention](https://www.w3.org/TR/WCAG22/#error-prevention-legal-financial-data)
+   identifies review, confirmation, and correction as a valid safeguard before consequential data
+   submission.
+4. [WCAG 2.2 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages)
+   requires visible action outcomes to be programmatically available without moving focus merely
+   to announce them.
+
+### Adopted decisions
+
+1. Keep talking points, exact source measures, supportability, risks, and the internal review
+   transaction within one dense selected-portfolio reading path.
+2. Separate narrative preparation, output availability, evidence, human review, freshness, and
+   client-use permission; no one status is allowed to imply the others.
+3. Offer only source-allowed review actions and translate each into a business consequence.
+4. Require an explicit review-before-confirm step showing staff reference, rationale, replacement
+   reference when applicable, and prohibited downstream uses before any POST.
+5. Admit human review only from complete source-returned actor, time, transition-count, and history
+   evidence. A terminal state string alone fails closed.
+6. Announce pending, success, and failure without stealing focus; publish success only after the
+   Gateway/Lotus AI mutation returns and preserve entered values after failure.
+7. Keep provider, model, workflow-run, task-flow, handoff, and correlation identifiers in a
+   collapsed support disclosure.
+8. Move the live feature selector family into one CSS Module, remove dead and duplicate selectors,
+   and retain a dense three-column desktop workspace with governed responsive reflow.
+
+### Rejected decisions
+
+1. Treating an AI-generated or rule-based narrative as source authority, human-reviewed content,
+   client-ready communication, suitability advice, or a recommendation.
+2. Copying competitor navigation, visual identity, wording, household breadth, CRM context, or
+   next-best-action claims that Lotus contracts do not support.
+3. Posting a review decision on first activation, because the user must inspect its consequence and
+   correct the exact record before persistence.
+4. Showing success after an optimistic browser update or a terminal state without complete
+   source-owned audit evidence.
+5. Using a hard-coded reviewer, browser session, or production-identity claim; the staff reference
+   is a bounded request field, not authenticated-principal evidence.
+6. Leaving technical workflow identifiers in the first scan, adding decorative trust badges, or
+   creating another component, styling, state, notification, or AI dependency.
+7. Retaining Advisor Brief styling in the legacy global stylesheet or preserving dead selectors
+   merely because older tests once referenced them.
+
+### Validation and publication decision
+
+Workbench #697 owns the screen slice and Gateway #547 owns the missing review-audit mapping. Focused
+tests prove fail-closed source admission, source-allowed actions, review-before-confirm, no POST
+before confirmation, source-confirmed success, explicit failure, retained input, internal-note
+boundary, and secondary technical evidence. Isolated optimized-production browser proof uses
+`PB_SG_GLOBAL_BAL_001`, exercises the exact confirmation and persistence transaction, asserts
+source actor/time/history, no unexpected runtime errors, head-managed styles, and no overflow at
+1440, 1024, 720, and 390 pixels. The complete screen guide, source registry, catalogue, API notes,
+Supported Features, review ledger, and repository context change. Canonical live proof remains
+required after both repository contracts merge. No dependency, calculation, direct source call,
+production identity, advice, client publication, trade, report-order, or service-topology authority
+changes.

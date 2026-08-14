@@ -206,6 +206,10 @@ Implemented:
    shows source-published replacement lineage when available,
 10. treats persisted PM-quality summary invocation history as audit evidence only, with output
     unavailable and client use blocked unless the owning source independently returns output.
+11. gives Performance Advisor Brief a source-allowed, review-before-confirm workflow for internal
+    acceptance, rejection, revision, supersession, and withdrawal; success is visible only after
+    Gateway and Lotus AI persist the action and return complete actor, timestamp, transition-count,
+    and review-history evidence.
 
 Not yet supported:
 

@@ -551,6 +551,9 @@ describe("PerformanceAdvisorBriefMode", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Use the bank staff reference required for this internal review record.")
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Review decision"), {
       target: { value: "ACCEPT" },
