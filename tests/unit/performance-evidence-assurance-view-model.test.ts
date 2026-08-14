@@ -331,6 +331,57 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("requires freshness for an assigned benchmark", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ input_freshness: { performance: "fresh" } })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Benchmark input freshness not confirmed", tone: "warn" })
+    );
+  });
+
+  it("does not require benchmark freshness when no benchmark is assigned", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ benchmark_code: null, input_freshness: { performance: "fresh" } })
+    );
+
+    expect(view.state).toBe("ready");
+  });
+
+  it("preserves danger severity for duplicate source operations", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        source_supportability: [
+          {
+            operation: "performance.attribution",
+            source_service: "lotus-performance",
+            state: "partial",
+            freshness_bucket: "fresh",
+          },
+          {
+            operation: "performance.attribution",
+            source_service: "lotus-performance",
+            state: "blocked",
+            freshness_bucket: "fresh",
+          },
+        ],
+      })
+    );
+
+    expect(view.state).toBe("attention");
+    expect(view.exceptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: "Source assurance qualified", tone: "warn" }),
+        expect.objectContaining({ title: "Source calculation unavailable", tone: "danger" }),
+      ])
+    );
+  });
+
   it.each([
     ["coverage", { coverage: null }, "Evidence coverage not confirmed"],
     [

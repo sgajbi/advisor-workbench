@@ -71,6 +71,10 @@ const DIMENSION_LABELS: Record<string, string> = {
   issuer: "Issuer",
   sector: "Sector",
 };
+const REQUIRED_INPUT_LABELS = {
+  performance: "Performance input",
+  benchmark: "Benchmark input",
+} as const;
 
 const COMPLETE_STATUS = "complete";
 const PENDING_STATUSES: readonly string[] = ["accepted", "pending", "queued", "running", "processing"];
@@ -344,7 +348,8 @@ function buildExceptions(
     });
   });
 
-  const inputFreshnessEntries = Object.entries(evidence.input_freshness ?? {});
+  const inputFreshness = evidence.input_freshness ?? {};
+  const inputFreshnessEntries = Object.entries(inputFreshness);
   if (!inputFreshnessEntries.length) {
     exceptions.push({
       key: "input-freshness-missing",
@@ -352,6 +357,20 @@ function buildExceptions(
       detail: "The source did not publish freshness evidence for the inputs used by this package.",
       action: "Obtain refreshed source evidence before relying on the calculation-assurance package.",
       tone: "warn",
+    });
+  } else {
+    const requiredInputKeys: Array<keyof typeof REQUIRED_INPUT_LABELS> = ["performance"];
+    if (evidence.benchmark_code?.trim()) requiredInputKeys.push("benchmark");
+    requiredInputKeys.forEach((key) => {
+      if (Object.hasOwn(inputFreshness, key)) return;
+      const label = REQUIRED_INPUT_LABELS[key];
+      exceptions.push({
+        key: `freshness-${key}-missing`,
+        title: `${label} freshness not confirmed`,
+        detail: `The source did not publish freshness evidence for the selected ${key} input.`,
+        action: "Obtain refreshed source evidence before relying on the calculation-assurance package.",
+        tone: "warn",
+      });
     });
   }
   inputFreshnessEntries.forEach(([key, value]) => {
@@ -392,7 +411,7 @@ function buildExceptions(
   sourceSupportability.forEach((item, index) => {
     const state = normalise(item.state);
     const freshness = normalise(item.freshness_bucket);
-    const sourceReference = item.operation || item.key || index;
+    const sourceReference = `${item.source_service || "source"}-${item.operation || item.key || "entry"}-${index}`;
     if (STALE_STATES.includes(freshness)) {
       exceptions.push({
         key: `source-supportability-${sourceReference}`,
