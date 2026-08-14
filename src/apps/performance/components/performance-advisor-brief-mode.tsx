@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 
 import { AiAssistanceDisclosure } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceAdvisorBriefViewModel } from "../advisor-brief-view-model";
 import { usePerformanceAdvisorBrief } from "../use-performance-advisor-brief";
@@ -22,6 +23,7 @@ import PerformanceWorkspaceStageSurface, {
 } from "./performance-workspace-stage-surface";
 import PerformanceWorkspaceSection from "./performance-workspace-section";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
+import styles from "./performance-advisor-brief-mode.module.css";
 
 export default function PerformanceAdvisorBriefMode({
   workspace,
@@ -148,7 +150,7 @@ export default function PerformanceAdvisorBriefMode({
       intro={modeIntro}
       contextAriaLabel="Advisor brief context"
       contextItems={contextItems}
-      shellClassName="performance-advisor-brief-shell"
+      shellClassName={cx(styles.advisorBriefScope, "performance-advisor-brief-shell")}
     >
         <LotusPageHeader
           summary={brief.summary}
