@@ -10,6 +10,12 @@
     "performance-analysis-insight-pane",
     "performance-analysis-level-",
     "performance-advisor-brief-",
+    "performance-contributor-bar-",
+    "performance-contributors-asymmetric-side",
+    "performance-contributors-compare-grid",
+    "performance-contributors-grid",
+    "performance-contributors-panel",
+    "performance-contributors-ranked-card",
     "performance-evidence-",
     "performance-risk-compact-segmented-control",
     "performance-risk-rolling-window-toolbar",
@@ -71,8 +77,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 12509,
-      "maxBytes": 274145
+      "maxLines": 12331,
+      "maxBytes": 270478
     }
   ]
 }
