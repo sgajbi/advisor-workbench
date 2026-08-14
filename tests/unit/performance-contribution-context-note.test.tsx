@@ -535,6 +535,47 @@ describe("PerformanceContributionContextNote", () => {
     );
   });
 
+  it("requires source-backed lineage to agree with a positive snapshot count", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...buildSourceBackedEvidence(contribution),
+            source_snapshot_count: 0,
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
+  it("requires source-backed evidence to identify contracts and available economics", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...buildSourceBackedEvidence(contribution),
+            source_contracts: [],
+            available_economics: [],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
   it("rejects smoothing reason codes that contradict the published smoothing status", () => {
     const contribution = buildContribution();
     render(

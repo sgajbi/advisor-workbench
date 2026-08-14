@@ -70,6 +70,14 @@ function isSourceEvidenceConsistent(
     sourceEvidence?.available_economics ?? [],
     sourceEvidence?.unsupported_economics ?? [],
   );
+  const hasPublishedSourceContracts = hasNonBlankValues(sourceEvidence?.source_contracts ?? []);
+  const hasPublishedAvailableEconomics = hasNonBlankValues(
+    sourceEvidence?.available_economics ?? [],
+  );
+  const hasConsistentSnapshotLineage = isSnapshotLineageConsistent(
+    reasonCodes,
+    sourceEvidence?.source_snapshot_count,
+  );
   const hasSupportedDeclaredLimitations = hasReasonEvidenceForDeclaredLimitations(
     sourceEvidence?.unsupported_economics ?? [],
     sourceEvidence?.degraded_economics ?? [],
@@ -83,6 +91,9 @@ function isSourceEvidenceConsistent(
         !hasLimitationReason &&
         !hasCallerSuppliedReason &&
         !hasContradictoryEconomics &&
+        hasPublishedSourceContracts &&
+        hasPublishedAvailableEconomics &&
+        hasConsistentSnapshotLineage &&
         reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED") &&
         reasonCodes.includes("UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE")
       );
@@ -92,6 +103,9 @@ function isSourceEvidenceConsistent(
         hasSupportedDeclaredLimitations &&
         !hasCallerSuppliedReason &&
         !hasContradictoryEconomics &&
+        hasPublishedSourceContracts &&
+        hasPublishedAvailableEconomics &&
+        hasConsistentSnapshotLineage &&
         reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED")
       );
     case "CALLER_SUPPLIED":
@@ -104,6 +118,38 @@ function isSourceEvidenceConsistent(
 function hasOverlappingValues(left: string[], right: string[]): boolean {
   const rightValues = new Set(right);
   return left.some((value) => rightValues.has(value));
+}
+
+function hasNonBlankValues(values: string[]): boolean {
+  return values.length > 0 && values.every((value) => value.trim().length > 0);
+}
+
+function isSnapshotLineageConsistent(
+  reasonCodes: string[],
+  sourceSnapshotCount: number | null | undefined,
+): boolean {
+  if (
+    typeof sourceSnapshotCount !== "number" ||
+    !Number.isInteger(sourceSnapshotCount) ||
+    sourceSnapshotCount < 0
+  ) {
+    return false;
+  }
+
+  const hasEmbeddedLineage = reasonCodes.includes("UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE");
+  const hasExecutionOnlyLineage = reasonCodes.includes(
+    "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
+  );
+  if (hasEmbeddedLineage && hasExecutionOnlyLineage) {
+    return false;
+  }
+  if (hasEmbeddedLineage) {
+    return sourceSnapshotCount > 0;
+  }
+  if (hasExecutionOnlyLineage) {
+    return sourceSnapshotCount === 0;
+  }
+  return true;
 }
 
 function hasReasonEvidenceForDeclaredLimitations(
