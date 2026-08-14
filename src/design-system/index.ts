@@ -65,6 +65,11 @@ export { default as EmptyStatePanel } from "./components/empty-state-panel";
 export { default as FieldLabel } from "./components/field-label";
 export { default as ModuleStatePanel } from "./components/module-state-panel";
 export { default as ModuleSkeleton } from "./components/module-skeleton";
+export { default as OperationalRecordList } from "./components/operational-record-list";
+export type {
+  OperationalRecordFact,
+  OperationalRecordListItem,
+} from "./components/operational-record-list";
 export { default as StateInfoHint } from "./components/state-info-hint";
 export { default as FilterBar } from "./components/filter-bar";
 export { default as MainWithSideRailLayout } from "./components/main-with-side-rail-layout";
