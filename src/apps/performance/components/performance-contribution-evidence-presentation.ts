@@ -327,7 +327,7 @@ function formatContributionCoverageContext(contribution: ContributionSummaryView
   if (getContributionCoveragePosture(coverageMvPct) === "unconfirmed") {
     return "Market-value coverage needs review";
   }
-  return `${formatPct(coverageMvPct)} of market value covered`;
+  return `${formatContributionCoveragePct(coverageMvPct)} of market value covered`;
 }
 
 function buildContributionEvidenceItems(
@@ -354,6 +354,18 @@ function buildContributionEvidenceItems(
     {
       label: "Weighting basis",
       value: contribution.weighting_scheme?.trim() || "Not published",
+    },
+    {
+      label: "Market-value coverage",
+      value: formatExactEvidencePct(contribution.coverage_mv_pct),
+    },
+    {
+      label: "Portfolio contribution",
+      value: formatExactEvidencePct(contribution.portfolio_contribution_pct),
+    },
+    {
+      label: "Portfolio return",
+      value: formatExactEvidencePct(contribution.total_portfolio_return_pct),
     },
     { label: "Smoothing status", value: smoothingEvidence?.status || "Not published" },
     { label: "Smoothing reason codes", value: formatEvidenceList(smoothingEvidence?.reason_codes) },
@@ -418,6 +430,11 @@ function formatEvidenceList(values: string[] | undefined): string {
 
 function formatExactEvidencePct(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? `${String(value)}%` : "Not published";
+}
+
+function formatContributionCoveragePct(value: number): string {
+  const roundedCoverage = Number(value.toFixed(2));
+  return value < 95 && roundedCoverage >= 95 ? "<95.00%" : formatPct(value);
 }
 
 function formatBusinessList(values: string[]): string {
