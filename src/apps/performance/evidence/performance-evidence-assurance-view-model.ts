@@ -392,9 +392,10 @@ function buildExceptions(
   sourceSupportability.forEach((item, index) => {
     const state = normalise(item.state);
     const freshness = normalise(item.freshness_bucket);
+    const sourceReference = item.operation || item.key || index;
     if (STALE_STATES.includes(freshness)) {
       exceptions.push({
-        key: `source-supportability-${item.key || index}`,
+        key: `source-supportability-${sourceReference}`,
         title: "Source calculation evidence is not current",
         detail: "A source calculation required by this evidence package is stale.",
         action: "Review the source reason in support details and obtain refreshed evidence.",
@@ -405,7 +406,7 @@ function buildExceptions(
     if (READY_SUPPORTABILITY_STATES.includes(state)) {
       if (!FRESH_STATES.includes(freshness)) {
         exceptions.push({
-          key: `source-supportability-${item.key || index}`,
+          key: `source-supportability-${sourceReference}`,
           title: "Source calculation freshness not confirmed",
           detail: "A ready source calculation does not include a recognised current freshness state.",
           action: "Review the source reason in support details and obtain current source evidence.",
@@ -416,7 +417,7 @@ function buildExceptions(
     }
     const actionRequired = ACTION_REQUIRED_SUPPORTABILITY_STATES.includes(state);
     exceptions.push({
-      key: `source-supportability-${item.key || index}`,
+      key: `source-supportability-${sourceReference}`,
       title: actionRequired ? "Source calculation unavailable" : "Source assurance qualified",
       detail:
         actionRequired
@@ -557,7 +558,10 @@ function buildSupportGroups(
         value: displayValue(item.freshness_bucket),
       },
       { label: `Source ${index + 1} reason`, value: displayValue(item.reason) },
-      { label: `Source ${index + 1} key`, value: displayValue(item.key) },
+      {
+        label: `Source ${index + 1} reference`,
+        value: displayValue(item.operation || item.key),
+      },
     ]
   );
   if (sourceSupportabilityRows.length) {

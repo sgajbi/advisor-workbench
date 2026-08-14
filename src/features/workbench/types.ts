@@ -400,7 +400,8 @@ export type PerformanceCalculationEvidenceView = {
 };
 
 export type PerformanceSourceSupportabilityView = {
-  key: string;
+  key?: string | null;
+  operation?: string | null;
   state: string;
   reason?: string | null;
   freshness_bucket?: string | null;
