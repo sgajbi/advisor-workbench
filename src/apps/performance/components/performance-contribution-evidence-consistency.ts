@@ -74,6 +74,11 @@ function isSourceEvidenceConsistent(
   const hasPublishedAvailableEconomics = hasNonBlankValues(
     sourceEvidence?.available_economics ?? [],
   );
+  const hasPublishedValuesForAvailableContributionEconomics =
+    hasValuesForAvailableContributionEconomics(
+      contribution,
+      sourceEvidence?.available_economics ?? [],
+    );
   const hasConsistentSnapshotLineage = isSnapshotLineageConsistent(
     reasonCodes,
     sourceEvidence?.source_snapshot_count,
@@ -93,6 +98,7 @@ function isSourceEvidenceConsistent(
         !hasContradictoryEconomics &&
         hasPublishedSourceContracts &&
         hasPublishedAvailableEconomics &&
+        hasPublishedValuesForAvailableContributionEconomics &&
         hasConsistentSnapshotLineage &&
         reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED") &&
         reasonCodes.includes("UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE")
@@ -105,6 +111,7 @@ function isSourceEvidenceConsistent(
         !hasContradictoryEconomics &&
         hasPublishedSourceContracts &&
         hasPublishedAvailableEconomics &&
+        hasPublishedValuesForAvailableContributionEconomics &&
         hasConsistentSnapshotLineage &&
         reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED")
       );
@@ -122,6 +129,44 @@ function hasOverlappingValues(left: string[], right: string[]): boolean {
 
 function hasNonBlankValues(values: string[]): boolean {
   return values.length > 0 && values.every((value) => value.trim().length > 0);
+}
+
+function hasValuesForAvailableContributionEconomics(
+  contribution: ContributionSummaryView,
+  availableEconomics: string[],
+): boolean {
+  return availableEconomics.every((economics) => {
+    switch (economics) {
+      case "local_contribution":
+        return hasPublishedContributionDimension(
+          contribution,
+          "portfolio_local_contribution_pct",
+          "local_contribution_pct",
+        );
+      case "fx_contribution":
+        return hasPublishedContributionDimension(
+          contribution,
+          "portfolio_fx_contribution_pct",
+          "fx_contribution_pct",
+        );
+      default:
+        return true;
+    }
+  });
+}
+
+function hasPublishedContributionDimension(
+  contribution: ContributionSummaryView,
+  portfolioField: "portfolio_local_contribution_pct" | "portfolio_fx_contribution_pct",
+  rowField: "local_contribution_pct" | "fx_contribution_pct",
+): boolean {
+  return (
+    isFiniteNumber(contribution[portfolioField]) ||
+    contribution.position_rows.some((row) => isFiniteNumber(row[rowField])) ||
+    contribution.levels.some((level) =>
+      level.rows.some((row) => isFiniteNumber(row[rowField])),
+    )
+  );
 }
 
 function isSnapshotLineageConsistent(
