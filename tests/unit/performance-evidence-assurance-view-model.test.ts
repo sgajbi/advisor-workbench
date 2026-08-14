@@ -281,6 +281,39 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it.each([
+    ["coverage", { coverage: null }, "Evidence coverage not confirmed"],
+    [
+      "source supportability",
+      { source_supportability: [] as NonNullable<PerformanceEvidenceView["source_supportability"]> },
+      "Source supportability not confirmed",
+    ],
+    [
+      "methodology",
+      { methodology_references: [] as string[] },
+      "Methodology reference not confirmed",
+    ],
+    [
+      "supporting records",
+      {
+        calculations: [
+          { ...evidence().calculations[0], artifacts: [] },
+        ] as PerformanceEvidenceView["calculations"],
+      },
+      "Supporting records not published",
+    ],
+  ] as const)("fails closed when %s evidence is absent", (_label, overrides, title) => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence(overrides)
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title, tone: "warn" })
+    );
+  });
+
   it("keeps raw identifiers and technical vocabulary in support groups only", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, evidence());
     const primaryText = JSON.stringify({

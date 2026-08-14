@@ -312,7 +312,17 @@ function buildExceptions(
   safeArray(evidence.calculations).forEach((calculation, index) => {
     appendLifecycleException(exceptions, calculation.execution_status, "calculation", index);
     appendLifecycleException(exceptions, calculation.lineage_status, "evidence", index);
-    safeArray(calculation.artifacts).forEach((artifact, artifactIndex) => {
+    const artifacts = safeArray(calculation.artifacts);
+    if (!artifacts.length) {
+      exceptions.push({
+        key: `artifacts-${index}`,
+        title: "Supporting records not published",
+        detail: "The source did not publish a supporting record for this calculation.",
+        action: "Obtain the calculation record before relying on the assurance package.",
+        tone: "warn",
+      });
+    }
+    artifacts.forEach((artifact, artifactIndex) => {
       if (buildEvidenceRecordHref(artifact.archive_document_download_url ?? artifact.url)) return;
       exceptions.push({
         key: `artifact-route-${index}-${artifactIndex}`,
@@ -359,7 +369,17 @@ function buildExceptions(
     }
   });
 
-  safeArray(evidence.source_supportability).forEach((item, index) => {
+  const sourceSupportability = safeArray(evidence.source_supportability);
+  if (!sourceSupportability.length) {
+    exceptions.push({
+      key: "source-supportability-missing",
+      title: "Source supportability not confirmed",
+      detail: "The package does not identify the supportability posture of its source calculation.",
+      action: "Obtain source supportability evidence before relying on the package.",
+      tone: "warn",
+    });
+  }
+  sourceSupportability.forEach((item, index) => {
     const state = normalise(item.state);
     const freshness = normalise(item.freshness_bucket);
     if (freshness === "stale") {
@@ -407,7 +427,27 @@ function buildExceptions(
     });
   }
 
+  if (!safeStrings(evidence.methodology_references).length) {
+    exceptions.push({
+      key: "methodology-reference-missing",
+      title: "Methodology reference not confirmed",
+      detail: "The source did not publish a governed methodology reference for this package.",
+      action: "Obtain the applicable methodology reference before relying on the calculation evidence.",
+      tone: "warn",
+    });
+  }
+
+  const supportedDimensions = safeStrings(evidence.coverage?.supported_dimensions);
   const unsupportedDimensions = safeStrings(evidence.coverage?.unsupported_dimensions);
+  if (!supportedDimensions.length && !unsupportedDimensions.length) {
+    exceptions.push({
+      key: "coverage-not-confirmed",
+      title: "Evidence coverage not confirmed",
+      detail: "The source did not publish the dimensional scope covered by this assurance package.",
+      action: "Obtain source-confirmed coverage before applying the evidence conclusion.",
+      tone: "warn",
+    });
+  }
   if (unsupportedDimensions.length) {
     const knownLabels = unsupportedDimensions
       .map((dimension) => DIMENSION_LABELS[normalise(dimension)])
