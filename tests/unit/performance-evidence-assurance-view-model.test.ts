@@ -457,7 +457,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.posture).toBe("Incomplete evidence");
     expect(view.calculations[0]).toMatchObject({
       title: "Additional performance calculation 1",
-      calculationStatus: "Not reported",
+      calculationStatus: "Not confirmed",
       evidenceStatus: "Not confirmed",
     });
     expect(view.exceptions.map((item) => item.title)).toEqual(
@@ -539,6 +539,34 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
         "Additional performance calculation 1 upstream evidence 1 context not confirmed",
       ])
     );
+  });
+
+  it("keeps an unrecognized calculation role explicitly unconfirmed", () => {
+    const calculation = evidence().calculations[0];
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({
+        calculations: [{ ...calculation, calculation_role: "new_unmapped_role" }],
+      })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({
+        title: "Additional performance calculation 1 purpose not confirmed",
+        tone: "warn",
+      })
+    );
+    expect(view.calculations[0]).toMatchObject({
+      title: "Additional performance calculation 1",
+      purpose: "Business purpose not confirmed by the source.",
+      calculationStatus: "Not confirmed",
+      calculationTone: "default",
+    });
+    expect(JSON.stringify({ exceptions: view.exceptions, calculations: view.calculations })).not.toContain(
+      "new_unmapped_role"
+    );
+    expect(JSON.stringify(view.supportGroups)).toContain("new_unmapped_role");
   });
 
   it("rejects evidence that does not match the active source-confirmed selection", () => {
