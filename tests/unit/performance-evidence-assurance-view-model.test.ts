@@ -70,6 +70,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       label: "Calculation input record",
       href: "/api/bff/api/v1/evidence/request.json",
     });
+    expect(view.context).toContainEqual({ label: "Benchmark", value: "Assigned" });
   });
 
   it("fails closed when the source publishes no calculations", () => {
@@ -100,7 +101,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ title: "Calculation evidence not reported", tone: "warn" }),
-        expect.objectContaining({ title: "Required input evidence is not current", tone: "danger" }),
+        expect.objectContaining({ title: "Performance input evidence is not current", tone: "danger" }),
       ])
     );
   });
@@ -156,7 +157,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       expect.arrayContaining([
         expect.objectContaining({ title: "Calculation did not complete", tone: "danger" }),
         expect.objectContaining({ title: "Supporting evidence unavailable", tone: "danger" }),
-        expect.objectContaining({ title: "Required input evidence is not current", tone: "danger" }),
+        expect.objectContaining({ title: "Performance input evidence is not current", tone: "danger" }),
       ])
     );
   });
@@ -312,7 +313,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions.map((item) => item.title)).toEqual(
       expect.arrayContaining([
         "Assurance status not reported",
-        "Required input freshness not confirmed",
+        "Performance input freshness not confirmed",
         "Calculation status not reported",
         "Supporting evidence not confirmed",
       ])
@@ -343,13 +344,31 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("identifies each selected input with qualified freshness", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ input_freshness: { performance: "stale", benchmark: "unknown" } })
+    );
+
+    expect(view.exceptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: "Performance input evidence is not current" }),
+        expect.objectContaining({ title: "Benchmark input freshness not confirmed" }),
+      ])
+    );
+  });
+
   it("does not require benchmark freshness when no benchmark is assigned", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(
       supportedCapability,
-      evidence({ benchmark_code: null, input_freshness: { performance: "fresh" } })
+      evidence({
+        benchmark_code: null,
+        input_freshness: { performance: "fresh", benchmark: "unavailable" },
+      })
     );
 
     expect(view.state).toBe("ready");
+    expect(view.context).toContainEqual({ label: "Benchmark", value: "Not assigned" });
   });
 
   it("preserves danger severity for duplicate source operations", () => {
@@ -420,6 +439,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     const primaryText = JSON.stringify({
       posture: view.posture,
       summary: view.summary,
+      context: view.context,
       exceptions: view.exceptions,
       calculations: view.calculations.map((calculation) => ({
         title: calculation.title,
@@ -438,10 +458,12 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(primaryText).not.toContain("calc-1");
     expect(primaryText).not.toContain("WORKSPACE_SUMMARY");
     expect(primaryText).not.toContain("gateway_contract");
+    expect(primaryText).not.toContain("BMK_PB_GLOBAL_BALANCED_60_40");
     expect(supportText).toContain("lotus-performance");
     expect(supportText).toContain("calc-1");
     expect(supportText).toContain("WORKSPACE_SUMMARY");
     expect(supportText).toContain("gateway_contract");
+    expect(supportText).toContain("BMK_PB_GLOBAL_BALANCED_60_40");
   });
 
   it("preserves the governed archived-document download route", () => {
