@@ -671,6 +671,32 @@ describe("PerformanceContributionContextNote", () => {
     expectEvidenceValue(openCalculationEvidence(), "Raw contribution", "4%");
   });
 
+  it("rejects residual reason codes when smoothing was not requested", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: {
+            ...contribution.smoothing_evidence!,
+            status: "NOT_REQUESTED",
+            reason_codes: [
+              "SMOOTHING_NOT_REQUESTED",
+              "RAW_CONTRIBUTION_DIFFERS_FROM_LINKED_RETURN",
+            ],
+            raw_contribution_pct: 5.42,
+          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+  });
+
   it("rejects source-backed evidence with a material published smoothing residual", () => {
     const contribution = buildContribution();
     render(

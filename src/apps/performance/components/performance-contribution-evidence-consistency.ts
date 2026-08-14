@@ -187,26 +187,30 @@ function isSmoothingEvidenceConsistent(
 
   switch (smoothingStatus) {
     case "APPLIED":
-      return hasOnlyExpectedReasons(
-        publishedReasonCodes,
-        [
+      return (
+        hasOnlyExpectedReasons(
+          publishedReasonCodes,
+          [
+            "CARINO_FACTOR_APPLIED",
+            "SMOOTHED_CONTRIBUTION_RECONCILES",
+            ...COMMON_SMOOTHING_RESIDUAL_CODES,
+          ],
           "CARINO_FACTOR_APPLIED",
-          "SMOOTHED_CONTRIBUTION_RECONCILES",
-          ...COMMON_SMOOTHING_RESIDUAL_CODES,
-        ],
-        "CARINO_FACTOR_APPLIED",
+        ) && hasConsistentResidualReasons(contribution, publishedReasonCodes)
       );
     case "NOT_REQUESTED":
       return hasOnlyExpectedReasons(
         publishedReasonCodes,
-        ["SMOOTHING_NOT_REQUESTED", ...COMMON_SMOOTHING_RESIDUAL_CODES],
+        ["SMOOTHING_NOT_REQUESTED"],
         "SMOOTHING_NOT_REQUESTED",
       );
     case "INVALID_DOMAIN_FALLBACK":
-      return hasOnlyExpectedReasons(
-        publishedReasonCodes,
-        ["CARINO_INVALID_DAILY_LOG_DOMAIN", ...COMMON_SMOOTHING_RESIDUAL_CODES],
-        "CARINO_INVALID_DAILY_LOG_DOMAIN",
+      return (
+        hasOnlyExpectedReasons(
+          publishedReasonCodes,
+          ["CARINO_INVALID_DAILY_LOG_DOMAIN", ...COMMON_SMOOTHING_RESIDUAL_CODES],
+          "CARINO_INVALID_DAILY_LOG_DOMAIN",
+        ) && hasConsistentResidualReasons(contribution, publishedReasonCodes)
       );
     case "NO_CONTRIBUTION_ROWS":
       return (
@@ -221,6 +225,26 @@ function isSmoothingEvidenceConsistent(
     default:
       return false;
   }
+}
+
+function hasConsistentResidualReasons(
+  contribution: ContributionSummaryView,
+  reasonCodes: string[],
+): boolean {
+  const hasResidualReason = COMMON_SMOOTHING_RESIDUAL_CODES.some((reasonCode) =>
+    reasonCodes.includes(reasonCode),
+  );
+  if (!hasResidualReason) {
+    return true;
+  }
+
+  const rawContribution = contribution.smoothing_evidence?.raw_contribution_pct;
+  const linkedReturn = contribution.smoothing_evidence?.linked_return_pct;
+  return (
+    isFiniteNumber(rawContribution) &&
+    isFiniteNumber(linkedReturn) &&
+    !isWithinReconciliationTolerance(rawContribution, linkedReturn)
+  );
 }
 
 function hasOnlyExpectedReasons(
