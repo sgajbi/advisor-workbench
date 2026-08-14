@@ -41,6 +41,16 @@ export function hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer) {
   );
 }
 
+export function classifyAdvisorBriefAcceptProofPosture(text, expectedReviewer) {
+  if (hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer)) {
+    return "source-confirmed-existing-action";
+  }
+  if (hasAcceptedAdvisorBriefReviewPosture(text)) {
+    return "accepted-by-another-reviewer";
+  }
+  return "review-action-available";
+}
+
 export function createBrowserValidationHelpers({
   outputDir,
   summary,
@@ -1107,8 +1117,10 @@ export async function validateAdvisorBriefPanel(
     performAcceptReviewActionProof = false,
   },
 ) {
+  const buildAdvisorBriefRoute = (detailBasis) =>
+    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=${detailBasis}&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`;
   await page.goto(
-    `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
+    buildAdvisorBriefRoute("NET"),
     { waitUntil: "networkidle", timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
@@ -1144,19 +1156,45 @@ export async function validateAdvisorBriefPanel(
   await screenshotRegisteredPanel(page, "performance.advisor_brief");
 
   if (performAcceptReviewActionProof) {
-    const reviewRegion = page.getByLabel("Advisor brief human review");
-    const supportabilityRegion = page.getByLabel(
+    let reviewRegion = page.getByLabel("Advisor brief human review");
+    let supportabilityRegion = page.getByLabel(
       "Advisor brief supportability",
     );
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
     const expectedReviewer = "live.validator.ui";
-    const existingRecordedAccept = hasRecordedAdvisorBriefAcceptProof(
+    let proofDetailBasis = "NET";
+    let proofPosture = classifyAdvisorBriefAcceptProofPosture(
       await supportabilityRegion.innerText(),
       expectedReviewer,
     );
+    if (proofPosture === "accepted-by-another-reviewer") {
+      proofDetailBasis = "GROSS";
+      await page.goto(buildAdvisorBriefRoute(proofDetailBasis), {
+        waitUntil: "networkidle",
+        timeout: timeoutMs,
+      });
+      await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
+      reviewRegion = page.getByLabel("Advisor brief human review");
+      supportabilityRegion = page.getByLabel("Advisor brief supportability");
+      await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
+      await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
+      proofPosture = classifyAdvisorBriefAcceptProofPosture(
+        await supportabilityRegion.innerText(),
+        expectedReviewer,
+      );
+      if (proofPosture === "accepted-by-another-reviewer") {
+        throw new Error(
+          "Advisor brief browser ACCEPT proof could not reserve the GROSS fallback run because it was already accepted by another reviewer.",
+        );
+      }
+    }
+    const existingRecordedAccept =
+      proofPosture === "source-confirmed-existing-action";
     if (!existingRecordedAccept) {
-      await reviewRegion.getByLabel("Review decision").selectOption("ACCEPT");
+      const reviewDecision = reviewRegion.getByLabel("Review decision");
+      await expect(reviewDecision).toBeVisible({ timeout: timeoutMs });
+      await reviewDecision.selectOption("ACCEPT");
       await reviewRegion
         .getByLabel("Reviewer reference")
         .fill(expectedReviewer);
@@ -1198,6 +1236,7 @@ export async function validateAdvisorBriefPanel(
       proofSource: existingRecordedAccept
         ? "source-confirmed-existing-action"
         : "workbench-review-action",
+      detailBasis: proofDetailBasis,
     });
   }
 }

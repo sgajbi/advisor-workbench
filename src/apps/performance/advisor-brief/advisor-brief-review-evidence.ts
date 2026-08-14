@@ -49,6 +49,10 @@ export function buildAdvisorBriefHumanReview(
       : { state: "unavailable", sourceRecorded: false };
   }
 
+  if (workflowPackRun?.review_pending !== false) {
+    return { state: "unavailable", sourceRecorded: false };
+  }
+
   switch (normalizedReviewState) {
     case "ACCEPTED":
     case "REVISED":
@@ -66,7 +70,7 @@ export function buildAdvisorBriefHumanReview(
     case "NOT_REVIEW_REQUIRED":
       return { state: "not-required", sourceRecorded: false };
     case "AWAITING_REVIEW":
-      return { state: "review-required", sourceRecorded: false };
+      return { state: "unavailable", sourceRecorded: false };
     default:
       return { state: "unavailable", sourceRecorded: false };
   }

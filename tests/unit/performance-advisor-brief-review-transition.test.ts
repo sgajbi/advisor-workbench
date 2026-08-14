@@ -134,6 +134,18 @@ describe("advisor brief review transition evidence", () => {
     },
   );
 
+  it.each([null, undefined])(
+    "fails terminal review posture closed when review_pending is %s",
+    (reviewPending) => {
+      expect(
+        buildAdvisorBriefHumanReview({
+          ...baseRun,
+          review_pending: reviewPending as unknown as boolean,
+        })
+      ).toEqual({ state: "unavailable", sourceRecorded: false });
+    }
+  );
+
   it.each([
     ["portfolio", { portfolioId: "PF_OTHER" }],
     ["run", { run: { ...baseRun, run_id: "packrun-other" } }],
@@ -153,6 +165,15 @@ describe("advisor brief review transition evidence", () => {
     ["non-finite transition count", { run: { ...baseRun, review_transition_count: Infinity } }],
     ["history flag", { run: { ...baseRun, has_review_history: false } }],
     ["pending posture", { run: { ...baseRun, review_pending: true } }],
+    [
+      "omitted pending posture",
+      {
+        run: {
+          ...baseRun,
+          review_pending: undefined as unknown as boolean,
+        },
+      },
+    ],
     ["superseded posture", { run: { ...baseRun, superseded: true } }],
     [
       "replacement lineage",

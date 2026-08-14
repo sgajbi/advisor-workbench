@@ -9,6 +9,7 @@ const {
   buildReportCentreProofPosture,
   classifyAttributionDetailEvidence,
   createBrowserValidationHelpers,
+  classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
   hasRecordedAdvisorBriefAcceptProof,
   resolveHighCashIdeaCandidateId,
@@ -32,6 +33,13 @@ const {
     | "governed_partial_fallback"
     | "ready_empty_state";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
+  classifyAdvisorBriefAcceptProofPosture: (
+    text: string,
+    expectedReviewer: string,
+  ) =>
+    | "source-confirmed-existing-action"
+    | "accepted-by-another-reviewer"
+    | "review-action-available";
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
   hasRecordedAdvisorBriefAcceptProof: (
     text: string,
@@ -116,13 +124,40 @@ describe("live validation browser workflow helpers", () => {
     ).toBe(false);
   });
 
+  it("classifies accepted runs owned by another reviewer for fallback reservation", () => {
+    const exactPosture =
+      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui • Recorded 2026-04-21T03:22:00Z";
+    const otherReviewerPosture =
+      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.accept • Recorded 2026-04-21T03:22:00Z";
+
+    expect(
+      classifyAdvisorBriefAcceptProofPosture(exactPosture, "live.validator.ui"),
+    ).toBe("source-confirmed-existing-action");
+    expect(
+      classifyAdvisorBriefAcceptProofPosture(
+        otherReviewerPosture,
+        "live.validator.ui",
+      ),
+    ).toBe("accepted-by-another-reviewer");
+    expect(
+      classifyAdvisorBriefAcceptProofPosture(
+        "Human Review Awaiting review Supportability ACTION REQUIRED",
+        "live.validator.ui",
+      ),
+    ).toBe("review-action-available");
+  });
+
   it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
     const source = validateAdvisorBriefPanel.toString();
 
     expect(source).toContain('getByLabel("Advisor brief human review")');
     expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
     expect(source).toContain("source-confirmed-existing-action");
-    expect(source).toContain('getByLabel("Review decision").selectOption("ACCEPT")');
+    expect(source).toContain("accepted-by-another-reviewer");
+    expect(source).toContain('proofDetailBasis = "GROSS"');
+    expect(source).toContain("buildAdvisorBriefRoute(proofDetailBasis)");
+    expect(source).toContain('getByLabel("Review decision")');
+    expect(source).toContain('reviewDecision.selectOption("ACCEPT")');
     expect(source).toContain('getByLabel("Reviewer reference")');
     expect(source).toContain('getByLabel("Review rationale")');
     expect(source).toContain('name: "Confirm acceptance"');
