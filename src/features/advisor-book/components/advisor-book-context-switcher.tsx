@@ -41,7 +41,6 @@ export default function AdvisorBookContextSwitcher({
           <span className={styles.fullContextLabel}>Portfolio context</span>
           <span className={styles.compactContextLabel}>Portfolio</span>
         </span>
-        <Link href={`/book?asOfDate=${encodeURIComponent(asOfDate)}`}>My book</Link>
       </div>
       <details
         className={styles.disclosure}

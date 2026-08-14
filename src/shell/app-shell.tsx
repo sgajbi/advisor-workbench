@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
-import AppSwitcherNav from "./app-switcher-nav";
+import AppSwitcherNav, { AppSwitcherNavLoading } from "./app-switcher-nav";
 import LotusMark from "./lotus-mark";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,11 +20,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <span className="shell-product-context">Private Banking Workbench</span>
           </div>
-        </div>
-        <div className="shell-workspace-bar">
-          <Suspense fallback={null}>
-            <AppSwitcherNav />
-          </Suspense>
+          <div className="shell-topbar-actions">
+            <Link href="/book" className="shell-book-link">
+              <small>Advisor</small>
+              <strong>My book</strong>
+            </Link>
+            <Suspense fallback={<AppSwitcherNavLoading />}>
+              <AppSwitcherNav />
+            </Suspense>
+          </div>
         </div>
       </header>
       <div className="shell-body">{children}</div>

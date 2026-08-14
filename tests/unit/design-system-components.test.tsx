@@ -41,7 +41,7 @@ import {
   WorkspaceRail,
   WorkspaceRailLink,
   WorkspaceSide,
-  WorkspaceTabNav,
+  WorkspaceMenuNav,
   WorkbenchDeferredSection,
   WorkbenchChoiceGroup,
   WorkbenchInlineRefreshNote,
@@ -85,9 +85,9 @@ describe("design-system components", () => {
     expect(screen.getByText("Catalog live")).toHaveClass("semantic-badge-success");
   });
 
-  it("renders shared workspace navigation tabs with active and disabled states", () => {
+  it("renders a focused workspace switcher with active and disabled states", () => {
     render(
-      <WorkspaceTabNav
+      <WorkspaceMenuNav
         ariaLabel="Workspace Navigation"
         items={[
           { key: "portfolio", label: "Portfolio", href: "/portfolio" },
@@ -98,9 +98,19 @@ describe("design-system components", () => {
     );
 
     expect(screen.getByRole("navigation", { name: "Workspace Navigation" })).toBeInTheDocument();
+    const disclosure = screen.getByRole("button", {
+      name: "Switch workspace. Current workspace Performance",
+    });
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(disclosure);
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+
+    screen.getByRole("link", { name: "Portfolio" }).focus();
+    fireEvent.keyDown(screen.getByRole("link", { name: "Portfolio" }), { key: "Escape" });
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    expect(disclosure).toHaveFocus();
   });
 
   it("resets detail drawer tab selection when reopening the same item", () => {

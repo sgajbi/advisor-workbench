@@ -4,6 +4,7 @@ import {
   PlatformShellWorkspaceDescriptor,
   PlatformNormalizedCapabilities,
 } from "./types";
+import { createGatewayRequestSignal } from "@/features/platform-runtime/gateway-request-policy";
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
@@ -17,6 +18,7 @@ export async function getPlatformCapabilities(
   });
   const response = await fetch(`${BFF_PROXY_BASE}/platform/capabilities?${params.toString()}`, {
     cache: "no-store",
+    signal: createGatewayRequestSignal(),
   });
   if (!response.ok) {
     const detail = await response.text();

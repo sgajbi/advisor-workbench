@@ -80,7 +80,10 @@ describe("platform capabilities api", () => {
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/bff/api/v1/platform/capabilities?consumerSystem=UI&tenantId=default",
-      expect.objectContaining({ cache: "no-store" })
+      expect.objectContaining({
+        cache: "no-store",
+        signal: expect.any(AbortSignal),
+      })
     );
   });
 
