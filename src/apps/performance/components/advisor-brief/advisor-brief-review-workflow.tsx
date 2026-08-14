@@ -80,12 +80,22 @@ export default function AdvisorBriefReviewWorkflow({
   const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
   const reviewButtonRef = useRef<HTMLButtonElement | null>(null);
   const feedbackRef = useRef<HTMLDivElement | null>(null);
-  const allowedActions = workflowPackRun.allowed_review_actions.filter(isKnownReviewAction);
+  const humanReview = buildAdvisorBriefHumanReview(workflowPackRun);
+  const canRecordReviewDecision =
+    humanReview.state === "review-required" &&
+    workflowPackRun.review_pending === true &&
+    workflowPackRun.review_state.trim().toUpperCase() === "AWAITING_REVIEW" &&
+    workflowPackRun.runtime_state.trim().toUpperCase() === "COMPLETED" &&
+    workflowPackRun.superseded === false;
+  const allowedActions = canRecordReviewDecision
+    ? workflowPackRun.allowed_review_actions.filter(isKnownReviewAction)
+    : [];
   const selectedDefinition = selectedAction ? REVIEW_ACTIONS[selectedAction] : null;
   const requiresReplacement =
     selectedAction === "REVISE" || selectedAction === "SUPERSEDE";
   const canReview =
     selectedAction !== "" &&
+    allowedActions.includes(selectedAction) &&
     reviewedBy.trim().length > 0 &&
     reviewReason.trim().length > 0 &&
     (!requiresReplacement || replacementRunId.trim().length > 0) &&
