@@ -163,12 +163,19 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
   });
 
   it.each([
-    ["failed", "attention", "Calculation stage did not complete", "danger"],
-    ["running", "incomplete", "Calculation stage still in progress", "warn"],
-    ["unexpected", "incomplete", "Calculation stage status not reported", "warn"],
+    ["failed", "attention", "Calculation stage did not complete", "danger", "Attention required", "danger"],
+    ["running", "incomplete", "Calculation stage still in progress", "warn", "In progress", "warn"],
+    ["unexpected", "incomplete", "Calculation stage status not reported", "warn", "Not confirmed", "default"],
   ] as const)(
     "fails closed when a published calculation stage is %s",
-    (stageStatus, expectedState, expectedTitle, expectedTone) => {
+    (
+      stageStatus,
+      expectedState,
+      expectedTitle,
+      expectedTone,
+      expectedCalculationStatus,
+      expectedCalculationTone
+    ) => {
       const source = evidence();
       source.calculations[0].stage_statuses = [
         {
@@ -182,6 +189,13 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       expect(view.state).toBe(expectedState);
       expect(view.exceptions).toContainEqual(
         expect.objectContaining({ title: expectedTitle, tone: expectedTone })
+      );
+      expect(view.calculations[0]).toMatchObject({
+        calculationStatus: expectedCalculationStatus,
+        calculationTone: expectedCalculationTone,
+      });
+      expect(view.metrics).toContainEqual(
+        expect.objectContaining({ label: "Calculation coverage", value: "0 of 1" })
       );
       expect(JSON.stringify(view.exceptions)).not.toContain("internal_stage_code");
       expect(JSON.stringify(view.supportGroups)).toContain("internal_stage_code");
