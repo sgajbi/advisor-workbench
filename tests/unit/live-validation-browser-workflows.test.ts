@@ -39,6 +39,7 @@ const {
   ) =>
     | "source-confirmed-existing-action"
     | "accepted-by-another-reviewer"
+    | "review-action-unavailable"
     | "review-action-available";
   hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
   hasRecordedAdvisorBriefAcceptProof: (
@@ -147,6 +148,19 @@ describe("live validation browser workflow helpers", () => {
     ).toBe("review-action-available");
   });
 
+  it.each([
+    "Human Review Rejected Supportability FAILED Recorded by live.validator.reject • Recorded 2026-04-21T03:22:00Z",
+    "Human Review Withdrawn Supportability FAILED Recorded by live.validator.withdraw • Recorded 2026-04-21T03:22:00Z",
+    "Human Review Revision requested Supportability ACTION REQUIRED Recorded by live.validator.revise • Recorded 2026-04-21T03:22:00Z",
+    "Human Review Superseded Supportability ACTION REQUIRED Recorded by live.validator.replace • Recorded 2026-04-21T03:22:00Z",
+    "Human Review No review required Supportability READY",
+    "Human Review Not reported Supportability ACTION REQUIRED",
+  ])("reserves a fresh run when the current posture is not actionable: %s", (posture) => {
+    expect(
+      classifyAdvisorBriefAcceptProofPosture(posture, "live.validator.ui"),
+    ).toBe("review-action-unavailable");
+  });
+
   it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
     const source = validateAdvisorBriefPanel.toString();
 
@@ -154,6 +168,7 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
     expect(source).toContain("source-confirmed-existing-action");
     expect(source).toContain("accepted-by-another-reviewer");
+    expect(source).toContain("review-action-unavailable");
     expect(source).toContain('detailBasis: "GROSS"');
     expect(source).toContain('chartFrequency: "quarterly"');
     expect(source).toContain("buildAdvisorBriefRoute(proofQuery)");

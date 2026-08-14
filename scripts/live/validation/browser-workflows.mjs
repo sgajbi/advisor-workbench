@@ -48,7 +48,10 @@ export function classifyAdvisorBriefAcceptProofPosture(text, expectedReviewer) {
   if (hasAcceptedAdvisorBriefReviewPosture(text)) {
     return "accepted-by-another-reviewer";
   }
-  return "review-action-available";
+  if (text.includes("Human Review") && text.includes("Awaiting review")) {
+    return "review-action-available";
+  }
+  return "review-action-unavailable";
 }
 
 export function createBrowserValidationHelpers({
@@ -1168,7 +1171,10 @@ export async function validateAdvisorBriefPanel(
       await supportabilityRegion.innerText(),
       expectedReviewer,
     );
-    if (proofPosture === "accepted-by-another-reviewer") {
+    if (
+      proofPosture === "accepted-by-another-reviewer" ||
+      proofPosture === "review-action-unavailable"
+    ) {
       proofQuery = { detailBasis: "GROSS", chartFrequency: "quarterly" };
       await page.goto(buildAdvisorBriefRoute(proofQuery), {
         waitUntil: "networkidle",
@@ -1183,9 +1189,12 @@ export async function validateAdvisorBriefPanel(
         await supportabilityRegion.innerText(),
         expectedReviewer,
       );
-      if (proofPosture === "accepted-by-another-reviewer") {
+      if (
+        proofPosture === "accepted-by-another-reviewer" ||
+        proofPosture === "review-action-unavailable"
+      ) {
         throw new Error(
-          "Advisor brief browser ACCEPT proof could not reserve the GROSS fallback run because it was already accepted by another reviewer.",
+          `Advisor brief browser ACCEPT proof could not reserve an actionable GROSS fallback run (posture: ${proofPosture}).`,
         );
       }
     }
