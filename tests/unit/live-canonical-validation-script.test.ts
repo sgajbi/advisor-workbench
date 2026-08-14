@@ -1465,7 +1465,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Request Advisor Commentary");
     expect(browserWorkflowModule).toContain("Replay evidence: sha256:");
     expect(browserWorkflowModule).toContain("panel: panelId");
-    expect(browserWorkflowModule).toContain('screenshotState = "demo_ready"');
+    expect(browserWorkflowModule).toContain(
+      'return assuranceState === "ready" ? "demo_ready" : "truthfully_degraded"',
+    );
+    expect(browserWorkflowModule).toContain(
+      "screenshotState = classifyPerformanceEvidenceScreenshotState(assuranceState)",
+    );
     expect(browserWorkflowModule).toContain("state: screenshotState");
     expect(browserWorkflowModule).toContain("path: target");
     expect(evidenceWriter).toContain("SHOT-INDEX.md");
