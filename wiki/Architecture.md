@@ -29,6 +29,20 @@ The versioned runtime, browser, support-lifecycle, and current scalability bound
 implemented evidence and explicit non-claims; architecture compatibility must not be presented as
 capacity or bank certification.
 
+## Presentation ownership
+
+Workbench keeps design tokens and true cross-screen primitives in governed global layers. Feature
+composition and component interaction states belong beside their React owner in CSS Modules; each
+migration removes the corresponding legacy selectors and lowers the executable global-CSS budget.
+
+Responsive behavior follows available business canvas rather than device labels. Page and shell
+composition may use viewport breakpoints, while a reusable analytical module that can appear beside
+different rails uses inline-size container queries for its own internal reflow. Performance Drivers
+applies this boundary at two levels: its ranked business groups choose comparison or stacked reading
+from the module width, and each contribution row independently preserves readable identity, return,
+weight, value, and bar evidence. This prevents a 1440-pixel three-rail workstation from being
+mistaken for a wide content container and avoids page-specific fixes.
+
 ## Navigation model
 
 Workbench separates three business contexts so the interface remains dense without becoming a

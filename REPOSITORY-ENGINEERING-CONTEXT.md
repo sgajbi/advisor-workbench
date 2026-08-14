@@ -223,6 +223,11 @@ Current repository posture:
     ratcheted to 885 lines after retiring the old tab-navigation selectors. Remove the complete
     `workspace-tab-nav*` family from legacy global CSS with the retired component and keep its
     selector prefix forbidden so dead compatibility styling cannot return.
+    Nested analytical components must reflow from their own inline-size container when shell or
+    sibling rails can materially change their usable width at the same viewport. Performance
+    Drivers owns ranked-group and contribution-row reflow in colocated CSS Modules; do not restore
+    its retired `performance-contributors-*` or `performance-contributor-bar-*` global selectors or
+    replace the container contract with another outer-viewport breakpoint.
     `WorkbenchChoiceGroup` similarly owns exclusive one-of-many business choices with radio-group
     semantics, while `ModeTabs` is reserved for controls with associated tab panels. Their shared
     interaction presentation belongs in design-system CSS Modules; consuming features may own only
