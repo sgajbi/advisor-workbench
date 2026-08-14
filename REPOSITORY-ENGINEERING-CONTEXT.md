@@ -1027,6 +1027,10 @@ Important validation expectations:
     the same Gateway-owned contribution object. Translate only explicitly governed source and
     smoothing values; absent, inconsistent, or unknown statuses and reason codes fail closed to a
     neutral review posture while the exact raw value remains available in **Calculation evidence**.
+    A confirmed contribution posture additionally requires matching reason evidence for every
+    declared limitation, finite and reconciled published contribution values, and published
+    market-value coverage of at least 95%; lower coverage is partial and missing or invalid coverage
+    remains review-only.
     Keep market-value coverage, weighting basis, reconciliation, and known exclusions in the
     primary business scan. Keep source status, reason codes, contracts, available/unsupported/
     degraded economics, snapshots, smoothing status, and methodology reason codes secondary but
