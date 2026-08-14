@@ -1,3 +1,4 @@
+import { parseCanonicalPerformancePeriod } from "@/apps/performance/periods";
 import type {
   PerformanceCalculationEvidenceView,
   PerformanceEvidenceArtifactView,
@@ -423,6 +424,24 @@ function buildExceptions(
       detail: "The source did not identify the performance period covered by this assurance package.",
       action: "Obtain source-confirmed reporting context before relying on the package.",
       tone: "warn",
+    });
+  } else if (!parseCanonicalPerformancePeriod(evidence.period)) {
+    exceptions.push({
+      key: "review-period-unrecognized",
+      title: "Review period not supported",
+      detail:
+        "The source assurance package identifies a performance period that Workbench does not support.",
+      action: "Obtain calculation evidence for a supported review period before relying on the package.",
+      tone: "danger",
+    });
+  }
+  if (selection.period.trim() && !parseCanonicalPerformancePeriod(selection.period)) {
+    exceptions.push({
+      key: "active-review-period-unrecognized",
+      title: "Selected review period not supported",
+      detail: "The active performance workspace uses a review period that Workbench cannot interpret.",
+      action: "Choose a supported review period and refresh the source-confirmed performance view.",
+      tone: "danger",
     });
   }
   if (!["gross", "net"].includes(normalise(evidence.basis))) {
