@@ -88,6 +88,10 @@ current only after the matching summary and detail contracts both confirm the re
   reconciliation remain in the native **Calculation evidence** disclosure.
 - Treats absent, inconsistent, or unrecognised source and methodology evidence as **needs review**;
   Workbench never converts an unknown code into a favourable business interpretation.
+- Publishes **Contribution coverage is confirmed** only when source limitations and reason codes
+  agree, the applicable contribution values reconcile, and market-value coverage is both published
+  and at least 95%. Lower coverage remains explicitly partial; absent or invalid coverage needs
+  review.
 - Preserves capability, warning, partial-failure, benchmark, calculation, and lineage posture
   without manufacturing unavailable analytics.
 - Treats a selection change as one atomic decision-context transaction: requested labels, figures,

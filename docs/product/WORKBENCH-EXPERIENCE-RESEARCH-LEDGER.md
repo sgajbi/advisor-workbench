@@ -4697,12 +4697,16 @@ sources:
 3. Lead with market-value coverage, weighting basis, reconciliation, client-use implication, and
    known exclusions. Preserve every exact source status, reason code, contract, economics field,
    snapshot count, smoothing status, and reconciliation value in **Calculation evidence**.
-4. Fail closed when a status or reason code is absent, inconsistent, or unknown. The business layer
-   stays neutral while the raw unknown value remains visible for support.
-5. Use a native disclosure and a container-aware definition grid: dense two-column evidence when
+4. Fail closed when a status or reason code is absent, inconsistent, or unknown. Require declared
+   limitations to carry matching reason evidence and require the applicable published contribution
+   values to reconcile within the existing 0.005 percentage-point Workbench threshold.
+5. Reserve the confirmed posture for published market-value coverage of at least 95%; lower
+   coverage remains partial and absent or invalid coverage needs review. The business layer stays
+   neutral while exact evidence remains visible for support.
+6. Use a native disclosure and a container-aware definition grid: dense two-column evidence when
    the module owns sufficient width, safe one-column evidence in a narrow three-rail workstation or
    compact viewport.
-6. Move the live note styling beside its component, lower the exact global-CSS ratchet, and prohibit
+7. Move the live note styling beside its component, lower the exact global-CSS ratchet, and prohibit
    the retired global selector from returning.
 
 ### Rejected decisions
