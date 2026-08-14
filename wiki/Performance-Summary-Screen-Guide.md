@@ -79,6 +79,9 @@ current only after the matching summary and detail contracts both confirm the re
 - Distinguishes no published horizons, one exact horizon, and a true multi-horizon comparison;
   one horizon remains table evidence and is not presented as a comparison graphic.
 - Shows leading positive and negative position or segment contributors from confirmed detail data.
+- Keeps positive and negative contributor groups visually distinct through component-container
+  reflow: the groups compare side by side only when Performance Drivers owns enough width and stack
+  without overlap when the surrounding workstation rails reduce its usable canvas.
 - Preserves capability, warning, partial-failure, benchmark, calculation, and lineage posture
   without manufacturing unavailable analytics.
 - Treats a selection change as one atomic decision-context transaction: requested labels, figures,
@@ -159,7 +162,10 @@ Performance Summary deliberately does not:
   source authority,
 - claim advisor-book aggregation, household performance, composite reporting, official performance
   sign-off, client-ready publication, production entitlement, or bank certification,
-- expose source codes or implementation topology as the primary language of the business workflow.
+- use source codes or implementation topology as a substitute for business interpretation. The
+  current Performance Drivers support note still exposes raw source-economics status and reason
+  codes; [Workbench #712](https://github.com/sgajbi/lotus-workbench/issues/712) owns moving that
+  detail behind an advisor-readable coverage explanation without suppressing source truth.
 
 Official wealth-platform research informed the integrated decision context, cross-horizon review,
 and evidence-first recovery pattern. Lotus does not copy another product's layout, wording, visual
@@ -200,6 +206,11 @@ superiority.
 - The existing populated and unavailable Performance scenarios remain the regression proof for
   complete and degraded source contracts. Canonical live validation remains the release evidence
   for the governed front-office stack.
+- The populated asymmetric-contributor scenario proves that one source-populated group and one
+  source-confirmed empty group never overlap. It asserts rendered group separation and zero
+  internal horizontal overflow at 1800, 1440, 1024, 768, and 519 pixels; reviewed evidence under
+  `output/playwright/issue-706-performance-*` confirms stacked three-rail workstation and compact
+  layouts plus a dense two-column tablet layout when the module itself has sufficient width.
 - Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
   controls.
 

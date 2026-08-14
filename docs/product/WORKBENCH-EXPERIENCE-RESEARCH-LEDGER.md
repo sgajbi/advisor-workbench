@@ -4591,3 +4591,70 @@ records machine-readable assurance state rather than stale technical copy. The c
 guide, API note, source registry, catalogue, navigation, Supported Features, architecture ledger,
 and repository context change. Gateway contracts, calculations, dependencies, authentication,
 production entitlements, and service topology do not change.
+
+## Performance Drivers Container-Aware Comparison
+
+### Business job
+
+An advisor needs to compare the leading positive and negative contributors without confusing an
+empty detractor group with missing data or letting a narrow three-rail workstation collapse labels,
+values, and bars into one another. The same module may own substantially different widths at the
+same outer viewport, so device classification is not a reliable presentation input.
+
+### Current-product research
+
+Research was reviewed on 2026-08-15 from primary web-platform, accessibility, and enterprise-design
+sources:
+
+1. [MDN container queries](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries)
+   defines component adaptation from the size of the actual containing block rather than the
+   viewport. This matches a reusable analytical module composed beside optional Workbench rails.
+2. [WCAG 2.1 Reflow](https://www.w3.org/WAI/WCAG21/Understanding/reflow.html) requires content to
+   remain available without loss of information or functionality when it reflows and permits
+   relocation where needed. Stacking the two intact business groups is preferable to compression
+   or overlap.
+3. [SAP Fiori analytical cards](https://experience.sap.com/fiori-design-web/analytical-card/)
+   recommends concise analytical-card scope and deliberately limited series. Lotus adopts the
+   bounded comparison and readable evidence hierarchy, not SAP's layout, styling, product identity,
+   or unsupported capabilities.
+
+### Adopted decisions
+
+1. Use one ordered contributor-group structure for balanced and asymmetric source data. Preserve a
+   truthful empty group and place the populated group first when only one side has observations.
+2. Let Performance Drivers choose one- or two-column group composition from its own inline size.
+   A 1440-pixel workstation with both rails may stack while a 1024-pixel shell with more module
+   width may compare side by side.
+3. Give each contribution bar list its own inline-size container so identity and measure evidence
+   stack before their minimum readable widths conflict.
+4. Keep exact contribution, weight, return, empty-state, source-economics, and detail-disclosure
+   truth unchanged; the browser performs presentation only.
+5. Replace CSS-class-coupled browser lookup with stable business-group evidence and assert exact
+   rendered separation plus internal and page-level overflow across governed widths.
+6. Move both selector families beside their React owners, remove dead global declarations, lower
+   the exact CSS ratchet by 178 lines, and prohibit the retired prefixes from returning.
+
+### Rejected decisions
+
+1. Adding a 1440-pixel viewport breakpoint, because the actual failure is the module width inside
+   shell composition and the same viewport can provide different content capacity.
+2. Hiding the source-confirmed empty group, truncating contributor evidence, shrinking typography,
+   or allowing horizontal scrolling inside the primary decision card.
+3. Copying another vendor's dashboard composition or adding a new grid, styling, chart, or
+   responsive library when stable CSS container queries and existing Workbench primitives suffice.
+4. Changing Performance calculations, Gateway mapping, benchmark logic, source status, or detail
+   data to make a presentation defect disappear.
+5. Treating raw source-economics codes as polished advisor language. Their separate hierarchy gap is
+   recorded under Workbench #712 so the layout fix does not suppress source evidence.
+
+### Validation and publication decision
+
+Workbench #706 owns the layout slice. Focused component and page tests prove balanced and asymmetric
+structure, populated and empty states, source-value preservation, and detail access. CSS governance
+proves no retired selector returns. The optimized-production populated scenario uses
+`PB_SG_GLOBAL_BAL_001` and asserts contributor/detractor geometric separation, heading containment,
+zero internal overflow, and no page overflow at 1800, 1440, 1024, 768, and 519 pixels. Reviewed
+desktop, tablet, and compact evidence is stored under `output/playwright/issue-706-performance-*`.
+The Performance Summary guide, architecture wiki, repository context, and review ledger change;
+Gateway/API/OpenAPI, calculation, dependency, runtime topology, identity, and authorization truth do
+not.
