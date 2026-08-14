@@ -160,6 +160,32 @@ function assertAcceptedRunPosture(payload) {
   return run;
 }
 
+function isValidUtcReviewTimestamp(value) {
+  const timestamp = typeof value === "string" ? value.trim() : "";
+  const match = timestamp.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|\+00:00)$/
+  );
+  if (!match) {
+    return false;
+  }
+
+  const parsedTimestamp = Date.parse(timestamp);
+  if (!Number.isFinite(parsedTimestamp)) {
+    return false;
+  }
+
+  const parsedDate = new Date(parsedTimestamp);
+  const [, year, month, day, hour, minute, second] = match;
+  return (
+    parsedDate.getUTCFullYear() === Number(year) &&
+    parsedDate.getUTCMonth() + 1 === Number(month) &&
+    parsedDate.getUTCDate() === Number(day) &&
+    parsedDate.getUTCHours() === Number(hour) &&
+    parsedDate.getUTCMinutes() === Number(minute) &&
+    parsedDate.getUTCSeconds() === Number(second)
+  );
+}
+
 function assertRecordedReviewAudit(run, { description, expectedReviewer = null }) {
   if (run.review_pending !== false) {
     throw new Error(`${description} did not clear review_pending.`);
@@ -184,10 +210,7 @@ function assertRecordedReviewAudit(run, { description, expectedReviewer = null }
   ) {
     throw new Error(`${description} returned no recorded review transition history.`);
   }
-  if (
-    typeof run.latest_review_event_at !== "string" ||
-    !Number.isFinite(Date.parse(run.latest_review_event_at))
-  ) {
+  if (!isValidUtcReviewTimestamp(run.latest_review_event_at)) {
     throw new Error(`${description} returned no valid review event time.`);
   }
 }

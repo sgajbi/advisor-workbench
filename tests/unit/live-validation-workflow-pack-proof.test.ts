@@ -429,6 +429,36 @@ describe("live validation workflow-pack proof", () => {
       },
       "returned no valid review event time",
     ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "2026-04-21",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no valid review event time",
+    ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "2026-04-21T11:22:00+08:00",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no valid review event time",
+    ],
+    [
+      {
+        latest_review_actor: "live.validator.supersede",
+        latest_review_event_at: "2026-02-31T03:22:00Z",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no valid review event time",
+    ],
   ])(
     "rejects stored replacement lineage without complete review audit evidence: %s",
     async (reviewAudit, expectedError) => {
