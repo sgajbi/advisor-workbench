@@ -7,6 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 import RootLayout from "@/app/layout";
 import Providers from "@/app/providers";
 
+vi.mock("next/font/local", () => ({
+  default: ({ variable }: { variable: string }) => ({
+    variable: variable.replace(/^--/, ""),
+  }),
+}));
+
 vi.mock("@/shell/app-shell", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));
@@ -42,6 +48,11 @@ describe("RootLayout", () => {
 
     expect(tree.type).toBe("html");
     expect(tree.props.lang).toBe("en");
+    expect(tree.props.className).toContain("font-lotus-ui-face");
+    expect(tree.props.className).toContain("font-lotus-display-face");
+    expect(tree.props.className).toContain("font-lotus-mono-face");
+    expect(tree.props.className.trim().split(/\s+/)).toHaveLength(3);
+    expect(tree.props["data-font-delivery"]).toBe("self-hosted");
 
     const body = tree.props.children;
     expect(body.type).toBe("body");
