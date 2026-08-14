@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { buildAdvisorBriefHumanReview } from "../../src/apps/performance/advisor-brief/advisor-brief-review-evidence";
 import { isConfirmedAdvisorBriefReviewTransition } from "../../src/apps/performance/advisor-brief/advisor-brief-review-transition";
 import type {
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -55,6 +56,19 @@ describe("advisor brief review transition evidence", () => {
   it("accepts a matching source-recorded transition", () => {
     expect(isConfirmed()).toBe(true);
   });
+
+  it.each(["ACCEPTED", "REVISED", "NOT_REVIEW_REQUIRED"])(
+    "fails a contradictory pending %s read posture closed to review required",
+    (reviewState) => {
+      expect(
+        buildAdvisorBriefHumanReview({
+          ...baseRun,
+          review_state: reviewState,
+          review_pending: true,
+        })
+      ).toEqual({ state: "review-required", sourceRecorded: false });
+    }
+  );
 
   it.each([
     ["portfolio", { portfolioId: "PF_OTHER" }],

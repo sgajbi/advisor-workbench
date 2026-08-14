@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import type { APIRequestContext } from '@playwright/test';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   buildPerformanceSmokePagePath,
   buildPerformanceSmokeSummaryPath,
   classifyPerformanceSummaryPosture,
+  loadPerformanceSmokeSummary,
 } from '../e2e/performance-workbench-supportability';
 import {
   buildBenchmarkUnassignedPerformanceScenario,
@@ -18,6 +20,22 @@ describe('Performance E2E supportability posture', () => {
     expect(buildPerformanceSmokeSummaryPath('PB SG/001')).toBe(
       '/api/bff/api/v1/workbench/PB%20SG%2F001/performance/summary?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET',
     );
+  });
+
+  it('probes the configured Workbench origin through Playwright base URL resolution', async () => {
+    const summary = buildSupportedPerformanceScenario().workspace;
+    const get = vi.fn().mockResolvedValue({
+      ok: () => true,
+      json: () => Promise.resolve(summary),
+    });
+
+    await expect(
+      loadPerformanceSmokeSummary({ get } as unknown as APIRequestContext, 'PB SG/001'),
+    ).resolves.toBe(summary);
+    expect(get).toHaveBeenCalledWith(buildPerformanceSmokeSummaryPath('PB SG/001'), {
+      headers: { 'cache-control': 'no-store' },
+      timeout: 60_000,
+    });
   });
 
   it('classifies the governed populated precondition exactly', () => {

@@ -42,6 +42,10 @@ export function buildAdvisorBriefHumanReview(
     ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
   };
 
+  if (workflowPackRun?.review_pending === true) {
+    return { state: "review-required", sourceRecorded: false };
+  }
+
   switch (workflowPackRun?.review_state.trim().toUpperCase()) {
     case "ACCEPTED":
     case "REVISED":
