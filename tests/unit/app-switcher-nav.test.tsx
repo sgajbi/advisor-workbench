@@ -212,10 +212,10 @@ describe("AppSwitcherNav", () => {
       },
     });
 
-    const { container } = render(<AppSwitcherNav />);
+    render(<AppSwitcherNav />);
 
     expect(screen.queryByRole("navigation", { name: "Workspace Navigation" })).not.toBeInTheDocument();
-    expect(container.querySelector(".shell-workspace-menu-loading")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Checking workspace availability" })).toBeVisible();
     expect(
       screen.getByRole("status", { name: "Checking workspace availability" }),
     ).toHaveTextContent("Checking availability");

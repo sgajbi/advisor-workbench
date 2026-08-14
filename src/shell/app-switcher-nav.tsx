@@ -8,6 +8,7 @@ import { usePlatformCapabilities } from "@/features/platform-capabilities/use-pl
 import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
 import { resolveShellRouteContext } from "./app-registry";
+import styles from "./app-shell.module.css";
 import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
@@ -42,7 +43,6 @@ export default function AppSwitcherNav() {
     <WorkspaceMenuNav
       items={items}
       ariaLabel="Workspace Navigation"
-      className="shell-workspace-menu"
     />
   );
 }
@@ -50,7 +50,7 @@ export default function AppSwitcherNav() {
 export function AppSwitcherNavLoading() {
   return (
     <div
-      className="shell-workspace-menu-loading"
+      className={styles.workspaceLoading}
       role="status"
       aria-label="Checking workspace availability"
     >

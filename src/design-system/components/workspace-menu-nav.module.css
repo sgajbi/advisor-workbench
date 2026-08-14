@@ -1,0 +1,143 @@
+.root {
+  position: relative;
+  min-width: 11.5rem;
+}
+
+.trigger {
+  width: 100%;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(87, 121, 157, 0.14);
+  border-radius: 7px;
+  padding: 0.38rem 0.52rem 0.38rem 0.7rem;
+  font-family: var(--font-ui);
+  color: rgba(23, 32, 43, 0.84);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.trigger > span {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+  text-align: left;
+}
+
+.trigger small,
+.label {
+  color: #60718a;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 760;
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.trigger strong {
+  overflow: hidden;
+  color: var(--brand-strong);
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trigger em {
+  color: #8b6513;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  border-color: rgba(87, 121, 157, 0.24);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--brand-strong);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 0.42rem);
+  right: 0;
+  z-index: 40;
+  width: min(20rem, calc(100vw - 1.6rem));
+  padding: 0.72rem;
+  border: 1px solid rgba(223, 193, 126, 0.36);
+  border-radius: 8px;
+  background: #111b2f;
+  box-shadow: 0 18px 36px rgba(12, 21, 38, 0.2);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.label {
+  display: block;
+  padding: 0.18rem 0.28rem 0.48rem;
+  color: #9fb0c8;
+}
+
+.list {
+  display: grid;
+  gap: 1px;
+  border-top: 1px solid rgba(159, 176, 200, 0.18);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.58rem;
+  border-left: 2px solid transparent;
+  color: #f7f9fc;
+  font-size: 0.82rem;
+  font-weight: 680;
+}
+
+.link small {
+  color: #9fb0c8;
+  font-size: 0.64rem;
+  font-weight: 620;
+}
+
+.link:hover {
+  border-left-color: rgba(224, 186, 100, 0.64);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.linkActive {
+  border-left-color: #e0ba64;
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffe29a;
+}
+
+.linkDisabled {
+  color: #a8b4c5;
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+@media (max-width: 640px) {
+  .root {
+    min-width: 9.4rem;
+    width: 9.4rem;
+  }
+
+  .trigger {
+    min-height: 2.65rem;
+    padding-inline: 0.56rem;
+  }
+}
