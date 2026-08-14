@@ -125,7 +125,9 @@ describe("PortfolioScreenRail", () => {
     fireEvent.click(within(navigation).getByRole("link", { name: /holdings/i }));
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
-    expect(navigation).toHaveAttribute("data-navigation-state", "collapsed");
+    expect(
+      screen.getByRole("navigation", { name: "Workbench screen navigation" }),
+    ).toHaveAttribute("data-navigation-state", "collapsed");
   });
 
   it("returns nested navigation to its closed default when the compact rail closes", () => {
@@ -174,8 +176,13 @@ describe("PortfolioScreenRail", () => {
     expect(railDisclosure).toHaveAttribute("aria-expanded", "false");
 
     fireEvent.click(railDisclosure);
-    expect(allWorkspaces).toHaveAttribute("aria-expanded", "false");
-    expect(changeStep).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /all workspaces/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(
+      screen.getByRole("button", { name: /change workflow step/i }),
+    ).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Suitability" })).not.toBeInTheDocument();
   });

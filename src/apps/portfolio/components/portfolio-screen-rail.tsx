@@ -93,6 +93,7 @@ export default function PortfolioScreenRail({
         </button>
       </div>
       <PortfolioScreenRailNavigation
+        key={navigationExpanded ? "expanded" : "collapsed"}
         id={navigationId}
         expanded={navigationExpanded}
         model={navigationModel}
