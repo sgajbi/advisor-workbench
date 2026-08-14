@@ -12,6 +12,8 @@ import type {
   WorkbenchPerformanceAdvisorBrief,
 } from "@/features/workbench/types";
 
+import { isConfirmedAdvisorBriefReviewTransition } from "./advisor-brief/advisor-brief-review-transition";
+
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
   period: string;
@@ -61,6 +63,7 @@ export function usePerformanceAdvisorBrief({
   const [refreshSequence, setRefreshSequence] = useState(0);
   const requestSequenceRef = useRef(0);
   const reviewActionSequenceRef = useRef(0);
+  const activeRunId = advisorBrief?.workflow_pack_run?.run_id ?? null;
 
   useEffect(() => {
     const requestId = requestSequenceRef.current + 1;
@@ -158,6 +161,17 @@ export function usePerformanceAdvisorBrief({
           return response;
         }
 
+        if (
+          !isConfirmedAdvisorBriefReviewTransition({
+            response,
+            payload,
+            expectedPortfolioId: portfolioId,
+            expectedRunId: activeRunId,
+          })
+        ) {
+          throw new Error("Gateway did not confirm the requested advisor-brief review transition.");
+        }
+
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
@@ -183,6 +197,7 @@ export function usePerformanceAdvisorBrief({
       }
     },
     [
+      activeRunId,
       attributionDimension,
       benchmark,
       chartFrequency,

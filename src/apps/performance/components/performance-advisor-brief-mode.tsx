@@ -12,6 +12,7 @@ import AdvisorBriefReviewWorkflow from "./advisor-brief/advisor-brief-review-wor
 import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
 import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
 import {
+  canCopyAdvisorBrief,
   dedupeAdvisorActions,
   toAdvisorNoteCopy,
 } from "./advisor-brief/performance-advisor-brief-helpers";
@@ -182,9 +183,7 @@ function PerformanceAdvisorBriefModeSession({
           status={brief.status}
           noteText={toAdvisorNoteCopy(brief)}
           onRefresh={refresh}
-          canCopy={
-            brief.talkingPoints.length > 0 && brief.aiDisclosure.evidence.state !== "missing"
-          }
+          canCopy={canCopyAdvisorBrief(brief)}
           refreshing={isLoading}
           interactionBusy={isLoading || isApplyingReviewAction}
         />
