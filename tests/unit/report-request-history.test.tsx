@@ -1,0 +1,96 @@
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { vi } from "vitest";
+
+import { ReportRequestHistory } from "../../src/features/report-ordering/components/report-request-history";
+import type { ReportRequestRow } from "../../src/features/report-ordering/view-model";
+
+const readyRow: ReportRequestRow = {
+  key: "rjob_1",
+  reportLabel: "Portfolio review",
+  reportDate: "14 Aug 2026",
+  requestedAt: "14 Aug 2026, 09:30",
+  statusLabel: "In progress",
+  statusDetail: "Approved report creation is in progress.",
+  tone: "warn",
+  supportReference: "rjob_1",
+};
+
+describe("ReportRequestHistory", () => {
+  it("renders the same source-backed lifecycle fields in workstation and compact presentations", () => {
+    renderHistory({ rows: [readyRow], state: "ready" });
+
+    const table = screen.getByRole("table", { name: "Recent portfolio report requests" });
+    expect(within(table).getByText("Portfolio review")).toBeInTheDocument();
+    expect(within(table).getByText("14 Aug 2026")).toBeInTheDocument();
+    expect(within(table).getByText("14 Aug 2026, 09:30")).toBeInTheDocument();
+    expect(within(table).getByText("In progress")).toBeInTheDocument();
+    expect(within(table).getByText("Approved report creation is in progress.")).toBeInTheDocument();
+    expect(within(table).getByText("rjob_1")).toBeInTheDocument();
+
+    const compactList = screen.getByRole("list", {
+      name: "Recent portfolio report request details",
+    });
+    expect(within(compactList).getByText("Portfolio review")).toBeInTheDocument();
+    expect(within(compactList).getByText("14 Aug 2026")).toBeInTheDocument();
+    expect(within(compactList).getByText("14 Aug 2026, 09:30")).toBeInTheDocument();
+    expect(within(compactList).getByText("In progress")).toBeInTheDocument();
+    expect(
+      within(compactList).getByText("Approved report creation is in progress."),
+    ).toBeInTheDocument();
+    expect(within(compactList).getByText("rjob_1")).toBeInTheDocument();
+    expect(
+      within(compactList).getByText("Support reference").closest("summary"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps loading and empty states explicit for both responsive presentations", () => {
+    const { rerender } = renderHistory({ rows: [], state: "loading" });
+    expect(screen.getAllByText("Loading recent requests")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeDisabled();
+
+    rerender(
+      <ReportRequestHistory rows={[]} state="ready" error={null} onRefresh={vi.fn()} />,
+    );
+    expect(screen.getAllByText("No report requests yet")).toHaveLength(2);
+  });
+
+  it.each([
+    {
+      state: "permission_blocked" as const,
+      title: "Recent requests are restricted",
+      error: "Your business role cannot review report request history.",
+    },
+    {
+      state: "error" as const,
+      title: "Recent requests unavailable",
+      error: "Report request history could not be refreshed.",
+    },
+  ])("renders the $state state with an explicit recovery action", ({ state, title, error }) => {
+    const onRefresh = vi.fn();
+    renderHistory({ rows: [], state, error, onRefresh });
+
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(error)).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(onRefresh).toHaveBeenCalledOnce();
+  });
+});
+
+function renderHistory({
+  rows,
+  state,
+  error = null,
+  onRefresh = vi.fn(),
+}: {
+  rows: ReportRequestRow[];
+  state: "loading" | "ready" | "permission_blocked" | "error";
+  error?: string | null;
+  onRefresh?: () => void;
+}) {
+  return render(
+    <ReportRequestHistory rows={rows} state={state} error={error} onRefresh={onRefresh} />,
+  );
+}

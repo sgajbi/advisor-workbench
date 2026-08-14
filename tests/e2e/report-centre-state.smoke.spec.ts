@@ -246,11 +246,13 @@ test("tracks an accepted request and deliberately starts a second at constrained
   ).toBeVisible();
   await expect(page.getByText("Report request accepted")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "Approved report" })).toHaveCount(0);
-  await expect(
-    page.getByRole("table", { name: "Recent portfolio report requests" }),
-  ).toBeVisible();
-  await page.getByText("Support reference", { exact: true }).click();
-  await expect(page.getByText("rjob_e2e_1", { exact: true })).toBeVisible();
+  const compactHistory = page.getByRole("list", {
+    name: "Recent portfolio report request details",
+  });
+  await expect(compactHistory).toBeVisible();
+  const readinessRegion = page.getByRole("region", { name: "Report request readiness" });
+  await readinessRegion.getByText("Support reference", { exact: true }).click();
+  await expect(readinessRegion.getByText("rjob_e2e_1", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Create another report" }).click();
   const configuration = page.getByLabel("Report configuration");
@@ -263,12 +265,69 @@ test("tracks an accepted request and deliberately starts a second at constrained
   await expect(
     acceptedStatus.getByRole("heading", { name: "Report request accepted" }),
   ).toBeVisible();
-  await page.getByText("Support reference", { exact: true }).click();
-  await expect(page.getByText("rjob_e2e_2", { exact: true })).toBeVisible();
+  await readinessRegion.getByText("Support reference", { exact: true }).click();
+  await expect(readinessRegion.getByText("rjob_e2e_2", { exact: true })).toBeVisible();
 
   const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(pageWidth).toBeLessThanOrEqual(720);
   await captureDiagnosticScreenshot(page, "accepted-next-request-720");
+});
+
+test("keeps report lifecycle and support discoverable across tablet and compact layouts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1024, height: 1000 });
+  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: 15_000,
+  });
+  const workstationHistory = page.getByRole("table", {
+    name: "Recent portfolio report requests",
+  });
+  await expect(workstationHistory).toBeVisible();
+  await expect(workstationHistory.getByText("Report data complete")).toBeVisible();
+  const workstationSupport = workstationHistory.getByText("Support reference", {
+    exact: true,
+  });
+  await expect(workstationSupport).toBeVisible();
+  await workstationSupport.focus();
+  await expect(workstationSupport).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(workstationHistory.getByText("rjob_1", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
+  await captureDiagnosticScreenshot(page, "request-history-tablet-1024");
+
+  await page.setViewportSize({ width: 519, height: 1000 });
+  const compactHistory = page.getByRole("list", {
+    name: "Recent portfolio report request details",
+  });
+  await expect(workstationHistory).not.toBeVisible();
+  await expect(compactHistory).toBeVisible();
+  const record = compactHistory.getByRole("article", { name: "Portfolio review" });
+  await expect(record.getByText("Report data complete")).toBeVisible();
+  await expect(
+    record.getByText("Report data is complete. Archive and client delivery remain separate states."),
+  ).toBeVisible();
+  await expect(record.getByText("Report date", { exact: true })).toBeVisible();
+  await expect(record.getByText("22 Apr 2026", { exact: true })).toBeVisible();
+  await expect(record.getByText("Requested", { exact: true })).toBeVisible();
+
+  const compactSupport = record.getByText("Support reference", { exact: true });
+  await compactSupport.focus();
+  await expect(compactSupport).toBeFocused();
+  const compactSupportHeight = await compactSupport.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  expect(compactSupportHeight).toBeGreaterThanOrEqual(44);
+  await page.keyboard.press("Enter");
+  await expect(record.getByText("rjob_1", { exact: true })).toBeVisible();
+  await expect(compactSupport).toBeFocused();
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(519);
+  await captureDiagnosticScreenshot(page, "request-history-compact-519");
 });
 
 test("keeps Reporting task-aware while every specialist workspace remains reachable", async ({

@@ -574,9 +574,18 @@
 }
 
 .supportDisclosure summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   cursor: pointer;
   color: #315d8a;
   font-weight: 700;
+}
+
+.supportDisclosure summary:focus-visible {
+  border-radius: var(--radius-control);
+  outline: 3px solid rgba(54, 95, 139, 0.32);
+  outline-offset: 2px;
 }
 
 .supportDisclosure code {
@@ -592,6 +601,10 @@
   gap: 4px;
   min-width: 230px;
   white-space: normal;
+}
+
+.historyCompact {
+  display: none;
 }
 
 .srOnly {
@@ -630,6 +643,14 @@
 }
 
 @media (max-width: 760px) {
+  .historyDesktop {
+    display: none;
+  }
+
+  .historyCompact {
+    display: block;
+  }
+
   .choiceHeading,
   .workflowManagedHeading,
   .railHeading {
