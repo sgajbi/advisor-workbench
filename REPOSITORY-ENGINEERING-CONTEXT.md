@@ -1053,8 +1053,10 @@ Most relevant current governance:
 11. Shared interactive primitives own their base, priority, focus, hover, disabled, reduced-motion,
     and accessibility presentation beside the component. `ActionButton` keeps stable compatibility
     class names only for existing feature-level sizing and placement; global CSS must not regain its
-    base or state contract. Disabled actions remain native `disabled`, visually unambiguous, and
-    protected from hover overrides across primary, secondary, and quiet priorities. When migrating
+    base or state contract. Permanently unavailable actions remain native `disabled`. A mounted
+    async control may use focus-preserving `aria-disabled` only through `ActionButton`, which
+    centrally suppresses activation and applies the same unambiguous disabled and hover treatment
+    across primary, secondary, and quiet priorities. When migrating
     a shared primitive out of legacy global CSS, remove duplicate selectors and ratchet the governed
     global line and normalized-byte budgets in the same issue-backed change.
 12. Dead presentation cleanup requires an exact production, test, and selector consumer map. Delete
