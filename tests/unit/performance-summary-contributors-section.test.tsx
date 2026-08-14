@@ -96,11 +96,19 @@ describe("PerformanceSummaryContributorsSection", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Contributor driver strip")).not.toBeInTheDocument();
     const contributionEvidenceNote = screen.getByRole("note");
-    expect(contributionEvidenceNote).toHaveTextContent("Source economics: SOURCE_LIMITED");
-    expect(contributionEvidenceNote).toHaveTextContent("Smoothing: APPLIED");
+    expect(contributionEvidenceNote).toHaveTextContent("Contribution coverage is limited");
     expect(contributionEvidenceNote).toHaveTextContent(
-      "Source reasons: LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+      "Not source-authored: income effects and tax effects."
     );
+    fireEvent.click(within(contributionEvidenceNote).getByText("Calculation evidence"));
+    const calculationEvidence = within(contributionEvidenceNote).getByLabelText(
+      "Contribution calculation evidence"
+    );
+    expect(within(calculationEvidence).getByText("SOURCE_LIMITED")).toBeInTheDocument();
+    expect(within(calculationEvidence).getByText("APPLIED")).toBeInTheDocument();
+    expect(within(calculationEvidence).getByText(
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+    )).toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();
 

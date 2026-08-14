@@ -465,6 +465,30 @@ test.describe('Performance workbench smoke', () => {
 
     await expectContributorGroupsToRemainSeparate(page);
 
+    const contributionEvidenceNote = page.getByTestId('performance-contribution-evidence');
+    await expect(contributionEvidenceNote).toBeVisible();
+    await expect(contributionEvidenceNote).toContainText('Contribution coverage is limited');
+    await expect(contributionEvidenceNote).toContainText(
+      'Not source-authored: income effects and tax effects.',
+    );
+    const calculationEvidenceSummary = contributionEvidenceNote
+      .locator('summary')
+      .filter({ hasText: 'Calculation evidence' });
+    const calculationEvidenceDisclosure = calculationEvidenceSummary.locator('xpath=ancestor::details[1]');
+    await expect(calculationEvidenceDisclosure).not.toHaveAttribute('open');
+    await calculationEvidenceSummary.focus();
+    await page.keyboard.press('Enter');
+    await expect(calculationEvidenceSummary).toBeFocused();
+    await expect(calculationEvidenceDisclosure).toHaveAttribute('open');
+    const calculationEvidence = contributionEvidenceNote.getByLabel(
+      'Contribution calculation evidence',
+    );
+    await expect(calculationEvidence).toContainText('SOURCE_LIMITED');
+    await expect(calculationEvidence).toContainText('APPLIED');
+    await expect(calculationEvidence).toContainText(
+      'LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED',
+    );
+
     const chartMetrics = await measureElement(page.locator('.performance-chart-stage'));
     expect(chartMetrics.height).toBeLessThanOrEqual(1300);
     expect(chartMetrics.width).toBeGreaterThan(900);
@@ -486,6 +510,13 @@ test.describe('Performance workbench smoke', () => {
       await expect(horizonChoices).toBeVisible();
       await driversModule.scrollIntoViewIfNeeded();
       await expectContributorGroupsToRemainSeparate(page);
+      await expect(calculationEvidenceSummary).toBeVisible();
+      await expect(calculationEvidence).toBeVisible();
+      const evidenceOverflow = await calculationEvidence.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      expect(evidenceOverflow.scrollWidth - evidenceOverflow.clientWidth).toBeLessThanOrEqual(1);
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
