@@ -9,6 +9,7 @@ const {
   buildReportCentreProofPosture,
   classifyAttributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
+  classifyRegisteredPanelScreenshotState,
   createBrowserValidationHelpers,
   classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
@@ -35,6 +36,10 @@ const {
     | "ready_empty_state";
   classifyPerformanceEvidenceScreenshotState: (
     assuranceState: string | null,
+  ) => "demo_ready" | "truthfully_degraded";
+  classifyRegisteredPanelScreenshotState: (
+    panelState: string | null,
+    requiredSupportState: string | null,
   ) => "demo_ready" | "truthfully_degraded";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   classifyAdvisorBriefAcceptProofPosture: (
@@ -68,6 +73,18 @@ describe("live validation browser workflow helpers", () => {
   ] as const)("classifies %s evidence screenshot posture as %s", (state, expected) => {
     expect(classifyPerformanceEvidenceScreenshotState(state)).toBe(expected);
   });
+
+  it.each([
+    ["ready", "ready", "demo_ready"],
+    ["partial", "partial", "demo_ready"],
+    ["partial", "ready", "truthfully_degraded"],
+    [null, "ready", "truthfully_degraded"],
+  ] as const)(
+    "classifies panel state %s against required state %s as %s",
+    (panelState, requiredState, expected) => {
+      expect(classifyRegisteredPanelScreenshotState(panelState, requiredState)).toBe(expected);
+    }
+  );
 
   it.each([
     [{ detailTableCount: 1, summaryTableCount: 0, partialFallbackCount: 0, readyEmptyStateCount: 0 }, "detail_rows"],
@@ -311,6 +328,9 @@ describe("live validation browser workflow helpers", () => {
     const summary = {
       uiChecks: [],
       screenshots: [],
+      panelClassifications: [
+        { panel: "performance.risk.snapshot", state: "partial" },
+      ],
     };
     const panelRegistryById = new Map([
       [
@@ -318,6 +338,7 @@ describe("live validation browser workflow helpers", () => {
         {
           screenshotName: "performance-risk-live.png",
           route: "/performance?portfolioId={portfolio_id}&mode=risk&benchmark={benchmarkCode}",
+          requiredSupportState: "ready",
         },
       ],
     ]);
@@ -392,7 +413,7 @@ describe("live validation browser workflow helpers", () => {
           portfolioId: "PB_SG_GLOBAL_BAL_001",
           benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
           asOfDate: "2026-04-10",
-          state: "demo_ready",
+          state: "truthfully_degraded",
         }),
       ]);
     } finally {
