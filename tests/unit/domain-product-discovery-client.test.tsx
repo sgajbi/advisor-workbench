@@ -79,6 +79,31 @@ describe("DomainProductDiscoveryClient", () => {
     expect(screen.queryByText("Live assurance is temporarily unavailable")).not.toBeInTheDocument();
   });
 
+  it("fences repeated assurance retries while the source request is still pending", async () => {
+    const discovery = buildDiscovery();
+    let resolveTrust!: (value: DomainProductTrustCertificationData) => void;
+    const pendingTrust = new Promise<DomainProductTrustCertificationData>((resolve) => {
+      resolveTrust = resolve;
+    });
+    getDomainProductTrustCertificationMock
+      .mockRejectedValueOnce(new Error("trust unavailable"))
+      .mockImplementationOnce(() => pendingTrust);
+
+    renderDiscovery();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Retry assurance" }));
+    const pendingControl = await screen.findByRole("button", { name: "Refresh assurance" });
+    await waitFor(() => expect(pendingControl).toHaveAttribute("aria-disabled", "true"));
+    fireEvent.click(pendingControl);
+
+    expect(getDomainProductTrustCertificationMock).toHaveBeenCalledTimes(2);
+    resolveTrust(discovery.trustCertification);
+    await waitFor(() => {
+      expect(screen.getByText(/Live assurance confirmed/)).toBeInTheDocument();
+    });
+    expect(getDomainProductTrustCertificationMock).toHaveBeenCalledTimes(2);
+  });
+
   it("keeps the catalogue usable when dependency impact fails and supports recovery", async () => {
     const discovery = buildDiscovery();
     getDomainProductDependencyGraphMock
