@@ -107,11 +107,12 @@ Current repository posture:
    source retry to the last valid page before publishing ready state when a shrinking book makes a
    requested offset invalid.
    Recent request history keeps one source-backed row model across responsive presentations. Use
-   the semantic comparison table when the Report Centre owns sufficient width; at 760 pixels or
-   narrower, use the shared operational-record pattern so report identity, lifecycle explanation,
+   the semantic comparison table when the Report Centre owns at least 760 pixels of content width;
+   below that capacity, use the shared operational-record pattern so report identity, lifecycle explanation,
    report date, requested time, and keyboard/touch-accessible support reference remain discoverable
    without nested horizontal scrolling. Loading, empty, restricted, and error posture must remain
-   explicit in both presentations; never hide a business field merely to make a compact layout fit.
+   explicit in both presentations. During background refresh, retain the last source-confirmed rows
+   with one shared live status; never hide a business field merely to make a compact layout fit.
    Output readiness is source-owned by format; structured data may be ready while governed PDF
    creation is unavailable. Report-data completion does not imply archive, advisor approval, client
    delivery, or communication. The Workbench BFF strips browser reporting authority headers and

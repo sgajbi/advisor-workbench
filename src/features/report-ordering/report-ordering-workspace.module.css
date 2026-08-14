@@ -603,7 +603,16 @@
   white-space: normal;
 }
 
+.historyResponsive {
+  container-name: report-request-history;
+  container-type: inline-size;
+}
+
 .historyCompact {
+  display: block;
+}
+
+.historyDesktop {
   display: none;
 }
 
@@ -642,15 +651,17 @@
   }
 }
 
-@media (max-width: 760px) {
+@container report-request-history (min-width: 760px) {
   .historyDesktop {
-    display: none;
-  }
-
-  .historyCompact {
     display: block;
   }
 
+  .historyCompact {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
   .choiceHeading,
   .workflowManagedHeading,
   .railHeading {
