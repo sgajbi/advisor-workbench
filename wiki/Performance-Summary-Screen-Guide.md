@@ -82,6 +82,12 @@ current only after the matching summary and detail contracts both confirm the re
 - Keeps positive and negative contributor groups visually distinct through component-container
   reflow: the groups compare side by side only when Performance Drivers owns enough width and stack
   without overlap when the surrounding workstation rails reduce its usable canvas.
+- Leads Performance Drivers supportability with one advisor-readable coverage conclusion, the
+  client-use implication, market-value coverage, weighting basis, reconciliation, and named
+  exclusions. Exact source status, reason codes, contracts, economics, snapshots, smoothing, and
+  reconciliation remain in the native **Calculation evidence** disclosure.
+- Treats absent, inconsistent, or unrecognised source and methodology evidence as **needs review**;
+  Workbench never converts an unknown code into a favourable business interpretation.
 - Preserves capability, warning, partial-failure, benchmark, calculation, and lineage posture
   without manufacturing unavailable analytics.
 - Treats a selection change as one atomic decision-context transaction: requested labels, figures,
@@ -118,7 +124,7 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | Portfolio identity, base currency, booking context, and selected mandate | Formats the selected workspace and navigation context | Gateway over Core portfolio contracts |
 | Reporting window, return basis, frequency, benchmark options, portfolio return, benchmark return, active return, annualised return, and cash-flow-aware return | Validates and presents the returned contract; does not recalculate performance | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/summary`, composing Core portfolio/reference/benchmark context with Performance analytics |
 | Return-path observations and source capability posture | Selects and charts returned observations without interpolating missing values | Gateway performance details contract |
-| Contribution rows, dimensions, coverage, attribution support, warnings, and partial failures | Builds decision-focused ranking and status presentation from returned evidence | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
+| Contribution rows, dimensions, coverage, source-economics and smoothing status, reason codes, contracts, snapshots, attribution support, warnings, and partial failures | Builds decision-focused ranking and a business-first supportability conclusion from the same returned evidence; preserves exact technical values in **Calculation evidence** and fails closed for unknown values | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Zero, one, or multiple horizon observations | Chooses a truthful empty, exact-table, or comparison presentation without manufacturing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` over Performance authority |
 | Horizon loading, failure, permission block, exact retry, success-only cache, and obsolete-request fencing | Owns browser request state independently from Summary selection confirmation | Workbench over the matching Gateway response |
 | Pending, failed, requested, and source-confirmed selection context | Owns the browser transaction state; never relabels retained source data | Workbench over the matching Gateway responses |
@@ -137,6 +143,8 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | Selection pending | Requested and source-confirmed contexts shown separately; prior figures keep their confirmed labels and controls are locked | Wait for both summary and detail confirmation |
 | Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
 | Partial or limited | Usable facts remain visible with named capability, warning, or partial-failure evidence | Qualify the discussion and investigate the named source limitation |
+| Source-limited contribution | **Contribution coverage is limited**, named business exclusions, market-value coverage, weighting basis, and reconciliation; exact codes remain secondary | Review the exclusions and calculation evidence before using the driver explanation with a client |
+| Unknown or missing contribution evidence | **Contribution evidence needs review** or **Contribution coverage cannot be confirmed** without an invented translation | Open **Calculation evidence**, retain the exact value, and use the approved support path |
 | Normalised selection | Workbench explains that the source resolved a different supported analytical option | Use the displayed source-confirmed option |
 | Horizon request failed | Persistent **Horizon comparison could not be refreshed**, source response status when known, and **Refresh comparison** | Retry the exact request; do not interpret failure as no data |
 | Horizon permission blocked | **Horizon comparison restricted** without restricted detail or stale cached evidence | Use an entitled role or approved support path |
@@ -162,10 +170,9 @@ Performance Summary deliberately does not:
   source authority,
 - claim advisor-book aggregation, household performance, composite reporting, official performance
   sign-off, client-ready publication, production entitlement, or bank certification,
-- use source codes or implementation topology as a substitute for business interpretation. The
-  current Performance Drivers support note still exposes raw source-economics status and reason
-  codes; [Workbench #712](https://github.com/sgajbi/lotus-workbench/issues/712) owns moving that
-  detail behind an advisor-readable coverage explanation without suppressing source truth.
+- use source codes or implementation topology as a substitute for business interpretation, hide
+  exact source or methodology evidence, translate an unknown value optimistically, or derive the
+  business and technical layers from different payloads.
 
 Official wealth-platform research informed the integrated decision context, cross-horizon review,
 and evidence-first recovery pattern. Lotus does not copy another product's layout, wording, visual
@@ -211,6 +218,12 @@ superiority.
   internal horizontal overflow at 1800, 1440, 1024, 768, and 519 pixels; reviewed evidence under
   `output/playwright/issue-706-performance-*` confirms stacked three-rail workstation and compact
   layouts plus a dense two-column tablet layout when the module itself has sufficient width.
+- The contribution-evidence state matrix proves source-backed, source-limited, missing,
+  unrecognised-code, and invalid-smoothing postures. The populated optimized-production journey
+  proves the business conclusion is primary, keyboard access keeps focus on the native disclosure,
+  exact codes remain available, and the open evidence grid has no internal or page overflow at
+  1440, 1024, 768, and 519 pixels. Reviewed evidence is stored under
+  `output/playwright/issue-712-performance-evidence-*`.
 - Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
   controls.
 
@@ -222,7 +235,10 @@ governed validation sequence.
 Confirm the selected portfolio, visible reporting window, net or gross basis, observation
 frequency, benchmark, and whether the screen says **Updating source analysis**, **Selection not
 applied**, **Horizon comparison could not be refreshed**, **Partial**, **Unavailable**, or **Access
-restricted**. If a failed-selection card is present, record its requested context,
+restricted**. If Performance Drivers says its contribution coverage is limited, unavailable, or
+needs review, open **Calculation evidence** and record the source status, source contracts,
+unsupported or degraded economics, smoothing status, and reconciliation without rewording the
+exact codes. If a failed-selection card is present, record its requested context,
 source-confirmed context, and HTTP status. For Horizon Comparison, record the selected period,
 basis, frequency, and benchmark. Do not copy client data or raw payloads into an unapproved
 channel; retry once through the matching in-context control.
