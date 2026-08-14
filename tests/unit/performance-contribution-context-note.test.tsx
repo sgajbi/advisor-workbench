@@ -184,6 +184,24 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
   });
 
+  it("does not round sub-threshold market-value coverage into the confirmed range", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          coverage_mv_pct: 94.999,
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "limited");
+    expect(note).toHaveTextContent("<95.00% of market value covered");
+    expectEvidenceValue(openCalculationEvidence(), "Market-value coverage", "94.999%");
+  });
+
   it("keeps source-limited evidence review-only when market-value coverage is absent", () => {
     render(
       <PerformanceContributionContextNote
@@ -504,6 +522,9 @@ describe("PerformanceContributionContextNote", () => {
     expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
       "Contribution reconciliation needs review",
     );
+    const evidence = openCalculationEvidence();
+    expectEvidenceValue(evidence, "Portfolio contribution", "5.1%");
+    expectEvidenceValue(evidence, "Portfolio return", "5.42%");
   });
 
   it("keeps missing evidence explicit instead of implying source completeness", () => {
