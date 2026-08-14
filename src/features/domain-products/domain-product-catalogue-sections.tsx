@@ -109,7 +109,12 @@ function ProductCard({
   trustAvailability: SourceAvailability;
 }) {
   const trustState = getProductTrustLabel(trust, trustAvailability);
-  const trustTone = trust ? getTrustTone(trust.certificationState) : "default";
+  const trustTone =
+    trustAvailability === "retained"
+      ? "warn"
+      : trust
+        ? getTrustTone(trust.certificationState)
+        : "default";
 
   return (
     <article className={styles.productCard}>

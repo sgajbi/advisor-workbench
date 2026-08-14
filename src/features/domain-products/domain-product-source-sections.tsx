@@ -79,6 +79,21 @@ function TrustEvidence({
   data: DomainProductTrustCertificationData;
   hasRefreshFailure: boolean;
 }) {
+  if (hasRefreshFailure) {
+    return (
+      <ScreenStatePanel
+        kind="partial"
+        title="The latest assurance refresh did not complete"
+        body={
+          data.trustAvailable
+            ? "Previously confirmed assurance remains visible and is clearly retained as earlier evidence."
+            : "The earlier source response reported assurance unavailable; no certified posture has been substituted."
+        }
+        hint={`Last confirmed ${formatDateTime(data.generatedAtUtc)}.`}
+      />
+    );
+  }
+
   if (!data.trustAvailable) {
     return (
       <ScreenStatePanel
@@ -86,17 +101,6 @@ function TrustEvidence({
         title="Live assurance has not been confirmed"
         body={data.unavailableReason ?? "The source did not provide current certification evidence."}
         hint="The catalogue remains available, but assurance fields are shown as unavailable."
-      />
-    );
-  }
-
-  if (hasRefreshFailure) {
-    return (
-      <ScreenStatePanel
-        kind="partial"
-        title="The latest assurance refresh did not complete"
-        body="Previously confirmed assurance remains visible and is clearly retained as earlier evidence."
-        hint={`Last confirmed ${formatDateTime(data.generatedAtUtc)}.`}
       />
     );
   }
@@ -177,8 +181,18 @@ export function DependencyGraphSection({
         <WorkbenchSummaryMetricStrip
           ariaLabel="Dependency impact summary"
           items={[
-            { key: "nodes", label: "Products and consumers", value: data.nodeCount },
-            { key: "edges", label: "Relationships", value: data.edgeCount },
+            {
+              key: "nodes",
+              label: "Products and consumers",
+              value: data.nodeCount,
+              support: hasError ? "Earlier confirmed evidence" : "Current source evidence",
+            },
+            {
+              key: "edges",
+              label: "Relationships",
+              value: data.edgeCount,
+              support: hasError ? "Earlier confirmed evidence" : "Current source evidence",
+            },
             {
               key: "fail-closed",
               label: "Fail-closed relationships",

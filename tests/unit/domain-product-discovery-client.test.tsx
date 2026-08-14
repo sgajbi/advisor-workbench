@@ -141,6 +141,10 @@ describe("DomainProductDiscoveryClient", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByText("Portfolio State Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Assurance refresh failed")).toBeInTheDocument();
+    expect(screen.getAllByText("Earlier source evidence").length).toBeGreaterThan(0);
+    expect(screen.getByText("Certified · earlier evidence")).toBeInTheDocument();
+    expect(screen.getByText("Current", { selector: "dd" })).toBeInTheDocument();
     expect(screen.queryByText("refresh failed")).not.toBeInTheDocument();
   });
 
