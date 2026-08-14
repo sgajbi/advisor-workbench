@@ -12,10 +12,6 @@ const SOURCE_LIMITATION_REASON_CODES = [
   "UNCLASSIFIED_POSITION_ECONOMICS_PRESENT",
   "MISSING_FX",
   "MISSING_LOCAL_ECONOMICS",
-] as const;
-
-const SOURCE_LINEAGE_REASON_CODES = [
-  "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
   "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
 ] as const;
 
@@ -70,6 +66,10 @@ function isSourceEvidenceConsistent(
   const hasCallerSuppliedReason = reasonCodes.includes(
     "STATELESS_CALLER_SUPPLIED_SOURCE_ECONOMICS",
   );
+  const hasContradictoryEconomics = hasOverlappingValues(
+    sourceEvidence?.available_economics ?? [],
+    sourceEvidence?.unsupported_economics ?? [],
+  );
   const hasSupportedDeclaredLimitations = hasReasonEvidenceForDeclaredLimitations(
     sourceEvidence?.unsupported_economics ?? [],
     sourceEvidence?.degraded_economics ?? [],
@@ -82,20 +82,28 @@ function isSourceEvidenceConsistent(
         !hasDeclaredLimitations &&
         !hasLimitationReason &&
         !hasCallerSuppliedReason &&
+        !hasContradictoryEconomics &&
         reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED") &&
-        SOURCE_LINEAGE_REASON_CODES.some((reasonCode) => reasonCodes.includes(reasonCode))
+        reasonCodes.includes("UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE")
       );
     case "SOURCE_LIMITED":
       return (
         hasDeclaredLimitations &&
         hasSupportedDeclaredLimitations &&
-        !hasCallerSuppliedReason
+        !hasCallerSuppliedReason &&
+        !hasContradictoryEconomics &&
+        reasonCodes.includes("LOTUS_CORE_ANALYTICS_INPUTS_USED")
       );
     case "CALLER_SUPPLIED":
       return hasCallerSuppliedReason;
     default:
       return false;
   }
+}
+
+function hasOverlappingValues(left: string[], right: string[]): boolean {
+  const rightValues = new Set(right);
+  return left.some((value) => rightValues.has(value));
 }
 
 function hasReasonEvidenceForDeclaredLimitations(
@@ -210,7 +218,9 @@ function isPublishedContributionReconciled(
     isWithinReconciliationTolerance(portfolioContribution, portfolioReturn) &&
     isWithinReconciliationTolerance(finalContribution, linkedReturn) &&
     isWithinReconciliationTolerance(finalContribution, portfolioContribution) &&
-    isWithinReconciliationTolerance(smoothingResidual, 0)
+    isWithinReconciliationTolerance(smoothingResidual, 0) &&
+    (smoothingStatus !== "NOT_REQUESTED" ||
+      isWithinReconciliationTolerance(rawContribution, finalContribution))
   );
 }
 
