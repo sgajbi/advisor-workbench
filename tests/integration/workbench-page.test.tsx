@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import WorkbenchPage from "../../src/app/workbench/[portfolioId]/page";
@@ -51,7 +51,7 @@ describe("WorkbenchPage", () => {
       "href",
       "/portfolio?portfolioId=PF_1001"
     );
-    expect(within(screenNav).getByRole("link", { name: /Manage/i })).toHaveAttribute(
+    expect(within(screenNav).getByRole("link", { name: /Mandate management/i })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -60,6 +60,9 @@ describe("WorkbenchPage", () => {
     expect(within(manageNav).getByRole("link", { name: "Overview" })).toHaveAttribute(
       "href",
       "/workbench/PF_1001"
+    );
+    fireEvent.click(
+      within(manageNav).getByRole("button", { name: /Change workflow step/i }),
     );
     expect(within(manageNav).getByRole("link", { name: "Mandate" })).toHaveAttribute(
       "href",

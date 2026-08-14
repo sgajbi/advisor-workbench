@@ -111,6 +111,27 @@ async function openPerformanceWorkbench(
   return { portfolioId, available: true };
 }
 
+async function openPerformanceWorkflowStep(
+  page: Page,
+  name: string | RegExp,
+): Promise<Locator> {
+  const navigation = page.getByLabel('Performance surface navigation');
+  const control = navigation.getByRole('button', { name });
+  if (await control.isVisible().catch(() => false)) {
+    return control;
+  }
+
+  const changeStep = navigation.getByRole('button', {
+    name: /Change workflow step/i,
+  });
+  await expect(changeStep).toBeVisible();
+  if ((await changeStep.getAttribute('aria-expanded')) !== 'true') {
+    await changeStep.click();
+  }
+  await expect(control).toBeVisible();
+  return control;
+}
+
 function getExecutiveMetric(executiveStrip: Locator, label: string): Locator {
   return executiveStrip.getByText(label, { exact: true }).locator('..');
 }
@@ -487,9 +508,10 @@ test.describe('Performance workbench smoke', () => {
     );
     await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
 
-    const analysisTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisTab = await openPerformanceWorkflowStep(
+      page,
+      /^Performance Analysis/i,
+    );
     const analysisNavigation = page.waitForResponse(
       (response) =>
         response.url().includes('/performance?') &&
@@ -587,9 +609,10 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const analysisTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisTab = await openPerformanceWorkflowStep(
+      page,
+      /^Performance Analysis/i,
+    );
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
@@ -674,9 +697,10 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     expect(session.available).toBe(true);
 
-    const analysisTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisTab = await openPerformanceWorkflowStep(
+      page,
+      /^Performance Analysis/i,
+    );
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
@@ -761,9 +785,10 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     expect(session.available).toBe(true);
 
-    const analysisTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisTab = await openPerformanceWorkflowStep(
+      page,
+      /^Performance Analysis/i,
+    );
     await analysisTab.click();
 
     const evidence = page.getByTestId('attribution-trend-evidence');
@@ -893,9 +918,7 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const advisorTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Advisor Brief/i });
+    const advisorTab = await openPerformanceWorkflowStep(page, /^Advisor Brief/i);
     await advisorTab.click();
     await expect(advisorTab).toHaveAttribute('aria-current', 'page');
 
@@ -954,10 +977,7 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     expect(session.available).toBe(true);
 
-    await page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Advisor Brief/i })
-      .click();
+    await (await openPerformanceWorkflowStep(page, /^Advisor Brief/i)).click();
 
     const review = page.getByLabel('Advisor brief human review');
     await expect(review).toBeVisible();
@@ -1036,9 +1056,10 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const analysisTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Performance Analysis/i });
+    const analysisTab = await openPerformanceWorkflowStep(
+      page,
+      /^Performance Analysis/i,
+    );
     await expect(analysisTab).toBeVisible();
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
@@ -1148,9 +1169,7 @@ test.describe('Performance workbench smoke', () => {
     }
     const posture = await loadSummaryPosture(request, session.portfolioId);
 
-    const evidenceTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Evidence/i });
+    const evidenceTab = await openPerformanceWorkflowStep(page, /^Evidence/i);
     if (posture.capabilities.evidence === 'unavailable') {
       await expect(evidenceTab).toBeDisabled();
       await expect(evidenceTab).toContainText('Unavailable');
@@ -1214,9 +1233,7 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     expect(session.available).toBe(true);
 
-    const evidenceTab = page
-      .getByLabel('Performance surface navigation')
-      .getByRole('button', { name: /^Evidence/i });
+    const evidenceTab = await openPerformanceWorkflowStep(page, /^Evidence/i);
     await expect(evidenceTab).toBeEnabled();
     await evidenceTab.click();
 

@@ -155,7 +155,9 @@ test.describe('UI smoke checks', () => {
 
     await currentView.click();
     await expect(navigation).toBeVisible();
-    const activeIncomeLink = navigation.getByRole('link', { name: /Income Income and activity/i });
+    const activeIncomeLink = navigation.getByRole('link', {
+      name: /Income and activity Booked income, fees, and taxes/i,
+    });
     await expect(activeIncomeLink).toHaveAttribute('aria-current', 'page');
     await activeIncomeLink.focus();
     await activeIncomeLink.press('Escape');

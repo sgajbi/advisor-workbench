@@ -77,6 +77,21 @@ describe("PerformanceWorkspaceView", () => {
     return render(<Harness />);
   }
 
+  function getWorkflowControl(name: string | RegExp) {
+    const visibleControl = screen.queryByRole("button", { name });
+    if (visibleControl) {
+      return visibleControl;
+    }
+
+    const changeStep = screen.getByRole("button", {
+      name: /Change workflow step/i,
+    });
+    if (changeStep.getAttribute("aria-expanded") !== "true") {
+      fireEvent.click(changeStep);
+    }
+    return screen.getByRole("button", { name });
+  }
+
   it("keeps summary mode as the only mounted mode on initial render", async () => {
     const scenario = buildSupportedPerformanceScenario();
 
@@ -105,7 +120,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
+    expect(getWorkflowControl(/^Evidence/i)).toBeDisabled();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
   });
 
@@ -134,8 +149,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    fireEvent.click(screen.getByRole("button", { name: "Performance Overview" }));
-    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
+    fireEvent.click(getWorkflowControl("Performance Overview"));
+    expect(getWorkflowControl(/^Evidence/i)).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
   });
@@ -145,8 +160,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("button", { name: /^Performance Analysis/i })).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    expect(getWorkflowControl(/^Performance Analysis/i)).not.toBeDisabled();
+    fireEvent.click(getWorkflowControl(/^Performance Analysis/i));
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
@@ -157,7 +172,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace, isDetailsPending: true });
 
-    const analysisButton = screen.getByRole("button", { name: /^Performance Analysis/i });
+    const analysisButton = getWorkflowControl(/^Performance Analysis/i);
     expect(analysisButton).not.toBeDisabled();
     expect(analysisButton).toHaveAttribute("title", "Analysis availability is loading.");
     expect(screen.getByText("Loading")).toBeInTheDocument();
@@ -262,7 +277,8 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
     expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Positions/i })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
+    expect(screen.getByRole("link", { name: /Holdings/i })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PF_1001"
     );
@@ -272,6 +288,7 @@ describe("PerformanceWorkspaceView", () => {
     );
     expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Change workflow step/i }));
     expect(
       screen.queryByText(
         "Review benchmark-aware outcome, horizon comparisons, and contributor leadership in one governed performance surface before moving into deeper analysis."
@@ -305,7 +322,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Risk Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(getWorkflowControl(/^Performance Analysis/i));
     expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     expect(analysisModeMock).toHaveBeenCalled();
     expect(analysisModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
@@ -316,7 +333,7 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Risk Review/i }));
+    fireEvent.click(getWorkflowControl(/^Risk Review/i));
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });
@@ -332,8 +349,8 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Evidence/i }));
-    expect(screen.getByRole("button", { name: /^Evidence/i })).toBeDisabled();
+    fireEvent.click(getWorkflowControl(/^Evidence/i));
+    expect(getWorkflowControl(/^Evidence/i)).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
     expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();

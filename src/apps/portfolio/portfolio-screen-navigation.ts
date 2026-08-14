@@ -17,29 +17,138 @@ export type PortfolioScreenNavigationItem = {
   label: string;
   detail: string;
   href: string;
+  group: PortfolioScreenNavigationGroupKey;
+  primary: boolean;
 };
 
+export type PortfolioScreenNavigationGroupKey =
+  | "portfolio-records"
+  | "analytics"
+  | "advice"
+  | "operations";
+
+export type PortfolioScreenNavigationGroup = {
+  key: PortfolioScreenNavigationGroupKey;
+  label: string;
+  items: PortfolioScreenNavigationItem[];
+};
+
+export type PortfolioScreenNavigationModel = {
+  primaryItems: PortfolioScreenNavigationItem[];
+  currentTask: PortfolioScreenNavigationItem | null;
+  directoryGroups: PortfolioScreenNavigationGroup[];
+};
+
+export type PortfolioScreenRailModeItem = {
+  key: string;
+  label: string;
+  detail: string;
+  active: boolean;
+  disabled?: boolean;
+  status?: string;
+  title?: string;
+  href?: string;
+  onSelect?: () => void;
+};
+
+const PORTFOLIO_SCREEN_NAVIGATION_GROUPS: ReadonlyArray<{
+  key: PortfolioScreenNavigationGroupKey;
+  label: string;
+}> = [
+  { key: "portfolio-records", label: "Portfolio records" },
+  { key: "analytics", label: "Analysis" },
+  { key: "advice", label: "Advice and proposals" },
+  { key: "operations", label: "Client service" },
+];
+
 const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
-  { key: "portfolio", label: "Portfolio", detail: "Review and decision context", href: "/portfolio" },
-  { key: "allocation", label: "Allocation", detail: "Composition, exposure, and concentration", href: "/allocation" },
-  { key: "positions", label: "Positions", detail: "Holdings, valuation, and P&L", href: "/positions" },
-  { key: "transactions", label: "Transactions", detail: "Booked activity and settlement", href: "/transactions" },
-  { key: "income", label: "Income", detail: "Income and activity", href: "/income" },
-  { key: "cashflow", label: "Cashflow", detail: "Expected cash movements", href: "/cashflow" },
-  { key: "performance", label: "Performance", detail: "Return and attribution workspace", href: "/performance" },
-  { key: "risk", label: "Risk", detail: "Risk review workspace", href: "/performance?mode=risk" },
-  { key: "proposal", label: "Proposal", detail: "Proposal lifecycle", href: "/proposals" },
+  {
+    key: "portfolio",
+    label: "Portfolio review",
+    detail: "Mandate and decision context",
+    href: "/portfolio",
+    group: "portfolio-records",
+    primary: true,
+  },
+  {
+    key: "allocation",
+    label: "Allocation",
+    detail: "Composition and concentration",
+    href: "/allocation",
+    group: "portfolio-records",
+    primary: false,
+  },
+  {
+    key: "positions",
+    label: "Holdings",
+    detail: "Valuation and profit or loss",
+    href: "/positions",
+    group: "portfolio-records",
+    primary: false,
+  },
+  {
+    key: "transactions",
+    label: "Transactions",
+    detail: "Booked activity and settlement",
+    href: "/transactions",
+    group: "portfolio-records",
+    primary: false,
+  },
+  {
+    key: "income",
+    label: "Income and activity",
+    detail: "Booked income, fees, and taxes",
+    href: "/income",
+    group: "portfolio-records",
+    primary: false,
+  },
+  {
+    key: "cashflow",
+    label: "Cash movements",
+    detail: "Expected portfolio cash movement",
+    href: "/cashflow",
+    group: "portfolio-records",
+    primary: false,
+  },
+  {
+    key: "performance",
+    label: "Performance",
+    detail: "Returns and attribution",
+    href: "/performance",
+    group: "analytics",
+    primary: true,
+  },
+  {
+    key: "risk",
+    label: "Risk",
+    detail: "Exposure and risk review",
+    href: "/performance?mode=risk",
+    group: "analytics",
+    primary: false,
+  },
+  {
+    key: "proposal",
+    label: "Proposals",
+    detail: "Advice lifecycle and approvals",
+    href: "/proposals",
+    group: "advice",
+    primary: false,
+  },
   {
     key: "advisory",
-    label: "Advisory",
-    detail: "Advisor brief and recommendations",
+    label: "Advice",
+    detail: "Priorities and recommendations",
     href: "/recommendations",
+    group: "advice",
+    primary: true,
   },
   {
     key: "reports",
-    label: "Reports",
-    detail: "Order, monitor, and retrieve",
+    label: "Reporting",
+    detail: "Order and monitor reports",
     href: "/reports",
+    group: "operations",
+    primary: true,
   },
 ];
 
@@ -53,11 +162,31 @@ export function buildPortfolioScreenNavigationItems(
     })),
     {
       key: "manage",
-      label: "Manage",
-      detail: "Mandates and advisor workflow",
+      label: "Mandate management",
+      detail: "Mandate and operating workflow",
       href: `/workbench/${encodeURIComponent(portfolioId)}`,
+      group: "operations",
+      primary: true,
     },
   ];
+}
+
+export function buildPortfolioScreenNavigationModel(
+  portfolioId: string,
+  activeScreen: PortfolioScreenNavigationKey,
+): PortfolioScreenNavigationModel {
+  const items = buildPortfolioScreenNavigationItems(portfolioId);
+  const primaryItems = items.filter((item) => item.primary);
+  const activeItem = items.find((item) => item.key === activeScreen) ?? null;
+
+  return {
+    primaryItems,
+    currentTask: activeItem?.primary ? null : activeItem,
+    directoryGroups: PORTFOLIO_SCREEN_NAVIGATION_GROUPS.map((group) => ({
+      ...group,
+      items: items.filter((item) => !item.primary && item.group === group.key),
+    })).filter((group) => group.items.length > 0),
+  };
 }
 
 export function buildPortfolioScreenHref(href: string, portfolioId: string) {

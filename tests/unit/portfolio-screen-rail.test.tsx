@@ -90,10 +90,18 @@ describe("PortfolioScreenRail", () => {
       "data-navigation-state",
       "collapsed",
     );
-    expect(screen.getByRole("link", { name: /income income and activity/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /income and activity booked income/i })).toHaveAttribute(
       "aria-current",
       "page",
     );
+    expect(
+      screen.getByRole("group", { name: "Primary workspaces" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /all workspaces/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
   });
 
   it("opens with native button behavior and closes after destination selection", () => {
@@ -113,7 +121,8 @@ describe("PortfolioScreenRail", () => {
     expect(disclosure).toHaveAttribute("aria-expanded", "true");
     expect(navigation).toHaveAttribute("data-navigation-state", "expanded");
 
-    fireEvent.click(within(navigation).getByRole("link", { name: /positions/i }));
+    fireEvent.click(screen.getByRole("button", { name: /all workspaces/i }));
+    fireEvent.click(within(navigation).getByRole("link", { name: /holdings/i }));
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(navigation).toHaveAttribute("data-navigation-state", "collapsed");
@@ -129,12 +138,88 @@ describe("PortfolioScreenRail", () => {
 
     const disclosure = screen.getByRole("button", { name: /current view income/i });
     fireEvent.click(disclosure);
-    const positionsLink = screen.getByRole("link", { name: /positions/i });
-    positionsLink.focus();
-    fireEvent.keyDown(positionsLink, { key: "Escape" });
+    const performanceLink = screen.getByRole("link", { name: /performance/i });
+    performanceLink.focus();
+    fireEvent.keyDown(performanceLink, { key: "Escape" });
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(disclosure).toHaveFocus();
+  });
+
+  it("reveals the grouped workspace directory and restores disclosure focus on Escape", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="income"
+      />,
+    );
+
+    const allWorkspaces = screen.getByRole("button", { name: /all workspaces/i });
+    fireEvent.click(allWorkspaces);
+
+    expect(allWorkspaces).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Portfolio records")).toBeInTheDocument();
+    expect(screen.getByText("Analysis")).toBeInTheDocument();
+    expect(screen.getByText("Advice and proposals")).toBeInTheDocument();
+    const holdingsLink = screen.getByRole("link", { name: /holdings valuation/i });
+    expect(holdingsLink).toHaveAttribute(
+      "href",
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+
+    holdingsLink.focus();
+    fireEvent.keyDown(holdingsLink, { key: "Escape" });
+
+    expect(allWorkspaces).toHaveAttribute("aria-expanded", "false");
+    expect(allWorkspaces).toHaveFocus();
+    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps only the current workflow step visible until the advisor changes it", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="advisory"
+        modeNavigationLabel="Advisory lifecycle navigation"
+        modeItems={[
+          {
+            key: "overview",
+            label: "Overview",
+            detail: "Advisor priorities",
+            active: true,
+            href: "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001",
+          },
+          {
+            key: "suitability",
+            label: "Suitability",
+            detail: "Mandate fit",
+            active: false,
+            href: "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=suitability",
+          },
+        ]}
+      />,
+    );
+
+    const workflow = screen.getByRole("group", {
+      name: "Advisory lifecycle navigation",
+    });
+    expect(within(workflow).getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(workflow).queryByRole("link", { name: "Suitability" })).not.toBeInTheDocument();
+
+    const changeStep = within(workflow).getByRole("button", {
+      name: /change workflow step/i,
+    });
+    fireEvent.click(changeStep);
+    const suitability = within(workflow).getByRole("link", { name: "Suitability" });
+    expect(suitability).toBeInTheDocument();
+
+    suitability.focus();
+    fireEvent.keyDown(suitability, { key: "Escape" });
+    expect(changeStep).toHaveFocus();
+    expect(changeStep).toHaveAttribute("aria-expanded", "false");
   });
 
   it("identifies the active nested workspace and runs its supported action", () => {
@@ -165,7 +250,7 @@ describe("PortfolioScreenRail", () => {
 
     const disclosure = screen.getByRole("button", { name: /current view mandate health/i });
     expect(disclosure).toHaveAccessibleName(
-      /current view mandate health manage · mandate controls and exceptions/i,
+      /current view mandate health mandate management · mandate controls and exceptions/i,
     );
     fireEvent.click(disclosure);
     fireEvent.click(screen.getByRole("button", { name: "Mandate health" }));

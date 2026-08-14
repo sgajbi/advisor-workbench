@@ -1,29 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
 import { Panel, Text } from "@/design-system";
-import { cx } from "@/design-system/utils/cx";
 import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
 import {
-  buildPortfolioScreenNavigationItems,
+  buildPortfolioScreenNavigationModel,
   type PortfolioScreenNavigationKey,
+  type PortfolioScreenRailModeItem,
 } from "../portfolio-screen-navigation";
+import PortfolioScreenRailNavigation from "./portfolio-screen-rail-navigation";
 import styles from "./portfolio-screen-rail.module.css";
 
-export type PortfolioScreenRailModeItem = {
-  key: string;
-  label: string;
-  detail: string;
-  active: boolean;
-  disabled?: boolean;
-  status?: string;
-  title?: string;
-  href?: string;
-  onSelect?: () => void;
-};
+export type { PortfolioScreenRailModeItem } from "../portfolio-screen-navigation";
 
 export default function PortfolioScreenRail({
   portfolioId,
@@ -37,14 +27,17 @@ export default function PortfolioScreenRail({
   modeNavigationLabel?: string;
 }) {
   const pathname = usePathname();
-  const screens = buildPortfolioScreenNavigationItems(portfolioId);
+  const navigationModel = buildPortfolioScreenNavigationModel(
+    portfolioId,
+    activeScreen,
+  );
   const [navigationExpanded, setNavigationExpanded] = useState(false);
   const navigationId = useId();
   const disclosureButtonRef = useRef<HTMLButtonElement>(null);
   const activeModeItem = modeItems?.find((item) => item.active);
-  const activeItem = screens.find(
-    (screen) => activeScreen === screen.key || pathname === screen.href,
-  );
+  const activeItem =
+    navigationModel.currentTask ??
+    navigationModel.primaryItems.find((item) => item.key === activeScreen);
   const activeLabel =
     activeModeItem?.label ?? activeItem?.label ?? "Portfolio review";
   const activeDetail = activeModeItem
@@ -99,95 +92,15 @@ export default function PortfolioScreenRail({
           </span>
         </button>
       </div>
-      <nav
+      <PortfolioScreenRailNavigation
         id={navigationId}
-        className={cx(
-          styles.navigation,
-          navigationExpanded
-            ? styles.navigationExpanded
-            : styles.navigationCollapsed,
-        )}
-        data-navigation-state={navigationExpanded ? "expanded" : "collapsed"}
-        aria-label="Workbench screen navigation"
-      >
-        {screens.map((screen) => {
-          const active =
-            activeScreen === screen.key || pathname === screen.href;
-          return (
-            <Link
-              key={screen.key}
-              href={screen.href}
-              aria-current={active ? "page" : undefined}
-              className={cx(styles.link, active && styles.linkActive)}
-              onClick={() => closeCompactNavigation()}
-            >
-              <span>{screen.label}</span>
-              <small>{screen.detail}</small>
-            </Link>
-          );
-        })}
-        {modeItems?.length ? (
-          <div
-            className={styles.subnavigation}
-            aria-label={modeNavigationLabel}
-          >
-            {modeItems.map((item) => {
-              const className = cx(
-                styles.link,
-                styles.subnavigationLink,
-                item.active && styles.linkActive,
-              );
-              const content = (
-                <>
-                  <span>{item.label}</span>
-                  <small>
-                    {item.detail}
-                    {item.status ? (
-                      <em aria-label={`Status ${item.status}`}>
-                        {item.status}
-                      </em>
-                    ) : null}
-                  </small>
-                </>
-              );
-
-              if (item.href && !item.disabled) {
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={item.active ? "page" : undefined}
-                    className={className}
-                    title={item.title}
-                    onClick={() => closeCompactNavigation()}
-                  >
-                    {content}
-                  </Link>
-                );
-              }
-
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  disabled={item.disabled}
-                  aria-label={item.label}
-                  aria-current={item.active ? "page" : undefined}
-                  className={className}
-                  title={item.title}
-                  onClick={() => {
-                    item.onSelect?.();
-                    closeCompactNavigation();
-                  }}
-                >
-                  {content}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-      </nav>
+        expanded={navigationExpanded}
+        model={navigationModel}
+        activeScreen={activeScreen}
+        modeItems={modeItems}
+        modeNavigationLabel={modeNavigationLabel}
+        onDestinationSelected={() => closeCompactNavigation()}
+      />
     </Panel>
   );
 }

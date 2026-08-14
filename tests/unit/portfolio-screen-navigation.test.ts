@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPortfolioScreenHref,
   buildPortfolioScreenNavigationItems,
+  buildPortfolioScreenNavigationModel,
 } from "../../src/apps/portfolio/portfolio-screen-navigation";
 
 describe("portfolio screen navigation", () => {
@@ -48,5 +49,46 @@ describe("portfolio screen navigation", () => {
     expect(buildPortfolioScreenHref("/performance?mode=risk", "PB_1")).toBe(
       "/performance?mode=risk&portfolioId=PB_1"
     );
+  });
+
+  it("keeps five business domains primary and groups the remaining tasks", () => {
+    const model = buildPortfolioScreenNavigationModel(
+      "PB_SG_GLOBAL_BAL_001",
+      "income",
+    );
+
+    expect(model.primaryItems.map((item) => item.key)).toEqual([
+      "portfolio",
+      "performance",
+      "advisory",
+      "reports",
+      "manage",
+    ]);
+    expect(model.currentTask).toMatchObject({
+      key: "income",
+      label: "Income and activity",
+    });
+    expect(
+      model.directoryGroups.map((group) => ({
+        key: group.key,
+        items: group.items.map((item) => item.key),
+      })),
+    ).toEqual([
+      {
+        key: "portfolio-records",
+        items: ["allocation", "positions", "transactions", "income", "cashflow"],
+      },
+      { key: "analytics", items: ["risk"] },
+      { key: "advice", items: ["proposal"] },
+    ]);
+  });
+
+  it("does not repeat a primary destination as a separate current task", () => {
+    const model = buildPortfolioScreenNavigationModel(
+      "PB_SG_GLOBAL_BAL_001",
+      "performance",
+    );
+
+    expect(model.currentTask).toBeNull();
   });
 });
