@@ -725,6 +725,28 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.queryByRole("option", { name: "UNKNOWN_ACTION" })).not.toBeInTheDocument();
   });
 
+  it.each([null, undefined, { action: "ACCEPT" }])(
+    "fails closed when the source action list drifts to %s",
+    (sourceActions) => {
+      render(
+        <AdvisorBriefReviewWorkflow
+          workflowPackRun={{
+            ...readyAdvisorBriefResponse.workflow_pack_run!,
+            allowed_review_actions: sourceActions as unknown as
+              WorkbenchAdvisorBriefWorkflowPackRun["allowed_review_actions"],
+          }}
+          feedback={{ state: "idle", message: "" }}
+          isApplying={false}
+          onApply={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByLabelText("Review decision")).not.toBeInTheDocument();
+      expect(screen.getByText(/No further review decision is currently available/))
+        .toBeInTheDocument();
+    }
+  );
+
   it("clears copy confirmation when the source note or copy posture changes", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
