@@ -54,6 +54,12 @@ export function classifyAdvisorBriefAcceptProofPosture(text, expectedReviewer) {
   return "review-action-unavailable";
 }
 
+export function classifyRegisteredPanelScreenshotState(panelState, requiredSupportState) {
+  return panelState && requiredSupportState && panelState === requiredSupportState
+    ? "demo_ready"
+    : "truthfully_degraded";
+}
+
 export function createBrowserValidationHelpers({
   outputDir,
   summary,
@@ -130,10 +136,18 @@ export function createBrowserValidationHelpers({
     if (!panelSpec.screenshotName) {
       throw new Error(`Panel '${panelId}' has no governed screenshot name.`);
     }
+    const panelClassification = summary.panelClassifications?.find(
+      (classification) => classification.panel === panelId,
+    );
     await screenshot(page, panelSpec.screenshotName, {
       route: metadata.route ?? resolveRegistryRoute(panelSpec.route),
       panel: panelId,
-      state: metadata.state,
+      state:
+        metadata.state ??
+        classifyRegisteredPanelScreenshotState(
+          panelClassification?.state,
+          panelSpec.requiredSupportState,
+        ),
     });
   }
 
