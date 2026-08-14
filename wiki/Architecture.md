@@ -43,6 +43,14 @@ from the module width, and each contribution row independently preserves readabl
 weight, value, and bar evidence. This prevents a 1440-pixel three-rail workstation from being
 mistaken for a wide content container and avoids page-specific fixes.
 
+Business interpretation and technical evidence also have one presentation owner. A feature-level
+pure model derives both layers from the same Gateway object: the primary scan explains business
+posture, material limitation, and next action; a native disclosure retains exact status, reason
+codes, contracts, lineage, and methodology evidence. Translation is allowlisted and conservative.
+An absent, inconsistent, or unknown value stays neutral and visible in evidence rather than being
+formatted into favourable copy. Page components consume this model; they do not duplicate code
+mappings or construct a separate evidence story.
+
 ## Navigation model
 
 Workbench separates three business contexts so the interface remains dense without becoming a

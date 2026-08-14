@@ -1022,6 +1022,16 @@ Important validation expectations:
     listener. Use
     `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
     confirmation, source-persistence, responsive, focus, and browser-runtime proof.
+28. Performance supportability uses one business-and-evidence presentation boundary. Derive the
+    advisor conclusion, client-use implication, named limitations, and technical disclosure from
+    the same Gateway-owned contribution object. Translate only explicitly governed source and
+    smoothing values; absent, inconsistent, or unknown statuses and reason codes fail closed to a
+    neutral review posture while the exact raw value remains available in **Calculation evidence**.
+    Keep market-value coverage, weighting basis, reconciliation, and known exclusions in the
+    primary business scan. Keep source status, reason codes, contracts, available/unsupported/
+    degraded economics, snapshots, smoothing status, and methodology reason codes secondary but
+    accessible. Do not hide evidence, duplicate the mapping in page components, infer calculation
+    completeness, or expose implementation vocabulary as the advisor's first reading path.
 
 ### Visual Review Gate
 
