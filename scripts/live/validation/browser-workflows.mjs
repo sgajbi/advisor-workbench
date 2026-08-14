@@ -22,10 +22,11 @@ export function resolveHighCashIdeaCandidateId(candidateHref, workbenchBaseUrl) 
 
 export function hasAcceptedAdvisorBriefReviewPosture(text) {
   return (
-    (text.includes("Human Review") || text.includes("AI Review")) &&
-    text.includes("ACCEPTED") &&
-    (text.includes("Supportability ACTION REQUIRED") ||
-      text.includes("Supportability READY"))
+    text.includes("Human Review") &&
+    text.includes("Accepted for internal use") &&
+    text.includes("Supportability READY") &&
+    text.includes("Recorded by") &&
+    text.includes("Recorded ")
   );
 }
 

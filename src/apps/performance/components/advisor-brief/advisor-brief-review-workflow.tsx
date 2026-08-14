@@ -9,7 +9,10 @@ import type {
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest,
   WorkbenchAdvisorBriefWorkflowPackRunReviewActionType,
 } from "@/features/workbench/types";
-import { hasRecordedAdvisorBriefReviewEvidence } from "../../advisor-brief/advisor-brief-review-evidence";
+import {
+  getAdvisorBriefReviewStateLabel,
+  hasRecordedAdvisorBriefReviewEvidence,
+} from "../../advisor-brief/advisor-brief-review-evidence";
 
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
@@ -101,7 +104,7 @@ export default function AdvisorBriefReviewWorkflow({
   }, [feedback.state]);
 
   const reviewStateLabel = useMemo(
-    () => toBusinessStateLabel(workflowPackRun.review_state),
+    () => getAdvisorBriefReviewStateLabel(workflowPackRun.review_state),
     [workflowPackRun.review_state]
   );
 
@@ -303,20 +306,6 @@ function isKnownReviewAction(
   value: string
 ): value is WorkbenchAdvisorBriefWorkflowPackRunReviewActionType {
   return Object.hasOwn(REVIEW_ACTIONS, value);
-}
-
-const REVIEW_STATE_LABELS: Readonly<Record<string, string>> = {
-  ACCEPTED: "Accepted for internal use",
-  REJECTED: "Rejected",
-  REVISED: "Revision requested",
-  SUPERSEDED: "Superseded",
-  ABANDONED: "Withdrawn",
-  AWAITING_REVIEW: "Awaiting review",
-  NOT_REVIEW_REQUIRED: "No review required",
-};
-
-function toBusinessStateLabel(value: string): string {
-  return REVIEW_STATE_LABELS[value.toUpperCase()] ?? "Not reported";
 }
 
 function getReviewStateTone(

@@ -49,30 +49,33 @@ export default function LotusStatusBar({
   refreshing: boolean;
   interactionBusy: boolean;
 }) {
-  const [copyState, setCopyState] = useState<"idle" | "copying" | "copied" | "failed">(
-    "idle"
-  );
+  const [copyFeedback, setCopyFeedback] = useState<{
+    source: string;
+    state: "idle" | "copying" | "copied" | "failed";
+  }>({ source: "", state: "idle" });
   const copyButtonRef = useRef<HTMLButtonElement | null>(null);
   const copyAvailable =
     canCopy &&
     (status === "ready" || status === "partial") &&
     noteText.trim().length > 0;
+  const copySource = `${copyAvailable}:${noteText}`;
+  const copyState = copyFeedback.source === copySource ? copyFeedback.state : "idle";
 
   async function handleCopyNote() {
     if (!copyAvailable || interactionBusy || copyState === "copying") {
       return;
     }
 
-    setCopyState("copying");
+    setCopyFeedback({ source: copySource, state: "copying" });
     if (!navigator.clipboard?.writeText) {
-      setCopyState("failed");
+      setCopyFeedback({ source: copySource, state: "failed" });
       return;
     }
     try {
       await navigator.clipboard.writeText(noteText);
-      setCopyState("copied");
+      setCopyFeedback({ source: copySource, state: "copied" });
     } catch {
-      setCopyState("failed");
+      setCopyFeedback({ source: copySource, state: "failed" });
     } finally {
       copyButtonRef.current?.focus();
     }

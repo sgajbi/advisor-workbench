@@ -1,4 +1,5 @@
 import type { WorkbenchAdvisorBriefWorkflowPackRun } from "@/features/workbench/types";
+import type { AiHumanReviewState } from "@/design-system";
 
 type AdvisorBriefReviewEvidence = Pick<
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -7,6 +8,80 @@ type AdvisorBriefReviewEvidence = Pick<
   | "latest_review_event_at"
   | "review_transition_count"
 >;
+
+const REVIEW_STATE_LABELS: Readonly<Record<string, string>> = {
+  ACCEPTED: "Accepted for internal use",
+  REJECTED: "Rejected",
+  REVISED: "Revision requested",
+  SUPERSEDED: "Superseded",
+  ABANDONED: "Withdrawn",
+  AWAITING_REVIEW: "Awaiting review",
+  NOT_REVIEW_REQUIRED: "No review required",
+};
+
+type AdvisorBriefHumanReview = {
+  state: AiHumanReviewState;
+  sourceRecorded: boolean;
+  actor?: string;
+  occurredAt?: string;
+};
+
+export function getAdvisorBriefReviewStateLabel(value: string): string {
+  return REVIEW_STATE_LABELS[value.trim().toUpperCase()] ?? "Not reported";
+}
+
+export function buildAdvisorBriefHumanReview(
+  workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun | null | undefined
+): AdvisorBriefHumanReview {
+  const sourceRecorded = hasRecordedAdvisorBriefReviewEvidence(workflowPackRun);
+  const actor = workflowPackRun?.latest_review_actor?.trim();
+  const occurredAt = workflowPackRun?.latest_review_event_at?.trim();
+  const recordedEvidence = {
+    sourceRecorded,
+    ...(sourceRecorded && actor ? { actor } : {}),
+    ...(sourceRecorded && occurredAt ? { occurredAt } : {}),
+  };
+
+  switch (workflowPackRun?.review_state.trim().toUpperCase()) {
+    case "ACCEPTED":
+    case "REVISED":
+    case "SUPERSEDED":
+      return {
+        state: sourceRecorded ? "reviewed" : "unavailable",
+        ...recordedEvidence,
+      };
+    case "REJECTED":
+    case "ABANDONED":
+      return {
+        state: sourceRecorded ? "rejected" : "unavailable",
+        ...recordedEvidence,
+      };
+    case "NOT_REVIEW_REQUIRED":
+      return { state: "not-required", sourceRecorded: false };
+    case "AWAITING_REVIEW":
+    case "REVIEW_REQUIRED":
+    case "PENDING":
+      return { state: "review-required", sourceRecorded: false };
+    default:
+      return { state: "unavailable", sourceRecorded: false };
+  }
+}
+
+export function isHistoricalAdvisorBriefReviewState(
+  reviewState: string | null | undefined
+): boolean {
+  const normalizedState = reviewState?.trim().toUpperCase();
+  return normalizedState === "REVISED" || normalizedState === "SUPERSEDED";
+}
+
+export function isTerminalAdvisorBriefReviewState(
+  reviewState: string | null | undefined
+): boolean {
+  const normalizedState = reviewState?.trim().toUpperCase();
+  return ["ACCEPTED", "REJECTED", "REVISED", "SUPERSEDED", "ABANDONED"].includes(
+    normalizedState ?? ""
+  );
+}
 
 export function hasRecordedAdvisorBriefReviewEvidence(
   evidence: AdvisorBriefReviewEvidence | null | undefined
