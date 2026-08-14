@@ -412,6 +412,8 @@ export type PerformanceEvidenceView = {
   state: string;
   as_of_date?: string | null;
   period?: string | null;
+  report_start_date?: string | null;
+  report_end_date?: string | null;
   basis?: string | null;
   benchmark_code?: string | null;
   calculation_scope?: string | null;
