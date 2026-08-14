@@ -20,6 +20,13 @@ export function hasRecordedAdvisorBriefAcceptProof(
   text: string,
   expectedReviewer: string,
 ): boolean;
+export function classifyAdvisorBriefAcceptProofPosture(
+  text: string,
+  expectedReviewer: string,
+):
+  | "source-confirmed-existing-action"
+  | "accepted-by-another-reviewer"
+  | "review-action-available";
 
 export function validatePortfolioPanels(
   page: BrowserValidationPage,
@@ -44,7 +51,7 @@ export function validatePerformanceAnalysisPanel(
 export function validateAdvisorBriefPanel(
   page: BrowserValidationPage,
   options: Record<string, unknown>
-): Promise<void>;
+): Promise<{ detailBasis: string; chartFrequency: string } | null>;
 export function validateRiskPanel(
   page: BrowserValidationPage,
   options: Record<string, unknown>

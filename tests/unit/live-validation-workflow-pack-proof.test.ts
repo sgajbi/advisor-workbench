@@ -26,6 +26,8 @@ const {
       body: Record<string, unknown>,
     ) => Promise<unknown>;
     preRecordedAcceptReviewer?: string;
+    acceptDetailBasis?: string;
+    acceptChartFrequency?: string;
   }) => Promise<void>;
 };
 
@@ -297,6 +299,8 @@ describe("live validation workflow-pack proof", () => {
       canonicalAsOfDate: "2026-04-10",
       timeoutMs: 1000,
       preRecordedAcceptReviewer: "live.validator.ui",
+      acceptDetailBasis: "GROSS",
+      acceptChartFrequency: "quarterly",
       fetchJson: async (_summary: unknown, url: string) => {
         if (url.includes("report_start_date=2026-02-01")) {
           return createAdvisorBriefPayload({
@@ -323,6 +327,24 @@ describe("live validation workflow-pack proof", () => {
         }
         if (
           url.includes("detail_basis=GROSS") &&
+          url.includes("chart_frequency=quarterly") &&
+          url.includes("report_start_date=2025-03-31")
+        ) {
+          return createAdvisorBriefPayload({
+            runId: "packrun-browser-gross-quarterly",
+            reviewState: "ACCEPTED",
+            allowedReviewActions: [],
+            supportabilityStatus: "READY",
+            taskFlowId: "taskflow-browser-gross-quarterly",
+            taskFlowStatus: "COMPLETED",
+            taskFlowSupportabilityStatus: "READY",
+            handoffStatus: "READY_FOR_HANDOFF",
+            latestReviewActor: "live.validator.ui",
+          });
+        }
+        if (
+          url.includes("detail_basis=GROSS") &&
+          url.includes("chart_frequency=monthly") &&
           url.includes("report_start_date=2025-03-31")
         ) {
           return createAdvisorBriefPayload({
@@ -336,22 +358,6 @@ describe("live validation workflow-pack proof", () => {
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
             latestReviewActor: "live.validator.revise",
-          });
-        }
-        if (
-          url.includes("detail_basis=NET") &&
-          url.includes("report_start_date=2025-03-31")
-        ) {
-          return createAdvisorBriefPayload({
-            runId: "packrun-explicit-net",
-            reviewState: "ACCEPTED",
-            allowedReviewActions: [],
-            supportabilityStatus: "READY",
-            taskFlowId: "taskflow-explicit-net",
-            taskFlowStatus: "COMPLETED",
-            taskFlowSupportabilityStatus: "READY",
-            handoffStatus: "READY_FOR_HANDOFF",
-            latestReviewActor: "live.validator.ui",
           });
         }
         return fetchAdvisorBriefPayload(url);
@@ -372,7 +378,7 @@ describe("live validation workflow-pack proof", () => {
     expect(summary.workflowPackChecks[0]).toEqual(
       expect.objectContaining({
         actionType: "ACCEPT",
-        sourceRunId: "packrun-explicit-net",
+        sourceRunId: "packrun-browser-gross-quarterly",
         resultReviewState: "ACCEPTED",
         proofSource: "source-confirmed-browser-action",
       })

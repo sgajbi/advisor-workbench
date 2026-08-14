@@ -302,10 +302,13 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
   fetchJson,
   postJson,
   preRecordedAcceptReviewer = null,
+  acceptDetailBasis = "NET",
+  acceptChartFrequency = "monthly",
 }) {
   const acceptQuery = buildAdvisorBriefWorkspaceQuery({
     period: "EXPLICIT",
-    detailBasis: "NET",
+    detailBasis: acceptDetailBasis,
+    chartFrequency: acceptChartFrequency,
     benchmarkCode,
     reportStartDate: canonicalStartDate,
     reportEndDate: canonicalAsOfDate,
