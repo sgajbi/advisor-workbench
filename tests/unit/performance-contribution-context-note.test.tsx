@@ -155,6 +155,44 @@ describe("PerformanceContributionContextNote", () => {
     expect(within(evidence).getAllByText("None published").length).toBeGreaterThanOrEqual(4);
   });
 
+  it("does not confirm client use when source evidence exists without smoothing evidence", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          smoothing_evidence: null,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            status: "SOURCE_BACKED",
+            unsupported_economics: [],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution calculation evidence is incomplete");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
+    expect(within(openCalculationEvidence()).getByText("Not published")).toBeInTheDocument();
+  });
+
+  it("preserves an unfamiliar weighting basis in calculation evidence", () => {
+    render(
+      <PerformanceContributionContextNote
+        contribution={buildContribution({ weighting_scheme: "FUTURE_WEIGHTING_BASIS" })}
+      />,
+    );
+
+    expect(screen.getByTestId("performance-contribution-evidence")).toHaveTextContent(
+      "Weighting basis published in calculation evidence",
+    );
+    expect(
+      within(openCalculationEvidence()).getByText("FUTURE_WEIGHTING_BASIS"),
+    ).toBeInTheDocument();
+  });
+
   it("promotes a source-confirmed smoothing fallback into the advisor limitation", () => {
     const contribution = buildContribution();
     render(

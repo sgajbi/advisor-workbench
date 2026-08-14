@@ -83,6 +83,7 @@ export function getContributionEvidencePresentation(
   const smoothingEvidence = contribution.smoothing_evidence;
   const sourceStatus = normalizeEvidenceValue(sourceEvidence?.status);
   const smoothingStatus = normalizeEvidenceValue(smoothingEvidence?.status);
+  const hasIncompleteEvidence = sourceStatus === null || smoothingStatus === null;
   const unknownSourceCodes = getUnknownValues(sourceEvidence?.reason_codes, SOURCE_REASON_CODES);
   const unknownSmoothingCodes = getUnknownValues(
     smoothingEvidence?.reason_codes,
@@ -99,6 +100,7 @@ export function getContributionEvidencePresentation(
   });
   const decision = getContributionEvidenceDecision({
     hasSourceEvidence: sourceEvidence !== null && sourceEvidence !== undefined,
+    hasIncompleteEvidence,
     sourceStatus,
     smoothingStatus,
     hasUnknownEvidence,
@@ -117,12 +119,14 @@ export function getContributionEvidencePresentation(
 
 function getContributionEvidenceDecision({
   hasSourceEvidence,
+  hasIncompleteEvidence,
   sourceStatus,
   smoothingStatus,
   hasUnknownEvidence,
   hasDeclaredSourceLimitations,
 }: {
   hasSourceEvidence: boolean;
+  hasIncompleteEvidence: boolean;
   sourceStatus: string | null;
   smoothingStatus: string | null;
   hasUnknownEvidence: boolean;
@@ -133,6 +137,13 @@ function getContributionEvidenceDecision({
       tone: "review",
       title: "Contribution coverage cannot be confirmed",
       body: "Lotus did not receive source-economics evidence for this calculation. Review the calculation evidence before using the drivers in a client discussion.",
+    };
+  }
+  if (hasIncompleteEvidence) {
+    return {
+      tone: "review",
+      title: "Contribution calculation evidence is incomplete",
+      body: "Lotus did not receive complete source and methodology statuses for this calculation. Review the published calculation evidence before using the driver explanation with a client.",
     };
   }
   if (hasUnknownEvidence) {
@@ -265,6 +276,10 @@ function buildContributionEvidenceItems(
         sourceEvidence?.source_snapshot_count === undefined
           ? "Not published"
           : String(sourceEvidence.source_snapshot_count),
+    },
+    {
+      label: "Weighting basis",
+      value: contribution.weighting_scheme?.trim() || "Not published",
     },
     { label: "Smoothing status", value: smoothingEvidence?.status?.trim() || "Not published" },
     { label: "Smoothing reason codes", value: formatEvidenceList(smoothingEvidence?.reason_codes) },
