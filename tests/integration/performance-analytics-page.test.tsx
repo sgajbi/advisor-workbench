@@ -519,10 +519,8 @@ describe("PerformanceAnalyticsPage", () => {
         .find(Boolean) ?? null;
     expect(contributorsModule).toBeTruthy();
     expect(
-      contributorsModule?.querySelector(
-        ".performance-contributors-compare-grid, .performance-contributors-panel-asymmetric"
-      )
-    ).toBeTruthy();
+      within(contributorsModule as HTMLElement).getByTestId("performance-contributor-groups")
+    ).toHaveAttribute("data-layout", "asymmetric");
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Contributors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByText("Source economics: SOURCE_LIMITED • Smoothing: APPLIED")).toBeInTheDocument();
