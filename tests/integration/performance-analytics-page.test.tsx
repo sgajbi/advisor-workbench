@@ -105,6 +105,21 @@ async function expectTextPresent(text: string) {
   expect(matches.length).toBeGreaterThan(0);
 }
 
+async function findWorkflowControl(name: string | RegExp) {
+  const visibleControl = screen.queryByRole("button", { name });
+  if (visibleControl) {
+    return visibleControl;
+  }
+
+  const changeStep = await screen.findByRole("button", {
+    name: /Change workflow step/i,
+  });
+  if (changeStep.getAttribute("aria-expanded") !== "true") {
+    fireEvent.click(changeStep);
+  }
+  return screen.findByRole("button", { name });
+}
+
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     replaceMock.mockReset();
@@ -149,6 +164,11 @@ describe("PerformanceAnalyticsPage", () => {
       "page"
     );
     expect(screen.getByLabelText("Performance surface navigation")).toBeInTheDocument();
+    fireEvent.click(
+      within(screen.getByLabelText("Performance surface navigation")).getByRole("button", {
+        name: /Change workflow step/i,
+      }),
+    );
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
     expect(
@@ -353,7 +373,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
-    fireEvent.click(await screen.findByRole("button", { name: /^Risk Review/i }));
+    fireEvent.click(await findWorkflowControl(/^Risk Review/i));
 
     const riskRegion = await screen.findByRole("region", { name: "Risk" });
     await waitFor(() => {
@@ -602,7 +622,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
     const sourceSelection = await screen.findByRole("group", {
@@ -713,7 +733,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: "Advisor Brief" }));
+    fireEvent.click(await findWorkflowControl("Advisor Brief"));
 
     expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
@@ -756,7 +776,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Advisor Brief" }));
+    fireEvent.click(await findWorkflowControl("Advisor Brief"));
     fireEvent.click(
       within(screen.getByLabelText("Advisor Talking Points")).getByRole("button", {
         name: /Top Contributor/,
@@ -778,7 +798,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    expect(await screen.findByRole("button", { name: /^Risk Review/i })).toHaveAttribute(
+    expect(await findWorkflowControl(/^Risk Review/i)).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -786,7 +806,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith(
@@ -803,7 +823,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Risk Review/i }));
+    fireEvent.click(await findWorkflowControl(/^Risk Review/i));
 
     expect(screen.getByLabelText("Risk mode intro")).toHaveTextContent(
       "Downside, concentration, and rolling stability posture"
@@ -1013,7 +1033,7 @@ describe("PerformanceAnalyticsPage", () => {
         })
       );
 
-      fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
@@ -1124,7 +1144,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     await screen.findByText("Performance Drivers");
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
@@ -1136,7 +1156,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
@@ -1168,7 +1188,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(
@@ -1196,7 +1216,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(
@@ -1242,7 +1262,7 @@ describe("PerformanceAnalyticsPage", () => {
       installPerformancePageFetchScenario(scenario);
 
       render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
-      fireEvent.click(await screen.findByRole("button", { name: /^Performance Analysis/i }));
+      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
       for (const text of expectations) {
         await expectTextPresent(text);
@@ -1259,7 +1279,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
-    const evidenceTab = await screen.findByRole("button", { name: /^Evidence/i });
+    const evidenceTab = await findWorkflowControl(/^Evidence/i);
     expect(evidenceTab).toBeDisabled();
     fireEvent.click(evidenceTab);
 
@@ -1328,7 +1348,7 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(screen.getByRole("button", { name: /^Performance Analysis/i }));
+      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
       for (const text of analysisExpectations) {
         await expectTextPresent(text);
       }
@@ -1336,13 +1356,13 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(screen.getByRole("button", { name: "Advisor Brief" }));
+      fireEvent.click(await findWorkflowControl("Advisor Brief"));
       expect(
         await screen.findByRole("heading", { name: "Performance Advisor Brief" })
       ).toBeInTheDocument();
       expect(screen.getByLabelText("Source Metrics")).toBeInTheDocument();
 
-      const evidenceTab = screen.getByRole("button", { name: /^Evidence/i });
+      const evidenceTab = await findWorkflowControl(/^Evidence/i);
       expect(evidenceTab).toBeDisabled();
       for (const text of evidenceExpectations) {
         await expectTextPresent(text);

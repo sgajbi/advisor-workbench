@@ -330,7 +330,7 @@ for (const { width, stacked } of [
       ),
     ).toBeGreaterThanOrEqual(4.5);
 
-    const disclosure = page.getByRole("button", { name: /Current view Reports/ });
+    const disclosure = page.getByRole("button", { name: /Current view Reporting/ });
     await disclosure.focus();
     await page.keyboard.press("Enter");
     await expect(
@@ -356,7 +356,7 @@ test("keeps portfolio context and navigation compact and keyboard-complete on mo
   await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
     timeout: 15_000,
   });
-  const disclosure = page.getByRole("button", { name: /Current view Reports/ });
+  const disclosure = page.getByRole("button", { name: /Current view Reporting/ });
   await expect(disclosure).toBeVisible();
   await disclosure.focus();
   await page.keyboard.press("Enter");
