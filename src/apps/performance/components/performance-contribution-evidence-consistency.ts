@@ -14,6 +14,15 @@ const SOURCE_LINEAGE_REASON_CODES = [
   "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
 ] as const;
 
+const DEGRADED_ECONOMICS_REASON_CODES: Record<string, string> = {
+  performance_component_economics_unavailable:
+    "PERFORMANCE_COMPONENT_ECONOMICS_UNAVAILABLE",
+  unsupported_cash_flow_types: "UNSUPPORTED_SOURCE_CASH_FLOW_TYPES_PRESENT",
+  missing_classification: "UNCLASSIFIED_POSITION_ECONOMICS_PRESENT",
+  upstream_snapshot_lineage_not_embedded:
+    "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE_VIA_EXECUTION_ONLY",
+};
+
 const COMMON_SMOOTHING_RESIDUAL_CODES = [
   "RAW_CONTRIBUTION_DIFFERS_FROM_LINKED_RETURN",
   "RESIDUAL_ALLOCATED_TO_RECONCILE_PERIOD",
@@ -53,6 +62,11 @@ function isSourceEvidenceConsistent(
   const hasCallerSuppliedReason = reasonCodes.includes(
     "STATELESS_CALLER_SUPPLIED_SOURCE_ECONOMICS",
   );
+  const hasSupportedDeclaredLimitations = hasReasonEvidenceForDeclaredLimitations(
+    sourceEvidence?.unsupported_economics ?? [],
+    sourceEvidence?.degraded_economics ?? [],
+    reasonCodes,
+  );
 
   switch (sourceStatus) {
     case "SOURCE_BACKED":
@@ -64,12 +78,34 @@ function isSourceEvidenceConsistent(
         SOURCE_LINEAGE_REASON_CODES.some((reasonCode) => reasonCodes.includes(reasonCode))
       );
     case "SOURCE_LIMITED":
-      return hasDeclaredLimitations && !hasCallerSuppliedReason;
+      return (
+        hasDeclaredLimitations &&
+        hasSupportedDeclaredLimitations &&
+        !hasCallerSuppliedReason
+      );
     case "CALLER_SUPPLIED":
       return hasCallerSuppliedReason;
     default:
       return false;
   }
+}
+
+function hasReasonEvidenceForDeclaredLimitations(
+  unsupportedEconomics: string[],
+  degradedEconomics: string[],
+  reasonCodes: string[],
+): boolean {
+  const unsupportedEvidenceIsExplained =
+    unsupportedEconomics.length === 0 ||
+    reasonCodes.includes("COMPONENT_PNL_NOT_SOURCE_AUTHORED") ||
+    reasonCodes.includes("MISSING_FX") ||
+    reasonCodes.includes("MISSING_LOCAL_ECONOMICS");
+  const degradedEvidenceIsExplained = degradedEconomics.every((degradedItem) => {
+    const expectedReasonCode = DEGRADED_ECONOMICS_REASON_CODES[degradedItem];
+    return expectedReasonCode !== undefined && reasonCodes.includes(expectedReasonCode);
+  });
+
+  return unsupportedEvidenceIsExplained && degradedEvidenceIsExplained;
 }
 
 function isSmoothingEvidenceConsistent(

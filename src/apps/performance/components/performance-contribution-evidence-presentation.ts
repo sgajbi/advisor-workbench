@@ -23,6 +23,8 @@ export type ContributionEvidencePresentation = {
   evidenceItems: ContributionEvidenceItem[];
 };
 
+type ContributionCoveragePosture = "adequate" | "limited" | "unconfirmed";
+
 const SOURCE_STATUSES = ["SOURCE_BACKED", "SOURCE_LIMITED", "CALLER_SUPPLIED"] as const;
 const SMOOTHING_STATUSES = [
   "APPLIED",
@@ -115,6 +117,7 @@ export function getContributionEvidencePresentation(
     smoothingStatus,
     hasUnknownEvidence,
     hasInconsistentEvidence,
+    coveragePosture: getContributionCoveragePosture(contribution.coverage_mv_pct),
     hasDeclaredSourceLimitations: Boolean(
       sourceEvidence?.unsupported_economics.length || sourceEvidence?.degraded_economics.length,
     ),
@@ -135,6 +138,7 @@ function getContributionEvidenceDecision({
   smoothingStatus,
   hasUnknownEvidence,
   hasInconsistentEvidence,
+  coveragePosture,
   hasDeclaredSourceLimitations,
 }: {
   hasSourceEvidence: boolean;
@@ -143,6 +147,7 @@ function getContributionEvidenceDecision({
   smoothingStatus: string | null;
   hasUnknownEvidence: boolean;
   hasInconsistentEvidence: boolean;
+  coveragePosture: ContributionCoveragePosture;
   hasDeclaredSourceLimitations: boolean;
 }): Pick<ContributionEvidencePresentation, "tone" | "title" | "body"> {
   if (!hasSourceEvidence) {
@@ -201,6 +206,20 @@ function getContributionEvidenceDecision({
       body: "These figures rely on request-supplied inputs rather than the standard source-owned portfolio record. Confirm the input provenance before client use.",
     };
   }
+  if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "unconfirmed") {
+    return {
+      tone: "review",
+      title: "Contribution coverage cannot be confirmed",
+      body: "A reliable market-value coverage percentage was not published for this calculation. Review the calculation evidence before using the driver explanation with a client.",
+    };
+  }
+  if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "limited") {
+    return {
+      tone: "limited",
+      title: "Contribution market-value coverage is limited",
+      body: "The source economics are confirmed, but the calculation covers less than 95% of portfolio market value. Treat the driver ranking as partial until broader coverage is available.",
+    };
+  }
   if (sourceStatus === "SOURCE_BACKED" && !hasDeclaredSourceLimitations) {
     return {
       tone: "confirmed",
@@ -213,6 +232,20 @@ function getContributionEvidenceDecision({
     title: "Contribution coverage needs review",
     body: "The published source posture and its stated limitations do not fully align. Review the exact calculation evidence before use.",
   };
+}
+
+function getContributionCoveragePosture(
+  coverageMvPct: number | null | undefined,
+): ContributionCoveragePosture {
+  if (
+    typeof coverageMvPct !== "number" ||
+    !Number.isFinite(coverageMvPct) ||
+    coverageMvPct < 0 ||
+    coverageMvPct > 100
+  ) {
+    return "unconfirmed";
+  }
+  return coverageMvPct >= 95 ? "adequate" : "limited";
 }
 
 function getContributionLimitations(

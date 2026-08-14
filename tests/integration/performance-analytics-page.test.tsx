@@ -534,7 +534,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(within(contributionEvidence).getByText("SOURCE_LIMITED")).toBeInTheDocument();
     expect(within(contributionEvidence).getByText("APPLIED")).toBeInTheDocument();
     expect(within(contributionEvidence).getByText(
-      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED, UNSUPPORTED_SOURCE_CASH_FLOW_TYPES_PRESENT"
     )).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).getByText("Instrument detail")).toBeInTheDocument();
     expect(within(contributorsModule as HTMLElement).queryByLabelText("Contributor summary")).not.toBeInTheDocument();
