@@ -6,6 +6,19 @@ import type {
 export type TrustTone = "success" | "warn" | "danger" | "default";
 export type SourceAvailability = "checking" | "ready" | "retained" | "unavailable";
 
+export function getTrustHeaderPresentation({
+  data,
+  hasError,
+}: {
+  data: DomainProductTrustCertificationData | undefined;
+  hasError: boolean;
+}): { label: string; tone: TrustTone } {
+  if (hasError && data) return { label: "Assurance refresh failed", tone: "warn" };
+  if (data) return { label: formatStateLabel(data.trustPosture), tone: getTrustTone(data.trustPosture) };
+  if (hasError) return { label: "Assurance unavailable", tone: "warn" };
+  return { label: "Checking assurance", tone: "default" };
+}
+
 export function getTrustAvailability({
   data,
   loading,
