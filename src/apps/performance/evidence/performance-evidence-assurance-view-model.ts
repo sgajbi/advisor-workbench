@@ -165,8 +165,8 @@ function resolveAssuranceState(
 ): PerformanceEvidenceAssuranceViewModel["state"] {
   if (capability.state === "unavailable" || capability.state === "hidden") return "unavailable";
   if (normalise(evidence.state) === "unavailable") return "unavailable";
-  if (!calculations.length) return "incomplete";
   if (exceptions.some((exception) => exception.tone === "danger")) return "attention";
+  if (!calculations.length) return "incomplete";
   if (
     capability.state !== "supported" ||
     normalise(evidence.state) !== "supported" ||
@@ -309,7 +309,17 @@ function buildExceptions(
     });
   }
 
-  safeArray(evidence.calculations).forEach((calculation, index) => {
+  const calculations = safeArray(evidence.calculations);
+  if (!calculations.length) {
+    exceptions.push({
+      key: "calculations-missing",
+      title: "Calculation evidence not reported",
+      detail: "The source did not publish any calculation evidence for this assurance package.",
+      action: "Obtain the source calculation and its supporting records before relying on the package.",
+      tone: "warn",
+    });
+  }
+  calculations.forEach((calculation, index) => {
     appendLifecycleException(exceptions, calculation.execution_status, "calculation", index);
     appendLifecycleException(exceptions, calculation.lineage_status, "evidence", index);
     const artifacts = safeArray(calculation.artifacts);
