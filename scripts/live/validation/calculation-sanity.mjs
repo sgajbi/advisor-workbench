@@ -120,8 +120,17 @@ function summarizeSourceSupportability(items) {
       continue;
     }
     itemCount += 1;
-    if (typeof item.source_service === "string" && item.source_service) {
-      services.add(item.source_service);
+    const sourceService =
+      typeof item.source_service === "string" ? item.source_service.trim() : "";
+    const calculationReference =
+      typeof item.operation === "string" && item.operation.trim()
+        ? item.operation.trim()
+        : typeof item.key === "string"
+          ? item.key.trim()
+          : "";
+    const identityConfirmed = Boolean(sourceService && calculationReference);
+    if (sourceService) {
+      services.add(sourceService);
     }
     const freshnessState = normalizeFreshnessState(item.freshness_bucket);
     if (freshnessState === "stale") {
@@ -134,7 +143,11 @@ function summarizeSourceSupportability(items) {
     if (normalizedState === "action_required") {
       actionRequiredCount += 1;
     }
-    if (normalizedState === "unknown" || freshnessState === "unknown") {
+    if (
+      !identityConfirmed ||
+      normalizedState === "unknown" ||
+      freshnessState === "unknown"
+    ) {
       unconfirmedCount += 1;
     }
   }

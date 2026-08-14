@@ -374,6 +374,16 @@ describe("live validation calculation sanity helpers", () => {
   it.each([
     ["missing freshness", { state: "ready" }],
     ["unknown supportability", { state: "unexpected", freshness_bucket: "fresh" }],
+    [
+      "missing source identity",
+      {
+        source_service: undefined,
+        operation: undefined,
+        key: undefined,
+        state: "ready",
+        freshness_bucket: "fresh",
+      },
+    ],
   ])("fails source supportability closed for %s", (_label, sourceSupportability) => {
     const summary = createSummary();
 
