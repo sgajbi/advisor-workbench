@@ -41,8 +41,10 @@ export function TrustSection({
       actions={
         <ActionButton
           priority="quiet"
-          disabled={isRefreshing}
-          onClick={onRefresh}
+          aria-disabled={isRefreshing}
+          onClick={() => {
+            if (!isRefreshing) onRefresh();
+          }}
           aria-label={actionLabel}
         >
           {isRefreshing ? "Checking…" : actionLabel}
@@ -152,8 +154,10 @@ export function DependencyGraphSection({
       actions={
         <ActionButton
           priority="quiet"
-          disabled={isRefreshing}
-          onClick={onRefresh}
+          aria-disabled={isRefreshing}
+          onClick={() => {
+            if (!isRefreshing) onRefresh();
+          }}
           aria-label={actionLabel}
         >
           {isRefreshing ? "Checking…" : actionLabel}
