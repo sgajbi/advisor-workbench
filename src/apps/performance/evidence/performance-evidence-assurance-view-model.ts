@@ -324,7 +324,17 @@ function buildExceptions(
     });
   });
 
-  Object.entries(evidence.input_freshness ?? {}).forEach(([key, value]) => {
+  const inputFreshnessEntries = Object.entries(evidence.input_freshness ?? {});
+  if (!inputFreshnessEntries.length) {
+    exceptions.push({
+      key: "input-freshness-missing",
+      title: "Input freshness not confirmed",
+      detail: "The source did not publish freshness evidence for the inputs used by this package.",
+      action: "Obtain refreshed source evidence before relying on the calculation-assurance package.",
+      tone: "warn",
+    });
+  }
+  inputFreshnessEntries.forEach(([key, value]) => {
     const state = normalise(value);
     if (FRESH_STATES.includes(state)) return;
     const label = DIMENSION_LABELS[normalise(key)] ?? "Required input";

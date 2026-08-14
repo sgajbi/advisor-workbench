@@ -33,6 +33,9 @@ function recordCalculationCheck(summary, description, evidence) {
 function readSourceSupportabilityItems(...payloads) {
   return payloads.flatMap((payload) => [
     ...(Array.isArray(payload?.source_supportability) ? payload.source_supportability : []),
+    ...(Array.isArray(payload?.evidence_view?.source_supportability)
+      ? payload.evidence_view.source_supportability
+      : []),
     ...(Array.isArray(payload?.supportability) ? payload.supportability : []),
     ...readContributionSourceEconomicsItems(payload),
   ]);

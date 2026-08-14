@@ -269,6 +269,18 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it("fails closed when the source omits input freshness evidence", () => {
+    const view = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ input_freshness: null })
+    );
+
+    expect(view.state).toBe("incomplete");
+    expect(view.exceptions).toContainEqual(
+      expect.objectContaining({ title: "Input freshness not confirmed", tone: "warn" })
+    );
+  });
+
   it("keeps raw identifiers and technical vocabulary in support groups only", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, evidence());
     const primaryText = JSON.stringify({

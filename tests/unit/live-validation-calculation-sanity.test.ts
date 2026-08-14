@@ -47,14 +47,16 @@ describe("live validation calculation sanity helpers", () => {
             reason: "lineage evidence remains partial",
           },
         },
-        source_supportability: [
-          {
-            source_service: "lotus-performance",
-            operation: "performance.twr",
-            state: "ready",
-            freshness_bucket: "fresh",
-          },
-        ],
+        evidence_view: {
+          source_supportability: [
+            {
+              source_service: "lotus-performance",
+              operation: "performance.twr",
+              state: "ready",
+              freshness_bucket: "fresh",
+            },
+          ],
+        },
       },
       performanceDetails: {
         net_chart: [{}, {}, {}, {}],
@@ -84,14 +86,16 @@ describe("live validation calculation sanity helpers", () => {
             },
           ],
         },
-        source_supportability: [
-          {
-            source_service: "lotus-performance",
-            operation: "performance.attribution",
-            state: "partial",
-            freshness_bucket: "stale",
-          },
-        ],
+        evidence_view: {
+          source_supportability: [
+            {
+              source_service: "lotus-performance",
+              operation: "performance.attribution",
+              state: "partial",
+              freshness_bucket: "stale",
+            },
+          ],
+        },
       },
     });
 
