@@ -107,7 +107,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     expect(within(calculationEvidence).getByText("SOURCE_LIMITED")).toBeInTheDocument();
     expect(within(calculationEvidence).getByText("APPLIED")).toBeInTheDocument();
     expect(within(calculationEvidence).getByText(
-      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED"
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED, COMPONENT_PNL_NOT_SOURCE_AUTHORED, UNSUPPORTED_SOURCE_CASH_FLOW_TYPES_PRESENT"
     )).toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 24.00%")).not.toBeInTheDocument();
     expect(screen.queryByText("Avg. Weight 8.00%")).not.toBeInTheDocument();

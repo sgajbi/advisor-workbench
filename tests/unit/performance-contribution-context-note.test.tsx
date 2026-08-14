@@ -41,6 +41,19 @@ function buildContribution(
   };
 }
 
+function buildSourceBackedEvidence(contribution: ContributionSummaryView) {
+  return {
+    ...contribution.source_economics_evidence!,
+    status: "SOURCE_BACKED",
+    reason_codes: [
+      "LOTUS_CORE_ANALYTICS_INPUTS_USED",
+      "UPSTREAM_SNAPSHOT_LINEAGE_AVAILABLE",
+    ],
+    unsupported_economics: [],
+    degraded_economics: [],
+  };
+}
+
 function openCalculationEvidence() {
   fireEvent.click(screen.getByText("Calculation evidence"));
   return screen.getByLabelText("Contribution calculation evidence");
@@ -107,6 +120,63 @@ describe("PerformanceContributionContextNote", () => {
     ).toBeInTheDocument();
     expect(within(evidence).getByText("income_pnl, tax_pnl")).toBeInTheDocument();
     expect(within(evidence).getByText("APPLIED")).toBeInTheDocument();
+  });
+
+  it("rejects source-limited evidence when declared limitations have no reason evidence", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          source_economics_evidence: {
+            ...contribution.source_economics_evidence!,
+            reason_codes: [],
+          },
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution evidence is inconsistent");
+    expect(note).not.toHaveTextContent("Contribution coverage is limited");
+  });
+
+  it("does not confirm source-backed evidence when market-value coverage is absent", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          coverage_mv_pct: null,
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution coverage cannot be confirmed");
+    expect(note).toHaveTextContent("Market-value coverage not published");
+  });
+
+  it("keeps source-backed evidence limited below high market-value coverage", () => {
+    const contribution = buildContribution();
+    render(
+      <PerformanceContributionContextNote
+        contribution={{
+          ...contribution,
+          coverage_mv_pct: 82.5,
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
+        }}
+      />,
+    );
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "limited");
+    expect(note).toHaveTextContent("Contribution market-value coverage is limited");
+    expect(note).toHaveTextContent("82.50% of market value covered");
+    expect(note).not.toHaveTextContent("Contribution coverage is confirmed");
   });
 
   it("fails closed when a future reason code is not recognized and preserves it verbatim", () => {
@@ -214,11 +284,7 @@ describe("PerformanceContributionContextNote", () => {
             ...contribution.smoothing_evidence!,
             final_contribution_pct: 4.91,
           },
-          source_economics_evidence: {
-            ...contribution.source_economics_evidence!,
-            status: "SOURCE_BACKED",
-            unsupported_economics: [],
-          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
         }}
       />,
     );
@@ -239,11 +305,7 @@ describe("PerformanceContributionContextNote", () => {
             ...contribution.smoothing_evidence!,
             final_contribution_pct: null,
           },
-          source_economics_evidence: {
-            ...contribution.source_economics_evidence!,
-            status: "SOURCE_BACKED",
-            unsupported_economics: [],
-          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
         }}
       />,
     );
@@ -260,11 +322,7 @@ describe("PerformanceContributionContextNote", () => {
         contribution={{
           ...contribution,
           portfolio_contribution_pct: 5.1,
-          source_economics_evidence: {
-            ...contribution.source_economics_evidence!,
-            status: "SOURCE_BACKED",
-            unsupported_economics: [],
-          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
         }}
       />,
     );
@@ -301,11 +359,7 @@ describe("PerformanceContributionContextNote", () => {
         contribution={{
           ...contribution,
           smoothing_evidence: null,
-          source_economics_evidence: {
-            ...contribution.source_economics_evidence!,
-            status: "SOURCE_BACKED",
-            unsupported_economics: [],
-          },
+          source_economics_evidence: buildSourceBackedEvidence(contribution),
         }}
       />,
     );

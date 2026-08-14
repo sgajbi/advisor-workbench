@@ -466,7 +466,11 @@ export function buildPerformanceWorkspaceDetails(
       },
       source_economics_evidence: {
         status: "SOURCE_LIMITED",
-        reason_codes: ["LOTUS_CORE_ANALYTICS_INPUTS_USED", "COMPONENT_PNL_NOT_SOURCE_AUTHORED"],
+        reason_codes: [
+          "LOTUS_CORE_ANALYTICS_INPUTS_USED",
+          "COMPONENT_PNL_NOT_SOURCE_AUTHORED",
+          "UNSUPPORTED_SOURCE_CASH_FLOW_TYPES_PRESENT",
+        ],
         source_contracts: ["PortfolioTimeseriesInput:v1", "PositionTimeseriesInput:v1"],
         available_economics: ["portfolio_market_values", "position_market_values"],
         unsupported_economics: ["income_pnl", "tax_pnl"],
