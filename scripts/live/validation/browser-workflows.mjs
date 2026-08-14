@@ -1536,6 +1536,10 @@ export async function validateRiskPanel(
   await screenshotRegisteredPanel(page, "performance.risk.snapshot");
 }
 
+export function classifyPerformanceEvidenceScreenshotState(assuranceState) {
+  return assuranceState === "ready" ? "demo_ready" : "truthfully_degraded";
+}
+
 export async function validateEvidencePanel(
   page,
   {
@@ -1571,12 +1575,13 @@ export async function validateEvidencePanel(
     await expect(
       assuranceWorkspace.getByRole("heading", { name: "Calculation coverage" }),
     ).toBeVisible({ timeout: timeoutMs });
+    const assuranceState = await assuranceWorkspace.getAttribute("data-assurance-state");
     summary.uiChecks.push({
       description: "Calculation assurance source posture",
       kind: "assurance-workspace",
-      state: await assuranceWorkspace.getAttribute("data-assurance-state"),
+      state: assuranceState,
     });
-    screenshotState = "demo_ready";
+    screenshotState = classifyPerformanceEvidenceScreenshotState(assuranceState);
   } else {
     await expect(
       page.getByRole("heading", { name: /Assurance (evidence incomplete|unavailable)/ }),

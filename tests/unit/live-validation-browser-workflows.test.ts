@@ -8,6 +8,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 const {
   buildReportCentreProofPosture,
   classifyAttributionDetailEvidence,
+  classifyPerformanceEvidenceScreenshotState,
   createBrowserValidationHelpers,
   classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
@@ -32,6 +33,9 @@ const {
     | "summary_fallback"
     | "governed_partial_fallback"
     | "ready_empty_state";
+  classifyPerformanceEvidenceScreenshotState: (
+    assuranceState: string | null,
+  ) => "demo_ready" | "truthfully_degraded";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   classifyAdvisorBriefAcceptProofPosture: (
     text: string,
@@ -55,6 +59,16 @@ const {
 };
 
 describe("live validation browser workflow helpers", () => {
+  it.each([
+    ["ready", "demo_ready"],
+    ["attention", "truthfully_degraded"],
+    ["incomplete", "truthfully_degraded"],
+    ["unavailable", "truthfully_degraded"],
+    [null, "truthfully_degraded"],
+  ] as const)("classifies %s evidence screenshot posture as %s", (state, expected) => {
+    expect(classifyPerformanceEvidenceScreenshotState(state)).toBe(expected);
+  });
+
   it.each([
     [{ detailTableCount: 1, summaryTableCount: 0, partialFallbackCount: 0, readyEmptyStateCount: 0 }, "detail_rows"],
     [{ detailTableCount: 0, summaryTableCount: 1, partialFallbackCount: 0, readyEmptyStateCount: 0 }, "summary_fallback"],
