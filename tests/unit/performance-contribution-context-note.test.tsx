@@ -319,6 +319,34 @@ describe("PerformanceContributionContextNote", () => {
     expect(note).toHaveTextContent("Not source-authored: currency contribution.");
   });
 
+  it("prioritizes caller-supplied provenance review over a smoothing limitation", () => {
+    const contribution = buildContribution({
+      smoothing_evidence: {
+        status: "INVALID_DOMAIN_FALLBACK",
+        reason_codes: ["CARINO_INVALID_DAILY_LOG_DOMAIN"],
+        raw_contribution_pct: 5.31,
+        final_contribution_pct: 5.42,
+        linked_return_pct: 5.42,
+        smoothing_residual_pct: 0,
+      },
+      source_economics_evidence: {
+        status: "CALLER_SUPPLIED",
+        reason_codes: ["STATELESS_CALLER_SUPPLIED_SOURCE_ECONOMICS"],
+        source_contracts: [],
+        available_economics: [],
+        unsupported_economics: [],
+        degraded_economics: [],
+        source_snapshot_count: 0,
+      },
+    });
+    render(<PerformanceContributionContextNote contribution={contribution} />);
+
+    const note = screen.getByTestId("performance-contribution-evidence");
+    expect(note).toHaveAttribute("data-tone", "review");
+    expect(note).toHaveTextContent("Contribution input provenance needs confirmation");
+    expect(note).not.toHaveTextContent("Contribution evidence has a methodology limitation");
+  });
+
   it("rejects a source-backed status that carries a limiting source reason", () => {
     const contribution = buildContribution();
     render(

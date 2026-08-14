@@ -179,6 +179,13 @@ function getContributionEvidenceDecision({
       body: "A reliable market-value coverage percentage was not published for this calculation. Review the calculation evidence before using the driver explanation with a client.",
     };
   }
+  if (sourceStatus === "CALLER_SUPPLIED") {
+    return {
+      tone: "review",
+      title: "Contribution input provenance needs confirmation",
+      body: "These figures rely on request-supplied inputs rather than the standard source-owned portfolio record. Confirm the input provenance before client use.",
+    };
+  }
   if (smoothingStatus === "INVALID_DOMAIN_FALLBACK") {
     return {
       tone: "limited",
@@ -197,14 +204,7 @@ function getContributionEvidenceDecision({
     return {
       tone: "limited",
       title: "Contribution coverage is limited",
-      body: "The driver ranking uses the available source-owned portfolio economics, but not every component is source-authored. Review the stated exclusions before using the explanation with a client.",
-    };
-  }
-  if (sourceStatus === "CALLER_SUPPLIED") {
-    return {
-      tone: "review",
-      title: "Contribution input provenance needs confirmation",
-      body: "These figures rely on request-supplied inputs rather than the standard source-owned portfolio record. Confirm the input provenance before client use.",
+      body: "The driver ranking uses the available source-owned portfolio economics, but the evidence has published limitations. Review the stated exclusions before using the explanation with a client.",
     };
   }
   if (sourceStatus === "SOURCE_BACKED" && coveragePosture === "limited") {
