@@ -1,6 +1,7 @@
 import type { ContributionSummaryView } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
+import { isContributionEvidenceConsistent } from "./performance-contribution-evidence-consistency";
 import {
   getContributionCoverageAssessment,
   getContributionReconciliationAssessment,
@@ -94,8 +95,17 @@ export function getContributionEvidencePresentation(
     (smoothingStatus !== null && !includesEvidenceValue(SMOOTHING_STATUSES, smoothingStatus));
   const hasUnknownEvidence =
     hasUnknownStatus || unknownSourceCodes.length > 0 || unknownSmoothingCodes.length > 0;
+  const hasInconsistentEvidence =
+    !hasIncompleteEvidence &&
+    sourceStatus !== null &&
+    smoothingStatus !== null &&
+    !isContributionEvidenceConsistent(contribution, {
+      sourceStatus,
+      smoothingStatus,
+    });
   const limitations = getContributionLimitations(contribution, {
     hasUnknownEvidence,
+    hasInconsistentEvidence,
     smoothingStatus,
   });
   const decision = getContributionEvidenceDecision({
@@ -104,6 +114,7 @@ export function getContributionEvidencePresentation(
     sourceStatus,
     smoothingStatus,
     hasUnknownEvidence,
+    hasInconsistentEvidence,
     hasDeclaredSourceLimitations: Boolean(
       sourceEvidence?.unsupported_economics.length || sourceEvidence?.degraded_economics.length,
     ),
@@ -123,6 +134,7 @@ function getContributionEvidenceDecision({
   sourceStatus,
   smoothingStatus,
   hasUnknownEvidence,
+  hasInconsistentEvidence,
   hasDeclaredSourceLimitations,
 }: {
   hasSourceEvidence: boolean;
@@ -130,6 +142,7 @@ function getContributionEvidenceDecision({
   sourceStatus: string | null;
   smoothingStatus: string | null;
   hasUnknownEvidence: boolean;
+  hasInconsistentEvidence: boolean;
   hasDeclaredSourceLimitations: boolean;
 }): Pick<ContributionEvidencePresentation, "tone" | "title" | "body"> {
   if (!hasSourceEvidence) {
@@ -151,6 +164,13 @@ function getContributionEvidenceDecision({
       tone: "review",
       title: "Contribution evidence needs review",
       body: "Lotus received a source or methodology status it does not yet recognize. Do not assume the figures are complete; review the exact calculation evidence before use.",
+    };
+  }
+  if (hasInconsistentEvidence) {
+    return {
+      tone: "review",
+      title: "Contribution evidence is inconsistent",
+      body: "The published calculation status does not agree with its supporting evidence. Do not use the driver explanation with a client until the source evidence has been reviewed.",
     };
   }
   if (smoothingStatus === "INVALID_DOMAIN_FALLBACK") {
@@ -199,8 +219,13 @@ function getContributionLimitations(
   contribution: ContributionSummaryView,
   {
     hasUnknownEvidence,
+    hasInconsistentEvidence,
     smoothingStatus,
-  }: { hasUnknownEvidence: boolean; smoothingStatus: string | null },
+  }: {
+    hasUnknownEvidence: boolean;
+    hasInconsistentEvidence: boolean;
+    smoothingStatus: string | null;
+  },
 ): string[] {
   const sourceEvidence = contribution.source_economics_evidence;
   const limitations: string[] = [];
@@ -239,6 +264,9 @@ function getContributionLimitations(
   }
   if (hasUnknownEvidence) {
     limitations.push("Some published evidence is not recognized by this Workbench version.");
+  }
+  if (hasInconsistentEvidence) {
+    limitations.push("Published statuses and supporting reason codes do not agree.");
   }
 
   return [...new Set(limitations)];
