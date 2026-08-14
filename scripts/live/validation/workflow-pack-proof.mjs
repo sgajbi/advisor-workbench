@@ -194,6 +194,14 @@ function isReviewActionAllowed(payload, actionType) {
   return allowedActions.includes(actionType);
 }
 
+function hasRecordedReplacementLineage(run, expectedReviewState, replacementRunId) {
+  return (
+    run.review_state === expectedReviewState &&
+    run.superseded === true &&
+    run.replacement_run_id === replacementRunId
+  );
+}
+
 function recordSkippedReviewAction(summary, payload, actionType, route) {
   const run = assertWorkflowPackRunPresence(payload, `Advisor brief ${actionType} source run`);
   const taskFlow = assertInitialTaskFlowPosture(
@@ -359,11 +367,6 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     supersedeOriginal,
     "Advisor brief supersede source run"
   );
-  assertInitialTaskFlowPosture(
-    supersedeOriginal,
-    supersedeSourceRun.run_id,
-    "Advisor brief supersede source run"
-  );
   const supersedeReplacementRun = assertWorkflowPackRunPresence(
     supersedeReplacement,
     "Advisor brief supersede replacement run"
@@ -373,18 +376,42 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     supersedeReplacementRun.run_id,
     "Advisor brief supersede replacement run"
   );
-  const supersededBrief = await postJson(
-    summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${supersedeOriginalQuery}`,
-    "Advisor brief SUPERSEDE review action",
-    timeoutMs,
-    {
-      action_type: "SUPERSEDE",
-      reviewed_by: "live.validator.supersede",
-      reason: "Live canonical validator proving bounded SUPERSEDE replacement lineage.",
-      replacement_run_id: supersedeReplacementRun.run_id,
+  let supersededBrief;
+  let supersedeProofSource;
+  if (
+    hasRecordedReplacementLineage(
+      supersedeSourceRun,
+      "SUPERSEDED",
+      supersedeReplacementRun.run_id
+    )
+  ) {
+    supersededBrief = supersedeOriginal;
+    supersedeProofSource = "source-confirmed-existing-lineage";
+  } else {
+    assertInitialTaskFlowPosture(
+      supersedeOriginal,
+      supersedeSourceRun.run_id,
+      "Advisor brief supersede source run"
+    );
+    if (!isReviewActionAllowed(supersedeOriginal, "SUPERSEDE")) {
+      throw new Error(
+        "Advisor brief SUPERSEDE source run exposed neither an allowed action nor exact recorded lineage."
+      );
     }
-  );
+    supersededBrief = await postJson(
+      summary,
+      `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${supersedeOriginalQuery}`,
+      "Advisor brief SUPERSEDE review action",
+      timeoutMs,
+      {
+        action_type: "SUPERSEDE",
+        reviewed_by: "live.validator.supersede",
+        reason: "Live canonical validator proving bounded SUPERSEDE replacement lineage.",
+        replacement_run_id: supersedeReplacementRun.run_id,
+      }
+    );
+    supersedeProofSource = "validator-api-action";
+  }
   const supersededRun = assertReplacementLineagePosture(
     supersededBrief,
     "SUPERSEDED",
@@ -406,6 +433,7 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     taskFlowSupportabilityStatus: supersededTaskFlow.supportability_status,
     resultReviewState: supersededRun.review_state,
     resultSupportabilityStatus: supersededRun.supportability_status,
+    proofSource: supersedeProofSource,
   });
 
   const reviseOriginalQuery = buildAdvisorBriefWorkspaceQuery({
@@ -438,11 +466,6 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     reviseOriginal,
     "Advisor brief revise source run"
   );
-  assertInitialTaskFlowPosture(
-    reviseOriginal,
-    reviseSourceRun.run_id,
-    "Advisor brief revise source run"
-  );
   const reviseReplacementRun = assertWorkflowPackRunPresence(
     reviseReplacement,
     "Advisor brief revise replacement run"
@@ -452,18 +475,42 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     reviseReplacementRun.run_id,
     "Advisor brief revise replacement run"
   );
-  const revisedBrief = await postJson(
-    summary,
-    `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${reviseOriginalQuery}`,
-    "Advisor brief REVISE review action",
-    timeoutMs,
-    {
-      action_type: "REVISE",
-      reviewed_by: "live.validator.revise",
-      reason: "Live canonical validator proving bounded REVISE replacement lineage.",
-      replacement_run_id: reviseReplacementRun.run_id,
+  let revisedBrief;
+  let reviseProofSource;
+  if (
+    hasRecordedReplacementLineage(
+      reviseSourceRun,
+      "REVISED",
+      reviseReplacementRun.run_id
+    )
+  ) {
+    revisedBrief = reviseOriginal;
+    reviseProofSource = "source-confirmed-existing-lineage";
+  } else {
+    assertInitialTaskFlowPosture(
+      reviseOriginal,
+      reviseSourceRun.run_id,
+      "Advisor brief revise source run"
+    );
+    if (!isReviewActionAllowed(reviseOriginal, "REVISE")) {
+      throw new Error(
+        "Advisor brief REVISE source run exposed neither an allowed action nor exact recorded lineage."
+      );
     }
-  );
+    revisedBrief = await postJson(
+      summary,
+      `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/advisor-brief/review-actions?${reviseOriginalQuery}`,
+      "Advisor brief REVISE review action",
+      timeoutMs,
+      {
+        action_type: "REVISE",
+        reviewed_by: "live.validator.revise",
+        reason: "Live canonical validator proving bounded REVISE replacement lineage.",
+        replacement_run_id: reviseReplacementRun.run_id,
+      }
+    );
+    reviseProofSource = "validator-api-action";
+  }
   const revisedRun = assertReplacementLineagePosture(
     revisedBrief,
     "REVISED",
@@ -485,5 +532,6 @@ export async function validateAdvisorBriefWorkflowPackReviewChain({
     taskFlowSupportabilityStatus: revisedTaskFlow.supportability_status,
     resultReviewState: revisedRun.review_state,
     resultSupportabilityStatus: revisedRun.supportability_status,
+    proofSource: reviseProofSource,
   });
 }

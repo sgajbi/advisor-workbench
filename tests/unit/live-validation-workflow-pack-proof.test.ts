@@ -270,7 +270,7 @@ describe("live validation workflow-pack proof", () => {
     ]);
   });
 
-  it("verifies the browser-recorded acceptance before continuing API lineage proof", async () => {
+  it("verifies recorded review lineage without reposting on a canonical rerun", async () => {
     const summary = createSummary();
     const postCalls: Array<{ url: string; body: Record<string, unknown> }> = [];
     const fetchAdvisorBriefPayload = createFetchAdvisorBriefPayload();
@@ -285,6 +285,44 @@ describe("live validation workflow-pack proof", () => {
       timeoutMs: 1000,
       preRecordedAcceptReviewer: "live.validator.ui",
       fetchJson: async (_summary: unknown, url: string) => {
+        if (url.includes("report_start_date=2026-02-01")) {
+          return createAdvisorBriefPayload({
+            runId: "packrun-revise-replacement",
+            taskFlowId: "taskflow-revise-replacement",
+          });
+        }
+        if (
+          url.includes("detail_basis=NET") &&
+          url.includes("report_start_date=2026-01-01")
+        ) {
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-net",
+            reviewState: "SUPERSEDED",
+            allowedReviewActions: [],
+            supportabilityStatus: "HISTORICAL",
+            superseded: true,
+            replacementRunId: "packrun-explicit-gross",
+            taskFlowId: "taskflow-explicit-net",
+            taskFlowStatus: "SUPERSEDED",
+            taskFlowSupportabilityStatus: "HISTORICAL",
+          });
+        }
+        if (
+          url.includes("detail_basis=GROSS") &&
+          url.includes("report_start_date=2025-03-31")
+        ) {
+          return createAdvisorBriefPayload({
+            runId: "packrun-explicit-gross",
+            reviewState: "REVISED",
+            allowedReviewActions: [],
+            supportabilityStatus: "HISTORICAL",
+            superseded: true,
+            replacementRunId: "packrun-revise-replacement",
+            taskFlowId: "taskflow-explicit-gross",
+            taskFlowStatus: "SUPERSEDED",
+            taskFlowSupportabilityStatus: "HISTORICAL",
+          });
+        }
         if (
           url.includes("detail_basis=NET") &&
           url.includes("report_start_date=2025-03-31")
@@ -311,35 +349,11 @@ describe("live validation workflow-pack proof", () => {
         body: Record<string, unknown>
       ) => {
         postCalls.push({ url, body });
-        if (body.action_type === "SUPERSEDE") {
-          return createAdvisorBriefPayload({
-            runId: "packrun-explicit-net",
-            reviewState: "SUPERSEDED",
-            supportabilityStatus: "HISTORICAL",
-            superseded: true,
-            replacementRunId: body.replacement_run_id,
-            taskFlowId: "taskflow-explicit-net",
-            taskFlowStatus: "SUPERSEDED",
-            taskFlowSupportabilityStatus: "HISTORICAL",
-          });
-        }
-        return createAdvisorBriefPayload({
-          runId: "packrun-explicit-gross",
-          reviewState: "REVISED",
-          supportabilityStatus: "HISTORICAL",
-          superseded: true,
-          replacementRunId: body.replacement_run_id,
-          taskFlowId: "taskflow-explicit-gross",
-          taskFlowStatus: "SUPERSEDED",
-          taskFlowSupportabilityStatus: "HISTORICAL",
-        });
+        throw new Error("postJson should not be called for recorded canonical lineage.");
       },
     });
 
-    expect(postCalls.map(({ body }) => body.action_type)).toEqual([
-      "SUPERSEDE",
-      "REVISE",
-    ]);
+    expect(postCalls).toEqual([]);
     expect(summary.workflowPackChecks[0]).toEqual(
       expect.objectContaining({
         actionType: "ACCEPT",
@@ -348,6 +362,16 @@ describe("live validation workflow-pack proof", () => {
         proofSource: "source-confirmed-browser-action",
       })
     );
+    expect(summary.workflowPackChecks.slice(1)).toEqual([
+      expect.objectContaining({
+        actionType: "SUPERSEDE",
+        proofSource: "source-confirmed-existing-lineage",
+      }),
+      expect.objectContaining({
+        actionType: "REVISE",
+        proofSource: "source-confirmed-existing-lineage",
+      }),
+    ]);
   });
 
   it("accepts truthfully action-required accept posture when the run remains degraded", async () => {
