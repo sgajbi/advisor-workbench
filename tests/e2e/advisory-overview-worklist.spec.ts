@@ -2,11 +2,16 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
+import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const evidenceDirectory = path.resolve("output", "issue-591");
+const navigationEvidenceDirectory = path.resolve("output", "playwright");
 
 async function mockAdvisoryOverview(page: Page) {
+  await page.route("**/api/bff/api/v1/platform/capabilities?**", async (route) => {
+    await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
+  });
   await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
     await route.fulfill({
       json: {
@@ -73,12 +78,79 @@ for (const viewport of viewports) {
     );
     await expect(page.getByText("Advisory Journey", { exact: true })).toHaveCount(0);
 
+    const navigation = page.getByRole("navigation", {
+      name: "Workbench screen navigation",
+    });
+    const compactNavigation = viewport.width <= 1200;
+    const currentView = page.getByRole("button", {
+      name: /Current view Overview/i,
+    });
+    if (compactNavigation) {
+      await expect(navigation).not.toBeVisible();
+      await currentView.click();
+    }
+    await expect(navigation).toBeVisible();
+    await expect(navigation).toHaveAttribute("data-default-destination-count", "6");
+    await expect(
+      navigation
+        .getByRole("group", { name: "Primary workspaces" })
+        .getByRole("link", { name: /Advice Priorities and recommendations/i }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(
+      navigation
+        .getByRole("group", { name: "Advisory lifecycle navigation" })
+        .getByRole("link", { name: "Overview" }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("link", { name: "Cockpit" })).toHaveCount(0);
+
+    const allWorkspaces = navigation.getByRole("button", {
+      name: /All workspaces/i,
+    });
+    await allWorkspaces.click();
+    const holdings = navigation.getByRole("link", {
+      name: /Holdings Valuation and profit or loss/i,
+    });
+    await expect(holdings).toBeVisible();
+    await expect(navigation.getByRole("link", { name: /Risk Exposure and risk review/i })).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: /Proposals Advice lifecycle and approvals/i }),
+    ).toBeVisible();
+    await holdings.focus();
+    await page.keyboard.press("Escape");
+    await expect(allWorkspaces).toBeFocused();
+    await expect(holdings).toHaveCount(0);
+
+    const changeWorkflow = navigation.getByRole("button", {
+      name: /Change workflow step/i,
+    });
+    await changeWorkflow.click();
+    const cockpit = navigation.getByRole("link", { name: "Cockpit" });
+    await expect(cockpit).toBeVisible();
+    await cockpit.focus();
+    await page.keyboard.press("Escape");
+    await expect(changeWorkflow).toBeFocused();
+    await expect(cockpit).toHaveCount(0);
+
     const hasHorizontalPageOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth
     );
     expect(hasHorizontalPageOverflow).toBeFalsy();
 
     await mkdir(evidenceDirectory, { recursive: true });
+    await mkdir(navigationEvidenceDirectory, { recursive: true });
+    await page.screenshot({
+      path: path.join(
+        navigationEvidenceDirectory,
+        `issue-705-advisory-navigation-${viewport.name}.png`,
+      ),
+      fullPage: true,
+      animations: "disabled",
+    });
+    if (compactNavigation) {
+      await page.keyboard.press("Escape");
+      await expect(currentView).toBeFocused();
+      await expect(navigation).not.toBeVisible();
+    }
     await page.screenshot({
       path: path.join(evidenceDirectory, `advisory-overview-${viewport.name}.png`),
       fullPage: true,

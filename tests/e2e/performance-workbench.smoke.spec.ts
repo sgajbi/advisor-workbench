@@ -105,9 +105,17 @@ async function openPerformanceWorkbench(
   }
 
   await expect(workbenchHeading).toBeVisible({ timeout: 30000 });
-  await expect(
-    page.getByLabel('Performance surface navigation').getByRole('button', { name: /^Performance Overview$/i })
-  ).toBeVisible({ timeout: 30000 });
+  if ((page.viewportSize()?.width ?? 1440) <= 1200) {
+    await expect(
+      page.getByRole('button', { name: /^Current view Performance Overview/i }),
+    ).toBeVisible({ timeout: 30000 });
+  } else {
+    await expect(
+      page
+        .getByLabel('Performance surface navigation')
+        .getByRole('button', { name: /^Performance Overview$/i }),
+    ).toBeVisible({ timeout: 30000 });
+  }
   return { portfolioId, available: true };
 }
 
@@ -456,6 +464,100 @@ test.describe('Performance workbench smoke', () => {
         scrollWidth: document.documentElement.scrollWidth,
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test('task-aware navigation keeps Performance work available without catalogue overload', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic navigation proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+
+    for (const viewport of [
+      { name: 'desktop', width: 1440, height: 1000 },
+      { name: 'tablet', width: 1024, height: 1100 },
+      { name: 'compact', width: 519, height: 1000 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const session = await openPerformanceWorkbench(page, request);
+      expect(session.available).toBe(true);
+
+      const navigation = page.getByRole('navigation', {
+        name: 'Workbench screen navigation',
+      });
+      const compactNavigation = viewport.width <= 1200;
+      const currentView = page.getByRole('button', {
+        name: /Current view Performance/i,
+      });
+      if (compactNavigation) {
+        await expect(navigation).not.toBeVisible();
+        await currentView.click();
+      }
+      await expect(navigation).toBeVisible();
+      await expect(navigation).toHaveAttribute('data-default-destination-count', '6');
+      await expect(
+        navigation
+          .getByRole('group', { name: 'Primary workspaces' })
+          .getByRole('link', { name: /Performance Returns and attribution/i }),
+      ).toHaveAttribute('aria-current', 'page');
+      await expect(
+        navigation
+          .getByRole('group', { name: 'Performance surface navigation' })
+          .getByRole('button', { name: 'Performance Overview' }),
+      ).toHaveAttribute('aria-current', 'page');
+      await expect(
+        navigation.getByRole('button', { name: 'Performance Analysis' }),
+      ).toHaveCount(0);
+
+      const allWorkspaces = navigation.getByRole('button', {
+        name: /All workspaces/i,
+      });
+      await allWorkspaces.click();
+      const holdings = navigation.getByRole('link', {
+        name: /Holdings Valuation and profit or loss/i,
+      });
+      await expect(holdings).toBeVisible();
+      await expect(
+        navigation.getByRole('link', { name: /Risk Exposure and risk review/i }),
+      ).toBeVisible();
+      await holdings.focus();
+      await page.keyboard.press('Escape');
+      await expect(allWorkspaces).toBeFocused();
+      await expect(holdings).toHaveCount(0);
+
+      const changeWorkflow = navigation.getByRole('button', {
+        name: /Change workflow step/i,
+      });
+      await changeWorkflow.click();
+      const analysis = navigation.getByRole('button', {
+        name: 'Performance Analysis',
+      });
+      await expect(analysis).toBeVisible();
+      await analysis.focus();
+      await page.keyboard.press('Escape');
+      await expect(changeWorkflow).toBeFocused();
+      await expect(analysis).toHaveCount(0);
+
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+      await page.screenshot({
+        path: `output/playwright/issue-705-performance-navigation-${viewport.name}.png`,
+        fullPage: true,
+        animations: 'disabled',
+      });
+
+      if (compactNavigation) {
+        await page.keyboard.press('Escape');
+        await expect(currentView).toBeFocused();
+        await expect(navigation).not.toBeVisible();
+      }
     }
   });
 

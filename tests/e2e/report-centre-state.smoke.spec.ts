@@ -271,6 +271,78 @@ test("tracks an accepted request and deliberately starts a second at constrained
   await captureDiagnosticScreenshot(page, "accepted-next-request-720");
 });
 
+test("keeps Reporting task-aware while every specialist workspace remains reachable", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { name: "desktop", width: 1440, height: 1000 },
+    { name: "tablet", width: 1024, height: 1100 },
+    { name: "compact", width: 519, height: 1000 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(
+      `/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`,
+      { waitUntil: "domcontentloaded" },
+    );
+    await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const navigation = page.getByRole("navigation", {
+      name: "Workbench screen navigation",
+    });
+    const compactNavigation = viewport.width <= 1200;
+    const currentView = page.getByRole("button", {
+      name: /Current view Reporting/i,
+    });
+    if (compactNavigation) {
+      await expect(navigation).not.toBeVisible();
+      await currentView.click();
+    }
+    await expect(navigation).toBeVisible();
+    await expect(navigation).toHaveAttribute("data-default-destination-count", "5");
+    await expect(
+      navigation
+        .getByRole("group", { name: "Primary workspaces" })
+        .getByRole("link", { name: /Reporting Order and monitor reports/i }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByText("Current workflow", { exact: true })).toHaveCount(0);
+
+    const allWorkspaces = navigation.getByRole("button", {
+      name: /All workspaces/i,
+    });
+    await allWorkspaces.click();
+    const holdings = navigation.getByRole("link", {
+      name: /Holdings Valuation and profit or loss/i,
+    });
+    await expect(holdings).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: /Risk Exposure and risk review/i }),
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: /Proposals Advice lifecycle and approvals/i }),
+    ).toBeVisible();
+    await holdings.focus();
+    await page.keyboard.press("Escape");
+    await expect(allWorkspaces).toBeFocused();
+    await expect(holdings).toHaveCount(0);
+
+    const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(pageWidth).toBeLessThanOrEqual(viewport.width + 2);
+    await page.screenshot({
+      path: `output/playwright/issue-705-reporting-navigation-${viewport.name}.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
+
+    if (compactNavigation) {
+      await page.keyboard.press("Escape");
+      await expect(currentView).toBeFocused();
+      await expect(navigation).not.toBeVisible();
+    }
+  }
+});
+
 for (const { width, stacked } of [
   { width: 721, stacked: false },
   { width: 720, stacked: true },
