@@ -1,0 +1,22 @@
+.stage {
+  min-height: 28.5rem;
+}
+
+.stage.singleObservationStage {
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .stage {
+    min-height: 19rem;
+  }
+
+  .stage.singleObservationStage {
+    min-height: 0;
+  }
+
+  .stage :global(.echarts-for-react),
+  .stage [data-testid="performance-echart"] {
+    min-height: 21rem;
+  }
+}

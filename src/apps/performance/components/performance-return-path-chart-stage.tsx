@@ -12,6 +12,7 @@ import PerformanceReturnPathSingleObservationStage, {
   type PerformanceReturnPathSingleObservationPresentation,
 } from "./performance-return-path-single-observation-stage";
 import { SHARED_CHART_TEXT } from "./performance-return-path-chart-model";
+import styles from "./performance-return-path-chart-stage.module.css";
 
 type PerformanceReturnPathChartStageProps = {
   title: string;
@@ -30,7 +31,8 @@ export default function PerformanceReturnPathChartStage({
 }: PerformanceReturnPathChartStageProps) {
   return (
     <div
-      className="performance-chart-library-frame performance-return-path-chart-stage workbench-summary-visual"
+      className={`performance-chart-library-frame workbench-summary-visual ${styles.stage} ${singleObservation ? styles.singleObservationStage : ""}`}
+      data-layout={singleObservation ? "single-observation" : "time-series"}
       role="img"
       aria-label={`${title} chart`}
       style={{ position: "relative" }}
