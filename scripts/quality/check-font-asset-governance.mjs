@@ -12,21 +12,17 @@ const REQUIRED_ROLE_VARIABLES = new Map([
   ["brand-display", "--font-lotus-display-face"],
   ["technical-evidence", "--font-lotus-mono-face"],
 ]);
-const REQUIRED_FORBIDDEN_RUNTIME_HOSTS = new Set([
-  "fonts.googleapis.com",
-  "fonts.gstatic.com",
+const REQUIRED_ROLE_CONSUMERS = new Map([
+  ["operational-ui", { css: "--font-ui", typescript: "ui" }],
+  ["brand-display", { css: "--font-display", typescript: "display" }],
+  ["technical-evidence", { css: "--font-mono", typescript: "mono" }],
 ]);
-const REQUIRED_GIT_ATTRIBUTES = [
-  "src/assets/fonts/*.woff2 binary",
-  "docs/licenses/fonts/*.txt text eol=lf -whitespace",
-];
+const REQUIRED_FORBIDDEN_RUNTIME_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
+const REQUIRED_GIT_ATTRIBUTES = ["src/assets/fonts/*.woff2 binary", "docs/licenses/fonts/*.txt text eol=lf -whitespace"];
 const REMOTE_FONT_DELIVERY_PATTERNS = [
-  ["remote stylesheet import", /@import\s+(?:url\(\s*)?["']?\s*https?:\/\//i],
-  ["remote font asset", /https?:\/\/[^\s"'`)<]+\.(?:woff2?|ttf|otf|eot)(?:[?#][^\s"'`)<]*)?/i],
-  [
-    "remote stylesheet link",
-    /<link\b(?=[^>]*\brel\s*=\s*["']stylesheet["'])(?=[^>]*\bhref\s*=\s*["']https?:\/\/)[^>]*>/i,
-  ],
+  ["remote stylesheet import", /@import\s+(?:url\(\s*)?["']?\s*(?:https?:)?\/\//i],
+  ["remote font asset", /(?:https?:)?\/\/[^\s"'`)<]+\.(?:woff2?|ttf|otf|eot)(?:[?#][^\s"'`)<]*)?/i],
+  ["remote stylesheet link", /<link\b(?=[^>]*\brel\s*=\s*["']stylesheet["'])(?=[^>]*\bhref\s*=\s*["'](?:https?:)?\/\/)[^>]*>/i],
 ];
 
 function resolveDefaultRepoRoot() {
@@ -96,19 +92,33 @@ function storedFontAssetPaths(repoRoot) {
   if (!existsSync(assetRoot)) {
     return [];
   }
-  return readdirSync(assetRoot, { withFileTypes: true }).flatMap((entry) => {
-    if (!entry.isFile() || !/\.(?:woff2?|ttf|otf|eot)$/i.test(entry.name)) {
-      return [];
-    }
-    return [`src/assets/fonts/${entry.name}`];
-  });
+
+  function fontAssets(directory) {
+    return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const absolutePath = resolve(directory, entry.name);
+      if (entry.isDirectory()) {
+        return fontAssets(absolutePath);
+      }
+      if (!entry.isFile() || !/\.(?:woff2?|ttf|otf|eot)$/i.test(entry.name)) {
+        return [];
+      }
+      return [relative(repoRoot, absolutePath).replaceAll("\\", "/")];
+    });
+  }
+
+  return fontAssets(assetRoot);
 }
 
 function propertyAssignment(objectLiteral, propertyName) {
-  return objectLiteral.properties.find((property) =>
-    ts.isPropertyAssignment(property) &&
-    (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) &&
-    property.name.text === propertyName);
+  return objectLiteral.properties.find((property) => ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) && property.name.text === propertyName);
+}
+
+function objectLiteralExpression(node) {
+  let candidate = node;
+  while (ts.isAsExpression(candidate) || ts.isSatisfiesExpression(candidate) || ts.isParenthesizedExpression(candidate)) {
+    candidate = candidate.expression;
+  }
+  return ts.isObjectLiteralExpression(candidate) ? candidate : undefined;
 }
 
 function staticFontPath(node, description) {
@@ -118,12 +128,16 @@ function staticFontPath(node, description) {
   throw new Error(`${description} in src/app/fonts.ts must use a static string path.`);
 }
 
+function optionalStaticProperty(objectLiteral, propertyName, description) {
+  const property = propertyAssignment(objectLiteral, propertyName);
+  return property ? staticFontPath(property.initializer, description) : undefined;
+}
+
 function bindingIdentifierNames(name) {
   if (ts.isIdentifier(name)) {
     return [name.text];
   }
-  return name.elements.flatMap((element) =>
-    ts.isOmittedExpression(element) ? [] : bindingIdentifierNames(element.name));
+  return name.elements.flatMap((element) => (ts.isOmittedExpression(element) ? [] : bindingIdentifierNames(element.name)));
 }
 
 function assertNoLoaderShadowing(sourceFile, loaderIdentifier) {
@@ -131,19 +145,11 @@ function assertNoLoaderShadowing(sourceFile, loaderIdentifier) {
     let names = [];
     if (ts.isVariableDeclaration(node) || ts.isParameter(node)) {
       names = bindingIdentifierNames(node.name);
-    } else if (
-      (ts.isFunctionDeclaration(node) ||
-        ts.isFunctionExpression(node) ||
-        ts.isClassDeclaration(node) ||
-        ts.isClassExpression(node)) &&
-      node.name
-    ) {
+    } else if ((ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isClassDeclaration(node) || ts.isClassExpression(node)) && node.name) {
       names = [node.name.text];
     }
     if (names.includes(loaderIdentifier)) {
-      throw new Error(
-        `src/app/fonts.ts must not shadow the ${loaderIdentifier} import from next/font/local.`,
-      );
+      throw new Error(`src/app/fonts.ts must not shadow the ${loaderIdentifier} import from next/font/local.`);
     }
     ts.forEachChild(node, visit);
   }
@@ -151,20 +157,9 @@ function assertNoLoaderShadowing(sourceFile, loaderIdentifier) {
 }
 
 function localFontCalls(fontLoaderText) {
-  const sourceFile = ts.createSourceFile(
-    "src/app/fonts.ts",
-    fontLoaderText,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS,
-  );
+  const sourceFile = ts.createSourceFile("src/app/fonts.ts", fontLoaderText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const loaderImports = sourceFile.statements.flatMap((statement) => {
-    if (
-      !ts.isImportDeclaration(statement) ||
-      !ts.isStringLiteral(statement.moduleSpecifier) ||
-      statement.moduleSpecifier.text !== "next/font/local" ||
-      !statement.importClause?.name
-    ) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== "next/font/local" || !statement.importClause?.name) {
       return [];
     }
     return [statement.importClause.name.text];
@@ -177,11 +172,7 @@ function localFontCalls(fontLoaderText) {
 
   const calls = [];
   function visit(node) {
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === loaderIdentifier
-    ) {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === loaderIdentifier) {
       const configuration = node.arguments[0];
       if (!configuration || !ts.isObjectLiteralExpression(configuration)) {
         throw new Error("Every localFont call must use an inline configuration object.");
@@ -205,10 +196,18 @@ function localFontCalls(fontLoaderText) {
           if (!path) {
             throw new Error("Every localFont src array entry must declare path.");
           }
-          sourceReferences.push(staticFontPath(path.initializer, "localFont path"));
+          sourceReferences.push({
+            path: staticFontPath(path.initializer, "localFont path"),
+            style: optionalStaticProperty(entry, "style", "localFont style"),
+            weight: optionalStaticProperty(entry, "weight", "localFont weight"),
+          });
         }
       } else {
-        sourceReferences.push(staticFontPath(source.initializer, "localFont src"));
+        sourceReferences.push({
+          path: staticFontPath(source.initializer, "localFont src"),
+          style: optionalStaticProperty(configuration, "style", "localFont style"),
+          weight: optionalStaticProperty(configuration, "weight", "localFont weight"),
+        });
       }
       calls.push({ semanticVariable, sourceReferences });
     }
@@ -228,40 +227,38 @@ function fontLoaderAssets(repoRoot, fontLoaderText) {
 
   return localFontCalls(fontLoaderText).flatMap(({ semanticVariable, sourceReferences }) =>
     sourceReferences.map((sourceReference) => {
-      if (!sourceReference.toLowerCase().endsWith(".woff2")) {
-        throw new Error(`${sourceReference} in src/app/fonts.ts must use the WOFF2 format.`);
+      if (!sourceReference.path.toLowerCase().endsWith(".woff2")) {
+        throw new Error(`${sourceReference.path} in src/app/fonts.ts must use the WOFF2 format.`);
       }
-      const absolutePath = resolve(loaderDirectory, sourceReference.replaceAll("\\", "/"));
+      const absolutePath = resolve(loaderDirectory, sourceReference.path.replaceAll("\\", "/"));
       if (!isContainedPath(assetRoot, absolutePath)) {
-        throw new Error(`${sourceReference} in src/app/fonts.ts resolves outside src/assets/fonts.`);
+        throw new Error(`${sourceReference.path} in src/app/fonts.ts resolves outside src/assets/fonts.`);
       }
       return {
         path: relative(repoRoot, absolutePath).replaceAll("\\", "/"),
         semanticVariable,
+        style: sourceReference.style,
+        weight: sourceReference.weight,
       };
-    }));
+    }),
+  );
 }
 
-function nextFontModuleReferences(sourceFile) {
+function fontModuleReferences(sourceFile) {
   const moduleNames = [];
   function visit(node) {
     let moduleName = null;
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       moduleName = node.moduleSpecifier.text;
     } else if (
       ts.isCallExpression(node) &&
       node.arguments.length > 0 &&
       ts.isStringLiteral(node.arguments[0]) &&
-      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === "require"))
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(node.expression) && node.expression.text === "require"))
     ) {
       moduleName = node.arguments[0].text;
     }
-    if (moduleName?.startsWith("next/font/")) {
+    if (moduleName?.startsWith("next/font/") || moduleName?.startsWith("@fontsource/") || moduleName?.startsWith("typeface-")) {
       moduleNames.push(moduleName);
     }
     ts.forEachChild(node, visit);
@@ -272,7 +269,7 @@ function nextFontModuleReferences(sourceFile) {
 
 function nonCanonicalFontDelivery(relativePath, text) {
   const violations = [];
-  if (relativePath !== "src/app/fonts.ts" && /@font-face\b/i.test(text)) {
+  if (/@font-face\b/i.test(text)) {
     violations.push("direct @font-face declaration");
   }
   for (const [label, pattern] of REMOTE_FONT_DELIVERY_PATTERNS) {
@@ -282,29 +279,78 @@ function nonCanonicalFontDelivery(relativePath, text) {
   }
 
   if (extname(relativePath) !== ".css") {
-    const sourceFile = ts.createSourceFile(
-      relativePath,
-      text,
-      ts.ScriptTarget.Latest,
-      true,
-      relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
-    for (const moduleName of nextFontModuleReferences(sourceFile)) {
+    const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    for (const moduleName of fontModuleReferences(sourceFile)) {
       if (moduleName.startsWith("next/font/") && moduleName !== "next/font/local") {
         violations.push(`non-local Next font loader ${moduleName}`);
       } else if (moduleName === "next/font/local" && relativePath !== "src/app/fonts.ts") {
         violations.push("next/font/local outside src/app/fonts.ts");
+      } else if (moduleName.startsWith("@fontsource/") || moduleName.startsWith("typeface-")) {
+        violations.push(`non-canonical font package ${moduleName}`);
       }
     }
   }
   return violations.map((violation) => `${relativePath}: ${violation}`);
 }
 
+function cssCustomProperties(text) {
+  return new Map([...text.matchAll(/(?:^|\n)\s*(--[\w-]+)\s*:\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
+}
+
+function typescriptFontFamilyTokens(text) {
+  const sourceFile = ts.createSourceFile("src/design-system/theme/tokens.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const tokenDeclaration = sourceFile.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => [...statement.declarationList.declarations])
+    .find((declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "lotusThemeTokens");
+  const tokenObject = tokenDeclaration?.initializer ? objectLiteralExpression(tokenDeclaration.initializer) : undefined;
+  if (!tokenObject) {
+    throw new Error("src/design-system/theme/tokens.ts must declare lotusThemeTokens as an object literal.");
+  }
+
+  const typography = propertyAssignment(tokenObject, "typography");
+  const typographyObject = typography ? objectLiteralExpression(typography.initializer) : undefined;
+  if (!typographyObject) {
+    throw new Error("lotusThemeTokens must declare typography as an object literal.");
+  }
+  const fontFamily = propertyAssignment(typographyObject, "fontFamily");
+  const fontFamilyObject = fontFamily ? objectLiteralExpression(fontFamily.initializer) : undefined;
+  if (!fontFamilyObject) {
+    throw new Error("lotusThemeTokens.typography must declare fontFamily as an object literal.");
+  }
+
+  const tokens = new Map();
+  for (const property of fontFamilyObject.properties) {
+    if (ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))) {
+      tokens.set(property.name.text, staticFontPath(property.initializer, `fontFamily.${property.name.text}`));
+    }
+  }
+  return tokens;
+}
+
+function validateSemanticTokenConsumers(repoRoot) {
+  const cssPath = resolve(repoRoot, "src/styles/global/tokens.css");
+  const typescriptPath = resolve(repoRoot, "src/design-system/theme/tokens.ts");
+  const cssTokens = cssCustomProperties(readFileSync(cssPath, "utf8"));
+  const typescriptTokens = typescriptFontFamilyTokens(readFileSync(typescriptPath, "utf8"));
+
+  for (const [role, consumers] of REQUIRED_ROLE_CONSUMERS) {
+    const expectedVariable = REQUIRED_ROLE_VARIABLES.get(role);
+    const expectedPrefix = `var(${expectedVariable})`;
+    const cssValue = cssTokens.get(consumers.css);
+    const typescriptValue = typescriptTokens.get(consumers.typescript);
+    if (!cssValue?.startsWith(expectedPrefix)) {
+      throw new Error(`${consumers.css} must consume ${expectedVariable} for ${role}.`);
+    }
+    if (!typescriptValue?.startsWith(expectedPrefix)) {
+      throw new Error(`fontFamily.${consumers.typescript} must consume ${expectedVariable} for ${role}.`);
+    }
+  }
+}
+
 export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
   const effectiveRepoRoot = repoRoot ?? resolveDefaultRepoRoot();
-  const effectiveManifest = manifest ?? JSON.parse(
-    readFileSync(resolve(effectiveRepoRoot, "config/font-assets.json"), "utf8"),
-  );
+  const effectiveManifest = manifest ?? JSON.parse(readFileSync(resolve(effectiveRepoRoot, "config/font-assets.json"), "utf8"));
   const gitAttributes = readFileSync(resolve(effectiveRepoRoot, ".gitattributes"), "utf8")
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -346,6 +392,9 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     if (!REQUIRED_ROLE_VARIABLES.has(family.role)) {
       throw new Error(`${family.family} declares unsupported semantic role ${family.role}.`);
     }
+    if (roles.has(family.role)) {
+      throw new Error(`Semantic font role ${family.role} is declared more than once.`);
+    }
     roles.add(family.role);
     assertGovernedFile(effectiveRepoRoot, family.licenseFile, "docs/licenses/fonts", "font license");
 
@@ -368,9 +417,10 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
       }
       const expectedVariable = REQUIRED_ROLE_VARIABLES.get(family.role);
       if (loadedAsset.semanticVariable !== expectedVariable) {
-        throw new Error(
-          `${asset.path} for ${family.role} must be loaded through ${expectedVariable}, received ${loadedAsset.semanticVariable}.`,
-        );
+        throw new Error(`${asset.path} for ${family.role} must be loaded through ${expectedVariable}, received ${loadedAsset.semanticVariable}.`);
+      }
+      if (loadedAsset.weight !== asset.weight || loadedAsset.style !== asset.style) {
+        throw new Error(`${asset.path} loader descriptors must match manifest weight ${asset.weight} and style ${asset.style}.`);
       }
     }
   }
@@ -380,40 +430,31 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     throw new Error(`Font asset governance is missing semantic roles: ${missingRoles.join(", ")}.`);
   }
 
-  const ungovernedLoadedAssets = [...loadedAssetsByPath.keys()]
-    .filter((assetPath) => !governedAssetPaths.has(assetPath));
+  validateSemanticTokenConsumers(effectiveRepoRoot);
+
+  const ungovernedLoadedAssets = [...loadedAssetsByPath.keys()].filter((assetPath) => !governedAssetPaths.has(assetPath));
   if (ungovernedLoadedAssets.length > 0) {
-    throw new Error(
-      `Font assets loaded by src/app/fonts.ts must be governed in config/font-assets.json: ${ungovernedLoadedAssets.join(", ")}.`,
-    );
+    throw new Error(`Font assets loaded by src/app/fonts.ts must be governed in config/font-assets.json: ${ungovernedLoadedAssets.join(", ")}.`);
   }
 
-  const ungovernedStoredAssets = storedFontAssetPaths(effectiveRepoRoot)
-    .filter((assetPath) => !governedAssetPaths.has(assetPath));
+  const ungovernedStoredAssets = storedFontAssetPaths(effectiveRepoRoot).filter((assetPath) => !governedAssetPaths.has(assetPath));
   if (ungovernedStoredAssets.length > 0) {
-    throw new Error(
-      `Font assets stored under src/assets/fonts must be governed in config/font-assets.json: ${ungovernedStoredAssets.join(", ")}.`,
-    );
+    throw new Error(`Font assets stored under src/assets/fonts must be governed in config/font-assets.json: ${ungovernedStoredAssets.join(", ")}.`);
   }
 
   const forbiddenHosts = effectiveManifest.forbiddenRuntimeHosts;
   if (!Array.isArray(forbiddenHosts) || forbiddenHosts.length === 0) {
     throw new Error("Font asset governance must declare forbiddenRuntimeHosts.");
   }
-  const missingForbiddenHosts = [...REQUIRED_FORBIDDEN_RUNTIME_HOSTS]
-    .filter((host) => !forbiddenHosts.includes(host));
+  const missingForbiddenHosts = [...REQUIRED_FORBIDDEN_RUNTIME_HOSTS].filter((host) => !forbiddenHosts.includes(host));
   if (missingForbiddenHosts.length > 0) {
-    throw new Error(
-      `Font asset governance is missing required forbidden runtime hosts: ${missingForbiddenHosts.join(", ")}.`,
-    );
+    throw new Error(`Font asset governance is missing required forbidden runtime hosts: ${missingForbiddenHosts.join(", ")}.`);
   }
 
   const publicFontReferences = sourceFiles(resolve(effectiveRepoRoot, "src")).flatMap((filePath) => {
     const text = readFileSync(filePath, "utf8");
     const normalizedText = text.toLowerCase();
-    return forbiddenHosts
-      .filter((host) => normalizedText.includes(host.toLowerCase()))
-      .map((host) => `${relative(effectiveRepoRoot, filePath).replaceAll("\\", "/")}: ${host}`);
+    return forbiddenHosts.filter((host) => normalizedText.includes(host.toLowerCase())).map((host) => `${relative(effectiveRepoRoot, filePath).replaceAll("\\", "/")}: ${host}`);
   });
   if (publicFontReferences.length > 0) {
     throw new Error(`Public font runtime references are forbidden: ${publicFontReferences.join(", ")}.`);
@@ -424,9 +465,7 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     return nonCanonicalFontDelivery(relativePath, readFileSync(filePath, "utf8"));
   });
   if (fontDeliveryViolations.length > 0) {
-    throw new Error(
-      `Font delivery must remain same-origin through src/app/fonts.ts: ${fontDeliveryViolations.join(", ")}.`,
-    );
+    throw new Error(`Font delivery must remain same-origin through src/app/fonts.ts: ${fontDeliveryViolations.join(", ")}.`);
   }
 }
 
