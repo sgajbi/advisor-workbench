@@ -3316,7 +3316,7 @@
 .portfolio-instrument-cell span {
   overflow: hidden;
   color: #59616f;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   line-height: 13px;
   text-overflow: ellipsis;
