@@ -10,6 +10,8 @@ test("delivers governed typography from Workbench without layout regression or p
   const fontRequests: string[] = [];
   const publicFontRequests: string[] = [];
   const failedFontResponses: string[] = [];
+  const failedFontRequests: string[] = [];
+  const successfulFontResponses = new Set<string>();
 
   page.on("request", (request) => {
     const url = new URL(request.url());
@@ -21,8 +23,18 @@ test("delivers governed typography from Workbench without layout regression or p
     }
   });
   page.on("response", (response) => {
-    if (response.request().resourceType() === "font" && !response.ok()) {
+    if (response.request().resourceType() !== "font") {
+      return;
+    }
+    if (response.ok()) {
+      successfulFontResponses.add(response.url());
+    } else {
       failedFontResponses.push(`${response.status()} ${response.url()}`);
+    }
+  });
+  page.on("requestfailed", (request) => {
+    if (request.resourceType() === "font") {
+      failedFontRequests.push(`${request.failure()?.errorText ?? "unknown failure"} ${request.url()}`);
     }
   });
 
@@ -95,7 +107,9 @@ test("delivers governed typography from Workbench without layout regression or p
   });
   expect(publicFontRequests).toEqual([]);
   expect(failedFontResponses).toEqual([]);
+  expect(failedFontRequests).toEqual([]);
   expect(fontRequests.length).toBeGreaterThanOrEqual(3);
+  expect([...new Set(fontRequests)].every((url) => successfulFontResponses.has(url))).toBe(true);
   const workbenchOrigin = new URL(page.url()).origin;
   expect(
     fontRequests.every((url) => {
