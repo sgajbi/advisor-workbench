@@ -299,8 +299,8 @@ function staticJsxAttributeValue(attribute) {
   return expression && (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) ? expression.text : undefined;
 }
 
-function hasRemoteJsxStylesheetLink(sourceFile) {
-  let remoteLink = false;
+function hasUnprovenOrRemoteJsxStylesheetLink(sourceFile) {
+  let unprovenOrRemoteLink = false;
   function visit(node) {
     if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText(sourceFile).toLowerCase() === "link") {
       const attributes = node.attributes.properties.filter(ts.isJsxAttribute);
@@ -308,14 +308,14 @@ function hasRemoteJsxStylesheetLink(sourceFile) {
       const href = attributes.find((attribute) => attribute.name.getText(sourceFile) === "href");
       const relValue = staticJsxAttributeValue(rel)?.toLowerCase();
       const hrefValue = staticJsxAttributeValue(href);
-      if (relValue === "stylesheet" && hrefValue && /^(?:https?:)?\/\//i.test(hrefValue)) {
-        remoteLink = true;
+      if (relValue === "stylesheet" && (!hrefValue || /^(?:https?:)?\/\//i.test(hrefValue))) {
+        unprovenOrRemoteLink = true;
       }
     }
     ts.forEachChild(node, visit);
   }
   visit(sourceFile);
-  return remoteLink;
+  return unprovenOrRemoteLink;
 }
 
 function usesBrowserFontFaceApi(sourceFile) {
@@ -334,7 +334,7 @@ function usesBrowserFontFaceApi(sourceFile) {
 }
 
 function hasDirectCssFontFamily(text) {
-  return [...text.matchAll(/(?:^|\n)\s*font-family\s*:\s*([^;]+);/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
+  return [...text.matchAll(/(?:^|[;{])\s*font-family\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
 }
 
 function hasDirectTypescriptFontFamily(sourceFile, relativePath) {
@@ -375,8 +375,8 @@ function nonCanonicalFontDelivery(relativePath, text) {
 
   if (extname(relativePath) !== ".css") {
     const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-    if (hasRemoteJsxStylesheetLink(sourceFile)) {
-      violations.push("remote stylesheet link");
+    if (hasUnprovenOrRemoteJsxStylesheetLink(sourceFile)) {
+      violations.push("unproven or remote stylesheet link");
     }
     if (usesBrowserFontFaceApi(sourceFile)) {
       violations.push("browser FontFace API outside governed loader");

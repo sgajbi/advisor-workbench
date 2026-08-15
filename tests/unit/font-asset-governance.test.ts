@@ -297,7 +297,22 @@ describe("font asset governance", () => {
     writeFileSync(path.join(repoRoot, "src/app/remote-font.tsx"), 'export const remoteLink = <link rel="stylesheet" href={"https://fonts.bunny.net/css?family=Inter"} />;\n');
 
     try {
-      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/remote stylesheet link/);
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/unproven or remote stylesheet link/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a stylesheet destination that cannot be proven local", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(
+      path.join(repoRoot, "src/app/dynamic-stylesheet.tsx"),
+      'const fontStylesheet = "https://fonts.bunny.net/css?family=Inter"; export const remoteLink = <link rel="stylesheet" href={fontStylesheet} />;\n',
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/unproven or remote stylesheet link/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
@@ -410,7 +425,7 @@ describe("font asset governance", () => {
   it("rejects direct CSS font families outside shared semantic tokens", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
-    writeFileSync(path.join(repoRoot, "src/app/direct-font.css"), ".label {\n  font-family: Georgia, serif;\n}\n");
+    writeFileSync(path.join(repoRoot, "src/app/direct-font.css"), ".label { color: red; font-family: Georgia, serif; }\n");
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font-family outside shared semantic tokens/);
