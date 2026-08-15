@@ -50,7 +50,7 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
   );
   writeFileSync(
     path.join(repoRoot, "src/app/fonts.ts"),
-    `${assetPaths.map((assetPath) => `const font = "../assets/fonts/${path.basename(assetPath)}";`).join("\n")}\n${runtimeSource}`,
+    `import localFont from "next/font/local";\n${assetPaths.map((assetPath, index) => `const font${index} = localFont({ src: "../assets/fonts/${path.basename(assetPath)}" });`).join("\n")}\n${runtimeSource}`,
   );
   for (const [index, assetPath] of assetPaths.entries()) {
     writeFileSync(path.join(repoRoot, assetPath), assetTextByRole[roles[index]]);
@@ -151,6 +151,21 @@ describe("font asset governance", () => {
     }
   });
 
+  it("rejects case variants of canonical public font hosts", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture(
+      "export const stylesheet = 'https://FONTS.GOOGLEAPIS.COM/css2?family=Inter';\n",
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /Public font runtime references are forbidden/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("does not allow the manifest to remove canonical public font hosts", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
@@ -172,12 +187,33 @@ describe("font asset governance", () => {
     writeFileSync(path.join(repoRoot, ungovernedAsset), "ungoverned-font-binary");
     writeFileSync(
       path.join(repoRoot, "src/app/fonts.ts"),
-      `${readFileSync(path.join(repoRoot, "src/app/fonts.ts"), "utf8")}\nconst extraFont = "../assets/fonts/ungoverned.woff2";\n`,
+      `${readFileSync(path.join(repoRoot, "src/app/fonts.ts"), "utf8")}\nconst extraFont = localFont({ src: "../assets/fonts/ungoverned.woff2" });\n`,
     );
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
         /must be governed in config\/font-assets\.json: src\/assets\/fonts\/ungoverned\.woff2/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("does not certify a manifest asset referenced only by dead source text", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    const fontLoaderPath = path.join(repoRoot, "src/app/fonts.ts");
+    writeFileSync(
+      fontLoaderPath,
+      readFileSync(fontLoaderPath, "utf8").replace(
+        'const font0 = localFont({ src: "../assets/fonts/operational-ui.woff2" });',
+        '// removed localFont call retained only as dead text: "../assets/fonts/operational-ui.woff2"',
+      ),
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /operational-ui\.woff2 is governed but not loaded by src\/app\/fonts\.ts/,
       );
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
