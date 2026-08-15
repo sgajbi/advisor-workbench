@@ -1149,6 +1149,15 @@ Most relevant current governance:
     ids, versions, source reasons, upstream snapshots, methodology references, and artifact routes
     belong only in the collapsed support disclosure. Evidence mode remains read-only and owns no
     performance calculation, certification, client-release approval, or local retry authority.
+15. Workbench typography is a governed same-origin product asset, not a public runtime service.
+    Load Inter UI, Cormorant brand display, and IBM Plex Mono evidence roles only through
+    `src/app/fonts.ts` and their semantic custom properties. Keep exact upstream release/commit,
+    SIL OFL license, and SHA-256 truth in `config/font-assets.json`; `npm run quality:font-assets`
+    must remain in the blocking lint chain. Do not add a Google Fonts import, CDN URL, page-local
+    `@font-face`, font package, or direct family declaration that bypasses the shared tokens.
+    Preserve Inter and the visible wordmark face as the only root preloads; evidence faces should
+    load on demand. Any typography replacement requires issue-backed brand, accessibility,
+    payload, fallback, license, optimized-browser, and responsive-geometry evidence.
 
 ## Context Maintenance Rule
 

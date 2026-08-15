@@ -16,10 +16,33 @@ The system is designed to keep portfolio, performance, risk, proposal, and advis
 
 Operational UI uses a single sans-serif family:
 
-- `Inter Variable`
+- self-hosted `Inter` variable face for weights 100–900
 - fallback: `Inter`, `ui-sans-serif`, `system-ui`, `-apple-system`, `BlinkMacSystemFont`, `"Segoe UI"`, `sans-serif`
 
-The serif display family is reserved for Lotus brand expression only, such as the shell logo wordmark.
+The self-hosted Cormorant Garamond 700 face is reserved for Lotus brand expression, currently the
+shell wordmark. Self-hosted IBM Plex Mono 400 and 500 are reserved for technical evidence and
+identifiers; they must not replace the operational reading face.
+
+## Delivery And Supply-Chain Control
+
+Font delivery is same-origin and uses the built-in Next.js local-font pipeline. The browser must
+not contact Google Fonts or another public font service. Inter and the visible Lotus wordmark face
+are preloaded; evidence faces load only when used so routine advisor screens do not pay for
+technical typography they do not render.
+
+Governed truth lives in:
+
+- `config/font-assets.json` for semantic role, upstream repository, release tag, immutable commit,
+  license, file path, and SHA-256 checksum
+- `src/assets/fonts/` for the checked-in WOFF2 assets
+- `docs/licenses/fonts/` for the upstream SIL Open Font License texts
+- `src/app/fonts.ts` for the Next.js local-font mapping
+- `npm run quality:font-assets` for checksum, license, loader-coverage, WOFF2, semantic-role, and
+  public-runtime-host enforcement
+
+Do not add a public CSS import, CDN font URL, unlicensed font file, page-local `@font-face`, or a new
+font package. A font change requires an issue-backed brand, accessibility, payload, provenance,
+license, fallback, browser, and responsive-geometry review.
 
 ## Numeric Typography
 
@@ -114,6 +137,7 @@ Interactive nav and controls should use the shared button typography:
 
 Centralized typography lives in:
 
+- `src/app/fonts.ts`
 - `src/design-system/theme/tokens.ts`
 - `src/design-system/components/text.tsx`
 - `src/styles/global/tokens.css` for typography custom properties
