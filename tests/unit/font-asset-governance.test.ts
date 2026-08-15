@@ -297,7 +297,7 @@ describe("font asset governance", () => {
     writeFileSync(path.join(repoRoot, "src/app/remote-font.tsx"), 'export const remoteLink = <link rel="stylesheet" href={"https://fonts.bunny.net/css?family=Inter"} />;\n');
 
     try {
-      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/unproven or remote stylesheet link/);
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/runtime stylesheet link outside governed loader/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
@@ -312,7 +312,19 @@ describe("font asset governance", () => {
     );
 
     try {
-      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/unproven or remote stylesheet link/);
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/runtime stylesheet link outside governed loader/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an ungoverned same-origin runtime stylesheet link", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/local-stylesheet.tsx"), 'export const localLink = <link rel="stylesheet" href="/font.css" />;\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/runtime stylesheet link outside governed loader/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
@@ -465,7 +477,18 @@ describe("font asset governance", () => {
     const { repoRoot, manifest } = createFixture('export const style = { fontFamily: "Georgia, serif" };\n');
 
     try {
-      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/fontFamily outside shared semantic tokens/);
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font or fontFamily outside shared semantic tokens/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a direct CSS-in-JS font shorthand", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture('export const style = { color: "red", font: "14px Georgia" };\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font or fontFamily outside shared semantic tokens/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }

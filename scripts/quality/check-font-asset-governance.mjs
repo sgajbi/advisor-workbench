@@ -299,23 +299,21 @@ function staticJsxAttributeValue(attribute) {
   return expression && (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) ? expression.text : undefined;
 }
 
-function hasUnprovenOrRemoteJsxStylesheetLink(sourceFile) {
-  let unprovenOrRemoteLink = false;
+function hasRuntimeJsxStylesheetLink(sourceFile) {
+  let runtimeStylesheetLink = false;
   function visit(node) {
     if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText(sourceFile).toLowerCase() === "link") {
       const attributes = node.attributes.properties.filter(ts.isJsxAttribute);
       const rel = attributes.find((attribute) => attribute.name.getText(sourceFile) === "rel");
-      const href = attributes.find((attribute) => attribute.name.getText(sourceFile) === "href");
       const relValue = staticJsxAttributeValue(rel)?.toLowerCase();
-      const hrefValue = staticJsxAttributeValue(href);
-      if (relValue === "stylesheet" && (!hrefValue || /^(?:https?:)?\/\//i.test(hrefValue))) {
-        unprovenOrRemoteLink = true;
+      if (relValue === "stylesheet") {
+        runtimeStylesheetLink = true;
       }
     }
     ts.forEachChild(node, visit);
   }
   visit(sourceFile);
-  return unprovenOrRemoteLink;
+  return runtimeStylesheetLink;
 }
 
 function usesBrowserFontFaceApi(sourceFile) {
@@ -345,21 +343,55 @@ function hasDirectCssFontShorthand(text) {
   });
 }
 
-function hasDirectTypescriptFontFamily(sourceFile, relativePath) {
+function isGovernedTypescriptFontValue(node, sourceFile) {
+  const source = node.getText(sourceFile);
+  if (/^lotusThemeTokens\.typography\.fontFamily\.(?:ui|display|mono)$/.test(source)) {
+    return true;
+  }
+  if (!ts.isStringLiteral(node) && !ts.isNoSubstitutionTemplateLiteral(node)) {
+    return false;
+  }
+  return /^(?:inherit|initial|revert|revert-layer|unset)$/i.test(node.text) || /var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(node.text);
+}
+
+function assignedFontPropertyName(node) {
+  if (ts.isPropertyAccessExpression(node)) {
+    return node.name.text;
+  }
+  if (ts.isElementAccessExpression(node) && node.argumentExpression && (ts.isStringLiteral(node.argumentExpression) || ts.isNoSubstitutionTemplateLiteral(node.argumentExpression))) {
+    return node.argumentExpression.text;
+  }
+  return undefined;
+}
+
+function hasDirectTypescriptFontDeclaration(sourceFile, relativePath) {
   if (relativePath === "src/design-system/theme/tokens.ts") {
     return false;
   }
   let directFamily = false;
   function visit(node) {
+    const propertyName = ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) ? node.name.text : undefined;
+    if ((propertyName === "font" || propertyName === "fontFamily") && !isGovernedTypescriptFontValue(node.initializer, sourceFile)) {
+      directFamily = true;
+    }
     if (
-      ts.isPropertyAssignment(node) &&
-      (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) &&
-      node.name.text === "fontFamily"
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ["font", "fontFamily"].includes(assignedFontPropertyName(node.left) ?? "") &&
+      !isGovernedTypescriptFontValue(node.right, sourceFile)
     ) {
-      const value = node.initializer.getText(sourceFile);
-      if (!/^lotusThemeTokens\.typography\.fontFamily\.(?:ui|display|mono)$/.test(value) && !/^["'`]var\(--font-(?:ui|display|mono)(?:\s*,|\))/.test(value)) {
-        directFamily = true;
-      }
+      directFamily = true;
+    }
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === "setProperty" &&
+      node.arguments.length >= 2 &&
+      ts.isStringLiteral(node.arguments[0]) &&
+      ["font", "font-family"].includes(node.arguments[0].text) &&
+      !isGovernedTypescriptFontValue(node.arguments[1], sourceFile)
+    ) {
+      directFamily = true;
     }
     ts.forEachChild(node, visit);
   }
@@ -386,14 +418,14 @@ function nonCanonicalFontDelivery(relativePath, text) {
 
   if (extname(relativePath) !== ".css") {
     const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-    if (hasUnprovenOrRemoteJsxStylesheetLink(sourceFile)) {
-      violations.push("unproven or remote stylesheet link");
+    if (hasRuntimeJsxStylesheetLink(sourceFile)) {
+      violations.push("runtime stylesheet link outside governed loader");
     }
     if (usesBrowserFontFaceApi(sourceFile)) {
       violations.push("browser FontFace API outside governed loader");
     }
-    if (hasDirectTypescriptFontFamily(sourceFile, relativePath)) {
-      violations.push("fontFamily outside shared semantic tokens");
+    if (hasDirectTypescriptFontDeclaration(sourceFile, relativePath)) {
+      violations.push("font or fontFamily outside shared semantic tokens");
     }
     for (const moduleName of fontModuleReferences(sourceFile)) {
       if (moduleName.startsWith("next/font/") && moduleName !== "next/font/local") {
