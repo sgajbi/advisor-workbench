@@ -399,6 +399,67 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
   });
 
+  test('capability-restricted workflow navigation keeps availability claims truthful', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(90_000);
+    const session = await openPerformanceWorkbench(page, request);
+    if (!session.available || !session.portfolioId) {
+      test.skip(true, 'Performance upstream unavailable in standalone smoke environment.');
+      return;
+    }
+
+    for (const viewport of [
+      { width: 1024, height: 900 },
+      { width: 519, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const compactDisclosure = page.getByRole('button', { name: /Current view/i });
+      if (await compactDisclosure.isVisible().catch(() => false)) {
+        await compactDisclosure.click();
+      }
+
+      const navigation = page.getByLabel('Performance surface navigation');
+      await expect(navigation).toBeVisible();
+      const changeWorkflow = navigation.getByRole('button', {
+        name: /Change workflow step/i,
+      });
+      await expect(changeWorkflow).toBeVisible();
+      await changeWorkflow.click();
+
+      const directory = navigation.getByTestId('workbench-workflow-directory');
+      const unavailableSteps = directory.locator('button:disabled');
+      const unavailableCount = await unavailableSteps.count();
+      if (unavailableCount === 0) {
+        test.skip(true, 'Capability-restricted workflow proof requires an unavailable mode.');
+        return;
+      }
+
+      const actionableCount = await directory.locator('a[href], button:not(:disabled)').count();
+      await expect(changeWorkflow).toContainText(
+        `${actionableCount} ${actionableCount === 1 ? 'available step' : 'available steps'}`,
+      );
+      expect(actionableCount).toBeLessThan(actionableCount + unavailableCount);
+      await expect(unavailableSteps.first()).toContainText('Unavailable');
+
+      const focusTarget = directory.locator('a[href], button:not(:disabled)').first();
+      await focusTarget.focus();
+      await page.keyboard.press('Escape');
+      await expect(changeWorkflow).toBeFocused();
+      await expect(directory).toBeHidden();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+
+      if (await compactDisclosure.isVisible().catch(() => false)) {
+        await compactDisclosure.click();
+      }
+    }
+  });
+
   test('populated summary preserves its metric and layout contract', async ({ page, request }) => {
     test.setTimeout(60_000);
     await page.setViewportSize({ width: 1800, height: 1400 });

@@ -84,6 +84,46 @@ async function mockShellFallback(page: Page) {
   });
 }
 
+async function assertWorkspaceAvailabilityAffordances(page: Page) {
+  const navigation = page.getByRole("navigation", { name: "Workspace Navigation" });
+  const switcher = navigation.getByRole("button", { name: /Switch workspace/i });
+  if ((await switcher.getAttribute("aria-expanded")) !== "true") {
+    await switcher.click();
+  }
+
+  await expect(navigation.getByText("Workspace directory")).toBeVisible();
+  const enabledWorkspace = navigation.getByRole("link", { name: "Performance" });
+  const unavailableWorkspace = navigation.getByTitle(
+    "Proposal availability could not be confirmed.",
+  );
+  await expect(enabledWorkspace).toBeVisible();
+  await expect(unavailableWorkspace).toHaveAttribute("aria-disabled", "true");
+
+  const readAffordance = async (locator: typeof enabledWorkspace) =>
+    locator.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        borderLeftColor: style.borderLeftColor,
+      };
+    });
+
+  await unavailableWorkspace.hover();
+  const unavailableHover = await readAffordance(unavailableWorkspace);
+  await enabledWorkspace.hover();
+  await expect
+    .poll(async () => {
+      const enabledHover = await readAffordance(enabledWorkspace);
+      return (
+        enabledHover.backgroundColor !== unavailableHover.backgroundColor ||
+        enabledHover.borderLeftColor !== unavailableHover.borderLeftColor
+      );
+    })
+    .toBe(true);
+  await unavailableWorkspace.hover();
+  await expect.poll(() => readAffordance(unavailableWorkspace)).toEqual(unavailableHover);
+}
+
 test("supports a keyboard-complete own-book review and portfolio handoff", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockAdvisorBook(page);
@@ -116,6 +156,7 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   await workspaceSwitcher.focus();
   await page.keyboard.press("Enter");
   await expect(workspaceSwitcher).toHaveAttribute("aria-expanded", "true");
+  await assertWorkspaceAvailabilityAffordances(page);
   const unavailableProposal = page.getByTitle(
     "Proposal availability could not be confirmed.",
   );
@@ -160,6 +201,7 @@ test("keeps the book usable at tablet and effective 200 percent zoom width", asy
   await expect(page.getByRole("combobox", { name: "Mandate" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Sort by" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Sort direction" })).toBeVisible();
+  await assertWorkspaceAvailabilityAffordances(page);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
