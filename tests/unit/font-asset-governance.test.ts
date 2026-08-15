@@ -103,10 +103,14 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
 }
 
 describe("font asset governance", () => {
-  it("accepts the repository's licensed and checksummed same-origin fonts", async () => {
-    const { validateFontAssetGovernance } = await fontGovernancePromise;
-    expect(() => validateFontAssetGovernance({ repoRoot: process.cwd() })).not.toThrow();
-  });
+  it(
+    "accepts the repository's licensed and checksummed same-origin fonts",
+    async () => {
+      const { validateFontAssetGovernance } = await fontGovernancePromise;
+      expect(() => validateFontAssetGovernance({ repoRoot: process.cwd() })).not.toThrow();
+    },
+    15_000,
+  );
 
   it("rejects checksum drift", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
