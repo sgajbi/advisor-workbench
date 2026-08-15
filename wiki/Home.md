@@ -71,7 +71,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - the quiet global shell keeps **My book** and a capability-backed workspace switcher visible;
   `Proposal` and `Advisory` remain disabled in that global capability posture
 - the selected-portfolio rail prioritizes five daily business domains, shows the active specialist
-  task once, and keeps the grouped specialist directory and alternative workflow steps on demand
+  task once, and keeps the grouped specialist directory and actionable alternative workflow steps
+  on demand; unavailable entries remain orientation evidence, not implied actions
 
 ## Most important commands
 

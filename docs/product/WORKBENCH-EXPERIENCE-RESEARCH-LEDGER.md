@@ -1031,6 +1031,19 @@ discoverability is owned by #707. No Lotus-wide skill change is justified: the e
 issue-discovery, wiki, and review-ledger skills already required the research, source truth,
 responsive browser inspection, issue capture, and durable documentation used here.
 
+Follow-up review under #710/#711 applied the same research principles to capability truth. The
+workflow disclosure now exists only when at least one alternative has a supported destination or
+action, and its **available** count excludes disabled or actionless entries. Disabled alternatives
+remain visible only inside a directory that has a real action, preserving capability orientation
+without inventing choice. The global menu now uses the neutral **Workspace directory** label for a
+mixed enabled/unavailable catalogue, and its component-owned hover selector excludes unavailable
+entries. This adopts predictable disclosure and unequivocal action state; it rejects a cosmetic
+count, hover-only implication, page-local exception, or browser-authored capability inference.
+Focused component tests cover mixed and all-unavailable workflow states. Optimized production
+browser proof covers a capability-restricted Performance rail and the Gateway-fallback global
+directory at desktop and compact widths, including exact enabled counts, disabled semantics,
+computed hover separation, Escape focus restoration, and absence of page overflow.
+
 ## Report Ordering
 
 ### Business job
