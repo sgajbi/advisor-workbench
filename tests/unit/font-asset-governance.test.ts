@@ -44,13 +44,18 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
     "src/assets/fonts/*.woff2 binary\ndocs/licenses/fonts/*.txt text eol=lf -whitespace\n",
   );
   const roles = ["operational-ui", "brand-display", "technical-evidence"];
+  const semanticVariables = [
+    "--font-lotus-ui-face",
+    "--font-lotus-display-face",
+    "--font-lotus-mono-face",
+  ];
   const assetPaths = roles.map((role) => `src/assets/fonts/${role}.woff2`);
   const assetTextByRole = Object.fromEntries(
     roles.map((role) => [role, `governed-${role}-font-binary`]),
   );
   writeFileSync(
     path.join(repoRoot, "src/app/fonts.ts"),
-    `import localFont from "next/font/local";\n${assetPaths.map((assetPath, index) => `const font${index} = localFont({ src: "../assets/fonts/${path.basename(assetPath)}" });`).join("\n")}\n${runtimeSource}`,
+    `import localFont from "next/font/local";\n${assetPaths.map((assetPath, index) => `const font${index} = localFont({ src: "../assets/fonts/${path.basename(assetPath)}", variable: "${semanticVariables[index]}" });`).join("\n")}\n${runtimeSource}`,
   );
   for (const [index, assetPath] of assetPaths.entries()) {
     writeFileSync(path.join(repoRoot, assetPath), assetTextByRole[roles[index]]);
@@ -187,7 +192,7 @@ describe("font asset governance", () => {
     writeFileSync(path.join(repoRoot, ungovernedAsset), "ungoverned-font-binary");
     writeFileSync(
       path.join(repoRoot, "src/app/fonts.ts"),
-      `${readFileSync(path.join(repoRoot, "src/app/fonts.ts"), "utf8")}\nconst extraFont = localFont({ src: "../assets/fonts/ungoverned.woff2" });\n`,
+      `${readFileSync(path.join(repoRoot, "src/app/fonts.ts"), "utf8")}\nconst extraFont = localFont({ src: "../assets/fonts/ungoverned.woff2", variable: "--font-lotus-ui-face" });\n`,
     );
 
     try {
@@ -206,7 +211,7 @@ describe("font asset governance", () => {
     writeFileSync(
       fontLoaderPath,
       readFileSync(fontLoaderPath, "utf8").replace(
-        'const font0 = localFont({ src: "../assets/fonts/operational-ui.woff2" });',
+        'const font0 = localFont({ src: "../assets/fonts/operational-ui.woff2", variable: "--font-lotus-ui-face" });',
         '// removed localFont call retained only as dead text: "../assets/fonts/operational-ui.woff2"',
       ),
     );
@@ -214,6 +219,91 @@ describe("font asset governance", () => {
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
         /operational-ui\.woff2 is governed but not loaded by src\/app\/fonts\.ts/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a shadowed local font loader binding", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture(
+      "export function shadowed(localFont: Function) { return localFont({ src: '../assets/fonts/operational-ui.woff2' }); }\n",
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /must not shadow the localFont import/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves each manifest role through its semantic loader variable", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    const fontLoaderPath = path.join(repoRoot, "src/app/fonts.ts");
+    writeFileSync(
+      fontLoaderPath,
+      readFileSync(fontLoaderPath, "utf8")
+        .replace("operational-ui.woff2", "role-swap-placeholder.woff2")
+        .replace("brand-display.woff2", "operational-ui.woff2")
+        .replace("role-swap-placeholder.woff2", "brand-display.woff2"),
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /operational-ui\.woff2 for operational-ui must be loaded through --font-lotus-ui-face, received --font-lotus-display-face/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a non-local Next font loader", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture(
+      'import { Inter } from "next/font/google";\nexport const remoteFont = Inter({ subsets: ["latin"] });\n',
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /non-local Next font loader next\/font\/google/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a remote font stylesheet from any provider", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(
+      path.join(repoRoot, "src/app/remote-font.css"),
+      '@import url("https://fonts.bunny.net/css?family=inter");\n',
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /remote stylesheet import/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a dormant font binary without manifest provenance", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(
+      path.join(repoRoot, "src/assets/fonts/dormant.woff2"),
+      "dead-font-binary",
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /stored under src\/assets\/fonts must be governed.*dormant\.woff2/,
       );
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
