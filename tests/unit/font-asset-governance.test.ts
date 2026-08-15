@@ -39,6 +39,10 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
   mkdirSync(path.join(repoRoot, "src/app"), { recursive: true });
   mkdirSync(path.join(repoRoot, "src/assets/fonts"), { recursive: true });
   mkdirSync(path.join(repoRoot, "docs/licenses/fonts"), { recursive: true });
+  writeFileSync(
+    path.join(repoRoot, ".gitattributes"),
+    "src/assets/fonts/*.woff2 binary\ndocs/licenses/fonts/*.txt text eol=lf -whitespace\n",
+  );
   const roles = ["operational-ui", "brand-display", "technical-evidence"];
   const assetPaths = roles.map((role) => `src/assets/fonts/${role}.woff2`);
   const assetTextByRole = Object.fromEntries(
@@ -96,6 +100,20 @@ describe("font asset governance", () => {
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/checksum drifted/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("requires cross-platform-stable font and license attributes", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, ".gitattributes"), "src/assets/fonts/*.woff2 binary\n");
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /docs\/licenses\/fonts\/\*\.txt text eol=lf -whitespace/,
+      );
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
