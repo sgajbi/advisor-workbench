@@ -291,6 +291,18 @@ describe("font asset governance", () => {
     }
   });
 
+  it("rejects a same-origin runtime CSS import", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/remote-font.css"), '@import url("/font.css");\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/runtime CSS import outside repository-relative source/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects a remote stylesheet in a JSX expression attribute", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
@@ -452,6 +464,18 @@ describe("font asset governance", () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
     writeFileSync(path.join(repoRoot, "src/app/direct-font.css"), ".label { color: red; font-family: Georgia, serif; }\n");
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font-family outside shared semantic tokens/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a direct family in a tagged CSS template", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/tagged-font.ts"), "export const label = styled.div`\n  font-family: Georgia, serif;\n`;\n");
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font-family outside shared semantic tokens/);
