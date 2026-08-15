@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const SOURCE_TEXT_EXTENSIONS = new Set([".css", ".js", ".jsx", ".mjs", ".ts", ".tsx"]);
 const REQUIRED_ROLES = new Set(["operational-ui", "brand-display", "technical-evidence"]);
+const REQUIRED_FORBIDDEN_RUNTIME_HOSTS = new Set([
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+]);
 const REQUIRED_GIT_ATTRIBUTES = [
   "src/assets/fonts/*.woff2 binary",
   "docs/licenses/fonts/*.txt text eol=lf -whitespace",
@@ -72,6 +76,20 @@ function sourceFiles(directory) {
   });
 }
 
+function fontLoaderAssetPaths(repoRoot, fontLoaderText) {
+  const loaderDirectory = resolve(repoRoot, "src/app");
+  const assetRoot = resolve(repoRoot, "src/assets/fonts");
+  const quotedWoff2Reference = /(["'`])([^"'`\r\n]+\.woff2)\1/g;
+
+  return new Set([...fontLoaderText.matchAll(quotedWoff2Reference)].map((match) => {
+    const absolutePath = resolve(loaderDirectory, match[2].replaceAll("\\", "/"));
+    if (!isContainedPath(assetRoot, absolutePath)) {
+      throw new Error(`${match[2]} in src/app/fonts.ts resolves outside src/assets/fonts.`);
+    }
+    return relative(repoRoot, absolutePath).replaceAll("\\", "/");
+  }));
+}
+
 export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
   const effectiveRepoRoot = repoRoot ?? resolveDefaultRepoRoot();
   const effectiveManifest = manifest ?? JSON.parse(
@@ -98,6 +116,7 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
   const roles = new Set();
   const governedAssetPaths = new Set();
   const fontLoaderText = readFileSync(resolve(effectiveRepoRoot, "src/app/fonts.ts"), "utf8");
+  const loadedAssetPaths = fontLoaderAssetPaths(effectiveRepoRoot, fontLoaderText);
 
   for (const family of effectiveManifest.families) {
     if (!family.family || !family.version || family.license !== "OFL-1.1") {
@@ -123,8 +142,7 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
       }
       governedAssetPaths.add(asset.path);
 
-      const assetName = asset.path.split("/").at(-1);
-      if (!fontLoaderText.includes(assetName)) {
+      if (!loadedAssetPaths.has(asset.path)) {
         throw new Error(`${asset.path} is governed but not loaded by src/app/fonts.ts.`);
       }
     }
@@ -135,9 +153,24 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     throw new Error(`Font asset governance is missing semantic roles: ${missingRoles.join(", ")}.`);
   }
 
+  const ungovernedLoadedAssets = [...loadedAssetPaths]
+    .filter((assetPath) => !governedAssetPaths.has(assetPath));
+  if (ungovernedLoadedAssets.length > 0) {
+    throw new Error(
+      `Font assets loaded by src/app/fonts.ts must be governed in config/font-assets.json: ${ungovernedLoadedAssets.join(", ")}.`,
+    );
+  }
+
   const forbiddenHosts = effectiveManifest.forbiddenRuntimeHosts;
   if (!Array.isArray(forbiddenHosts) || forbiddenHosts.length === 0) {
     throw new Error("Font asset governance must declare forbiddenRuntimeHosts.");
+  }
+  const missingForbiddenHosts = [...REQUIRED_FORBIDDEN_RUNTIME_HOSTS]
+    .filter((host) => !forbiddenHosts.includes(host));
+  if (missingForbiddenHosts.length > 0) {
+    throw new Error(
+      `Font asset governance is missing required forbidden runtime hosts: ${missingForbiddenHosts.join(", ")}.`,
+    );
   }
 
   const publicFontReferences = sourceFiles(resolve(effectiveRepoRoot, "src")).flatMap((filePath) => {
