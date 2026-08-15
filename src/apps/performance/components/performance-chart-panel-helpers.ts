@@ -69,7 +69,7 @@ export function buildSingleObservationPresentation({
             key: "portfolio",
             label: "Portfolio",
             value: toNumeric(point.cumulative_portfolio_return_pct),
-            toneClassName: "performance-return-path-single-observation-tone-portfolio",
+            tone: "portfolio" as const,
           },
           ...(hasBenchmarkSeries
             ? [
@@ -77,7 +77,7 @@ export function buildSingleObservationPresentation({
                   key: "benchmark",
                   label: "Benchmark",
                   value: toNumeric(point.cumulative_benchmark_return_pct),
-                  toneClassName: "performance-return-path-single-observation-tone-benchmark",
+                  tone: "benchmark" as const,
                 },
               ]
             : []),
@@ -89,12 +89,17 @@ export function buildSingleObservationPresentation({
             key: "active",
             label: "Active",
             value: resolveActiveCumulativeReturn(point),
-            toneClassName: "performance-return-path-single-observation-tone-active",
+            tone: "active" as const,
           },
         ]
       : []),
   ].filter(
-    (row): row is { key: string; label: string; value: number; toneClassName: string } =>
+    (row): row is {
+      key: string;
+      label: string;
+      value: number;
+      tone: "portfolio" | "benchmark" | "active";
+    } =>
       row.value !== null
   );
 
@@ -122,7 +127,7 @@ export function buildSingleObservationPresentation({
         startPct,
         widthPct,
         markerPct,
-        toneClassName: row.toneClassName,
+        tone: row.tone,
       };
     }),
   };

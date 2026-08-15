@@ -1,4 +1,7 @@
 import type { PerformanceReturnPathLegendItem } from "./performance-return-path-legend";
+import styles from "./performance-return-path-single-observation-stage.module.css";
+
+export type PerformanceReturnPathObservationTone = "portfolio" | "benchmark" | "active";
 
 type PerformanceReturnPathSingleObservationRow = {
   key: string;
@@ -7,7 +10,7 @@ type PerformanceReturnPathSingleObservationRow = {
   startPct: number;
   widthPct: number;
   markerPct: number;
-  toneClassName: string;
+  tone: PerformanceReturnPathObservationTone;
 };
 
 export type PerformanceReturnPathSingleObservationPresentation = {
@@ -26,17 +29,17 @@ export default function PerformanceReturnPathSingleObservationStage({
   legendItems: PerformanceReturnPathLegendItem[];
 }) {
   return (
-    <div className="performance-return-path-single-observation" aria-label="Single observation comparison">
-      <div className="performance-return-path-single-observation-header">
-        <div className="performance-return-path-single-observation-copy">
+    <div className={styles.stage} aria-label="Single observation comparison">
+      <div className={styles.header}>
+        <div className={styles.copy}>
           <span>Single published observation</span>
           <strong>{observation.observationLabel}</strong>
         </div>
-        <div className="performance-return-path-single-observation-legend" aria-label="Return path legend">
+        <div className={styles.legend} aria-label="Return path legend">
           {legendItems.map((item) => (
             <span
               key={item.key}
-              className={`performance-return-path-single-observation-legend-item ${item.className}`}
+              className={`${styles.legendItem} ${styles[item.key]}`}
             >
               {item.label}
             </span>
@@ -44,30 +47,30 @@ export default function PerformanceReturnPathSingleObservationStage({
         </div>
       </div>
 
-      <div className="performance-return-path-single-observation-axis" aria-hidden="true">
+      <div className={styles.axis} aria-hidden="true">
         <span>{observation.axisMinLabel}</span>
         <span>0%</span>
         <span>{observation.axisMaxLabel}</span>
       </div>
 
-      <div className="performance-return-path-single-observation-rows">
+      <div className={styles.rows}>
         {observation.rows.map((row) => (
-          <div key={row.key} className="performance-return-path-single-observation-row">
-            <div className="performance-return-path-single-observation-row-copy">
+          <div key={row.key} className={styles.row}>
+            <div className={styles.rowCopy}>
               <span>{row.label}</span>
               <strong>{row.valueLabel}</strong>
             </div>
-            <div className="performance-return-path-single-observation-track" aria-hidden="true">
+            <div className={styles.track} aria-hidden="true">
               <div
-                className="performance-return-path-single-observation-baseline"
+                className={styles.baseline}
                 style={{ left: `${observation.baselinePct}%` }}
               />
               <div
-                className={`performance-return-path-single-observation-fill ${row.toneClassName}`}
+                className={`${styles.fill} ${styles[row.tone]}`}
                 style={{ left: `${row.startPct}%`, width: `${row.widthPct}%` }}
               />
               <div
-                className={`performance-return-path-single-observation-marker ${row.toneClassName}`}
+                className={`${styles.marker} ${styles[row.tone]}`}
                 style={{ left: `${row.markerPct}%` }}
               />
             </div>
