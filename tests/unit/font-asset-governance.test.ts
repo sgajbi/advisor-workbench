@@ -48,7 +48,7 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
     recursive: true,
   });
   mkdirSync(path.join(repoRoot, "docs/licenses/fonts"), { recursive: true });
-  writeFileSync(path.join(repoRoot, ".gitattributes"), "src/assets/fonts/*.woff2 binary\ndocs/licenses/fonts/*.txt text eol=lf -whitespace\n");
+  writeFileSync(path.join(repoRoot, ".gitattributes"), "src/assets/fonts/** binary\ndocs/licenses/fonts/** text eol=lf -whitespace\n");
   const roles = ["operational-ui", "brand-display", "technical-evidence"];
   const semanticVariables = ["--font-lotus-ui-face", "--font-lotus-display-face", "--font-lotus-mono-face"];
   const assetPaths = roles.map((role) => `src/assets/fonts/${role}.woff2`);
@@ -127,10 +127,10 @@ describe("font asset governance", () => {
   it("requires cross-platform-stable font and license attributes", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
-    writeFileSync(path.join(repoRoot, ".gitattributes"), "src/assets/fonts/*.woff2 binary\n");
+    writeFileSync(path.join(repoRoot, ".gitattributes"), "src/assets/fonts/** binary\n");
 
     try {
-      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/docs\/licenses\/fonts\/\*\.txt text eol=lf -whitespace/);
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/docs\/licenses\/fonts\/\*\* text eol=lf -whitespace/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
@@ -298,6 +298,18 @@ describe("font asset governance", () => {
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/remote stylesheet link/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects browser FontFace API delivery outside the governed loader", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/dynamic-font.ts"), 'export const face = new FontFace("Ungoverned", "url(https://cdn.example/font?id=1)");\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/browser FontFace API outside governed loader/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
