@@ -4803,3 +4803,72 @@ support access, keyboard disclosure focus, a 44-pixel target, and no page-level 
 diagnostic captures are stored under `output/playwright/diagnostic-report-centre-request-history-*`.
 The Report Centre guide, repository context, research ledger, and review ledger change. No Gateway,
 Report, OpenAPI, dependency, global CSS, runtime topology, identity, or entitlement truth changes.
+
+## Governed Same-Origin Typography Delivery
+
+### Business job
+
+An advisor workstation must render its operational hierarchy consistently without a public network
+call changing text metrics, delaying first paint, leaking workstation access to an undeclared host,
+or polluting source-failure evidence. Brand expression and technical evidence should remain
+distinct from the high-legibility business reading face without adding dead payload.
+
+### Current-product research
+
+Research was reviewed on 2026-08-15 from framework and font-publisher primary sources:
+
+1. [Next.js font documentation](https://nextjs.org/docs/app/api-reference/components/font) states
+   that `next/font` self-hosts font files, removes browser requests to Google, supports local files,
+   CSS variables, preload control, fallback adjustment, and automatic optimization. Lotus uses the
+   built-in local path so neither build nor browser availability depends on a font CDN.
+2. [Inter v4.1](https://github.com/rsms/inter/releases/tag/v4.1) provides the governed variable
+   WOFF2 and SIL OFL license used for operational UI.
+3. [Cormorant v4.002](https://github.com/CatharsisFonts/Cormorant/releases/tag/v4.002) provides the
+   governed webfont release and SIL OFL license used only for the Lotus wordmark.
+4. [IBM Plex](https://github.com/IBM/plex) publishes the governed mono faces and license used for
+   technical evidence and identifiers.
+5. [MDN `font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40font-face/font-display)
+   documents the block and swap periods that make explicit fallback behavior part of first-render
+   resilience rather than a purely aesthetic choice.
+
+### Adopted decisions
+
+1. Replace the browser-time Google Fonts CSS import with repository-owned WOFF2 files loaded by
+   `next/font/local`; add no new production or development dependency.
+2. Preserve the existing semantic roles: Inter for operational reading, Cormorant Garamond 700 for
+   the shell wordmark, and IBM Plex Mono 400/500 for technical evidence.
+3. Pin upstream repository, tag, immutable commit, SIL OFL text, and SHA-256 for every asset in one
+   machine-readable manifest.
+4. Preload only Inter and the visible wordmark face. Load the evidence face on use. Delete the
+   unused Cormorant 600 face rather than carrying an unconsumed 204,052-byte asset.
+5. Remove the late global overrides that collapsed display and mono back to Inter, while preserving
+   the intentional Portfolio-local Inter-only scope.
+6. Keep `src/app/globals.css` import-only and smaller. Use Next-generated variables under the
+   existing semantic typography tokens; replace the remaining direct IBM Plex declaration with
+   `var(--font-mono)`.
+7. Make font checksum, license, format, role, loader coverage, and forbidden public hosts part of
+   the blocking lint chain.
+8. Prove the optimized browser receives successful same-origin WOFF2 responses, no Google Fonts
+   requests, distinct UI/display/evidence computed families, and no desktop or compact overflow.
+
+### Rejected decisions
+
+1. Retaining the public import, allowlisting Google hosts, suppressing the runtime failure ledger,
+   or treating public internet availability as a supported bank workstation dependency.
+2. Adding a font package, runtime styling library, new design system, or font CDN when the supported
+   framework path and publisher assets satisfy the requirement.
+3. Rebranding screens, changing the type scale, or adjusting density to hide metric differences.
+4. Shipping every upstream weight or preloading technical faces globally. An available asset is not
+   a reason to create dead payload.
+5. Converting publisher binaries without a governed transformation and reproducibility contract.
+
+### Validation and publication decision
+
+Workbench #709 owns this slice. Focused governance, layout, and design-token tests prove licensed
+asset admission, checksum drift rejection, public-host rejection, root semantic variables, and token
+alignment. The optimized 25-route build emits the governed WOFF2 files and retains every bundle
+budget. An isolated Chromium journey proves successful same-origin delivery, distinct operational,
+brand, and evidence roles, 1440/390 geometry, and zero public font request or page overflow; its
+reviewed captures live under the Playwright issue output. The typography architecture, technology
+risk wiki, repository context, research ledger, and review ledger change. Gateway/API/OpenAPI,
+business workflow, calculation, identity, authorization, dependency, and runtime topology do not.

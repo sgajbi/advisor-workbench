@@ -20,6 +20,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | UI foundation | React `19.1.0` and TypeScript `5.9.3` | Exact manifest and policy reconciliation |
 | Production container | Official Debian Bookworm slim Node image | Immutable digest, standalone output, non-root runtime |
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
+| Typography delivery | Repo-governed Inter, Cormorant Garamond, and IBM Plex Mono WOFF2 assets through Next local fonts | Same-origin only; SIL OFL texts, upstream release/commit provenance, and SHA-256 checksums enforced |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
 | Direct dependency admission | 16 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
 | Scale validation dependency | Official NGINX stable `1.30.3` Alpine `3.23` slim image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
@@ -30,6 +31,24 @@ The architecture decision is
 [`workbench-production-runtime-decision.md`](../docs/architecture/workbench-production-runtime-decision.md).
 The direct dependency source is
 [`workbench-dependency-risk-inventory.v1.json`](../docs/architecture/workbench-dependency-risk-inventory.v1.json).
+
+## Governed Typography Delivery
+
+Workbench does not contact a public font service at runtime. The browser receives the governed
+WOFF2 files from the same Workbench origin through Next.js local-font output. This removes an
+undeclared workstation egress/privacy path, avoids public-network availability changing first
+render, and supports a deployment policy that does not require Google Fonts exceptions.
+
+`config/font-assets.json` pins each semantic role to an upstream repository, release tag, immutable
+commit, SIL OFL license file, and SHA-256 checksum. `npm run quality:font-assets` rejects missing or
+altered assets, ungoverned formats, absent roles, loader drift, or a production-source reference to
+`fonts.googleapis.com` or `fonts.gstatic.com`. Optimized-browser proof checks that font responses
+are successful same-origin WOFF2 resources and that desktop and compact Workbench geometry does not
+overflow.
+
+This is controlled open-font distribution evidence, not an independent legal opinion or bank
+procurement approval. Font replacement remains an issue-backed design, accessibility, payload,
+license, fallback, and visual-regression decision.
 
 ## Direct Dependency Architecture
 
@@ -70,6 +89,8 @@ must be valid HTTPS URLs with a usable host; prefix-shaped placeholders do not s
 8. The root App Router boundary uses MUI's supported server-rendering cache provider; production
    browser proof rejects Emotion styles in the document body, blanket hydration suppression, and
    unexpected console or page errors.
+9. Font assets are versioned with the product, checksummed, licensed, and served from the Workbench
+   origin; advisor rendering does not depend on a public font endpoint.
 
 ## Production And Scaling Posture
 
@@ -158,17 +179,21 @@ durable execution record.
 1. [Node.js release lifecycle](https://nodejs.org/en/about/previous-releases)
 2. [Node 22.23.1 and bundled npm](https://nodejs.org/en/download/archive/v22.23.1)
 3. [Next.js support policy](https://nextjs.org/support-policy)
-4. [npm package metadata controls](https://docs.npmjs.com/files/package.json/)
-5. [Next.js browser floors](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
-6. [MDN Baseline scope](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
-7. [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
-8. [Dockerfile reference](https://docs.docker.com/reference/dockerfile)
-9. [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
-10. [Lotus platform technology-governance policy](https://github.com/sgajbi/lotus-platform/blob/2868348d289fc685ecf5a218b6c73256ac3a7742/platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json)
-11. [OpenSSF dependency selection guidance](https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software)
-12. [SPDX license expressions](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/)
-13. [NGINX HTTP load-balancing guidance](https://nginx.org/en/docs/http/load_balancing.html)
-14. [Official NGINX container image](https://hub.docker.com/_/nginx)
-15. [MUI Next.js integration](https://mui.com/material-ui/integrations/nextjs/)
-16. [Next.js hydration-error guidance](https://nextjs.org/docs/messages/react-hydration-error)
-17. [React hydrateRoot guidance](https://react.dev/reference/react-dom/client/hydrateRoot)
+4. [Next.js local font documentation](https://nextjs.org/docs/app/api-reference/components/font)
+5. [Inter releases](https://github.com/rsms/inter/releases)
+6. [Cormorant releases](https://github.com/CatharsisFonts/Cormorant/releases)
+7. [IBM Plex releases](https://github.com/IBM/plex/releases)
+8. [npm package metadata controls](https://docs.npmjs.com/files/package.json/)
+9. [Next.js browser floors](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
+10. [MDN Baseline scope](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
+11. [GitHub Actions workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+12. [Dockerfile reference](https://docs.docker.com/reference/dockerfile)
+13. [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
+14. [Lotus platform technology-governance policy](https://github.com/sgajbi/lotus-platform/blob/2868348d289fc685ecf5a218b6c73256ac3a7742/platform-contracts/technology-governance/lotus-technology-governance-policy.v1.json)
+15. [OpenSSF dependency selection guidance](https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software)
+16. [SPDX license expressions](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/)
+17. [NGINX HTTP load-balancing guidance](https://nginx.org/en/docs/http/load_balancing.html)
+18. [Official NGINX container image](https://hub.docker.com/_/nginx)
+19. [MUI Next.js integration](https://mui.com/material-ui/integrations/nextjs/)
+20. [Next.js hydration-error guidance](https://nextjs.org/docs/messages/react-hydration-error)
+21. [React hydrateRoot guidance](https://react.dev/reference/react-dom/client/hydrateRoot)
