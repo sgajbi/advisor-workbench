@@ -350,6 +350,12 @@ describe("PortfolioScreenRail", () => {
             active: false,
             disabled: true,
           },
+          {
+            key: "diagnostics",
+            label: "Diagnostics",
+            detail: "Supporting evidence",
+            active: false,
+          },
         ]}
       />,
     );
@@ -365,6 +371,7 @@ describe("PortfolioScreenRail", () => {
       within(workflow).queryByRole("button", { name: /change workflow step/i }),
     ).not.toBeInTheDocument();
     expect(within(workflow).queryByText("Suitability")).not.toBeInTheDocument();
+    expect(within(workflow).queryByText("Diagnostics")).not.toBeInTheDocument();
   });
 
   it("identifies the active nested workspace and runs its supported action", () => {
