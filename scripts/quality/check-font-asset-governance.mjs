@@ -364,13 +364,45 @@ function assignedFontPropertyName(node) {
   return undefined;
 }
 
+function staticObjectPropertyName(name) {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNoSubstitutionTemplateLiteral(name)) {
+    return name.text;
+  }
+  if (
+    ts.isComputedPropertyName(name) &&
+    (ts.isStringLiteral(name.expression) || ts.isNoSubstitutionTemplateLiteral(name.expression))
+  ) {
+    return name.expression.text;
+  }
+  return undefined;
+}
+
+function createsRuntimeLinkElement(sourceFile) {
+  let createsLink = false;
+  function visit(node) {
+    if (
+      ts.isCallExpression(node) &&
+      node.arguments.length > 0 &&
+      (ts.isStringLiteral(node.arguments[0]) || ts.isNoSubstitutionTemplateLiteral(node.arguments[0])) &&
+      node.arguments[0].text.toLowerCase() === "link" &&
+      ((ts.isIdentifier(node.expression) && node.expression.text === "createElement") ||
+        (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "createElement"))
+    ) {
+      createsLink = true;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  return createsLink;
+}
+
 function hasDirectTypescriptFontDeclaration(sourceFile, relativePath) {
   if (relativePath === "src/design-system/theme/tokens.ts") {
     return false;
   }
   let directFamily = false;
   function visit(node) {
-    const propertyName = ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) ? node.name.text : undefined;
+    const propertyName = ts.isPropertyAssignment(node) ? staticObjectPropertyName(node.name) : undefined;
     if ((propertyName === "font" || propertyName === "fontFamily") && !isGovernedTypescriptFontValue(node.initializer, sourceFile)) {
       directFamily = true;
     }
@@ -420,6 +452,9 @@ function nonCanonicalFontDelivery(relativePath, text) {
     const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     if (hasRuntimeJsxStylesheetLink(sourceFile)) {
       violations.push("runtime stylesheet link outside governed loader");
+    }
+    if (createsRuntimeLinkElement(sourceFile)) {
+      violations.push("runtime link element construction outside governed loader");
     }
     if (usesBrowserFontFaceApi(sourceFile)) {
       violations.push("browser FontFace API outside governed loader");

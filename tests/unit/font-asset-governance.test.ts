@@ -494,6 +494,30 @@ describe("font asset governance", () => {
     }
   });
 
+  it("rejects a computed direct CSS-in-JS font family", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture('export const style = { ["fontFamily"]: "Georgia, serif" };\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font or fontFamily outside shared semantic tokens/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects non-JSX runtime link element construction", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture(
+      'export const stylesheet = React.createElement("link", { rel: "stylesheet", href: "https://fonts.bunny.net/css?family=Inter" });\n',
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/runtime link element construction outside governed loader/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects duplicate semantic roles in the manifest", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
