@@ -517,11 +517,41 @@ describe("PerformanceChartPanel", () => {
 
     const singleObservation = screen.getByLabelText("Single observation comparison");
     expect(singleObservation).toBeInTheDocument();
+    expect(singleObservation.closest('[role="img"]')).toHaveAttribute(
+      "data-layout",
+      "single-observation"
+    );
     expect(within(singleObservation).getByText("Single published observation")).toBeInTheDocument();
     expect(within(singleObservation).getByText("14 Apr 2026")).toBeInTheDocument();
     expect(within(singleObservation).getByText("+0.11%")).toBeInTheDocument();
     expect(within(singleObservation).getByText("+1.61%")).toBeInTheDocument();
     expect(within(singleObservation).getByText("-1.5%")).toBeInTheDocument();
+  });
+
+  it("preserves the time-series stage when more than one observation is published", () => {
+    const props = buildChartProps();
+    const firstPoint = props.points[0];
+
+    render(
+      <PerformanceChartPanel
+        {...props}
+        points={[
+          firstPoint,
+          {
+            ...firstPoint,
+            label: "2026-04",
+            period_start: "2026-04-01",
+            period_end: "2026-04-30",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("img", { name: "Net Return Path chart" })).toHaveAttribute(
+      "data-layout",
+      "time-series"
+    );
+    expect(screen.queryByLabelText("Single observation comparison")).not.toBeInTheDocument();
   });
 
   it("falls back to plain resolved dates when money-weighted audit metadata is absent", () => {
