@@ -284,6 +284,89 @@ describe("PortfolioScreenRail", () => {
     expect(changeStep).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("counts only actionable workflow steps while retaining unavailable discovery", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="advisory"
+        modeNavigationLabel="Advisory lifecycle navigation"
+        modeItems={[
+          {
+            key: "overview",
+            label: "Overview",
+            detail: "Advisor priorities",
+            active: true,
+            href: "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001",
+          },
+          {
+            key: "suitability",
+            label: "Suitability",
+            detail: "Mandate fit",
+            active: false,
+            disabled: true,
+            title: "Suitability is not available for this portfolio.",
+          },
+          {
+            key: "proposal",
+            label: "Proposal review",
+            detail: "Advice approval",
+            active: false,
+            href: "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001",
+          },
+        ]}
+      />,
+    );
+
+    const workflow = screen.getByRole("group", {
+      name: "Advisory lifecycle navigation",
+    });
+    const changeStep = within(workflow).getByRole("button", {
+      name: /change workflow step 1 available step/i,
+    });
+    fireEvent.click(changeStep);
+
+    expect(within(workflow).getByRole("link", { name: "Proposal review" })).toBeInTheDocument();
+    expect(within(workflow).getByRole("button", { name: "Suitability" })).toBeDisabled();
+  });
+
+  it("does not offer a workflow-change action when every alternative is unavailable", () => {
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="advisory"
+        modeNavigationLabel="Advisory lifecycle navigation"
+        modeItems={[
+          {
+            key: "overview",
+            label: "Overview",
+            detail: "Advisor priorities",
+            active: true,
+            href: "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001",
+          },
+          {
+            key: "suitability",
+            label: "Suitability",
+            detail: "Mandate fit",
+            active: false,
+            disabled: true,
+          },
+        ]}
+      />,
+    );
+
+    const workflow = screen.getByRole("group", {
+      name: "Advisory lifecycle navigation",
+    });
+    expect(within(workflow).getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(
+      within(workflow).queryByRole("button", { name: /change workflow step/i }),
+    ).not.toBeInTheDocument();
+    expect(within(workflow).queryByText("Suitability")).not.toBeInTheDocument();
+  });
+
   it("identifies the active nested workspace and runs its supported action", () => {
     const onSelect = vi.fn();
     render(
