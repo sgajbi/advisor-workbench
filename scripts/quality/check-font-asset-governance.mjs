@@ -331,13 +331,20 @@ function usesBrowserFontFaceApi(sourceFile) {
   return usesFontFace;
 }
 
+function hasRuntimeCssImport(text) {
+  return [...text.matchAll(/@import\s+(?:url\(\s*)?["']?\s*([^"')\s;]+)/gi)].some((match) => {
+    const target = match[1];
+    return !target.startsWith("./") && !target.startsWith("../");
+  });
+}
+
 function hasDirectCssFontFamily(text) {
-  return [...text.matchAll(/(?:^|[;{])\s*font-family\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
+  return [...text.matchAll(/(?:^|[\n;{}`])\s*font-family\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
 }
 
 function hasDirectCssFontShorthand(text) {
   const safeReset = /^(?:inherit|initial|revert|revert-layer|unset)$/i;
-  return [...text.matchAll(/(?:^|[;{])\s*font\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => {
+  return [...text.matchAll(/(?:^|[\n;{}`])\s*font\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => {
     const value = match[1].trim();
     return !safeReset.test(value) && !/var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(value);
   });
@@ -440,6 +447,9 @@ function nonCanonicalFontDelivery(relativePath, text) {
     if (pattern.test(text)) {
       violations.push(label);
     }
+  }
+  if (hasRuntimeCssImport(text)) {
+    violations.push("runtime CSS import outside repository-relative source");
   }
   if (hasDirectCssFontFamily(text)) {
     violations.push("font-family outside shared semantic tokens");
