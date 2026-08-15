@@ -23,7 +23,7 @@ const REQUIRED_ROLE_CONSUMERS = new Map([
   ["technical-evidence", { css: "--font-mono", typescript: "mono" }],
 ]);
 const REQUIRED_FORBIDDEN_RUNTIME_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
-const REQUIRED_GIT_ATTRIBUTES = ["src/assets/fonts/*.woff2 binary", "docs/licenses/fonts/*.txt text eol=lf -whitespace"];
+const REQUIRED_GIT_ATTRIBUTES = ["src/assets/fonts/** binary", "docs/licenses/fonts/** text eol=lf -whitespace"];
 const REMOTE_FONT_DELIVERY_PATTERNS = [
   ["remote stylesheet import", /@import\s+(?:url\(\s*)?["']?\s*(?:https?:)?\/\//i],
   ["remote font asset", /(?:https?:)?\/\/[^\s"'`)<]+\.(?:woff2?|ttf|otf|eot)(?:[?#][^\s"'`)<]*)?/i],
@@ -318,6 +318,21 @@ function hasRemoteJsxStylesheetLink(sourceFile) {
   return remoteLink;
 }
 
+function usesBrowserFontFaceApi(sourceFile) {
+  let usesFontFace = false;
+  function visit(node) {
+    if (
+      ts.isNewExpression(node) &&
+      (ts.isIdentifier(node.expression) ? node.expression.text === "FontFace" : ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "FontFace")
+    ) {
+      usesFontFace = true;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  return usesFontFace;
+}
+
 function hasDirectCssFontFamily(text) {
   return [...text.matchAll(/(?:^|\n)\s*font-family\s*:\s*([^;]+);/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
 }
@@ -362,6 +377,9 @@ function nonCanonicalFontDelivery(relativePath, text) {
     const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     if (hasRemoteJsxStylesheetLink(sourceFile)) {
       violations.push("remote stylesheet link");
+    }
+    if (usesBrowserFontFaceApi(sourceFile)) {
+      violations.push("browser FontFace API outside governed loader");
     }
     if (hasDirectTypescriptFontFamily(sourceFile, relativePath)) {
       violations.push("fontFamily outside shared semantic tokens");
