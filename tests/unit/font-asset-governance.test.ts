@@ -55,7 +55,7 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
   const assetTextByRole = Object.fromEntries(roles.map((role) => [role, `governed-${role}-font-binary`]));
   writeFileSync(
     path.join(repoRoot, "src/app/fonts.ts"),
-    `import localFont from "next/font/local";\n${assetPaths.map((assetPath, index) => `const font${index} = localFont({ src: "../assets/fonts/${path.basename(assetPath)}", variable: "${semanticVariables[index]}", weight: "400", style: "normal" });`).join("\n")}\n${runtimeSource}`,
+    `import localFont from "next/font/local";\n${assetPaths.map((assetPath, index) => `const font${index} = localFont({ src: "../assets/fonts/${path.basename(assetPath)}", variable: "${semanticVariables[index]}", weight: "400", style: "normal", preload: ${index < 2} });`).join("\n")}\n${runtimeSource}`,
   );
   writeFileSync(
     path.join(repoRoot, "src/styles/global/tokens.css"),
@@ -206,7 +206,7 @@ describe("font asset governance", () => {
     writeFileSync(
       fontLoaderPath,
       readFileSync(fontLoaderPath, "utf8").replace(
-        'const font0 = localFont({ src: "../assets/fonts/operational-ui.woff2", variable: "--font-lotus-ui-face", weight: "400", style: "normal" });',
+        'const font0 = localFont({ src: "../assets/fonts/operational-ui.woff2", variable: "--font-lotus-ui-face", weight: "400", style: "normal", preload: true });',
         '// removed localFont call retained only as dead text: "../assets/fonts/operational-ui.woff2"',
       ),
     );
@@ -291,6 +291,18 @@ describe("font asset governance", () => {
     }
   });
 
+  it("rejects a remote stylesheet in a JSX expression attribute", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/remote-font.tsx"), 'export const remoteLink = <link rel="stylesheet" href={"https://fonts.bunny.net/css?family=Inter"} />;\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/remote stylesheet link/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects direct font-face declarations in the canonical loader", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture("export const injectedCss = '@font-face { font-family: Ungoverned; src: url(/fonts/ungoverned.woff2); }';\n");
@@ -365,6 +377,42 @@ describe("font asset governance", () => {
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/loader descriptors must match manifest weight 400 and style normal/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects preload policy drift for technical evidence fonts", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    const fontLoaderPath = path.join(repoRoot, "src/app/fonts.ts");
+    writeFileSync(fontLoaderPath, readFileSync(fontLoaderPath, "utf8").replace("preload: false", "preload: true"));
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/technical-evidence must declare preload: false/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects direct CSS font families outside shared semantic tokens", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/direct-font.css"), ".label {\n  font-family: Georgia, serif;\n}\n");
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font-family outside shared semantic tokens/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects direct TypeScript font families outside shared semantic tokens", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture('export const style = { fontFamily: "Georgia, serif" };\n');
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/fontFamily outside shared semantic tokens/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }

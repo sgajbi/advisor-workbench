@@ -758,7 +758,7 @@
 
 .manageScope :global(.manage-status-icon[data-icon="info"]::before) {
   content: "i";
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 16px;
   font-style: italic;
 }
