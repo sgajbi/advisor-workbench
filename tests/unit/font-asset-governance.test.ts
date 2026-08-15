@@ -409,6 +409,20 @@ describe("font asset governance", () => {
     }
   });
 
+  it("requires nonempty weight and style descriptors", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    manifest.families[0].assets[0].weight = "";
+    const fontLoaderPath = path.join(repoRoot, "src/app/fonts.ts");
+    writeFileSync(fontLoaderPath, readFileSync(fontLoaderPath, "utf8").replace('weight: "400"', 'weight: ""'));
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/must declare nonempty weight and style descriptors/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects preload policy drift for technical evidence fonts", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture();
@@ -429,6 +443,18 @@ describe("font asset governance", () => {
 
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font-family outside shared semantic tokens/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects direct families supplied through the CSS font shorthand", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    writeFileSync(path.join(repoRoot, "src/app/direct-font.css"), ".label { font: 14px Georgia; }\n");
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(/font shorthand outside shared semantic tokens/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }

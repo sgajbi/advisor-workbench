@@ -337,6 +337,14 @@ function hasDirectCssFontFamily(text) {
   return [...text.matchAll(/(?:^|[;{])\s*font-family\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => !/^var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(match[1].trim()));
 }
 
+function hasDirectCssFontShorthand(text) {
+  const safeReset = /^(?:inherit|initial|revert|revert-layer|unset)$/i;
+  return [...text.matchAll(/(?:^|[;{])\s*font\s*:\s*([^;}]+)(?:;|})/gi)].some((match) => {
+    const value = match[1].trim();
+    return !safeReset.test(value) && !/var\(--font-(?:ui|display|mono)(?:\s*,|\))/i.test(value);
+  });
+}
+
 function hasDirectTypescriptFontFamily(sourceFile, relativePath) {
   if (relativePath === "src/design-system/theme/tokens.ts") {
     return false;
@@ -371,6 +379,9 @@ function nonCanonicalFontDelivery(relativePath, text) {
   }
   if (hasDirectCssFontFamily(text)) {
     violations.push("font-family outside shared semantic tokens");
+  }
+  if (hasDirectCssFontShorthand(text)) {
+    violations.push("font shorthand outside shared semantic tokens");
   }
 
   if (extname(relativePath) !== ".css") {
@@ -507,6 +518,9 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     }
     for (const asset of family.assets) {
       assertGovernedFile(effectiveRepoRoot, asset, "src/assets/fonts", "font asset");
+      if (typeof asset.weight !== "string" || !asset.weight.trim() || typeof asset.style !== "string" || !asset.style.trim()) {
+        throw new Error(`${asset.path} must declare nonempty weight and style descriptors.`);
+      }
       if (!asset.path.endsWith(".woff2")) {
         throw new Error(`${asset.path} must use the production-efficient WOFF2 format.`);
       }
