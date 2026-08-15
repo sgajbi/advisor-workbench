@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { extname, relative, resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SOURCE_TEXT_EXTENSIONS = new Set([".css", ".js", ".jsx", ".mjs", ".ts", ".tsx"]);
@@ -22,6 +22,11 @@ function sha256(filePath) {
   return createHash("sha256").update(readFileSync(filePath)).digest("hex");
 }
 
+function isContainedPath(parentPath, candidatePath) {
+  const relativePath = relative(parentPath, candidatePath);
+  return relativePath !== ".." && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath);
+}
+
 function assertGovernedFile(repoRoot, file, expectedRoot, kind) {
   if (!file || typeof file.path !== "string" || typeof file.sha256 !== "string") {
     throw new Error(`Every ${kind} must declare path and sha256.`);
@@ -32,12 +37,22 @@ function assertGovernedFile(repoRoot, file, expectedRoot, kind) {
     throw new Error(`${file.path} must stay under ${expectedRoot}.`);
   }
 
+  const absoluteRoot = resolve(repoRoot, expectedRoot);
   const absolutePath = resolve(repoRoot, normalizedPath);
+  if (!isContainedPath(absoluteRoot, absolutePath)) {
+    throw new Error(`${file.path} resolves outside ${expectedRoot}.`);
+  }
   if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
     throw new Error(`${file.path} is missing.`);
   }
 
-  const actualHash = sha256(absolutePath);
+  const realRoot = realpathSync(absoluteRoot);
+  const realPath = realpathSync(absolutePath);
+  if (!isContainedPath(realRoot, realPath)) {
+    throw new Error(`${file.path} resolves outside ${expectedRoot}.`);
+  }
+
+  const actualHash = sha256(realPath);
   if (actualHash !== file.sha256.toLowerCase()) {
     throw new Error(`${file.path} checksum drifted: expected ${file.sha256}, received ${actualHash}.`);
   }

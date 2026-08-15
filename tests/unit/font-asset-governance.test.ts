@@ -119,6 +119,23 @@ describe("font asset governance", () => {
     }
   });
 
+  it("rejects manifest traversal outside a governed asset root before reading the file", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    const outsideAsset = path.join(repoRoot, "src/assets/outside.woff2");
+    writeFileSync(outsideAsset, "must-not-be-read");
+    manifest.families[0].assets[0].path = "src/assets/fonts/../outside.woff2";
+    manifest.families[0].assets[0].sha256 = "0".repeat(64);
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /resolves outside src\/assets\/fonts/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects public font hosts in production source", async () => {
     const { validateFontAssetGovernance } = await fontGovernancePromise;
     const { repoRoot, manifest } = createFixture(
