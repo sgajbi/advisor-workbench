@@ -4838,7 +4838,8 @@ Research was reviewed on 2026-08-15 from framework and font-publisher primary so
 2. Preserve the existing semantic roles: Inter for operational reading, Cormorant Garamond 700 for
    the shell wordmark, and IBM Plex Mono 400/500 for technical evidence.
 3. Pin upstream repository, tag, immutable commit, SIL OFL text, and SHA-256 for every asset in one
-   machine-readable manifest.
+   machine-readable manifest; preserve binary font files and LF-stable license bytes through narrow
+   repository attributes so the same hashes hold on Windows and Linux.
 4. Preload only Inter and the visible wordmark face. Load the evidence face on use. Delete the
    unused Cormorant 600 face rather than carrying an unconsumed 204,052-byte asset.
 5. Remove the late global overrides that collapsed display and mono back to Inter, while preserving

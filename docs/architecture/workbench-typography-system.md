@@ -36,6 +36,7 @@ Governed truth lives in:
   license, file path, and SHA-256 checksum
 - `src/assets/fonts/` for the checked-in WOFF2 assets
 - `docs/licenses/fonts/` for the upstream SIL Open Font License texts
+- `.gitattributes` for binary font treatment and LF-stable publisher-license bytes across platforms
 - `src/app/fonts.ts` for the Next.js local-font mapping
 - `npm run quality:font-assets` for checksum, license, loader-coverage, WOFF2, semantic-role, and
   public-runtime-host enforcement

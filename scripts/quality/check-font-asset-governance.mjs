@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const SOURCE_TEXT_EXTENSIONS = new Set([".css", ".js", ".jsx", ".mjs", ".ts", ".tsx"]);
 const REQUIRED_ROLES = new Set(["operational-ui", "brand-display", "technical-evidence"]);
+const REQUIRED_GIT_ATTRIBUTES = [
+  "src/assets/fonts/*.woff2 binary",
+  "docs/licenses/fonts/*.txt text eol=lf -whitespace",
+];
 
 function resolveDefaultRepoRoot() {
   return resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -58,6 +62,16 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
   const effectiveManifest = manifest ?? JSON.parse(
     readFileSync(resolve(effectiveRepoRoot, "config/font-assets.json"), "utf8"),
   );
+  const gitAttributes = readFileSync(resolve(effectiveRepoRoot, ".gitattributes"), "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const requiredAttribute of REQUIRED_GIT_ATTRIBUTES) {
+    if (!gitAttributes.includes(requiredAttribute)) {
+      throw new Error(`Font asset governance requires .gitattributes entry: ${requiredAttribute}.`);
+    }
+  }
 
   if (effectiveManifest.schemaVersion !== 1 || effectiveManifest.delivery !== "same-origin") {
     throw new Error("Font asset governance requires schemaVersion 1 and same-origin delivery.");

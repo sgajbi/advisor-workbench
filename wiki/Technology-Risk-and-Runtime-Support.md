@@ -42,7 +42,9 @@ render, and supports a deployment policy that does not require Google Fonts exce
 `config/font-assets.json` pins each semantic role to an upstream repository, release tag, immutable
 commit, SIL OFL license file, and SHA-256 checksum. `npm run quality:font-assets` rejects missing or
 altered assets, ungoverned formats, absent roles, loader drift, or a production-source reference to
-`fonts.googleapis.com` or `fonts.gstatic.com`. Optimized-browser proof checks that font responses
+`fonts.googleapis.com` or `fonts.gstatic.com`. Narrow repository attributes preserve binary font
+bytes and LF-stable publisher-license bytes across Windows and Linux. Optimized-browser proof checks
+that font responses
 are successful same-origin WOFF2 resources and that desktop and compact Workbench geometry does not
 overflow.
 

@@ -1153,7 +1153,9 @@ Most relevant current governance:
     Load Inter UI, Cormorant brand display, and IBM Plex Mono evidence roles only through
     `src/app/fonts.ts` and their semantic custom properties. Keep exact upstream release/commit,
     SIL OFL license, and SHA-256 truth in `config/font-assets.json`; `npm run quality:font-assets`
-    must remain in the blocking lint chain. Do not add a Google Fonts import, CDN URL, page-local
+    must remain in the blocking lint chain. Preserve the narrow `.gitattributes` binary and
+    LF-license rules so checksums remain stable across developer and CI platforms. Do not add a
+    Google Fonts import, CDN URL, page-local
     `@font-face`, font package, or direct family declaration that bypasses the shared tokens.
     Preserve Inter and the visible wordmark face as the only root preloads; evidence faces should
     load on demand. Any typography replacement requires issue-backed brand, accessibility,
