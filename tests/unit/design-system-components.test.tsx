@@ -103,9 +103,14 @@ describe("design-system components", () => {
     });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(disclosure);
+    expect(screen.getByText("Workspace directory")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute("href", "/portfolio");
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByText("Proposal")).toHaveAttribute("aria-disabled", "true");
+    const unavailableProposal = screen.getByText("Proposal");
+    expect(unavailableProposal).toHaveAttribute("aria-disabled", "true");
+    expect(unavailableProposal.tagName).toBe("SPAN");
+    expect(unavailableProposal).not.toHaveAttribute("tabindex");
+    expect(screen.queryByText("Available workspaces")).not.toBeInTheDocument();
 
     screen.getByRole("link", { name: "Portfolio" }).focus();
     fireEvent.keyDown(screen.getByRole("link", { name: "Portfolio" }), { key: "Escape" });

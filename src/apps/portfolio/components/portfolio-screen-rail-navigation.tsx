@@ -22,6 +22,10 @@ type PortfolioScreenRailNavigationProps = {
   onDestinationSelected: () => void;
 };
 
+function isModeItemActionable(item: PortfolioScreenRailModeItem) {
+  return !item.disabled && Boolean(item.href || item.onSelect);
+}
+
 export default function PortfolioScreenRailNavigation({
   id,
   expanded,
@@ -39,6 +43,7 @@ export default function PortfolioScreenRailNavigation({
   const workflowButtonRef = useRef<HTMLButtonElement>(null);
   const activeModeItem = modeItems?.find((item) => item.active) ?? null;
   const otherModeItems = modeItems?.filter((item) => !item.active) ?? [];
+  const actionableModeItemCount = otherModeItems.filter(isModeItemActionable).length;
   const directoryItemCount = model.directoryGroups.reduce(
     (count, group) => count + group.items.length,
     0,
@@ -82,6 +87,7 @@ export default function PortfolioScreenRailNavigation({
   }
 
   function renderModeItem(item: PortfolioScreenRailModeItem) {
+    const actionable = isModeItemActionable(item);
     const className = cx(
       styles.link,
       styles.subnavigationLink,
@@ -99,7 +105,7 @@ export default function PortfolioScreenRailNavigation({
       </>
     );
 
-    if (item.href && !item.disabled) {
+    if (item.href && actionable) {
       return (
         <Link
           key={item.key}
@@ -119,7 +125,7 @@ export default function PortfolioScreenRailNavigation({
       <button
         key={item.key}
         type="button"
-        disabled={item.disabled}
+        disabled={!actionable}
         aria-label={item.label}
         aria-current={item.active ? "page" : undefined}
         className={className}
@@ -217,7 +223,7 @@ export default function PortfolioScreenRailNavigation({
         >
           <span className={styles.sectionLabel}>Current workflow</span>
           {renderModeItem(activeModeItem)}
-          {otherModeItems.length > 0 ? (
+          {actionableModeItemCount > 0 ? (
             <>
               <button
                 ref={workflowButtonRef}
@@ -229,7 +235,10 @@ export default function PortfolioScreenRailNavigation({
               >
                 <span>
                   <strong>Change workflow step</strong>
-                  <small>{otherModeItems.length} available steps</small>
+                  <small>
+                    {actionableModeItemCount}{" "}
+                    {actionableModeItemCount === 1 ? "available step" : "available steps"}
+                  </small>
                 </span>
                 <span className={styles.disclosureAction} aria-hidden="true">
                   {workflowExpanded ? "Close" : "Choose"}

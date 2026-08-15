@@ -71,7 +71,7 @@ export default function WorkspaceMenuNav({
         className={styles.panel}
         hidden={!expanded}
       >
-        <span className={styles.label}>Available workspaces</span>
+        <span className={styles.label}>Workspace directory</span>
         <div className={styles.list}>
           {items.map((item) =>
             item.disabled || !item.href ? (
