@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -50,7 +50,7 @@ function createFixture(runtimeSource = "export const delivery = 'same-origin';\n
   );
   writeFileSync(
     path.join(repoRoot, "src/app/fonts.ts"),
-    `${assetPaths.map((assetPath) => `const font = "${path.basename(assetPath)}";`).join("\n")}\n${runtimeSource}`,
+    `${assetPaths.map((assetPath) => `const font = "../assets/fonts/${path.basename(assetPath)}";`).join("\n")}\n${runtimeSource}`,
   );
   for (const [index, assetPath] of assetPaths.entries()) {
     writeFileSync(path.join(repoRoot, assetPath), assetTextByRole[roles[index]]);
@@ -145,6 +145,39 @@ describe("font asset governance", () => {
     try {
       expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
         /Public font runtime references are forbidden/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("does not allow the manifest to remove canonical public font hosts", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    manifest.forbiddenRuntimeHosts = ["example.invalid"];
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /missing required forbidden runtime hosts: fonts\.googleapis\.com, fonts\.gstatic\.com/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a loader asset without checksum and license provenance", async () => {
+    const { validateFontAssetGovernance } = await fontGovernancePromise;
+    const { repoRoot, manifest } = createFixture();
+    const ungovernedAsset = "src/assets/fonts/ungoverned.woff2";
+    writeFileSync(path.join(repoRoot, ungovernedAsset), "ungoverned-font-binary");
+    writeFileSync(
+      path.join(repoRoot, "src/app/fonts.ts"),
+      `${readFileSync(path.join(repoRoot, "src/app/fonts.ts"), "utf8")}\nconst extraFont = "../assets/fonts/ungoverned.woff2";\n`,
+    );
+
+    try {
+      expect(() => validateFontAssetGovernance({ repoRoot, manifest })).toThrow(
+        /must be governed in config\/font-assets\.json: src\/assets\/fonts\/ungoverned\.woff2/,
       );
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
