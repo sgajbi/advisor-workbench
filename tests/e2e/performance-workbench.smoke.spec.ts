@@ -440,7 +440,8 @@ test.describe('Performance workbench smoke', () => {
       await expect(changeWorkflow).toContainText(
         `${actionableCount} ${actionableCount === 1 ? 'available step' : 'available steps'}`,
       );
-      expect(actionableCount).toBeLessThan(actionableCount + unavailableCount);
+      expect(actionableCount).toBeGreaterThan(0);
+      expect(unavailableCount).toBeGreaterThan(0);
       await expect(unavailableSteps.first()).toContainText('Unavailable');
 
       const focusTarget = directory.locator('a[href], button:not(:disabled)').first();

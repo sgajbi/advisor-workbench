@@ -108,20 +108,20 @@ async function assertWorkspaceAvailabilityAffordances(page: Page) {
       };
     });
 
+  const unavailableRest = await readAffordance(unavailableWorkspace);
+  const enabledRest = await readAffordance(enabledWorkspace);
   await unavailableWorkspace.hover();
-  const unavailableHover = await readAffordance(unavailableWorkspace);
+  await expect.poll(() => readAffordance(unavailableWorkspace)).toEqual(unavailableRest);
   await enabledWorkspace.hover();
   await expect
     .poll(async () => {
       const enabledHover = await readAffordance(enabledWorkspace);
       return (
-        enabledHover.backgroundColor !== unavailableHover.backgroundColor ||
-        enabledHover.borderLeftColor !== unavailableHover.borderLeftColor
+        enabledHover.backgroundColor !== enabledRest.backgroundColor ||
+        enabledHover.borderLeftColor !== enabledRest.borderLeftColor
       );
     })
     .toBe(true);
-  await unavailableWorkspace.hover();
-  await expect.poll(() => readAffordance(unavailableWorkspace)).toEqual(unavailableHover);
 }
 
 test("supports a keyboard-complete own-book review and portfolio handoff", async ({ page }) => {
