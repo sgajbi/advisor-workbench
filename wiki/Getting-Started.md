@@ -16,14 +16,16 @@ does not by itself certify populated source data, integrated panel support, or d
 
 1. Use **My book** to select a source-backed portfolio from the advisor's current book. Returning
    there preserves the active review date when one is already selected.
-2. Use **Workspace — Switch** only to move between Gateway-published product capabilities.
-   Unavailable entries remain visible but cannot be opened.
+2. Use **Workspace — Switch** to open the **Workspace directory** and move only between
+   Gateway-published product capabilities. Unavailable entries remain visible for orientation but
+   do not behave or appear like selectable destinations.
 3. Within a selected portfolio, use **Daily work** for Portfolio review, Performance, Advice,
    Reporting, or Mandate management.
 4. Open **All workspaces** for specialist records such as Holdings, Transactions, Cash movements,
    Risk, or Proposals.
-5. In a multi-step workspace, confirm **Current workflow** first and open **Change workflow step**
-   only when another supported step is required.
+5. In a multi-step workspace, confirm **Current workflow** first. **Change workflow step** appears
+   only when at least one other step is selectable, and its availability count excludes
+   source-disabled steps.
 
 This is one responsive information architecture, not separate desktop and mobile products. On a
 compact screen, open the current-view disclosure to reach the same task rail; Escape closes an open

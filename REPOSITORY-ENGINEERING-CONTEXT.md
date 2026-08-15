@@ -202,7 +202,11 @@ Current repository posture:
     work domains—Portfolio review, Performance, Advice, Reporting, and Mandate management—then
     exposes the active specialist task and a grouped **All workspaces** directory without
     duplicating the current destination. When a workspace has modes, show the current workflow
-    step first and disclose alternative steps on demand. The global shell separately owns
+    step first and disclose alternative steps on demand only when at least one alternative is
+    genuinely actionable. Availability counts include actionable alternatives only; source-disabled
+    entries may remain inside an open directory for orientation but cannot create the disclosure or
+    inherit enabled pointer/keyboard affordances. An item without a destination or supported action
+    also fails closed as unavailable. The global shell separately owns
     **My book** and the capability-backed workspace switcher; it must not repeat a visible feature
     catalogue, infer a role or entitlement in the browser, or make a capability-disabled entry
     actionable. Returning to **My book** preserves a valid active `asOfDate` review context.
@@ -1110,9 +1114,10 @@ Most relevant current governance:
     utility outside the five Gateway `shell-bootstrap.v1` advisor workspaces, so it deliberately
     renders no current workspace rather than inventing a sixth capability or selecting an unrelated
     domain. Home, platform utility, workspace, and unmatched route scopes remain distinct. Render
-    the normalized capability set through the shared workspace switcher, closed by default, with
-    unavailable entries visibly non-actionable; do not restore an always-visible row of workspace
-    pills or add shell-local availability logic.
+    the normalized capability set through the shared workspace switcher, closed by default, with a
+    neutral **Workspace directory** label. Unavailable entries remain non-links, outside the tab
+    order, and visually stable under pointer hover; do not restore an always-visible row of
+    workspace pills or add shell-local availability logic.
 11. Shared interactive primitives own their base, priority, focus, hover, disabled, reduced-motion,
     and accessibility presentation beside the component. `ActionButton` keeps stable compatibility
     class names only for existing feature-level sizing and placement; global CSS must not regain its
