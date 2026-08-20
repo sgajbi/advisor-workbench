@@ -29,9 +29,11 @@ recommendation forward:
 4. Which exact proposal record owns the next action and supporting evidence?
 5. Has the latest queue posture been confirmed through Gateway, or is earlier evidence retained?
 
-The reading order is selected portfolio, advisor decision, visible-window measures, lifecycle
-handoffs, priority worklist, source-window posture, then record detail. This keeps routine triage
-fast without presenting a partial list as a complete portfolio or book.
+The reading order is selected portfolio, advisor decision, priority worklist, compact
+visible-window measures, lifecycle orientation, then record detail. The source window sits inside
+the worklist so its boundary is visible before any row is used. On tablets and compact layouts,
+repeated queue posture is removed while the source-and-scope boundary remains available. This keeps
+routine triage fast without presenting a partial list as a complete portfolio or book.
 
 ## Who Uses This Screen
 
@@ -50,11 +52,12 @@ These roles describe business use; they do not grant authority or replace source
 
 1. Select one entitled portfolio from [Advisor Book](Advisor-Book-Workflow) or the shared portfolio
    switcher.
-2. Confirm whether the source window is complete or whether earlier or later windows remain.
-3. Review the decision statement and visible counts for control review, client discussion, drafts,
-   and implementation follow-up.
-4. Open the highest-priority proposal to inspect its source-owned workflow, evidence, approvals,
-   narrative, or implementation posture.
+2. Review the decision statement, then scan the source-window boundary and highest-priority visible
+   proposals.
+3. Open the proposal that owns the next control review, client discussion, construction, or
+   implementation action.
+4. Use the compact visible-window measures and lifecycle orientation to understand the surrounding
+   queue without delaying the active review.
 5. Move to the next or previous source window before concluding the selected portfolio has no open
    proposal work.
 6. Use **Refresh advisory priorities** or **Retry advisory priorities** when the current source
@@ -77,8 +80,13 @@ These roles describe business use; they do not grant authority or replace source
 - Keeps one shared source-refresh action mounted during retry, prevents duplicate activation,
   preserves keyboard focus, and confirms success only after the Gateway response succeeds.
 - Keeps permission failure fail-closed without exposing proposal evidence or an inappropriate retry.
-- Reflows the lifecycle, measures, worklist, and workflow context from workstation to tablet and
-  compact widths without page-level horizontal overflow.
+- Keeps the priority worklist immediately after the advisor decision in DOM, visual, and keyboard
+  order; visible-window measures and lifecycle orientation remain secondary.
+- Uses the shared Workbench metric strip and a two-column compact record treatment to preserve
+  information density without hiding exact proposal evidence.
+- Retains the full workflow-context rail on desktop. At tablet and compact widths, the typed
+  supplementary-context rule removes repeated decision/count/window posture while keeping the
+  source-and-scope boundary visible and avoiding page-level horizontal overflow.
 
 ## Decisions And Actions
 
@@ -113,7 +121,7 @@ Shared request families remain summarized in [API Surface](API-Surface), with ow
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Loading | A shaped loading state under stable Advisor Priorities context | Wait for Gateway; no fallback queue is shown |
-| Ready | Decision, measures, lifecycle, worklist, window posture, and supported actions | Review the source record or refresh the window |
+| Ready | Decision, worklist and window posture, compact measures, lifecycle orientation, and supported actions | Review the source record or refresh the window |
 | Complete empty | No open proposals in the complete source window | Review source-backed ideas or start a draft; this is not an approval all-clear |
 | Partial empty | No proposals in this window while another window remains | Review adjacent windows before concluding the portfolio is clear |
 | Background checking | Earlier worklist remains visible with a checking status | Wait or continue reading earlier evidence; duplicate refresh is suppressed |
@@ -135,9 +143,9 @@ Advisory Overview deliberately does not:
 - invent proposals, fallback states, source timestamps, approval evidence, or successful recovery,
 - call Advise directly or expose raw source errors in the business workflow.
 
-Official BlackRock Advisor Center 360, Morningstar Direct Advisory Suite, Salesforce Wealth
-Management, and W3C status-message guidance informed the centralised worklist, in-place recovery,
-and accessible status principles. Lotus does not copy another product's visual identity, wording,
+Official BlackRock Aladdin Wealth, SAP Fiori responsive design, and W3C Reflow and meaningful-order
+guidance informed the task-first worklist, information-priority, responsive disclosure, and
+accessible-order principles. Lotus does not copy another product's visual identity, wording,
 calculations, or unsupported capability.
 
 ## Adjacent Handoffs
@@ -156,13 +164,15 @@ calculations, or unsupported capability.
   counts, ranking, copy, and partial-window boundaries.
 - `tests/integration/advisory-overview-workspace.test.tsx` proves loading/ready/empty/partial/error,
   permission, initial and background recovery, duplicate-request fencing, focus stability, and
-  support-safe failure copy.
+  support-safe failure copy. It also pins decision, worklist, measure, and lifecycle DOM order.
 - `tests/e2e/advisory-overview-worklist.spec.ts` proves the optimized-production route at
   1440/1024/519 pixels, source-window navigation, deliberate Gateway failure-to-ready recovery,
-  exact request count, focus continuity, and zero page overflow.
+  exact request count, focus continuity, worklist precedence, responsive measure density, desktop
+  context retention, compact de-duplication, source-boundary visibility, and zero page overflow.
 - `scripts/live/validation/browser-workflows.mjs` covers the canonical Advisory Overview panel in
   the governed front-office runtime.
-- `output/issue-729/` contains reviewed generated screenshots. They are branch evidence, not
+- `output/issue-731/` contains reviewed desktop, tablet, and compact hierarchy screenshots;
+  `output/issue-729/` retains source-recovery evidence. They are branch evidence, not
   production readiness, independent certification, bank approval, or competitor-superiority proof.
 - Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
   protected PR, exact-main, and canonical runtime sequence.
