@@ -4958,3 +4958,64 @@ API Surface already record the correct Gateway/Core/Performance owners and split
 Horizon contract family, so they require no change. Canonical runtime proof is not added because no
 source contract, calculation, seed, route, or integrated business transaction changed; protected PR
 and exact-main gates remain required.
+
+## Performance Source-Confirmation Lifecycle
+
+### Business job
+
+After an advisor changes the Performance horizon, basis, benchmark, frequency, or analytical
+dimension, Workbench must make source settlement clear without turning routine success into a
+permanent exception. Failure and recovery require durable evidence; success should return attention
+to the portfolio outcome while leaving the resolved controls, figures, and URL as lasting truth.
+
+### Current-product research
+
+Research was reviewed on 2026-08-20 from official accessibility and enterprise-design sources:
+
+1. [W3C WCAG 2.2 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires success and result changes to be programmatically determinable without receiving focus.
+2. [SAP Fiori Toast guidance](https://experience.sap.com/fiori-design-web/toast-web-component/)
+   describes routine success feedback as short, non-disruptive, and automatically disappearing;
+   information needed later belongs in a durable positive state instead.
+3. [SAP Fiori UI element states](https://experience.sap.com/fiori-design-web/ui-element-states/)
+   distinguishes a short successful-process notification from a positive state the user must retain
+   for later use.
+
+### Adopted decisions
+
+1. Preserve the existing source transaction: confirm only after every required Gateway response,
+   resolved controls, data, and URL agree; failure, permission denial, partial commit, and obsolete
+   completion cannot publish success.
+2. Keep pending and failed evidence persistent because the advisor must wait, interpret, or recover.
+3. Render confirmed state through the shared refresh-status component as one compact, polite,
+   source-context acknowledgement and clear it after five seconds.
+4. Keep resolved source controls, analytical figures, and canonical URL as durable confirmation
+   after the acknowledgement clears.
+5. Preserve the last interacted source selector across a failed request and retry. Restore it only
+   when the retry control disappears and focus would otherwise fall to the document; do not move
+   focus if the advisor selected another stable task.
+6. Suppress confirmation for initial hydration, repeated identical input, mode-only navigation, and
+   obsolete completion. A distinct user-requested transaction may confirm once even when an earlier
+   source-confirmed response can be reused safely.
+
+### Rejected decisions
+
+1. Keeping a permanent green success panel ahead of the analytical canvas.
+2. Adding a toast library, modal, confirmation dialog, or focus transfer into the status message.
+3. Clearing pending or failed evidence on a timer, or treating a browser-only transition as source
+   persistence.
+4. Retaining duplicate requested/source-confirmed definitions after success when the selected
+   controls already show the same resolved context.
+5. Changing Gateway, Performance calculations, API/OpenAPI contracts, or source ownership for a
+   Workbench feedback-lifecycle defect.
+
+### Validation and publication decision
+
+Workbench #721 owns the slice. Focused component, source-control, and transaction-client tests prove
+compact polite semantics, source-only settlement, five-second expiry, identical-input suppression,
+obsolete-response fencing, and focus non-interference/restoration. The optimized production
+refresh-integrity journey proves deliberate summary/detail failure, exact retry, resolved controls
+and URL, original-selector focus, compact machine-readable confirmation, expiry, governed narrow
+reflow, and bounded browser-error admission. The Performance Summary guide, repository context,
+research ledger, and review ledger change. Gateway/API/OpenAPI, calculation, dependency, global CSS,
+runtime topology, identity, and entitlement truth do not change.

@@ -147,6 +147,7 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | Ready | Confirmed scope, headline outcome, return path, horizon context, contributors, and supportability | Continue the review |
 | Selection pending | Requested and source-confirmed contexts shown separately; prior figures keep their confirmed labels and controls are locked | Wait for both summary and detail confirmation |
 | Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
+| Selection confirmed | Compact **Source analysis updated** or **Source detail updated** acknowledgement naming the resolved analytical context for five seconds; controls, figures, and URL remain the durable truth | Continue the review; no dismissal is required |
 | Partial or limited | Usable facts remain visible with named capability, warning, or partial-failure evidence | Qualify the discussion and investigate the named source limitation |
 | Source-limited contribution | **Contribution coverage is limited**, named business exclusions, market-value coverage, weighting basis, and reconciliation; exact codes remain secondary | Review the exclusions and calculation evidence before using the driver explanation with a client |
 | Unknown or missing contribution evidence | **Contribution evidence needs review** or **Contribution coverage cannot be confirmed** without an invented translation | Open **Calculation evidence**, retain the exact value, and use the approved support path |
@@ -202,14 +203,16 @@ superiority.
 
 - Focused state tests prove pending, summary failure, detail failure, exact retry, permission block,
   stale-response fencing, and atomic source-confirmed commit behavior.
-- Shared-component tests prove polite pending and assertive failure announcements, exact
-  requested/confirmed context, native retry behavior, and responsive ownership. Browser proof
-  verifies that the retry is keyboard-focusable before activation; it does not claim a separate
-  source-confirmed success announcement that the current component does not render.
+- Shared-component tests prove polite pending and compact source-confirmed announcements, assertive
+  failure, exact requested/confirmed context, native retry behavior, and responsive ownership.
+  Client tests prove the five-second confirmation lifecycle, identical-input suppression, obsolete
+  response fencing, and that an existing stable task keeps focus.
 - The owned optimized-production browser journey uses `PB_SG_GLOBAL_BAL_001`; it deliberately
   receives a 503 for a 3Y summary and a 502 for Sector detail, proves YTD and Asset Class remain
-  source-confirmed, retries each request, and then proves 3Y and Sector become current together with
-  the URL.
+  source-confirmed, retries each request, proves focus returns to the original source selector only
+  when the retry action would otherwise leave focus nowhere, and then proves 3Y and Sector become
+  current together with the URL. The final confirmation clears while the resolved controls, data,
+  and URL remain current.
 - The browser proof admits only the two deliberate BFF error signals, rejects any other console or
   page error, keeps Emotion styles head-managed, and verifies no page overflow at 1024, 768, and
   519 pixels.
