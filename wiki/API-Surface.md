@@ -88,6 +88,11 @@ promote dormant labels into product ownership just because historical route file
   internal review decisions through `/performance/advisor-brief/review-actions`; browser requests
   use `/api/bff/api/v1/...`, confirmation precedes the POST, and Workbench admits recorded human
   review only from the returned actor, timestamp, transition count, and review-history evidence
+- Risk Review consumes Gateway
+  `/api/v1/workbench/{portfolio_id}/risk/{summary,concentration,drawdown,rolling,attribution}`
+  through the browser's `/api/bff/api/v1/...` boundary. Lotus Risk owns measures, module state,
+  supportability, coverage, methodology, and source controls; Workbench formats that evidence and
+  does not author mandate limits, universal severity bands, breach, or all-clear posture.
 - Data Product Catalogue is served through `/data-products` and independently consumes Gateway
   `/api/v1/domain-products/catalog`, `/dependency-graph`, and `/trust-certification` through the
   internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;

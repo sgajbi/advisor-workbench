@@ -5,6 +5,62 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Risk Review: measured evidence before policy judgement
+
+### Business job
+
+A client advisor or portfolio manager uses Risk Review to understand measured downside,
+concentration, rolling behavior, and risk contributors for one selected portfolio before deciding
+whether a professional or policy review is required. The screen must let the user identify the
+measure, period, driver, coverage, methodology, and source limitation quickly without mistaking a
+generic browser label for the client's approved mandate or house risk policy.
+
+The reading order is:
+
+1. exact realized volatility, max drawdown, largest position, and source coverage,
+2. the explicit absence of a source-owned mandate/house-limit comparison,
+3. snapshot and drawdown evidence,
+4. position and issuer concentration with coverage and methodology,
+5. rolling-risk and historical-attribution detail on demand,
+6. source supportability, warnings, and partial failures.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-20 from official sources:
+
+1. [BlackRock Aladdin Risk](https://www.blackrock.com/aladdin/platforms/products/aladdin-risk)
+   emphasizes context-appropriate models and factors, risk decomposition, and source analytics.
+2. [BlackRock Aladdin Wealth Regulation Best Interest](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/regulation-best-interest)
+   describes alignment to investment profiles, risk alerts and outliers, and a common risk
+   language rather than a universal client-independent browser threshold.
+3. [CFA Institute Standard III(C)](https://www.cfainstitute.org/standards/professionals/code-ethics-standards/standards-of-practice-iii-c)
+   requires suitability and portfolio-risk judgement to consider written objectives, mandate,
+   risk tolerance, constraints, and the total portfolio.
+
+### Adopted
+
+- Lead with exact source measures and factual recovered/open and source-coverage evidence.
+- Preserve module-level ready, partial, unavailable, and blocked posture from source contracts.
+- Keep mandate and house-policy comparison visibly unavailable until a governed source supplies it.
+- Use dense progressive disclosure for methodology, episodes, series, and attribution detail.
+- Validate keyboard semantics, accessible evidence labels, and 1440/1024/519-pixel reflow.
+
+### Rejected
+
+- Workbench-authored volatility, drawdown, HHI, position, issuer, or top-N severity thresholds.
+- A green all-clear, red breach, or universal acceptable/diversified band without source policy.
+- Merely adding a disclaimer while retaining the fabricated scale or accessible classification.
+- Copying competitor layout, wording, visual identity, thresholds, or unsupported capability.
+
+### Implementation and validation
+
+Workbench issue #723 replaces executive classifications with exact source evidence, removes the
+fabricated concentration scale, adds a compact visible mandate-comparison boundary, retains exact
+concentration and methodology evidence, and prohibits retired helpers/selectors from returning.
+Focused model/component and source-authority tests plus canonical browser validation own the proof.
+Synthetic Risk fixture ownership remains separately tracked under issue #724; it is not live source
+authority.
+
 ## Portfolio Review
 
 ### Business job

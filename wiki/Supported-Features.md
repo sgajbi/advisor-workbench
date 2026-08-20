@@ -42,6 +42,20 @@ must not reintroduce fabricated fallback business state while that dependency is
 | DPM PM operating quality                | `/workbench/{portfolioId}?mode=quality`                             | Gateway `/api/v1/dpm/command-center/pm-operating-quality*`                                                                                                                                                                                                                                                                              | Implemented for Manage-owned policy, score-run, source-defined segment, fairness-analysis preview/create/list/detail, score-run support-summary requests with shared fail-closed result disclosure, bounded supervisory review-action preview/create/list/detail, and summary-invocation preview/create/list/detail through Gateway only. Supervisors can explicitly select one quality run, fairness review, and recorded action using pointer or keyboard; the selected source records stay visibly bound to detail, readiness, support-summary, review-action, and summary-invocation controls across source reorder, with late or superseded detail and mutation completion fenced. Review-action and summary-invocation creates are preview-gated and record Manage-owned evidence; persisted invocation history is explicitly audit evidence with generated output unavailable unless the source returns that output independently. Workbench does not calculate PM scores, fairness spreads, segment membership, PM rankings, HR/conduct posture, client communication, trade/order, OMS, execution, fills, or settlement truth. |
 | DPM PM copilot workspace                | `/workbench/{portfolioId}?mode=copilot`                             | Gateway/lotus-ai typed workflow execution posture                                                                                                                                                                                                                                                                                       | Implemented for proof-pack PM memo, wave PM memo, operations brief, exception summary, outcome narrative, and PM-quality support-summary requests with one reusable business result and disclosure. Preparation, output availability, evidence, human review, client use, freshness, limitations, supersession, runtime, and support diagnostics remain independent source-backed facts. Canonical panel proof is governed as `dpm.copilot_workspace`; Workbench does not construct or store prompts, store generated responses, contact clients, route orders, or claim OMS execution.                                                                                                                                                                                           |
 
+## Risk Review Interpretation Boundary
+
+The runtime-gated `/performance?mode=risk` screen presents exact Gateway/Lotus Risk volatility,
+drawdown, concentration, rolling-risk, and historical risk-attribution evidence. Its executive
+first scan leads with realized volatility, max drawdown and factual recovery posture, largest
+position and source driver, and source coverage. It does not turn those values into universal
+contained, moderate, elevated, high, severe, acceptable, or diversified classifications.
+
+No approved client mandate or house risk limit is present in the current Workbench risk contracts.
+The screen therefore states that boundary visibly and does not infer a breach or an all-clear.
+Ready, partial, unavailable, access-restricted, warning, coverage, and methodology posture continue
+to come from the source contract. Workbench does not calculate risk, suitability, limit compliance,
+remediation, advice, a proposal, or an order.
+
 ## Performance Calculation Assurance
 
 The runtime-gated `/performance?mode=evidence` screen is implemented as an exception-first review
