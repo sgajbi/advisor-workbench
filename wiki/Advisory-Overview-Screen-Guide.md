@@ -166,7 +166,8 @@ calculations, or unsupported capability.
   permission, initial and background recovery, duplicate-request fencing, focus stability, and
   support-safe failure copy. It also pins decision, worklist, measure, and lifecycle DOM order.
 - `tests/e2e/advisory-overview-worklist.spec.ts` proves the optimized-production route at
-  1440/1024/519 pixels, source-window navigation, deliberate Gateway failure-to-ready recovery,
+  1440/1150/1024/519 pixels, including the shell's responsive stacking boundary, source-window
+  navigation, deliberate Gateway failure-to-ready recovery,
   exact request count, focus continuity, worklist precedence, responsive measure density, desktop
   context retention, compact de-duplication, source-boundary visibility, and zero page overflow.
 - `scripts/live/validation/browser-workflows.mjs` covers the canonical Advisory Overview panel in
