@@ -960,10 +960,22 @@ test.describe('Portfolio workbench smoke', () => {
       const chartSuppressed = await page
         .locator('[class*="portfolio-allocation-panel_visual"]')
         .evaluate((element) => getComputedStyle(element).display === 'none');
+      const allocationBodyColumnCount = await page
+        .locator('[class*="portfolio-allocation-panel_body"]')
+        .evaluate(
+          (element) =>
+            getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+        );
       if (viewport.width === 1220) {
         expect(allocationPanelInlineSize).toBeLessThanOrEqual(640);
         expect(chartSuppressed).toBe(true);
+        expect(allocationBodyColumnCount).toBe(1);
         railConstrainedChartSuppressed = chartSuppressed;
+      }
+      if (viewport.width === 1024) {
+        expect(allocationPanelInlineSize).toBeGreaterThan(640);
+        expect(chartSuppressed).toBe(false);
+        expect(allocationBodyColumnCount).toBe(2);
       }
       if (viewport.width === 519) {
         compactChartSuppressed = chartSuppressed;
@@ -972,11 +984,13 @@ test.describe('Portfolio workbench smoke', () => {
           .isVisible();
         expect(compactChartSuppressed).toBe(true);
         expect(compactExactValuesVisible).toBe(true);
+        expect(allocationBodyColumnCount).toBe(1);
       }
       viewportEvidence.push({
         viewport,
         allocationPanelInlineSize,
         chartSuppressed,
+        allocationBodyColumnCount,
         measurements,
       });
 
