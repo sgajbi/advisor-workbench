@@ -120,6 +120,9 @@ describe("PortfolioAllocationPanel", () => {
       expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled(),
     );
     expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
+    expect(
+      screen.getByText("Expanded exposure is available for this portfolio snapshot"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute("aria-disabled", "true");
 
     fireEvent.click(screen.getByRole("radio", { name: "Currency" }));
@@ -351,10 +354,57 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.activeElement).toBe(recheck);
 
     await waitFor(() => expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument());
+    expect(
+      screen.getByText("Expanded exposure is available for this portfolio snapshot"),
+    ).toBeInTheDocument();
     expect(document.activeElement).toBe(recheck);
     expect(recheck).toHaveAttribute("aria-disabled", "false");
     expect(allocationRequestCount).toBe(2);
     expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled();
+  });
+
+  it("keeps source-confirmed empty expanded coverage distinct from unsupported coverage", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "prefer_look_through",
+            effective_mode: "prefer_look_through",
+            applied: true,
+          },
+          views: [],
+        }),
+      ),
+    );
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={() => {}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled(),
+    );
+    expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
+    expect(
+      screen.getByText("Expanded exposure is available for this portfolio snapshot"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Direct holdings only")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show expanded exposure" }));
+
+    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Show direct holdings" })).toBeEnabled();
+    expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
   });
 
   it("does not let a superseded portfolio response replace newer coverage evidence", async () => {

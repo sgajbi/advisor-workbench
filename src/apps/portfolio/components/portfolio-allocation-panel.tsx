@@ -158,10 +158,7 @@ export default function PortfolioAllocationPanel({
         </div>
       </WorkbenchSummaryToolbar>
 
-      <AllocationCoverageStatus
-        status={lookThroughCoverageStatus}
-        lookThroughLabel={lookThroughLabel}
-      />
+      <AllocationCoverageStatus status={lookThroughCoverageStatus} />
 
       <div
         className="portfolio-analytics-canvas portfolio-allocation-card"
@@ -227,13 +224,7 @@ export default function PortfolioAllocationPanel({
   );
 }
 
-function AllocationCoverageStatus({
-  status,
-  lookThroughLabel,
-}: {
-  status: AllocationCoverageStatus;
-  lookThroughLabel: string;
-}) {
+function AllocationCoverageStatus({ status }: { status: AllocationCoverageStatus }) {
   if (status === "checking") {
     return (
       <WorkbenchRefreshStatus
@@ -267,7 +258,7 @@ function AllocationCoverageStatus({
       title={status === "available" ? "Source coverage confirmed" : "Direct holdings only"}
       confirmedContext={
         status === "available"
-          ? `${lookThroughLabel} is available for this portfolio snapshot`
+          ? "Expanded exposure is available for this portfolio snapshot"
           : "Expanded exposure is not available for this portfolio snapshot"
       }
     />

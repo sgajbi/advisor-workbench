@@ -889,6 +889,11 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(recheckCoverage).toHaveAttribute('aria-disabled', 'true');
     await expect(page.getByText('Checking expanded exposure', { exact: true })).toBeVisible();
     await expect(page.getByText('Source coverage confirmed', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Expanded exposure is available for this portfolio snapshot', {
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(recheckCoverage).toBeFocused();
     await expect(recheckCoverage).toHaveAttribute('aria-disabled', 'false');
     await expect.poll(() => fixtureGateway?.getAllocationRequestCount()).toBe(2);
