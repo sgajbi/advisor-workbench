@@ -9,10 +9,11 @@ to find its operating guide.
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
-Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Performance Summary,
+Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Portfolio Allocation,
+Performance Summary,
 Performance Analysis, Risk Review, Performance Evidence, Performance Advisor Brief, Report Centre,
-and Data Product Catalogue are the 14 surfaces that have passed the complete guide standard. The
-remaining 22 dedicated guides are explicit work under
+and Data Product Catalogue are the 15 surfaces that have passed the complete guide standard. The
+remaining 21 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -50,7 +51,7 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | --- | --- | --- | --- | --- |
 | [Advisor Book](Advisor-Book-Workflow) | `/book` | Active | Guide available | Gateway and Core |
 | [Portfolio Review](Portfolio-Review-Screen-Guide) | `/portfolio` | Active | Guide available | Gateway, Core, Performance, and Manage |
-| Portfolio Allocation | `/allocation` | Active | Guide planned — #605 | Gateway and Core |
+| [Portfolio Allocation](Portfolio-Allocation-Screen-Guide) | `/allocation` | Active | Guide available | Gateway and Core |
 | [Positions](Positions-Screen-Guide) | `/positions` | Active | Guide available | Gateway and Core |
 | [Transactions](Transactions-Screen-Guide) | `/transactions` | Active | Guide available | Gateway and Core |
 | [Income And Activity](Income-And-Activity-Screen-Guide) | `/income` | Active | Guide available | Gateway and Core |

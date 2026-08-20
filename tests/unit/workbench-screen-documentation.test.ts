@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 14,
-      coverageExceptions: 22,
-      unmappedGuides: 22,
+      mappedGuides: 15,
+      coverageExceptions: 21,
+      unmappedGuides: 21,
     });
   });
 
@@ -110,6 +110,32 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("unknown non-empty states fail closed to **Review required**");
     expect(guide).toContain("source-returned cash balances");
     expect(guide).toContain("this guide is not a\nclaim of bank approval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Portfolio Allocation to one source-recoverable business guide", () => {
+    const registry = loadRegistry();
+    const allocation = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "portfolio-allocation",
+    );
+
+    expect(allocation).toMatchObject({
+      routePattern: "/allocation",
+      wikiSlug: "Portfolio-Allocation-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-core"],
+      runtimeEvidence: ["tests/e2e/portfolio-workbench.smoke.spec.ts"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Portfolio-Allocation-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("Retains valid direct allocation");
+    expect(guide).toContain("preserves\n  keyboard focus");
+    expect(guide).toContain("does not:\n\n- calculate or infer target weights");
+    expect(guide).toContain("not readiness certification");
     expect(validate(registry).errors).toEqual([]);
   });
 

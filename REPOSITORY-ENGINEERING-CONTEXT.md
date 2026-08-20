@@ -1184,6 +1184,15 @@ Most relevant current governance:
     Preserve Inter and the visible wordmark face as the only root preloads; evidence faces should
     load on demand. Any typography replacement requires issue-backed brand, accessibility,
     payload, fallback, license, optimized-browser, and responsive-geometry evidence.
+16. Optional Allocation look-through coverage must remain distinct from the direct allocation
+    already confirmed by the selected portfolio book. Model checking, available, unsupported, and
+    failed states explicitly; accept unsupported only from a valid allocation response; retain
+    direct evidence during optional-source failure; fence late responses by portfolio/source key;
+    and force a new Gateway request for recheck. Keep recovery mounted and focus-stable. Expanded
+    contributor selection remains disabled until source-owned decomposed lineage is returned.
+    Compact layouts should prioritize exact market value, weight, and position evidence over a
+    chart that cannot remain legible; component-specific responsive behavior belongs beside the
+    Allocation component, not in the legacy global stylesheet.
 
 ## Context Maintenance Rule
 

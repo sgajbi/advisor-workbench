@@ -270,16 +270,12 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "Portfolio-Allocation-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-core"],
       "implementationEvidence": ["src/app/allocation/page.tsx"],
-      "runtimeEvidence": [],
+      "runtimeEvidence": ["tests/e2e/portfolio-workbench.smoke.spec.ts"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "book-and-portfolio-entry-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "positions",

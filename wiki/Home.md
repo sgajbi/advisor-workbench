@@ -18,6 +18,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - Daily selected-portfolio decision checkpoint:
   [Portfolio Review](Portfolio-Review-Screen-Guide)
+- Source-backed exposure composition, coverage, and direct contributing-holdings review:
+  [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - Booked inventory, valuation, source-status, and holding-activity review:
   [Positions](Positions-Screen-Guide)
 - Booked activity, applicable settlement exceptions, and transaction lineage:
@@ -95,6 +97,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
+- [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)
