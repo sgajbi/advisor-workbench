@@ -744,6 +744,7 @@ export async function getPortfolioAllocationViews(
     asOfDate?: string;
     reportingCurrency?: string;
     lookThroughMode?: PortfolioLookThroughMode;
+    forceRefresh?: boolean;
   } = {}
 ): Promise<PortfolioAllocationResponse | null> {
   try {
@@ -759,7 +760,7 @@ export async function getPortfolioAllocationViews(
     return await fetchPortfolioJson<PortfolioAllocationResponse>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
-      { query: searchParams }
+      { query: searchParams, forceRefresh: params.forceRefresh }
     );
   } catch {
     return null;

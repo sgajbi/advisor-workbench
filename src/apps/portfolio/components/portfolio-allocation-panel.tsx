@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ActionButton,
   WorkbenchChoiceGroup,
+  WorkbenchRefreshStatus,
   WorkbenchSummaryToolbar,
 } from "@/design-system";
 
@@ -21,7 +23,10 @@ import {
   AllocationRankedList,
   AllocationTableChart,
 } from "./portfolio-allocation-visuals";
-import { usePortfolioAllocationPanelState } from "./use-portfolio-allocation-panel-state";
+import {
+  type AllocationCoverageStatus,
+  usePortfolioAllocationPanelState,
+} from "./use-portfolio-allocation-panel-state";
 
 export default function PortfolioAllocationPanel({
   portfolioId,
@@ -29,7 +34,6 @@ export default function PortfolioAllocationPanel({
   baseCurrency,
   asOfDate,
   reportingCurrency,
-  compact = false,
   selectedAllocation,
   onSelectionChange,
   onExposureModeChange,
@@ -39,7 +43,6 @@ export default function PortfolioAllocationPanel({
   baseCurrency: string;
   asOfDate: string;
   reportingCurrency: string;
-  compact?: boolean;
   selectedAllocation: PortfolioAllocationSelection | null;
   onSelectionChange: (selection: PortfolioAllocationSelection | null) => void;
   onExposureModeChange?: (mode: AllocationExposureMode) => void;
@@ -66,23 +69,18 @@ export default function PortfolioAllocationPanel({
     selectedBucket,
     lookThroughRequestedMode,
     lookThroughLabel,
+    lookThroughCoverageStatus,
     lookThroughSupported,
     lookThroughBusy,
-    lookThroughProbeComplete,
     holdingsDrilldownAvailable,
     changeDimension,
     selectBucket,
     toggleLookThrough,
+    recheckLookThroughCoverage,
   } = allocationState;
 
   return (
-    <div
-      className={
-        compact
-          ? "portfolio-allocation-panel portfolio-allocation-panel-compact"
-          : "portfolio-allocation-panel"
-      }
-    >
+    <div className="portfolio-allocation-panel">
       <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
         <WorkbenchChoiceGroup
           value={activeDimension}
@@ -120,28 +118,48 @@ export default function PortfolioAllocationPanel({
             aria-pressed={lookThroughRequestedMode === "prefer_look_through"}
             aria-label={
               lookThroughSupported
-                ? `Look-through ${lookThroughRequestedMode === "prefer_look_through" ? "on" : "off"}`
-                : lookThroughProbeComplete
-                  ? "Look-through unavailable for current portfolio snapshot"
-                  : "Checking look-through support"
+                ? lookThroughRequestedMode === "prefer_look_through"
+                  ? "Show direct holdings"
+                  : "Show expanded exposure"
+                : lookThroughCoverageStatus === "failed"
+                  ? "Expanded exposure coverage could not be confirmed"
+                  : lookThroughCoverageStatus === "unsupported"
+                    ? "Expanded exposure unavailable for current portfolio snapshot"
+                    : "Checking expanded exposure coverage"
             }
             title={
               lookThroughSupported
                 ? `Current allocation mode: ${lookThroughLabel}`
-                : lookThroughProbeComplete
-                  ? "Look-through is not available for the current portfolio snapshot"
-                  : "Checking look-through support"
+                : lookThroughCoverageStatus === "failed"
+                  ? "Expanded exposure coverage could not be confirmed"
+                  : lookThroughCoverageStatus === "unsupported"
+                    ? "Expanded exposure is not available for the current portfolio snapshot"
+                    : "Checking expanded exposure coverage"
             }
-            onClick={() => {
-              void toggleLookThrough();
-            }}
+            onClick={toggleLookThrough}
           >
             {lookThroughRequestedMode === "prefer_look_through"
               ? "Expanded exposure"
               : "Direct holdings"}
           </button>
+
+          <ActionButton
+            priority="quiet"
+            aria-disabled={lookThroughBusy}
+            aria-label="Recheck exposure coverage"
+            onClick={() => {
+              void recheckLookThroughCoverage();
+            }}
+          >
+            {lookThroughBusy ? "Checking…" : "Recheck coverage"}
+          </ActionButton>
         </div>
       </WorkbenchSummaryToolbar>
+
+      <AllocationCoverageStatus
+        status={lookThroughCoverageStatus}
+        lookThroughLabel={lookThroughLabel}
+      />
 
       <div
         className="portfolio-analytics-canvas portfolio-allocation-card"
@@ -188,23 +206,68 @@ export default function PortfolioAllocationPanel({
               ) : null}
             </div>
 
-            {!compact ? (
-              <AllocationRankedList
-                activeDimension={activeDimension}
-                buckets={buckets}
-                baseCurrency={baseCurrency}
-                hoveredBucket={hoveredBucket}
-                selectedBucket={selectedBucket}
-                holdingsDrilldownAvailable={holdingsDrilldownAvailable}
-                onHover={setHoveredBucket}
-                onSelect={selectBucket}
-              />
-            ) : null}
+            <AllocationRankedList
+              activeDimension={activeDimension}
+              buckets={buckets}
+              baseCurrency={baseCurrency}
+              hoveredBucket={hoveredBucket}
+              selectedBucket={selectedBucket}
+              holdingsDrilldownAvailable={holdingsDrilldownAvailable}
+              onHover={setHoveredBucket}
+              onSelect={selectBucket}
+            />
           </div>
         ) : (
           <AllocationEmptyState dimensionLabel={activeDimensionLabel} />
         )}
       </div>
     </div>
+  );
+}
+
+function AllocationCoverageStatus({
+  status,
+  lookThroughLabel,
+}: {
+  status: AllocationCoverageStatus;
+  lookThroughLabel: string;
+}) {
+  if (status === "checking") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="pending"
+        eyebrow="Exposure coverage"
+        title="Checking expanded exposure"
+        message="Direct allocation remains available while source coverage is confirmed."
+        requestedContext="Expanded exposure"
+        confirmedContext="Direct holdings"
+      />
+    );
+  }
+
+  if (status === "failed") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="failed"
+        eyebrow="Exposure coverage"
+        title="Expanded exposure could not be confirmed"
+        message="Direct allocation remains available. Recheck source coverage before using expanded exposure."
+        requestedContext="Expanded exposure"
+        confirmedContext="Direct holdings"
+      />
+    );
+  }
+
+  return (
+    <WorkbenchRefreshStatus
+      kind="confirmed"
+      eyebrow="Exposure coverage"
+      title={status === "available" ? "Source coverage confirmed" : "Direct holdings only"}
+      confirmedContext={
+        status === "available"
+          ? `${lookThroughLabel}; expanded exposure is available`
+          : "Expanded exposure is not available for this portfolio snapshot"
+      }
+    />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   getPortfolioAllocationViews,
@@ -21,18 +21,23 @@ import type {
 } from "../types";
 import type { AllocationExposureMode } from "../portfolio-allocation-drilldown-view-model";
 
+export type AllocationCoverageStatus =
+  | "checking"
+  | "available"
+  | "unsupported"
+  | "failed";
+
 export type PortfolioAllocationPanelState = ReturnType<
   typeof usePortfolioAllocationPanelState
 >;
 
 type AllocationResolutionState = {
   sourceKey: string;
+  directAllocationViews: PortfolioAllocationView[];
   resolvedAllocationViews: PortfolioAllocationView[];
   lookThroughRequestedMode: PortfolioLookThroughMode;
   lookThroughEffectiveMode: PortfolioLookThroughMode;
-  lookThroughSupported: boolean;
-  lookThroughBusy: boolean;
-  lookThroughProbeComplete: boolean;
+  lookThroughCoverageStatus: AllocationCoverageStatus;
   cachedLookThroughResponse: {
     views: PortfolioAllocationView[];
     lookThrough: PortfolioAllocationLookThrough | null;
@@ -75,6 +80,7 @@ export function usePortfolioAllocationPanelState({
     useState<AllocationResolutionState>(() =>
       buildInitialAllocationResolutionState(allocationSourceKey, allocationViews),
     );
+  const coverageRequestSequence = useRef(0);
   const activeAllocationState =
     allocationState.sourceKey === allocationSourceKey
       ? allocationState
@@ -106,56 +112,36 @@ export function usePortfolioAllocationPanelState({
 
   useEffect(() => {
     let cancelled = false;
+    const requestSequence = ++coverageRequestSequence.current;
 
-    void Promise.all([
-      getPortfolioAllocationViews(portfolioId, {
-        asOfDate,
-        reportingCurrency,
-        lookThroughMode: "direct_only",
-      }),
-      getPortfolioAllocationViews(portfolioId, {
-        asOfDate,
-        reportingCurrency,
-        lookThroughMode: "prefer_look_through",
-      }),
-    ])
-      .then(([directResponse, lookThroughResponse]) => {
-        if (cancelled) {
-          return;
-        }
-
-        const nextResolvedAllocationViews = directResponse?.views?.length
-          ? directResponse.views
-          : allocationViews;
-        const nextLookThroughEffectiveMode = normalizeLookThroughMode(
-          directResponse?.look_through?.effective_mode,
-        );
-
-        const supportsExpandedLookThrough = isExpandedLookThroughSupported(
-          lookThroughResponse?.look_through ?? null,
-        );
-        setAllocationState({
-          sourceKey: allocationSourceKey,
-          resolvedAllocationViews: nextResolvedAllocationViews,
-          lookThroughRequestedMode: "direct_only",
-          lookThroughEffectiveMode: nextLookThroughEffectiveMode,
-          lookThroughSupported: supportsExpandedLookThrough,
-          lookThroughBusy: false,
-          lookThroughProbeComplete: true,
-          cachedLookThroughResponse:
-            supportsExpandedLookThrough && lookThroughResponse?.views?.length
-              ? {
-                  views: lookThroughResponse.views,
-                  lookThrough: lookThroughResponse.look_through ?? null,
-                }
-              : null,
-        });
-      });
+    void getPortfolioAllocationViews(portfolioId, {
+      asOfDate,
+      reportingCurrency,
+      lookThroughMode: "prefer_look_through",
+    }).then((response) => {
+      if (cancelled || requestSequence !== coverageRequestSequence.current) {
+        return;
+      }
+      setAllocationState((current) =>
+        applyLookThroughCoverageResponse(
+          current.sourceKey === allocationSourceKey
+            ? current
+            : buildInitialAllocationResolutionState(allocationSourceKey, allocationViews),
+          response,
+        ),
+      );
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [allocationSourceKey, allocationViews, asOfDate, portfolioId, reportingCurrency]);
+  }, [
+    allocationSourceKey,
+    allocationViews,
+    asOfDate,
+    portfolioId,
+    reportingCurrency,
+  ]);
 
   const activeView = viewsByDimension.get(activeDimension) ?? null;
   const buckets = activeView?.buckets ?? [];
@@ -165,8 +151,14 @@ export function usePortfolioAllocationPanelState({
       (sum, bucket) => sum + Math.max(bucket.weight_pct ?? 0, 0),
       0,
     ) || 0;
+  const activeHoveredBucket = buckets.some(
+    (bucket) => bucket.bucket === hoveredBucket,
+  )
+    ? hoveredBucket
+    : null;
   const selectedBucket =
-    selectedAllocation?.dimension === activeDimension
+    selectedAllocation?.dimension === activeDimension &&
+    buckets.some((bucket) => bucket.bucket === selectedAllocation.bucket)
       ? selectedAllocation.bucket
       : null;
   const lookThroughLabel =
@@ -201,93 +193,69 @@ export function usePortfolioAllocationPanelState({
     );
   }
 
-  const syncAllocationViewState = (
-    nextViews: PortfolioAllocationView[],
-    nextRequestedMode: PortfolioLookThroughMode,
-    nextLookThrough: PortfolioAllocationLookThrough | null | undefined,
-  ) => {
-    setAllocationState({
-      ...activeAllocationState,
-      resolvedAllocationViews: nextViews,
-      lookThroughRequestedMode: nextRequestedMode,
-      lookThroughEffectiveMode: normalizeLookThroughMode(
-        nextLookThrough?.effective_mode,
-        nextRequestedMode,
-      ),
-      lookThroughBusy: false,
-      lookThroughProbeComplete: true,
-    });
+  function toggleLookThrough() {
+    if (
+      activeAllocationState.lookThroughCoverageStatus !== "available" ||
+      !activeAllocationState.cachedLookThroughResponse
+    ) {
+      return;
+    }
+
     setHoveredBucket(null);
-
-    const nextExposureMode: AllocationExposureMode =
-      nextRequestedMode === "prefer_look_through" &&
-      normalizeLookThroughMode(
-        nextLookThrough?.effective_mode,
-        nextRequestedMode,
-      ) === "prefer_look_through"
-        ? "expanded"
-        : "direct";
-
-    if (nextExposureMode === "expanded") {
-      onSelectionChange(null);
-      return;
-    }
-
-    if (!selectedAllocation) {
-      return;
-    }
-
-    const matchingView = nextViews.find(
-      (view) => view.dimension === selectedAllocation.dimension,
-    );
-    const bucketStillAvailable = matchingView?.buckets.some(
-      (bucket) => bucket.bucket === selectedAllocation.bucket,
-    );
-    if (!bucketStillAvailable) {
-      onSelectionChange(null);
-    }
-  };
-
-  async function toggleLookThrough() {
-    const nextMode: PortfolioLookThroughMode =
-      activeAllocationState.lookThroughRequestedMode === "prefer_look_through"
-        ? "direct_only"
-        : "prefer_look_through";
-    setAllocationState({
-      ...activeAllocationState,
-      lookThroughBusy: true,
-    });
-
-    try {
-      const response =
-        nextMode === "prefer_look_through" && activeAllocationState.cachedLookThroughResponse
-          ? {
-              views: activeAllocationState.cachedLookThroughResponse.views,
-              look_through: activeAllocationState.cachedLookThroughResponse.lookThrough,
-            }
-          : await getPortfolioAllocationViews(portfolioId, {
-              asOfDate,
-              reportingCurrency,
-              lookThroughMode: nextMode,
-            });
-
-      if (response?.views?.length) {
-        syncAllocationViewState(
-          response.views,
-          nextMode,
-          response.look_through,
-        );
+    onSelectionChange(null);
+    setAllocationState((current) => {
+      if (current.sourceKey !== allocationSourceKey) {
+        return current;
       }
-    } finally {
-      setAllocationState((current) =>
-        current.sourceKey === allocationSourceKey
-          ? {
-              ...current,
-              lookThroughBusy: false,
-            }
-          : current,
-      );
+      const showExpanded = current.lookThroughRequestedMode === "direct_only";
+      return {
+        ...current,
+        resolvedAllocationViews: showExpanded
+          ? current.cachedLookThroughResponse?.views ?? current.directAllocationViews
+          : current.directAllocationViews,
+        lookThroughRequestedMode: showExpanded
+          ? "prefer_look_through"
+          : "direct_only",
+        lookThroughEffectiveMode: showExpanded
+          ? normalizeLookThroughMode(
+              current.cachedLookThroughResponse?.lookThrough?.effective_mode,
+              "prefer_look_through",
+            )
+          : "direct_only",
+      };
+    });
+  }
+
+  async function recheckLookThroughCoverage() {
+    const requestSequence = ++coverageRequestSequence.current;
+    setHoveredBucket(null);
+    onSelectionChange(null);
+    setAllocationState((current) =>
+      current.sourceKey === allocationSourceKey
+        ? {
+            ...current,
+            resolvedAllocationViews: current.directAllocationViews,
+            lookThroughRequestedMode: "direct_only",
+            lookThroughEffectiveMode: "direct_only",
+            lookThroughCoverageStatus: "checking",
+          }
+        : current,
+    );
+
+    const response = await getPortfolioAllocationViews(portfolioId, {
+      asOfDate,
+      reportingCurrency,
+      lookThroughMode: "prefer_look_through",
+      forceRefresh: true,
+    });
+    if (requestSequence !== coverageRequestSequence.current) {
+      return;
     }
+    setAllocationState((current) =>
+      current.sourceKey === allocationSourceKey
+        ? applyLookThroughCoverageResponse(current, response)
+        : current,
+    );
   }
 
   return {
@@ -298,18 +266,21 @@ export function usePortfolioAllocationPanelState({
     totalWeight,
     chartType,
     setChartType,
-    hoveredBucket,
+    hoveredBucket: activeHoveredBucket,
     setHoveredBucket,
     selectedBucket,
     lookThroughRequestedMode: activeAllocationState.lookThroughRequestedMode,
     lookThroughLabel,
-    lookThroughSupported: activeAllocationState.lookThroughSupported,
-    lookThroughBusy: activeAllocationState.lookThroughBusy,
-    lookThroughProbeComplete: activeAllocationState.lookThroughProbeComplete,
+    lookThroughCoverageStatus: activeAllocationState.lookThroughCoverageStatus,
+    lookThroughSupported:
+      activeAllocationState.lookThroughCoverageStatus === "available",
+    lookThroughBusy:
+      activeAllocationState.lookThroughCoverageStatus === "checking",
     holdingsDrilldownAvailable: exposureMode === "direct",
     changeDimension,
     selectBucket,
     toggleLookThrough,
+    recheckLookThroughCoverage,
   };
 }
 
@@ -319,12 +290,53 @@ function buildInitialAllocationResolutionState(
 ): AllocationResolutionState {
   return {
     sourceKey,
+    directAllocationViews: allocationViews,
     resolvedAllocationViews: allocationViews,
     lookThroughRequestedMode: "direct_only",
     lookThroughEffectiveMode: "direct_only",
-    lookThroughSupported: false,
-    lookThroughBusy: true,
-    lookThroughProbeComplete: false,
+    lookThroughCoverageStatus: "checking",
     cachedLookThroughResponse: null,
+  };
+}
+
+function applyLookThroughCoverageResponse(
+  current: AllocationResolutionState,
+  response: {
+    views: PortfolioAllocationView[];
+    look_through?: PortfolioAllocationLookThrough | null;
+  } | null,
+): AllocationResolutionState {
+  if (!response) {
+    return {
+      ...current,
+      lookThroughCoverageStatus: "failed",
+    };
+  }
+
+  const supportsExpandedLookThrough =
+    response.views.length > 0 &&
+    isExpandedLookThroughSupported(response.look_through ?? null);
+  if (!supportsExpandedLookThrough) {
+    const directAllocationViews = response.views.length
+      ? response.views
+      : current.directAllocationViews;
+    return {
+      ...current,
+      directAllocationViews,
+      resolvedAllocationViews: directAllocationViews,
+      lookThroughRequestedMode: "direct_only",
+      lookThroughEffectiveMode: "direct_only",
+      lookThroughCoverageStatus: "unsupported",
+      cachedLookThroughResponse: null,
+    };
+  }
+
+  return {
+    ...current,
+    lookThroughCoverageStatus: "available",
+    cachedLookThroughResponse: {
+      views: response.views,
+      lookThrough: response.look_through ?? null,
+    },
   };
 }
