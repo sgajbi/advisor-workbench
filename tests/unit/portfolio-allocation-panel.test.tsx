@@ -407,6 +407,42 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
   });
 
+  it("keeps malformed successful coverage responses failed and recoverable", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        reporting_currency: "USD",
+        code: "unexpected_success_envelope",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={() => {}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("725,000 USD")).toBeInTheDocument();
+
+    const recheck = screen.getByRole("button", { name: "Recheck exposure coverage" });
+    fireEvent.click(recheck);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    expect(recheck).toHaveAttribute("aria-disabled", "false");
+  });
+
   it("does not let a superseded portfolio response replace newer coverage evidence", async () => {
     let resolveSupersededRequest: ((response: Response) => void) | undefined;
     const supersededRequest = new Promise<Response>((resolve) => {
