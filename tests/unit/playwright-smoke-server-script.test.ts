@@ -5,7 +5,9 @@ describe("Playwright smoke server launcher", () => {
   const source = readFileSync(
     resolve(process.cwd(), "scripts/testing/start-playwright-smoke-server.mjs"),
     "utf8",
-  );
+  )
+    .replaceAll("\r\n", "\n")
+    .replaceAll("\r", "\n");
 
   it("starts Next directly and forwards shutdown signals without a shell child", () => {
     expect(source).toContain('import { cleanNextBuildArtifacts }');
