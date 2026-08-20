@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -9,6 +9,7 @@ import {
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
+  SourceRefreshAction,
   SourceWindowNavigation,
   Text,
 } from "@/design-system";
@@ -25,8 +26,14 @@ import styles from "./advisory-overview-workspace.module.css";
 
 const ADVISORY_OVERVIEW_WINDOW_SIZE = 8;
 
+type SourceRefreshOutcome = {
+  queryIdentity: string;
+  state: "pending" | "confirmed" | "failed";
+};
+
 export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId: string }) {
   const sourceWindow = useProposalSourceWindow(portfolioId);
+  const [sourceRefreshOutcome, setSourceRefreshOutcome] = useState<SourceRefreshOutcome | null>(null);
   const proposalQuery = useQuery({
     queryKey: ["advisory-overview", portfolioId, sourceWindow.cursor],
     queryFn: async () =>
@@ -62,6 +69,9 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
     hasError: Boolean(proposalQuery.error),
     isPermissionBlocked: isWorkbenchPermissionBlockedError(proposalQuery.error),
   });
+  const queryIdentity = `${portfolioId}:${sourceWindow.cursor ?? "first"}`;
+  const refreshState =
+    sourceRefreshOutcome?.queryIdentity === queryIdentity ? sourceRefreshOutcome.state : null;
   const workflowContext = useMemo(
     () =>
       buildProposalQueueWorkflowContext({
@@ -97,13 +107,61 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
   );
   usePublishProposalWorkflowContext(workflowContext);
 
+  async function refreshAdvisoryPriorities() {
+    const requestedIdentity = queryIdentity;
+    setSourceRefreshOutcome({ queryIdentity: requestedIdentity, state: "pending" });
+    const result = await proposalQuery.refetch({ cancelRefetch: true });
+    setSourceRefreshOutcome({
+      queryIdentity: requestedIdentity,
+      state: result.error ? "failed" : "confirmed",
+    });
+  }
+
+  const showRefreshAction =
+    !sourcePosture.isPermissionBlocked
+    && (!sourcePosture.isInitialLoading || refreshState === "pending");
+  const refreshLabel =
+    sourcePosture.isUnavailable || sourcePosture.hasRefreshFailure || refreshState === "failed"
+      ? sourceWindow.hasPrevious
+        ? "Retry proposal window"
+        : "Retry advisory priorities"
+      : "Refresh advisory priorities";
+  const sectionActions = (
+    <>
+      {showRefreshAction ? (
+        <SourceRefreshAction
+          idleLabel={refreshLabel}
+          busyLabel="Checking advisory priorities"
+          isRefreshing={proposalQuery.isFetching}
+          onRefresh={refreshAdvisoryPriorities}
+        />
+      ) : null}
+      {proposalQuery.data && !sourcePosture.isPermissionBlocked ? (
+        <Link
+          className="nav-link"
+          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+        >
+          Build Proposal
+        </Link>
+      ) : null}
+    </>
+  );
+
   if (sourcePosture.isInitialLoading) {
     return (
-      <SectionBlock>
+      <SectionBlock
+        title="Advisor Priorities"
+        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+        actions={sectionActions}
+      >
         <ScreenStatePanel
           kind="loading"
-          title="Loading advisory priorities"
-          body="Retrieving the current proposal posture for this portfolio."
+          title={refreshState === "pending" ? "Checking advisory priorities" : "Loading advisory priorities"}
+          body={
+            refreshState === "pending"
+              ? "Recontacting the approved advisory workflow for this portfolio."
+              : "Retrieving the current proposal posture for this portfolio."
+          }
           surface="default"
           rows={5}
         />
@@ -113,7 +171,10 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
 
   if (sourcePosture.isPermissionBlocked) {
     return (
-      <SectionBlock>
+      <SectionBlock
+        title="Advisor Priorities"
+        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+      >
         <ScreenStatePanel
           kind="permission_blocked"
           title="Advisory proposal access is not available"
@@ -127,33 +188,41 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
 
   if (sourcePosture.isUnavailable) {
     return (
-      <SectionBlock>
-        <ScreenStatePanel
-          kind="error"
-          title={
-            sourceWindow.hasPrevious
-              ? "This proposal window is unavailable"
-              : "Advisory priorities are unavailable"
-          }
-          body={
-            sourceWindow.hasPrevious
-              ? "The next proposal window could not be loaded from the approved advisory workflow."
-              : "The proposal worklist could not be loaded from the approved advisory workflow."
-          }
-          hint={
-            sourceWindow.hasPrevious
-              ? "Return to the previously loaded proposal window or retry after the source recovers."
-              : "No fallback proposal, review, or implementation posture is shown."
-          }
-          action={
-            sourceWindow.hasPrevious ? (
-              <ActionButton priority="secondary" onClick={sourceWindow.showPrevious}>
-                Return to previous proposals
-              </ActionButton>
-            ) : undefined
-          }
-          surface="default"
-        />
+      <SectionBlock
+        title="Advisor Priorities"
+        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+        actions={sectionActions}
+      >
+        <div role="alert" aria-live="assertive" aria-atomic="true">
+          <ScreenStatePanel
+            kind="error"
+            title={
+              sourceWindow.hasPrevious
+                ? "This proposal window is unavailable"
+                : refreshState === "failed"
+                  ? "Advisory priorities remain unavailable"
+                  : "Advisory priorities are unavailable"
+            }
+            body={
+              sourceWindow.hasPrevious
+                ? "The next proposal window could not be loaded from the approved advisory workflow."
+                : "The proposal worklist could not be loaded from the approved advisory workflow."
+            }
+            hint={
+              sourceWindow.hasPrevious
+                ? "Retry this proposal window, or return to the previously loaded proposals."
+                : "Use Retry advisory priorities when the source is available. No fallback proposal, review, or implementation posture is shown."
+            }
+            action={
+              sourceWindow.hasPrevious ? (
+                <ActionButton priority="secondary" onClick={sourceWindow.showPrevious}>
+                  Return to previous proposals
+                </ActionButton>
+              ) : undefined
+            }
+            surface="default"
+          />
+        </div>
       </SectionBlock>
     );
   }
@@ -162,14 +231,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
     <SectionBlock
       title="Advisor Priorities"
       subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
-      actions={
-        <Link
-          className="nav-link"
-          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
-        >
-          Build Proposal
-        </Link>
-      }
+      actions={sectionActions}
     >
       <div className={styles.workspace} data-testid="advisory-overview-workspace">
         {sourcePosture.isRefreshing ? (
@@ -177,6 +239,13 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
             <SemanticBadge>Refreshing</SemanticBadge>
             <Text variant="secondary">
               The current worklist remains visible while source-owned proposal posture refreshes.
+            </Text>
+          </div>
+        ) : refreshState === "confirmed" ? (
+          <div className={styles.sourceNotice} role="status" aria-live="polite" aria-atomic="true">
+            <SemanticBadge tone="success">Source confirmed</SemanticBadge>
+            <Text variant="secondary">
+              Latest advisory priorities confirmed through Gateway.
             </Text>
           </div>
         ) : null}

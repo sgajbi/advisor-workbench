@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const evidenceDirectory = path.resolve("output", "issue-591");
+const evidenceDirectory = path.resolve("output", "issue-729");
 const navigationEvidenceDirectory = path.resolve("output", "playwright");
 
 async function mockAdvisoryOverview(page: Page) {
@@ -202,4 +202,81 @@ test("moves between source windows without presenting a window as the full portf
   await expect(page.getByTestId("advisory-source-window-posture")).toContainText(
     "Proposal window 2"
   );
+});
+
+test("recovers Advisory Overview from the Gateway without losing focus", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route("**/api/bff/api/v1/platform/capabilities?**", async (route) => {
+    await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
+  });
+
+  let proposalRequestCount = 0;
+  let releaseRetry!: () => void;
+  const retryReleased = new Promise<void>((resolve) => {
+    releaseRetry = resolve;
+  });
+  await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
+    proposalRequestCount += 1;
+    if (proposalRequestCount === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ detail: "source unavailable" }),
+      });
+      return;
+    }
+
+    await retryReleased;
+    await route.fulfill({
+      json: {
+        correlation_id: "corr-advisory-recovery-729",
+        contract_version: "v1",
+        data: {
+          items: [
+            {
+              proposal_id: "PRP-RECOVERED-729",
+              portfolio_id: portfolioId,
+              current_state: "RISK_REVIEW",
+              title: "Recovered mandate risk review",
+            },
+          ],
+          next_cursor: null,
+        },
+      },
+    });
+  });
+
+  await page.goto(`/recommendations?portfolioId=${portfolioId}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByText("Advisory priorities are unavailable")).toBeVisible();
+  const retry = page.getByRole("button", { name: "Retry advisory priorities" });
+  await retry.focus();
+  await retry.click();
+
+  const pending = page.getByRole("button", { name: "Checking advisory priorities" });
+  await expect(pending).toHaveAttribute("aria-disabled", "true");
+  await expect(pending).toBeFocused();
+  await pending.click({ force: true });
+  expect(proposalRequestCount).toBe(2);
+
+  releaseRetry();
+
+  await expect(page.getByText("Recovered mandate risk review")).toBeVisible();
+  await expect(page.getByText("Latest advisory priorities confirmed through Gateway.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh advisory priorities" })).toBeFocused();
+  expect(proposalRequestCount).toBe(2);
+
+  const hasHorizontalPageOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(hasHorizontalPageOverflow).toBeFalsy();
+
+  await mkdir(evidenceDirectory, { recursive: true });
+  await page.screenshot({
+    path: path.join(evidenceDirectory, "advisory-overview-source-recovery-desktop.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
 });
