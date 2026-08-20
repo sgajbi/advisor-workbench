@@ -179,6 +179,16 @@ async function openPerformanceWorkflowStep(
   name: string | RegExp,
 ): Promise<Locator> {
   const navigation = page.getByLabel('Performance surface navigation');
+  const compactCurrentView = page.getByRole('button', {
+    name: /^Current view /i,
+  });
+  if (
+    !(await navigation.isVisible().catch(() => false)) &&
+    (await compactCurrentView.isVisible().catch(() => false))
+  ) {
+    await compactCurrentView.click();
+    await expect(navigation).toBeVisible();
+  }
   const control = navigation.getByRole('button', { name });
   if (await control.isVisible().catch(() => false)) {
     return control;
@@ -782,6 +792,75 @@ test.describe('Performance workbench smoke', () => {
         await expect(navigation).not.toBeVisible();
       }
     }
+  });
+
+  test('Risk Review keeps exact evidence primary and mandate judgement explicit', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic Risk Review proof requires the populated performance fixture.',
+    );
+    test.setTimeout(120_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+
+    for (const viewport of [
+      { name: 'desktop', width: 1440, height: 1000 },
+      { name: 'tablet', width: 1024, height: 1100 },
+      { name: 'compact', width: 519, height: 1000 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const session = await openPerformanceWorkbench(page, request);
+      expect(session.available).toBe(true);
+
+      const riskStep = await openPerformanceWorkflowStep(page, /^Risk Review/i);
+      await riskStep.click();
+      await expect(page).toHaveURL(/(?:\?|&)mode=risk(?:&|$)/);
+
+      const executiveEvidence = page.getByRole('region', {
+        name: 'Risk executive overview',
+      });
+      await expect(executiveEvidence).toBeVisible();
+      await expect(executiveEvidence).toContainText('Realized volatility');
+      await expect(executiveEvidence).toContainText('7.25%');
+      await expect(executiveEvidence).toContainText('Max drawdown');
+      await expect(executiveEvidence).toContainText('-12.45%');
+      await expect(executiveEvidence).toContainText('Largest position');
+      await expect(executiveEvidence).toContainText('18.40%');
+      await expect(executiveEvidence).toContainText('PIMCO GIS Income Fund');
+      await expect(executiveEvidence).toContainText('Source coverage');
+
+      const policyBoundary = page.getByRole('note', {
+        name: 'Risk mandate comparison boundary',
+      });
+      await expect(policyBoundary).toContainText('Not supplied by source');
+      await expect(policyBoundary).toContainText(
+        'does not infer a breach or an all-clear',
+      );
+      await expect(
+        executiveEvidence.getByText(
+          /^(Contained|Moderate|Elevated|High|Severe|Acceptable|Diversified)$/,
+        ),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('heading', { name: 'Concentration', exact: true }),
+      ).toBeVisible();
+
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+      await page.screenshot({
+        path: `output/playwright/issue-723-risk-review-${viewport.name}.png`,
+        fullPage: false,
+        animations: 'disabled',
+      });
+    }
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('refresh failure keeps source-confirmed performance context and recovers without stale labels', async ({

@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type Server } from 'node:http';
 
 import type {
   PerformanceComparativeSummary,
+  WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceAdvisorBrief,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
@@ -13,6 +14,13 @@ import {
   buildPerformanceWorkspaceSummary,
 } from '../fixtures/performance-workspace-fixtures';
 import { fallbackNormalizedCapabilities } from '../../src/features/platform-capabilities/api';
+import {
+  buildFixtureRiskAttribution,
+  buildFixtureRiskConcentration,
+  buildFixtureRiskDrawdown,
+  buildFixtureRiskRolling,
+  buildFixtureRiskSummary,
+} from '../../src/apps/performance/risk-workspace-view-model';
 
 export type PerformanceFixtureGatewayScenario =
   | 'populated'
@@ -183,6 +191,82 @@ export async function startPerformanceFixtureGateway({
       sendJson(response, reviewedAdvisorBriefs.get(portfolioId) ?? buildAdvisorBriefResponse(portfolioId));
       return;
     }
+    if (requestUrl.pathname.endsWith('/risk/summary')) {
+      const workspace = buildRiskFixtureWorkspace(portfolioId);
+      sendJson(
+        response,
+        buildFixtureRiskSummary(
+          workspace,
+          requestUrl.searchParams.get('period') ?? 'YTD',
+          requestUrl.searchParams.get('detail_basis') ?? 'NET',
+        ),
+      );
+      return;
+    }
+    if (requestUrl.pathname.endsWith('/risk/concentration')) {
+      const workspace = buildRiskFixtureWorkspace(portfolioId);
+      sendJson(
+        response,
+        buildFixtureRiskConcentration(
+          workspace,
+          requestUrl.searchParams.get('period') ?? 'YTD',
+        ),
+      );
+      return;
+    }
+    if (requestUrl.pathname.endsWith('/risk/drawdown')) {
+      const workspace = buildRiskFixtureWorkspace(portfolioId);
+      sendJson(
+        response,
+        buildFixtureRiskDrawdown(
+          workspace,
+          requestUrl.searchParams.get('period') ?? 'YTD',
+          requestUrl.searchParams.get('detail_basis') ?? 'NET',
+          {
+            includeUnderwaterSeries:
+              requestUrl.searchParams.get('include_underwater_series') === 'true',
+          },
+        ),
+      );
+      return;
+    }
+    if (requestUrl.pathname.endsWith('/risk/rolling')) {
+      const workspace = buildRiskFixtureWorkspace(portfolioId);
+      sendJson(
+        response,
+        buildFixtureRiskRolling(
+          workspace,
+          requestUrl.searchParams.get('period') ?? 'YTD',
+          requestUrl.searchParams.get('detail_basis') ?? 'NET',
+          {
+            includeTimeSeries:
+              requestUrl.searchParams.get('include_time_series') === 'true',
+          },
+        ),
+      );
+      return;
+    }
+    if (requestUrl.pathname.endsWith('/risk/attribution')) {
+      const workspace = buildRiskFixtureWorkspace(portfolioId);
+      sendJson(
+        response,
+        buildFixtureRiskAttribution(
+          workspace,
+          requestUrl.searchParams.get('period') ?? 'YTD',
+          requestUrl.searchParams.get('detail_basis') ?? 'NET',
+          {
+            attributionType:
+              requestUrl.searchParams.get('attribution_type') === 'ACTIVE_RISK'
+                ? 'ACTIVE_RISK'
+                : 'TOTAL_RISK',
+            groupingDimension: resolveRiskGroupingDimension(
+              requestUrl.searchParams.get('grouping_dimension'),
+            ),
+          },
+        ),
+      );
+      return;
+    }
     if (
       request.method === 'POST' &&
       requestUrl.pathname.endsWith('/performance/advisor-brief/review-actions')
@@ -209,6 +293,28 @@ export async function startPerformanceFixtureGateway({
     port,
     close: () => close(server),
   };
+}
+
+function buildRiskFixtureWorkspace(portfolioId: string): WorkbenchPerformanceWorkspace {
+  const summary = buildPerformanceWorkspaceSummary(portfolioId);
+  return {
+    ...summary,
+    contribution_dimension: 'asset_class',
+    attribution_dimension: 'asset_class',
+    net_chart: [],
+    gross_chart: [],
+    contribution: null,
+    attribution: null,
+  };
+}
+
+function resolveRiskGroupingDimension(
+  value: string | null,
+): 'POSITION' | 'SECTOR' | 'ASSET_CLASS' | 'ISSUER' {
+  if (value === 'POSITION' || value === 'ASSET_CLASS' || value === 'ISSUER') {
+    return value;
+  }
+  return 'SECTOR';
 }
 
 function buildReviewedAdvisorBriefResponse(
@@ -560,7 +666,9 @@ function clearPerformanceEconomics(
 }
 
 function resolvePortfolioId(pathname: string): string | null {
-  const match = pathname.match(/^\/api\/v1\/workbench\/([^/]+)\/performance\//);
+  const match = pathname.match(
+    /^\/api\/v1\/workbench\/([^/]+)\/(?:performance|risk)\//,
+  );
   return match ? decodeURIComponent(match[1]) : null;
 }
 
