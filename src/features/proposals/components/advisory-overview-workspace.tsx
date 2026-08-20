@@ -241,7 +241,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
               The current worklist remains visible while source-owned proposal posture refreshes.
             </Text>
           </div>
-        ) : refreshState === "confirmed" ? (
+        ) : refreshState === "confirmed" && !sourcePosture.hasRefreshFailure ? (
           <div className={styles.sourceNotice} role="status" aria-live="polite" aria-atomic="true">
             <SemanticBadge tone="success">Source confirmed</SemanticBadge>
             <Text variant="secondary">

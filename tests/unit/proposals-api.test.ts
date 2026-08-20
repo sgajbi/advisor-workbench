@@ -243,6 +243,44 @@ describe("proposal api", () => {
     );
   });
 
+  it.each([
+    {
+      label: "missing proposal-list data",
+      envelope: { correlation_id: "c", contract_version: "v1" },
+    },
+    {
+      label: "missing proposal items",
+      envelope: { correlation_id: "c", contract_version: "v1", data: {} },
+    },
+    {
+      label: "invalid proposal summary",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: { items: [{ proposal_id: "PRP-1" }] },
+      },
+    },
+    {
+      label: "invalid continuation cursor",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: { items: [], next_cursor: 2 },
+      },
+    },
+  ])("rejects $label instead of confirming an empty worklist", async ({ envelope }) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify(envelope), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })),
+    );
+
+    await expect(listProposals()).rejects.toThrow("Proposal list response was incomplete.");
+  });
+
   it("loads the Gateway-backed advisory policy review queue", async () => {
     vi.stubGlobal(
       "fetch",
