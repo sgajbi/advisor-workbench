@@ -6,27 +6,30 @@ import styles from "./workbench-refresh-status.module.css";
 
 export type WorkbenchRefreshStatusKind = "pending" | "confirmed" | "failed";
 
-export default function WorkbenchRefreshStatus({
-  kind,
-  eyebrow,
-  title,
-  message,
-  requestedContext,
-  confirmedContext,
-  onRetry,
-  retrying = false,
-  className,
-}: {
-  kind: WorkbenchRefreshStatusKind;
+type WorkbenchRefreshStatusCommonProps = {
   eyebrow: string;
   title: string;
-  message: string;
-  requestedContext: string;
   confirmedContext: string;
-  onRetry?: () => void;
-  retrying?: boolean;
   className?: string;
-}) {
+};
+
+export type WorkbenchRefreshStatusProps =
+  | (WorkbenchRefreshStatusCommonProps & { kind: "confirmed" })
+  | (WorkbenchRefreshStatusCommonProps & {
+      kind: "pending";
+      message: string;
+      requestedContext: string;
+    })
+  | (WorkbenchRefreshStatusCommonProps & {
+      kind: "failed";
+      message: string;
+      requestedContext: string;
+      onRetry?: () => void;
+      retrying?: boolean;
+    });
+
+export default function WorkbenchRefreshStatus(props: WorkbenchRefreshStatusProps) {
+  const { kind, eyebrow, title, confirmedContext, className } = props;
   const accessibilityProps =
     kind === "failed"
       ? { role: "alert" as const, "aria-live": "assertive" as const }
@@ -40,30 +43,40 @@ export default function WorkbenchRefreshStatus({
       data-testid="workbench-refresh-status"
       data-state={kind}
     >
-      <div className={styles.copy}>
-        <p className={styles.eyebrow}>{eyebrow}</p>
-        <p className={styles.title}>{title}</p>
-        <p className={styles.message}>{message}</p>
-        <dl className={styles.context}>
-          <div className={styles.contextItem}>
-            <dt>Requested</dt>
-            <dd>{requestedContext}</dd>
-          </div>
-          <div className={styles.contextItem}>
-            <dt>Source-confirmed</dt>
-            <dd>{confirmedContext}</dd>
-          </div>
-        </dl>
-      </div>
-      {kind === "failed" && onRetry ? (
+      {kind === "confirmed" ? (
+        <div className={cx(styles.copy, styles.confirmedCopy)}>
+          <p className={styles.eyebrow}>{eyebrow}</p>
+          <p className={styles.confirmedSummary}>
+            <span className={styles.title}>{title}</span>
+            <span className={styles.confirmedContext}>{confirmedContext}</span>
+          </p>
+        </div>
+      ) : (
+        <div className={styles.copy}>
+          <p className={styles.eyebrow}>{eyebrow}</p>
+          <p className={styles.title}>{title}</p>
+          <p className={styles.message}>{props.message}</p>
+          <dl className={styles.context}>
+            <div className={styles.contextItem}>
+              <dt>Requested</dt>
+              <dd>{props.requestedContext}</dd>
+            </div>
+            <div className={styles.contextItem}>
+              <dt>Source-confirmed</dt>
+              <dd>{confirmedContext}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+      {kind === "failed" && props.onRetry ? (
         <ActionButton
           priority="secondary"
           className={styles.action}
-          onClick={onRetry}
-          disabled={retrying}
+          onClick={props.onRetry}
+          disabled={props.retrying ?? false}
           aria-label="Retry performance selection"
         >
-          {retrying ? "Retrying…" : "Retry selection"}
+          {props.retrying ? "Retrying…" : "Retry selection"}
         </ActionButton>
       ) : null}
     </section>

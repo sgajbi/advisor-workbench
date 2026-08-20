@@ -34,6 +34,14 @@ export type PerformanceWorkspaceRequestPatch = {
   reportEndDate?: string;
 };
 
+export type PerformanceSourceControlFocusTarget =
+  | { kind: "choice"; groupLabel: "Horizon" | "Basis"; optionLabel: string }
+  | {
+      kind: "field";
+      fieldLabel: "Frequency" | "Benchmark" | "Contribution Segment" | "Attribution Segment";
+    }
+  | { kind: "action"; actionLabel: "Apply" };
+
 export type PerformanceWorkspaceControls = {
   period: string;
   detailBasis: string;
@@ -41,7 +49,10 @@ export type PerformanceWorkspaceControls = {
   attributionDimension: string;
   chartFrequency: string;
   benchmark?: string;
-  onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
+  onRequestChange?: (
+    patch: PerformanceWorkspaceRequestPatch,
+    focusTarget?: PerformanceSourceControlFocusTarget
+  ) => void;
   isUpdating: boolean;
   isDetailsPending: boolean;
 };
@@ -134,7 +145,10 @@ export type PerformanceWorkspaceViewProps = {
   chartFrequency: string;
   benchmark?: string;
   onModeChange: (mode: PerformanceWorkspaceMode) => void;
-  onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
+  onRequestChange?: (
+    patch: PerformanceWorkspaceRequestPatch,
+    focusTarget?: PerformanceSourceControlFocusTarget
+  ) => void;
   onRetryRefresh?: () => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;

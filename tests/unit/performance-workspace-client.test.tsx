@@ -7,7 +7,9 @@ import type {
   WorkbenchPerformanceWorkspaceSummary,
   WorkbenchPerformanceWorkspace,
 } from "../../src/features/workbench/types";
-import PerformanceWorkspaceClient from "../../src/apps/performance/components/performance-workspace-client";
+import PerformanceWorkspaceClient, {
+  PERFORMANCE_REFRESH_CONFIRMATION_DURATION_MS,
+} from "../../src/apps/performance/components/performance-workspace-client";
 import {
   buildPerformanceWorkspaceDetails,
   buildPerformanceWorkspaceSummary,
@@ -155,9 +157,72 @@ function buildDetails(
 
 describe("PerformanceWorkspaceClient", () => {
   afterEach(() => {
+    vi.useRealTimers();
     replaceMock.mockReset();
     getSummaryClientMock.mockReset();
     getDetailsClientMock.mockReset();
+  });
+
+  it("expires one source-confirmed acknowledgement without stealing focus or replaying identical input", async () => {
+    vi.useFakeTimers();
+    getSummaryClientMock.mockResolvedValueOnce(
+      buildSummary({
+        period: "3Y",
+        report_start_date: "2023-03-28",
+      }),
+    );
+    getDetailsClientMock.mockResolvedValueOnce(
+      buildDetails({
+        period: "3Y",
+        report_start_date: "2023-03-28",
+      }),
+    );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />,
+    );
+
+    const sourceControl = screen.getByRole("button", { name: "Switch 3Y" });
+    await act(async () => {
+      sourceControl.focus();
+      sourceControl.click();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+    expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("3Y");
+    expect(sourceControl).toHaveFocus();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PERFORMANCE_REFRESH_CONFIRMATION_DURATION_MS - 1);
+    });
+    expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
+    expect(sourceControl).toHaveFocus();
+
+    await act(async () => {
+      sourceControl.click();
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
+    expect(getSummaryClientMock).toHaveBeenCalledTimes(1);
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
   });
 
   it("reuses cached summary and detail responses when switching back to a previously loaded control state", async () => {
@@ -605,6 +670,7 @@ describe("PerformanceWorkspaceClient", () => {
 
     expect(screen.getByTestId("period")).toHaveTextContent("YTD");
     expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
+    expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
   });
 
   it("refreshes only the details contract for analytic-only control changes", async () => {

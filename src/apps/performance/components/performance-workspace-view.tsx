@@ -194,17 +194,27 @@ export default function PerformanceWorkspaceView({
           >
             <WorkbenchSectionStack className="performance-page-sections">
               {refreshStatus ? (
-                <WorkbenchRefreshStatus
-                  kind={refreshStatus.kind}
-                  eyebrow={getRefreshStatusEyebrow(refreshStatus)}
-                  title={getRefreshStatusTitle(refreshStatus)}
-                  message={getRefreshStatusMessage(refreshStatus)}
-                  requestedContext={refreshStatus.requestedContext}
-                  confirmedContext={refreshStatus.confirmedContext}
-                  onRetry={refreshStatus.kind === "failed" ? onRetryRefresh : undefined}
-                  retrying={false}
-                  className="performance-refresh-status"
-                />
+                refreshStatus.kind === "confirmed" ? (
+                  <WorkbenchRefreshStatus
+                    kind="confirmed"
+                    eyebrow={getRefreshStatusEyebrow(refreshStatus)}
+                    title={getRefreshStatusTitle(refreshStatus)}
+                    confirmedContext={refreshStatus.confirmedContext}
+                    className="performance-refresh-status"
+                  />
+                ) : (
+                  <WorkbenchRefreshStatus
+                    kind={refreshStatus.kind}
+                    eyebrow={getRefreshStatusEyebrow(refreshStatus)}
+                    title={getRefreshStatusTitle(refreshStatus)}
+                    message={getRefreshStatusMessage(refreshStatus)}
+                    requestedContext={refreshStatus.requestedContext}
+                    confirmedContext={refreshStatus.confirmedContext}
+                    onRetry={refreshStatus.kind === "failed" ? onRetryRefresh : undefined}
+                    retrying={false}
+                    className="performance-refresh-status"
+                  />
+                )
               ) : null}
               {controlNormalizationNotice ? (
                 <div
@@ -284,12 +294,6 @@ function getRefreshStatusMessage(
 ) {
   if (refreshStatus.kind === "pending") {
     return "The source-confirmed view remains labelled with its original context until the requested selection is available.";
-  }
-
-  if (refreshStatus.kind === "confirmed") {
-    return refreshStatus.scope === "summary"
-      ? "The requested selection is now source-confirmed and has been applied to the performance view."
-      : "The requested contribution and attribution detail is source-confirmed. Historical attribution shows its own source status in Analysis.";
   }
 
   const supportSuffix = refreshStatus.status

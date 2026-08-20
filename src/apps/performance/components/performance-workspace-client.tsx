@@ -19,8 +19,10 @@ import { buildPerformanceHref } from "../navigation";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
+import { restorePerformanceSourceControlFocus } from "./performance-source-control-focus";
 import PerformanceWorkspaceView from "./performance-workspace-view";
 import type {
+  PerformanceSourceControlFocusTarget,
   PerformanceWorkspaceLoadIssue,
   PerformanceWorkspaceRefreshStatus,
 } from "./performance-workspace-types";
@@ -69,6 +71,8 @@ type ResolvedPerformanceDetails = {
   details: WorkbenchPerformanceWorkspaceDetails;
   controls: PerformanceControlState;
 };
+
+export const PERFORMANCE_REFRESH_CONFIRMATION_DURATION_MS = 5_000;
 
 export default function PerformanceWorkspaceClient({
   initialSummary,
@@ -150,6 +154,7 @@ export default function PerformanceWorkspaceClient({
   );
   const requestSequenceRef = useRef(0);
   const initialDetailsRequestedRef = useRef(false);
+  const lastSourceControlFocusTargetRef = useRef<PerformanceSourceControlFocusTarget | null>(null);
 
   const initialDetailsKey = useMemo(
     () => (initialControls && initialDetails ? buildDetailsCacheKey(initialControls) : null),
@@ -184,6 +189,21 @@ export default function PerformanceWorkspaceClient({
     refreshFailure,
     refreshConfirmation
   );
+
+  useEffect(() => {
+    if (!refreshConfirmation) {
+      return;
+    }
+
+    const confirmation = refreshConfirmation;
+    const timeoutId = window.setTimeout(() => {
+      setRefreshConfirmation((currentConfirmation) =>
+        currentConfirmation === confirmation ? null : currentConfirmation
+      );
+    }, PERFORMANCE_REFRESH_CONFIRMATION_DURATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshConfirmation]);
 
   useEffect(() => {
     if (!initialControls || !initialPortfolioId) {
@@ -281,9 +301,15 @@ export default function PerformanceWorkspaceClient({
     };
   }, []);
 
-  async function handleRequestChange(patch: Partial<PerformanceControlState>) {
+  async function handleRequestChange(
+    patch: Partial<PerformanceControlState>,
+    focusTarget?: PerformanceSourceControlFocusTarget
+  ) {
     if (!controls) {
       return;
+    }
+    if (focusTarget) {
+      lastSourceControlFocusTargetRef.current = focusTarget;
     }
     const nextControls = applyPerformanceControlPatch(controls, patch);
     const sameSummary = buildSummaryCacheKey(nextControls) === buildSummaryCacheKey(controls);
@@ -309,12 +335,13 @@ export default function PerformanceWorkspaceClient({
       return;
     }
 
-    await runRefresh(nextControls, controls);
+    await runRefresh(nextControls, controls, { focusTarget });
   }
 
   async function runRefresh(
     requestedControls: PerformanceControlState,
-    confirmedControls: PerformanceControlState
+    confirmedControls: PerformanceControlState,
+    options: { focusTarget?: PerformanceSourceControlFocusTarget } = {}
   ) {
     const refreshesSummary = shouldRefreshSummary(confirmedControls, requestedControls);
     const initialScope: PerformanceRefreshScope = refreshesSummary ? "summary" : "details";
@@ -372,6 +399,9 @@ export default function PerformanceWorkspaceClient({
           scroll: false,
         });
       });
+      if (options.focusTarget) {
+        restorePerformanceSourceControlFocus(options.focusTarget);
+      }
     } catch (error) {
       if (requestSequenceRef.current !== requestId) {
         return;
@@ -485,7 +515,9 @@ export default function PerformanceWorkspaceClient({
         if (!refreshFailure || !controls) {
           return;
         }
-        void runRefresh(refreshFailure.requestedControls, controls);
+        void runRefresh(refreshFailure.requestedControls, controls, {
+          focusTarget: lastSourceControlFocusTargetRef.current ?? undefined,
+        });
       }}
       isUpdating={isUpdating}
       isDetailsPending={isDetailsPending}

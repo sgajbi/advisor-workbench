@@ -89,9 +89,10 @@ export default function PerformanceAnalysisAttributionSection({
               isCapabilityOptionSupported(capabilities.attributionDetail, "dimension", option)
             }
             onChange={(nextValue) =>
-              onRequestChange?.({
-                attributionDimension: nextValue,
-              })
+              onRequestChange?.(
+                { attributionDimension: nextValue },
+                { kind: "field", fieldLabel: "Attribution Segment" }
+              )
             }
           />
           <PerformancePanelInfoDrawer

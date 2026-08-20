@@ -20,6 +20,8 @@
 .confirmed {
   --refresh-background: #eef7f2;
   --refresh-border: #4f7f68;
+
+  padding-block: 0.625rem;
 }
 
 .failed {
@@ -37,6 +39,30 @@
 .title,
 .message {
   margin: 0;
+}
+
+.confirmedCopy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+}
+
+.confirmedSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.65rem;
+  align-items: baseline;
+  margin: 0;
+}
+
+.confirmedContext {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
