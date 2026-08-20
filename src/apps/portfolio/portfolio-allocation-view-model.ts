@@ -49,7 +49,8 @@ export function isExpandedLookThroughSupported(
   }
   return (
     lookThrough.requested_mode === "prefer_look_through" &&
-    (lookThrough.applied || lookThrough.effective_mode === "prefer_look_through")
+    lookThrough.effective_mode === "prefer_look_through" &&
+    lookThrough.applied
   );
 }
 
