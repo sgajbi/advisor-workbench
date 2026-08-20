@@ -991,7 +991,10 @@ Important validation expectations:
     separate from the rendered summary/details and URL until every contract required by the selected
     view succeeds. If a refresh fails, retain usable prior evidence only under its prior labels,
     expose the requested and confirmed contexts plus an exact source retry, and announce pending,
-    failure, and successful confirmation without moving focus. Fence obsolete completions, lock
+    failure, and one concise, bounded successful confirmation without focusing the message. Keep
+    routine success visually subordinate to the resolved analytical evidence; restore the original
+    source selector only when a removed recovery action would otherwise leave focus on the document,
+    and never steal focus after the advisor has moved elsewhere. Fence obsolete completions, lock
     conflicting controls while pending, and keep permission blocks fail-closed. Do not partially
     publish summary, detail, normalized controls, or query state; do not invent fallback analytics.
     Use `npm run test:e2e:performance:refresh-integrity` for the owned optimized-production failure
