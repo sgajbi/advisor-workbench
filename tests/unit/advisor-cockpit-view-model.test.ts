@@ -26,6 +26,7 @@ const actionPage: AdvisorCockpitActionPageData = {
       next_required_action: "Review policy evidence before client discussion.",
       reason_codes: ["POLICY_PENDING_REVIEW", "CLIENT_READY_BLOCKED"],
       portfolio_id: "PB_SG_GLOBAL_BAL_001",
+      proposal_id: "proposal_sg_001",
       sla_age_band: "DUE_SOON",
       evidence_refs: [
         {
@@ -203,6 +204,12 @@ describe("advisor cockpit view model", () => {
       family: "Policy Review Required",
       sla: "Due Soon",
       canAcknowledge: true,
+      sourceHandoff: {
+        href: "/proposals/proposal_sg_001",
+        label: "Open proposal",
+        accessibleLabel: "Open proposal proposal_sg_001",
+        recordLabel: "Proposal proposal_sg_001",
+      },
     });
     expect(model.actionRows[0].reasonSummary).toBe(
       "Policy Pending Review, Client-ready Blocked",
@@ -260,6 +267,27 @@ describe("advisor cockpit view model", () => {
     expect(model.preparationCount).toBe(1);
     expect(model.preparationPosture).toBe("available");
     expect(model.actionPosture).toBe("actionable");
+  });
+
+  it("exposes only a valid supported proposal handoff", () => {
+    const invalidProposalPage: AdvisorCockpitActionPageData = {
+      ...actionPage,
+      items: actionPage.items?.map((action) => ({
+        ...action,
+        proposal_id: "proposal/unsupported-path",
+        policy_evaluation_id: "policy_eval_sg_001",
+        report_ref: "report_sg_001",
+      })),
+    };
+
+    const model = buildAdvisorCockpitModel({
+      snapshot,
+      actionPage: invalidProposalPage,
+      preparationPage,
+      supportability,
+    });
+
+    expect(model.actionRows[0].sourceHandoff).toBeNull();
   });
 
   it("keeps a non-zero preparation scope partial when no packet detail is loaded", () => {

@@ -62,6 +62,7 @@ async function mockAdvisorCockpit(
           priority: "HIGH",
           owner_role: "ADVISOR",
           title: "Policy review required",
+          proposal_id: "proposal_sg_001",
           next_required_action: "Review policy evidence before client discussion.",
           reason_codes: ["POLICY_PENDING_REVIEW"],
           evidence_refs: [
@@ -284,6 +285,21 @@ test("keeps advisor action evidence and review controls visible by module capaci
 
     const worklist = page.getByTestId("advisor-cockpit-action-worklist");
     await expect(worklist).toBeVisible();
+    const sourceBoundary = page.locator('[data-context-presentation="inline"]');
+    await expect(sourceBoundary).toContainText(
+      "Advisor Cockpit source-owned action evidence",
+    );
+    await expect(page.getByText("Select a source record")).toHaveCount(0);
+    await expect(page.getByText("Workflow context", { exact: true })).toHaveCount(0);
+    await expect(page.locator(".workstation-shell-side")).toHaveCount(0);
+    const proposalHandoffs = page.getByRole("link", {
+      name: "Open proposal proposal_sg_001",
+    });
+    await expect(proposalHandoffs).toHaveCount(2);
+    await expect(proposalHandoffs.first()).toHaveAttribute(
+      "href",
+      "/proposals/proposal_sg_001",
+    );
     if (viewport.worklistWidth !== undefined) {
       await worklist.evaluate((element, width) => {
         element.style.width = `${width}px`;

@@ -135,6 +135,11 @@
   gap: 2px;
 }
 
+.sourceBoundaryPanel > div {
+  display: grid;
+  gap: 2px;
+}
+
 .sourceBoundaryPanel strong {
   overflow-wrap: anywhere;
   color: #131b2e;
@@ -146,6 +151,34 @@
   color: #5f6670;
   font-size: 12px;
   line-height: 17px;
+}
+
+.inlineSourceBoundary {
+  align-items: center;
+  border-left: 3px solid var(--brand);
+  gap: var(--space-4);
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
+  padding: var(--space-3);
+}
+
+.inlineSourceBoundary p {
+  border-left: 1px solid var(--border);
+  padding-left: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .inlineSourceBoundary {
+    align-items: start;
+    gap: var(--space-2);
+    grid-template-columns: 1fr;
+  }
+
+  .inlineSourceBoundary p {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: var(--space-2);
+  }
 }
 
 @media (max-width: 1200px) {

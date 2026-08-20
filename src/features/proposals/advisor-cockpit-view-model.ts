@@ -16,6 +16,14 @@ import {
   type AdvisorCockpitOperatingBoundaryPresentation,
   type AdvisorCockpitReadinessState,
 } from "./advisor-cockpit-readiness-presentation";
+import { isValidProposalId } from "./proposal-workflow-copy";
+
+export type AdvisorCockpitSourceHandoff = {
+  href: string;
+  label: string;
+  accessibleLabel: string;
+  recordLabel: string;
+};
 
 export type AdvisorCockpitActionRow = {
   actionItemId: string;
@@ -29,6 +37,7 @@ export type AdvisorCockpitActionRow = {
   family: string;
   sla: string;
   nextRequiredAction: string;
+  sourceHandoff: AdvisorCockpitSourceHandoff | null;
   reasonSummary: string;
   evidenceSummary: string;
   sourceGapSummary: string;
@@ -351,6 +360,15 @@ function toActionRow(
 ): AdvisorCockpitActionRow {
   const acknowledged = Boolean(action.acknowledgement_state?.acknowledged);
   const externalOwner = action.owner_role !== "ADVISOR";
+  const proposalId = action.proposal_id?.trim() ?? "";
+  const sourceHandoff = isValidProposalId(proposalId)
+    ? {
+        href: `/proposals/${encodeURIComponent(proposalId)}`,
+        label: "Open proposal",
+        accessibleLabel: `Open proposal ${proposalId}`,
+        recordLabel: `Proposal ${proposalId}`,
+      }
+    : null;
   return {
     actionItemId: action.action_item_id,
     actionItemVersion: action.action_item_version,
@@ -364,6 +382,7 @@ function toActionRow(
     sla: formatCode(action.sla_age_band ?? "NOT_APPLICABLE"),
     nextRequiredAction:
       action.next_required_action ?? "Follow source-owned next action.",
+    sourceHandoff,
     reasonSummary: listCodes(action.reason_codes),
     evidenceSummary: summarizeEvidence(action.evidence_refs),
     sourceGapSummary: summarizeSourceGaps(action.source_readiness_gaps),

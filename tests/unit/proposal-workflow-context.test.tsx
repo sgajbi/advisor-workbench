@@ -5,8 +5,10 @@ import {
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextPublisher,
   ProposalWorkflowContextRail,
+  ProposalWorkflowBoundary,
 } from "@/features/proposals/components/proposal-workflow-context";
 import {
+  buildAdvisorCockpitWorkflowContext,
   buildNeutralProposalWorkflowContext,
   buildProposalQueueWorkflowContext,
 } from "@/features/proposals/proposal-workflow-context-view-model";
@@ -31,6 +33,24 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/client readiness/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the Cockpit source boundary without duplicating a workflow decision", () => {
+    const model = buildAdvisorCockpitWorkflowContext({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+    render(<ProposalWorkflowBoundary model={model} presentation="inline" />);
+
+    const boundary = screen.getByText("Source and scope").closest("article");
+    expect(boundary).toHaveAttribute("data-context-presentation", "inline");
+    expect(boundary).toHaveTextContent(
+      "Advisor Cockpit source-owned action evidence",
+    );
+    expect(boundary).toHaveTextContent(
+      "Review and acknowledgement do not establish suitability",
+    );
+    expect(screen.queryByText("Workflow context")).not.toBeInTheDocument();
+    expect(screen.queryByText("Select a source record")).not.toBeInTheDocument();
   });
 
   it("publishes source-backed queue posture to the shared rail", async () => {

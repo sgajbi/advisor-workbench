@@ -80,13 +80,21 @@ vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
   default: ({
     title,
     portfolioId,
+    workflowContext,
+    workflowContextPresentation,
     children,
   }: {
     title: string;
     portfolioId: string;
+    workflowContext?: { sourceLabel: string };
+    workflowContextPresentation?: string;
     children: React.ReactNode;
   }) => (
-    <section>
+    <section
+      data-testid="proposal-workspace-shell"
+      data-context-presentation={workflowContextPresentation}
+      data-source-label={workflowContext?.sourceLabel}
+    >
       <h1>{title}</h1>
       <p>{portfolioId}</p>
       {children}
@@ -279,6 +287,14 @@ describe("app route entrypoints", () => {
       screen.getAllByRole("heading", { name: "Advisor Cockpit" }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("proposal-workspace-shell")).toHaveAttribute(
+      "data-context-presentation",
+      "inline-boundary",
+    );
+    expect(screen.getByTestId("proposal-workspace-shell")).toHaveAttribute(
+      "data-source-label",
+      "Advisor Cockpit source-owned action evidence",
+    );
   });
 
   it("mounts recommendations copilot mode as a Gateway-backed advisory screen", async () => {
