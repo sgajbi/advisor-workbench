@@ -78,9 +78,13 @@ function useProposalWorkflowContext(): ProposalWorkflowContextValue {
 
 export function ProposalWorkflowContextRail() {
   const { model } = useProposalWorkflowContext();
+  const isSupplementary = model.responsivePriority === "supplementary";
 
   return (
-    <div className={styles.proposalSide}>
+    <div
+      className={`${styles.proposalSide} ${isSupplementary ? styles.supplementaryContext : ""}`}
+      data-responsive-priority={model.responsivePriority}
+    >
       <Panel className={`${styles.contextPanel} ${styles.workflowContextPanel}`}>
         <div className={styles.drawerHeader}>
           <div>

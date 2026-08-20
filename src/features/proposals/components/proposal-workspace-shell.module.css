@@ -152,4 +152,8 @@
   .proposalScope :global(.proposal-layout) {
     grid-template-columns: 1fr;
   }
+
+  .supplementaryContext .workflowContextPanel {
+    display: none;
+  }
 }
