@@ -28,6 +28,8 @@ import {
 } from "../fixtures/performance-workspace-server-fixtures";
 
 const replaceMock = vi.fn();
+const RETURN_PATH_EVIDENCE_NAME =
+  /^Net Return Path (?:chart|single observation comparison)$/;
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/performance",
@@ -420,7 +422,7 @@ describe("PerformanceAnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
       expect(screen.getAllByText("Horizon Comparison")).toHaveLength(1);
-      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+      expect(screen.getByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
       expect(screen.getByLabelText("Performance decision workspace")).toBeInTheDocument();
       expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
         /portfolio/i
@@ -488,7 +490,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     await waitFor(() => {
       expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
-      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+      expect(screen.getByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
     });
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
@@ -603,13 +605,13 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
-    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
     expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
     expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     const returnDecisionReadout = screen.getByLabelText("Return decision readout");
     const controlBar = screen.getByLabelText("Performance source selection");
-    const chart = screen.getByRole("img", { name: "Net Return Path chart" });
+    const chart = screen.getByLabelText(RETURN_PATH_EVIDENCE_NAME);
     const executiveStrip = screen.getByLabelText("Executive return strip");
     expect(
       Boolean(returnDecisionReadout.compareDocumentPosition(controlBar) & Node.DOCUMENT_POSITION_FOLLOWING)
@@ -681,7 +683,7 @@ describe("PerformanceAnalyticsPage", () => {
     const attributionTable = await screen.findByLabelText("Asset Class attribution table");
     expect(screen.queryByRole("tab", { name: /^Relative Segment Context/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: /^Effect Breakdown/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(RETURN_PATH_EVIDENCE_NAME)).not.toBeInTheDocument();
     expect(screen.queryByText("Horizon Comparison")).not.toBeInTheDocument();
     expect(within(attributionTable).getAllByText("—")).toHaveLength(3);
     expect(screen.queryByLabelText("Attribution effect legend")).not.toBeInTheDocument();
@@ -766,7 +768,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(RETURN_PATH_EVIDENCE_NAME)).not.toBeInTheDocument();
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
     expect(screen.getByText("Live AI-assisted output")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
@@ -779,7 +781,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
 
     fireEvent.click(await findWorkflowControl("Advisor Brief"));
     fireEvent.click(
@@ -1394,7 +1396,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(horizonEvidence).toHaveAttribute("data-state", "empty");
     expect(horizonEvidence).toHaveTextContent("No published horizon comparison");
     expect(screen.getByText("Performance Drivers")).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(RETURN_PATH_EVIDENCE_NAME)).not.toBeInTheDocument();
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
 
@@ -1404,7 +1406,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
-    expect(await screen.findByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
   });
 
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
@@ -1416,7 +1418,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+      expect(screen.getByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
     });
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
   });
