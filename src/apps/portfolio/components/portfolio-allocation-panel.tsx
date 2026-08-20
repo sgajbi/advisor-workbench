@@ -81,7 +81,7 @@ export default function PortfolioAllocationPanel({
   } = allocationState;
 
   return (
-    <div className="portfolio-allocation-panel">
+    <div className={`portfolio-allocation-panel ${styles.root}`}>
       <WorkbenchSummaryToolbar className="portfolio-allocation-toolbar">
         <WorkbenchChoiceGroup
           value={activeDimension}
