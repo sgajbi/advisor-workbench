@@ -1364,7 +1364,12 @@ function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pi
   }
 
   const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
-  if (!volatility || volatility.state === "unavailable" || volatility.state === "blocked") {
+  if (
+    !volatility ||
+    typeof volatility.value !== "number" ||
+    volatility.state === "unavailable" ||
+    volatility.state === "blocked"
+  ) {
     return {
       value: "Unavailable",
       support: volatility?.reason ?? "No source-confirmed volatility measure is available.",
