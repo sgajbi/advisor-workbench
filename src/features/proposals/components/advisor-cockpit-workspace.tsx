@@ -5,7 +5,6 @@ import { Alert, AlertTitle } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -31,6 +30,9 @@ import {
   type AdvisorCockpitActionRow,
   type AdvisorCockpitModel,
 } from "../advisor-cockpit-view-model";
+import AdvisorCockpitActionWorklist, {
+  type AdvisorCockpitAcknowledgementTransaction,
+} from "./advisor-cockpit-action-worklist";
 import styles from "./advisor-cockpit-workspace.module.css";
 
 export default function AdvisorCockpitWorkspace({
@@ -187,6 +189,20 @@ export default function AdvisorCockpitWorkspace({
     (actionWorklistUnavailable
       ? "Restore Advisor Cockpit worklist access before relying on action posture for client discussion."
       : model.recommendedAction);
+  const acknowledgementTransaction: AdvisorCockpitAcknowledgementTransaction = {
+    actionItemId: acknowledgementMutation.variables?.actionItemId ?? null,
+    status: acknowledgementMutation.isPending
+      ? cockpitSourcePosture.isRefreshing
+        ? "confirming"
+        : "recording"
+      : acknowledgementMutation.isError
+        ? "failed"
+        : acknowledgementMutation.isSuccess
+          ? evidencePresentation.state === "partial"
+            ? "confirmed-partial"
+            : "confirmed"
+          : "idle",
+  };
 
   if (evidencePresentation.state === "loading") {
     return (
@@ -300,14 +316,10 @@ export default function AdvisorCockpitWorkspace({
           surface="default"
         />
       ) : (
-        <AdvisorCockpitActionTable
+        <AdvisorCockpitActionWorklist
           rows={model.actionRows}
-          acknowledgementPending={acknowledgementMutation.isPending}
-          acknowledgementSucceeded={acknowledgementMutation.isSuccess}
-          acknowledgementFailed={Boolean(acknowledgementMutation.error)}
-          evidenceRefreshing={cockpitSourcePosture.isRefreshing}
           evidenceConfirmed={evidencePresentation.actionsEnabled}
-          evidencePartial={evidencePresentation.state === "partial"}
+          transaction={acknowledgementTransaction}
           onAcknowledge={(row) => {
             if (
               evidencePresentation.actionsEnabled &&
@@ -448,105 +460,6 @@ function AdvisorCockpitPreparationGrid({
           <Text variant="secondary">{packet.evidenceSummary}</Text>
         </div>
       ))}
-    </div>
-  );
-}
-
-function AdvisorCockpitActionTable({
-  rows,
-  acknowledgementPending,
-  acknowledgementSucceeded,
-  acknowledgementFailed,
-  evidenceRefreshing,
-  evidenceConfirmed,
-  evidencePartial,
-  onAcknowledge,
-}: {
-  rows: AdvisorCockpitActionRow[];
-  acknowledgementPending: boolean;
-  acknowledgementSucceeded: boolean;
-  acknowledgementFailed: boolean;
-  evidenceRefreshing: boolean;
-  evidenceConfirmed: boolean;
-  evidencePartial: boolean;
-  onAcknowledge: (row: AdvisorCockpitActionRow) => void;
-}) {
-  return (
-    <div className={styles.actionTableWrap}>
-      <table className={styles.actionTable}>
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Status</th>
-            <th>Owner</th>
-            <th>SLA</th>
-            <th>Evidence</th>
-            <th>Next Action</th>
-            <th>Acknowledgement</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.actionItemId}>
-              <td>
-                <span className={styles.actionTitle}>{row.title}</span>
-                <span className={styles.actionMeta}>{row.family}</span>
-                <span className={styles.actionMeta}>{row.reasonSummary}</span>
-              </td>
-              <td>
-                <SemanticBadge tone={row.statusTone}>
-                  {row.status}
-                </SemanticBadge>
-                <span className={styles.actionMeta}>{row.priority}</span>
-              </td>
-              <td>{row.owner}</td>
-              <td>{row.sla}</td>
-              <td className={styles.evidenceCell}>
-                <p>{row.evidenceSummary}</p>
-                <span className={styles.actionMeta}>
-                  {row.sourceGapSummary}
-                </span>
-                <span className={styles.actionMeta}>
-                  {row.dependencySummary}
-                </span>
-              </td>
-              <td>{row.nextRequiredAction}</td>
-              <td>
-                <ActionButton
-                  priority="secondary"
-                  disabled={
-                    !row.canAcknowledge ||
-                    acknowledgementPending ||
-                    !evidenceConfirmed
-                  }
-                  onClick={() => onAcknowledge(row)}
-                >
-                  {acknowledgementPending && row.canAcknowledge
-                    ? evidenceRefreshing
-                      ? "Confirming..."
-                      : "Recording..."
-                    : row.acknowledgementLabel}
-                </ActionButton>
-                <span className={styles.acknowledgementDetail}>
-                  {acknowledgementPending &&
-                  evidenceRefreshing &&
-                  row.canAcknowledge
-                    ? "Review recorded; confirming current advisor evidence."
-                    : acknowledgementSucceeded &&
-                        evidencePartial &&
-                        row.canAcknowledge
-                      ? "Review recorded; latest advisor evidence is not fully confirmed."
-                      : acknowledgementSucceeded && row.canAcknowledge
-                    ? "Acknowledgement recorded in the source workflow."
-                    : acknowledgementFailed && row.canAcknowledge
-                      ? "Acknowledgement could not be recorded."
-                      : row.acknowledgementDetail}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
