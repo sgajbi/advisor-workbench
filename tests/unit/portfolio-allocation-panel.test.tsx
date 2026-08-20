@@ -428,6 +428,67 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.queryByText("725,000 USD")).not.toBeInTheDocument();
   });
 
+  it("clears a selection invalidated by the initial direct fallback", async () => {
+    let resolveInitialCoverage: ((response: Response) => void) | undefined;
+    const initialCoverageResponse = new Promise<Response>((resolve) => {
+      resolveInitialCoverage = resolve;
+    });
+    const onSelectionChange = vi.fn();
+    vi.stubGlobal("fetch", vi.fn(async () => initialCoverageResponse));
+
+    const { rerender } = render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing holdings.",
+      }),
+    );
+    expect(onSelectionChange).toHaveBeenCalledWith({
+      dimension: "asset_class",
+      bucket: "Equities",
+    });
+
+    rerender(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={{ dimension: "asset_class", bucket: "Equities" }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    onSelectionChange.mockClear();
+
+    resolveInitialCoverage?.(
+      jsonResponse({
+        reporting_currency: "USD",
+        look_through: {
+          requested_mode: "prefer_look_through",
+          effective_mode: "direct_only",
+          applied: false,
+        },
+        views: [],
+      }),
+    );
+
+    await waitFor(() => expect(onSelectionChange).toHaveBeenCalledWith(null));
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
+    expect(screen.queryByText("725,000 USD")).not.toBeInTheDocument();
+  });
+
   it("keeps source-confirmed empty expanded coverage distinct from unsupported coverage", async () => {
     vi.stubGlobal(
       "fetch",

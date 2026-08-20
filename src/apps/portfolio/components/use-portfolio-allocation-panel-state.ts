@@ -126,6 +126,17 @@ export function usePortfolioAllocationPanelState({
       if (cancelled || requestSequence !== coverageRequestSequence.current) {
         return;
       }
+      const currentSelection = selectedAllocationRef.current;
+      const nextDirectAllocationViews = resolveDirectAllocationViews(
+        allocationViews,
+        response,
+      );
+      if (
+        currentSelection &&
+        !includesAllocationSelection(nextDirectAllocationViews, currentSelection)
+      ) {
+        onSelectionChange(null);
+      }
       setAllocationState((current) =>
         applyLookThroughCoverageResponse(
           current.sourceKey === allocationSourceKey
@@ -143,6 +154,7 @@ export function usePortfolioAllocationPanelState({
     allocationSourceKey,
     allocationViews,
     asOfDate,
+    onSelectionChange,
     portfolioId,
     reportingCurrency,
   ]);
@@ -256,7 +268,7 @@ export function usePortfolioAllocationPanelState({
     }
     const currentSelection = selectedAllocationRef.current;
     const nextDirectAllocationViews = resolveDirectAllocationViews(
-      activeAllocationState,
+      activeAllocationState.directAllocationViews,
       response,
     );
     if (
@@ -331,7 +343,10 @@ function applyLookThroughCoverageResponse(
     response.look_through ?? null,
   );
   if (!supportsExpandedLookThrough) {
-    const directAllocationViews = resolveDirectAllocationViews(current, response);
+    const directAllocationViews = resolveDirectAllocationViews(
+      current.directAllocationViews,
+      response,
+    );
     return {
       ...current,
       directAllocationViews,
@@ -354,7 +369,7 @@ function applyLookThroughCoverageResponse(
 }
 
 function resolveDirectAllocationViews(
-  current: AllocationResolutionState,
+  currentDirectAllocationViews: PortfolioAllocationView[],
   response: {
     views: PortfolioAllocationView[];
     look_through?: PortfolioAllocationLookThrough | null;
@@ -364,7 +379,7 @@ function resolveDirectAllocationViews(
     !response ||
     isExpandedLookThroughSupported(response.look_through ?? null)
   ) {
-    return current.directAllocationViews;
+    return currentDirectAllocationViews;
   }
   return response.views;
 }
