@@ -939,9 +939,11 @@ test.describe('Portfolio workbench smoke', () => {
     const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
     const viewportEvidence = [];
     let compactChartSuppressed = false;
+    let railConstrainedChartSuppressed = false;
     let compactExactValuesVisible = false;
     for (const viewport of [
       { width: 1440, height: 1000 },
+      { width: 1220, height: 1000 },
       { width: 1024, height: 1000 },
       { width: 519, height: 900 },
     ]) {
@@ -952,17 +954,31 @@ test.describe('Portfolio workbench smoke', () => {
       expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
         measurements.document.clientWidth + 1,
       );
+      const allocationPanelInlineSize = await page
+        .locator('.portfolio-allocation-panel')
+        .evaluate((element) => element.getBoundingClientRect().width);
+      const chartSuppressed = await page
+        .locator('[class*="portfolio-allocation-panel_visual"]')
+        .evaluate((element) => getComputedStyle(element).display === 'none');
+      if (viewport.width === 1220) {
+        expect(allocationPanelInlineSize).toBeLessThanOrEqual(640);
+        expect(chartSuppressed).toBe(true);
+        railConstrainedChartSuppressed = chartSuppressed;
+      }
       if (viewport.width === 519) {
-        compactChartSuppressed = await page
-          .locator('[class*="portfolio-allocation-panel_visual"]')
-          .evaluate((element) => getComputedStyle(element).display === 'none');
+        compactChartSuppressed = chartSuppressed;
         compactExactValuesVisible = await page
           .getByText('7,250,000 USD', { exact: true })
           .isVisible();
         expect(compactChartSuppressed).toBe(true);
         expect(compactExactValuesVisible).toBe(true);
       }
-      viewportEvidence.push({ viewport, measurements });
+      viewportEvidence.push({
+        viewport,
+        allocationPanelInlineSize,
+        chartSuppressed,
+        measurements,
+      });
 
       if (evidenceDirectory && (viewport.width === 1440 || viewport.width === 519)) {
         await mkdir(evidenceDirectory, { recursive: true });
@@ -988,6 +1004,7 @@ test.describe('Portfolio workbench smoke', () => {
             retryFocusStable,
             expandedContributorDetail: 'unavailable',
             compactChartSuppressed,
+            railConstrainedChartSuppressed,
             compactExactValuesVisible,
             viewportEvidence,
             browserRuntimeFailures,

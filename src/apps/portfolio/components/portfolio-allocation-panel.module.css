@@ -1,4 +1,9 @@
-@media (max-width: 640px) {
+.root {
+  container-name: allocation-panel;
+  container-type: inline-size;
+}
+
+@container allocation-panel (max-width: 640px) {
   .body {
     grid-template-columns: minmax(0, 1fr);
   }
