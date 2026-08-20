@@ -448,15 +448,8 @@
 
 @media (max-width: 1280px) {
   .portfolio-analytical-zone-grid,
-  .portfolio-chart-module-body,
-  .portfolio-allocation-body {
+  .portfolio-chart-module-body {
     grid-template-columns: 1fr;
-  }
-
-  .portfolio-allocation-ranked {
-    border-left: 0;
-    border-top: 1px solid rgba(226, 232, 240, 0.9);
-    padding-top: var(--space-3);
   }
 }
 
