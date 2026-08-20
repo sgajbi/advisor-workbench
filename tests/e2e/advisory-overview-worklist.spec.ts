@@ -200,6 +200,10 @@ for (const viewport of viewports) {
     }
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
     await page.screenshot({
+      path: path.join(evidenceDirectory, `advisory-overview-${viewport.name}-viewport.png`),
+      animations: "disabled",
+    });
+    await page.screenshot({
       path: path.join(evidenceDirectory, `advisory-overview-${viewport.name}.png`),
       fullPage: true,
     });
