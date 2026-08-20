@@ -18,6 +18,7 @@ import RiskAttributionPanel from "./risk/risk-attribution-panel";
 import RiskDrawdownDetailDrawer from "./risk/risk-drawdown-detail-drawer";
 import RiskExecutiveOverview from "./risk/risk-executive-overview";
 import RiskPrimaryPanelGroup from "./risk/risk-primary-panel-group";
+import RiskPolicyBoundary from "./risk/risk-policy-boundary";
 import RiskRollingDetailDrawer from "./risk/risk-rolling-detail-drawer";
 import RiskRollingPanel from "./risk/risk-rolling-panel";
 import RiskSecondaryPanelGroup from "./risk/risk-secondary-panel-group";
@@ -180,6 +181,7 @@ function PerformanceRiskInteractionState({
       {statePanel ?? (
         <div className="performance-risk-main-column">
           <RiskExecutiveOverview overview={viewModel.workspaceOverview} />
+          <RiskPolicyBoundary />
           <RiskPrimaryPanelGroup
             snapshot={<RiskSnapshotPanel viewModel={viewModel} />}
             drawdown={

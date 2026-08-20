@@ -28,10 +28,25 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.state).toBe("partial");
     expect(viewModel.title).toBe("Risk");
     expect(viewModel.workspaceOverview).toEqual([
-      expect.objectContaining({ label: "Risk posture", value: "Contained" }),
-      expect.objectContaining({ label: "Drawdown posture", value: "Underwater" }),
-      expect.objectContaining({ label: "Concentration posture", value: "Partial" }),
-      expect.objectContaining({ label: "Evidence posture", value: "Partial" }),
+      expect.objectContaining({
+        label: "Realized volatility",
+        value: "7.25%",
+        support: "YTD annualized source measure",
+        tone: "default",
+      }),
+      expect.objectContaining({
+        label: "Max drawdown",
+        value: "-12.45%",
+        support: "Still below the prior peak at period end",
+        tone: "default",
+      }),
+      expect.objectContaining({
+        label: "Largest position",
+        value: "18.40%",
+        support: "PIMCO GIS Income Fund",
+        tone: "default",
+      }),
+      expect.objectContaining({ label: "Source coverage", value: "Partial" }),
     ]);
     expect(viewModel.snapshotHeadlineMetrics.map((metric) => metric.label)).toEqual([
       "Volatility",
@@ -54,10 +69,16 @@ describe("buildPerformanceRiskViewModel", () => {
       "Largest Issuer Weight",
       "Top 10 Weight",
     ]);
-    expect(viewModel.concentrationScales[0]).toMatchObject({
-      label: "Portfolio Concentration Index",
-      interpretationBand: "Moderate",
-    });
+    expect(viewModel.concentrationIndicators).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Largest Position Weight", tone: "neutral" }),
+        expect.objectContaining({ label: "Largest Issuer Weight", tone: "warn" }),
+        expect.objectContaining({ label: "Top 10 Weight", tone: "neutral" }),
+      ]),
+    );
+    expect(JSON.stringify(viewModel.workspaceOverview)).not.toMatch(
+      /Contained|Moderate|Elevated|High|Severe|Acceptable|Diversified/,
+    );
     expect(viewModel.concentrationContextRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

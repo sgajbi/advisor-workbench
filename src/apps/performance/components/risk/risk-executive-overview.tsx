@@ -34,12 +34,11 @@ export default function RiskExecutiveOverview({
             key={item.key}
             label={item.label}
             value={item.value}
-            support=""
+            support={item.support}
             tone={mapOverviewToneToCardTone(item.tone)}
             density="compact"
             className="performance-risk-executive-card"
-            displaySupport={false}
-            ariaLabel={`${item.label}: ${item.value}`}
+            ariaLabel={`${item.label}: ${item.value}. ${item.support}`}
           />
         ))}
       </div>

@@ -24,13 +24,6 @@ export type PerformanceRiskState =
   | "unavailable"
   | "error";
 
-export type RiskConcentrationPostureState =
-  | "acceptable"
-  | "moderate"
-  | "elevated"
-  | "high"
-  | "partial";
-
 export type PerformanceRiskConcentrationIndicator = {
   key: string;
   label: string;
@@ -38,14 +31,6 @@ export type PerformanceRiskConcentrationIndicator = {
   support: string;
   definition: string;
   tone?: "neutral" | "warn" | "danger";
-};
-
-export type PerformanceRiskConcentrationScale = {
-  key: string;
-  label: string;
-  interpretationBand: string;
-  markerPct: number;
-  definition: string;
 };
 
 export type PerformanceRiskConcentrationContextRow = {
@@ -107,6 +92,7 @@ export type PerformanceRiskOverviewItem = {
   key: string;
   label: string;
   value: string;
+  support: string;
   tone: "default" | "success" | "warn" | "danger";
 };
 
@@ -120,7 +106,6 @@ export type PerformanceRiskViewModel = {
   snapshotSupportingMetrics: PerformanceRiskMetricCard[];
   snapshotContextRows: PerformanceRiskContextRow[];
   concentrationIndicators: PerformanceRiskConcentrationIndicator[];
-  concentrationScales: PerformanceRiskConcentrationScale[];
   concentrationContextRows: PerformanceRiskConcentrationContextRow[];
   drawdownHeadlineMetrics: PerformanceRiskMetricCard[];
   drawdownSupportingMetrics: PerformanceRiskMetricCard[];
@@ -320,7 +305,6 @@ export function buildPerformanceRiskViewModel({
     snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
     snapshotContextRows: mapSnapshotContextRows(summary),
     concentrationIndicators: mapConcentrationIndicators(concentration),
-    concentrationScales: mapConcentrationScales(concentration),
     concentrationContextRows: mapConcentrationContextRows(concentration),
     drawdownHeadlineMetrics: mapDrawdownHeadlineMetrics(drawdown),
     drawdownSupportingMetrics: mapDrawdownSupportingMetrics(drawdown),
@@ -1263,7 +1247,6 @@ function buildStateViewModel(
     snapshotSupportingMetrics: [],
     snapshotContextRows: [],
     concentrationIndicators: [],
-    concentrationScales: [],
     concentrationContextRows: [],
     drawdownHeadlineMetrics: [],
     drawdownSupportingMetrics: [],
@@ -1333,7 +1316,6 @@ function buildRiskWorkspaceOverview({
     reason?: string | null;
   }>;
 }): PerformanceRiskOverviewItem[] {
-  const concentrationPosture = buildConcentrationPostureModel(concentration);
   const supportabilityPosture = resolveRiskEvidencePosture(supportability, [
     summary.state,
     concentration.state,
@@ -1344,26 +1326,25 @@ function buildRiskWorkspaceOverview({
 
   return [
     {
-      key: "risk_posture",
-      label: "Risk posture",
+      key: "realized_volatility",
+      label: "Realized volatility",
       ...resolveRiskSnapshotOverview(summary),
     },
     {
-      key: "drawdown_posture",
-      label: "Drawdown posture",
-      value: resolveDrawdownOverviewPosture(drawdown),
-      tone: resolveDrawdownOverviewTone(drawdown),
+      key: "max_drawdown",
+      label: "Max drawdown",
+      ...resolveDrawdownOverviewEvidence(drawdown),
     },
     {
-      key: "concentration_posture",
-      label: "Concentration posture",
-      value: concentrationPosture.label,
-      tone: resolveConcentrationOverviewTone(concentrationPosture.state),
+      key: "largest_position",
+      label: "Largest position",
+      ...resolveConcentrationOverviewEvidence(concentration),
     },
     {
-      key: "evidence_posture",
-      label: "Evidence posture",
+      key: "source_coverage",
+      label: "Source coverage",
       value: supportabilityPosture.label,
+      support: supportabilityPosture.support,
       tone: supportabilityPosture.tone,
     },
   ];
@@ -1371,73 +1352,76 @@ function buildRiskWorkspaceOverview({
 
 function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pick<
   PerformanceRiskOverviewItem,
-  "value" | "tone"
+  "value" | "support" | "tone"
 > {
   const period = response.payload?.periods[0];
   if (!period) {
-    return { value: "Unavailable", tone: "warn" };
+    return {
+      value: "Unavailable",
+      support: "No source-confirmed volatility measure is available.",
+      tone: "warn",
+    };
   }
 
   const volatility = period.metrics.find((metric) => metric.key === "VOLATILITY");
   if (!volatility || volatility.state === "unavailable" || volatility.state === "blocked") {
-    return { value: "Unavailable", tone: "warn" };
+    return {
+      value: "Unavailable",
+      support: volatility?.reason ?? "No source-confirmed volatility measure is available.",
+      tone: "warn",
+    };
   }
 
-  const posture = resolveSnapshotPosture(volatility.value).label;
-  switch (posture) {
-    case "Contained":
-      return { value: posture, tone: "success" };
-    case "Moderate":
-      return { value: posture, tone: "default" };
-    case "Elevated":
-    case "High":
-      return { value: posture, tone: "warn" };
-    default:
-      return { value: "Unavailable", tone: "warn" };
-  }
+  return {
+    value: formatRiskPercentValue(volatility.value),
+    support: `${period.label} annualized source measure`,
+    tone: volatility.state === "partial" ? "warn" : "default",
+  };
 }
 
-function resolveDrawdownOverviewPosture(response: WorkbenchRiskDrawdownResponse) {
+function resolveDrawdownOverviewEvidence(response: WorkbenchRiskDrawdownResponse): Pick<
+  PerformanceRiskOverviewItem,
+  "value" | "support" | "tone"
+> {
   const period = response.payload?.periods[0];
   const summary = period?.summary;
-  if (!summary) {
-    return "Unavailable";
+  if (!summary || typeof summary.max_drawdown !== "number") {
+    return {
+      value: "Unavailable",
+      support: "No source-confirmed drawdown measure is available.",
+      tone: "warn",
+    };
   }
-  if (summary.is_recovered) {
-    return "Recovered";
-  }
-  const severity = resolveDrawdownSeverity(summary.max_drawdown).label;
-  return severity === "Contained" ? "Open" : "Underwater";
+  return {
+    value: formatRiskPercentValue(summary.max_drawdown),
+    support: summary.is_recovered
+      ? "Recovered before period end"
+      : "Still below the prior peak at period end",
+    tone: "default",
+  };
 }
 
-function resolveDrawdownOverviewTone(response: WorkbenchRiskDrawdownResponse) {
-  const posture = resolveDrawdownOverviewPosture(response);
-  switch (posture) {
-    case "Recovered":
-      return "success" as const;
-    case "Open":
-      return "default" as const;
-    case "Underwater":
-      return "warn" as const;
-    default:
-      return "warn" as const;
+function resolveConcentrationOverviewEvidence(
+  response: WorkbenchRiskConcentrationResponse,
+): Pick<PerformanceRiskOverviewItem, "value" | "support" | "tone"> {
+  const concentration = response.payload?.single_position_concentration;
+  if (!concentration) {
+    return {
+      value: "Unavailable",
+      support: "No source-confirmed largest position is available.",
+      tone: "warn",
+    };
   }
-}
 
-function resolveConcentrationOverviewTone(posture: RiskConcentrationPostureState | undefined) {
-  switch (posture) {
-    case "acceptable":
-      return "success" as const;
-    case "moderate":
-      return "default" as const;
-    case "elevated":
-    case "partial":
-      return "warn" as const;
-    case "high":
-      return "danger" as const;
-    default:
-      return "warn" as const;
-  }
+  const driver =
+    concentration.top_position_current.security_name ??
+    concentration.top_position_current.security_id ??
+    "Source-identified holding";
+  return {
+    value: formatRiskPercentValue(concentration.top_position_weight_current),
+    support: driver,
+    tone: "default",
+  };
 }
 
 function resolveRiskEvidencePosture(
@@ -1634,24 +1618,6 @@ function defineSnapshotMetric(metric: WorkbenchRiskMetric): string {
   }
 }
 
-function resolveSnapshotPosture(volatility: number | null | undefined): {
-  label: "Contained" | "Moderate" | "Elevated" | "High";
-} {
-  if (typeof volatility !== "number") {
-    return { label: "Moderate" };
-  }
-  if (volatility >= 16) {
-    return { label: "High" };
-  }
-  if (volatility >= 12) {
-    return { label: "Elevated" };
-  }
-  if (volatility >= 8) {
-    return { label: "Moderate" };
-  }
-  return { label: "Contained" };
-}
-
 function formatRiskExpectedShortfall(details: Record<string, unknown> | null | undefined): string | null {
   const expectedShortfall = details?.expected_shortfall;
   return typeof expectedShortfall === "number"
@@ -1691,7 +1657,7 @@ function mapConcentrationIndicators(
       value: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
       support: "Weight of the largest single holding",
       definition: "Weight of the single largest holding in the current portfolio.",
-      tone: resolveWeightIndicatorTone(payload.single_position_concentration.top_position_weight_current),
+      tone: "neutral",
     },
     {
       key: "top_issuer_weight",
@@ -1699,7 +1665,7 @@ function mapConcentrationIndicators(
       value: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
       support: "Aggregated exposure to the largest issuer group",
       definition: "Combined weight of all holdings mapped to the largest issuer group.",
-      tone: resolveWeightIndicatorTone(payload.issuer_concentration.top_issuer_weight_current),
+      tone: coverageTone,
     },
     {
       key: "top_n_cumulative",
@@ -1709,34 +1675,7 @@ function mapConcentrationIndicators(
       ),
       support: "Cumulative weight of the 10 largest holdings",
       definition: "Cumulative portfolio weight of the 10 largest holdings.",
-      tone: resolveWeightIndicatorTone(payload.single_position_concentration.top_n_cumulative_weight_current),
-    },
-  ];
-}
-
-function mapConcentrationScales(
-  response: WorkbenchRiskConcentrationResponse
-): PerformanceRiskConcentrationScale[] {
-  const payload = response.payload;
-  if (!payload) {
-    return [];
-  }
-  return [
-    {
-      key: "portfolio_hhi",
-      label: "Portfolio Concentration Index",
-      interpretationBand: resolveConcentrationBand(payload.portfolio_concentration.hhi_current),
-      markerPct: resolveConcentrationIndexMarker(payload.portfolio_concentration.hhi_current),
-      definition:
-        "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
-    },
-    {
-      key: "issuer_hhi",
-      label: "Issuer Concentration Index",
-      interpretationBand: resolveConcentrationBand(payload.issuer_concentration.hhi_current),
-      markerPct: resolveConcentrationIndexMarker(payload.issuer_concentration.hhi_current),
-      definition:
-        "Concentration index after holdings are grouped at issuer level using the configured enrichment and grouping policy.",
+      tone: "neutral",
     },
   ];
 }
@@ -2261,26 +2200,6 @@ function describeDrawdownHeadlineMetric(
   }
 }
 
-function resolveDrawdownSeverity(maxDrawdown: number | null | undefined): {
-  label: "Contained" | "Moderate" | "Elevated" | "Severe";
-} {
-  if (typeof maxDrawdown !== "number" || maxDrawdown >= 0) {
-    return { label: "Contained" };
-  }
-
-  const absoluteDepth = Math.abs(maxDrawdown);
-  if (absoluteDepth >= 0.15) {
-    return { label: "Severe" };
-  }
-  if (absoluteDepth >= 0.1) {
-    return { label: "Elevated" };
-  }
-  if (absoluteDepth >= 0.05) {
-    return { label: "Moderate" };
-  }
-  return { label: "Contained" };
-}
-
 function buildRelativeDrawdownDateRange(
   relative: NonNullable<WorkbenchRiskDrawdownResponse["payload"]>["periods"][number]["relative_to_benchmark"]
 ) {
@@ -2657,19 +2576,6 @@ function resolveConcentrationIndicatorTone(
   return "neutral" as const;
 }
 
-function resolveWeightIndicatorTone(value: number | null | undefined) {
-  if (typeof value !== "number") {
-    return "neutral" as const;
-  }
-  if (value >= 0.25) {
-    return "danger" as const;
-  }
-  if (value >= 0.15) {
-    return "warn" as const;
-  }
-  return "neutral" as const;
-}
-
 function formatEnumLabel(value: string | null | undefined) {
   if (!value) {
     return null;
@@ -2856,90 +2762,6 @@ function buildDrawdownDateRange(summary: WorkbenchRiskDrawdownSummary) {
   return `${formatDateValue(summary.max_drawdown_peak_date)} to ${formatDateValue(
     summary.max_drawdown_trough_date
   )}`;
-}
-
-function resolveConcentrationBand(value: number) {
-  if (value < 1000) {
-    return "Diversified";
-  }
-  if (value < 1500) {
-    return "Moderate";
-  }
-  if (value < 2000) {
-    return "Elevated";
-  }
-  return "High";
-}
-
-function resolveConcentrationIndexMarker(value: number) {
-  return Math.max(0, Math.min(100, (value / 2500) * 100));
-}
-
-function buildConcentrationPostureModel(response: WorkbenchRiskConcentrationResponse) {
-  const payload = response.payload;
-  if (!payload) {
-    return {
-      state: "partial" as const,
-      label: "Partial Coverage",
-      principalDriver: "both" as const,
-      summary: "Concentration is available only partially for the current selection.",
-    };
-  }
-  const topPosition = payload.single_position_concentration.top_position_weight_current;
-  const topIssuer = payload.issuer_concentration.top_issuer_weight_current;
-  const topTen = payload.single_position_concentration.top_n_cumulative_weight_current;
-  const coverage = payload.issuer_concentration.coverage_ratio_current;
-  const portfolioBand = resolveConcentrationBand(payload.portfolio_concentration.hhi_current);
-  const issuerBand = resolveConcentrationBand(payload.issuer_concentration.hhi_current);
-  const principalDriver =
-    topIssuer - topPosition >= 0.03
-      ? ("issuer" as const)
-      : topPosition - topIssuer >= 0.03
-        ? ("position" as const)
-        : ("both" as const);
-
-  if (coverage < 0.99) {
-    return {
-      state: "partial" as const,
-      label: "Partial",
-      principalDriver,
-      summary:
-        "Concentration is visible, but issuer interpretation is only partial.",
-    };
-  }
-  if (topTen >= 0.9 || topPosition >= 0.2 || topIssuer >= 0.25) {
-    return {
-      state: "high" as const,
-      label: "High",
-      principalDriver,
-      summary: "Concentration is high and is driven by a small number of holdings.",
-    };
-  }
-  if (topTen >= 0.75 || topPosition >= 0.15 || topIssuer >= 0.2) {
-    return {
-      state: "elevated" as const,
-      label: "Elevated",
-      principalDriver,
-      summary:
-        portfolioBand === "Elevated" && issuerBand === "Elevated"
-          ? "Both position and issuer concentration are materially elevated."
-          : "Concentration is elevated and is driven by a limited number of holdings.",
-    };
-  }
-  if (topTen >= 0.6) {
-    return {
-      state: "moderate" as const,
-      label: "Moderate",
-      principalDriver,
-      summary: "Concentration is moderate and should be reviewed against diversification expectations.",
-    };
-  }
-  return {
-    state: "acceptable" as const,
-    label: "Acceptable",
-    principalDriver,
-    summary: "Concentration appears acceptable for the current selection.",
-  };
 }
 
 function resolveModuleState(state: WorkbenchRiskModuleState): PerformanceRiskState {

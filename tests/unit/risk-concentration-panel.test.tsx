@@ -20,14 +20,14 @@ function buildRiskViewModel() {
 }
 
 describe("RiskConcentrationPanel", () => {
-  it("uses compact shared metric cards for concentration first-read indicators", () => {
+  it("uses compact exact measures without a browser-authored severity scale", () => {
     const viewModel = buildRiskViewModel();
     const { container } = render(<RiskConcentrationPanel viewModel={viewModel} />);
 
     expect(screen.getByRole("heading", { name: "Concentration" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk concentration executive summary")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk concentration headline metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Risk concentration scale")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
     expect(
       container.querySelectorAll(
         ".performance-risk-concentration-indicator-grid .performance-risk-metric-card-compact"
@@ -39,20 +39,11 @@ describe("RiskConcentrationPanel", () => {
         name: "Portfolio Concentration Index: Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
       }).length
     ).toBeGreaterThan(0);
-    expect(screen.queryByRole("heading", { name: "Concentration scale" })).not.toBeInTheDocument();
-    const scaleSection = screen.getByLabelText("Risk concentration scale");
-    expect(scaleSection).toHaveClass("performance-risk-concentration-scale");
-    expect(container.querySelector(".performance-risk-module-body-context-only")).toBeTruthy();
-    expect(
-      container.querySelectorAll(".performance-risk-concentration-scale-card")
-    ).toHaveLength(2);
-    expect(container.querySelectorAll(".performance-risk-concentration-scale-legend")).toHaveLength(1);
-    expect(
-      container.querySelectorAll(".performance-risk-concentration-scale-card .performance-risk-concentration-scale-legend")
-    ).toHaveLength(0);
-    expect(
-      container.querySelectorAll(".performance-risk-concentration-scale-legend .ui-text-metadata")
-    ).toHaveLength(4);
+    expect(container.querySelector(".performance-risk-module-body-context-only")).toBeNull();
+    expect(container.querySelectorAll(".performance-risk-concentration-scale-card")).toHaveLength(0);
+    expect(screen.getByText("1,260")).toBeInTheDocument();
+    expect(screen.getByText("18.40%")).toBeInTheDocument();
+    expect(screen.queryByText(/Diversified|Moderate|Elevated|High|Acceptable/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Position-level concentration is/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Issuer-level concentration remains/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Driver analysis" })).not.toBeInTheDocument();
