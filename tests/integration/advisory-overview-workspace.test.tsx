@@ -373,6 +373,19 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(screen.getByRole("button", { name: "Next proposals" })).toBeEnabled();
   });
 
+  it("keeps active proposal work ahead of summary and lifecycle orientation in DOM order", async () => {
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    const decision = await screen.findByTestId("advisory-decision-brief");
+    const worklist = screen.getByTestId("advisory-priority-worklist");
+    const summary = screen.getByLabelText("Advisory overview summary");
+    const lifecycle = screen.getByTestId("advisory-lifecycle-summary");
+
+    expect(decision.nextElementSibling).toBe(worklist);
+    expect(worklist.nextElementSibling).toBe(summary);
+    expect(summary.nextElementSibling).toBe(lifecycle);
+  });
+
   it("keeps restricted proposal posture behind the source entitlement boundary", async () => {
     listProposalsMock.mockRejectedValueOnce(
       new Error("Proposal list failed (403): forbidden")

@@ -38,30 +38,11 @@
   gap: 8px;
 }
 
-.metricTile {
+.summaryMetric {
   min-width: 0;
-  border: 1px solid var(--border);
   border-left-width: 3px;
-  border-radius: 6px;
-  background: var(--panel);
-  padding: 10px 12px;
-}
-
-.metricTile strong {
-  display: block;
-  margin-top: 3px;
-  color: var(--text);
-  font-size: 1.35rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
-}
-
-.metricTile span:last-child {
-  display: block;
-  margin-top: 4px;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  line-height: 1.35;
+  min-height: 0;
+  padding: 9px 11px;
 }
 
 .warn {
@@ -290,7 +271,6 @@
 
   .priorityTable,
   .priorityTable tbody,
-  .priorityTable tr,
   .priorityTable td {
     display: block;
     width: 100%;
@@ -312,6 +292,8 @@
   }
 
   .priorityTable tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -327,8 +309,17 @@
   }
 
   .priorityTable td:first-child {
+    grid-column: 1 / -1;
     border-top: 0;
     background: #fbfcfd;
+  }
+
+  .priorityTable td:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .priorityTable td:nth-child(2) {
+    border-right: 1px solid var(--border);
   }
 
   .priorityTable td:not(:first-child)::before {
@@ -354,10 +345,23 @@
   }
 }
 
-@media (max-width: 520px) {
-  .summaryGrid,
+@media (max-width: 400px) {
   .lifecycleGrid {
     grid-template-columns: 1fr;
+  }
+
+  .priorityTable tr {
+    grid-template-columns: 1fr;
+  }
+
+  .priorityTable td,
+  .priorityTable td:first-child,
+  .priorityTable td:last-child {
+    grid-column: 1;
+  }
+
+  .priorityTable td:nth-child(2) {
+    border-right: 0;
   }
 
   .lifecycleStage {

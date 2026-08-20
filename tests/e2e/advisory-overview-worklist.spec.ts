@@ -5,7 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const evidenceDirectory = path.resolve("output", "issue-729");
+const evidenceDirectory = path.resolve("output", "issue-731");
+const recoveryEvidenceDirectory = path.resolve("output", "issue-729");
 const navigationEvidenceDirectory = path.resolve("output", "playwright");
 
 async function mockAdvisoryOverview(page: Page) {
@@ -77,6 +78,52 @@ for (const viewport of viewports) {
       "Counts and ranking apply only to proposals visible in this source window"
     );
     await expect(page.getByText("Advisory Journey", { exact: true })).toHaveCount(0);
+
+    const decision = page.getByTestId("advisory-decision-brief");
+    const worklist = page.getByTestId("advisory-priority-worklist");
+    const summary = page.getByLabel("Advisory overview summary");
+    const lifecycle = page.getByTestId("advisory-lifecycle-summary");
+    const [decisionBox, worklistBox, summaryBox, lifecycleBox] = await Promise.all([
+      decision.boundingBox(),
+      worklist.boundingBox(),
+      summary.boundingBox(),
+      lifecycle.boundingBox(),
+    ]);
+    expect(decisionBox).not.toBeNull();
+    expect(worklistBox).not.toBeNull();
+    expect(summaryBox).not.toBeNull();
+    expect(lifecycleBox).not.toBeNull();
+    expect(worklistBox!.y).toBeGreaterThan(decisionBox!.y);
+    expect(summaryBox!.y).toBeGreaterThan(worklistBox!.y);
+    expect(lifecycleBox!.y).toBeGreaterThan(summaryBox!.y);
+
+    const metricTops = await summary.locator(".workbench-summary-metric-card").evaluateAll(
+      (cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top)),
+    );
+    expect(metricTops).toHaveLength(4);
+    if (viewport.width > 1280) {
+      expect(new Set(metricTops).size).toBe(1);
+    } else {
+      expect(metricTops[0]).toBe(metricTops[1]);
+      expect(metricTops[2]).toBe(metricTops[3]);
+      expect(metricTops[2]).toBeGreaterThan(metricTops[0]);
+    }
+
+    const workflowContext = page.getByText("Workflow context", { exact: true });
+    const sourceBoundary = page.getByText("Source and scope", { exact: true });
+    await expect(sourceBoundary).toBeVisible();
+    if (viewport.width <= 1100) {
+      await expect(workflowContext).not.toBeVisible();
+    } else {
+      await expect(workflowContext).toBeVisible();
+    }
+
+    const priorityLink = worklist.getByRole("link", { name: "Technology concentration trim" });
+    await priorityLink.focus();
+    await expect(priorityLink).toBeFocused();
+    const lifecycleLink = lifecycle.getByRole("link", { name: /Identify/ });
+    await lifecycleLink.focus();
+    await expect(lifecycleLink).toBeFocused();
 
     const navigation = page.getByRole("navigation", {
       name: "Workbench screen navigation",
@@ -151,6 +198,7 @@ for (const viewport of viewports) {
       await expect(currentView).toBeFocused();
       await expect(navigation).not.toBeVisible();
     }
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
     await page.screenshot({
       path: path.join(evidenceDirectory, `advisory-overview-${viewport.name}.png`),
       fullPage: true,
@@ -273,9 +321,9 @@ test("recovers Advisory Overview from the Gateway without losing focus", async (
   );
   expect(hasHorizontalPageOverflow).toBeFalsy();
 
-  await mkdir(evidenceDirectory, { recursive: true });
+  await mkdir(recoveryEvidenceDirectory, { recursive: true });
   await page.screenshot({
-    path: path.join(evidenceDirectory, "advisory-overview-source-recovery-desktop.png"),
+    path: path.join(recoveryEvidenceDirectory, "advisory-overview-source-recovery-desktop.png"),
     fullPage: true,
     animations: "disabled",
   });
