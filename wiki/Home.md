@@ -30,6 +30,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
 - Review-controlled portfolio, position, activity, reference-data, price, and file publication:
   [Portfolio Intake](Portfolio-Intake-Screen-Guide)
+- Portfolio-scoped proposal priorities, lifecycle handoffs, source-window truth, and recovery:
+  [Advisory Overview](Advisory-Overview-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -98,6 +100,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
+- [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

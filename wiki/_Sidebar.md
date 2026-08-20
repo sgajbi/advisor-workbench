@@ -11,6 +11,7 @@
 - [Income And Activity](Income-And-Activity-Screen-Guide)
 - [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide)
 - [Portfolio Intake](Portfolio-Intake-Screen-Guide)
+- [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
 - [Performance Analysis](Performance-Analysis-Screen-Guide)
 - [Risk Review](Risk-Review-Screen-Guide)

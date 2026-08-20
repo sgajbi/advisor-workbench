@@ -10,10 +10,10 @@ to find its operating guide.
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
 Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Portfolio Allocation,
-Performance Summary,
+Advisory Overview, Performance Summary,
 Performance Analysis, Risk Review, Performance Evidence, Performance Advisor Brief, Report Centre,
-and Data Product Catalogue are the 15 surfaces that have passed the complete guide standard. The
-remaining 21 dedicated guides are explicit work under
+and Data Product Catalogue are the 16 surfaces that have passed the complete guide standard. The
+remaining 20 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -119,7 +119,7 @@ describe implemented validation surfaces rather than a promise of unrestricted p
 
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
-| Advisory Overview | `/recommendations?mode=overview` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| [Advisory Overview](Advisory-Overview-Screen-Guide) | `/recommendations?mode=overview` | Capability-disabled | Guide available | Gateway and Advise |
 | Advisor Cockpit | `/recommendations?mode=cockpit` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Advisory Copilot | `/recommendations?mode=copilot` | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Lotus AI |
 | Opportunities And Ideas | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway and Lotus Idea |
