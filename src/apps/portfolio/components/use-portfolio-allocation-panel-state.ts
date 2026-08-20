@@ -81,6 +81,10 @@ export function usePortfolioAllocationPanelState({
       buildInitialAllocationResolutionState(allocationSourceKey, allocationViews),
     );
   const coverageRequestSequence = useRef(0);
+  const selectedAllocationRef = useRef(selectedAllocation);
+  useEffect(() => {
+    selectedAllocationRef.current = selectedAllocation;
+  }, [selectedAllocation]);
   const activeAllocationState =
     allocationState.sourceKey === allocationSourceKey
       ? allocationState
@@ -229,7 +233,6 @@ export function usePortfolioAllocationPanelState({
   async function recheckLookThroughCoverage() {
     const requestSequence = ++coverageRequestSequence.current;
     setHoveredBucket(null);
-    onSelectionChange(null);
     setAllocationState((current) =>
       current.sourceKey === allocationSourceKey
         ? {
@@ -250,6 +253,17 @@ export function usePortfolioAllocationPanelState({
     });
     if (requestSequence !== coverageRequestSequence.current) {
       return;
+    }
+    const currentSelection = selectedAllocationRef.current;
+    const nextDirectAllocationViews = resolveDirectAllocationViews(
+      activeAllocationState,
+      response,
+    );
+    if (
+      currentSelection &&
+      !includesAllocationSelection(nextDirectAllocationViews, currentSelection)
+    ) {
+      onSelectionChange(null);
     }
     setAllocationState((current) =>
       current.sourceKey === allocationSourceKey
@@ -317,9 +331,7 @@ function applyLookThroughCoverageResponse(
     response.look_through ?? null,
   );
   if (!supportsExpandedLookThrough) {
-    const directAllocationViews = response.views.length
-      ? response.views
-      : current.directAllocationViews;
+    const directAllocationViews = resolveDirectAllocationViews(current, response);
     return {
       ...current,
       directAllocationViews,
@@ -339,4 +351,32 @@ function applyLookThroughCoverageResponse(
       lookThrough: response.look_through ?? null,
     },
   };
+}
+
+function resolveDirectAllocationViews(
+  current: AllocationResolutionState,
+  response: {
+    views: PortfolioAllocationView[];
+    look_through?: PortfolioAllocationLookThrough | null;
+  } | null,
+): PortfolioAllocationView[] {
+  if (
+    !response ||
+    isExpandedLookThroughSupported(response.look_through ?? null) ||
+    !response.views.length
+  ) {
+    return current.directAllocationViews;
+  }
+  return response.views;
+}
+
+function includesAllocationSelection(
+  views: PortfolioAllocationView[],
+  selection: PortfolioAllocationSelection,
+): boolean {
+  return views.some(
+    (view) =>
+      view.dimension === selection.dimension &&
+      view.buckets.some((bucket) => bucket.bucket === selection.bucket),
+  );
 }
