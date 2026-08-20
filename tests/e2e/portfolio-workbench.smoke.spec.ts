@@ -25,6 +25,7 @@ test.beforeAll(async () => {
   const scenario = process.env.PORTFOLIO_E2E_FIXTURE;
   if (
     scenario !== 'cashflow' &&
+    scenario !== 'allocation-recovery' &&
     scenario !== 'income-activity' &&
     scenario !== 'shell-unavailable' &&
     scenario !== 'positions-status' &&
@@ -850,6 +851,123 @@ test.describe('Portfolio workbench smoke', () => {
         page.getByRole('button', { name: /^Look-through unavailable for current portfolio snapshot$/i })
       ).toBeDisabled();
     }
+  });
+
+  test('allocation keeps direct evidence usable and recovers expanded exposure coverage', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'allocation-recovery',
+      'Owned Allocation recovery fixture is required.',
+    );
+    const browserRuntime = observeBrowserRuntimeFailures(page);
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const session = await openAllocationPortfolio(page, request);
+    expect(session.available).toBe(true);
+
+    await expect(page.getByText('Expanded exposure could not be confirmed')).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: 'Expanded exposure coverage could not be confirmed',
+      }),
+    ).toBeDisabled();
+    await expect(page.getByText('7,000,000 USD', { exact: true })).toBeVisible();
+    await expect.poll(() => fixtureGateway?.getAllocationRequestCount()).toBe(1);
+
+    const firstDirectExposure = page.locator('.portfolio-allocation-ranked-row').first();
+    await firstDirectExposure.focus();
+    await firstDirectExposure.press('Enter');
+    await expect(page.getByRole('heading', { name: /^Contributing holdings$/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Clear filter$/i })).toBeVisible();
+    await page.getByRole('button', { name: /^Clear filter$/i }).click();
+
+    const recheckCoverage = page.getByRole('button', { name: 'Recheck exposure coverage' });
+    await recheckCoverage.focus();
+    await recheckCoverage.click();
+    await expect(recheckCoverage).toBeFocused();
+    await expect(recheckCoverage).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByText('Checking expanded exposure', { exact: true })).toBeVisible();
+    await expect(page.getByText('Source coverage confirmed', { exact: true })).toBeVisible();
+    await expect(recheckCoverage).toBeFocused();
+    await expect(recheckCoverage).toHaveAttribute('aria-disabled', 'false');
+    await expect.poll(() => fixtureGateway?.getAllocationRequestCount()).toBe(2);
+    const retryFocusStable = await recheckCoverage.evaluate(
+      (element) => document.activeElement === element,
+    );
+
+    await page.getByRole('button', { name: 'Show expanded exposure' }).click();
+    await expect(page.getByRole('button', { name: 'Show direct holdings' })).toBeVisible();
+    await expect(page.getByText('Region • 3 exposures • Expanded exposure')).toBeVisible();
+    await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
+    await expect(
+      page.getByText(/Expanded exposure contributors require source-backed look-through detail/i),
+    ).toBeVisible();
+
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    const viewportEvidence = [];
+    let compactChartSuppressed = false;
+    let compactExactValuesVisible = false;
+    for (const viewport of [
+      { width: 1440, height: 1000 },
+      { width: 1024, height: 1000 },
+      { width: 519, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(page.getByRole('heading', { name: /^Allocation$/i })).toBeVisible();
+      await expect(page.getByText('Source coverage confirmed', { exact: true })).toBeVisible();
+      const measurements = await measureViewportEvidence(page);
+      expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
+        measurements.document.clientWidth + 1,
+      );
+      if (viewport.width === 519) {
+        compactChartSuppressed = await page
+          .locator('[class*="portfolio-allocation-panel_visual"]')
+          .evaluate((element) => getComputedStyle(element).display === 'none');
+        compactExactValuesVisible = await page
+          .getByText('7,250,000 USD', { exact: true })
+          .isVisible();
+        expect(compactChartSuppressed).toBe(true);
+        expect(compactExactValuesVisible).toBe(true);
+      }
+      viewportEvidence.push({ viewport, measurements });
+
+      if (evidenceDirectory && (viewport.width === 1440 || viewport.width === 519)) {
+        await mkdir(evidenceDirectory, { recursive: true });
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.screenshot({
+          path: resolve(evidenceDirectory, `allocation-recovered-${viewport.width}px.png`),
+          fullPage: true,
+        });
+      }
+    }
+
+    const browserRuntimeFailures = browserRuntime.snapshot();
+    if (evidenceDirectory) {
+      await writeFile(
+        resolve(evidenceDirectory, 'allocation-recovery-proof.json'),
+        `${JSON.stringify(
+          {
+            portfolioId: session.portfolioId,
+            initialCoverageState: 'failed',
+            retainedEvidence: 'direct holdings',
+            recoveredCoverageState: 'expanded exposure available',
+            allocationRequestCount: fixtureGateway?.getAllocationRequestCount(),
+            retryFocusStable,
+            expandedContributorDetail: 'unavailable',
+            compactChartSuppressed,
+            compactExactValuesVisible,
+            viewportEvidence,
+            browserRuntimeFailures,
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+    }
+    await browserRuntime.assertStylesAreHeadManaged();
+    browserRuntime.assertClean();
   });
 
   test('positions route exposes complete booked holdings and keyboard review', async ({ page, request }) => {

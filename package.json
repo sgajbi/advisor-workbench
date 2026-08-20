@@ -54,6 +54,7 @@
     "test:e2e:performance:evidence-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"exception-first calculation assurance\"",
     "test:e2e:performance:evidence-period-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs unknown-period --grep \"fails closed on an unfamiliar source-confirmed period\"",
     "test:e2e:portfolio:cashflow": "node scripts/testing/run-portfolio-smoke-scenario.mjs cashflow",
+    "test:e2e:portfolio:allocation-recovery": "node scripts/testing/run-portfolio-smoke-scenario.mjs allocation-recovery",
     "test:e2e:portfolio:income-activity": "node scripts/testing/run-portfolio-smoke-scenario.mjs income-activity",
     "test:e2e:portfolio:review-matrix": "node scripts/testing/run-portfolio-smoke-scenario.mjs review-matrix",
     "test:e2e:portfolio:positions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs positions-status",

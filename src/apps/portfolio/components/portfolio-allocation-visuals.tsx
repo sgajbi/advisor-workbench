@@ -11,6 +11,7 @@ import type {
   PortfolioAllocationSelection,
   PortfolioAllocationView,
 } from "../types";
+import styles from "./portfolio-allocation-panel.module.css";
 
 function handleInteractiveKeyPress(
   event: KeyboardEvent<Element>,
@@ -311,7 +312,7 @@ export function AllocationRankedList({
   onSelect: (bucket: string) => void;
 }) {
   return (
-    <div className="portfolio-allocation-ranked">
+    <div className={`portfolio-allocation-ranked ${styles.ranked}`}>
       <div className="portfolio-allocation-ranked-header">
         <span>Dimension</span>
         <span className="portfolio-allocation-ranked-number">

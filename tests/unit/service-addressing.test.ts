@@ -136,6 +136,15 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
   });
 
+  it("allows only the exact process-owned Portfolio allocation-recovery fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18120/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "portfolio";
+    process.env.PORTFOLIO_E2E_FIXTURE = "allocation-recovery";
+    process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18120");
+  });
+
   it("allows only the exact process-owned Portfolio income-activity fixture loopback", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:18120/";
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "portfolio";
