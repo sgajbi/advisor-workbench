@@ -190,11 +190,17 @@ describe("AdvisoryOverviewWorkspace", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
 
     expect(await screen.findByText("Portfolio B liquidity review")).toBeInTheDocument();
+    expect(
+      screen.getByText("Latest advisory priorities confirmed through Gateway.")
+    ).toBeInTheDocument();
     expect(listProposalsMock).toHaveBeenCalledTimes(4);
 
     resolvePortfolioARetry(defaultProposalList);
     await waitFor(() => {
       expect(screen.getByText("Portfolio B liquidity review")).toBeInTheDocument();
+      expect(
+        screen.getByText("Latest advisory priorities confirmed through Gateway.")
+      ).toBeInTheDocument();
     });
   });
 

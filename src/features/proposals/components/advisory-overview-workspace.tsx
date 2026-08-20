@@ -118,10 +118,14 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
     const requestedIdentity = queryIdentity;
     setSourceRefreshOutcome({ queryIdentity: requestedIdentity, state: "pending" });
     const result = await proposalQuery.refetch({ cancelRefetch: true });
-    setSourceRefreshOutcome({
-      queryIdentity: requestedIdentity,
-      state: result.error ? "failed" : "confirmed",
-    });
+    setSourceRefreshOutcome((currentOutcome) =>
+      currentOutcome && currentOutcome.queryIdentity !== requestedIdentity
+        ? currentOutcome
+        : {
+            queryIdentity: requestedIdentity,
+            state: result.error ? "failed" : "confirmed",
+          }
+    );
   }
 
   const showRefreshAction =
