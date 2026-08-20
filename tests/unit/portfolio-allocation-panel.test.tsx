@@ -294,6 +294,7 @@ describe("PortfolioAllocationPanel", () => {
 
   it("keeps direct allocation usable and recovers source coverage without moving focus", async () => {
     let allocationRequestCount = 0;
+    const onSelectionChange = vi.fn();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
@@ -332,8 +333,8 @@ describe("PortfolioAllocationPanel", () => {
         baseCurrency="USD"
         asOfDate="2026-03-28"
         reportingCurrency="USD"
-        selectedAllocation={null}
-        onSelectionChange={() => {}}
+        selectedAllocation={{ dimension: "asset_class", bucket: "Equities" }}
+        onSelectionChange={onSelectionChange}
       />,
     );
 
@@ -348,10 +349,16 @@ describe("PortfolioAllocationPanel", () => {
     ).toBeDisabled();
 
     const recheck = screen.getByRole("button", { name: "Recheck exposure coverage" });
+    const selectedExposure = screen.getByRole("button", {
+      name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing holdings.",
+    });
+    expect(selectedExposure).toHaveClass("portfolio-allocation-ranked-row-selected");
     recheck.focus();
     fireEvent.click(recheck);
     expect(recheck).toHaveAttribute("aria-disabled", "true");
     expect(document.activeElement).toBe(recheck);
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    expect(selectedExposure).toHaveClass("portfolio-allocation-ranked-row-selected");
 
     await waitFor(() => expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument());
     expect(
@@ -360,7 +367,75 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.activeElement).toBe(recheck);
     expect(recheck).toHaveAttribute("aria-disabled", "false");
     expect(allocationRequestCount).toBe(2);
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    expect(selectedExposure).toHaveClass("portfolio-allocation-ranked-row-selected");
     expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled();
+  });
+
+  it("clears a direct exposure only after refreshed source evidence invalidates it", async () => {
+    let allocationRequestCount = 0;
+    let resolveRecheck: ((response: Response) => void) | undefined;
+    const recheckResponse = new Promise<Response>((resolve) => {
+      resolveRecheck = resolve;
+    });
+    const onSelectionChange = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        allocationRequestCount += 1;
+        if (allocationRequestCount === 1) {
+          return jsonResponse({ code: "allocation_source_unavailable" }, 503);
+        }
+        return recheckResponse;
+      }),
+    );
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={{ dimension: "asset_class", bucket: "Equities" }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    const recheck = screen.getByRole("button", { name: "Recheck exposure coverage" });
+    fireEvent.click(recheck);
+
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    resolveRecheck?.(
+      jsonResponse({
+        reporting_currency: "USD",
+        look_through: {
+          requested_mode: "prefer_look_through",
+          effective_mode: "direct_only",
+          applied: false,
+        },
+        views: [
+          {
+            dimension: "asset_class",
+            buckets: [
+              {
+                bucket: "Fixed Income",
+                position_count: 5,
+                market_value_base: 640000,
+                weight_pct: 51.2,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() => expect(onSelectionChange).toHaveBeenCalledWith(null));
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Direct holdings only")).toBeInTheDocument();
   });
 
   it("keeps source-confirmed empty expanded coverage distinct from unsupported coverage", async () => {
@@ -414,6 +489,7 @@ describe("PortfolioAllocationPanel", () => {
         code: "unexpected_success_envelope",
       }),
     );
+    const onSelectionChange = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     render(
@@ -423,8 +499,8 @@ describe("PortfolioAllocationPanel", () => {
         baseCurrency="USD"
         asOfDate="2026-03-28"
         reportingCurrency="USD"
-        selectedAllocation={null}
-        onSelectionChange={() => {}}
+        selectedAllocation={{ dimension: "asset_class", bucket: "Equities" }}
+        onSelectionChange={onSelectionChange}
       />,
     );
 
@@ -441,6 +517,7 @@ describe("PortfolioAllocationPanel", () => {
       expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
     );
     expect(recheck).toHaveAttribute("aria-disabled", "false");
+    expect(onSelectionChange).not.toHaveBeenCalled();
   });
 
   it("does not let a superseded portfolio response replace newer coverage evidence", async () => {
