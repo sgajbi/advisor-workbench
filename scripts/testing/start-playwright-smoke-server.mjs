@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { cpSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 
@@ -7,6 +7,10 @@ import { cleanNextBuildArtifacts } from "../quality/clean-next-build-artifacts.m
 const projectRoot = process.cwd();
 const nextCli = resolve(projectRoot, "node_modules", "next", "dist", "bin", "next");
 const validatedBuildMarker = resolve(projectRoot, ".next", "BUILD_ID");
+const standaloneRoot = resolve(projectRoot, ".next", "standalone");
+const standaloneServerPath = resolve(standaloneRoot, "server.js");
+const generatedStaticAssets = resolve(projectRoot, ".next", "static");
+const standaloneStaticAssets = resolve(standaloneRoot, ".next", "static");
 const reuseValidatedBuild = process.env.PLAYWRIGHT_REUSE_VALIDATED_BUILD === "1";
 const playwrightPortValue = process.env.PLAYWRIGHT_PORT?.trim() || "3000";
 
@@ -46,20 +50,33 @@ function runNext(args) {
 }
 
 function startServer() {
+  if (!existsSync(standaloneServerPath)) {
+    throw new Error(
+      "Playwright smoke requires .next/standalone/server.js from a successful production build.",
+    );
+  }
+  if (!existsSync(generatedStaticAssets)) {
+    throw new Error(
+      "Playwright smoke requires generated .next/static assets from a successful production build.",
+    );
+  }
+
+  cpSync(generatedStaticAssets, standaloneStaticAssets, {
+    recursive: true,
+    force: true,
+  });
+
   const child = spawn(
     process.execPath,
-    [
-      nextCli,
-      "start",
-      "--hostname",
-      "127.0.0.1",
-      "--port",
-      String(playwrightPort),
-    ],
+    [standaloneServerPath],
     {
-      cwd: projectRoot,
+      cwd: standaloneRoot,
       stdio: "inherit",
-      env: process.env,
+      env: {
+        ...process.env,
+        HOSTNAME: "127.0.0.1",
+        PORT: String(playwrightPort),
+      },
       shell: false,
     },
   );
@@ -81,7 +98,7 @@ function startServer() {
       }
       rejectServer(
         new Error(
-          `next start exited with ${
+          `standalone Workbench server exited with ${
             signal ? `signal ${signal}` : `code ${code ?? "unknown"}`
           }`,
         ),
