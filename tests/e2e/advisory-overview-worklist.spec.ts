@@ -54,6 +54,7 @@ async function mockAdvisoryOverview(page: Page) {
 
 const viewports = [
   { name: "desktop", width: 1440, height: 1000 },
+  { name: "intermediate", width: 1150, height: 1050 },
   { name: "tablet", width: 1024, height: 1100 },
   { name: "compact", width: 519, height: 1000 },
 ] as const;
@@ -112,7 +113,7 @@ for (const viewport of viewports) {
     const workflowContext = page.getByText("Workflow context", { exact: true });
     const sourceBoundary = page.getByText("Source and scope", { exact: true });
     await expect(sourceBoundary).toBeVisible();
-    if (viewport.width <= 1100) {
+    if (viewport.width <= 1200) {
       await expect(workflowContext).not.toBeVisible();
     } else {
       await expect(workflowContext).toBeVisible();

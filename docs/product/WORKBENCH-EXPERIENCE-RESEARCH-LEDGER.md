@@ -5220,7 +5220,8 @@ sources:
    tablet/standard-phone columns, and one column only below 400 pixels.
 5. Add one typed proposal-shell responsive priority. Context remains persistent by default;
    Advisory Overview explicitly marks its duplicated queue posture supplementary.
-6. At 1100 pixels and below, omit only the supplementary workflow panel. Keep source-and-scope
+6. At the shared 1200-pixel shell stacking boundary and below, omit only the supplementary workflow
+   panel. Keep source-and-scope
    evidence visible and retain all source recovery, permission, pagination, and partial-window
    behavior.
 7. Preserve one semantic table DOM and adapt its cells into compact review records without cloning
@@ -5244,7 +5245,7 @@ Workbench #731 owns this Workbench-only slice. Focused model, rail, and workspac
 persistence, explicit supplementary priority, source-boundary retention, and decision → worklist →
 measure → lifecycle DOM order. The optimized-production journey measures that rendered order,
 metric row geometry, desktop/compact context visibility, keyboard focus, source-boundary visibility,
-and page overflow at 1440, 1024, and 519 pixels. Reviewed evidence is stored under
+and page overflow at 1440, 1150, 1024, and 519 pixels. Reviewed evidence is stored under
 `output/issue-731/`. The Advisory Overview guide, repository context, research ledger, and review
 ledger change. Gateway/API/OpenAPI, source calculation, dependencies, global CSS, runtime topology,
 identity, and entitlement truth do not change. Protected PR, exact-main, wiki publication, and
