@@ -177,6 +177,10 @@ function AcknowledgementControl({
   onAcknowledge: (row: AdvisorCockpitActionRow) => void;
 }) {
   const presentation = getAcknowledgementPresentation(row, transaction);
+  const interactionBlocked =
+    !row.canAcknowledge || transactionPending || !evidenceConfirmed;
+  const preserveSelectedFocus =
+    presentation.isSelected && transaction.status !== "idle";
 
   return (
     <div
@@ -189,10 +193,13 @@ function AcknowledgementControl({
     >
       <ActionButton
         priority="secondary"
-        disabled={
-          !row.canAcknowledge || transactionPending || !evidenceConfirmed
-        }
-        onClick={() => onAcknowledge(row)}
+        aria-disabled={interactionBlocked || undefined}
+        disabled={interactionBlocked && !preserveSelectedFocus}
+        onClick={() => {
+          if (!interactionBlocked) {
+            onAcknowledge(row);
+          }
+        }}
       >
         {presentation.label}
       </ActionButton>

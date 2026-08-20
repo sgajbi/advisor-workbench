@@ -193,7 +193,8 @@
   width: 1px;
 }
 
-@container advisor-action-worklist (min-width: 50rem) {
+/* Seven decision columns need this capacity before comparison beats complete records. */
+@container advisor-action-worklist (min-width: 58rem) {
   .tablePresentation {
     display: block;
   }

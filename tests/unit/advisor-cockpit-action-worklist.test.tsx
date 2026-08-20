@@ -67,11 +67,13 @@ describe("AdvisorCockpitActionWorklist", () => {
   });
 
   it("applies an active transaction only to the submitted row", () => {
+    const onAcknowledge = vi.fn();
     renderWorklist({
       transaction: {
         actionItemId: "action-policy",
         status: "recording",
       },
+      onAcknowledge,
     });
 
     const compact = screen.getByRole("list", {
@@ -84,7 +86,15 @@ describe("AdvisorCockpitActionWorklist", () => {
       name: "Liquidity evidence review",
     });
 
-    expect(within(policy).getByRole("button", { name: "Recording..." })).toBeDisabled();
+    const selectedButton = within(policy).getByRole("button", {
+      name: "Recording...",
+    });
+    expect(selectedButton).toHaveAttribute("aria-disabled", "true");
+    expect(selectedButton).not.toHaveAttribute("disabled");
+    selectedButton.focus();
+    expect(selectedButton).toHaveFocus();
+    fireEvent.click(selectedButton);
+    expect(onAcknowledge).not.toHaveBeenCalled();
     expect(within(policy).getByRole("status")).toHaveTextContent(
       "Recording this review in the source workflow.",
     );

@@ -21,7 +21,7 @@
 .metricGrid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
 }
 
 .metricTile {
@@ -44,7 +44,7 @@
 .preparationGrid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .supportabilityItem,
@@ -80,7 +80,7 @@
 .operatingBoundaryGrid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   margin-top: 8px;
 }
 
@@ -111,7 +111,7 @@
 .supportDetails dl {
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   margin: 10px 0 0;
 }
 
@@ -136,13 +136,5 @@
 @media (max-width: 900px) {
   .decisionPanel {
     flex-direction: column;
-  }
-
-  .metricGrid,
-  .supportabilityGrid,
-  .preparationGrid,
-  .operatingBoundaryGrid,
-  .supportDetails dl {
-    grid-template-columns: 1fr;
   }
 }
