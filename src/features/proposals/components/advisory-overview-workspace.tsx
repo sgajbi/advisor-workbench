@@ -70,8 +70,15 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
     isPermissionBlocked: isWorkbenchPermissionBlockedError(proposalQuery.error),
   });
   const queryIdentity = `${portfolioId}:${sourceWindow.cursor ?? "first"}`;
-  const refreshState =
+  const recordedRefreshState =
     sourceRefreshOutcome?.queryIdentity === queryIdentity ? sourceRefreshOutcome.state : null;
+  const refreshState =
+    recordedRefreshState === "failed"
+    && proposalQuery.isSuccess
+    && !sourcePosture.isRefreshing
+    && !sourcePosture.hasRefreshFailure
+      ? "confirmed"
+      : recordedRefreshState;
   const workflowContext = useMemo(
     () =>
       buildProposalQueueWorkflowContext({

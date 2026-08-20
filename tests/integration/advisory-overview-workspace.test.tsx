@@ -246,6 +246,43 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
   });
 
+  it("reconciles a failed manual outcome when a newer background refresh succeeds", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce(defaultProposalList)
+      .mockRejectedValueOnce(new Error("manual refresh unavailable"))
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "PRP-AUTO-RECOVERED",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "DRAFT",
+            title: "Automatically recovered client review",
+          },
+        ],
+        next_cursor: null,
+      });
+
+    const { queryClient } = renderWithQueryClient(
+      <AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
+    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toBeInTheDocument();
+
+    await queryClient.refetchQueries({
+      queryKey: ["advisory-overview", "PB_SG_GLOBAL_BAL_001", undefined],
+      exact: true,
+    });
+
+    expect(await screen.findByText("Automatically recovered client review")).toBeInTheDocument();
+    expect(
+      screen.getByText("Latest advisory priorities confirmed through Gateway."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toBeInTheDocument();
+    expect(screen.queryByText("Latest proposal posture is not confirmed")).not.toBeInTheDocument();
+  });
+
   it("discloses a partial proposal window instead of overstating portfolio totals", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [
