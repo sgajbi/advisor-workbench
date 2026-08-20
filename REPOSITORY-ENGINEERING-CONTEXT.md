@@ -522,7 +522,12 @@ Current repository posture:
     only under an unconfirmed posture. Keep the shared source-refresh action mounted, focus-stable,
     and duplicate-fenced while the same Gateway/BFF query identity settles. Announce source success
     only after a valid response replaces the failed or earlier evidence; permission blocks remain
-    fail-closed and expose no retry.
+    fail-closed and expose no retry. Keep the decision brief followed immediately by the proposal
+    worklist in DOM, visual, and keyboard order; compact measures and lifecycle orientation are
+    secondary. Proposal workflow-context models must explicitly classify responsive priority.
+    Persistent context remains visible when the shell stacks. Supplementary context may remove its
+    repeated decision/window panel at tablet and compact widths only when the main workspace owns
+    the same source-backed posture and the source-and-scope boundary remains visible.
     `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
     `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle

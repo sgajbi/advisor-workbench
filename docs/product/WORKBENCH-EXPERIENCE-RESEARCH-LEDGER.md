@@ -5177,3 +5177,75 @@ and URL, original-selector focus, compact machine-readable confirmation, expiry,
 reflow, and bounded browser-error admission. The Performance Summary guide, repository context,
 research ledger, and review ledger change. Gateway/API/OpenAPI, calculation, dependency, global CSS,
 runtime topology, identity, and entitlement truth do not change.
+
+## Advisory Overview Task-First Responsive Hierarchy
+
+### Business job
+
+A relationship manager should reach the proposal that needs attention before reading orientation
+material about the lifecycle. Desktop context can aid parallel scanning, but the same decision,
+counts, source-window posture, and next action must not become a second long queue summary when the
+layout stacks on a tablet or compact viewport.
+
+### Current-product research
+
+Research was reviewed on 2026-08-21 from official product, enterprise-design, and accessibility
+sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   frames advisor nudges, next-best action, opportunity management, and exception-based review as
+   mechanisms for acting quickly across client portfolios. Lotus adopts the action-first workflow
+   principle, not BlackRock's visual identity, wording, data, or unsupported capabilities.
+2. [SAP Fiori responsive design](https://experience.sap.com/fiori-design-web/explore_category/sap-fiori/)
+   recommends starting with core mobile functionality, preserving high-priority information, and
+   adapting secondary functions and fields by device capacity.
+3. [SAP Fiori table and list guidance](https://experience.sap.com/fiori-design-web/explore_group/table-list-tree/)
+   keeps the most important fields visible and moves lower-priority fields into responsive
+   arrangements rather than forcing unreadable columns or arbitrary duplication.
+4. [W3C WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) allows content to
+   relocate or adjust at narrow widths when information and functionality remain available without
+   two-dimensional page scrolling.
+5. [W3C C27](https://www.w3.org/WAI/WCAG22/Techniques/css/C27) requires source order to match visual
+   order so reading and keyboard focus preserve the same meaningful sequence.
+
+### Adopted decisions
+
+1. Keep the concise advisor decision first and place the proposal worklist immediately after it in
+   DOM, visual, and keyboard order.
+2. Keep source-window scope inside the worklist so an advisor sees the evidence boundary before
+   relying on any row.
+3. Reuse the Workbench metric strip after active work, with four measures in one desktop row and
+   two compact rows at tablet and 519-pixel widths.
+4. Keep lifecycle orientation available after the active queue, using four desktop columns, two
+   tablet/standard-phone columns, and one column only below 400 pixels.
+5. Add one typed proposal-shell responsive priority. Context remains persistent by default;
+   Advisory Overview explicitly marks its duplicated queue posture supplementary.
+6. At 1100 pixels and below, omit only the supplementary workflow panel. Keep source-and-scope
+   evidence visible and retain all source recovery, permission, pagination, and partial-window
+   behavior.
+7. Preserve one semantic table DOM and adapt its cells into compact review records without cloning
+   rows or changing source values.
+
+### Rejected decisions
+
+1. Adding more cards, decorative charts, urgency scores, SLAs, client priority, suitability, or
+   implementation claims that Gateway and Advise do not publish.
+2. Using CSS visual reordering while leaving a conflicting DOM/focus sequence.
+3. Hiding the entire evidence rail, source boundary, recovery controls, permission posture, or
+   partial-window qualification to shorten the page.
+4. Applying a page-specific selector against the shell, changing every proposal screen, or making
+   supplementary behavior implicit from route names.
+5. Replacing the proven React, CSS Module, semantic HTML, Vitest, and Playwright stack with a new UI
+   or responsive library.
+
+### Validation and publication decision
+
+Workbench #731 owns this Workbench-only slice. Focused model, rail, and workspace tests pin default
+persistence, explicit supplementary priority, source-boundary retention, and decision → worklist →
+measure → lifecycle DOM order. The optimized-production journey measures that rendered order,
+metric row geometry, desktop/compact context visibility, keyboard focus, source-boundary visibility,
+and page overflow at 1440, 1024, and 519 pixels. Reviewed evidence is stored under
+`output/issue-731/`. The Advisory Overview guide, repository context, research ledger, and review
+ledger change. Gateway/API/OpenAPI, source calculation, dependencies, global CSS, runtime topology,
+identity, and entitlement truth do not change. Protected PR, exact-main, wiki publication, and
+strict parity evidence remain required.
