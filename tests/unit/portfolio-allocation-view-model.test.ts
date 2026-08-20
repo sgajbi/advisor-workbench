@@ -58,11 +58,18 @@ describe("portfolio allocation view model", () => {
         effective_mode: "prefer_look_through",
         applied: false,
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isExpandedLookThroughSupported({
         requested_mode: "prefer_look_through",
         effective_mode: "direct_only",
+        applied: true,
+      }),
+    ).toBe(false);
+    expect(
+      isExpandedLookThroughSupported({
+        requested_mode: "prefer_look_through",
+        effective_mode: "prefer_look_through",
         applied: true,
       }),
     ).toBe(true);
