@@ -78,8 +78,10 @@ concurrency group.
   does not rely on Next's duplicate build-time ESLint integration as the lint authority.
 - `make test-e2e`
   Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
-  production build, allows up to four minutes for build and server readiness, and owns the direct
-  server child so cancellation cannot leave a shell-owned listener behind. Set
+  production build, stages generated `.next/static` assets beside the generated standalone output,
+  and runs `.next/standalone/server.js` directly, matching the production-image entrypoint. It
+  allows up to four minutes for build and server readiness and owns the direct server child so
+  cancellation cannot leave a shell-owned listener behind. Set
   `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1` only immediately after a successful production build in the
   same worktree; the launcher fails closed when `.next/BUILD_ID` is absent. When port `3000`
   belongs to a shared stack or another worktree, set `PLAYWRIGHT_PORT=<free-port>`. An explicit port
@@ -93,6 +95,11 @@ concurrency group.
   deterministic production-browser proof for source-owned unavailable return, benchmark, horizon,
   contribution, metric, and evidence postures. Populated-only geometry and live-only timing checks
   are explicitly skipped instead of weakening their preconditions.
+- `npm run test:e2e:performance:return-path-density`
+  optimized-production proof that a single source-returned observation is a compact exact
+  portfolio/benchmark/active comparison rather than a fabricated time series. It validates
+  semantic evidence, keyboard-focus stability, component-capacity reflow, bounded height, browser
+  runtime cleanliness, and page overflow at 1440, 1024, 720, and 519 pixels.
 - `make ci-local-docker`
   Docker parity built from the same immutable Node 22 Maintenance LTS Debian Bookworm slim base as
   the production image; Vitest is capped at two workers so the lane remains deterministic while the

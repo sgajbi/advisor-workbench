@@ -836,6 +836,8 @@ Important validation expectations:
    stack or another worktree owns port `3000`. An explicit port must bind the production server,
    readiness probe, and browser base URL to the same listener and must disable existing-server
    reuse so current-worktree proof cannot silently exercise stale code,
+   and run the generated `.next/standalone/server.js` directly after staging `.next/static` beside
+   it. Do not substitute `next start` for a repository configured with `output: standalone`,
 4. Docker and build validation remain part of the merge gate,
 4. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
    validation-only NGINX image, run the two-replica scale proof against that same Workbench image,
@@ -1008,6 +1010,11 @@ Important validation expectations:
     retry, focus, cardinality, and narrow-reflow proof. Horizon Comparison reuses the same shared
     source-confirmed resource lifecycle; use `npm run test:e2e:performance:horizon-integrity` for
     its explicit failure, exact retry, focus, cardinality, and narrow-reflow proof.
+    Performance Summary applies the same cardinality rule to Return Path: one observation is a
+    compact exact portfolio/benchmark/active comparison and two or more observations retain the
+    chart. Its nested layout must reflow from the module's inline-size capacity rather than the
+    outer viewport. Use `npm run test:e2e:performance:return-path-density` for the owned
+    optimized-production semantic, focus, height, responsive, and overflow proof.
 26. Source-selection controls belong beside every Performance decision view that they govern.
     Summary and Analysis must reuse one component and one complete request-shaping path for horizon,
     basis, explicit review window, frequency, and benchmark. Keep return-view presentation local to
