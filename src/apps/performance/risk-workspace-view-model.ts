@@ -1378,7 +1378,7 @@ function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pi
   }
 
   return {
-    value: formatRiskPercentValue(volatility.value),
+    value: formatPercent(volatility.value),
     support: `${period.label} annualized source measure`,
     tone: volatility.state === "partial" ? "warn" : "default",
   };
