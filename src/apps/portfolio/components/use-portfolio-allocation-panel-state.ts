@@ -313,9 +313,9 @@ function applyLookThroughCoverageResponse(
     };
   }
 
-  const supportsExpandedLookThrough =
-    response.views.length > 0 &&
-    isExpandedLookThroughSupported(response.look_through ?? null);
+  const supportsExpandedLookThrough = isExpandedLookThroughSupported(
+    response.look_through ?? null,
+  );
   if (!supportsExpandedLookThrough) {
     const directAllocationViews = response.views.length
       ? response.views

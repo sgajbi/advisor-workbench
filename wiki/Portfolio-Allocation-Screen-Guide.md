@@ -113,7 +113,7 @@ detail remains in [API Surface](API-Surface) and ownership flow in [Integrations
 | Ready with expanded exposure | **Source coverage confirmed** and the expanded-exposure control is enabled | Use the confirmed view or return to direct holdings |
 | Direct holdings only | A valid response explicitly does not support expanded exposure for this snapshot | Continue with direct evidence; recheck only when source posture may have changed |
 | Coverage failed | Direct allocation remains visible and the status says expanded exposure could not be confirmed | Use **Recheck coverage**; Workbench does not relabel failure as unsupported |
-| Empty dimension | The named exposure view has no buckets | Confirm source population; zero buckets are not presented as an all-clear |
+| Source-confirmed empty view | The source supports the selected direct or expanded mode but returns no buckets | Confirm source population; empty coverage is neither unsupported nor presented as an all-clear |
 | Expanded contributors unavailable | Expanded values remain readable but exposure rows cannot claim booked contributors | Return to direct holdings for contributor review |
 | Portfolio records unavailable | A degraded route state replaces the allocation workspace | Restore a valid source-backed portfolio selection through the governed runtime |
 
