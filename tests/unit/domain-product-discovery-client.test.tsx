@@ -93,7 +93,7 @@ describe("DomainProductDiscoveryClient", () => {
     renderDiscovery();
 
     fireEvent.click(await screen.findByRole("button", { name: "Retry assurance" }));
-    const pendingControl = await screen.findByRole("button", { name: "Refresh assurance" });
+    const pendingControl = await screen.findByRole("button", { name: "Checking assurance" });
     await waitFor(() => expect(pendingControl).toHaveAttribute("aria-disabled", "true"));
     fireEvent.click(pendingControl);
 
