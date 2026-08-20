@@ -243,7 +243,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(onRetryRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it("announces that a successful refresh is now source-confirmed", () => {
+  it("announces compact source-confirmed context without repeating settled transaction detail", () => {
     renderWorkspaceView({
       refreshStatus: {
         kind: "confirmed",
@@ -255,7 +255,10 @@ describe("PerformanceWorkspaceView", () => {
 
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent("Performance selection confirmed");
-    expect(status).toHaveTextContent("now source-confirmed");
+    expect(status).toHaveTextContent("3Y · NET returns · Monthly observations");
+    expect(status).not.toHaveTextContent("now source-confirmed");
+    expect(status).not.toHaveTextContent("Requested");
+    expect(status).not.toHaveTextContent("Source-confirmed");
     expect(screen.queryByRole("button", { name: "Retry performance selection" }))
       .not.toBeInTheDocument();
   });
