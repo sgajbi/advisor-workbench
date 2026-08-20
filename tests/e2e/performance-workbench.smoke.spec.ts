@@ -832,6 +832,7 @@ test.describe('Performance workbench smoke', () => {
       'true',
     );
     await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
+    await expect(requestedHorizon).toBeFocused();
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
@@ -899,11 +900,13 @@ test.describe('Performance workbench smoke', () => {
     await expect.poll(
       () => new URL(page.url()).searchParams.get('contributionDimension'),
     ).toBe('sector');
+    await expect(contributionSegment).toBeFocused();
     await detailsFailure.scrollIntoViewIfNeeded();
     await page.screenshot({
       path: 'output/playwright/issue-679-performance-refresh-confirmed-narrow.png',
       fullPage: false,
     });
+    await expect(detailsFailure).toHaveCount(0, { timeout: 7_000 });
     await runtime.assertStylesAreHeadManaged();
     const expectedFailureSignals = runtime.snapshot();
     expect(
