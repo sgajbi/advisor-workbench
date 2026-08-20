@@ -15,6 +15,12 @@ const rows: AdvisorCockpitActionRow[] = [
     reasonSummary: "Policy Pending Review",
     evidenceSummary: "Policy evaluation requires compliance review.",
     nextRequiredAction: "Review policy evidence before client discussion.",
+    sourceHandoff: {
+      href: "/proposals/proposal_sg_001",
+      label: "Open proposal",
+      accessibleLabel: "Open proposal proposal_sg_001",
+      recordLabel: "Proposal proposal_sg_001",
+    },
   }),
   buildRow({
     actionItemId: "action-liquidity",
@@ -63,6 +69,20 @@ describe("AdvisorCockpitActionWorklist", () => {
       expect(
         within(surface).getByRole("button", { name: "Acknowledge review" }),
       ).toBeEnabled();
+      expect(
+        within(surface).getByRole("link", {
+          name: "Open proposal proposal_sg_001",
+        }),
+      ).toHaveAttribute("href", "/proposals/proposal_sg_001");
+      expect(within(surface).getByText("Proposal proposal_sg_001")).toBeVisible();
+    }
+
+    const liquiditySurfaces = [
+      within(table).getByRole("row", { name: /Liquidity evidence review/ }),
+      within(compact).getByRole("article", { name: "Liquidity evidence review" }),
+    ];
+    for (const surface of liquiditySurfaces) {
+      expect(within(surface).queryByRole("link")).not.toBeInTheDocument();
     }
   });
 
@@ -202,7 +222,7 @@ function buildRow(
     | "reasonSummary"
     | "evidenceSummary"
     | "nextRequiredAction"
-  >,
+  > & Partial<Pick<AdvisorCockpitActionRow, "sourceHandoff">>,
 ): AdvisorCockpitActionRow {
   return {
     actionItemVersion: 1,
@@ -212,6 +232,7 @@ function buildRow(
     priorityTone: "warn",
     owner: "Advisor",
     sla: "Due Soon",
+    sourceHandoff: null,
     sourceGapSummary: "No source gaps reported",
     dependencySummary: "No dependency degradation reported",
     unsupportedClaims: "No unsupported claims reported",

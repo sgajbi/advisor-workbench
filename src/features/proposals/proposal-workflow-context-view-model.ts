@@ -87,6 +87,29 @@ export function buildNeutralProposalWorkflowContext({
   });
 }
 
+export function buildAdvisorCockpitWorkflowContext({
+  portfolioId,
+}: {
+  portfolioId: string;
+}): ProposalWorkflowContextModel {
+  return withStatePresentation({
+    state: "ready",
+    title: "Advisor action evidence",
+    summary:
+      "Each action retains its own source evidence, owner, review window, and supported business handoff.",
+    currentPosture: "Source-owned action review",
+    nextAction: "Review the action evidence and continue through an available source record.",
+    blockers: [],
+    facts: [
+      { label: "Portfolio", value: portfolioId },
+      { label: "Workspace", value: "Advisor Cockpit" },
+    ],
+    sourceLabel: "Advisor Cockpit source-owned action evidence",
+    boundaryNote:
+      "Review and acknowledgement do not establish suitability, approval, client publication, delivery, or execution readiness.",
+  });
+}
+
 export function buildSimulationProposalWorkflowContext({
   portfolioId,
 }: {

@@ -10,6 +10,9 @@ import {
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
+import {
+  buildAdvisorCockpitWorkflowContext,
+} from "@/features/proposals/proposal-workflow-context-view-model";
 
 export default async function RecommendationsAppPage({
   searchParams,
@@ -34,6 +37,14 @@ export default async function RecommendationsAppPage({
       activeMode={activeMode}
       title={definition.title}
       subtitle={definition.description}
+      workflowContext={
+        activeMode === "cockpit"
+          ? buildAdvisorCockpitWorkflowContext({ portfolioId })
+          : undefined
+      }
+      workflowContextPresentation={
+        activeMode === "cockpit" ? "inline-boundary" : "rail"
+      }
     >
       {activeMode === "cockpit" ? (
         <AdvisorCockpitWorkspace portfolioId={portfolioId} />

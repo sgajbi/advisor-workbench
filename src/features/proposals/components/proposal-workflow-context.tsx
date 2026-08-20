@@ -137,11 +137,30 @@ export function ProposalWorkflowContextRail() {
         ) : null}
       </Panel>
 
-      <Panel className={`${styles.contextPanel} ${styles.sourceBoundaryPanel}`}>
+      <ProposalWorkflowBoundary model={model} />
+    </div>
+  );
+}
+
+export function ProposalWorkflowBoundary({
+  model,
+  presentation = "rail",
+}: {
+  model: ProposalWorkflowContextModel;
+  presentation?: "rail" | "inline";
+}) {
+  return (
+    <Panel
+      className={`${styles.contextPanel} ${styles.sourceBoundaryPanel} ${
+        presentation === "inline" ? styles.inlineSourceBoundary : ""
+      }`}
+      data-context-presentation={presentation}
+    >
+      <div>
         <Text variant="microLabel">Source and scope</Text>
         <strong>{model.sourceLabel}</strong>
-        <p>{model.boundaryNote}</p>
-      </Panel>
-    </div>
+      </div>
+      <p>{model.boundaryNote}</p>
+    </Panel>
   );
 }

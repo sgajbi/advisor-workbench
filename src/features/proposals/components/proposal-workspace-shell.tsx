@@ -19,6 +19,7 @@ import {
   type ProposalWorkflowContextModel,
 } from "../proposal-workflow-context-view-model";
 import {
+  ProposalWorkflowBoundary,
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextRail,
 } from "./proposal-workflow-context";
@@ -37,6 +38,7 @@ export default function ProposalWorkspaceShell({
   title,
   subtitle,
   workflowContext,
+  workflowContextPresentation = "rail",
   children,
 }: {
   portfolioId: string;
@@ -45,6 +47,7 @@ export default function ProposalWorkspaceShell({
   title: string;
   subtitle: string;
   workflowContext?: ProposalWorkflowContextModel;
+  workflowContextPresentation?: "rail" | "inline-boundary";
   children: ReactNode;
 }) {
   const initialWorkflowContext =
@@ -85,10 +88,22 @@ export default function ProposalWorkspaceShell({
                   </>
                 }
               >
-                <WorkbenchSectionStack className="proposal-page-sections">{children}</WorkbenchSectionStack>
+                <WorkbenchSectionStack className="proposal-page-sections">
+                  {workflowContextPresentation === "inline-boundary" ? (
+                    <ProposalWorkflowBoundary
+                      model={initialWorkflowContext}
+                      presentation="inline"
+                    />
+                  ) : null}
+                  {children}
+                </WorkbenchSectionStack>
               </WorkbenchPageFrame>
             }
-            side={<ProposalWorkflowContextRail />}
+            side={
+              workflowContextPresentation === "rail" ? (
+                <ProposalWorkflowContextRail />
+              ) : undefined
+            }
           />
         </ProposalWorkflowContextProvider>
       </WorkbenchPageContainer>

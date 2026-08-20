@@ -2,6 +2,7 @@
 
 import {
   ActionButton,
+  ActionLink,
   OperationalRecordList,
   SemanticBadge,
 } from "@/design-system";
@@ -93,7 +94,12 @@ export default function AdvisorCockpitActionWorklist({
                     <span className={styles.meta}>{row.sourceGapSummary}</span>
                     <span className={styles.meta}>{row.dependencySummary}</span>
                   </td>
-                  <td>{row.nextRequiredAction}</td>
+                  <td>
+                    <div className={styles.nextActionCell}>
+                      <span>{row.nextRequiredAction}</span>
+                      <SourceHandoff row={row} />
+                    </div>
+                  </td>
                   <td>
                     <AcknowledgementControl
                       row={row}
@@ -146,6 +152,7 @@ export default function AdvisorCockpitActionWorklist({
                 <section className={styles.recordNextAction}>
                   <p className={styles.recordLabel}>Next business action</p>
                   <strong>{row.nextRequiredAction}</strong>
+                  <SourceHandoff row={row} />
                   <AcknowledgementControl
                     row={row}
                     evidenceConfirmed={evidenceConfirmed}
@@ -159,6 +166,25 @@ export default function AdvisorCockpitActionWorklist({
           }))}
         />
       </div>
+    </div>
+  );
+}
+
+function SourceHandoff({ row }: { row: AdvisorCockpitActionRow }) {
+  if (!row.sourceHandoff) {
+    return null;
+  }
+
+  return (
+    <div className={styles.sourceHandoff}>
+      <span>{row.sourceHandoff.recordLabel}</span>
+      <ActionLink
+        href={row.sourceHandoff.href}
+        className={styles.sourceHandoffLink}
+      >
+        <span aria-hidden="true">{row.sourceHandoff.label}</span>
+        <span className={styles.srOnly}>{row.sourceHandoff.accessibleLabel}</span>
+      </ActionLink>
     </div>
   );
 }
