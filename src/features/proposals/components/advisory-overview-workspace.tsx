@@ -12,6 +12,7 @@ import {
   SourceRefreshAction,
   SourceWindowNavigation,
   Text,
+  WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
@@ -98,6 +99,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
         attentionCount: model.attentionCount,
         primaryDecision: model.primaryDecision,
         recommendedAction: model.recommendedAction,
+        responsivePriority: "supplementary",
       }),
     [
       model,
@@ -271,7 +273,11 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
           />
         ) : null}
 
-        <section className={styles.decisionPanel} aria-labelledby="advisory-decision-title">
+        <section
+          className={styles.decisionPanel}
+          aria-labelledby="advisory-decision-title"
+          data-testid="advisory-decision-brief"
+        >
           <div>
             <Text variant="microLabel">Advisor Decision</Text>
             <Text variant="subsectionTitle" as="h2" id="advisory-decision-title">
@@ -284,49 +290,6 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
               ? `${model.attentionCount} ${model.attentionCount === 1 ? "item needs" : "items need"} action`
               : "No action in view"}
           </SemanticBadge>
-        </section>
-
-        <div className={styles.summaryGrid} aria-label="Advisory overview summary">
-          {model.metrics.map((metric) => (
-            <article key={metric.label} className={`${styles.metricTile} ${styles[metric.tone]}`}>
-              <Text variant="microLabel">{metric.label}</Text>
-              <strong>{metric.value}</strong>
-              <span>{metric.detail}</span>
-            </article>
-          ))}
-        </div>
-
-        <section
-          className={styles.lifecyclePanel}
-          aria-labelledby="advisory-lifecycle-title"
-          data-testid="advisory-lifecycle-summary"
-        >
-          <div className={styles.panelHeader}>
-            <div>
-              <Text variant="microLabel">Proposal Lifecycle</Text>
-              <Text variant="subsectionTitle" as="h2" id="advisory-lifecycle-title">
-                Move recommendations from insight to implementation
-              </Text>
-            </div>
-            <Text variant="metadata">{portfolioId}</Text>
-          </div>
-          <ol className={styles.lifecycleGrid}>
-            {model.lifecycleStages.map((stage) => (
-              <li key={stage.key}>
-                <Link href={stage.href} className={styles.lifecycleStage}>
-                  <span className={styles.stageSequence}>{stage.sequence}</span>
-                  <span className={styles.stageContent}>
-                    <strong>{stage.label}</strong>
-                    <span>{stage.detail}</span>
-                  </span>
-                  <span className={styles.stagePosture}>
-                    <SemanticBadge tone={stage.tone}>{stage.value}</SemanticBadge>
-                    <span>{stage.valueLabel}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ol>
         </section>
 
         <section
@@ -428,6 +391,53 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
             onPrevious={sourceWindow.showPrevious}
             onNext={() => sourceWindow.showNext(proposalQuery.data?.next_cursor)}
           />
+        </section>
+
+        <WorkbenchSummaryMetricStrip
+          ariaLabel="Advisory overview summary"
+          className={styles.summaryGrid}
+          itemClassName={styles.summaryMetric}
+          layout="custom"
+          items={model.metrics.map((metric) => ({
+            key: metric.label,
+            label: metric.label,
+            value: metric.value,
+            support: metric.detail,
+            className: styles[metric.tone],
+          }))}
+        />
+
+        <section
+          className={styles.lifecyclePanel}
+          aria-labelledby="advisory-lifecycle-title"
+          data-testid="advisory-lifecycle-summary"
+        >
+          <div className={styles.panelHeader}>
+            <div>
+              <Text variant="microLabel">Proposal Lifecycle</Text>
+              <Text variant="subsectionTitle" as="h2" id="advisory-lifecycle-title">
+                Move recommendations from insight to implementation
+              </Text>
+            </div>
+            <Text variant="metadata">{portfolioId}</Text>
+          </div>
+          <ol className={styles.lifecycleGrid}>
+            {model.lifecycleStages.map((stage) => (
+              <li key={stage.key}>
+                <Link href={stage.href} className={styles.lifecycleStage}>
+                  <span className={styles.stageSequence}>{stage.sequence}</span>
+                  <span className={styles.stageContent}>
+                    <strong>{stage.label}</strong>
+                    <span>{stage.detail}</span>
+                  </span>
+                  <span className={styles.stagePosture}>
+                    <SemanticBadge tone={stage.tone}>{stage.value}</SemanticBadge>
+                    <span>{stage.valueLabel}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
         </section>
       </div>
     </SectionBlock>
