@@ -460,14 +460,6 @@
   }
 }
 
-@media (max-width: 960px) {
-  .portfolio-chart-module-body,
-  .portfolio-allocation-body {
-    grid-template-columns: 1fr;
-  }
-
-}
-
 .topbar {
   position: sticky;
   top: 0;

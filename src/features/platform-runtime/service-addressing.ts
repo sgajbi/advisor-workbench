@@ -29,6 +29,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     scenarioEnvironmentVariable: "PORTFOLIO_E2E_FIXTURE",
     scenarios: new Set([
       "cashflow",
+      "allocation-recovery",
       "income-activity",
       "shell-unavailable",
       "positions-status",

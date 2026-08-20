@@ -15,6 +15,7 @@ const workbenchPort = parseUnprivilegedPort(
 
 if (
   scenario !== 'cashflow' &&
+  scenario !== 'allocation-recovery' &&
   scenario !== 'income-activity' &&
   scenario !== 'shell-unavailable' &&
   scenario !== 'review-matrix' &&
@@ -22,7 +23,7 @@ if (
   scenario !== 'transactions-status'
 ) {
   throw new Error(
-    'Portfolio smoke scenario must be cashflow, income-activity, shell-unavailable, review-matrix, positions-status, or transactions-status.',
+    'Portfolio smoke scenario must be cashflow, allocation-recovery, income-activity, shell-unavailable, review-matrix, positions-status, or transactions-status.',
   );
 }
 if (fixturePort === workbenchPort) {
@@ -35,6 +36,8 @@ const evidenceDirectory = resolve(
   process.env.PORTFOLIO_E2E_EVIDENCE_DIR ??
     (scenario === 'shell-unavailable'
       ? 'output/playwright/issue-651-shell-recovery'
+      : scenario === 'allocation-recovery'
+        ? 'output/playwright/issue-727-allocation-recovery'
       : scenario === 'income-activity'
         ? 'output/playwright/issue-674-income-activity'
       : scenario === 'review-matrix'
@@ -56,6 +59,8 @@ const child = spawn(
     '--grep',
     scenario === 'shell-unavailable'
       ? 'selected shell failure reaches one truthful terminal recovery state'
+      : scenario === 'allocation-recovery'
+        ? 'allocation keeps direct evidence usable and recovers expanded exposure coverage'
       : scenario === 'income-activity'
         ? 'income and activity keeps booked cash evidence truthful across governed viewports'
       : scenario === 'review-matrix'

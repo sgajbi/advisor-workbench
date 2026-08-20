@@ -27,6 +27,7 @@ import {
   type AllocationCoverageStatus,
   usePortfolioAllocationPanelState,
 } from "./use-portfolio-allocation-panel-state";
+import styles from "./portfolio-allocation-panel.module.css";
 
 export default function PortfolioAllocationPanel({
   portfolioId,
@@ -108,6 +109,7 @@ export default function PortfolioAllocationPanel({
               label: option.label,
             }))}
             ariaLabel="Allocation chart types"
+            className={styles.chartSwitcher}
           />
 
           <button
@@ -171,8 +173,8 @@ export default function PortfolioAllocationPanel({
           <strong>{`${activeDimensionLabel} • ${buckets.length} exposures • ${lookThroughLabel}`}</strong>
         </div>
         {buckets.length ? (
-          <div className="portfolio-allocation-body">
-            <div className="portfolio-allocation-visual">
+          <div className={`portfolio-allocation-body ${styles.body}`}>
+            <div className={`portfolio-allocation-visual ${styles.visual}`}>
               {chartType === "donut" ? (
                 <AllocationDonutChart
                   buckets={buckets}
@@ -265,7 +267,7 @@ function AllocationCoverageStatus({
       title={status === "available" ? "Source coverage confirmed" : "Direct holdings only"}
       confirmedContext={
         status === "available"
-          ? `${lookThroughLabel}; expanded exposure is available`
+          ? `${lookThroughLabel} is available for this portfolio snapshot`
           : "Expanded exposure is not available for this portfolio snapshot"
       }
     />

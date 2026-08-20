@@ -7,6 +7,7 @@ const HISTORICAL_AS_OF_DATE = '2026-03-31';
 
 export type PortfolioFixtureScenario =
   | 'cashflow'
+  | 'allocation-recovery'
   | 'income-activity'
   | 'shell-unavailable'
   | 'positions-status'
@@ -14,6 +15,7 @@ export type PortfolioFixtureScenario =
 
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
+  getAllocationRequestCount: () => number;
   getWorkspaceRequestCount: () => number;
   port: number;
 };
@@ -26,6 +28,7 @@ export async function startPortfolioFixtureGateway({
   scenario: PortfolioFixtureScenario;
 }): Promise<PortfolioFixtureGateway> {
   let workspaceRequestCount = 0;
+  let allocationRequestCount = 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
 
@@ -146,6 +149,35 @@ export async function startPortfolioFixtureGateway({
       return;
     }
 
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/allocations`) {
+      allocationRequestCount += 1;
+      if (scenario === 'allocation-recovery' && allocationRequestCount === 1) {
+        // An empty source response exercises the same client-side unconfirmed state
+        // without teaching the browser proof to ignore an HTTP console failure.
+        sendJson(response, null);
+        return;
+      }
+      const prefersLookThrough =
+        requestUrl.searchParams.get('look_through_mode') === 'prefer_look_through';
+      const allocationResponse = {
+        reporting_currency: 'USD',
+        look_through: {
+          requested_mode: prefersLookThrough ? 'prefer_look_through' : 'direct_only',
+          effective_mode: prefersLookThrough ? 'prefer_look_through' : 'direct_only',
+          applied: prefersLookThrough,
+        },
+        views: prefersLookThrough
+          ? buildExpandedAllocationViews()
+          : buildDirectAllocationViews(),
+      };
+      if (scenario === 'allocation-recovery') {
+        setTimeout(() => sendJson(response, allocationResponse), 150);
+      } else {
+        sendJson(response, allocationResponse);
+      }
+      return;
+    }
+
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/workflow`) {
       sendJson(response, {
         actions: [
@@ -171,6 +203,7 @@ export async function startPortfolioFixtureGateway({
   return {
     port,
     close: () => close(server),
+    getAllocationRequestCount: () => allocationRequestCount,
     getWorkspaceRequestCount: () => workspaceRequestCount,
   };
 }
@@ -475,10 +508,143 @@ function buildBookResponse(asOfDate: string, scenario: PortfolioFixtureScenario 
               }
             : buildWorkspaceResponse(scenario).summary,
     cash_balances: [],
-    allocation_views: [{ dimension: 'asset_class', buckets: [] }],
+    allocation_views:
+      scenario === 'allocation-recovery'
+        ? buildDirectAllocationViews()
+        : [{ dimension: 'asset_class', buckets: [] }],
     top_positions: [],
-    positions: scenario === 'positions-status' ? buildPositionStatusMatrix() : [],
+    positions:
+      scenario === 'positions-status'
+        ? buildPositionStatusMatrix()
+        : scenario === 'allocation-recovery'
+          ? buildAllocationRecoveryPositions()
+          : [],
   };
+}
+
+function buildDirectAllocationViews() {
+  return [
+    {
+      dimension: 'asset_class',
+      buckets: [
+        { bucket: 'Equity', position_count: 2, market_value_base: 7_000_000, weight_pct: 56 },
+        {
+          bucket: 'Fixed Income',
+          position_count: 1,
+          market_value_base: 3_500_000,
+          weight_pct: 28,
+        },
+        {
+          bucket: 'Alternatives',
+          position_count: 1,
+          market_value_base: 2_000_000,
+          weight_pct: 16,
+        },
+      ],
+    },
+    {
+      dimension: 'currency',
+      buckets: [
+        { bucket: 'USD', position_count: 2, market_value_base: 6_500_000, weight_pct: 52 },
+        { bucket: 'SGD', position_count: 1, market_value_base: 3_500_000, weight_pct: 28 },
+        { bucket: 'EUR', position_count: 1, market_value_base: 2_500_000, weight_pct: 20 },
+      ],
+    },
+    {
+      dimension: 'sector',
+      buckets: [
+        { bucket: 'Technology', position_count: 2, market_value_base: 6_000_000, weight_pct: 48 },
+        { bucket: 'Government', position_count: 1, market_value_base: 3_500_000, weight_pct: 28 },
+        { bucket: 'Diversified', position_count: 1, market_value_base: 3_000_000, weight_pct: 24 },
+      ],
+    },
+    {
+      dimension: 'region',
+      buckets: [
+        { bucket: 'Asia', position_count: 2, market_value_base: 6_500_000, weight_pct: 52 },
+        { bucket: 'North America', position_count: 1, market_value_base: 3_500_000, weight_pct: 28 },
+        { bucket: 'Europe', position_count: 1, market_value_base: 2_500_000, weight_pct: 20 },
+      ],
+    },
+  ];
+}
+
+function buildExpandedAllocationViews() {
+  return [
+    {
+      dimension: 'region',
+      buckets: [
+        { bucket: 'Asia', position_count: 4, market_value_base: 7_250_000, weight_pct: 58 },
+        { bucket: 'North America', position_count: 3, market_value_base: 3_000_000, weight_pct: 24 },
+        { bucket: 'Europe', position_count: 2, market_value_base: 2_250_000, weight_pct: 18 },
+      ],
+    },
+  ];
+}
+
+function buildAllocationRecoveryPositions() {
+  return [
+    {
+      security_id: 'EQ_ASIA_1',
+      instrument_name: 'Asia Quality Equity Fund',
+      asset_class: 'Equity',
+      sector: 'Technology',
+      country_of_risk: 'Asia',
+      quantity: 10_000,
+      market_price: 400,
+      market_value_base: 4_000_000,
+      cost_basis_base: 3_600_000,
+      unrealized_gain_loss_base: 400_000,
+      weight_pct: 32,
+      currency: 'USD',
+      reprocessing_status: 'CURRENT',
+    },
+    {
+      security_id: 'EQ_ASIA_2',
+      instrument_name: 'Singapore Leaders Equity',
+      asset_class: 'Equity',
+      sector: 'Technology',
+      country_of_risk: 'Asia',
+      quantity: 12_000,
+      market_price: 250,
+      market_value_base: 3_000_000,
+      cost_basis_base: 2_900_000,
+      unrealized_gain_loss_base: 100_000,
+      weight_pct: 24,
+      currency: 'SGD',
+      reprocessing_status: 'CURRENT',
+    },
+    {
+      security_id: 'FI_US_1',
+      instrument_name: 'US Treasury Portfolio',
+      asset_class: 'Fixed Income',
+      sector: 'Government',
+      country_of_risk: 'North America',
+      quantity: 35_000,
+      market_price: 100,
+      market_value_base: 3_500_000,
+      cost_basis_base: 3_450_000,
+      unrealized_gain_loss_base: 50_000,
+      weight_pct: 28,
+      currency: 'USD',
+      reprocessing_status: 'CURRENT',
+    },
+    {
+      security_id: 'ALT_EU_1',
+      instrument_name: 'European Private Markets Fund',
+      asset_class: 'Alternatives',
+      sector: 'Diversified',
+      country_of_risk: 'Europe',
+      quantity: 2_000,
+      market_price: 1_000,
+      market_value_base: 2_000_000,
+      cost_basis_base: 1_950_000,
+      unrealized_gain_loss_base: 50_000,
+      weight_pct: 16,
+      currency: 'EUR',
+      reprocessing_status: 'CURRENT',
+    },
+  ];
 }
 
 function buildPositionStatusMatrix() {
