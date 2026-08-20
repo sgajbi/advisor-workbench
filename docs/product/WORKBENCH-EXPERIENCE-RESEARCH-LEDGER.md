@@ -4886,3 +4886,75 @@ brand, and evidence roles, 1440/390 geometry, and zero public font request or pa
 reviewed captures live under the Playwright issue output. The typography architecture, technology
 risk wiki, repository context, research ledger, and review ledger change. Gateway/API/OpenAPI,
 business workflow, calculation, identity, authorization, dependency, and runtime topology do not.
+
+## Performance Return-Path Evidence Capacity
+
+### Business job
+
+Performance Summary must help an advisor explain the portfolio outcome quickly without implying a
+trend that the performance source has not published. A single observation should make the exact
+portfolio, benchmark, and active-return comparison immediately legible; a genuine time series must
+retain enough analytical depth for path review. The same module must remain useful when workstation
+rails, tablet width, or zoom reduce its own canvas independently of the browser viewport.
+
+### Current-product research
+
+Research was reviewed on 2026-08-20 from official product and standards sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/products/aladdin-wealth)
+   positions integrated portfolio analytics as advisor decision support. Lotus adopts the
+   evidence-first workflow principle, not BlackRock's layout, language, visual identity, or any
+   unsupported capability.
+2. [Morningstar Direct Advisory Suite](https://www.morningstar.com/products/direct-advisory-suite)
+   describes portfolio analysis and reporting as one connected advisor workflow. Lotus uses the
+   same business need for concise explainable comparison while retaining its own Gateway and
+   Performance source boundaries.
+3. [WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) requires information and
+   functionality to remain available without two-dimensional scrolling at the governed narrow
+   presentation. The comparison therefore retains exact text evidence instead of depending on bar
+   geometry or color alone.
+4. [MDN container queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries)
+   documents style decisions based on a containing element's available size. This matches a nested
+   analytics module whose width changes with Workbench rails even when the outer viewport does not.
+
+### Adopted decisions
+
+1. Treat one return observation as an exact comparison, not a time series: lead with period,
+   portfolio return, benchmark return, active return, and a visible zero baseline.
+2. Retain the established chart and analytical depth when the source returns two or more
+   observations.
+3. Remove chart-only controls and the inherited 28.5rem minimum height from point evidence while
+   preserving all source-returned values and capability posture.
+4. Expose the one-observation region as an accessible named group whose exact text descendants
+   remain available to assistive technology; keep decorative bars hidden from that evidence tree.
+5. Reflow the nested point comparison from its own inline-size container and prove the full page at
+   1440, 1024, 720, and 519 pixels.
+6. Move the two live presentation families beside their React owners, delete superseded global
+   selectors, lower the exact global-CSS ratchet, and prohibit selector return.
+
+### Rejected decisions
+
+1. Manufacturing additional observations, interpolating a path, or using an oversized empty chart
+   to imply analytical history that the source did not publish.
+2. Hiding exact values behind hover, relying on color or bar direction alone, or replacing source
+   evidence with a browser-authored score or conclusion.
+3. Applying page-level overflow suppression or an outer-viewport breakpoint to repair a nested
+   module whose true constraint is its own available width.
+4. Changing Performance calculations, Gateway/API/OpenAPI contracts, benchmark assignment, or
+   return-selection behavior for a presentation-capacity issue.
+5. Adding a new chart, styling, or responsive library when the proven React, CSS Module, native HTML,
+   Vitest, and Playwright stack owns the requirement.
+
+### Validation and publication decision
+
+Workbench #719 owns the user-facing slice and parent campaign #492 owns the global-CSS reduction.
+Focused tests prove one-observation group semantics, exact values, partial evidence, and unchanged
+multi-observation chart semantics. The named optimized-production journey proves exact evidence,
+zero baseline, no chart-only controls, stable focus through reflow, bounded height, clean browser
+runtime, head-managed styles, and zero page overflow at 1440/1024/720/519; reviewed captures live
+under `output/playwright/issue-719-performance-return-path-*`. The Performance Summary guide, CSS
+governance, repository context, research ledger, and review ledger change. The screen registry and
+API Surface already record the correct Gateway/Core/Performance owners and split Summary/Details/
+Horizon contract family, so they require no change. Canonical runtime proof is not added because no
+source contract, calculation, seed, route, or integrated business transaction changed; protected PR
+and exact-main gates remain required.

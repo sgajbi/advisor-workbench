@@ -63,6 +63,15 @@ from returning to governed global CSS. A future workflow must use the active Ana
 or establish a new issue-backed owner and validation contract; it must not revive an unreachable
 alternative layout.
 
+Performance Return Path follows evidence capacity rather than reserving chart capacity regardless
+of source shape. `performance-return-path-chart-stage.module.css` owns the multi-observation chart
+stage, while `performance-return-path-single-observation-stage.module.css` owns the exact
+one-observation comparison. The single-observation owner has no inherited chart minimum height and
+reflows from its own inline-size container; the time-series owner retains the established 28.5rem
+analytical canvas. The retired `performance-return-path-chart-stage` and
+`performance-return-path-single-observation` selector families are forbidden from returning to
+global CSS. The resulting `legacy-global.css` ratchet is 12,137 lines and 265,472 normalized bytes.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.

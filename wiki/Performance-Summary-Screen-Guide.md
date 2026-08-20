@@ -57,8 +57,8 @@ investment suitability, or supervisory authority.
    currency, and assigned or selected benchmark.
 3. Read portfolio return, benchmark return, active return, annualised or money-weighted measures
    only when the source contract supports them.
-4. Review the plotted return path and exact period evidence rather than inferring values from chart
-   geometry.
+4. Review the exact portfolio, benchmark, and active-return evidence for the published periods. A
+   single observation is an exact comparison; only two or more observations form a return path.
 5. Compare supported horizons and identify leading positive and negative contributors.
 6. Continue to Performance Analysis for attribution and contribution diagnostics, Advisor Brief for
    an internal working narrative, Risk Review for downside context, or Evidence for calculation and
@@ -73,8 +73,9 @@ current only after the matching summary and detail contracts both confirm the re
   only when the selected contract publishes usable evidence.
 - Supports source-admitted standard or explicit reporting windows, net or gross basis, monthly or
   supported alternative frequency, and available benchmark choices.
-- Plots the source-returned portfolio, benchmark, and active return path with accessible chart and
-  exact-value evidence.
+- Presents one source-returned observation as a compact exact comparison with period, zero baseline,
+  portfolio, benchmark, and active return. It uses a time-series chart only when at least two
+  observations make a path supportable.
 - Requests a Gateway-owned horizon-comparison contract for side-by-side supported periods.
 - Distinguishes no published horizons, one exact horizon, and a true multi-horizon comparison;
   one horizon remains table evidence and is not presented as a comparison graphic.
@@ -127,7 +128,7 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | --- | --- | --- |
 | Portfolio identity, base currency, booking context, and selected mandate | Formats the selected workspace and navigation context | Gateway over Core portfolio contracts |
 | Reporting window, return basis, frequency, benchmark options, portfolio return, benchmark return, active return, annualised return, and cash-flow-aware return | Validates and presents the returned contract; does not recalculate performance | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/summary`, composing Core portfolio/reference/benchmark context with Performance analytics |
-| Return-path observations and source capability posture | Selects and charts returned observations without interpolating missing values | Gateway performance details contract |
+| Return-path observations and source capability posture | Presents one observation as exact comparison evidence and charts two or more observations without interpolating missing values | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Contribution rows, dimensions, coverage, source-economics and smoothing status, reason codes, contracts, snapshots, attribution support, warnings, and partial failures | Builds decision-focused ranking and a business-first supportability conclusion from the same returned evidence; preserves exact technical values in **Calculation evidence** and fails closed for unknown values | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Zero, one, or multiple horizon observations | Chooses a truthful empty, exact-table, or comparison presentation without manufacturing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` over Performance authority |
 | Horizon loading, failure, permission block, exact retry, success-only cache, and obsolete-request fencing | Owns browser request state independently from Summary selection confirmation | Workbench over the matching Gateway response |
@@ -154,6 +155,8 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | Horizon permission blocked | **Horizon comparison restricted** without restricted detail or stale cached evidence | Use an entitled role or approved support path |
 | No published horizons | Source-confirmed statement that no horizon observations were returned | Do not infer portfolio or benchmark outcome |
 | One published horizon | Exact table with a visible qualification that comparison requires at least two horizons | Use the returned period as point evidence only |
+| One published return observation | Compact exact comparison with period, zero baseline, portfolio, benchmark, and active return; no invented trend or empty chart canvas | Use the observation as point evidence and qualify any path interpretation |
+| Return time series | Source-returned portfolio, benchmark, and active observations in the existing chart with exact values available | Explain only the published path and source-supported scope |
 | Unavailable | Performance data is absent and the workspace states that the contract did not resolve | Re-establish supported portfolio/source context or follow the approved support process |
 | Permission blocked | Explicit access-restricted state without restricted entitlement detail | Use an entitled role or contact platform support |
 
@@ -199,9 +202,10 @@ superiority.
 
 - Focused state tests prove pending, summary failure, detail failure, exact retry, permission block,
   stale-response fencing, and atomic source-confirmed commit behavior.
-- Shared-component tests prove polite pending and success announcement, assertive failure
-  announcement, exact requested/confirmed context, native retry behavior, and responsive ownership;
-  browser proof verifies the retry receives focus before activation without unexpected focus movement.
+- Shared-component tests prove polite pending and assertive failure announcements, exact
+  requested/confirmed context, native retry behavior, and responsive ownership. Browser proof
+  verifies that the retry is keyboard-focusable before activation; it does not claim a separate
+  source-confirmed success announcement that the current component does not render.
 - The owned optimized-production browser journey uses `PB_SG_GLOBAL_BAL_001`; it deliberately
   receives a 503 for a 3Y summary and a 502 for Sector detail, proves YTD and Asset Class remain
   source-confirmed, retries each request, and then proves 3Y and Sector become current together with
@@ -228,6 +232,13 @@ superiority.
   exact codes remain available, and the open evidence grid has no internal or page overflow at
   1440, 1024, 768, and 519 pixels. Reviewed evidence is stored under
   `output/playwright/issue-712-performance-evidence-*`.
+- `npm run test:e2e:performance:return-path-density` proves the one-observation comparison in the
+  optimized standalone production server at 1440, 1024, 720, and 519 pixels. It asserts exact
+  portfolio, benchmark, and active-return semantics; a visible zero baseline; no chart-only
+  controls; stable keyboard focus during reflow; bounded evidence capacity; zero page overflow;
+  clean browser runtime; and head-managed styles. Reviewed evidence is stored under
+  `output/playwright/issue-719-performance-return-path-*`. Focused component tests separately prove
+  that two or more observations retain the existing time-series chart contract.
 - Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
   controls.
 
