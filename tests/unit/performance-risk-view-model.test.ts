@@ -232,6 +232,37 @@ describe("buildPerformanceRiskViewModel", () => {
     });
   });
 
+  it("treats a source metric without a numeric volatility value as unavailable", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const riskSummary = buildFixtureRiskSummary(scenario.workspace, "YTD", "NET");
+    const volatility = riskSummary.payload?.periods[0]?.metrics.find(
+      (metric) => metric.key === "VOLATILITY",
+    );
+    if (!volatility) {
+      throw new Error("Expected the fixture to publish a volatility metric.");
+    }
+    volatility.value = null;
+    volatility.reason = "The source did not return a numeric volatility measure.";
+
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary,
+      riskConcentration: buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+      riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+      riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    });
+
+    expect(viewModel.workspaceOverview[0]).toMatchObject({
+      label: "Realized volatility",
+      value: "Unavailable",
+      support: "The source did not return a numeric volatility measure.",
+      tone: "warn",
+    });
+  });
+
   it("returns a loading state without fabricated metrics while details are pending", () => {
     const scenario = buildSupportedPerformanceScenario();
 
