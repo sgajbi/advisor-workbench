@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -439,6 +439,7 @@ describe("design-system components", () => {
     );
     const view = render(
       <SourceRefreshAction
+        refreshScope="portfolio-a:first"
         idleLabel="Retry advisory priorities"
         busyLabel="Checking advisory priorities"
         isRefreshing={false}
@@ -456,6 +457,7 @@ describe("design-system components", () => {
 
     view.rerender(
       <SourceRefreshAction
+        refreshScope="portfolio-a:first"
         idleLabel="Refresh advisory priorities"
         busyLabel="Checking advisory priorities"
         isRefreshing
@@ -472,6 +474,48 @@ describe("design-system components", () => {
 
     resolveRefresh();
     await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("allows the current source scope to refresh while an obsolete scope is still pending", async () => {
+    const resolveRefreshes: Array<() => void> = [];
+    const onRefresh = vi.fn(
+      () => new Promise<void>((resolve) => resolveRefreshes.push(resolve))
+    );
+    const view = render(
+      <SourceRefreshAction
+        refreshScope="portfolio-a:first"
+        idleLabel="Retry advisory priorities"
+        busyLabel="Checking advisory priorities"
+        isRefreshing={false}
+        onRefresh={onRefresh}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry advisory priorities" }));
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+
+    view.rerender(
+      <SourceRefreshAction
+        refreshScope="portfolio-b:first"
+        idleLabel="Retry advisory priorities"
+        busyLabel="Checking advisory priorities"
+        isRefreshing={false}
+        onRefresh={onRefresh}
+      />
+    );
+    const currentRetry = screen.getByRole("button", { name: "Retry advisory priorities" });
+    fireEvent.click(currentRetry);
+    fireEvent.click(currentRetry);
+    expect(onRefresh).toHaveBeenCalledTimes(2);
+
+    await act(async () => resolveRefreshes[0]?.());
+    fireEvent.click(currentRetry);
+    expect(onRefresh).toHaveBeenCalledTimes(2);
+
+    await act(async () => resolveRefreshes[1]?.());
+    fireEvent.click(currentRetry);
+    expect(onRefresh).toHaveBeenCalledTimes(3);
+    await act(async () => resolveRefreshes[2]?.());
   });
 
   it("renders the shared disclosure toggle contract with consistent labels and chevron state", () => {

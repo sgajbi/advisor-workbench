@@ -139,6 +139,65 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
   });
 
+  it("allows the newly selected portfolio to recover while an obsolete retry is pending", async () => {
+    let resolvePortfolioARetry!: (value: typeof defaultProposalList) => void;
+    const portfolioARetry = new Promise<typeof defaultProposalList>((resolve) => {
+      resolvePortfolioARetry = resolve;
+    });
+    listProposalsMock.mockImplementation(async (filters?: unknown) => {
+      const portfolioId = (filters as { portfolioId?: string } | undefined)?.portfolioId;
+      const portfolioCalls = listProposalsMock.mock.calls.filter(
+        ([callFilters]) =>
+          (callFilters as { portfolioId?: string } | undefined)?.portfolioId === portfolioId
+      ).length;
+      if (portfolioId === "portfolio-a") {
+        if (portfolioCalls === 1) throw new Error("portfolio A unavailable");
+        return await portfolioARetry;
+      }
+      if (portfolioId === "portfolio-b") {
+        if (portfolioCalls === 1) throw new Error("portfolio B unavailable");
+        return {
+          items: [
+            {
+              proposal_id: "PRP-PORTFOLIO-B",
+              portfolio_id: "portfolio-b",
+              current_state: "DRAFT",
+              title: "Portfolio B liquidity review",
+            },
+          ],
+          next_cursor: null,
+        };
+      }
+      return defaultProposalList;
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <AdvisoryOverviewWorkspace portfolioId="portfolio-a" />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
+    expect(listProposalsMock).toHaveBeenCalledTimes(2);
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <AdvisoryOverviewWorkspace portfolioId="portfolio-b" />
+      </QueryClientProvider>
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
+
+    expect(await screen.findByText("Portfolio B liquidity review")).toBeInTheDocument();
+    expect(listProposalsMock).toHaveBeenCalledTimes(4);
+
+    resolvePortfolioARetry(defaultProposalList);
+    await waitFor(() => {
+      expect(screen.getByText("Portfolio B liquidity review")).toBeInTheDocument();
+    });
+  });
+
   it("recovers the initial worklist from Gateway without losing focus or duplicating requests", async () => {
     let resolveRetry!: (value: typeof defaultProposalList) => void;
     const pendingRetry = new Promise<typeof defaultProposalList>((resolve) => {
