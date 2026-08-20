@@ -362,8 +362,7 @@ function resolveDirectAllocationViews(
 ): PortfolioAllocationView[] {
   if (
     !response ||
-    isExpandedLookThroughSupported(response.look_through ?? null) ||
-    !response.views.length
+    isExpandedLookThroughSupported(response.look_through ?? null)
   ) {
     return current.directAllocationViews;
   }

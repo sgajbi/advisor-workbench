@@ -372,7 +372,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled();
   });
 
-  it("clears a direct exposure only after refreshed source evidence invalidates it", async () => {
+  it("applies an empty direct fallback and clears the invalidated exposure", async () => {
     let allocationRequestCount = 0;
     let resolveRecheck: ((response: Response) => void) | undefined;
     const recheckResponse = new Promise<Response>((resolve) => {
@@ -417,25 +417,15 @@ describe("PortfolioAllocationPanel", () => {
           effective_mode: "direct_only",
           applied: false,
         },
-        views: [
-          {
-            dimension: "asset_class",
-            buckets: [
-              {
-                bucket: "Fixed Income",
-                position_count: 5,
-                market_value_base: 640000,
-                weight_pct: 51.2,
-              },
-            ],
-          },
-        ],
+        views: [],
       }),
     );
 
     await waitFor(() => expect(onSelectionChange).toHaveBeenCalledWith(null));
     expect(onSelectionChange).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Direct holdings only")).toBeInTheDocument();
+    expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
+    expect(screen.queryByText("725,000 USD")).not.toBeInTheDocument();
   });
 
   it("keeps source-confirmed empty expanded coverage distinct from unsupported coverage", async () => {
