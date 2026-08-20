@@ -125,6 +125,60 @@ type PortfolioAllocationResponse = {
   look_through?: PortfolioAllocationLookThrough | null;
 };
 
+function isPortfolioAllocationResponse(
+  value: unknown,
+): value is PortfolioAllocationResponse {
+  if (!isRecord(value) || !Array.isArray(value.views)) {
+    return false;
+  }
+  if (
+    "reporting_currency" in value &&
+    value.reporting_currency !== null &&
+    value.reporting_currency !== undefined &&
+    typeof value.reporting_currency !== "string"
+  ) {
+    return false;
+  }
+  if (
+    "look_through" in value &&
+    value.look_through !== null &&
+    value.look_through !== undefined &&
+    (!isRecord(value.look_through) ||
+      typeof value.look_through.requested_mode !== "string" ||
+      typeof value.look_through.effective_mode !== "string" ||
+      typeof value.look_through.applied !== "boolean")
+  ) {
+    return false;
+  }
+
+  return value.views.every(
+    (view) =>
+      isRecord(view) &&
+      typeof view.dimension === "string" &&
+      Array.isArray(view.buckets) &&
+      view.buckets.every(
+        (bucket) =>
+          isRecord(bucket) &&
+          typeof bucket.bucket === "string" &&
+          isFiniteNumber(bucket.position_count) &&
+          isNullableFiniteNumber(bucket.market_value_base) &&
+          isNullableFiniteNumber(bucket.weight_pct),
+      ),
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isNullableFiniteNumber(value: unknown): value is number | null {
+  return value === null || isFiniteNumber(value);
+}
+
 type PortfolioLiquidityResponse = {
   cash_balances: NonNullable<PortfolioWorkspace["cash_balances"]>;
   cashflow_outlook: PortfolioWorkspace["cashflow_outlook"];
@@ -757,11 +811,12 @@ export async function getPortfolioAllocationViews(
     }
     searchParams.set("look_through_mode", params.lookThroughMode ?? "direct_only");
 
-    return await fetchPortfolioJson<PortfolioAllocationResponse>(
+    const payload = await fetchPortfolioJson<unknown>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
       { query: searchParams, forceRefresh: params.forceRefresh }
     );
+    return isPortfolioAllocationResponse(payload) ? payload : null;
   } catch {
     return null;
   }

@@ -1573,6 +1573,23 @@ describe("portfolio api", () => {
     expect(requestUrl).toContain("look_through_mode=prefer_look_through");
   });
 
+  it.each([
+    ["missing views", { code: "unexpected_success_envelope" }],
+    ["non-array views", { views: { dimension: "region", buckets: [] } }],
+    [
+      "malformed buckets",
+      { views: [{ dimension: "region", buckets: [{ bucket: "Asia" }] }] },
+    ],
+  ])("rejects a successful allocation response with %s", async (_case, payload) => {
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(payload)));
+
+    await expect(
+      getPortfolioAllocationViews("MANUAL_PB_USD_001", {
+        lookThroughMode: "prefer_look_through",
+      }),
+    ).resolves.toBeNull();
+  });
+
   it("reuses cached BFF responses for identical requests", async () => {
     const fetchSpy = vi.fn(async (input: string | URL) => {
       const url = input.toString();
