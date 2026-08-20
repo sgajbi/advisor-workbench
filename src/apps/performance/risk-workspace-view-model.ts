@@ -1379,7 +1379,10 @@ function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pi
 
   return {
     value: formatPercent(volatility.value),
-    support: `${period.label} annualized source measure`,
+    support:
+      volatility.state === "partial"
+        ? `${period.label}: ${volatility.reason ?? "Source coverage is partial for this annualized measure."}`
+        : `${period.label} annualized source measure`,
     tone: volatility.state === "partial" ? "warn" : "default",
   };
 }
