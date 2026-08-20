@@ -835,21 +835,48 @@ test.describe('Portfolio workbench smoke', () => {
     await page.getByRole('button', { name: /^Clear filter$/i }).click();
     await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
 
-    const lookThroughToggle = page.getByRole('button', { name: /^Look-through off$/i });
-    if ((await lookThroughToggle.count()) > 0) {
-      await expect(lookThroughToggle).toBeEnabled();
-      await lookThroughToggle.click();
-      await expect(page.getByRole('button', { name: /^Look-through on$/i })).toContainText(
-        'Expanded exposure'
+    const showExpandedExposure = page.getByRole('button', { name: 'Show expanded exposure' });
+    const unsupportedExposure = page.getByRole('button', {
+      name: 'Expanded exposure unavailable for current portfolio snapshot',
+    });
+    const failedExposure = page.getByRole('button', {
+      name: 'Expanded exposure coverage could not be confirmed',
+    });
+    const getCoverageState = async (): Promise<
+      'checking' | 'available' | 'unsupported' | 'failed'
+    > => {
+      if ((await showExpandedExposure.count()) > 0) {
+        return 'available';
+      }
+      if ((await unsupportedExposure.count()) > 0) {
+        return 'unsupported';
+      }
+      if ((await failedExposure.count()) > 0) {
+        return 'failed';
+      }
+      return 'checking';
+    };
+    await expect.poll(getCoverageState).not.toBe('checking');
+    const coverageState = await getCoverageState();
+
+    if (coverageState === 'available') {
+      await expect(showExpandedExposure).toBeEnabled();
+      await showExpandedExposure.click();
+      await expect(page.getByRole('button', { name: 'Show direct holdings' })).toContainText(
+        'Expanded exposure',
       );
       await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
       await expect(
-        page.getByText(/Expanded exposure contributors require source-backed look-through detail/i)
+        page.getByText(/Expanded exposure contributors require source-backed look-through detail/i),
       ).toBeVisible();
+    } else if (coverageState === 'unsupported') {
+      await expect(unsupportedExposure).toBeDisabled();
+      await expect(page.getByText('Direct holdings only', { exact: true })).toBeVisible();
     } else {
+      await expect(failedExposure).toBeDisabled();
       await expect(
-        page.getByRole('button', { name: /^Look-through unavailable for current portfolio snapshot$/i })
-      ).toBeDisabled();
+        page.getByText('Expanded exposure could not be confirmed', { exact: true }),
+      ).toBeVisible();
     }
   });
 
