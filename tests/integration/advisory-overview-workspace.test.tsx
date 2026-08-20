@@ -1,11 +1,11 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisoryOverviewWorkspace from "../../src/features/proposals/components/advisory-overview-workspace";
 
-const listProposalsMock = vi.fn(async (_filters?: unknown) => ({
+const defaultProposalList = {
   items: [
     {
       proposal_id: "PRP-RISK",
@@ -21,7 +21,9 @@ const listProposalsMock = vi.fn(async (_filters?: unknown) => ({
     },
   ],
   next_cursor: null as string | null,
-}));
+};
+
+const listProposalsMock = vi.fn(async (_filters?: unknown) => defaultProposalList);
 
 vi.mock("../../src/features/proposals/api", () => ({
   listProposals: (filters: unknown) => listProposalsMock(filters),
@@ -39,6 +41,11 @@ function renderWithQueryClient(ui: React.ReactElement) {
 }
 
 describe("AdvisoryOverviewWorkspace", () => {
+  beforeEach(() => {
+    listProposalsMock.mockReset();
+    listProposalsMock.mockResolvedValue(defaultProposalList);
+  });
+
   it("renders portfolio-scoped advisory posture and priority actions", async () => {
     renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
 
@@ -123,9 +130,90 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     expect(await screen.findByText("Advisory priorities are unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText("No fallback proposal, review, or implementation posture is shown.")
+      screen.getByText(/No fallback proposal, review, or implementation posture is shown/)
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toBeInTheDocument();
     expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
+  });
+
+  it("recovers the initial worklist from Gateway without losing focus or duplicating requests", async () => {
+    let resolveRetry!: (value: typeof defaultProposalList) => void;
+    const pendingRetry = new Promise<typeof defaultProposalList>((resolve) => {
+      resolveRetry = resolve;
+    });
+    listProposalsMock
+      .mockRejectedValueOnce(new Error("gateway unavailable"))
+      .mockImplementationOnce(async () => await pendingRetry);
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
+    retry.focus();
+    fireEvent.click(retry);
+
+    const pending = await screen.findByRole("button", { name: "Checking advisory priorities" });
+    expect(pending).toHaveAttribute("aria-disabled", "true");
+    expect(pending).not.toBeDisabled();
+    expect(pending).toHaveFocus();
+    fireEvent.click(pending);
+    expect(listProposalsMock).toHaveBeenCalledTimes(2);
+
+    resolveRetry(defaultProposalList);
+
+    expect(await screen.findByText("Latest advisory priorities confirmed through Gateway.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toHaveFocus();
+    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
+    expect(listProposalsMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a failed retry explicit and recoverable", async () => {
+    listProposalsMock
+      .mockRejectedValueOnce(new Error("gateway unavailable"))
+      .mockRejectedValueOnce(new Error("gateway still unavailable"));
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
+    retry.focus();
+    fireEvent.click(retry);
+
+    expect(await screen.findByText("Advisory priorities remain unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toHaveFocus();
+    expect(screen.queryByText(/gateway still unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it("retains earlier proposals until a failed refresh is source-confirmed", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce(defaultProposalList)
+      .mockRejectedValueOnce(new Error("refresh unavailable"))
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "PRP-RECOVERED",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "DRAFT",
+            title: "Recovered income mandate review",
+          },
+        ],
+        next_cursor: null,
+      });
+
+    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+
+    const refresh = await screen.findByRole("button", { name: "Refresh advisory priorities" });
+    refresh.focus();
+    fireEvent.click(refresh);
+
+    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
+    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
+    const retry = screen.getByRole("button", { name: "Retry advisory priorities" });
+    expect(retry).toHaveFocus();
+    fireEvent.click(retry);
+
+    expect(await screen.findByText("Recovered income mandate review")).toBeInTheDocument();
+    expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
+    expect(screen.getByText("Latest advisory priorities confirmed through Gateway.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toHaveFocus();
   });
 
   it("discloses a partial proposal window instead of overstating portfolio totals", async () => {
@@ -164,6 +252,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       await screen.findByText("Advisory proposal access is not available")
     ).toBeInTheDocument();
     expect(screen.queryByTestId("advisory-priority-worklist")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /advisory priorities/i })).not.toBeInTheDocument();
   });
 
   it("lets the advisor return after a later proposal window fails", async () => {
@@ -178,6 +267,7 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
     expect(await screen.findByText("This proposal window is unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry proposal window" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Return to previous proposals" }));
     expect(await screen.findByText("No proposals in this source window")).toBeInTheDocument();
