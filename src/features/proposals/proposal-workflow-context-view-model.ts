@@ -14,6 +14,8 @@ export type ProposalWorkflowContextFact = {
   value: string;
 };
 
+export type ProposalWorkflowContextResponsivePriority = "persistent" | "supplementary";
+
 export type ProposalWorkflowContextModel = {
   state: ProposalWorkflowContextState;
   stateLabel: string;
@@ -26,6 +28,14 @@ export type ProposalWorkflowContextModel = {
   facts: ProposalWorkflowContextFact[];
   sourceLabel: string;
   boundaryNote: string;
+  responsivePriority: ProposalWorkflowContextResponsivePriority;
+};
+
+type ProposalWorkflowContextInput = Omit<
+  ProposalWorkflowContextModel,
+  "stateLabel" | "stateTone" | "responsivePriority"
+> & {
+  responsivePriority?: ProposalWorkflowContextResponsivePriority;
 };
 
 const STATE_PRESENTATION: Record<
@@ -42,12 +52,13 @@ const STATE_PRESENTATION: Record<
 };
 
 function withStatePresentation(
-  model: Omit<ProposalWorkflowContextModel, "stateLabel" | "stateTone">
+  model: ProposalWorkflowContextInput
 ): ProposalWorkflowContextModel {
   return {
     ...model,
     stateLabel: STATE_PRESENTATION[model.state].label,
     stateTone: STATE_PRESENTATION[model.state].tone,
+    responsivePriority: model.responsivePriority ?? "persistent",
   };
 }
 
@@ -142,6 +153,7 @@ export function buildProposalQueueWorkflowContext({
   attentionCount,
   primaryDecision,
   recommendedAction,
+  responsivePriority,
 }: {
   portfolioId: string;
   modeLabel: string;
@@ -159,6 +171,7 @@ export function buildProposalQueueWorkflowContext({
   attentionCount: number;
   primaryDecision: string;
   recommendedAction: string;
+  responsivePriority?: ProposalWorkflowContextResponsivePriority;
 }): ProposalWorkflowContextModel {
   const facts = [
     { label: "Portfolio", value: portfolioId },
@@ -176,6 +189,7 @@ export function buildProposalQueueWorkflowContext({
       facts,
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "Workbench does not show cached or fallback workflow claims while the source loads.",
+      responsivePriority,
     });
   }
 
@@ -190,6 +204,7 @@ export function buildProposalQueueWorkflowContext({
       facts,
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "Workbench does not expose restricted workflow or entitlement details.",
+      responsivePriority,
     });
   }
 
@@ -204,6 +219,7 @@ export function buildProposalQueueWorkflowContext({
       facts,
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "No fallback workflow, approval, or readiness state is shown.",
+      responsivePriority,
     });
   }
 
@@ -224,6 +240,7 @@ export function buildProposalQueueWorkflowContext({
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote:
         "Visible proposal evidence remains readable during refresh but is not labelled current until the source settles.",
+      responsivePriority,
     });
   }
 
@@ -304,6 +321,7 @@ export function buildProposalQueueWorkflowContext({
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote:
         "Counts apply only to proposals shown in this view. They do not establish complete queue posture while proposal or supporting evidence is partial.",
+      responsivePriority,
     });
   }
 
@@ -318,6 +336,7 @@ export function buildProposalQueueWorkflowContext({
       facts: [...facts, { label: "Proposals", value: "0" }],
       sourceLabel: "Advisory proposal lifecycle",
       boundaryNote: "An empty queue does not imply that suitability or approval checks are complete.",
+      responsivePriority,
     });
   }
 
@@ -339,5 +358,6 @@ export function buildProposalQueueWorkflowContext({
     sourceLabel: "Advisory proposal lifecycle",
     boundaryNote:
       "This is queue-level posture. Open a proposal to inspect its record-specific workflow, evidence, and approvals.",
+    responsivePriority,
   });
 }

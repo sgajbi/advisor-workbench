@@ -65,4 +65,39 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.getByText("3 proposals in view")).toBeInTheDocument();
     expect(screen.getByText("2 proposals need advisor action.")).toBeInTheDocument();
   });
+
+  it("marks supplementary workflow posture without removing source and scope evidence", () => {
+    const supplementaryModel = buildProposalQueueWorkflowContext({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      modeLabel: "Advisory overview",
+      isLoading: false,
+      isRefreshing: false,
+      permissionBlocked: false,
+      hasError: false,
+      hasUnavailableEvidence: false,
+      hasProposalRefreshFailure: false,
+      hasSupportingEvidenceRefreshFailure: false,
+      hasMoreResults: false,
+      hasPreviousResults: false,
+      windowNumber: 1,
+      totalCount: 3,
+      attentionCount: 2,
+      primaryDecision: "Which proposals require review?",
+      recommendedAction: "Review proposals with open decisions.",
+      responsivePriority: "supplementary",
+    });
+
+    const { container } = render(
+      <ProposalWorkflowContextProvider initialModel={supplementaryModel}>
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>
+    );
+
+    expect(container.firstElementChild).toHaveAttribute(
+      "data-responsive-priority",
+      "supplementary"
+    );
+    expect(screen.getByText("Workflow context")).toBeInTheDocument();
+    expect(screen.getByText("Source and scope")).toBeInTheDocument();
+  });
 });

@@ -120,6 +120,16 @@ describe("proposal workflow context view model", () => {
     );
     expect(model.blockers).toEqual(["1 proposal needs advisor action."]);
     expect(model.boundaryNote).toContain("queue-level posture");
+    expect(model.responsivePriority).toBe("persistent");
+  });
+
+  it("publishes an explicit supplementary responsive priority when the main workspace owns queue posture", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      responsivePriority: "supplementary",
+    });
+
+    expect(model.responsivePriority).toBe("supplementary");
   });
 
   it("does not let an empty proposal queue mask unavailable suitability evidence", () => {
