@@ -19,6 +19,7 @@ import { isCapabilityOptionSupported } from "./performance-capability-options";
 import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
 import choiceStyles from "./performance-choice-groups.module.css";
 import styles from "./performance-source-selection-controls.module.css";
+import type { PerformanceSourceControlFocusTarget } from "./performance-workspace-types";
 
 type PerformanceSourceSelectionControlsProps = {
   portfolioId: string;
@@ -34,7 +35,10 @@ type PerformanceSourceSelectionControlsProps = {
   capabilities: PerformanceWorkspaceCapabilities;
   isUpdating: boolean;
   ariaLabel: string;
-  onRequestChange: (patch: PerformanceControlPatch) => void;
+  onRequestChange: (
+    patch: PerformanceControlPatch,
+    focusTarget?: PerformanceSourceControlFocusTarget
+  ) => void;
 };
 
 type ExplicitDateDraft = {
@@ -61,7 +65,8 @@ export default function PerformanceSourceSelectionControls({
   onRequestChange,
 }: PerformanceSourceSelectionControlsProps) {
   const isHydrated = useClientMounted();
-  const focusRestoreTargetRef = useRef<HTMLElement | null>(null);
+  const selectionFocusTargetRef = useRef<HTMLElement | null>(null);
+  const focusRestoreFrameRef = useRef<number | null>(null);
   const wasUpdatingRef = useRef(isUpdating);
   const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
     sourceStartDate: reportStartDate,
@@ -89,19 +94,41 @@ export default function PerformanceSourceSelectionControls({
       return;
     }
 
-    const target = focusRestoreTargetRef.current;
-    focusRestoreTargetRef.current = null;
-    const activeElement = document.activeElement;
-    if (
-      target?.isConnected &&
-      (activeElement === document.body || activeElement === document.documentElement)
-    ) {
-      target.focus();
-    }
+    const firstFrameId = window.requestAnimationFrame(() => {
+      const secondFrameId = window.requestAnimationFrame(() => {
+        const target = selectionFocusTargetRef.current;
+        selectionFocusTargetRef.current = null;
+        if (target && !target.isConnected) {
+          return;
+        }
+        const activeElement = document.activeElement;
+        if (
+          target?.isConnected &&
+          (activeElement === document.body || activeElement === document.documentElement)
+        ) {
+          target.focus();
+        }
+      });
+      focusRestoreFrameRef.current = secondFrameId;
+    });
+    focusRestoreFrameRef.current = firstFrameId;
+
+    return () => {
+      if (focusRestoreFrameRef.current !== null) {
+        window.cancelAnimationFrame(focusRestoreFrameRef.current);
+        focusRestoreFrameRef.current = null;
+      }
+    };
   }, [isUpdating]);
 
-  function updateSelection(patch: PerformanceControlPatch, focusRestoreTarget?: HTMLElement) {
-    focusRestoreTargetRef.current = focusRestoreTarget ?? null;
+  function updateSelection(
+    patch: PerformanceControlPatch,
+    focusTarget: PerformanceSourceControlFocusTarget,
+    focusRestoreTarget?: HTMLElement
+  ) {
+    const activeElement = document.activeElement;
+    selectionFocusTargetRef.current =
+      focusRestoreTarget ?? (activeElement instanceof HTMLElement ? activeElement : null);
     onRequestChange(
       buildPerformanceControlSelectionPatch({
         patch,
@@ -115,6 +142,7 @@ export default function PerformanceSourceSelectionControls({
         reportStartDate,
         reportEndDate,
       }),
+      focusTarget
     );
   }
 
@@ -130,6 +158,7 @@ export default function PerformanceSourceSelectionControls({
         reportStartDate: activeDateDraft.fromDate,
         reportEndDate: activeDateDraft.toDate,
       },
+      { kind: "action", actionLabel: "Apply" },
       submitter instanceof HTMLElement ? submitter : undefined,
     );
   }
@@ -172,17 +201,21 @@ export default function PerformanceSourceSelectionControls({
       className={`performance-analysis-control-bar ${styles.controls}`}
       role="group"
       aria-label={ariaLabel}
+      data-performance-source-control-region="true"
     >
       <ControlCluster className="performance-analysis-control-cluster-selection">
         <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
           <WorkbenchChoiceGroup
             value={period}
             onChange={(value) =>
-              updateSelection({
-                period: value,
-                reportStartDate: undefined,
-                reportEndDate: undefined,
-              })
+              updateSelection(
+                {
+                  period: value,
+                  reportStartDate: undefined,
+                  reportEndDate: undefined,
+                },
+                { kind: "choice", groupLabel: "Horizon", optionLabel: value }
+              )
             }
             ariaLabel="Horizon"
             className={choiceStyles.horizon}
@@ -198,7 +231,12 @@ export default function PerformanceSourceSelectionControls({
         <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
           <WorkbenchChoiceGroup
             value={detailBasis}
-            onChange={(value) => updateSelection({ detailBasis: value })}
+            onChange={(value) =>
+              updateSelection(
+                { detailBasis: value },
+                { kind: "choice", groupLabel: "Basis", optionLabel: value }
+              )
+            }
             ariaLabel="Basis"
             className={choiceStyles.horizon}
             density="compact"
@@ -271,7 +309,11 @@ export default function PerformanceSourceSelectionControls({
             size="small"
             value={chartFrequency}
             onChange={(event) =>
-              updateSelection({ chartFrequency: event.target.value }, event.currentTarget)
+              updateSelection(
+                { chartFrequency: event.target.value },
+                { kind: "field", fieldLabel: "Frequency" },
+                event.currentTarget
+              )
             }
             disabled={isUpdating}
             sx={selectControlSx}
@@ -303,6 +345,7 @@ export default function PerformanceSourceSelectionControls({
             onChange={(event) =>
               updateSelection(
                 { benchmark: event.target.value || undefined },
+                { kind: "field", fieldLabel: "Benchmark" },
                 event.currentTarget,
               )
             }

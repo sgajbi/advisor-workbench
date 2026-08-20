@@ -41,7 +41,10 @@ export default function PerformanceAnalysisSegmentToolbar({
   }, [disabled]);
 
   return (
-    <WorkbenchSummaryToolbar className="performance-analysis-toolbar">
+    <WorkbenchSummaryToolbar
+      className="performance-analysis-toolbar"
+      data-performance-source-control-region="true"
+    >
       <FormControl ref={controlRef} size="small" sx={{ minWidth: 180 }}>
         <FieldLabel>{fieldLabel}</FieldLabel>
         <Select

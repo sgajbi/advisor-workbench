@@ -164,9 +164,10 @@ export default function PerformanceAnalysisContributionSection({
                     isCapabilityOptionSupported(capabilities.contributionDetail, "dimension", option)
                   }
                   onChange={(nextValue) =>
-                    onRequestChange?.({
-                      contributionDimension: nextValue,
-                    })
+                    onRequestChange?.(
+                      { contributionDimension: nextValue },
+                      { kind: "field", fieldLabel: "Contribution Segment" }
+                    )
                   }
                 />
                 <PerformancePanelInfoDrawer

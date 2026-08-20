@@ -55,21 +55,25 @@ describe("PerformanceSourceSelectionControls", () => {
     });
 
     fireEvent.click(screen.getByRole("radio", { name: "QTD" }));
-    expect(onRequestChange).toHaveBeenLastCalledWith({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
-      period: "QTD",
-      detailBasis: "NET",
-      contributionDimension: "asset_class",
-      attributionDimension: "sector",
-      chartFrequency: "monthly",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      reportStartDate: undefined,
-      reportEndDate: undefined,
-    });
+    expect(onRequestChange).toHaveBeenLastCalledWith(
+      {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        period: "QTD",
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "sector",
+        chartFrequency: "monthly",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        reportStartDate: undefined,
+        reportEndDate: undefined,
+      },
+      { kind: "choice", groupLabel: "Horizon", optionLabel: "QTD" },
+    );
 
     fireEvent.click(screen.getByRole("radio", { name: "GROSS" }));
     expect(onRequestChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ detailBasis: "GROSS", period: "YTD" }),
+      { kind: "choice", groupLabel: "Basis", optionLabel: "GROSS" },
     );
 
     fireEvent.change(screen.getByLabelText("Frequency"), {
@@ -77,6 +81,7 @@ describe("PerformanceSourceSelectionControls", () => {
     });
     expect(onRequestChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ chartFrequency: "quarterly", period: "YTD" }),
+      { kind: "field", fieldLabel: "Frequency" },
     );
 
     fireEvent.change(screen.getByLabelText("Benchmark"), {
@@ -84,6 +89,7 @@ describe("PerformanceSourceSelectionControls", () => {
     });
     expect(onRequestChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ benchmark: "BMK_PRIVATE_BANK", period: "YTD" }),
+      { kind: "field", fieldLabel: "Benchmark" },
     );
   });
 
@@ -96,17 +102,20 @@ describe("PerformanceSourceSelectionControls", () => {
     fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-03-31" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
 
-    expect(onRequestChange).toHaveBeenCalledWith({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
-      period: "EXPLICIT",
-      detailBasis: "NET",
-      contributionDimension: "asset_class",
-      attributionDimension: "sector",
-      chartFrequency: "monthly",
-      benchmark: "BMK_GLOBAL_BALANCED_60_40",
-      reportStartDate: "2026-02-01",
-      reportEndDate: "2026-03-31",
-    });
+    expect(onRequestChange).toHaveBeenCalledWith(
+      {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        period: "EXPLICIT",
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "sector",
+        chartFrequency: "monthly",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        reportStartDate: "2026-02-01",
+        reportEndDate: "2026-03-31",
+      },
+      { kind: "action", actionLabel: "Apply" },
+    );
   });
 
   it("preserves the source-published date range after confirming a shorter explicit window", async () => {
@@ -209,6 +218,7 @@ describe("PerformanceSourceSelectionControls", () => {
     );
 
     await waitFor(() => expect(benchmark).toHaveFocus());
+
   });
 
   it("does not steal focus when the user moves during source confirmation", async () => {

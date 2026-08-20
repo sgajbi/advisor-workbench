@@ -1155,14 +1155,16 @@ describe("design-system components", () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it("announces a source-confirmed refresh without exposing a recovery action", () => {
+  it("announces a compact source-confirmed refresh without moving focus or repeating context", () => {
+    render(<button type="button">Continue analysis</button>);
+    const continuingTask = screen.getByRole("button", { name: "Continue analysis" });
+    continuingTask.focus();
+
     render(
       <WorkbenchRefreshStatus
         kind="confirmed"
         eyebrow="Source analysis updated"
         title="Performance selection confirmed"
-        message="The requested selection is now source-confirmed."
-        requestedContext="3Y"
         confirmedContext="3Y · NET returns"
       />
     );
@@ -1170,7 +1172,10 @@ describe("design-system components", () => {
     const status = screen.getByRole("status");
     expect(status).toHaveAttribute("aria-live", "polite");
     expect(status).toHaveAttribute("data-state", "confirmed");
-    expect(within(status).getAllByText("3Y", { exact: false })).toHaveLength(2);
+    expect(within(status).getByText("3Y · NET returns")).toBeInTheDocument();
+    expect(within(status).queryByText("Requested")).not.toBeInTheDocument();
+    expect(within(status).queryByText("Source-confirmed")).not.toBeInTheDocument();
+    expect(continuingTask).toHaveFocus();
     expect(screen.queryByRole("button", { name: /Retry performance selection/i }))
       .not.toBeInTheDocument();
   });
