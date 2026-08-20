@@ -18,6 +18,7 @@ import {
 const replaceMock = vi.fn();
 const getSummaryClientMock = vi.fn();
 const getDetailsClientMock = vi.fn();
+const restoreFocusMock = vi.fn();
 const DEFAULT_PORTFOLIO_RETURN = String(
   buildPerformanceWorkspaceSummary().net_performance.portfolio_return_pct
 );
@@ -44,6 +45,10 @@ vi.mock("../../src/features/workbench/api", () => ({
     [401, 403].includes(Number((error as { status: number }).status)),
 }));
 
+vi.mock("../../src/apps/performance/components/performance-source-control-focus", () => ({
+  restorePerformanceSourceControlFocus: (...args: unknown[]) => restoreFocusMock(...args),
+}));
+
 vi.mock("../../src/apps/performance/components/performance-workspace-view", () => ({
   default: ({
     workspace,
@@ -61,16 +66,19 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
     mode: string;
     onModeChange?: (mode: "summary" | "analysis" | "advisor" | "risk") => void;
     period: string;
-    onRequestChange?: (patch: {
-      period?: string;
-      detailBasis?: string;
-      contributionDimension?: string;
-      attributionDimension?: string;
-      chartFrequency?: string;
-      benchmark?: string;
-      reportStartDate?: string;
-      reportEndDate?: string;
-    }) => void;
+    onRequestChange?: (
+      patch: {
+        period?: string;
+        detailBasis?: string;
+        contributionDimension?: string;
+        attributionDimension?: string;
+        chartFrequency?: string;
+        benchmark?: string;
+        reportStartDate?: string;
+        reportEndDate?: string;
+      },
+      focusTarget?: { kind: "choice"; groupLabel: "Horizon"; optionLabel: string }
+    ) => void;
     isUpdating?: boolean;
     isDetailsPending?: boolean;
     refreshStatus?: {
@@ -114,6 +122,17 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       <div data-testid="load-issue">{loadIssue?.state ?? "none"}</div>
       <button type="button" onClick={() => onRequestChange?.({ period: "3Y" })}>
         Switch 3Y
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onRequestChange?.(
+            { period: "3Y" },
+            { kind: "choice", groupLabel: "Horizon", optionLabel: "3Y" }
+          )
+        }
+      >
+        Switch 3Y with focus target
       </button>
       <button type="button" onClick={() => onRequestChange?.({ period: "YTD" })}>
         Switch YTD
@@ -161,6 +180,68 @@ describe("PerformanceWorkspaceClient", () => {
     replaceMock.mockReset();
     getSummaryClientMock.mockReset();
     getDetailsClientMock.mockReset();
+    restoreFocusMock.mockReset();
+  });
+
+  it("does not reuse an earlier selector target for a targetless retry", async () => {
+    const detailFailure = Object.assign(new Error("Performance details unavailable"), {
+      status: 502,
+    });
+    getSummaryClientMock.mockResolvedValueOnce(
+      buildSummary({ period: "3Y", report_start_date: "2023-03-28" })
+    );
+    getDetailsClientMock
+      .mockResolvedValueOnce(buildDetails({ period: "3Y", report_start_date: "2023-03-28" }))
+      .mockRejectedValueOnce(detailFailure)
+      .mockResolvedValueOnce(
+        buildDetails({
+          period: "3Y",
+          report_start_date: "2023-03-28",
+          contribution_dimension: "sector",
+        })
+      );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y with focus target" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+    });
+    expect(restoreFocusMock).toHaveBeenCalledWith({
+      kind: "choice",
+      groupLabel: "Horizon",
+      optionLabel: "3Y",
+    });
+    restoreFocusMock.mockClear();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch Contribution Segment" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Retry Selection" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+    });
+    expect(restoreFocusMock).not.toHaveBeenCalled();
   });
 
   it("expires one source-confirmed acknowledgement without stealing focus or replaying identical input", async () => {

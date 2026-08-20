@@ -308,9 +308,7 @@ export default function PerformanceWorkspaceClient({
     if (!controls) {
       return;
     }
-    if (focusTarget) {
-      lastSourceControlFocusTargetRef.current = focusTarget;
-    }
+    lastSourceControlFocusTargetRef.current = focusTarget ?? null;
     const nextControls = applyPerformanceControlPatch(controls, patch);
     const sameSummary = buildSummaryCacheKey(nextControls) === buildSummaryCacheKey(controls);
     const sameDetails = buildDetailsCacheKey(nextControls) === buildDetailsCacheKey(controls);
