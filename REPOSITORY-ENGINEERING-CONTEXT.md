@@ -517,7 +517,12 @@ Current repository posture:
     Identify is an explicit handoff to the source-backed Ideas workspace, not a locally calculated
     proposal state. Proposal metrics, lifecycle counts, ranking, and workflow context apply only to
     the current source window. A continuation or earlier window keeps the overview partial and
-    advisors move between windows explicitly before concluding the portfolio is clear.
+    advisors move between windows explicitly before concluding the portfolio is clear. Initial
+    proposal-list failure withholds the worklist; background failure may retain earlier evidence
+    only under an unconfirmed posture. Keep the shared source-refresh action mounted, focus-stable,
+    and duplicate-fenced while the same Gateway/BFF query identity settles. Announce source success
+    only after a valid response replaces the failed or earlier evidence; permission blocks remain
+    fail-closed and expose no retry.
     `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
     `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle

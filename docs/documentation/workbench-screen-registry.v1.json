@@ -791,16 +791,19 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Advisory-Overview-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/apps/recommendations/page.tsx",
+        "src/features/proposals/components/advisory-overview-workspace.tsx",
+        "src/features/proposals/advisory-overview-view-model.ts"
+      ],
+      "runtimeEvidence": [
+        "tests/e2e/advisory-overview-worklist.spec.ts",
+        "scripts/live/validation/browser-workflows.mjs"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "advisory-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "advisor-cockpit",

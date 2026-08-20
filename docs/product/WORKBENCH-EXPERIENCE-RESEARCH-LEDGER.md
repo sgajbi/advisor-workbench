@@ -5,6 +5,61 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Advisory Overview: recoverable proposal prioritisation
+
+### Business job
+
+A client advisor uses Advisory Overview to decide which visible proposal needs attention first,
+identify its lifecycle handoff, and open the source record without mistaking one cursor window for
+the complete portfolio or advisor book. A source interruption must not force a page reload, hide
+retained-earlier status, or imply that the queue is current.
+
+The reading order is selected portfolio, advisor decision, visible-window measures, lifecycle
+handoffs, priority worklist, source-window posture, then proposal detail.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-21 from official sources:
+
+1. [BlackRock Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360)
+   centralises whole-book and portfolio insights so advisors can identify accounts requiring
+   attention, prepare meetings, analyse portfolios, and continue into proposals and reports.
+2. [Morningstar Direct Advisory Suite](https://www.morningstar.com/business/products/direct-advisory-suite)
+   connects research, proposal, planning, and compliance-aware advisory work in one operating flow.
+3. [Salesforce Wealth Management](https://www.salesforce.com/financial-services/wealth-management-software/)
+   joins client context, alerts, tasks, and action plans to reduce workflow switching.
+4. [W3C WCAG 2.2 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires asynchronous outcomes to be programmatically available without moving focus.
+
+### Adopted
+
+- Keep one dense, portfolio-scoped worklist with the highest-priority visible action first.
+- Preserve explicit cursor-window scope and route from summary to the owning proposal record.
+- Recover in place by recontacting the same Gateway query rather than requiring navigation or
+  browser reload.
+- Keep the source action mounted and keyboard focus stable while fencing repeat requests.
+- Retain earlier evidence only under an explicit unconfirmed posture and announce success only
+  after Gateway returns current rows.
+- Use one shared Workbench source-refresh primitive instead of another page-local async button.
+
+### Rejected
+
+- Browser-created fallback proposals, book-wide counts, policy thresholds, suitability conclusions,
+  approval, client-publication, contact, order, or execution authority.
+- A full-page reload as the primary source-recovery path.
+- Technical cache, query, refetch, service, or raw-error language in the business scan.
+- Disabled-control replacement that drops focus, decorative success banners, card-grid expansion,
+  or competitor visual imitation.
+
+### Implementation and validation
+
+Workbench issue #729 introduces the shared `SourceRefreshAction`, applies it to Advisory Overview,
+and removes a duplicated optional-source refresh implementation from Data Product Catalogue. The
+screen now proves initial unavailable-to-ready, retained-evidence-to-ready, repeated-request
+fencing, persistent failure, permission blocking, focus continuity, and 1440/1024/519-pixel
+optimized-browser reflow through the Gateway/BFF boundary. The global Advisory app entry remains
+capability-disabled; the guide does not promote broader product availability.
+
 ## Risk Review: measured evidence before policy judgement
 
 ### Business job

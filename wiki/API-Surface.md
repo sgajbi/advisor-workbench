@@ -43,7 +43,9 @@ promote dormant labels into product ownership just because historical route file
 ## Compatibility routes
 
 - `/recommendations`
-  redirects to supported active surfaces
+  renders Advisory Overview by default; `mode=overview` is the explicit equivalent. The overview
+  reads the selected portfolio's cursor-bounded Gateway proposal list and keeps the global Advisory
+  app entry capability-disabled.
 - `/recommendations?mode=cockpit`
   Gateway-backed RFC-0026 advisor cockpit for Advise-owned action items, supportability, meeting
   preparation, tactical house-view impact review, and bounded acknowledgements
@@ -75,6 +77,10 @@ promote dormant labels into product ownership just because historical route file
   look-through coverage. Browser requests use `/api/bff/api/v1/...`; Workbench retains confirmed
   direct evidence when optional expanded coverage cannot be confirmed and never calls Core
   directly.
+- Advisory Overview reads Gateway `GET /api/v1/proposals` through the browser's
+  `/api/bff/api/v1/proposals` boundary with `portfolio_id`, `limit`, and optional `cursor`. Counts,
+  ordering, lifecycle handoffs, and recovery apply only to the returned source window; a retry
+  repeats the same query identity and never calls Advise directly.
 - risk is currently served through `/performance` route mode selection, not a separate top-level URL
 - Performance Summary composes Gateway
   `/api/v1/workbench/{portfolio_id}/performance/summary`, `/details`, and

@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 15,
-      coverageExceptions: 21,
-      unmappedGuides: 21,
+      mappedGuides: 16,
+      coverageExceptions: 20,
+      unmappedGuides: 20,
     });
   });
 
@@ -136,6 +136,39 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("preserves\n  keyboard focus");
     expect(guide).toContain("does not:\n\n- calculate or infer target weights");
     expect(guide).toContain("not readiness certification");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Advisory Overview to one source-recoverable business guide", () => {
+    const registry = loadRegistry();
+    const advisoryOverview = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "advisory-overview",
+    );
+
+    expect(advisoryOverview).toMatchObject({
+      routePattern: "/recommendations",
+      mode: "overview",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Advisory-Overview-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise"],
+      runtimeEvidence: [
+        "tests/e2e/advisory-overview-worklist.spec.ts",
+        "scripts/live/validation/browser-workflows.mjs",
+      ],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Advisory-Overview-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("Retains earlier proposals after a background refresh failure");
+    expect(guide).toContain("preserves keyboard focus");
+    expect(guide).toContain("the global Advisory app entry remains capability-disabled");
+    expect(guide).toContain(
+      "not\n  production readiness, independent certification, bank approval, or competitor-superiority proof",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
