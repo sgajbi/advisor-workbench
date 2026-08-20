@@ -198,7 +198,7 @@ describe("DpmCommandCenterPanel", () => {
       expect(runDpmCommandCenterMonitoring).toHaveBeenCalledWith();
     });
     expect(
-      screen.getByText("Monitoring completed with Succeeded."),
+      await screen.findByText("Monitoring completed with Succeeded."),
     ).toBeInTheDocument();
   });
 
