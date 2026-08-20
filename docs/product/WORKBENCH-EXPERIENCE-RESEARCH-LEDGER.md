@@ -392,7 +392,39 @@ and booked-parent lineage during allocation aggregation. Gateway issue
 `sgajbi/lotus-gateway#496` tracks publication of that source detail to Workbench. Until both land,
 Workbench does not claim an expanded contributor drill-down.
 
-### Validation record
+### Slice 2 — source-confirmed coverage and recovery
+
+GitHub issue #727 governs the slice. A second research pass on 2026-08-20 reviewed official
+[BlackRock Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360),
+[BlackRock Aladdin Wealth asset-allocation guidance](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/insights/asset-allocation),
+[Morningstar Portfolio X-Ray](https://portfolio.morningstar.com/rtport/reg/xray_landingpage.aspx),
+and [W3C status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages).
+The adopted workflow moves from whole-portfolio composition into holdings-based investigation,
+keeps exact values next to the visual, and makes asynchronous source progress and results available
+without moving focus. Lotus does not copy another product's layout, wording, calculations, or
+unsupported capabilities.
+
+The prior client state converted any missing preferred-look-through response into a completed
+**Direct holdings only** conclusion. That made transport, HTTP, and parsing failure
+indistinguishable from a valid source response that explicitly did not support expanded exposure.
+The replacement state model distinguishes checking, available, unsupported, and failed; treats the
+book-provided direct allocation as confirmed evidence; fences superseded portfolio responses; and
+forces a fresh source request on recheck. Valid direct evidence remains usable throughout optional
+coverage failure.
+
+The recovery control remains mounted and focus-stable, and successful recovery is announced only
+after a valid source response. Compact layouts intentionally suppress the chart and its presentation
+switcher when the visualization cannot remain informative, preserving the exact ranked market
+value, weight, and position evidence instead. The new rules live in an Allocation-owned CSS Module;
+eight dead responsive lines were removed from the global legacy layer and the exact global CSS
+ratchet was lowered.
+
+Rejected decisions for this slice were a browser-authored unsupported state after request failure,
+silently retaining a prior portfolio's response, allowing duplicate retries, suppressing expected
+browser errors in validation, showing an unreadable micro-chart on compact screens, and enabling
+expanded contributor drill-down before Gateway/Core publish decomposed lineage.
+
+### Slice 1 validation record
 
 1. Focused allocation, record-screen, holdings-grid, and Portfolio view-model coverage: 33 tests
    passed on 2026-07-17.
@@ -410,11 +442,26 @@ Workbench does not claim an expanded contributor drill-down.
    Playwright smoke, Docker build, and Dockerized local-CI parity. Issue #413 is closed and codebase
    review item `LWB-R154` is hardened.
 
-### Publication decision
+### Slice 1 publication decision
 
 No repo wiki change is required for this slice. It completes an existing supported Allocation
 screen interaction and documents an unavailable expanded-contributor boundary; it does not change
 an operator command, integration contract, supported-feature claim, or published runtime flow.
+
+### Slice 2 validation and publication decision
+
+Focused Allocation, service-addressing, and scenario-runner coverage passed 32 tests. The dedicated
+optimized standalone browser journey passed against `PB_SG_GLOBAL_BAL_001` with an initial
+unconfirmed response, retained direct evidence, keyboard contributor review, exact two-request
+recovery, stable retry focus, confirmed expanded coverage, honest expanded-contributor limitation,
+zero browser errors, and zero page overflow at 1440, 1024, and 519 pixels. Reviewed screenshots and
+machine proof are generated under `output/playwright/issue-727-allocation-recovery/`. The global CSS
+governance gate passes at the lowered 11,976-line and 261,580-normalized-byte limit.
+
+Slice 2 changes business-visible recovery and supported-feature truth, so the repo-local wiki now
+includes the complete Portfolio Allocation screen guide, catalogue/navigation entry, concise API
+contract note, and supported-feature clarification. Publish those authored pages only after the PR
+merges, then verify strict wiki parity.
 
 ## Positions Review
 

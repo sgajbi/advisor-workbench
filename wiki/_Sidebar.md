@@ -5,6 +5,7 @@
 ### Orientation
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
+- [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

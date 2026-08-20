@@ -16,6 +16,7 @@ and canonical validation remain authoritative.
 ## Product routes
 
 - `/portfolio`
+- `/allocation`
 - `/book`
 - `/portfolios`
 - `/intake`
@@ -69,6 +70,11 @@ promote dormant labels into product ownership just because historical route file
 
 ## Current contract notes
 
+- Portfolio Allocation loads the selected portfolio book through Gateway and requests
+  `/api/v1/portfolio/portfolios/{portfolio_id}/allocations` separately for direct or preferred
+  look-through coverage. Browser requests use `/api/bff/api/v1/...`; Workbench retains confirmed
+  direct evidence when optional expanded coverage cannot be confirmed and never calls Core
+  directly.
 - risk is currently served through `/performance` route mode selection, not a separate top-level URL
 - Performance Summary composes Gateway
   `/api/v1/workbench/{portfolio_id}/performance/summary`, `/details`, and
