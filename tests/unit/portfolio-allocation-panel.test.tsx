@@ -66,7 +66,7 @@ describe("PortfolioAllocationPanel", () => {
         return jsonResponse({
           reporting_currency: "USD",
           look_through: {
-            requested_mode: "direct_only",
+            requested_mode: "prefer_look_through",
             effective_mode: "direct_only",
             applied: false,
           },
@@ -161,7 +161,7 @@ describe("PortfolioAllocationPanel", () => {
         jsonResponse({
           reporting_currency: "USD",
           look_through: {
-            requested_mode: "direct_only",
+            requested_mode: "prefer_look_through",
             effective_mode: "direct_only",
             applied: false,
           },
@@ -208,7 +208,7 @@ describe("PortfolioAllocationPanel", () => {
         jsonResponse({
           reporting_currency: "USD",
           look_through: {
-            requested_mode: "direct_only",
+            requested_mode: "prefer_look_through",
             effective_mode: "direct_only",
             applied: false,
           },
@@ -290,6 +290,72 @@ describe("PortfolioAllocationPanel", () => {
         })
       ).toBeDisabled()
     );
+  });
+
+  it("keeps unconfirmed preferred-mode responses recoverable without replacing direct evidence", async () => {
+    let allocationRequestCount = 0;
+    const onSelectionChange = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        allocationRequestCount += 1;
+        if (allocationRequestCount === 1) {
+          return jsonResponse({
+            reporting_currency: "USD",
+            views: [
+              {
+                dimension: "asset_class",
+                buckets: [
+                  {
+                    bucket: "Unconfirmed exposure",
+                    position_count: 1,
+                    market_value_base: 1,
+                    weight_pct: 100,
+                  },
+                ],
+              },
+            ],
+          });
+        }
+        return jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "direct_only",
+            effective_mode: "direct_only",
+            applied: false,
+          },
+          views: [],
+        });
+      }),
+    );
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={{ dimension: "asset_class", bucket: "Equities" }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("725,000 USD")).toBeInTheDocument();
+    expect(screen.queryByText("Unconfirmed exposure")).not.toBeInTheDocument();
+    expect(onSelectionChange).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Recheck exposure coverage" }));
+
+    await waitFor(() => expect(allocationRequestCount).toBe(2));
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("725,000 USD")).toBeInTheDocument();
+    expect(onSelectionChange).not.toHaveBeenCalled();
   });
 
   it("keeps direct allocation usable and recovers source coverage without moving focus", async () => {

@@ -6,6 +6,7 @@ import {
   ALLOCATION_DIMENSIONS,
   describeAllocationArc,
   formatAllocationDimensionLabel,
+  isDirectLookThroughFallbackConfirmed,
   isExpandedLookThroughSupported,
   normalizeLookThroughMode,
   roundSvgCoordinate,
@@ -65,6 +66,29 @@ describe("portfolio allocation view model", () => {
         applied: true,
       }),
     ).toBe(true);
+    expect(
+      isExpandedLookThroughSupported({
+        requested_mode: "direct_only",
+        effective_mode: "prefer_look_through",
+        applied: true,
+      }),
+    ).toBe(false);
+
+    expect(isDirectLookThroughFallbackConfirmed(null)).toBe(false);
+    expect(
+      isDirectLookThroughFallbackConfirmed({
+        requested_mode: "prefer_look_through",
+        effective_mode: "direct_only",
+        applied: false,
+      }),
+    ).toBe(true);
+    expect(
+      isDirectLookThroughFallbackConfirmed({
+        requested_mode: "direct_only",
+        effective_mode: "direct_only",
+        applied: false,
+      }),
+    ).toBe(false);
   });
 
   it("builds deterministic allocation donut arc geometry", () => {

@@ -48,7 +48,18 @@ export function isExpandedLookThroughSupported(
     return false;
   }
   return (
-    lookThrough.applied || lookThrough.effective_mode === "prefer_look_through"
+    lookThrough.requested_mode === "prefer_look_through" &&
+    (lookThrough.applied || lookThrough.effective_mode === "prefer_look_through")
+  );
+}
+
+export function isDirectLookThroughFallbackConfirmed(
+  lookThrough: PortfolioAllocationLookThrough | null,
+): boolean {
+  return (
+    lookThrough?.requested_mode === "prefer_look_through" &&
+    lookThrough.effective_mode === "direct_only" &&
+    !lookThrough.applied
   );
 }
 

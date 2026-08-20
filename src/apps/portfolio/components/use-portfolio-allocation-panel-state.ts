@@ -9,6 +9,7 @@ import {
 import {
   ALLOCATION_DIMENSIONS,
   formatAllocationDimensionLabel,
+  isDirectLookThroughFallbackConfirmed,
   isExpandedLookThroughSupported,
   normalizeLookThroughMode,
   type AllocationChartType,
@@ -343,6 +344,12 @@ function applyLookThroughCoverageResponse(
     response.look_through ?? null,
   );
   if (!supportsExpandedLookThrough) {
+    if (!isDirectLookThroughFallbackConfirmed(response.look_through ?? null)) {
+      return {
+        ...current,
+        lookThroughCoverageStatus: "failed",
+      };
+    }
     const directAllocationViews = resolveDirectAllocationViews(
       current.directAllocationViews,
       response,
@@ -377,7 +384,7 @@ function resolveDirectAllocationViews(
 ): PortfolioAllocationView[] {
   if (
     !response ||
-    isExpandedLookThroughSupported(response.look_through ?? null)
+    !isDirectLookThroughFallbackConfirmed(response.look_through ?? null)
   ) {
     return currentDirectAllocationViews;
   }
