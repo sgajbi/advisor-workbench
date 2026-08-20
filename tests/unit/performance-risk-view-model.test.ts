@@ -323,6 +323,59 @@ describe("buildPerformanceRiskViewModel", () => {
     });
   });
 
+  it("qualifies partial drawdown and largest-position evidence at the owning source", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const riskDrawdown = buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET");
+    const drawdownEvidence = riskDrawdown.supportability.find(
+      (item) => item.key === "portfolio_returns",
+    );
+    if (!drawdownEvidence) {
+      throw new Error("Expected the fixture to publish drawdown source evidence.");
+    }
+    drawdownEvidence.state = "partial";
+    drawdownEvidence.reason = "The source returned an incomplete return history.";
+
+    const riskConcentration = buildFixtureRiskConcentration(scenario.workspace, "YTD");
+    const positionEvidence = riskConcentration.supportability.find(
+      (item) => item.key === "portfolio_positions",
+    );
+    if (!positionEvidence) {
+      throw new Error("Expected the fixture to publish position source evidence.");
+    }
+    positionEvidence.state = "partial";
+    positionEvidence.reason = "The source returned incomplete booked-position coverage.";
+
+    const viewModel = buildPerformanceRiskViewModel({
+      workspace: scenario.workspace,
+      period: "YTD",
+      detailBasis: "NET",
+      riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      riskConcentration,
+      riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+      riskDrawdown,
+      riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    });
+
+    expect(viewModel.workspaceOverview).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Max drawdown",
+          value: "-12.45%",
+          support:
+            "Still below the prior peak at period end. The source returned an incomplete return history.",
+          tone: "warn",
+        }),
+        expect.objectContaining({
+          label: "Largest position",
+          value: "18.40%",
+          support:
+            "PIMCO GIS Income Fund. The source returned incomplete booked-position coverage.",
+          tone: "warn",
+        }),
+      ]),
+    );
+  });
+
   it("returns a loading state without fabricated metrics while details are pending", () => {
     const scenario = buildSupportedPerformanceScenario();
 

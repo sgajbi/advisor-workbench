@@ -1393,19 +1393,30 @@ function resolveDrawdownOverviewEvidence(response: WorkbenchRiskDrawdownResponse
 > {
   const period = response.payload?.periods[0];
   const summary = period?.summary;
-  if (!summary || typeof summary.max_drawdown !== "number") {
+  const sourceEvidence = response.supportability.find((item) => item.key === "portfolio_returns");
+  const sourceState = sourceEvidence?.state ?? response.state;
+  if (
+    !summary ||
+    typeof summary.max_drawdown !== "number" ||
+    sourceState === "blocked" ||
+    sourceState === "unavailable"
+  ) {
     return {
       value: "Unavailable",
-      support: "No source-confirmed drawdown measure is available.",
+      support: sourceEvidence?.reason ?? "No source-confirmed drawdown measure is available.",
       tone: "warn",
     };
   }
+  const recoverySupport = summary.is_recovered
+    ? "Recovered before period end"
+    : "Still below the prior peak at period end";
   return {
     value: formatRiskPercentValue(summary.max_drawdown),
-    support: summary.is_recovered
-      ? "Recovered before period end"
-      : "Still below the prior peak at period end",
-    tone: "default",
+    support:
+      sourceState === "partial"
+        ? `${recoverySupport}. ${sourceEvidence?.reason ?? "Source coverage is partial for this drawdown measure."}`
+        : recoverySupport,
+    tone: sourceState === "partial" ? "warn" : "default",
   };
 }
 
@@ -1413,10 +1424,16 @@ function resolveConcentrationOverviewEvidence(
   response: WorkbenchRiskConcentrationResponse,
 ): Pick<PerformanceRiskOverviewItem, "value" | "support" | "tone"> {
   const concentration = response.payload?.single_position_concentration;
-  if (!concentration) {
+  const sourceEvidence = response.supportability.find((item) => item.key === "portfolio_positions");
+  const sourceState = sourceEvidence?.state ?? response.state;
+  if (
+    !concentration ||
+    sourceState === "blocked" ||
+    sourceState === "unavailable"
+  ) {
     return {
       value: "Unavailable",
-      support: "No source-confirmed largest position is available.",
+      support: sourceEvidence?.reason ?? "No source-confirmed largest position is available.",
       tone: "warn",
     };
   }
@@ -1427,8 +1444,11 @@ function resolveConcentrationOverviewEvidence(
     "Source-identified holding";
   return {
     value: formatRiskPercentValue(concentration.top_position_weight_current),
-    support: driver,
-    tone: "default",
+    support:
+      sourceState === "partial"
+        ? `${driver}. ${sourceEvidence?.reason ?? "Source coverage is partial for this largest-position measure."}`
+        : driver,
+    tone: sourceState === "partial" ? "warn" : "default",
   };
 }
 
