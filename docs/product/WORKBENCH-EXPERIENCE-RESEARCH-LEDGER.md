@@ -5282,7 +5282,7 @@ sources:
 
 1. Keep one source-backed action row model and one acknowledgement-control policy across both
    presentations; do not maintain a mobile business-logic fork.
-2. Use the semantic comparison table only when the action module owns at least 58rem. Below that
+2. Use the semantic comparison table only when the action module owns at least 64rem. Below that
    capacity, reuse `OperationalRecordList` so evidence and next business action stay together.
 3. Keep the retained comparison table a named, focusable region with caption and scoped headers.
 4. Scope recording, confirming, confirmed, partial, and failed feedback to the selected action id.
@@ -5312,8 +5312,9 @@ Workbench #733 owns action reflow, #734 owns selected-action transaction integri
 intrinsic Cockpit grid capacity. Focused tests prove one row model, presentation parity, fail-closed
 controls, and every selected/non-selected acknowledgement state. The optimized production journey
 proves exact evidence and next action, stable focus, exact persisted id, 44-pixel targets,
-module-capacity presentation, readiness-label separation, compact measure density, and zero page
-overflow at 1800, 1440, 1024, and 519 pixels. The Advisor Cockpit guide, screen registry/catalogue,
+module-capacity presentation at the exact 64rem boundary and one pixel below, readiness-label
+separation, compact measure density, and zero page overflow at 1800, 1440, 1024, and 519 pixels. The
+Advisor Cockpit guide, screen registry/catalogue,
 repository context, research ledger, and review ledger change. Gateway/API/OpenAPI, Advise contracts,
 source calculations, dependencies, global CSS, identity, entitlement, and runtime topology do not
 change. Protected PR, exact-main, wiki publication, and strict parity evidence remain required.

@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const actionTableMinimumCapacity = 58 * 16;
+const actionTableMinimumCapacity = 64 * 16;
 
 async function mockAdvisorCockpit(
   page: Page,
@@ -260,6 +260,18 @@ test("keeps advisor action evidence and review controls visible by module capaci
     { name: "workstation", width: 1440, height: 1000 },
     { name: "tablet", width: 1024, height: 900 },
     { name: "compact", width: 519, height: 900 },
+    {
+      name: "boundary-table",
+      width: 1800,
+      height: 1000,
+      worklistWidth: actionTableMinimumCapacity,
+    },
+    {
+      name: "boundary-records",
+      width: 1800,
+      height: 1000,
+      worklistWidth: actionTableMinimumCapacity - 1,
+    },
   ];
   let tablePresentations = 0;
   let compactPresentations = 0;
@@ -272,7 +284,15 @@ test("keeps advisor action evidence and review controls visible by module capaci
 
     const worklist = page.getByTestId("advisor-cockpit-action-worklist");
     await expect(worklist).toBeVisible();
+    if (viewport.worklistWidth !== undefined) {
+      await worklist.evaluate((element, width) => {
+        element.style.width = `${width}px`;
+      }, viewport.worklistWidth);
+    }
     const capacity = await worklist.evaluate((element) => element.clientWidth);
+    if (viewport.worklistWidth !== undefined) {
+      expect(capacity).toBe(viewport.worklistWidth);
+    }
     const table = page.getByTestId("advisor-cockpit-action-table");
     const records = page.getByTestId("advisor-cockpit-action-records");
 
