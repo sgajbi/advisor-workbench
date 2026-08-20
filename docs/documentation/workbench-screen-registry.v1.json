@@ -814,16 +814,15 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Advisor-Cockpit-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": ["src/apps/recommendations/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "tests/e2e/advisor-cockpit-business-readiness.spec.ts",
+        "scripts/live/validation/browser-workflows.mjs"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "advisory-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "advisory-copilot",

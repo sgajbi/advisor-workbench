@@ -5250,3 +5250,70 @@ and page overflow at 1440, 1150, 1024, and 519 pixels. Reviewed evidence is stor
 ledger change. Gateway/API/OpenAPI, source calculation, dependencies, global CSS, runtime topology,
 identity, and entitlement truth do not change. Protected PR, exact-main, wiki publication, and
 strict parity evidence remain required.
+
+## Advisor Cockpit Decision-First Action Integrity
+
+### Business job
+
+A client advisor should identify the action requiring review, verify its source evidence and
+dependency limits, and record only that action's review without horizontal hunting or confusing
+another action's transaction state. The same facts and controls must remain usable when the
+three-rail workstation reduces the centre canvas or when the workflow moves to a tablet.
+
+### Current-product research
+
+Research was reviewed on 2026-08-21 from official product, enterprise-design, and accessibility
+sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   connects advisor nudges, opportunity management, exception-based review, and integrated
+   workflows to faster advisor action. Lotus adopts the exception-first workflow principle, not
+   BlackRock's layout, language, visual identity, data, or unsupported capability.
+2. [SAP Fiori table, list, and tree guidance](https://experience.sap.com/fiori-design-web/explore_group/table-list-tree/)
+   treats responsive list items as complete business objects and recommends retaining only the
+   fields that support the user's task when capacity changes.
+3. [W3C Design System responsive tables](https://design-system.w3.org/styles/tables.html) requires
+   a named, keyboard-focusable region when horizontal table scrolling is unavoidable.
+4. [W3C WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) permits table
+   exceptions but still prioritises reflow that avoids two-dimensional page use when information
+   and functionality can remain available.
+
+### Adopted decisions
+
+1. Keep one source-backed action row model and one acknowledgement-control policy across both
+   presentations; do not maintain a mobile business-logic fork.
+2. Use the semantic comparison table only when the action module owns at least 58rem. Below that
+   capacity, reuse `OperationalRecordList` so evidence and next business action stay together.
+3. Keep the retained comparison table a named, focusable region with caption and scoped headers.
+4. Scope recording, confirming, confirmed, partial, and failed feedback to the selected action id.
+   Disable conflicting submissions while the source transaction settles but keep every other row's
+   own label and evidence intact.
+5. Preserve the selected control's focus through persistence and the four-source reconciliation.
+6. Use intrinsic grid tracks for Cockpit measures, readiness, preparation, boundaries, and support
+   detail so workstation rails—not viewport guesses—determine safe density.
+7. Keep restrained navy, neutral evidence, and bounded amber action treatment. The visual thesis is
+   a quiet operational record: decision, evidence, next action, then secondary support detail.
+
+### Rejected decisions
+
+1. Keeping an 1120-pixel table that hides Next Action and Review in the normal advisor workstation.
+2. Removing fields from compact presentation, forcing page-level horizontal scrolling, or relying
+   on a hover-only disclosure.
+3. Rendering separate mobile data logic or allowing mutation-wide state to mark every row as the
+   selected transaction.
+4. Adding urgency scores, recommendations, approvals, client outreach, orders, charts, or other
+   business facts not published by Gateway and Advise.
+5. Adding a new responsive, table, state-management, or styling dependency when React, CSS Modules,
+   native HTML, the design system, Vitest, and Playwright own the requirement.
+
+### Validation and publication decision
+
+Workbench #733 owns action reflow, #734 owns selected-action transaction integrity, and #735 owns
+intrinsic Cockpit grid capacity. Focused tests prove one row model, presentation parity, fail-closed
+controls, and every selected/non-selected acknowledgement state. The optimized production journey
+proves exact evidence and next action, stable focus, exact persisted id, 44-pixel targets,
+module-capacity presentation, readiness-label separation, compact measure density, and zero page
+overflow at 1800, 1440, 1024, and 519 pixels. The Advisor Cockpit guide, screen registry/catalogue,
+repository context, research ledger, and review ledger change. Gateway/API/OpenAPI, Advise contracts,
+source calculations, dependencies, global CSS, identity, entitlement, and runtime topology do not
+change. Protected PR, exact-main, wiki publication, and strict parity evidence remain required.
