@@ -40,6 +40,7 @@ export function TrustSection({
       subtitle="Live certification, freshness, completeness and lineage evidence."
       actions={
         <SourceRefreshAction
+          refreshScope="domain-product-assurance"
           idleLabel={actionLabel}
           busyLabel="Checking assurance"
           isRefreshing={isRefreshing}
@@ -154,6 +155,7 @@ export function DependencyGraphSection({
       subtitle="Understand downstream reliance and fail-closed relationships before changing a product."
       actions={
         <SourceRefreshAction
+          refreshScope="domain-product-impact"
           idleLabel={actionLabel}
           busyLabel="Checking impact evidence"
           isRefreshing={isRefreshing}

@@ -5,6 +5,7 @@ import { forwardRef, useRef } from "react";
 import ActionButton, { type ActionButtonPriority } from "./action-button";
 
 type SourceRefreshActionProps = {
+  refreshScope: string;
   idleLabel: string;
   busyLabel: string;
   isRefreshing: boolean;
@@ -16,6 +17,7 @@ type SourceRefreshActionProps = {
 const SourceRefreshAction = forwardRef<HTMLButtonElement, SourceRefreshActionProps>(
   function SourceRefreshAction(
     {
+      refreshScope,
       idleLabel,
       busyLabel,
       isRefreshing,
@@ -25,19 +27,21 @@ const SourceRefreshAction = forwardRef<HTMLButtonElement, SourceRefreshActionPro
     },
     ref,
   ) {
-    const refreshInFlight = useRef(false);
+    const refreshInFlight = useRef<string | null>(null);
     const actionLabel = isRefreshing ? busyLabel : idleLabel;
 
     async function refreshOnce() {
-      if (refreshInFlight.current || isRefreshing) return;
-      refreshInFlight.current = true;
+      if (refreshInFlight.current === refreshScope || isRefreshing) return;
+      refreshInFlight.current = refreshScope;
 
       try {
         await onRefresh();
       } catch {
         // The owning source-state projection renders support-safe failure evidence.
       } finally {
-        refreshInFlight.current = false;
+        if (refreshInFlight.current === refreshScope) {
+          refreshInFlight.current = null;
+        }
       }
     }
 

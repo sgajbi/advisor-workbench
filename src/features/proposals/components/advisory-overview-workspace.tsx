@@ -137,6 +137,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
     <>
       {showRefreshAction ? (
         <SourceRefreshAction
+          refreshScope={queryIdentity}
           idleLabel={refreshLabel}
           busyLabel="Checking advisory priorities"
           isRefreshing={proposalQuery.isFetching}
