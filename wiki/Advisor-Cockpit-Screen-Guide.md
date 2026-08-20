@@ -165,8 +165,9 @@ identity, data, or unsupported capability.
   controls.
 - `tests/e2e/advisor-cockpit-business-readiness.spec.ts` proves source-backed rendering, selected
   action persistence, reconciliation, focus stability, 44-pixel minimum action targets,
-  capacity-driven table/record presentation, readiness-label separation, compact measure density,
-  and zero page overflow at 1800, 1440, 1024, and 519 pixels.
+  capacity-driven table/record presentation at the exact 64rem boundary and one pixel below,
+  readiness-label separation, compact measure density, and zero page overflow at 1800, 1440, 1024,
+  and 519 pixels.
 - Canonical validation uses `PB_SG_GLOBAL_BAL_001`, verifies the Gateway contract family and
   idempotent acknowledgement, and captures the governed Advisor Cockpit screenshot only after
   source validation passes.

@@ -130,11 +130,23 @@ function createDeferred<T>() {
 
 describe("AdvisorCockpitWorkspace", () => {
   beforeEach(() => {
-    listAdvisorCockpitActionsMock.mockClear();
-    getAdvisorCockpitSnapshotMock.mockClear();
-    listAdvisorCockpitPreparationPacketsMock.mockClear();
-    getAdvisorCockpitSupportabilityMock.mockClear();
-    acknowledgeAdvisorCockpitActionMock.mockClear();
+    listAdvisorCockpitActionsMock
+      .mockReset()
+      .mockResolvedValue(actionPageFixture);
+    getAdvisorCockpitSnapshotMock
+      .mockReset()
+      .mockResolvedValue(snapshotFixture);
+    listAdvisorCockpitPreparationPacketsMock
+      .mockReset()
+      .mockResolvedValue(preparationPageFixture);
+    getAdvisorCockpitSupportabilityMock
+      .mockReset()
+      .mockResolvedValue(supportabilityFixture);
+    acknowledgeAdvisorCockpitActionMock.mockReset().mockResolvedValue({
+      action_item: { action_item_id: "aci_policy_review_001" },
+      acknowledgement: { acknowledged: true },
+      replayed: false,
+    });
   });
 
   it("renders Gateway-backed cockpit actions and supportability without local fallback worklists", async () => {
@@ -169,11 +181,23 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(screen.getByLabelText("Advisor cockpit counts")).toHaveTextContent(
       /Actions in scope\s*1/,
     );
+    const actionTable = within(
+      screen.getByTestId("advisor-cockpit-action-table"),
+    );
+    const actionRecords = within(
+      screen.getByTestId("advisor-cockpit-action-records"),
+    );
     expect(
-      screen.getAllByText("Review policy evidence before client discussion."),
-    ).toHaveLength(2);
+      actionTable.getByText("Review policy evidence before client discussion."),
+    ).toBeInTheDocument();
     expect(
-      screen.getByText("Policy evaluation requires compliance review."),
+      actionRecords.getByText("Review policy evidence before client discussion."),
+    ).toBeInTheDocument();
+    expect(
+      actionTable.getByText("Policy evaluation requires compliance review."),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();
     const readiness = screen
       .getByRole("heading", { name: "Preparation Readiness" })
@@ -248,8 +272,11 @@ describe("AdvisorCockpitWorkspace", () => {
       <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
     fireEvent.click(
-      await screen.findByRole("button", { name: "Acknowledge review" }),
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
     );
 
     await waitFor(() => {
@@ -268,7 +295,7 @@ describe("AdvisorCockpitWorkspace", () => {
       );
     });
 
-    expect(screen.getByText(/Client-ready Blocked/)).toBeInTheDocument();
+    expect(actionRecords.getByText(/Client-ready Blocked/)).toBeInTheDocument();
   });
 
   it("keeps the prior advisor view qualified until every acknowledgement refresh settles", async () => {
@@ -276,7 +303,10 @@ describe("AdvisorCockpitWorkspace", () => {
       <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
-    const acknowledgeButton = await screen.findByRole("button", {
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
+    const acknowledgeButton = actionRecords.getByRole("button", {
       name: "Acknowledge review",
     });
     const snapshotRefresh = createDeferred<AdvisorCockpitSnapshotData>();
@@ -306,9 +336,17 @@ describe("AdvisorCockpitWorkspace", () => {
         name: "Confirming advisor priorities",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
-    expect(screen.getByText("Policy evaluation requires compliance review.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Confirming..." })).toBeDisabled();
+    expect(
+      actionRecords.getByText(
+        "Review recorded; confirming current advisor evidence.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByText("Policy evaluation requires compliance review."),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("button", { name: "Confirming..." }),
+    ).toHaveAttribute("aria-disabled", "true");
 
     await act(async () => {
       snapshotRefresh.resolve({
@@ -326,12 +364,20 @@ describe("AdvisorCockpitWorkspace", () => {
     await act(async () => {
       preparationRefresh.resolve(preparationPageFixture);
     });
-    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
+    expect(
+      actionRecords.getByText(
+        "Review recorded; confirming current advisor evidence.",
+      ),
+    ).toBeInTheDocument();
 
     await act(async () => {
       supportabilityRefresh.resolve(supportabilityFixture);
     });
-    expect(screen.getByText("Confirmation in progress")).toBeInTheDocument();
+    expect(
+      actionRecords.getByText(
+        "Review recorded; confirming current advisor evidence.",
+      ),
+    ).toBeInTheDocument();
 
     await act(async () => {
       actionRefresh.resolve({
@@ -356,8 +402,14 @@ describe("AdvisorCockpitWorkspace", () => {
         name: "Policy review recorded",
       }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Confirmation in progress")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Acknowledged" })).toBeDisabled();
+    expect(
+      actionRecords.queryByText(
+        "Review recorded; confirming current advisor evidence.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("button", { name: "Acknowledged" }),
+    ).toHaveAttribute("aria-disabled", "true");
     expect(acknowledgeAdvisorCockpitActionMock).toHaveBeenCalledTimes(1);
   });
 
@@ -366,7 +418,10 @@ describe("AdvisorCockpitWorkspace", () => {
       <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
-    const acknowledgeButton = await screen.findByRole("button", {
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
+    const acknowledgeButton = actionRecords.getByRole("button", {
       name: "Acknowledge review",
     });
     listAdvisorCockpitActionsMock.mockRejectedValueOnce(
@@ -379,13 +434,21 @@ describe("AdvisorCockpitWorkspace", () => {
       await screen.findByText("Advisor evidence is not fully confirmed"),
     ).toBeInTheDocument();
     expect(screen.getByText("Evidence not confirmed")).toBeInTheDocument();
-    expect(screen.getByText("Policy evaluation requires compliance review.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Acknowledge review" })).toBeDisabled();
     expect(
-      screen.getByText("Review recorded; latest advisor evidence is not fully confirmed."),
+      actionRecords.getByText("Policy evaluation requires compliance review."),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(
+      actionRecords.getByText(
+        "Review recorded; latest advisor evidence is not fully confirmed.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Action required")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Acknowledge review" }));
+    fireEvent.click(
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
+    );
     expect(acknowledgeAdvisorCockpitActionMock).toHaveBeenCalledTimes(1);
   });
 
@@ -394,7 +457,10 @@ describe("AdvisorCockpitWorkspace", () => {
       <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
-    const acknowledgeButton = await screen.findByRole("button", {
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
+    const acknowledgeButton = actionRecords.getByRole("button", {
       name: "Acknowledge review",
     });
     getAdvisorCockpitSupportabilityMock.mockRejectedValueOnce(
@@ -444,8 +510,11 @@ describe("AdvisorCockpitWorkspace", () => {
       await screen.findByText("Previously loaded meeting preparation evidence."),
     ).toBeInTheDocument();
 
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
     fireEvent.click(
-      screen.getByRole("button", { name: "Acknowledge review" }),
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
     );
 
     expect(
@@ -494,8 +563,11 @@ describe("AdvisorCockpitWorkspace", () => {
 
       expect(await screen.findByText(staleTitle)).toBeInTheDocument();
 
+      const actionRecords = within(
+        await screen.findByTestId("advisor-cockpit-action-records"),
+      );
       fireEvent.click(
-        screen.getByRole("button", { name: "Acknowledge review" }),
+        actionRecords.getByRole("button", { name: "Acknowledge review" }),
       );
 
       expect(
@@ -732,8 +804,13 @@ describe("AdvisorCockpitWorkspace", () => {
         "Previously retrieved evidence remains visible, but one or more required sources could not be confirmed.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Policy review required")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Acknowledge review" })).toBeDisabled();
+    const actionRecords = within(
+      screen.getByTestId("advisor-cockpit-action-records"),
+    );
+    expect(actionRecords.getByText("Policy review required")).toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
+    ).toBeDisabled();
     expect(
       screen.queryByText("Advisor action worklist unavailable"),
     ).not.toBeInTheDocument();
