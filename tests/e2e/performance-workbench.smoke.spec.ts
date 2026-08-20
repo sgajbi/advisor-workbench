@@ -364,7 +364,9 @@ test.describe('Performance workbench smoke', () => {
     }
 
     if (posture.capabilities.returnPath === 'supported') {
-      await expect(page.getByLabel('Net Return Path chart')).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByLabel(/Net Return Path (?:chart|single observation comparison)/),
+      ).toBeVisible({ timeout: 30_000 });
       await expect(page.getByLabel('Net Return Path unavailable')).toHaveCount(0);
     } else {
       await expect(page.getByLabel('Net Return Path unavailable')).toBeVisible({
@@ -488,7 +490,9 @@ test.describe('Performance workbench smoke', () => {
       await expect(getExecutiveMetric(executiveStrip, label)).not.toContainText(/N\/A|Unavailable/);
     }
 
-    await expect(page.getByLabel('Net Return Path chart')).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByLabel(/Net Return Path (?:chart|single observation comparison)/),
+    ).toBeVisible({ timeout: 30_000 });
     const returnDecisionReadout = page.getByLabel('Return decision readout');
     await expect(returnDecisionReadout).toBeVisible({ timeout: 15_000 });
     await expect(returnDecisionReadout).toContainText('Portfolio Return');
@@ -585,6 +589,97 @@ test.describe('Performance workbench smoke', () => {
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
+  });
+
+  test('single-observation Return Path stays compact, semantic, and responsive', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic layout proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+
+    const returnPath = page.getByRole('group', {
+      name: 'Net Return Path single observation comparison',
+    });
+    const comparison = returnPath.getByLabel('Single observation comparison');
+    await expect(returnPath).toHaveAttribute('data-layout', 'single-observation');
+    await expect(comparison).toBeVisible({ timeout: 30_000 });
+    const combinedReturnView = page
+      .getByRole('radiogroup', { name: 'Return view' })
+      .getByRole('radio', { name: 'Combined' });
+    if ((await combinedReturnView.getAttribute('aria-checked')) !== 'true') {
+      await combinedReturnView.click();
+    }
+    await expect(combinedReturnView).toHaveAttribute('aria-checked', 'true');
+    await expect(comparison).toContainText('Single published observation');
+    await expect(comparison).toContainText('2026-01');
+    await expect(comparison).toContainText('Portfolio');
+    await expect(comparison).toContainText('+2.2%');
+    await expect(comparison).toContainText('Benchmark');
+    await expect(comparison).toContainText('+1.9%');
+    await expect(comparison).toContainText('Active');
+    await expect(comparison).toContainText('+0.3%');
+    await expect(comparison.getByText('0%', { exact: true })).toBeVisible();
+    await expect(returnPath.locator('a, button, input, select, textarea')).toHaveCount(0);
+
+    await combinedReturnView.focus();
+    await expect(combinedReturnView).toBeFocused();
+
+    for (const width of [1440, 1024, 720, 519]) {
+      await page.setViewportSize({ width, height: 1100 });
+      await returnPath.scrollIntoViewIfNeeded();
+      await expect(returnPath).toBeVisible();
+      await expect(combinedReturnView).toBeFocused();
+
+      const [returnPathBox, comparisonBox] = await Promise.all([
+        returnPath.boundingBox(),
+        comparison.boundingBox(),
+      ]);
+      expect(returnPathBox).not.toBeNull();
+      expect(comparisonBox).not.toBeNull();
+      if (!returnPathBox || !comparisonBox) {
+        throw new Error('Return-path layout geometry was not available.');
+      }
+
+      const unusedBottomCapacity =
+        returnPathBox.y + returnPathBox.height - (comparisonBox.y + comparisonBox.height);
+      expect(unusedBottomCapacity).toBeLessThanOrEqual(8);
+
+      if (width === 1440) {
+        const retiredTimeSeriesCapacity = await page.evaluate(
+          () => Number.parseFloat(getComputedStyle(document.documentElement).fontSize) * 28.5,
+        );
+        expect(returnPathBox.height).toBeLessThan(retiredTimeSeriesCapacity * 0.75);
+
+        const horizonHeading = page.getByRole('heading', { name: /^Horizon Comparison$/i });
+        const horizonBox = await horizonHeading.boundingBox();
+        expect(horizonBox).not.toBeNull();
+        expect((horizonBox?.y ?? 0) - (returnPathBox.y + returnPathBox.height)).toBeLessThan(
+          retiredTimeSeriesCapacity,
+        );
+      }
+
+      const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
+
+      await page.screenshot({
+        path: `output/playwright/issue-719-performance-return-path-${width}.png`,
+        fullPage: false,
+      });
+    }
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('task-aware navigation keeps Performance work available without catalogue overload', async ({

@@ -517,10 +517,13 @@ describe("PerformanceChartPanel", () => {
 
     const singleObservation = screen.getByLabelText("Single observation comparison");
     expect(singleObservation).toBeInTheDocument();
-    expect(singleObservation.closest('[role="img"]')).toHaveAttribute(
+    expect(singleObservation.closest('[role="group"]')).toHaveAttribute(
       "data-layout",
       "single-observation"
     );
+    expect(
+      screen.getByRole("group", { name: "Net Return Path single observation comparison" })
+    ).toHaveTextContent(/Portfolio\s*\+0\.11%/);
     expect(within(singleObservation).getByText("Single published observation")).toBeInTheDocument();
     expect(within(singleObservation).getByText("14 Apr 2026")).toBeInTheDocument();
     expect(within(singleObservation).getByText("+0.11%")).toBeInTheDocument();
@@ -782,7 +785,9 @@ describe("PerformanceChartPanel", () => {
       screen.getByText(/Return observations are only partially published/)
     ).toBeInTheDocument();
     expect(screen.getByTestId("performance-echart")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Net Return Path chart" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Net Return Path single observation comparison" })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Return history partial state")).toBeInTheDocument();
   });
 

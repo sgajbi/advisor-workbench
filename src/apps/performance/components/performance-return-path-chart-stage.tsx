@@ -33,8 +33,8 @@ export default function PerformanceReturnPathChartStage({
     <div
       className={`performance-chart-library-frame workbench-summary-visual ${styles.stage} ${singleObservation ? styles.singleObservationStage : ""}`}
       data-layout={singleObservation ? "single-observation" : "time-series"}
-      role="img"
-      aria-label={`${title} chart`}
+      role={singleObservation ? "group" : "img"}
+      aria-label={`${title} ${singleObservation ? "single observation comparison" : "chart"}`}
       style={{ position: "relative" }}
     >
       {singleObservation ? (
