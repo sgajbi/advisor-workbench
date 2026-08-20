@@ -377,10 +377,18 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByRole('heading', { name: /^Horizon Comparison$/i })).toBeVisible({
       timeout: 15_000,
     });
+    const horizonEvidence = page.getByTestId('horizon-comparison-evidence');
+    await expect(horizonEvidence).toBeVisible({ timeout: 15_000 });
     if (posture.capabilities.horizon === 'supported') {
       await expect(page.getByLabel('Horizon comparison unavailable state')).toHaveCount(0);
     } else {
-      await expect(page.getByLabel('Horizon comparison unavailable state')).toBeVisible();
+      await expect(horizonEvidence).toHaveAttribute('data-state', /^(empty|unavailable)$/);
+      const horizonState = await horizonEvidence.getAttribute('data-state');
+      if (horizonState === 'empty') {
+        await expect(horizonEvidence).toContainText('No published horizon comparison');
+      } else {
+        await expect(page.getByLabel('Horizon comparison unavailable state')).toBeVisible();
+      }
     }
 
     await expect(page.getByRole('heading', { name: /^Performance Drivers$/i })).toBeVisible({
