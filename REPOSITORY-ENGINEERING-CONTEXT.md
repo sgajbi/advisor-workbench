@@ -33,6 +33,15 @@ It is responsible for:
 
 It should not invent unsupported backend behavior or bypass the governed gateway contract.
 
+### Risk Review source-authority rule
+
+Risk Review presents exact Gateway/Lotus Risk measures, factual lifecycle and recovery state,
+source supportability, coverage, and methodology. Workbench must not derive universal severity,
+concentration, mandate-compliance, breach, or all-clear classifications from browser-owned numeric
+thresholds. Warning and blocked treatment may reflect source state or source-published policy only.
+Until a governed contract supplies an approved client mandate or house limit comparison, keep that
+absence explicit and retain every risk workflow as read-only evidence review.
+
 Shared proposal and advisory shells must remain neutral unless the owning workspace publishes a
 typed source-backed workflow-context model. Queue-level context may summarize current source counts,
 attention, and recovery posture, but record-specific KYC, suitability, approval, evidence, client

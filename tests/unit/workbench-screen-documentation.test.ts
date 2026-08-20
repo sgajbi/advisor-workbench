@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 13,
-      coverageExceptions: 23,
-      unmappedGuides: 23,
+      mappedGuides: 14,
+      coverageExceptions: 22,
+      unmappedGuides: 22,
     });
   });
 
@@ -284,6 +284,38 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("same reusable selection component and request-shaping path");
     expect(guide).toContain("44px narrow touch targets");
     expect(guide).toContain("does not\ncopy another product's layout");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Risk Review to one source- and policy-bounded business guide", () => {
+    const registry = loadRegistry();
+    const riskReview = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "risk-review",
+    );
+
+    expect(riskReview).toMatchObject({
+      routePattern: "/performance",
+      mode: "risk",
+      wikiSlug: "Risk-Review-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-performance", "lotus-risk"],
+      implementationEvidence: expect.arrayContaining([
+        "src/apps/performance/components/performance-risk-mode.tsx",
+        "src/apps/performance/risk-workspace-view-model.ts",
+        "src/apps/performance/components/risk/risk-policy-boundary.tsx",
+      ]),
+      runtimeEvidence: ["scripts/live/validation/browser-workflows.mjs"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Risk-Review-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("Exact source measures are\nevidence, not a mandate conclusion");
+    expect(guide).toContain("No approved client mandate or house risk limit");
+    expect(guide).toContain("does not:\n\n- classify risk as contained");
+    expect(guide).toContain("not a claim of\nbank approval or competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

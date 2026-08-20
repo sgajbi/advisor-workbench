@@ -519,19 +519,17 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "runtime-capability-gated",
-      "wikiSlug": null,
+      "wikiSlug": "Risk-Review-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-risk"],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
-        "src/apps/performance/components/performance-workspace-view.tsx"
+        "src/apps/performance/components/performance-risk-mode.tsx",
+        "src/apps/performance/risk-workspace-view-model.ts",
+        "src/apps/performance/components/risk/risk-policy-boundary.tsx"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "performance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "performance-evidence",

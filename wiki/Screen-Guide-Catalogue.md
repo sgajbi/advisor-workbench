@@ -10,8 +10,9 @@ to find its operating guide.
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
 screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
 Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Performance Summary,
-Performance Analysis, Performance Advisor Brief, Report Centre, and Data Product Catalogue have
-passed the complete guide standard; the remaining 24 dedicated guides are explicit work under
+Performance Analysis, Risk Review, Performance Evidence, Performance Advisor Brief, Report Centre,
+and Data Product Catalogue are the 14 surfaces that have passed the complete guide standard. The
+remaining 22 dedicated guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -74,7 +75,7 @@ single Performance Advisor Brief surface and guide.
 | [Performance Summary](Performance-Summary-Screen-Guide) | `/performance?mode=summary` | Active | Guide available | Gateway, Core, and Performance |
 | [Performance Analysis](Performance-Analysis-Screen-Guide) | `/performance?mode=analysis` | Runtime-gated | Guide available | Gateway and Performance |
 | [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide) | `/performance?mode=advisor` | Active | Guide available | Gateway, Core, Performance, Advise, and Lotus AI |
-| Risk Review | `/performance?mode=risk` | Runtime-gated | Guide planned — #605 | Gateway, Performance, and Risk |
+| [Risk Review](Risk-Review-Screen-Guide) | `/performance?mode=risk` | Runtime-gated | Guide available | Gateway, Performance, and Risk |
 | [Performance Evidence](Performance-Evidence-Screen-Guide) | `/performance?mode=evidence` | Runtime-gated | Guide available | Gateway and Performance |
 
 Performance Summary and Performance Analysis share one source-selection surface for horizon,
@@ -83,9 +84,9 @@ Summary, while attribution and contribution segment controls remain local to Ana
 Evidence reviews the current source-confirmed context; it does not own a second selection or
 approval workflow.
 
-The remaining Risk Review guide will separate calculated facts from Workbench presentation, state
-benchmark and as-of-date posture, and describe partial, unavailable, stale, and evidence-recovery
-states without inventing figures in the browser.
+Risk Review separates exact source measures from mandate and house-policy judgement. It preserves
+benchmark, as-of-date, supportability, partial, unavailable, and access-restricted posture without
+inventing a breach, all-clear, or universal severity band in the browser.
 
 ## Portfolio Management
 
