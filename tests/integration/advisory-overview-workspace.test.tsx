@@ -37,7 +37,10 @@ function renderWithQueryClient(ui: React.ReactElement) {
       },
     },
   });
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  return {
+    queryClient,
+    view: render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
+  };
 }
 
 describe("AdvisoryOverviewWorkspace", () => {
@@ -214,6 +217,33 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
     expect(screen.getByText("Latest advisory priorities confirmed through Gateway.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toHaveFocus();
+  });
+
+  it("removes an earlier confirmation when a newer background refresh fails", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce(defaultProposalList)
+      .mockResolvedValueOnce(defaultProposalList)
+      .mockRejectedValueOnce(new Error("newer refresh unavailable"));
+
+    const { queryClient } = renderWithQueryClient(
+      <AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
+    expect(
+      await screen.findByText("Latest advisory priorities confirmed through Gateway."),
+    ).toBeInTheDocument();
+
+    await queryClient.refetchQueries({
+      queryKey: ["advisory-overview", "PB_SG_GLOBAL_BAL_001", undefined],
+      exact: true,
+    });
+
+    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Latest advisory priorities confirmed through Gateway."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
   });
 
   it("discloses a partial proposal window instead of overstating portfolio totals", async () => {

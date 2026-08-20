@@ -66,6 +66,7 @@ import {
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "./types";
+import { parseProposalListEnvelope } from "./proposal-list-contract";
 import { observeWorkbenchMutation } from "@/features/workbench/api-client";
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
@@ -290,8 +291,7 @@ export async function listProposals(
     const body = await response.text();
     throw new Error(`Proposal list failed (${response.status}): ${body}`);
   }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
-  return envelope.data as unknown as ProposalListData;
+  return parseProposalListEnvelope(await response.json());
 }
 
 export async function getAdvisoryPolicyReviewQueue({
