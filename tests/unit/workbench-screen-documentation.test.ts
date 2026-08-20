@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 16,
-      coverageExceptions: 20,
-      unmappedGuides: 20,
+      mappedGuides: 17,
+      coverageExceptions: 19,
+      unmappedGuides: 19,
     });
   });
 
@@ -169,6 +169,37 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "not\n  production readiness, independent certification, bank approval, or competitor-superiority proof",
     );
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Advisor Cockpit to one action-specific operating guide", () => {
+    const registry = loadRegistry();
+    const advisorCockpit = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "advisor-cockpit",
+    );
+
+    expect(advisorCockpit).toMatchObject({
+      routePattern: "/recommendations",
+      mode: "cockpit",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Advisor-Cockpit-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise"],
+      runtimeEvidence: [
+        "tests/e2e/advisor-cockpit-business-readiness.spec.ts",
+        "scripts/live/validation/browser-workflows.mjs",
+      ],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Advisor-Cockpit-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("one action model with a capacity-aware comparison table");
+    expect(guide).toContain("Scopes pending, confirmed, partial, and failed acknowledgement");
+    expect(guide).toContain("does not:\n\n- evaluate policy");
+    expect(guide).toContain("does not copy another product's layout");
     expect(validate(registry).errors).toEqual([]);
   });
 

@@ -32,6 +32,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - Portfolio-scoped proposal priorities, lifecycle handoffs, source-window truth, and recovery:
   [Advisory Overview](Advisory-Overview-Screen-Guide)
+- Source-backed advisor actions, evidence readiness, review acknowledgement, and operating boundaries:
+  [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -101,6 +103,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
+- [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

@@ -289,7 +289,13 @@ Current repository posture:
     evidence posture: previously retrieved evidence may remain readable during confirmation, but
     Workbench must not publish it as settled or enable another acknowledgement until every required
     query settles. Any required refresh failure keeps the composite partial, and any permission
-    denial hides the protected evidence. It must not reconstruct advisory policy semantics,
+    denial hides the protected evidence. Action review uses one source-backed row model: a semantic
+    comparison table is available only when the module owns enough width, otherwise complete
+    operational records keep evidence and next business action together without horizontal
+    hunting. Acknowledgement feedback is scoped to the exact selected action id, while conflicting
+    actions remain locked until reconciliation settles. Cockpit summary, readiness, preparation,
+    boundary, and support grids respond to available module capacity rather than assuming viewport
+    width. It must not reconstruct advisory policy semantics,
     clear blockers, infer client-ready release, contact clients, route orders, or call
     `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
     advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,
