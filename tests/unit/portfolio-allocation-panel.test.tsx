@@ -113,30 +113,30 @@ describe("PortfolioAllocationPanel", () => {
     expect(document.querySelectorAll(".portfolio-allocation-card")).toHaveLength(1);
     expect(screen.getByRole("region", { name: "Asset Class allocation view" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio exposure")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Checking look-through support" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Checking expanded exposure coverage" })).toBeDisabled();
     expect(screen.getByText("725,000 USD")).toHaveClass("portfolio-allocation-ranked-number");
 
     await waitFor(() =>
-      expect(screen.getByRole("radio", { name: "Region" })).not.toHaveAttribute("aria-disabled", "true")
+      expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled(),
     );
-    await waitFor(() => expect(screen.getByRole("button", { name: "Look-through off" })).toBeEnabled());
+    expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Region" })).toHaveAttribute("aria-disabled", "true");
 
     fireEvent.click(screen.getByRole("radio", { name: "Currency" }));
     expect(screen.getByRole("region", { name: "Currency allocation view" })).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Region" }));
     fireEvent.click(
       screen.getByRole("button", {
-        name: "North America: 625,000 USD, 50.00%, 6 positions. Review contributing holdings.",
+        name: "USD: 925,000 USD, 74.00%, 9 positions. Review contributing holdings.",
       }),
     );
     expect(onSelectionChange).toHaveBeenCalledWith({
-      dimension: "region",
-      bucket: "North America",
+      dimension: "currency",
+      bucket: "USD",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Look-through off" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show expanded exposure" }));
     await waitFor(() =>
       expect(
         screen.getByText("Region • 1 exposures • Expanded exposure")
@@ -182,7 +182,7 @@ describe("PortfolioAllocationPanel", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: "Look-through unavailable for current portfolio snapshot",
+          name: "Expanded exposure unavailable for current portfolio snapshot",
         })
       ).toBeDisabled()
     );
@@ -229,7 +229,7 @@ describe("PortfolioAllocationPanel", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: "Look-through unavailable for current portfolio snapshot",
+          name: "Expanded exposure unavailable for current portfolio snapshot",
         })
       ).toBeDisabled()
     );
@@ -243,51 +243,6 @@ describe("PortfolioAllocationPanel", () => {
       )
     ).toHaveLength(1);
     expect(screen.getByRole("region", { name: "Asset Class allocation view" })).toBeInTheDocument();
-  });
-
-  it("uses a visual-only compact summary layout when requested", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        jsonResponse({
-          reporting_currency: "USD",
-          look_through: {
-            requested_mode: "direct_only",
-            effective_mode: "direct_only",
-            applied: false,
-          },
-          views: allocationViews,
-        })
-      )
-    );
-
-    const { container } = render(
-      <PortfolioAllocationPanel
-        portfolioId="MANUAL_PB_USD_001"
-        allocationViews={allocationViews}
-        baseCurrency="USD"
-        asOfDate="2026-03-28"
-        reportingCurrency="USD"
-        compact
-        selectedAllocation={null}
-        onSelectionChange={() => {}}
-      />
-    );
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", {
-          name: "Look-through unavailable for current portfolio snapshot",
-        })
-      ).toBeDisabled()
-    );
-
-    expect(container.querySelector(".portfolio-allocation-panel-compact")).toBeTruthy();
-    expect(container.querySelector(".portfolio-allocation-toolbar.workbench-summary-toolbar")).toBeTruthy();
-    expect(screen.getAllByRole("radiogroup")).toHaveLength(2);
-    expect(container.querySelector(".portfolio-analytics-canvas.portfolio-allocation-card")).toBeTruthy();
-    expect(container.querySelector(".portfolio-allocation-ranked")).toBeFalsy();
-    expect(screen.getByLabelText("Allocation donut chart")).toBeInTheDocument();
   });
 
   it("keeps look-through disabled when gateway falls back to direct holdings", async () => {
@@ -328,16 +283,168 @@ describe("PortfolioAllocationPanel", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: "Look-through unavailable for current portfolio snapshot",
+          name: "Expanded exposure unavailable for current portfolio snapshot",
         })
       ).toBeDisabled()
     );
   });
+
+  it("keeps direct allocation usable and recovers source coverage without moving focus", async () => {
+    let allocationRequestCount = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        allocationRequestCount += 1;
+        if (allocationRequestCount === 1) {
+          return jsonResponse({ code: "allocation_source_unavailable" }, 503);
+        }
+        return jsonResponse({
+          reporting_currency: "USD",
+          look_through: {
+            requested_mode: "prefer_look_through",
+            effective_mode: "prefer_look_through",
+            applied: true,
+          },
+          views: [
+            {
+              dimension: "region",
+              buckets: [
+                {
+                  bucket: "Asia",
+                  position_count: 3,
+                  market_value_base: 300000,
+                  weight_pct: 24,
+                },
+              ],
+            },
+          ],
+        });
+      }),
+    );
+
+    render(
+      <PortfolioAllocationPanel
+        portfolioId="MANUAL_PB_USD_001"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={() => {}}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Expanded exposure could not be confirmed")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("725,000 USD")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Expanded exposure coverage could not be confirmed",
+      }),
+    ).toBeDisabled();
+
+    const recheck = screen.getByRole("button", { name: "Recheck exposure coverage" });
+    recheck.focus();
+    fireEvent.click(recheck);
+    expect(recheck).toHaveAttribute("aria-disabled", "true");
+    expect(document.activeElement).toBe(recheck);
+
+    await waitFor(() => expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument());
+    expect(document.activeElement).toBe(recheck);
+    expect(recheck).toHaveAttribute("aria-disabled", "false");
+    expect(allocationRequestCount).toBe(2);
+    expect(screen.getByRole("button", { name: "Show expanded exposure" })).toBeEnabled();
+  });
+
+  it("does not let a superseded portfolio response replace newer coverage evidence", async () => {
+    let resolveSupersededRequest: ((response: Response) => void) | undefined;
+    const supersededRequest = new Promise<Response>((resolve) => {
+      resolveSupersededRequest = resolve;
+    });
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      if (url.includes("PORTFOLIO_OLD")) {
+        return supersededRequest;
+      }
+      return jsonResponse({
+        reporting_currency: "USD",
+        look_through: {
+          requested_mode: "prefer_look_through",
+          effective_mode: "direct_only",
+          applied: false,
+        },
+        views: allocationViews,
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const onSelectionChange = vi.fn();
+
+    const { rerender } = render(
+      <PortfolioAllocationPanel
+        portfolioId="PORTFOLIO_OLD"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    rerender(
+      <PortfolioAllocationPanel
+        portfolioId="PORTFOLIO_NEW"
+        allocationViews={allocationViews}
+        baseCurrency="USD"
+        asOfDate="2026-03-28"
+        reportingCurrency="USD"
+        selectedAllocation={null}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    await waitFor(() => expect(screen.getByText("Direct holdings only")).toBeInTheDocument());
+
+    resolveSupersededRequest?.(
+      jsonResponse({
+        reporting_currency: "USD",
+        look_through: {
+          requested_mode: "prefer_look_through",
+          effective_mode: "prefer_look_through",
+          applied: true,
+        },
+        views: [
+          {
+            dimension: "region",
+            buckets: [
+              {
+                bucket: "Superseded exposure",
+                position_count: 1,
+                market_value_base: 1,
+                weight_pct: 100,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Expanded exposure unavailable for current portfolio snapshot",
+        }),
+      ).toBeDisabled(),
+    );
+    expect(screen.queryByText("Superseded exposure")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Show expanded exposure" })).not.toBeInTheDocument();
+  });
 });
 
-function jsonResponse(payload: unknown): Response {
+function jsonResponse(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
-    status: 200,
+    status,
     headers: { "Content-Type": "application/json" },
   });
 }

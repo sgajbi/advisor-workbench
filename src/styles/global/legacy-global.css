@@ -4183,10 +4183,6 @@
     min-width: 0;
   }
 
-  .portfolio-allocation-panel-compact {
-    gap: 0.75rem;
-  }
-
 .portfolio-allocation-toolbar {
     min-width: 0;
   }
@@ -4227,11 +4223,6 @@
     align-items: stretch;
   }
 
-  .portfolio-allocation-panel-compact .portfolio-allocation-body {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
-  }
-
   .portfolio-allocation-visual,
   .portfolio-allocation-ranked {
     min-width: 0;
@@ -4244,14 +4235,6 @@
     min-height: 20rem;
   }
 
-  .portfolio-allocation-panel-compact .portfolio-allocation-card {
-    padding: var(--space-3);
-  }
-
-  .portfolio-allocation-panel-compact .portfolio-allocation-visual {
-    min-height: 15rem;
-  }
-
   .portfolio-allocation-chart {
     width: 100%;
   }
@@ -4262,10 +4245,6 @@
     height: auto;
     display: block;
     margin: 0 auto;
-  }
-
-  .portfolio-allocation-panel-compact .portfolio-allocation-chart-svg {
-    max-width: 15rem;
   }
 
   .portfolio-allocation-chart-track {
