@@ -19,6 +19,8 @@
     "performance-contributors-ranked-card",
     "performance-evidence-",
     "performance-risk-compact-segmented-control",
+    "performance-risk-concentration-scale",
+    "performance-risk-concentration-side-stack",
     "performance-risk-rolling-window-toolbar",
     "performance-risk-window-toolbar",
     "performance-return-path-chart-stage",
@@ -79,8 +81,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 12137,
-      "maxBytes": 265472
+      "maxLines": 12005,
+      "maxBytes": 262211
     }
   ]
 }

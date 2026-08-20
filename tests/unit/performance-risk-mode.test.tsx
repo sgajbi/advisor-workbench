@@ -111,8 +111,18 @@ describe("PerformanceRiskMode", () => {
       screen.queryByLabelText("Risk snapshot business reading"),
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
-      "Risk posture",
+      "Realized volatility",
     );
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
+      "Max drawdown",
+    );
+    expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
+      "Largest position",
+    );
+    expect(screen.getByLabelText("Risk mandate comparison boundary")).toHaveTextContent(
+      "No approved client mandate or house risk limit is available",
+    );
+    expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
     expect(
       screen.getByLabelText("Risk executive overview"),
     ).not.toHaveTextContent("What matters now");
@@ -397,7 +407,7 @@ describe("PerformanceRiskMode", () => {
       screen.getByLabelText("Risk drawdown headline metrics"),
     ).toHaveTextContent("N/A");
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
-      "Evidence posture",
+      "Source coverage",
     );
   });
 
@@ -446,7 +456,7 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
   });
 
-  it("renders enriched concentration interpretation without a provenance footer", async () => {
+  it("renders exact concentration evidence without a browser-authored severity scale", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
@@ -485,8 +495,11 @@ describe("PerformanceRiskMode", () => {
       "title",
       "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
     );
-    expect(screen.getByLabelText("Risk concentration scale")).toHaveTextContent(
-      "Diversified",
+    expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
+    expect(concentrationMetricStrip).toHaveTextContent("1,260");
+    expect(concentrationMetricStrip).toHaveTextContent("18.40%");
+    expect(concentrationMetricStrip).not.toHaveTextContent(
+      /Diversified|Moderate|Elevated|High|Acceptable/,
     );
     expect(
       screen.queryByLabelText("Risk concentration driver analysis"),

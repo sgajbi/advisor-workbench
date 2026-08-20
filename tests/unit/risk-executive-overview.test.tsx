@@ -4,32 +4,36 @@ import { describe, expect, it } from "vitest";
 import RiskExecutiveOverview from "../../src/apps/performance/components/risk/risk-executive-overview";
 
 describe("RiskExecutiveOverview", () => {
-  it("renders posture states through the shared risk metric card layout", () => {
+  it("renders exact source evidence and interpretation context through the shared metric layout", () => {
     const { container } = render(
       <RiskExecutiveOverview
         overview={[
           {
-            key: "risk_posture",
-            label: "Risk posture",
-            value: "Moderate",
+            key: "realized_volatility",
+            label: "Realized volatility",
+            value: "7.25%",
+            support: "YTD annualized source measure",
             tone: "default",
           },
           {
-            key: "drawdown_posture",
-            label: "Drawdown posture",
-            value: "Recovered",
-            tone: "success",
+            key: "max_drawdown",
+            label: "Max drawdown",
+            value: "-12.45%",
+            support: "Still below the prior peak at period end",
+            tone: "default",
           },
           {
-            key: "concentration_posture",
-            label: "Concentration posture",
-            value: "High",
-            tone: "warn",
+            key: "largest_position",
+            label: "Largest position",
+            value: "18.40%",
+            support: "PIMCO GIS Income Fund",
+            tone: "default",
           },
           {
-            key: "evidence_posture",
-            label: "Evidence posture",
+            key: "source_coverage",
+            label: "Source coverage",
             value: "Partial",
+            support: "Issuer coverage requires qualification",
             tone: "warn",
           },
         ]}
@@ -37,8 +41,12 @@ describe("RiskExecutiveOverview", () => {
     );
 
     const overview = screen.getByLabelText("Risk executive overview");
-    expect(within(overview).getByText("Risk posture")).toBeInTheDocument();
-    expect(within(overview).getAllByText("Moderate").length).toBeGreaterThan(0);
+    expect(within(overview).getByText("Realized volatility")).toBeInTheDocument();
+    expect(within(overview).getByText("7.25%")).toBeInTheDocument();
+    expect(within(overview).getByText("YTD annualized source measure")).toBeInTheDocument();
+    expect(
+      within(overview).queryByText(/Contained|Moderate|Elevated|High|Acceptable/),
+    ).not.toBeInTheDocument();
     expect(container.querySelector(".performance-risk-executive-grid")).toBeTruthy();
     expect(container.querySelectorAll(".performance-risk-executive-card")).toHaveLength(4);
     expect(container.querySelectorAll(".performance-risk-metric-card")).toHaveLength(4);

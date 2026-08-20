@@ -6223,8 +6223,7 @@
 }
 
 .performance-risk-module-main,
-.performance-risk-module-side,
-.performance-risk-concentration-side-stack {
+.performance-risk-module-side {
   display: grid;
   gap: 0.68rem;
 }
@@ -6968,9 +6967,7 @@
 }
 
 .performance-risk-concentration-executive,
-.performance-risk-concentration-driver-analysis,
-.performance-risk-concentration-scale,
-.performance-risk-concentration-side-stack {
+.performance-risk-concentration-driver-analysis {
   display: grid;
   gap: 0.8rem;
 }
@@ -7146,128 +7143,6 @@
   line-height: 1.05;
 }
 
-.performance-risk-concentration-scale-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.72rem;
-}
-
-.performance-risk-concentration-scale-card {
-  display: grid;
-  gap: 0.56rem;
-  min-width: 0;
-}
-
-.performance-risk-concentration-scale-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.3rem;
-  align-items: start;
-}
-
-.performance-risk-concentration-scale-header .performance-risk-term-label {
-  max-width: 100%;
-}
-
-.performance-risk-concentration-scale-band-label {
-  justify-self: start;
-}
-
-.performance-risk-concentration-scale-bands {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  height: 0.65rem;
-  overflow: hidden;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.performance-risk-concentration-scale-band {
-  height: 100%;
-}
-
-.performance-risk-concentration-scale-band-diversified {
-  background: rgba(148, 163, 184, 0.34);
-}
-
-.performance-risk-concentration-scale-band-moderate {
-  background: rgba(100, 116, 139, 0.34);
-}
-
-.performance-risk-concentration-scale-band-elevated {
-  background: rgba(71, 85, 105, 0.42);
-}
-
-.performance-risk-concentration-scale-band-high {
-  background: rgba(30, 41, 59, 0.56);
-}
-
-.performance-risk-concentration-scale-marker {
-  position: absolute;
-  top: -0.18rem;
-  width: 3px;
-  height: 1rem;
-  background: rgba(15, 23, 42, 0.9);
-  transform: translateX(-50%);
-  border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
-}
-
-.performance-risk-concentration-scale-legend {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.32rem;
-  padding-top: 0.04rem;
-}
-
-.performance-risk-concentration-scale-legend .ui-text-metadata {
-  font-size: 0.68rem;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.performance-risk-concentration-scale-reading {
-  color: var(--text-muted);
-  line-height: 1.38;
-}
-
-.performance-risk-concentration-scale {
-  display: grid;
-  gap: 0.5rem;
-  padding: 0.64rem 0.72rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.performance-risk-concentration-panel .performance-risk-module-body {
-  gap: 0.58rem;
-}
-
-.performance-risk-concentration-panel .performance-risk-concentration-side-stack {
-  gap: 0.58rem;
-}
-
-.performance-risk-concentration-panel .performance-risk-concentration-scale-list {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.58rem;
-}
-
-.performance-risk-concentration-panel .performance-risk-concentration-scale-legend {
-  gap: 0.28rem;
-}
-
-.performance-risk-concentration-panel .performance-risk-concentration-scale .ui-text-card-title {
-  line-height: 1.22;
-}
-
-.performance-risk-concentration-panel .performance-risk-concentration-scale .ui-text-secondary,
-.performance-risk-concentration-panel .performance-risk-concentration-scale .ui-text-body {
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
 .performance-risk-concentration-context-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7373,7 +7248,6 @@
     grid-template-columns: 1fr;
   }
 
-  .performance-risk-concentration-scale-header,
   .performance-risk-concentration-driver-row {
     grid-template-columns: 1fr;
   }
@@ -7385,15 +7259,9 @@
     border-left: 0;
   }
 
-  .performance-risk-concentration-scale-list,
   .performance-risk-concentration-context-list,
   .performance-risk-concentration-indicator-grid {
     grid-template-columns: 1fr;
-  }
-
-  .performance-risk-concentration-scale-legend {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 0.24rem;
   }
 
   .performance-risk-detail-toolbar {
