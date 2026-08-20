@@ -34,6 +34,7 @@ import {
   SectionLabel,
   SectionHeader,
   SemanticBadge,
+  SourceRefreshAction,
   WorkspaceGrid,
   WorkspaceHeader,
   WorkspaceLayout,
@@ -427,6 +428,50 @@ describe("design-system components", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onDisabledClick).not.toHaveBeenCalled();
     expect(onChange).toHaveBeenCalledWith("summary");
+  });
+
+  it("keeps a source refresh action focusable while fencing repeated requests", async () => {
+    let resolveRefresh!: () => void;
+    const onRefresh = vi.fn(
+      () => new Promise<void>((resolve) => {
+        resolveRefresh = resolve;
+      })
+    );
+    const view = render(
+      <SourceRefreshAction
+        idleLabel="Retry advisory priorities"
+        busyLabel="Checking advisory priorities"
+        isRefreshing={false}
+        onRefresh={onRefresh}
+      />
+    );
+
+    const retry = screen.getByRole("button", { name: "Retry advisory priorities" });
+    retry.focus();
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveFocus();
+
+    view.rerender(
+      <SourceRefreshAction
+        idleLabel="Refresh advisory priorities"
+        busyLabel="Checking advisory priorities"
+        isRefreshing
+        onRefresh={onRefresh}
+      />
+    );
+
+    const pending = screen.getByRole("button", { name: "Checking advisory priorities" });
+    expect(pending).toHaveAttribute("aria-disabled", "true");
+    expect(pending).not.toBeDisabled();
+    expect(pending).toHaveFocus();
+    fireEvent.click(pending);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+
+    resolveRefresh();
+    await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
   });
 
   it("renders the shared disclosure toggle contract with consistent labels and chevron state", () => {

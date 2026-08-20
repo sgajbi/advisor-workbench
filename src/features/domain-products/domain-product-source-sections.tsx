@@ -1,10 +1,8 @@
-import { useRef } from "react";
-
 import {
-  ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
+  SourceRefreshAction,
   Text,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
@@ -42,9 +40,11 @@ export function TrustSection({
       subtitle="Live certification, freshness, completeness and lineage evidence."
       actions={
         <SourceRefreshAction
-          actionLabel={actionLabel}
+          idleLabel={actionLabel}
+          busyLabel="Checking assurance"
           isRefreshing={isRefreshing}
           onRefresh={onRefresh}
+          priority="quiet"
         />
       }
     >
@@ -154,9 +154,11 @@ export function DependencyGraphSection({
       subtitle="Understand downstream reliance and fail-closed relationships before changing a product."
       actions={
         <SourceRefreshAction
-          actionLabel={actionLabel}
+          idleLabel={actionLabel}
+          busyLabel="Checking impact evidence"
           isRefreshing={isRefreshing}
           onRefresh={onRefresh}
+          priority="quiet"
         />
       }
     >
@@ -203,39 +205,6 @@ export function DependencyGraphSection({
         />
       ) : null}
     </SectionBlock>
-  );
-}
-
-function SourceRefreshAction({
-  actionLabel,
-  isRefreshing,
-  onRefresh,
-}: {
-  actionLabel: string;
-  isRefreshing: boolean;
-  onRefresh: () => Promise<unknown>;
-}) {
-  const refreshInFlight = useRef(false);
-
-  async function refreshOnce() {
-    if (refreshInFlight.current) return;
-    refreshInFlight.current = true;
-    try {
-      await onRefresh();
-    } finally {
-      refreshInFlight.current = false;
-    }
-  }
-
-  return (
-    <ActionButton
-      priority="quiet"
-      aria-disabled={isRefreshing}
-      onClick={() => void refreshOnce()}
-      aria-label={actionLabel}
-    >
-      {isRefreshing ? "Checking…" : actionLabel}
-    </ActionButton>
   );
 }
 
