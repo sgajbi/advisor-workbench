@@ -1545,6 +1545,60 @@ export async function validateRiskPanel(
     5,
     "Historical risk attribution table",
   );
+
+  const executiveEvidence = page.getByRole("region", {
+    name: "Risk executive overview",
+  });
+  await expect(executiveEvidence).toBeVisible({ timeout: timeoutMs });
+  for (const label of [
+    "Realized volatility",
+    "Max drawdown",
+    "Largest position",
+    "Source coverage",
+  ]) {
+    await expect(executiveEvidence.getByText(label, { exact: true })).toBeVisible({
+      timeout: timeoutMs,
+    });
+  }
+  const policyBoundary = page.getByRole("note", {
+    name: "Risk mandate comparison boundary",
+  });
+  await expect(policyBoundary).toContainText("Not supplied by source", {
+    timeout: timeoutMs,
+  });
+  await expect(policyBoundary).toContainText(
+    "does not infer a breach or an all-clear",
+    { timeout: timeoutMs },
+  );
+  for (const retiredClassification of [
+    "Contained",
+    "Moderate",
+    "Elevated",
+    "High",
+    "Severe",
+    "Acceptable",
+    "Diversified",
+  ]) {
+    await expect(
+      executiveEvidence.getByText(retiredClassification, { exact: true }),
+    ).toHaveCount(0);
+  }
+
+  const originalViewport = page.viewportSize() ?? { width: 1440, height: 1000 };
+  for (const width of [1440, 1024, 519]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(executiveEvidence).toBeVisible({ timeout: timeoutMs });
+    await expect(policyBoundary).toBeVisible({ timeout: timeoutMs });
+    const pageReflows = await page.evaluate(
+      () =>
+        globalThis.document.documentElement.scrollWidth <=
+        globalThis.document.documentElement.clientWidth + 1,
+    );
+    if (!pageReflows) {
+      throw new Error(`Risk Review creates page-level horizontal scrolling at ${width}px.`);
+    }
+  }
+  await page.setViewportSize(originalViewport);
   await screenshotRegisteredPanel(page, "performance.risk.snapshot");
 }
 
