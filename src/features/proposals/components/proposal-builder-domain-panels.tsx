@@ -28,14 +28,16 @@ export function ProposalPortfolioEvidencePanel({
   cashCurrency,
   sourceCurrency,
   onRefresh,
+  refreshBlocked = false,
 }: {
   evidence: ProposalPortfolioEvidenceModel;
   cashCurrency: string | null;
   sourceCurrency: string | null;
   onRefresh: () => Promise<void>;
+  refreshBlocked?: boolean;
 }) {
   const refreshPending = evidence.status === "checking" || evidence.status === "refreshing";
-  const refreshDisabled = evidence.status === "not_selected" || refreshPending;
+  const refreshDisabled = evidence.status === "not_selected" || refreshPending || refreshBlocked;
 
   return (
     <section
