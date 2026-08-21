@@ -391,9 +391,10 @@ function parseAllocation(value: unknown): ProposalRiskImpactAllocationEvidence {
       allocation.source_mode === "LOTUS_CORE") ||
     (allocation.source_service === "lotus-advise" &&
       allocation.source_mode === "LOTUS_ADVISE_LOCAL_FALLBACK");
-  const hasRenderableComparison = views.length > 0;
+  const hasDisplayableComparison =
+    (state === "ready" || state === "partial") && views.length > 0;
   if (
-    (state === "ready" || hasRenderableComparison) &&
+    hasDisplayableComparison &&
     (!hasCoherentSource ||
       !allocation.contract_version ||
       !allocation.calculator_version)
