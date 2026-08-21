@@ -415,6 +415,17 @@ function parseData(value: unknown): ProposalRiskImpactData {
   ) {
     invalid("decision status does not match the workflow gate");
   }
+  if (
+    decision.state === "ready" &&
+    workflowGate.state === "ready" &&
+    workflowGate.gate &&
+    ["EXECUTION_READY", "NONE"].includes(workflowGate.gate) &&
+    hasBlockingDecisionEvidence(decision)
+  ) {
+    invalid(
+      "executable workflow gate cannot retain blocking decision evidence",
+    );
+  }
   for (const [capabilityKey, sectionState] of [
     ["allocation_comparison", allocation.state],
     ["proposal_risk_lens", risk.state],
@@ -741,16 +752,17 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
   ) {
     invalid("blocking missing evidence contradicts the decision status");
   }
-  if (
-    state === "ready" &&
-    decision.decision_status === "READY_FOR_CLIENT_REVIEW" &&
+  return decision;
+}
+
+function hasBlockingDecisionEvidence(
+  decision: ProposalRiskImpactDecisionEvidence,
+): boolean {
+  return (
     decision.approval_requirements.some(
       ({ blocking_until_approved }) => blocking_until_approved,
-    )
-  ) {
-    invalid("client-review-ready decision cannot retain blocking approvals");
-  }
-  return decision;
+    ) || decision.missing_evidence.some(({ blocking }) => blocking)
+  );
 }
 
 function parseRequirement(value: unknown): ProposalRiskImpactRequirement {
