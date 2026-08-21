@@ -330,6 +330,25 @@ describe("ProposalDetailView", () => {
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "true");
   });
 
+  it("returns to the originating lifecycle view using the source-owned portfolio", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-1"
+          returnPortfolioId="PB_QUERY_CONTEXT"
+          returnMode="risk-impact"
+        />
+      </QueryClientProvider>
+    );
+
+    const returnLink = await screen.findByRole("link", { name: "Return to Risk And Impact" });
+    expect(returnLink).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=pf_1&mode=risk-impact"
+    );
+  });
+
   it("submits draft to risk review", async () => {
     prepareCoherentActionRefresh("RISK_REVIEW");
     getProposalMock

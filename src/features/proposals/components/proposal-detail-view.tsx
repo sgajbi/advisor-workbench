@@ -54,6 +54,11 @@ import {
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
 import {
+  buildProposalLifecycleHref,
+  getProposalLifecycleModeDefinition,
+  type ProposalLifecycleMode,
+} from "../proposal-lifecycle-workspace-view-model";
+import {
   ProposalAdvisorActionsPanel,
   ProposalEvidenceControlsPanel,
   ProposalLineageAuditPanel,
@@ -62,6 +67,8 @@ import {
 
 type Props = {
   proposalId: string;
+  returnPortfolioId?: string;
+  returnMode?: ProposalLifecycleMode;
 };
 
 type ProposalDetailWorkspaceProps = Props & {
@@ -180,7 +187,11 @@ function confirmRefreshedProposalActionEvidence({
   return refreshedState;
 }
 
-export default function ProposalDetailView({ proposalId }: Props) {
+export default function ProposalDetailView({
+  proposalId,
+  returnPortfolioId,
+  returnMode,
+}: Props) {
   const queryClient = useQueryClient();
   const { data: revision = 0 } = useQuery({
     queryKey: proposalRefreshGenerationKey(proposalId),
@@ -200,6 +211,8 @@ export default function ProposalDetailView({ proposalId }: Props) {
     <ProposalDetailWorkspace
       key={proposalId}
       proposalId={proposalId}
+      returnPortfolioId={returnPortfolioId}
+      returnMode={returnMode}
       revision={revision}
       onAdvanceRevision={advanceRevision}
     />
@@ -208,9 +221,18 @@ export default function ProposalDetailView({ proposalId }: Props) {
 
 function ProposalDetailWorkspace({
   proposalId,
+  returnPortfolioId,
+  returnMode,
   revision,
   onAdvanceRevision,
 }: ProposalDetailWorkspaceProps) {
+  const fallbackReturnHref =
+    returnPortfolioId && returnMode
+      ? buildProposalLifecycleHref({ portfolioId: returnPortfolioId, mode: returnMode })
+      : "/proposals";
+  const returnLabel = returnMode
+    ? `Return to ${getProposalLifecycleModeDefinition(returnMode).title}`
+    : "Return to Proposal Queue";
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -550,8 +572,8 @@ function ProposalDetailWorkspace({
           Proposal ID `{proposalId}` is not a valid route key. Use alphanumeric IDs with hyphen or underscore separators only.
         </Text>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Link href="/proposals" className="nav-link">
-            Open Proposal Workspace
+          <Link href={fallbackReturnHref} className="nav-link">
+            {returnLabel}
           </Link>
           <Link href="/proposals/simulate" className="nav-link">
             Create New Proposal Draft
@@ -568,8 +590,8 @@ function ProposalDetailWorkspace({
           Proposal `{proposalId}` was not found in the active advisory pipeline.
         </Text>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Link href="/proposals" className="nav-link">
-            Open Proposal Workspace
+          <Link href={fallbackReturnHref} className="nav-link">
+            {returnLabel}
           </Link>
           <Link href="/proposals/simulate" className="nav-link">
             Create New Proposal Draft
@@ -607,6 +629,13 @@ function ProposalDetailWorkspace({
     approvalsSourcePosture,
     lineageSourcePosture,
   ].some((posture) => querySourceAvailability(posture) === "checking");
+  const sourcePortfolioId = data.proposal.portfolio_id?.trim() || returnPortfolioId;
+  const sourceReturnHref = sourcePortfolioId
+    ? buildProposalLifecycleHref({
+        portfolioId: sourcePortfolioId,
+        mode: returnMode ?? "approval-queue",
+      })
+    : fallbackReturnHref;
 
   return (
     <main className={detailStyles.page} aria-label="Proposal advisory workspace">
@@ -622,6 +651,9 @@ function ProposalDetailWorkspace({
           </Text>
         </div>
         <div className={detailStyles.headerStatus}>
+          <Link className={detailStyles.returnLink} href={sourceReturnHref}>
+            {returnLabel}
+          </Link>
           <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
             {proposalStageLabel(data.proposal.current_state)}
           </SemanticBadge>
