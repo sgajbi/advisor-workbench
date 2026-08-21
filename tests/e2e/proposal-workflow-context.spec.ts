@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
+import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
@@ -15,7 +16,7 @@ async function mockProposalPortfolioEvidence(
     effectiveDate?: string;
     requestedDates?: string[];
     sourceCurrencies?: Array<string | null>;
-  } = {}
+  } = {},
 ) {
   let bookReadCount = 0;
 
@@ -25,13 +26,17 @@ async function mockProposalPortfolioEvidence(
       bookReadCount += 1;
       const requestUrl = new URL(route.request().url());
       const requestedDate = requestUrl.searchParams.get("as_of_date") ?? "";
-      const requestedCurrency = requestUrl.searchParams.get("reporting_currency") ?? "USD";
+      const requestedCurrency =
+        requestUrl.searchParams.get("reporting_currency") ?? "USD";
       const sourceCurrency = sourceCurrencies
         ? sourceCurrencies[bookReadCount - 1]
         : requestedCurrency;
       requestedDates?.push(requestedDate);
       if (failFirstRead && bookReadCount === 1) {
-        await route.fulfill({ status: 503, json: { detail: "Portfolio book unavailable" } });
+        await route.fulfill({
+          status: 503,
+          json: { detail: "Portfolio book unavailable" },
+        });
         return;
       }
       await route.fulfill({
@@ -76,7 +81,7 @@ async function mockProposalPortfolioEvidence(
           allocation_views: [],
         },
       });
-    }
+    },
   );
 }
 
@@ -87,7 +92,9 @@ async function mockProposalBuilderEvaluation(page: Page) {
     const evaluated = url.pathname.endsWith("/evaluate");
     await route.fulfill({
       json: {
-        correlation_id: evaluated ? "corr-builder-evaluation" : "corr-builder-create",
+        correlation_id: evaluated
+          ? "corr-builder-evaluation"
+          : "corr-builder-create",
         contract_version: "v1",
         data: {
           workspace: {
@@ -113,42 +120,88 @@ async function mockProposalBuilderEvaluation(page: Page) {
   });
 }
 
-async function mockProposalQueue(page: Page) {
-  await page.route("**/api/bff/api/v1/platform/capabilities?**", async (route) => {
-    await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
-  });
-  await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
-    await route.fulfill({
-      json: {
-        correlation_id: "corr-proposal-workflow-context",
-        contract_version: "v1",
-        data: {
-          items: [
-            {
-              proposal_id: "PRP-RISK-001",
-              portfolio_id: portfolioId,
-              current_state: "RISK_REVIEW",
-              current_version_no: 3,
-              created_at: "2026-08-19T09:30:00Z",
-              title: "Concentration risk review",
-            },
-            {
-              proposal_id: "PRP-READY-001",
-              portfolio_id: portfolioId,
-              current_state: "EXECUTION_READY",
-              current_version_no: 5,
-              created_at: "2026-08-20T11:15:00Z",
-              title: "Execution handoff review",
-            },
-          ],
-          next_cursor: null,
+async function mockProposalQueue(
+  page: Page,
+  { includeSecondRisk = false }: { includeSecondRisk?: boolean } = {},
+) {
+  await page.route(
+    "**/api/bff/api/v1/platform/capabilities?**",
+    async (route) => {
+      await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals?portfolio_id=**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-proposal-workflow-context",
+          contract_version: "v1",
+          data: {
+            items: [
+              {
+                proposal_id: "PRP-RISK-001",
+                portfolio_id: portfolioId,
+                current_state: "RISK_REVIEW",
+                current_version_no: 3,
+                created_at: "2026-08-19T09:30:00Z",
+                title: "Concentration risk review",
+              },
+              {
+                proposal_id: "PRP-READY-001",
+                portfolio_id: portfolioId,
+                current_state: "EXECUTION_READY",
+                current_version_no: 5,
+                created_at: "2026-08-20T11:15:00Z",
+                title: "Execution handoff review",
+              },
+              ...(includeSecondRisk
+                ? [
+                    {
+                      proposal_id: "PRP-RISK-002",
+                      portfolio_id: portfolioId,
+                      current_state: "RISK_REVIEW",
+                      current_version_no: 4,
+                      created_at: "2026-08-20T15:20:00Z",
+                      title: "Income allocation review",
+                    },
+                  ]
+                : []),
+            ],
+            next_cursor: null,
+          },
         },
-      },
-    });
-  });
+      });
+    },
+  );
 }
 
-async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[]) {
+async function mockProposalRiskImpact(
+  page: Page,
+  requestedProposalIds: string[],
+) {
+  await page.route(
+    "**/api/bff/api/v1/proposals/*/risk-impact",
+    async (route) => {
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      requestedProposalIds.push(proposalId);
+      const payload = proposalRiskImpactFixture();
+      payload.data.proposal_id = proposalId;
+      payload.data.title =
+        proposalId === "PRP-RISK-002"
+          ? "Income allocation review"
+          : "Concentration risk review";
+      payload.data.version_no = proposalId === "PRP-RISK-002" ? 4 : 3;
+      await route.fulfill({ json: payload });
+    },
+  );
+}
+
+async function mockSuitabilityReviews(
+  page: Page,
+  recordedEvaluationIds: string[],
+) {
   const reviews = [
     {
       evaluation_id: "pev_001",
@@ -159,7 +212,9 @@ async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[
       policy_version: "2026.05",
       evaluation_status: "PENDING_REVIEW",
       approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
-      disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+      disclosure_requirements: [
+        "advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+      ],
       consent_requirements: [],
       source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
     },
@@ -178,113 +233,134 @@ async function mockSuitabilityReviews(page: Page, recordedEvaluationIds: string[
     },
   ];
 
-  await page.route("**/api/bff/api/v1/advisory-policy-evaluations/**", async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    if (url.pathname.endsWith("/review-queue")) {
-      await route.fulfill({
-        json: {
-          correlation_id: "corr-policy-queue",
-          contract_version: "v1",
-          data: { items: reviews },
-        },
-      });
-      return;
-    }
+  await page.route(
+    "**/api/bff/api/v1/advisory-policy-evaluations/**",
+    async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.pathname.endsWith("/review-queue")) {
+        await route.fulfill({
+          json: {
+            correlation_id: "corr-policy-queue",
+            contract_version: "v1",
+            data: { items: reviews },
+          },
+        });
+        return;
+      }
 
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    const evaluationId = pathParts.at(-2)?.startsWith("pev_")
-      ? pathParts.at(-2)
-      : pathParts.at(-1);
-    const review = reviews.find((item) => item.evaluation_id === evaluationId) ?? reviews[0];
+      const pathParts = url.pathname.split("/").filter(Boolean);
+      const evaluationId = pathParts.at(-2)?.startsWith("pev_")
+        ? pathParts.at(-2)
+        : pathParts.at(-1);
+      const review =
+        reviews.find((item) => item.evaluation_id === evaluationId) ??
+        reviews[0];
 
-    if (request.method() === "POST" && url.pathname.endsWith("/sign-off-decisions")) {
-      recordedEvaluationIds.push(evaluationId ?? "unknown");
-      await route.fulfill({
-        json: {
-          correlation_id: "corr-policy-decision",
-          contract_version: "v1",
-          data: {
-            workflow: {
+      if (
+        request.method() === "POST" &&
+        url.pathname.endsWith("/sign-off-decisions")
+      ) {
+        recordedEvaluationIds.push(evaluationId ?? "unknown");
+        await route.fulfill({
+          json: {
+            correlation_id: "corr-policy-decision",
+            contract_version: "v1",
+            data: {
+              workflow: {
+                evaluation_id: evaluationId,
+                sign_off_status: "PENDING_REVIEW",
+                client_ready_publication: "BLOCKED",
+              },
+            },
+          },
+        });
+        return;
+      }
+
+      if (url.pathname.endsWith("/sign-off-package")) {
+        await route.fulfill({
+          json: {
+            correlation_id: "corr-policy-package",
+            contract_version: "v1",
+            data: {
+              package_posture: {
+                sign_off_source_package: "AVAILABLE",
+                client_ready_publication: "BLOCKED",
+              },
+              lineage: {
+                evaluation_id: evaluationId,
+                audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+                lineage_posture: { client_ready_publication: "BLOCKED" },
+              },
+            },
+          },
+        });
+        return;
+      }
+
+      if (url.pathname.endsWith("/workflow")) {
+        await route.fulfill({
+          json: {
+            correlation_id: "corr-policy-workflow",
+            contract_version: "v1",
+            data: {
               evaluation_id: evaluationId,
               sign_off_status: "PENDING_REVIEW",
+              sign_off_blockers:
+                evaluationId === "pev_002" ? ["CLIENT_CONSENT_REQUIRED"] : [],
+              maker_checker_required: true,
+              sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
               client_ready_publication: "BLOCKED",
             },
           },
-        },
-      });
-      return;
-    }
+        });
+        return;
+      }
 
-    if (url.pathname.endsWith("/sign-off-package")) {
       await route.fulfill({
         json: {
-          correlation_id: "corr-policy-package",
+          correlation_id: "corr-policy-detail",
           contract_version: "v1",
           data: {
-            package_posture: {
-              sign_off_source_package: "AVAILABLE",
-              client_ready_publication: "BLOCKED",
-            },
-            lineage: {
-              evaluation_id: evaluationId,
-              audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
-              lineage_posture: { client_ready_publication: "BLOCKED" },
+            ...review,
+            evaluation_hash: `sha256:${review.evaluation_id}`,
+            source_refs: ["lotus-core:governed_policy_source"],
+            evaluation_json: {
+              rule_results: [{ rule_id: "MANDATE_ALIGNMENT", status: "READY" }],
             },
           },
         },
       });
-      return;
-    }
-
-    if (url.pathname.endsWith("/workflow")) {
-      await route.fulfill({
-        json: {
-          correlation_id: "corr-policy-workflow",
-          contract_version: "v1",
-          data: {
-            evaluation_id: evaluationId,
-            sign_off_status: "PENDING_REVIEW",
-            sign_off_blockers: evaluationId === "pev_002" ? ["CLIENT_CONSENT_REQUIRED"] : [],
-            maker_checker_required: true,
-            sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
-            client_ready_publication: "BLOCKED",
-          },
-        },
-      });
-      return;
-    }
-
-    await route.fulfill({
-      json: {
-        correlation_id: "corr-policy-detail",
-        contract_version: "v1",
-        data: {
-          ...review,
-          evaluation_hash: `sha256:${review.evaluation_id}`,
-          source_refs: ["lotus-core:governed_policy_source"],
-          evaluation_json: { rule_results: [{ rule_id: "MANDATE_ALIGNMENT", status: "READY" }] },
-        },
-      },
-    });
-  });
+    },
+  );
 }
 
-test("shows source-backed queue posture without invented advisory evidence", async ({ page }) => {
+test("shows source-backed queue posture without invented advisory evidence", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalQueue(page);
   await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
     waitUntil: "domcontentloaded",
   });
 
-  await expect(page.getByRole("heading", { level: 1, name: "Approval Queue" })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "1 need attention" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Approval Queue" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "1 need attention" }),
+  ).toBeVisible();
   await expect(page.getByText("2 proposals in view")).toBeVisible();
-  await expect(page.getByText("1 proposal needs advisor action.")).toBeVisible();
+  await expect(
+    page.getByText("1 proposal needs advisor action."),
+  ).toBeVisible();
   await expect(page.getByText("Advisory proposal lifecycle")).toBeVisible();
 
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
-  await expect(page.getByText("Evidence pack: advisor-use review in progress")).toHaveCount(0);
+  await expect(
+    page.getByText("Evidence pack: advisor-use review in progress"),
+  ).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
@@ -305,24 +381,40 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   });
 
   const workspace = page.getByTestId("proposal-approval-decision-workspace");
-  const worklist = page.getByRole("listbox", { name: "Approval Queue proposals" });
-  const selectedDecision = page.getByRole("region", { name: "Selected proposal decision" });
-  const firstProposal = worklist.getByRole("option", { name: /Concentration risk review/ });
-  const secondProposal = worklist.getByRole("option", { name: /Execution handoff review/ });
+  const worklist = page.getByRole("listbox", {
+    name: "Approval Queue proposals",
+  });
+  const selectedDecision = page.getByRole("region", {
+    name: "Selected proposal decision",
+  });
+  const firstProposal = worklist.getByRole("option", {
+    name: /Concentration risk review/,
+  });
+  const secondProposal = worklist.getByRole("option", {
+    name: /Execution handoff review/,
+  });
 
   await expect(workspace).toBeVisible();
   await expect(firstProposal).toHaveAttribute("aria-selected", "true");
-  await expect(selectedDecision.getByRole("heading", { name: "Concentration risk review" })).toBeVisible();
+  await expect(
+    selectedDecision.getByRole("heading", {
+      name: "Concentration risk review",
+    }),
+  ).toBeVisible();
   await expect(firstProposal).toContainText("Version 3");
   await expect(firstProposal).toContainText("19 Aug 2026");
 
   await firstProposal.press("ArrowDown");
   await expect(secondProposal).toBeFocused();
   await expect(secondProposal).toHaveAttribute("aria-selected", "true");
-  await expect(selectedDecision.getByRole("heading", { name: "Execution handoff review" })).toBeVisible();
-  await expect(selectedDecision.getByRole("link", { name: "Open proposal review" })).toHaveAttribute(
+  await expect(
+    selectedDecision.getByRole("heading", { name: "Execution handoff review" }),
+  ).toBeVisible();
+  await expect(
+    selectedDecision.getByRole("link", { name: "Open proposal review" }),
+  ).toHaveAttribute(
     "href",
-    `/proposals/PRP-READY-001?portfolioId=${portfolioId}&fromMode=approval-queue`
+    `/proposals/PRP-READY-001?portfolioId=${portfolioId}&fromMode=approval-queue`,
   );
   await testInfo.attach("approval-queue-review-desk-desktop", {
     body: await page.screenshot({ fullPage: true }),
@@ -336,7 +428,10 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     { width: 720, height: 1000, layout: "stacked" },
     { width: 390, height: 844, layout: "stacked" },
   ] as const) {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
     await expect(workspace).toBeVisible();
     const [worklistBox, selectedBox] = await Promise.all([
       worklist.boundingBox(),
@@ -351,15 +446,156 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     }
     expect(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
-      )
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
     ).toBe(true);
-    expect(await workspace.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
-      true
-    );
+    expect(
+      await workspace.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
   }
 
   await testInfo.attach("approval-queue-review-desk-mobile", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+  expect(browserErrors).toEqual([]);
+});
+
+test("presents source-backed Risk and Impact evidence as a responsive advisor decision workspace", async ({
+  page,
+}, testInfo) => {
+  const browserErrors: string[] = [];
+  const requestedProposalIds: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await mockProposalQueue(page, { includeSecondRisk: true });
+  await mockProposalRiskImpact(page, requestedProposalIds);
+  await page.goto(`/proposals?portfolioId=${portfolioId}&mode=risk-impact`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const workspace = page.getByTestId("proposal-risk-impact-workspace");
+  const worklist = page.getByRole("listbox", {
+    name: "Risk and Impact proposals",
+  });
+  const selectedEvidence = page.getByRole("region", {
+    name: "Selected proposal risk and impact",
+  });
+  const firstProposal = worklist.getByRole("option", {
+    name: /Concentration risk review/,
+  });
+  const secondProposal = worklist.getByRole("option", {
+    name: /Income allocation review/,
+  });
+
+  await expect(workspace).toBeVisible();
+  await expect(
+    selectedEvidence.getByRole("heading", { name: "Requires Risk Review" }),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("Current and proposed allocation"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("USD 850,000.00 · 12 positions"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("USD 775,000.00 · 13 positions"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText(
+      "Risk review is required before client discussion.",
+    ),
+  ).toBeVisible();
+  expect(requestedProposalIds).toEqual(["PRP-RISK-001"]);
+
+  await firstProposal.press("ArrowDown");
+  await expect(secondProposal).toBeFocused();
+  await expect(secondProposal).toHaveAttribute("aria-selected", "true");
+  await expect(
+    selectedEvidence.getByRole("heading", { name: "Income allocation review" }),
+  ).toBeVisible();
+  expect(requestedProposalIds).toEqual(["PRP-RISK-001", "PRP-RISK-002"]);
+  await expect(
+    selectedEvidence.getByRole("link", { name: "Open proposal review" }),
+  ).toHaveAttribute(
+    "href",
+    `/proposals/PRP-RISK-002?portfolioId=${portfolioId}&fromMode=risk-impact`,
+  );
+
+  const refreshAction = selectedEvidence.getByRole("button", {
+    name: "Refresh source evidence",
+  });
+  await refreshAction.click();
+  await expect(refreshAction).toBeFocused();
+
+  await selectedEvidence.getByText("Evidence scope and lineage").click();
+  await expect(
+    selectedEvidence.getByText("Benchmark and limits"),
+  ).toBeVisible();
+  await expect(selectedEvidence.getByText("Scenario analysis")).toBeVisible();
+  await expect(selectedEvidence.getByText("Valuation as of")).toBeVisible();
+
+  await testInfo.attach("risk-impact-decision-workspace-desktop", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  for (const viewport of [
+    { width: 1440, height: 1100 },
+    { width: 1280, height: 1100 },
+    { width: 1024, height: 1200 },
+    { width: 720, height: 1100 },
+    { width: 390, height: 844 },
+  ] as const) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    const [worklistBox, selectedBox] = await Promise.all([
+      worklist.boundingBox(),
+      selectedEvidence.boundingBox(),
+    ]);
+    expect(worklistBox).not.toBeNull();
+    expect(selectedBox).not.toBeNull();
+    const sideBySide =
+      (selectedBox?.x ?? 0) >=
+      (worklistBox?.x ?? 0) + (worklistBox?.width ?? 0);
+    const stacked =
+      (selectedBox?.y ?? 0) >=
+      (worklistBox?.y ?? 0) + (worklistBox?.height ?? 0);
+    expect(
+      sideBySide || stacked,
+      `worklist and evidence must not overlap at ${viewport.width}px`,
+    ).toBe(true);
+    if (viewport.width === 1440) {
+      expect(
+        sideBySide,
+        "1440px keeps worklist and selected evidence simultaneously visible",
+      ).toBe(true);
+    }
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await workspace.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+  }
+
+  await testInfo.attach("risk-impact-decision-workspace-mobile", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
@@ -375,9 +611,13 @@ test("keeps workflow context readable without horizontal overflow at stacked-she
     waitUntil: "domcontentloaded",
   });
 
-  await expect(page.getByRole("heading", { level: 2, name: "1 need attention" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "1 need attention" }),
+  ).toBeVisible();
   const hasHorizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+    () =>
+      document.documentElement.scrollWidth >
+      document.documentElement.clientWidth,
   );
   expect(hasHorizontalOverflow).toBeFalsy();
 });
@@ -399,14 +639,22 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
   await firstReview.press("ArrowDown");
   await expect(secondReview).toHaveAttribute("aria-selected", "true");
 
-  const selectedReview = page.getByRole("region", { name: "Selected suitability review" });
+  const selectedReview = page.getByRole("region", {
+    name: "Selected suitability review",
+  });
   await expect(
-    selectedReview.getByRole("heading", { name: "PRP-INCOME-002 · ppv_002" })
+    selectedReview.getByRole("heading", { name: "PRP-INCOME-002 · ppv_002" }),
   ).toBeVisible();
-  await expect(selectedReview.getByText("Source evidence complete")).toBeVisible();
-  await selectedReview.getByRole("button", { name: "Request more evidence" }).click();
   await expect(
-    selectedReview.getByText("Evidence review request recorded through the advisory policy workflow.")
+    selectedReview.getByText("Source evidence complete"),
+  ).toBeVisible();
+  await selectedReview
+    .getByRole("button", { name: "Request more evidence" })
+    .click();
+  await expect(
+    selectedReview.getByText(
+      "Evidence review request recorded through the advisory policy workflow.",
+    ),
   ).toBeVisible();
   expect(recordedEvaluationIds).toEqual(["pev_002"]);
 
@@ -418,7 +666,9 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(secondReview).toHaveAttribute("aria-selected", "true");
   const hasHorizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+    () =>
+      document.documentElement.scrollWidth >
+      document.documentElement.clientWidth,
   );
   expect(hasHorizontalOverflow).toBeFalsy();
   await testInfo.attach("suitability-selected-review-mobile", {
@@ -427,58 +677,77 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
   });
 });
 
-test("keeps proposal counts scoped to the current source window", async ({ page }) => {
+test("keeps proposal counts scoped to the current source window", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
-    const cursor = new URL(route.request().url()).searchParams.get("cursor");
-    await route.fulfill({
-      json: {
-        correlation_id: "corr-proposal-window",
-        contract_version: "v1",
-        data: cursor
-          ? {
-              items: [
-                {
-                  proposal_id: "PRP-RISK-002",
-                  portfolio_id: portfolioId,
-                  current_state: "RISK_REVIEW",
-                  title: "Cross-asset concentration review",
-                },
-              ],
-              next_cursor: null,
-            }
-          : {
-              items: [],
-              next_cursor: "cursor-window-2",
-            },
-      },
-    });
-  });
+  await page.route(
+    "**/api/bff/api/v1/proposals?portfolio_id=**",
+    async (route) => {
+      const cursor = new URL(route.request().url()).searchParams.get("cursor");
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-proposal-window",
+          contract_version: "v1",
+          data: cursor
+            ? {
+                items: [
+                  {
+                    proposal_id: "PRP-RISK-002",
+                    portfolio_id: portfolioId,
+                    current_state: "RISK_REVIEW",
+                    title: "Cross-asset concentration review",
+                  },
+                ],
+                next_cursor: null,
+              }
+            : {
+                items: [],
+                next_cursor: "cursor-window-2",
+              },
+        },
+      });
+    },
+  );
 
   await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
     waitUntil: "domcontentloaded",
   });
 
-  await expect(page.getByRole("heading", { name: "More proposals available" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "More proposals available" }),
+  ).toBeVisible();
   await expect(page.getByText("0 proposals in current view")).toBeVisible();
-  await expect(page.getByText("No matching proposals in this view")).toBeVisible();
-  await expect(page.getByText("No proposals in the approval queue")).toHaveCount(0);
+  await expect(
+    page.getByText("No matching proposals in this view"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No proposals in the approval queue"),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Next proposals" }).click();
 
   await expect(
     page
       .getByRole("region", { name: "Selected proposal decision" })
-      .getByRole("heading", { name: "Cross-asset concentration review" })
+      .getByRole("heading", { name: "Cross-asset concentration review" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "1 proposal needs attention in this view" })
+    page.getByRole("heading", {
+      name: "1 proposal needs attention in this view",
+    }),
   ).toBeVisible();
   await expect(page.getByText("Proposal view 2")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Previous proposals" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Next proposals" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Previous proposals" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Next proposals" }),
+  ).toBeDisabled();
 });
 
-test("keeps proposal evaluation inside construction without persisted workflow authority", async ({ page }) => {
+test("keeps proposal evaluation inside construction without persisted workflow authority", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
     waitUntil: "domcontentloaded",
@@ -486,19 +755,30 @@ test("keeps proposal evaluation inside construction without persisted workflow a
 
   const workflowRail = page.getByTestId("proposal-builder-workflow-rail");
   await expect(workflowRail).toBeVisible();
-  await expect(workflowRail).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(workflowRail).toHaveAttribute(
+    "data-workflow-admission",
+    "blocked",
+  );
   await expect(
-    workflowRail.getByRole("heading", { name: "Review and retain" })
+    workflowRail.getByRole("heading", { name: "Review and retain" }),
   ).toBeVisible();
-  await expect(workflowRail.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
-  await expect(workflowRail.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
-  await expect(page.getByText("No persisted advisory workflow record")).toBeVisible();
+  await expect(
+    workflowRail.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
+  await expect(
+    workflowRail.getByRole("button", { name: "Save Advisor Draft" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText("No persisted advisory workflow record"),
+  ).toBeVisible();
   await expect(
     page.getByText(
-      "Simulation does not imply suitability review, approval, client consent, publication, or execution readiness."
-    )
+      "Simulation does not imply suitability review, approval, client consent, publication, or execution readiness.",
+    ),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Advisor Workflow" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Advisor Workflow" }),
+  ).toHaveCount(0);
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
@@ -515,24 +795,43 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
 
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
-  await expect(page.getByText("Portfolio evidence is unavailable")).toBeVisible();
+  await expect(
+    page.getByText("Portfolio evidence is unavailable"),
+  ).toBeVisible();
   await page.getByLabel("Additional Cash Assumption").fill("0");
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Save Advisor Draft" }),
+  ).toBeDisabled();
 
-  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+  await page
+    .getByRole("button", { name: "Refresh Portfolio Evidence" })
+    .click();
 
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
   await expect(page.getByText("Portfolio evidence confirmed")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Save Advisor Draft" }),
+  ).toBeEnabled();
   const workflowRail = page.getByTestId("proposal-builder-workflow-rail");
-  const blotterPanel = page.locator("section").filter({
-    has: page.getByRole("heading", { name: "Draft Order Blotter" }),
-  }).first();
+  const blotterPanel = page
+    .locator("section")
+    .filter({
+      has: page.getByRole("heading", { name: "Draft Order Blotter" }),
+    })
+    .first();
   for (const panel of [workflowRail, blotterPanel]) {
     await expect(panel).toBeVisible();
-    expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(
+      await panel.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
   }
   await testInfo.attach("proposal-evidence-recovery", {
     body: await page.screenshot({ fullPage: true }),
@@ -551,37 +850,61 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
 
   const cashInput = page.getByLabel("Additional Cash Assumption");
   const actionPanel = page.locator("section[data-scenario-cash-state]");
-  const evaluateAction = page.getByRole("button", { name: "Evaluate Workspace" });
+  const evaluateAction = page.getByRole("button", {
+    name: "Evaluate Workspace",
+  });
   const saveAction = page.getByRole("button", { name: "Save Advisor Draft" });
 
-  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "positive");
+  await expect(actionPanel).toHaveAttribute(
+    "data-scenario-cash-state",
+    "positive",
+  );
   await expect(actionPanel).toHaveAttribute("data-workflow-admission", "ready");
   await expect(evaluateAction).toBeEnabled();
 
   await cashInput.fill("-250");
   await cashInput.press("Tab");
 
-  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "negative");
-  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(actionPanel).toHaveAttribute(
+    "data-scenario-cash-state",
+    "negative",
+  );
+  await expect(actionPanel).toHaveAttribute(
+    "data-workflow-admission",
+    "blocked",
+  );
   await expect(cashInput).toHaveAttribute("aria-invalid", "true");
   await expect(
-    page.getByText("Additional cash assumption cannot be negative. Enter 0 or a positive amount.").last()
+    page
+      .getByText(
+        "Additional cash assumption cannot be negative. Enter 0 or a positive amount.",
+      )
+      .last(),
   ).toBeVisible();
   await expect(evaluateAction).toBeDisabled();
   await expect(saveAction).toBeDisabled();
   await expect(page.getByTestId("proposal-draft-impact")).toHaveAttribute(
     "data-preview-blocked-by",
-    "additional_cash"
+    "additional_cash",
   );
-  await expect(page.getByText("Additional cash needs correction")).toBeVisible();
-  await expect(page.getByTestId("proposal-draft-impact").getByText("Current Value")).toHaveCount(0);
+  await expect(
+    page.getByText("Additional cash needs correction"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("proposal-draft-impact").getByText("Current Value"),
+  ).toHaveCount(0);
 
   await cashInput.fill("1,000");
-  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "not_numeric");
+  await expect(actionPanel).toHaveAttribute(
+    "data-scenario-cash-state",
+    "not_numeric",
+  );
   await expect(
-    page.getByText(
-      "Enter additional cash as a number without currency symbols or separators, or leave it blank."
-    ).last()
+    page
+      .getByText(
+        "Enter additional cash as a number without currency symbols or separators, or leave it blank.",
+      )
+      .last(),
   ).toBeVisible();
 
   await testInfo.attach("proposal-additional-cash-invalid", {
@@ -590,26 +913,45 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   });
 
   await cashInput.fill("70368744177663.99");
-  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "positive");
-  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(actionPanel).toHaveAttribute(
+    "data-scenario-cash-state",
+    "positive",
+  );
+  await expect(actionPanel).toHaveAttribute(
+    "data-workflow-admission",
+    "blocked",
+  );
   await expect(page.getByTestId("proposal-draft-impact")).toHaveAttribute(
     "data-preview-blocked-by",
-    "monetary_precision"
+    "monetary_precision",
   );
-  await expect(page.getByText("Draft amount exceeds the reliable preview range")).toBeVisible();
+  await expect(
+    page.getByText("Draft amount exceeds the reliable preview range"),
+  ).toBeVisible();
 
   await cashInput.fill("");
-  await expect(actionPanel).toHaveAttribute("data-scenario-cash-state", "empty");
+  await expect(actionPanel).toHaveAttribute(
+    "data-scenario-cash-state",
+    "empty",
+  );
   await expect(cashInput).toHaveAttribute("aria-invalid", "false");
   await expect(evaluateAction).toBeEnabled();
   await expect(saveAction).toBeEnabled();
 
-  const cashMovementCurrency = page.getByRole("textbox", { name: "Currency", exact: true });
+  const cashMovementCurrency = page.getByRole("textbox", {
+    name: "Currency",
+    exact: true,
+  });
   await page.getByLabel("Amount").fill("1.0000000001");
   await cashMovementCurrency.fill("EUR");
-  await expect(actionPanel).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(actionPanel).toHaveAttribute(
+    "data-workflow-admission",
+    "blocked",
+  );
   await expect(
-    page.getByText("Use no more than 2 decimal places and remain within the reliable draft range.")
+    page.getByText(
+      "Use no more than 2 decimal places and remain within the reliable draft range.",
+    ),
   ).toBeVisible();
   await expect(evaluateAction).toBeDisabled();
   await cashMovementCurrency.fill("USD");
@@ -621,12 +963,14 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   await evaluateAction.click();
 
   await expect(
-    page.getByRole("status", { name: "Proposal evaluation summary" })
+    page.getByRole("status", { name: "Proposal evaluation summary" }),
   ).toContainText("Advise Evaluation Summary");
 
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
   ).toBe(true);
   await testInfo.attach("proposal-additional-cash-zero-narrow", {
     body: await page.screenshot({ fullPage: true }),
@@ -646,15 +990,28 @@ test("refetches and confirms the combined portfolio book for a changed advisory 
 
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-10");
+  await expect(evidence).toHaveAttribute(
+    "data-effective-as-of-date",
+    "2026-04-10",
+  );
 
   await page.getByLabel("Advisory As-of Date").fill("2026-04-11");
 
-  await expect(evidence).toHaveAttribute("data-requested-as-of-date", "2026-04-11");
-  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-11");
+  await expect(evidence).toHaveAttribute(
+    "data-requested-as-of-date",
+    "2026-04-11",
+  );
+  await expect(evidence).toHaveAttribute(
+    "data-effective-as-of-date",
+    "2026-04-11",
+  );
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  expect(requestedDates).toEqual(expect.arrayContaining(["2026-04-10", "2026-04-11"]));
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  expect(requestedDates).toEqual(
+    expect.arrayContaining(["2026-04-10", "2026-04-11"]),
+  );
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeEnabled();
 });
 
 test("shows requested and source dates while blocking a mismatched source snapshot", async ({
@@ -667,48 +1024,86 @@ test("shows requested and source dates while blocking a mismatched source snapsh
   });
 
   const evidence = page.getByTestId("proposal-portfolio-evidence");
-  await expect(evidence).toHaveAttribute("data-evidence-status", "context_mismatch");
-  await expect(evidence).toHaveAttribute("data-requested-as-of-date", "2026-04-10");
-  await expect(evidence).toHaveAttribute("data-effective-as-of-date", "2026-04-09");
-  await expect(page.getByText("Portfolio context does not match")).toBeVisible();
-  const positionsPanel = page.getByRole("region", { name: "Current Positions" });
-  await expect(positionsPanel.getByText("1 position · different context")).toBeVisible();
+  await expect(evidence).toHaveAttribute(
+    "data-evidence-status",
+    "context_mismatch",
+  );
+  await expect(evidence).toHaveAttribute(
+    "data-requested-as-of-date",
+    "2026-04-10",
+  );
+  await expect(evidence).toHaveAttribute(
+    "data-effective-as-of-date",
+    "2026-04-09",
+  );
+  await expect(
+    page.getByText("Portfolio context does not match"),
+  ).toBeVisible();
+  const positionsPanel = page.getByRole("region", {
+    name: "Current Positions",
+  });
+  await expect(
+    positionsPanel.getByText("1 position · different context"),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: "Buy More" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Sell Down" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Save Advisor Draft" }),
+  ).toBeDisabled();
 });
 
 test("withholds mixed-currency impact until refreshed source evidence matches the proposal", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await mockProposalPortfolioEvidence(page, { sourceCurrencies: ["SGD", "USD"] });
+  await mockProposalPortfolioEvidence(page, {
+    sourceCurrencies: ["SGD", "USD"],
+  });
   await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
     waitUntil: "domcontentloaded",
   });
 
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   const impact = page.getByTestId("proposal-draft-impact");
-  await expect(evidence).toHaveAttribute("data-evidence-status", "context_mismatch");
-  await expect(impact).toHaveAttribute("data-preview-currency-status", "mixed_currency");
+  await expect(evidence).toHaveAttribute(
+    "data-evidence-status",
+    "context_mismatch",
+  );
+  await expect(impact).toHaveAttribute(
+    "data-preview-currency-status",
+    "mixed_currency",
+  );
   await expect(impact).toHaveAttribute("data-requested-currency", "USD");
   await expect(impact).toHaveAttribute("data-source-currency", "SGD");
-  await expect(impact.getByText("Currency-aligned impact is unavailable")).toBeVisible();
+  await expect(
+    impact.getByText("Currency-aligned impact is unavailable"),
+  ).toBeVisible();
   await expect(impact.getByText("USD 23,000")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
   await testInfo.attach("proposal-mixed-currency-impact-withheld", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
 
-  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+  await page
+    .getByRole("button", { name: "Refresh Portfolio Evidence" })
+    .click();
 
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  await expect(impact).toHaveAttribute("data-preview-currency-status", "available");
+  await expect(impact).toHaveAttribute(
+    "data-preview-currency-status",
+    "available",
+  );
   await expect(impact).toHaveAttribute("data-preview-currency", "USD");
   await expect(impact.getByText("USD 23,000").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeEnabled();
   await testInfo.attach("proposal-currency-impact-recovered", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
@@ -717,8 +1112,13 @@ test("withholds mixed-currency impact until refreshed source evidence matches th
   await page.getByRole("button", { name: "Buy More" }).click();
   await page.getByLabel("Quantity").last().fill("10");
   await page.getByLabel("Price Currency").last().fill("EUR");
-  await expect(impact).toHaveAttribute("data-preview-currency-status", "mixed_currency");
-  await expect(impact.getByText("Currency-aligned impact is unavailable")).toBeVisible();
+  await expect(impact).toHaveAttribute(
+    "data-preview-currency-status",
+    "mixed_currency",
+  );
+  await expect(
+    impact.getByText("Currency-aligned impact is unavailable"),
+  ).toBeVisible();
   await expect(impact.getByText(/monetary evidence in EUR/)).toBeVisible();
 });
 
@@ -726,7 +1126,9 @@ test("withholds unlabelled source money until currency identity is refreshed", a
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await mockProposalPortfolioEvidence(page, { sourceCurrencies: [null, "USD"] });
+  await mockProposalPortfolioEvidence(page, {
+    sourceCurrencies: [null, "USD"],
+  });
   await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
     waitUntil: "domcontentloaded",
   });
@@ -734,17 +1136,27 @@ test("withholds unlabelled source money until currency identity is refreshed", a
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   const impact = page.getByTestId("proposal-draft-impact");
   const positions = page.getByRole("region", { name: "Current Positions" });
-  await expect(impact).toHaveAttribute("data-preview-currency-status", "unresolved");
+  await expect(impact).toHaveAttribute(
+    "data-preview-currency-status",
+    "unresolved",
+  );
   await expect(evidence.getByText("Currency not confirmed")).toBeVisible();
   await expect(positions.getByText("Currency not confirmed")).toBeVisible();
   await expect(evidence.getByText("USD 4,000")).toHaveCount(0);
   await expect(positions.getByText("USD 19,000")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
 
-  await page.getByRole("button", { name: "Refresh Portfolio Evidence" }).click();
+  await page
+    .getByRole("button", { name: "Refresh Portfolio Evidence" })
+    .click();
 
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  await expect(impact).toHaveAttribute("data-preview-currency-status", "available");
+  await expect(impact).toHaveAttribute(
+    "data-preview-currency-status",
+    "available",
+  );
   await expect(evidence.getByText("USD 4,000")).toBeVisible();
   await expect(positions.getByText("USD 19,000")).toBeVisible();
 });
@@ -770,13 +1182,17 @@ for (const viewport of [
     expect(
       await page.evaluate(() => {
         const input = document.querySelector('input[name="proposalTitle"]');
-        const rail = document.querySelector('[data-testid="proposal-builder-workflow-rail"]');
+        const rail = document.querySelector(
+          '[data-testid="proposal-builder-workflow-rail"]',
+        );
         return Boolean(
           input &&
           rail &&
-          (input.compareDocumentPosition(rail) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+          (input.compareDocumentPosition(rail) &
+            Node.DOCUMENT_POSITION_FOLLOWING) !==
+            0,
         );
-      })
+      }),
     ).toBe(true);
     await draftTitle.scrollIntoViewIfNeeded();
     const railContainer = controlRail.locator("..");
@@ -784,7 +1200,9 @@ for (const viewport of [
       await expect(railContainer).toHaveCSS("position", "sticky");
       const railBox = await controlRail.boundingBox();
       expect(railBox?.y).toBeGreaterThanOrEqual(80);
-      expect((railBox?.y ?? 0) + (railBox?.height ?? 0)).toBeLessThanOrEqual(viewport.height);
+      expect((railBox?.y ?? 0) + (railBox?.height ?? 0)).toBeLessThanOrEqual(
+        viewport.height,
+      );
     } else {
       await expect(railContainer).toHaveCSS("position", "static");
       const draftBox = await draftTitle.boundingBox();
@@ -795,23 +1213,30 @@ for (const viewport of [
     await page.getByRole("button", { name: "Evaluate Workspace" }).click();
 
     await expect(
-      page.getByRole("status", { name: "Proposal evaluation summary" })
+      page.getByRole("status", { name: "Proposal evaluation summary" }),
     ).toContainText("Advise Evaluation Summary");
     await expect(
-      page.getByRole("status", { name: "Proposal evaluation status" })
+      page.getByRole("status", { name: "Proposal evaluation status" }),
     ).toContainText("Evaluation confirmed");
     await expect(
-      page.getByRole("status", { name: "Proposal evaluation status" })
+      page.getByRole("status", { name: "Proposal evaluation status" }),
     ).toContainText("Source reference aws_browser_001");
-    const orderBlotter = page.locator("section").filter({
-      has: page.getByRole("heading", { name: "Draft Order Blotter" }),
-    }).first();
+    const orderBlotter = page
+      .locator("section")
+      .filter({
+        has: page.getByRole("heading", { name: "Draft Order Blotter" }),
+      })
+      .first();
     expect(
-      await orderBlotter.evaluate((element) => element.scrollWidth <= element.clientWidth)
+      await orderBlotter.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
     ).toBe(true);
     await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
     expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
     ).toBe(true);
     await testInfo.attach(`proposal-builder-${viewport.name}`, {
       body: await page.screenshot({ fullPage: true }),
@@ -820,10 +1245,10 @@ for (const viewport of [
 
     await page.getByLabel("Additional Cash Assumption").fill("12500");
     await expect(
-      page.getByRole("status", { name: "Proposal evaluation status" })
+      page.getByRole("status", { name: "Proposal evaluation status" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("status", { name: "Proposal evaluation summary" })
+      page.getByRole("status", { name: "Proposal evaluation summary" }),
     ).toHaveCount(0);
   });
 }

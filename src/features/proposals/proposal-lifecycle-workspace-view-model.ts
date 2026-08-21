@@ -58,52 +58,67 @@ type ModeDefinition = {
 const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
   "approval-queue": {
     title: "Approval Queue",
-    subtitle: "Proposal drafts, review-stage posture, and source-supported next actions.",
+    subtitle:
+      "Proposal drafts, review-stage posture, and source-supported next actions.",
     primaryDecision: "Which proposal requires review action first?",
     recommendedAction:
       "Open the proposal to verify approvals and supporting evidence before advancing it.",
     emptyTitle: "No proposals in the approval queue",
-    emptyBody: "Create an advisor-use draft when a client objective is ready for review.",
+    emptyBody:
+      "Create an advisor-use draft when a client objective is ready for review.",
   },
   suitability: {
     title: "Suitability Review",
     subtitle: "Mandate, suitability, disclosure, and blocking-issue review.",
-    primaryDecision: "Can the proposal proceed under documented client and product constraints?",
-    recommendedAction: "Resolve suitability and compliance blockers before client discussion.",
+    primaryDecision:
+      "Can the proposal proceed under documented client and product constraints?",
+    recommendedAction:
+      "Resolve suitability and compliance blockers before client discussion.",
     emptyTitle: "No suitability items need review",
-    emptyBody: "There are no proposals currently waiting at risk or compliance review gates.",
+    emptyBody:
+      "There are no proposals currently waiting at risk or compliance review gates.",
     includedStates: ["RISK_REVIEW", "COMPLIANCE_REVIEW"],
   },
   "risk-impact": {
-    title: "Risk And Impact",
-    subtitle: "Risk-review posture for proposals requiring concentration or allocation evidence.",
+    title: "Risk and Impact",
+    subtitle:
+      "Risk-review posture for proposals requiring concentration or allocation evidence.",
     primaryDecision: "Is the risk and portfolio-impact trade-off acceptable?",
-    recommendedAction: "Open risk-review items and attach source-owned risk evidence before approval.",
+    recommendedAction:
+      "Open risk-review items and attach source-owned risk evidence before approval.",
     emptyTitle: "No risk-impact reviews are pending",
     emptyBody: "There are no proposals currently waiting for risk review.",
     includedStates: ["RISK_REVIEW"],
   },
   "discussion-pack": {
     title: "Discussion Pack Review",
-    subtitle: "Advisor-reviewed rationale, evidence, and client-consent gate posture.",
-    primaryDecision: "What evidence or review remains before client discussion?",
-    recommendedAction: "Resolve policy, memo, narrative, and consent blockers before using the pack.",
+    subtitle:
+      "Advisor-reviewed rationale, evidence, and client-consent gate posture.",
+    primaryDecision:
+      "What evidence or review remains before client discussion?",
+    recommendedAction:
+      "Resolve policy, memo, narrative, and consent blockers before using the pack.",
     emptyTitle: "No discussion-pack reviews are pending",
-    emptyBody: "There are no proposals currently waiting at the client-consent gate.",
+    emptyBody:
+      "There are no proposals currently waiting at the client-consent gate.",
     includedStates: ["AWAITING_CLIENT_CONSENT"],
   },
   implementation: {
     title: "Implementation Status",
-    subtitle: "Execution handoff, implementation status, and post-trade follow-up.",
+    subtitle:
+      "Execution handoff, implementation status, and post-trade follow-up.",
     primaryDecision: "Has the approved proposal been implemented as intended?",
-    recommendedAction: "Track execution handoff evidence and follow up exceptions.",
+    recommendedAction:
+      "Track execution handoff evidence and follow up exceptions.",
     emptyTitle: "No implementation follow-up is pending",
     emptyBody: "There are no proposals currently ready for execution handoff.",
     includedStates: ["EXECUTION_READY"],
   },
 };
 
-export function normalizeProposalLifecycleMode(mode: AdvisoryJourneyMode): ProposalLifecycleMode {
+export function normalizeProposalLifecycleMode(
+  mode: AdvisoryJourneyMode,
+): ProposalLifecycleMode {
   if (
     mode === "suitability" ||
     mode === "risk-impact" ||
@@ -115,16 +130,23 @@ export function normalizeProposalLifecycleMode(mode: AdvisoryJourneyMode): Propo
   return "approval-queue";
 }
 
-export function getProposalLifecycleModeDefinition(mode: ProposalLifecycleMode): ModeDefinition {
+export function getProposalLifecycleModeDefinition(
+  mode: ProposalLifecycleMode,
+): ModeDefinition {
   return MODE_DEFINITIONS[mode];
 }
 
-function filterByMode(proposals: ProposalSummary[], mode: ProposalLifecycleMode): ProposalSummary[] {
+function filterByMode(
+  proposals: ProposalSummary[],
+  mode: ProposalLifecycleMode,
+): ProposalSummary[] {
   const includedStates = MODE_DEFINITIONS[mode].includedStates;
   if (!includedStates) {
     return proposals;
   }
-  return proposals.filter((proposal) => includedStates.includes(proposal.current_state));
+  return proposals.filter((proposal) =>
+    includedStates.includes(proposal.current_state),
+  );
 }
 
 function attentionCount(rows: ProposalLifecycleRow[]): number {
