@@ -417,6 +417,36 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("announces a failed retry when no cached evidence is available", async () => {
+    getProposalRiskImpactMock.mockRejectedValue(new Error("Gateway unavailable"));
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    const retry = await screen.findByRole("button", {
+      name: "Retry source evidence",
+    });
+    fireEvent.click(retry);
+
+    const refreshStatus = await screen.findByTestId(
+      "workbench-refresh-status",
+    );
+    await waitFor(() => {
+      expect(refreshStatus).toHaveAttribute("data-state", "failed");
+    });
+    expect(within(refreshStatus).getByText("Source refresh failed"))
+      .toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Risk and impact evidence is unavailable",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("reads detail only for the selected proposal instead of fanning out across the worklist", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [

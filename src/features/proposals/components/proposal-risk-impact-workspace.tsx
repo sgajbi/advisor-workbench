@@ -124,6 +124,16 @@ export default function ProposalRiskImpactWorkspace({
   }
 
   if (!selectedProposal) return null;
+  const matchingRefreshOutcome =
+    refreshOutcome?.selectionIdentity === selectionIdentity
+      ? refreshOutcome.state
+      : null;
+  const activeRefreshState = hasRefreshFailure
+    ? "failed"
+    : isRefreshing
+      ? "pending"
+      : matchingRefreshOutcome;
+  const selectedRefreshContext = `${selectedProposal.proposalId} · Version ${selectedProposal.versionNo ?? "not reported"}`;
 
   return (
     <div
@@ -171,21 +181,31 @@ export default function ProposalRiskImpactWorkspace({
               body="Your current role cannot view the selected proposal's decision evidence. No fallback evidence is shown."
             />
           ) : hasError || !model ? (
-            <ScreenStatePanel
-              kind="error"
-              title="Risk and impact evidence is unavailable"
-              body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
-              action={
-                <SourceRefreshAction
-                  ref={refreshActionRef}
-                  refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
-                  idleLabel="Retry source evidence"
-                  busyLabel="Retrying source evidence"
-                  isRefreshing={isRefreshing}
-                  onRefresh={refreshEvidence}
+            <div className={styles.recoveryState}>
+              <ScreenStatePanel
+                kind="error"
+                title="Risk and impact evidence is unavailable"
+                body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
+                action={
+                  <SourceRefreshAction
+                    ref={refreshActionRef}
+                    refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
+                    idleLabel="Retry source evidence"
+                    busyLabel="Retrying source evidence"
+                    isRefreshing={isRefreshing}
+                    onRefresh={refreshEvidence}
+                  />
+                }
+              />
+              {activeRefreshState ? (
+                <RiskEvidenceRefreshStatus
+                  state={activeRefreshState}
+                  requestedContext={selectedRefreshContext}
+                  confirmedContext="No confirmed evidence"
+                  hasConfirmedEvidence={false}
                 />
-              }
-            />
+              ) : null}
+            </div>
           ) : (
             <RiskImpactEvidence
               key={`${model.identity.proposalId}:${selectedProposal.versionNo}`}
@@ -193,11 +213,7 @@ export default function ProposalRiskImpactWorkspace({
               proposalHref={selectedProposal.href}
               refreshing={isRefreshing}
               refreshFailed={hasRefreshFailure}
-              refreshOutcome={
-                refreshOutcome?.selectionIdentity === selectionIdentity
-                  ? refreshOutcome.state
-                  : null
-              }
+              refreshOutcome={matchingRefreshOutcome}
               onRefresh={refreshEvidence}
               refreshActionRef={refreshActionRef}
             />
@@ -270,30 +286,12 @@ function RiskImpactEvidence({
         </div>
       </header>
 
-      {effectiveRefreshState === "failed" ? (
-        <WorkbenchRefreshStatus
-          kind="failed"
-          eyebrow="Source evidence not updated"
-          title="Source refresh failed"
-          message="Previously retrieved evidence remains visible and is not re-confirmed."
+      {effectiveRefreshState ? (
+        <RiskEvidenceRefreshStatus
+          state={effectiveRefreshState}
           requestedContext={refreshContext}
           confirmedContext={refreshContext}
-        />
-      ) : effectiveRefreshState === "pending" ? (
-        <WorkbenchRefreshStatus
-          kind="pending"
-          eyebrow="Updating source evidence"
-          title="Reconfirming selected proposal evidence"
-          message="The current source-confirmed evidence remains visible while Gateway refreshes."
-          requestedContext={refreshContext}
-          confirmedContext={refreshContext}
-        />
-      ) : effectiveRefreshState === "confirmed" ? (
-        <WorkbenchRefreshStatus
-          kind="confirmed"
-          eyebrow="Source evidence updated"
-          title="Selected proposal evidence confirmed"
-          confirmedContext={refreshContext}
+          hasConfirmedEvidence
         />
       ) : null}
 
@@ -681,6 +679,59 @@ function RiskImpactEvidence({
         </Link>
       </footer>
     </div>
+  );
+}
+
+function RiskEvidenceRefreshStatus({
+  state,
+  requestedContext,
+  confirmedContext,
+  hasConfirmedEvidence,
+}: {
+  state: RiskEvidenceRefreshOutcome["state"];
+  requestedContext: string;
+  confirmedContext: string;
+  hasConfirmedEvidence: boolean;
+}) {
+  if (state === "failed") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="failed"
+        eyebrow="Source evidence not updated"
+        title="Source refresh failed"
+        message={
+          hasConfirmedEvidence
+            ? "Previously retrieved evidence remains visible and is not re-confirmed."
+            : "No source-confirmed evidence is available. The retry did not complete."
+        }
+        requestedContext={requestedContext}
+        confirmedContext={confirmedContext}
+      />
+    );
+  }
+  if (state === "pending") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="pending"
+        eyebrow="Updating source evidence"
+        title="Reconfirming selected proposal evidence"
+        message={
+          hasConfirmedEvidence
+            ? "The current source-confirmed evidence remains visible while Gateway refreshes."
+            : "Workbench is requesting source evidence through Gateway. No decision posture is shown until it succeeds."
+        }
+        requestedContext={requestedContext}
+        confirmedContext={confirmedContext}
+      />
+    );
+  }
+  return (
+    <WorkbenchRefreshStatus
+      kind="confirmed"
+      eyebrow="Source evidence updated"
+      title="Selected proposal evidence confirmed"
+      confirmedContext={confirmedContext}
+    />
   );
 }
 

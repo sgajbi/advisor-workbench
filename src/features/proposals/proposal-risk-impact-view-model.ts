@@ -30,13 +30,18 @@ export function buildProposalRiskImpactModel(
   envelope: ProposalRiskImpactEnvelope,
 ) {
   const { data } = envelope;
-  const decisionIsAvailable = data.decision.state === "ready";
-  const allocationIsAvailable =
-    data.allocation.state === "ready" || data.allocation.state === "partial";
-  const riskIsAvailable =
-    data.risk.state === "ready" || data.risk.state === "partial";
-  const workflowGateIsAvailable = data.workflow_gate.state === "ready";
   const effectiveOverallState = reconcileOverallState(data);
+  const aggregateIsAvailable = effectiveOverallState !== "unavailable";
+  const decisionIsAvailable =
+    aggregateIsAvailable && data.decision.state === "ready";
+  const allocationIsAvailable =
+    aggregateIsAvailable &&
+    (data.allocation.state === "ready" || data.allocation.state === "partial");
+  const riskIsAvailable =
+    aggregateIsAvailable &&
+    (data.risk.state === "ready" || data.risk.state === "partial");
+  const workflowGateIsAvailable =
+    aggregateIsAvailable && data.workflow_gate.state === "ready";
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
     : [];
