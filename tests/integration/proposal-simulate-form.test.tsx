@@ -268,6 +268,29 @@ describe("ProposalSimulateForm", () => {
     await waitForPortfolioEvidence();
   });
 
+  it("does not restore evaluation confirmation when evidence refreshes during evaluation", async () => {
+    const pendingEvaluation = deferred<ReturnType<typeof workspaceEnvelope>>();
+    advisoryApiMocks.evaluateAdvisoryWorkspace.mockReturnValueOnce(pendingEvaluation.promise);
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    await screen.findByRole("status", { name: "Proposal evaluation status" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+    await waitForPortfolioEvidence();
+    await act(async () => pendingEvaluation.resolve(workspaceEnvelope()));
+
+    expect(
+      await screen.findByText(
+        "Portfolio evidence changed while evaluation was running. Review the refreshed evidence and evaluate again."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Evaluation confirmed")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Advise Evaluation Summary" })
+    ).not.toBeInTheDocument();
+  });
+
   it("applies the admitted cash assumption to proposed impact while preserving current value", async () => {
     renderForm();
     await waitForPortfolioEvidence();
