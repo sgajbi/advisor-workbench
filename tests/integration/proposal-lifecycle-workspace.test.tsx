@@ -17,6 +17,7 @@ import {
 } from "../../src/features/proposals/components/proposal-workflow-context";
 import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
+import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
@@ -94,10 +95,39 @@ const getProposalRiskImpactMock = vi.fn(
     _currentState: string,
   ) => proposalRiskImpactFixture(),
 );
+function implementationStatusFixture(
+  proposalId = "PRP-READY",
+  versionNo?: number,
+) {
+  const fixture = proposalImplementationStatusFixture();
+  fixture.data.proposal_id = proposalId;
+  fixture.data.title =
+    proposalListFixture.items.find((item) => item.proposal_id === proposalId)
+      ?.title ?? proposalId;
+  fixture.data.current_version_no =
+    versionNo ??
+    proposalListFixture.items.find((item) => item.proposal_id === proposalId)
+      ?.current_version_no ??
+    1;
+  fixture.data.related_version_no = fixture.data.current_version_no;
+  fixture.data.latest_workflow_event!.related_version_no =
+    fixture.data.current_version_no;
+  fixture.data.lineage.proposal_id = proposalId;
+  fixture.data.lineage.related_version_no = fixture.data.current_version_no;
+  return fixture;
+}
+const getProposalExecutionStatusMock = vi.fn(
+  async (
+    proposalId: string,
+    _portfolioId: string,
+    versionNo: number,
+    _currentState: string,
+  ) => implementationStatusFixture(proposalId, versionNo),
+);
 function selectedProposalEvidence(proposalId: string) {
-  const proposal = proposalListFixture.items.find(
-    (item) => item.proposal_id === proposalId,
-  ) ?? proposalListFixture.items[0];
+  const proposal =
+    proposalListFixture.items.find((item) => item.proposal_id === proposalId) ??
+    proposalListFixture.items[0];
   const versionNo = proposal.current_version_no ?? 1;
   const detail: ProposalDetailData = { proposal: { ...proposal } };
   const workflow: ProposalWorkflowEventsData = {
@@ -161,14 +191,14 @@ const getProposalMock = vi.fn(
   async (proposalId: string, _includeEvidence = false) =>
     selectedProposalEvidence(proposalId).detail,
 );
-const getProposalWorkflowEventsMock = vi.fn(async (proposalId: string) =>
-  selectedProposalEvidence(proposalId).workflow,
+const getProposalWorkflowEventsMock = vi.fn(
+  async (proposalId: string) => selectedProposalEvidence(proposalId).workflow,
 );
-const getProposalApprovalsMock = vi.fn(async (proposalId: string) =>
-  selectedProposalEvidence(proposalId).approvals,
+const getProposalApprovalsMock = vi.fn(
+  async (proposalId: string) => selectedProposalEvidence(proposalId).approvals,
 );
-const getProposalLineageMock = vi.fn(async (proposalId: string) =>
-  selectedProposalEvidence(proposalId).lineage,
+const getProposalLineageMock = vi.fn(
+  async (proposalId: string) => selectedProposalEvidence(proposalId).lineage,
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
@@ -248,6 +278,18 @@ vi.mock("../../src/features/proposals/api", () => ({
     currentState: string,
   ) =>
     getProposalRiskImpactMock(proposalId, portfolioId, versionNo, currentState),
+  getProposalExecutionStatus: (
+    proposalId: string,
+    portfolioId: string,
+    versionNo: number,
+    currentState: string,
+  ) =>
+    getProposalExecutionStatusMock(
+      proposalId,
+      portfolioId,
+      versionNo,
+      currentState,
+    ),
   getProposal: (proposalId: string, includeEvidence?: boolean) =>
     getProposalMock(proposalId, includeEvidence),
   getProposalWorkflowEvents: (proposalId: string) =>
@@ -300,6 +342,15 @@ describe("ProposalLifecycleWorkspace", () => {
         _currentState: string,
       ) => proposalRiskImpactFixture(),
     );
+    getProposalExecutionStatusMock.mockReset();
+    getProposalExecutionStatusMock.mockImplementation(
+      async (
+        proposalId: string,
+        _portfolioId: string,
+        versionNo: number,
+        _currentState: string,
+      ) => implementationStatusFixture(proposalId, versionNo),
+    );
     getProposalMock.mockReset();
     getProposalMock.mockImplementation(
       async (proposalId: string, _includeEvidence = false) =>
@@ -311,12 +362,14 @@ describe("ProposalLifecycleWorkspace", () => {
         selectedProposalEvidence(proposalId).workflow,
     );
     getProposalApprovalsMock.mockReset();
-    getProposalApprovalsMock.mockImplementation(async (proposalId: string) =>
-      selectedProposalEvidence(proposalId).approvals,
+    getProposalApprovalsMock.mockImplementation(
+      async (proposalId: string) =>
+        selectedProposalEvidence(proposalId).approvals,
     );
     getProposalLineageMock.mockReset();
-    getProposalLineageMock.mockImplementation(async (proposalId: string) =>
-      selectedProposalEvidence(proposalId).lineage,
+    getProposalLineageMock.mockImplementation(
+      async (proposalId: string) =>
+        selectedProposalEvidence(proposalId).lineage,
     );
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
@@ -372,6 +425,208 @@ describe("ProposalLifecycleWorkspace", () => {
         },
       }),
     );
+  });
+
+  it("renders a source-backed implementation follow-up workspace for one selected proposal", async () => {
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await waitFor(() =>
+      expect(listProposalsMock).toHaveBeenCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: undefined,
+        state: "EXECUTION_READY",
+      }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        level: 4,
+        name: "Accepted for implementation",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalExecutionStatusMock).toHaveBeenCalledTimes(1);
+    expect(getProposalExecutionStatusMock).toHaveBeenCalledWith(
+      "PRP-READY",
+      "PB_SG_GLOBAL_BAL_001",
+      5,
+      "EXECUTION_READY",
+    );
+    expect(
+      screen.getByRole("listbox", {
+        name: "Implementation follow-up proposals",
+      }),
+    ).toHaveTextContent("Execution handoff");
+    expect(
+      screen.queryByText("Technology concentration trim"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Current version · Version 5")).toBeInTheDocument();
+    expect(screen.getAllByText("lotus-manage")).toHaveLength(2);
+    expect(
+      screen.getByText(/Order, fill, allocation, settlement, custody-booking/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open full proposal record" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=implementation",
+    );
+  });
+
+  it("reads implementation evidence only for the selected worklist record", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        proposalListFixture.items[1],
+        {
+          proposal_id: "PRP-READY-2",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "EXECUTION_READY",
+          current_version_no: 6,
+          created_at: "2026-08-21T08:00:00Z",
+          title: "Tactical liquidity reserve",
+        },
+      ],
+      next_cursor: null,
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    expect(getProposalExecutionStatusMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(
+      screen.getByRole("option", { name: /Tactical liquidity reserve/ }),
+    );
+
+    await waitFor(() =>
+      expect(getProposalExecutionStatusMock).toHaveBeenLastCalledWith(
+        "PRP-READY-2",
+        "PB_SG_GLOBAL_BAL_001",
+        6,
+        "EXECUTION_READY",
+      ),
+    );
+    expect(getProposalExecutionStatusMock).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole("heading", {
+        level: 3,
+        name: "Tactical liquidity reserve",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps implementation evidence permission failure distinct and does not infer progress", async () => {
+    getProposalExecutionStatusMock.mockRejectedValueOnce(
+      new Error("Proposal implementation status failed (403): forbidden"),
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Implementation evidence is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No execution status is inferred from lifecycle state/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry implementation evidence" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Accepted for implementation" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows partial implementation evidence without hiding the confirmed handoff status", async () => {
+    const partial = implementationStatusFixture();
+    partial.data.evidence_state = "partial";
+    partial.data.reason_code = "implementation_evidence_partial";
+    partial.data.execution_provider = null;
+    partial.data.capabilities = partial.data.capabilities.map((capability) =>
+      capability.key === "provider_reference"
+        ? { ...capability, state: "not_available", source_service: null }
+        : capability,
+    );
+    getProposalExecutionStatusMock.mockResolvedValueOnce(partial);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Partial source evidence" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Accepted for implementation" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Not reported").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/Treat the posture as incomplete evidence/),
+    ).toBeInTheDocument();
+  });
+
+  it("announces implementation refresh success only after list and evidence reconfirmation", async () => {
+    let resolveRefresh:
+      | ((value: ReturnType<typeof implementationStatusFixture>) => void)
+      | undefined;
+    getProposalExecutionStatusMock
+      .mockResolvedValueOnce(implementationStatusFixture())
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof implementationStatusFixture>>(
+            (resolve) => {
+              resolveRefresh = resolve;
+            },
+          ),
+      );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    const refresh = screen.getByRole("button", {
+      name: "Refresh implementation evidence",
+    });
+    refresh.focus();
+    fireEvent.click(refresh);
+    const status = await screen.findByTestId("workbench-refresh-status");
+    await waitFor(() =>
+      expect(status).toHaveAttribute("data-state", "pending"),
+    );
+    expect(
+      within(status).queryByText("Selected proposal handoff confirmed"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveRefresh?.(implementationStatusFixture());
+    });
+    await waitFor(() =>
+      expect(status).toHaveAttribute("data-state", "confirmed"),
+    );
+    expect(
+      within(status).getByText("Selected proposal handoff confirmed"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(refresh).toHaveFocus());
   });
 
   it("renders a selected proposal decision workspace from Gateway risk and impact evidence", async () => {
@@ -1080,7 +1335,9 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     const workflowRail = railHeading.closest("article");
     expect(workflowRail).not.toBeNull();
-    expect(within(workflowRail!).getByText("Approval exception")).toBeInTheDocument();
+    expect(
+      within(workflowRail!).getByText("Approval exception"),
+    ).toBeInTheDocument();
     expect(within(workflowRail!).getByText("PRP-RISK")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -1122,7 +1379,9 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "1 decision is not approved",
       }),
     ).toBeInTheDocument();
-    expect(within(selectedProposal).getByText("Approval exception")).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByText("Approval exception"),
+    ).toBeInTheDocument();
     expect(
       within(selectedProposal).getByRole("link", {
         name: "Open full proposal review",
@@ -1145,7 +1404,9 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "2 approval records confirmed",
       }),
     ).toBeInTheDocument();
-    expect(within(selectedProposal).getByText("Approval evidence recorded")).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByText("Approval evidence recorded"),
+    ).toBeInTheDocument();
     expect(getProposalMock).toHaveBeenCalledTimes(2);
     expect(getProposalWorkflowEventsMock).toHaveBeenCalledTimes(2);
     expect(getProposalApprovalsMock).toHaveBeenCalledTimes(2);
@@ -1153,10 +1414,12 @@ describe("ProposalLifecycleWorkspace", () => {
   });
 
   it("does not interpret an empty approval register as approval not required", async () => {
-    getProposalApprovalsMock.mockImplementationOnce(async (proposalId: string) => ({
-      ...selectedProposalEvidence(proposalId).approvals,
-      approvals: [],
-    }));
+    getProposalApprovalsMock.mockImplementationOnce(
+      async (proposalId: string) => ({
+        ...selectedProposalEvidence(proposalId).approvals,
+        approvals: [],
+      }),
+    );
 
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
@@ -1401,7 +1664,9 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     const restrictedRail = restrictedRailHeading.closest("article");
     expect(restrictedRail).not.toBeNull();
-    expect(within(restrictedRail!).queryByText("PRP-RISK")).not.toBeInTheDocument();
+    expect(
+      within(restrictedRail!).queryByText("PRP-RISK"),
+    ).not.toBeInTheDocument();
     expect(
       within(restrictedRail!).queryByText("Approval records"),
     ).not.toBeInTheDocument();
@@ -1411,9 +1676,7 @@ describe("ProposalLifecycleWorkspace", () => {
   });
 
   it("announces confirmation only after all selected approval sources refresh", async () => {
-    let resolveApprovals:
-      | ((value: ProposalApprovalsData) => void)
-      | undefined;
+    let resolveApprovals: ((value: ProposalApprovalsData) => void) | undefined;
     getProposalApprovalsMock
       .mockImplementationOnce(
         async (proposalId: string) =>
@@ -1446,9 +1709,7 @@ describe("ProposalLifecycleWorkspace", () => {
       within(refreshStatus).getByText("Reconfirming selected proposal"),
     ).toBeInTheDocument();
     expect(
-      within(refreshStatus).queryByText(
-        "Selected proposal evidence confirmed",
-      ),
+      within(refreshStatus).queryByText("Selected proposal evidence confirmed"),
     ).not.toBeInTheDocument();
 
     await act(async () => {
@@ -1503,7 +1764,9 @@ describe("ProposalLifecycleWorkspace", () => {
       within(refreshStatus).getByText("Selected proposal evidence confirmed"),
     ).toBeInTheDocument();
     expect(within(refreshStatus).getByText(/Version 4/)).toBeInTheDocument();
-    expect(screen.getByText("Active version").nextSibling).toHaveTextContent("4");
+    expect(screen.getByText("Active version").nextSibling).toHaveTextContent(
+      "4",
+    );
   });
 
   it("rejects a transport-success refresh whose compound approval evidence conflicts", async () => {
@@ -1540,9 +1803,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("heading", { name: "Workflow state does not agree" }),
     ).toBeInTheDocument();
     expect(
-      within(refreshStatus).queryByText(
-        "Selected proposal evidence confirmed",
-      ),
+      within(refreshStatus).queryByText("Selected proposal evidence confirmed"),
     ).not.toBeInTheDocument();
   });
 
