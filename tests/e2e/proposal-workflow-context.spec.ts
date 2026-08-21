@@ -144,6 +144,7 @@ async function mockProposalQueue(
                 portfolio_id: portfolioId,
                 current_state: "RISK_REVIEW",
                 current_version_no: 3,
+                created_by: "advisor_sg_01",
                 created_at: "2026-08-19T09:30:00Z",
                 title: "Concentration risk review",
               },
@@ -152,6 +153,7 @@ async function mockProposalQueue(
                 portfolio_id: portfolioId,
                 current_state: "EXECUTION_READY",
                 current_version_no: 5,
+                created_by: "advisor_sg_02",
                 created_at: "2026-08-20T11:15:00Z",
                 title: "Execution handoff review",
               },
@@ -169,6 +171,217 @@ async function mockProposalQueue(
                 : []),
             ],
             next_cursor: null,
+          },
+        },
+      });
+    },
+  );
+}
+
+async function mockProposalApprovalEvidence(page: Page) {
+  const proposal = (proposalId: string) => {
+    const executionReady = proposalId === "PRP-READY-001";
+    return {
+      proposal_id: proposalId,
+      portfolio_id: portfolioId,
+      current_state: executionReady ? "EXECUTION_READY" : "RISK_REVIEW",
+      current_version_no: executionReady ? 5 : 3,
+      created_by: executionReady ? "advisor_sg_02" : "advisor_sg_01",
+      created_at: executionReady
+        ? "2026-08-20T11:15:00Z"
+        : "2026-08-19T09:30:00Z",
+      title: executionReady
+        ? "Execution handoff review"
+        : "Concentration risk review",
+    };
+  };
+
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\?include_evidence=(?:true|false)$/,
+    async (route) => {
+      const proposalId = new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
+      await route.fulfill({
+        json: {
+          correlation_id: `corr-detail-${proposalId}`,
+          contract_version: "v1",
+          data: {
+            proposal: proposal(proposalId),
+            current_version: {
+              version_no: proposal(proposalId).current_version_no,
+            },
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/workflow-events$/,
+    async (route) => {
+      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const record = proposal(proposalId);
+      await route.fulfill({
+        json: {
+          correlation_id: `corr-workflow-${proposalId}`,
+          contract_version: "v1",
+          data: {
+            proposal_id: proposalId,
+            current_state: record.current_state,
+            events: [
+              {
+                event_id: `event-${proposalId}`,
+                event_type: record.current_state === "EXECUTION_READY"
+                  ? "COMPLIANCE_APPROVED"
+                  : "RISK_REVIEW_REQUESTED",
+                from_state: record.current_state === "EXECUTION_READY"
+                  ? "AWAITING_CLIENT_CONSENT"
+                  : "DRAFT",
+                to_state: record.current_state,
+                actor_id: "advisor_sg_01",
+                occurred_at: "2026-08-21T09:00:00Z",
+              },
+            ],
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/approvals$/,
+    async (route) => {
+      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const record = proposal(proposalId);
+      await route.fulfill({
+        json: {
+          correlation_id: `corr-approvals-${proposalId}`,
+          contract_version: "v1",
+          data: {
+            proposal_id: proposalId,
+            current_state: record.current_state,
+            approvals: [
+              {
+                approval_id: `approval-${proposalId}`,
+                approval_type: "RISK",
+                approved: record.current_state === "EXECUTION_READY",
+                actor_id: "risk_officer_sg_01",
+                occurred_at: "2026-08-21T09:00:00Z",
+              },
+            ],
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/lineage$/,
+    async (route) => {
+      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const record = proposal(proposalId);
+      await route.fulfill({
+        json: {
+          correlation_id: `corr-lineage-${proposalId}`,
+          contract_version: "v1",
+          data: {
+            proposal_id: proposalId,
+            versions: [{ version_no: record.current_version_no }],
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/delivery-summary",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-delivery-PRP-READY-001",
+          contract_version: "v1",
+          data: {},
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/delivery-events",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-delivery-events-PRP-READY-001",
+          contract_version: "v1",
+          data: { event_count: 0 },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/versions/5/memo",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-memo-PRP-READY-001",
+          contract_version: "v1",
+          data: {
+            memo_id: "memo-PRP-READY-001",
+            memo_status: "APPROVED_FOR_ADVISOR_USE",
+            memo_hash: "sha256:memo-PRP-READY-001",
+            review_posture: { advisor_use: "APPROVED_FOR_ADVISOR_USE" },
+            report_package_posture: { status: "NOT_REQUESTED", archive_refs: [] },
+            ai_commentary_posture: {
+              status: "NOT_REQUESTED",
+              authority: "NON_AUTHORITATIVE",
+            },
+            read_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/versions/5/memo/projection**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-projection-PRP-READY-001",
+          contract_version: "v1",
+          data: {
+            projection: {
+              audience: "ADVISOR",
+              client_ready_publication: "BLOCKED",
+            },
+            projection_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/memos/lineage",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-memo-lineage-PRP-READY-001",
+          contract_version: "v1",
+          data: {
+            memos: [
+              {
+                memo_hash: "sha256:memo-PRP-READY-001",
+                memo_status: "APPROVED_FOR_ADVISOR_USE",
+              },
+            ],
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/versions/5/memo/replay-evidence",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-replay-PRP-READY-001",
+          contract_version: "v1",
+          data: {
+            hashes: { memo_hash: "sha256:memo-PRP-READY-001" },
+            supportability: { client_ready_publication: "BLOCKED" },
           },
         },
       });
@@ -342,6 +555,7 @@ test("shows source-backed queue posture without invented advisory evidence", asy
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalQueue(page);
+  await mockProposalApprovalEvidence(page);
   await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
     waitUntil: "domcontentloaded",
   });
@@ -377,6 +591,7 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalQueue(page);
+  await mockProposalApprovalEvidence(page);
   await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
     waitUntil: "domcontentloaded",
   });
@@ -404,6 +619,12 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   ).toBeVisible();
   await expect(firstProposal).toContainText("Version 3");
   await expect(firstProposal).toContainText("19 Aug 2026");
+  await expect(firstProposal).toContainText("Recorded by source");
+  await expect(
+    selectedDecision.getByRole("heading", {
+      name: "1 decision is not approved",
+    }),
+  ).toBeVisible();
 
   await firstProposal.press("ArrowDown");
   await expect(secondProposal).toBeFocused();
@@ -412,7 +633,7 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     selectedDecision.getByRole("heading", { name: "Execution handoff review" }),
   ).toBeVisible();
   await expect(
-    selectedDecision.getByRole("link", { name: "Open proposal review" }),
+    selectedDecision.getByRole("link", { name: "Open full proposal review" }),
   ).toHaveAttribute(
     "href",
     `/proposals/PRP-READY-001?portfolioId=${portfolioId}&fromMode=approval-queue`,
@@ -424,10 +645,11 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
 
   for (const viewport of [
     { width: 1440, height: 1000, layout: "split" },
-    { width: 1280, height: 1000, layout: "split" },
+    { width: 1280, height: 1000, layout: "stacked" },
     { width: 1024, height: 1100, layout: "stacked" },
     { width: 720, height: 1000, layout: "stacked" },
     { width: 390, height: 844, layout: "stacked" },
+    { width: 320, height: 900, layout: "stacked" },
   ] as const) {
     await page.setViewportSize({
       width: viewport.width,
@@ -463,6 +685,33 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const refresh = selectedDecision.getByRole("button", {
+    name: "Refresh evidence",
+  });
+  await refresh.focus();
+  await refresh.click();
+  const refreshStatus = page.getByTestId("workbench-refresh-status");
+  await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+  await expect(refresh).toBeFocused();
+
+  await selectedDecision
+    .getByRole("link", { name: "Open full proposal review" })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/proposals/PRP-READY-001\\?portfolioId=${portfolioId}&fromMode=approval-queue$`,
+    ),
+  );
+  await expect(
+    page.getByRole("link", { name: "Return to Approval Queue" }),
+  ).toHaveAttribute("href", `/proposals?portfolioId=${portfolioId}`);
+  await page.getByRole("link", { name: "Return to Approval Queue" }).click();
+  await expect(page).toHaveURL(`/proposals?portfolioId=${portfolioId}`);
+  await expect(
+    page.getByRole("listbox", { name: "Approval Queue proposals" }),
+  ).toBeVisible();
   expect(browserErrors).toEqual([]);
 });
 
