@@ -494,22 +494,32 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
         </ul>
         <details className={styles.disclosures}>
           <summary>
-            {model.disclosures.length} policy{" "}
-            {model.disclosures.length === 1 ? "disclosure" : "disclosures"}
+            {model.disclosurePolicy.isSupported
+              ? `${model.disclosures.length} policy ${
+                  model.disclosures.length === 1 ? "disclosure" : "disclosures"
+                }`
+              : "Policy disclosure evidence unavailable"}
           </summary>
-          <ul>
-            {model.disclosures.map((disclosure) => (
-              <li key={disclosure.key}>
-                <strong>
-                  {disclosure.audience} · {disclosure.jurisdiction}
-                </strong>
-                <p>{disclosure.text}</p>
-                <span>
-                  {disclosure.authority} · {disclosure.policyVersion}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {model.disclosurePolicy.isSupported ? (
+            <ul>
+              {model.disclosures.map((disclosure) => (
+                <li key={disclosure.key}>
+                  <strong>
+                    {disclosure.audience} · {disclosure.jurisdiction}
+                  </strong>
+                  <p>{disclosure.text}</p>
+                  <span>
+                    {disclosure.authority} · {disclosure.policyVersion}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              Policy text is withheld because source disclosure support is not
+              available for this proposal version.
+            </p>
+          )}
         </details>
       </section>
     </div>

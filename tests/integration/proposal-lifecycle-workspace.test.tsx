@@ -3495,6 +3495,51 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("withholds policy text when disclosure support is restricted", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          title: "Rebalance concentrated technology exposure",
+        },
+      ],
+      next_cursor: null,
+    });
+    const restricted = proposalDiscussionPackFixture();
+    restricted.data.overall_state = "partial";
+    const policyCapability = restricted.data.capabilities.find(
+      ({ key }) => key === "disclosure_policy",
+    )!;
+    policyCapability.state = "restricted";
+    policyCapability.reason_code = "disclosure_policy_restricted";
+    const hiddenPolicyText = restricted.data.narrative.disclosures[0]!.text;
+    getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Policy disclosure evidence unavailable"),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByText("Policy disclosure evidence unavailable"),
+    );
+    expect(
+      screen.getByText(
+        "Policy text is withheld because source disclosure support is not available for this proposal version.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(hiddenPolicyText)).not.toBeInTheDocument();
+  });
+
   it("shows an explicit failure instead of inferring discussion readiness", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [

@@ -37,6 +37,9 @@ export function buildProposalDiscussionPackModel(
     (count, section) => count + section.source_refs.length,
     0,
   );
+  const disclosurePolicyCapability = data.capabilities.find(
+    ({ key }) => key === "disclosure_policy",
+  )!;
   const narrativeArtifactIsComplete = hasCompleteNarrativeArtifact(data.narrative);
   const narrativeReviewIsRecorded = hasRecordedAudit({
     id: data.narrative.review_id,
@@ -143,18 +146,26 @@ export function buildProposalDiscussionPackModel(
         reviewRequired: section.review_required,
       })),
     },
-    disclosures: data.narrative.disclosures.map((disclosure) => ({
-      key: disclosure.disclosure_id,
-      audience:
-        disclosure.required_for === "CLIENT_READY"
-          ? "Client-ready material"
-          : "Advisor review",
-      jurisdiction: disclosure.jurisdiction,
-      productType: businessLabel(disclosure.product_type),
-      text: disclosure.text,
-      authority: disclosure.source_authority,
-      policyVersion: disclosure.policy_version,
-    })),
+    disclosurePolicy: {
+      isSupported: disclosurePolicyCapability.state === "supported",
+      status: supportabilityLabel(disclosurePolicyCapability.state),
+      tone: supportabilityTone(disclosurePolicyCapability.state),
+    },
+    disclosures:
+      disclosurePolicyCapability.state === "supported"
+        ? data.narrative.disclosures.map((disclosure) => ({
+            key: disclosure.disclosure_id,
+            audience:
+              disclosure.required_for === "CLIENT_READY"
+                ? "Client-ready material"
+                : "Advisor review",
+            jurisdiction: disclosure.jurisdiction,
+            productType: businessLabel(disclosure.product_type),
+            text: disclosure.text,
+            authority: disclosure.source_authority,
+            policyVersion: disclosure.policy_version,
+          }))
+        : [],
     blockers: data.narrative.client_ready_blockers,
     limitations: data.narrative.limitations.map((limitation, index) => ({
       key: `${limitation.evidence_key}:${index}`,
@@ -201,7 +212,19 @@ function overallPosture(
   const internalControlsConfirmed = controls
     .filter(({ key }) => key !== "release")
     .every(({ tone }) => tone === "success");
-  if (data.attention_required || !internalControlsConfirmed) {
+  const requiredCapabilitiesSupported = [
+    "proposal_identity",
+    "disclosure_policy",
+  ].every(
+    (key) =>
+      data.capabilities.find((capability) => capability.key === key)?.state ===
+      "supported",
+  );
+  if (
+    data.attention_required ||
+    !internalControlsConfirmed ||
+    !requiredCapabilitiesSupported
+  ) {
     return {
       label: "Review required",
       tone: "warn" as const,
