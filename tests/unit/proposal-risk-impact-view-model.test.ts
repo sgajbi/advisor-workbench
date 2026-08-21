@@ -94,6 +94,20 @@ describe("proposal risk and impact view model", () => {
     expect(model.workflowGate.reasons).toEqual([]);
   });
 
+  it("withholds a ready workflow gate when the decision record is partial", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.overall_state = "partial";
+    envelope.data.decision.state = "partial";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.workflowGate.isAvailable).toBe(false);
+    expect(model.workflowGate.state.label).toBe("Partial source evidence");
+    expect(model.workflowGate.gate).toBe("Gate not confirmed");
+    expect(model.workflowGate.nextStep).toBe("Source next step not confirmed");
+    expect(model.workflowGate.reasons).toEqual([]);
+  });
+
   it("withholds risk conclusions when risk evidence is unusable", () => {
     const envelope = proposalRiskImpactFixture();
     envelope.data.risk.state = "not_supported";
