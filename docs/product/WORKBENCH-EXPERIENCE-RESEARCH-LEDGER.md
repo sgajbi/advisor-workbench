@@ -5,6 +5,60 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Approval Queue: exception-led selected-record review
+
+### Business job
+
+A client advisor must triage one bounded portfolio proposal window, keep the chosen proposal's
+source-supported review posture visible, and enter the full record without losing the originating
+portfolio or queue. The queue should reduce record switching while never implying whole-book
+completeness, maker-checker approval, client readiness, or execution authority from lifecycle
+stage alone.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-21 from official sources:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   describes one identify, construct, deliver, and implement lifecycle with whole-portfolio,
+   suitability, narrative, and implementation evidence.
+2. [Avaloq client management](https://www.avaloq.com/platform/client-management) prioritizes
+   proposals and compliance items in an integrated advisor workflow while sourcing book facts from
+   core banking.
+3. [Temenos Wealth Management](https://www.temenos.com/products/wealth-management/) joins
+   profiling, risk, compliance, and performance in configurable front-office workflows.
+4. [W3C table guidance](https://www.w3.org/WAI/ARIA/apg/patterns/table/) and
+   [WCAG 2.2](https://www.w3.org/TR/WCAG22/) require native or complete composite semantics,
+   meaningful focus order, visible focus, status evidence, operable targets, and reflow.
+
+### Adopted
+
+- Use a dense, keyboard-operable single-record worklist with the selected decision context visible
+  alongside it at wide desktop widths.
+- Keep source stage, version, recorded date, posture, and next action together; open Proposal Detail
+  for approval and evidence verification rather than duplicating regulated actions.
+- Preserve bounded source-window wording and portfolio/lifecycle return context.
+- Stack worklist before selected detail in DOM and focus order for tablet, narrow, and zoomed use.
+- Reuse the shared Workbench record selector and feature-owned CSS instead of a queue-only UI stack.
+
+### Rejected
+
+- Decorative proposal cards, optimistic stage timelines, or approval/readiness claims unsupported
+  by the selected proposal's owning evidence.
+- Invented client, household, owner, priority, materiality, SLA, due-date, or whole-book facts.
+- A 920-pixel mobile table, partial ARIA data-grid behavior, query-owned proposal identity, or
+  another global CSS expansion.
+
+### Implementation and validation
+
+Workbench issue #747 replaces only Approval Queue's raw table with a reusable selected-record
+decision workspace, carries portfolio and originating mode into Proposal Detail, and derives the
+return portfolio from source detail where available. Focused model/integration proof covers
+metadata, keyboard selection, bounded windows, failure states, and source-owned return context;
+optimized production-browser proof covers 1440, 1280, 1024, 720, and 390 pixels with no horizontal
+overflow. Later Risk Impact, Discussion Pack, and Implementation evidence work remain separate
+screen-specific slices.
+
 ## Proposal Builder: evidence before persistent action
 
 ### Business job

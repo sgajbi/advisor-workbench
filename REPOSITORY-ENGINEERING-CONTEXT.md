@@ -487,6 +487,14 @@ Current repository posture:
     portfolio scope in the queue handoff, and never let workflow-wide admission relabel a separately
     confirmed portfolio-evidence fact. Feature presentation belongs in a CSS Module; do not restore
     the superseded MUI action panel or add this workflow to global CSS.
+    Approval Queue is an exception-led selected-record review desk over one cursor-bounded Gateway
+    proposal window. Keep worklist selection and the selected proposal's source-supported stage,
+    version, recorded date, posture, and next action visible together at desktop; stack them in the
+    same document order for tablet, narrow, and zoomed layouts. Preserve source-window uncertainty,
+    restricted/unavailable failure boundaries, and originating portfolio/mode in the detail handoff.
+    Do not describe proposal stage as maker-checker proof, expose raw creator ids as human identity,
+    invent owner/SLA/client/priority facts, or duplicate Proposal Detail's approval and evidence
+    actions into the queue.
     The detail route records advisor-use narrative
     review and reviewed report-package requests through Gateway proposal endpoints only. It settles
     primary proposal detail independently from workflow, approval, and lineage reads, keeps
