@@ -356,6 +356,40 @@ describe("proposal risk and impact contract", () => {
     ).toBe("RISK_REVIEW_REQUIRED");
   });
 
+  it.each([
+    ["EXECUTION_READY", "EXECUTE"],
+    ["NONE", "NONE"],
+  ] as const)(
+    "rejects an insufficient-evidence decision beside a ready %s gate",
+    (gate, recommendedNextStep) => {
+      const payload = proposalRiskImpactFixture();
+      payload.data.decision.decision_status = "INSUFFICIENT_EVIDENCE";
+      payload.data.decision.recommended_next_action = "REVISE_PROPOSAL";
+      payload.data.decision.missing_evidence = [
+        {
+          evidence_type: "CLIENT_CONTEXT",
+          reason_code: "MISSING_CLIENT_CONTEXT",
+          summary: "Current client context must be confirmed.",
+          blocking: true,
+          evidence_refs: [],
+        },
+      ];
+      payload.data.workflow_gate.gate = gate;
+      payload.data.workflow_gate.recommended_next_step = recommendedNextStep;
+      payload.data.workflow_gate.reasons = [];
+
+      expect(() =>
+        parseProposalRiskImpactEnvelope(
+          payload,
+          "PRP-RISK",
+          "PB_SG_GLOBAL_BAL_001",
+          3,
+          "RISK_REVIEW",
+        ),
+      ).toThrow(/decision status does not match the workflow gate/);
+    },
+  );
+
   it("rejects an insufficient-evidence decision without a blocking gap", () => {
     const payload = proposalRiskImpactFixture();
     payload.data.decision.decision_status = "INSUFFICIENT_EVIDENCE";
