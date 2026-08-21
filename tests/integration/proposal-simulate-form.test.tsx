@@ -125,6 +125,16 @@ function workspaceEnvelopeWithoutEvaluationResult(workspaceId = "aws_test_001") 
   };
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, reject, resolve };
+}
+
 function renderForm(initialPortfolioId?: string) {
   const queryClient = new QueryClient();
   const portfolioId = initialPortfolioId ?? "PB_SG_GLOBAL_BAL_001";
@@ -180,6 +190,44 @@ describe("ProposalSimulateForm", () => {
     );
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
     expect(screen.getByLabelText("Additional Cash Assumption")).toHaveValue("10000");
+  });
+
+  it("keeps construction before the final control rail in DOM order and preserves portfolio scope", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    const draftTitle = screen.getByLabelText("Advisory Draft Title");
+    const controlRail = screen
+      .getByRole("heading", { name: "Review and retain" })
+      .closest("section");
+
+    expect(controlRail).not.toBeNull();
+    expect(
+      draftTitle.compareDocumentPosition(controlRail as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "View proposal queue" })).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
+  });
+
+  it("fences both final actions and announces source progress while evaluation is pending", async () => {
+    const pendingEvaluation = deferred<ReturnType<typeof workspaceEnvelope>>();
+    advisoryApiMocks.evaluateAdvisoryWorkspace.mockReturnValueOnce(pendingEvaluation.promise);
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+
+    expect(
+      await screen.findByRole("status", { name: "Proposal evaluation status" })
+    ).toHaveTextContent("Waiting for the source-owned assessment.");
+    expect(screen.getByRole("button", { name: "Evaluating proposal…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+
+    await act(async () => pendingEvaluation.resolve(workspaceEnvelope()));
+    expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
   });
 
   it("applies the admitted cash assumption to proposed impact while preserving current value", async () => {
@@ -423,6 +471,9 @@ describe("ProposalSimulateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
 
     expect(await screen.findByText("advisory service unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("alert", { name: "Proposal action failure" })).toHaveTextContent(
+      "Proposal action not completed"
+    );
     expect(
       screen.getByRole("heading", { name: "Draft not yet persisted" })
     ).toBeInTheDocument();
@@ -562,7 +613,7 @@ describe("ProposalSimulateForm", () => {
       name: "Proposal evaluation summary",
     });
     expect(evaluationSummary).toHaveTextContent("Advise Evaluation Summary");
-    expect(screen.getByText("Workspace aws_test_001 evaluated by Advise")).toBeInTheDocument();
+    expect(screen.getByText(/Source reference aws_test_001/)).toBeInTheDocument();
   });
 
   it("keeps evaluation failure explicit without claiming the workspace was evaluated", async () => {
@@ -575,6 +626,9 @@ describe("ProposalSimulateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
 
     expect(await screen.findByText("proposal evaluation unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("alert", { name: "Proposal action failure" })).toHaveTextContent(
+      "Proposal action not completed"
+    );
     expect(screen.queryByText(/evaluated by Advise/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("status", { name: "Proposal evaluation summary" })
@@ -626,7 +680,7 @@ describe("ProposalSimulateForm", () => {
     expect(
       await screen.findByRole("status", { name: "Proposal evaluation summary" })
     ).toHaveTextContent("run-test");
-    expect(screen.getByText("Workspace aws_test_001 evaluated by Advise")).toBeInTheDocument();
+    expect(screen.getByText(/Source reference aws_test_001/)).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Proposal evaluation returned incomplete evidence. Review the draft and try again."
@@ -670,7 +724,7 @@ describe("ProposalSimulateForm", () => {
     const quantityInputs = screen.getAllByLabelText("Quantity") as HTMLInputElement[];
     fireEvent.change(quantityInputs[quantityInputs.length - 1], { target: { value: "150" } });
     expect(
-      screen.getByText("1 sell line capped to source-backed available units")
+      screen.getByText("1 sell line capped to available units")
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
 

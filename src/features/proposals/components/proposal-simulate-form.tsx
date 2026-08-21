@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Stack, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 
 import { getRequiredPortfolioBook } from "@/apps/portfolio/api";
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
@@ -47,7 +46,7 @@ import {
   buildSimulationProposalWorkflowContext,
 } from "../proposal-workflow-context-view-model";
 import { buildProposalPortfolioEvidence } from "../proposal-portfolio-evidence";
-import { SectionBlock } from "@/design-system";
+import { MainWithSideRailLayout, SectionBlock } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import {
   AdviseEvaluationSummaryPanel,
@@ -58,6 +57,7 @@ import {
   ProposalPortfolioEvidencePanel,
   SavedAdvisoryDraftPanel,
 } from "./proposal-builder-domain-panels";
+import ProposalBuilderWorkflowRail from "./proposal-builder-workflow-rail";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-simulate-form.module.css";
 
@@ -496,20 +496,6 @@ export default function ProposalSimulateForm({
     }
   }
 
-  let evaluateActionLabel = "Evaluate Workspace";
-  if (!isHydrated) {
-    evaluateActionLabel = "Preparing Workspace...";
-  } else if (loading) {
-    evaluateActionLabel = "Evaluating...";
-  }
-
-  let saveActionLabel = "Save Advisor Draft";
-  if (!isHydrated) {
-    saveActionLabel = "Preparing Workspace...";
-  } else if (savingDraft) {
-    saveActionLabel = "Handing Off...";
-  }
-
   return (
     <SectionBlock
       title="Create Advisory Proposal"
@@ -571,69 +557,12 @@ export default function ProposalSimulateForm({
           </div>
         </div>
 
-        <div className={styles.workspaceGrid}>
-          <aside className={styles.actionRail} aria-label="Proposal workflow actions">
-            <section
-              className={styles.actionPanel}
-              data-scenario-cash-state={
-                scenarioCashAdmission.status === "ready"
-                  ? scenarioCashAdmission.inputState
-                  : scenarioCashAdmission.reason
-              }
-              data-workflow-admission={canRunProposalWorkflow ? "ready" : "blocked"}
-            >
-              <div>
-                <h3>Advisor Workflow</h3>
-                <p>
-                  Simulate first to review portfolio impact, then save a draft for risk and compliance routing.
-                </p>
-              </div>
-              <ul>
-                <li>Portfolio context captured</li>
-                <li>Cash movement model ready</li>
-                <li>{validTradeCount()} security order lines ready</li>
-                {cappedTradeCount ? (
-                  <li>{cappedTradeCount} sell line capped to source-backed available units</li>
-                ) : null}
-                {evaluatedWorkspaceId ? (
-                  <li>Workspace {evaluatedWorkspaceId} evaluated by Advise</li>
-                ) : null}
-              </ul>
-              <Stack spacing={1} className={styles.actionButtons}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={
-                    !isHydrated || loading || !canRunProposalWorkflow
-                  }
-                  aria-describedby="proposal-evidence-action-reason"
-                  fullWidth
-                >
-                  {evaluateActionLabel}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  onClick={onSaveDraft}
-                  disabled={
-                    !isHydrated || savingDraft || !canRunProposalWorkflow
-                  }
-                  aria-describedby="proposal-evidence-action-reason"
-                  fullWidth
-                >
-                  {saveActionLabel}
-                </Button>
-                <Button component={Link} href="/proposals" variant="text" fullWidth>
-                  View Proposal Queue
-                </Button>
-                <p id="proposal-evidence-action-reason" className={styles.actionReason}>
-                  {workflowActionReason}
-                </p>
-              </Stack>
-            </section>
-          </aside>
-
-          <div className={styles.mainLane}>
+        <MainWithSideRailLayout
+          className={styles.workspaceGrid}
+          mainClassName={styles.mainLane}
+          sideClassName={styles.stickyRail}
+          main={
+            <>
             <ProposalPortfolioEvidencePanel
               evidence={portfolioEvidence}
               cashCurrency={cashEvidenceCurrency}
@@ -798,30 +727,46 @@ export default function ProposalSimulateForm({
                 )}
               />
             </section>
-          </div>
+            {result ? (
+              <AdviseEvaluationSummaryPanel
+                result={result}
+                highlights={simulationHighlights(result)}
+                reviewIssueCount={extractEvaluationSummary(workspaceEnvelope)?.review_issue_count}
+                blockingIssueCount={extractEvaluationSummary(workspaceEnvelope)?.blocking_issue_count}
+                draftTradeCount={
+                  recordValue(extractEvaluationSummary(workspaceEnvelope)?.impact_summary)?.trade_count
+                }
+              />
+            ) : null}
 
-        </div>
-      </form>
-
-      {error ? (
-        <Alert severity="error" className={styles.message}>
-          {error}
-        </Alert>
-      ) : null}
-
-      {result ? (
-        <AdviseEvaluationSummaryPanel
-          result={result}
-          highlights={simulationHighlights(result)}
-          reviewIssueCount={extractEvaluationSummary(workspaceEnvelope)?.review_issue_count}
-          blockingIssueCount={extractEvaluationSummary(workspaceEnvelope)?.blocking_issue_count}
-          draftTradeCount={
-            recordValue(extractEvaluationSummary(workspaceEnvelope)?.impact_summary)?.trade_count
+            {savedDraft ? <SavedAdvisoryDraftPanel proposalId={savedDraft.proposalId} /> : null}
+            </>
+          }
+          side={
+            <ProposalBuilderWorkflowRail
+              portfolioId={portfolioId}
+              canRunWorkflow={canRunProposalWorkflow}
+              isPortfolioEvidenceConfirmed={portfolioEvidence.canEvaluateAndHandoff}
+              actionReason={workflowActionReason}
+              scenarioCashState={
+                scenarioCashAdmission.status === "ready"
+                  ? scenarioCashAdmission.inputState
+                  : scenarioCashAdmission.reason
+              }
+              readyTradeCount={validTradeCount()}
+              cappedTradeCount={cappedTradeCount}
+              evaluatedWorkspaceId={evaluatedWorkspaceId}
+              savedProposalId={savedDraft?.proposalId ?? null}
+              evaluationAvailable={Boolean(result)}
+              isHydrated={isHydrated}
+              isEvaluating={loading}
+              isSaving={savingDraft}
+              error={error}
+              onSaveDraft={() => void onSaveDraft()}
+            />
           }
         />
-      ) : null}
-
-      {savedDraft ? <SavedAdvisoryDraftPanel proposalId={savedDraft.proposalId} /> : null}
+      </form>
     </SectionBlock>
   );
 }

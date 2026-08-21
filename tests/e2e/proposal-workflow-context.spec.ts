@@ -652,26 +652,64 @@ test("withholds unlabelled source money until currency identity is refreshed", a
 
 for (const viewport of [
   { name: "desktop", width: 1440, height: 1000 },
+  { name: "tablet", width: 1024, height: 900 },
+  { name: "zoom-200-equivalent", width: 720, height: 900 },
   { name: "narrow", width: 390, height: 844 },
 ]) {
   test(`evaluates inside Proposal Builder without a duplicate ${viewport.name} destination`, async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.setViewportSize(viewport);
     await mockProposalBuilderEvaluation(page);
     await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
       waitUntil: "domcontentloaded",
     });
 
+    const controlRail = page.getByTestId("proposal-builder-workflow-rail");
+    const draftTitle = page.getByLabel("Advisory Draft Title");
+    expect(
+      await page.evaluate(() => {
+        const input = document.querySelector('input[name="proposalTitle"]');
+        const rail = document.querySelector('[data-testid="proposal-builder-workflow-rail"]');
+        return Boolean(
+          input &&
+          rail &&
+          (input.compareDocumentPosition(rail) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+        );
+      })
+    ).toBe(true);
+    await draftTitle.scrollIntoViewIfNeeded();
+    const railContainer = controlRail.locator("..");
+    if (viewport.name === "desktop") {
+      await expect(railContainer).toHaveCSS("position", "sticky");
+      const railBox = await controlRail.boundingBox();
+      expect(railBox?.y).toBeGreaterThanOrEqual(80);
+      expect((railBox?.y ?? 0) + (railBox?.height ?? 0)).toBeLessThanOrEqual(viewport.height);
+    } else {
+      await expect(railContainer).toHaveCSS("position", "static");
+      const draftBox = await draftTitle.boundingBox();
+      const railBox = await controlRail.boundingBox();
+      expect(railBox?.y).toBeGreaterThan(draftBox?.y ?? 0);
+    }
+
     await page.getByRole("button", { name: "Evaluate Workspace" }).click();
 
     await expect(
       page.getByRole("status", { name: "Proposal evaluation summary" })
     ).toContainText("Advise Evaluation Summary");
-    await expect(page.getByText("Workspace aws_browser_001 evaluated by Advise")).toBeVisible();
+    await expect(
+      page.getByRole("status", { name: "Proposal evaluation status" })
+    ).toContainText("Evaluation confirmed");
+    await expect(
+      page.getByRole("status", { name: "Proposal evaluation status" })
+    ).toContainText("Source reference aws_browser_001");
     await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
     ).toBe(true);
+    await testInfo.attach(`proposal-builder-${viewport.name}`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
   });
 }
