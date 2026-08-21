@@ -575,12 +575,16 @@ test("shows source-backed queue posture without invented advisory evidence", asy
   await expect(
     page
       .getByRole("region", { name: "Selected proposal decision" })
-      .getByText("Approval exception"),
+      .getByLabel("Status Approval exception"),
   ).toBeVisible();
   await expect(
     page.getByText("1 recorded approval decision is not approved."),
   ).toBeVisible();
-  await expect(page.getByText("Advisory proposal lifecycle")).toBeVisible();
+  await expect(
+    page.getByText(
+      "Gateway-backed proposal detail, workflow, approvals, and lineage",
+    ),
+  ).toBeVisible();
 
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
   await expect(
