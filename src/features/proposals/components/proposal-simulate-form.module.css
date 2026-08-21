@@ -7,7 +7,10 @@
 .summaryStrip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border-block: var(--border-subtle);
+  background: var(--surface-primary);
 }
 
 .summaryStrip > div {
@@ -15,11 +18,8 @@
   gap: 3px;
   min-height: 72px;
   padding: 12px 14px;
-  border: 1px solid #d6dbe0;
-  border-left: 3px solid #725b26;
-  border-radius: 4px;
-  background:
-    linear-gradient(180deg, #ffffff, #fbfcfd);
+  border-left: var(--border-subtle);
+  background: transparent;
 }
 
 .summaryStrip span,
@@ -45,9 +45,8 @@
 }
 
 .workspaceGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  --workstation-side-width: 300px;
+  --workstation-shell-gap: 14px;
   align-items: start;
   container-name: proposal-workspace;
   container-type: inline-size;
@@ -60,7 +59,6 @@
 }
 
 .panel,
-.actionPanel,
 .resultPanel {
   display: grid;
   gap: 12px;
@@ -82,15 +80,14 @@
 }
 
 .panelHeader h3,
-.actionPanel h3 {
+.resultPanel h3 {
   margin: 0;
   color: #191c1e;
   font-size: 16px;
   line-height: 22px;
 }
 
-.panelHeader p,
-.actionPanel p {
+.panelHeader p {
   margin: 3px 0 0;
   color: #45464d;
   font-size: 13px;
@@ -111,7 +108,11 @@
 
 .evidencePanel {
   border-left: 3px solid var(--brand);
-  background: linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+  background: linear-gradient(
+    180deg,
+    var(--surface-primary),
+    var(--surface-secondary)
+  );
 }
 
 .evidenceGrid {
@@ -174,11 +175,17 @@
 }
 
 .cashRow {
-  grid-template-columns: minmax(110px, 0.7fr) minmax(100px, 0.6fr) minmax(130px, 0.8fr) minmax(220px, 1fr) auto;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(100px, 0.6fr) minmax(
+      130px,
+      0.8fr
+    ) minmax(220px, 1fr) auto;
 }
 
 .tradeRow {
-  grid-template-columns: minmax(90px, 0.5fr) minmax(170px, 1.1fr) minmax(130px, 0.8fr) minmax(105px, 0.65fr) minmax(125px, 0.75fr) minmax(110px, 0.65fr) auto;
+  grid-template-columns: minmax(90px, 0.5fr) minmax(170px, 1.1fr) minmax(
+      130px,
+      0.8fr
+    ) minmax(105px, 0.65fr) minmax(125px, 0.75fr) minmax(110px, 0.65fr) auto;
 }
 
 .positionsTableWrap {
@@ -268,41 +275,9 @@
   font-weight: 700;
 }
 
-.actionRail {
-  position: static;
-}
-
-.actionPanel {
-  grid-template-columns: minmax(220px, 0.9fr) minmax(240px, 1fr) minmax(220px, 0.8fr);
-  align-items: start;
-  border-left: 3px solid #131b2e;
-  background:
-    linear-gradient(180deg, #ffffff, #f8fafc);
-}
-
-.actionPanel ul {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 18px;
-  color: #45464d;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.actionButtons {
-  min-width: 0;
-}
-
-.actionReason {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--type-helper-text-size);
-  line-height: var(--type-helper-text-line-height);
-}
-
-.message {
-  margin-top: 12px;
+.stickyRail {
+  position: sticky;
+  top: 88px;
 }
 
 .resultPanel {
@@ -334,10 +309,6 @@
 }
 
 @container proposal-workspace (max-width: 780px) {
-  .actionPanel {
-    grid-template-columns: 1fr;
-  }
-
   .cashRow,
   .tradeRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -361,9 +332,9 @@
   }
 }
 
-@media (max-width: 1180px) {
-  .actionPanel {
-    grid-template-columns: 1fr;
+@media (max-width: 1200px) {
+  .stickyRail {
+    position: static;
   }
 
   .cashRow,

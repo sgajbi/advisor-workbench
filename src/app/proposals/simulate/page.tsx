@@ -10,7 +10,9 @@ export default async function ProposalSimulatePage({
   searchParams: Promise<{ portfolioId?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const portfolioId = resolveProposalPortfolioId(resolvedSearchParams.portfolioId);
+  const portfolioId = resolveProposalPortfolioId(
+    resolvedSearchParams.portfolioId,
+  );
   return (
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
@@ -19,6 +21,7 @@ export default async function ProposalSimulatePage({
       title="Proposal Workspace"
       subtitle="Build and test an advisor-use proposal before routing it for review."
       workflowContext={buildSimulationProposalWorkflowContext({ portfolioId })}
+      workflowContextPresentation="inline-boundary"
     >
       <ProposalSimulateForm initialPortfolioId={portfolioId} />
     </ProposalWorkspaceShell>
