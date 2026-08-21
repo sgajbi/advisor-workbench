@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { CANONICAL_REPOSITORIES, bindMainlineSourceManifestToRuntime, buildMainlineSourceManifest, evaluateRepository, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
+import { CANONICAL_REPOSITORIES, bindMainlineSourceManifestToRuntime, buildMainlineSourceManifest, canonicalRepositoryPath, evaluateRepository, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
 
 function gitFixture(values: Record<string, string>) {
   return (_path: string, args: string[]) => values[args.join(" ")] ?? "";
+}
+
+function recordingGitFixture(values: Record<string, string>, paths: string[]) {
+  return (path: string, args: string[]) => {
+    if (args.join(" ") === "fetch origin --prune") {
+      paths.push(path);
+    }
+    return values[args.join(" ")] ?? "";
+  };
 }
 
 describe("canonical mainline source provenance", () => {
@@ -25,6 +34,35 @@ describe("canonical mainline source provenance", () => {
     expect(manifest.repositories.map((repository) => repository.repository)).toContain("lotus-idea");
     expect(manifest.repositories.map((repository) => repository.repository)).toContain("lotus-platform");
     expect(JSON.stringify(manifest)).not.toContain("C:/projects");
+  });
+
+  it("uses the supplied Workbench repository path for isolated mainline preflight", () => {
+    expect(canonicalRepositoryPath({
+      name: "lotus-workbench",
+      projectsRoot: "C:/projects",
+      workbenchRepoPath: "C:/projects/_qa_worktrees/lotus-workbench-mainline",
+    })).toBe("C:/projects/_qa_worktrees/lotus-workbench-mainline");
+    expect(canonicalRepositoryPath({
+      name: "lotus-idea",
+      projectsRoot: "C:/projects",
+      workbenchRepoPath: "C:/projects/_qa_worktrees/lotus-workbench-mainline",
+    })).toMatch(/lotus-idea$/);
+  });
+
+  it("evaluates lotus-workbench from the isolated path while preserving sibling repo paths", () => {
+    const paths: string[] = [];
+    const manifest = buildMainlineSourceManifest("C:/projects", recordingGitFixture({
+      "fetch origin --prune": "",
+      "status --porcelain": "",
+      "rev-parse HEAD": "abc",
+      "rev-parse refs/remotes/origin/main": "abc",
+      "branch --show-current": "main",
+    }, paths), { workbenchRepoPath: "C:/projects/_qa_worktrees/lotus-workbench-mainline" });
+
+    expect(manifest.passed).toBe(true);
+    expect(paths).toContain("C:/projects/_qa_worktrees/lotus-workbench-mainline");
+    expect(paths.some((path) => /lotus-idea$/.test(path))).toBe(true);
+    expect(paths.some((path) => /lotus-workbench$/.test(path))).toBe(false);
   });
 
   it("rejects incomplete, failed, or arbitrary manifests before certification is asserted", () => {
