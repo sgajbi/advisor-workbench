@@ -558,6 +558,14 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
     desktopTitleBox?.height ?? Number.POSITIVE_INFINITY,
     "desktop worklist titles should remain scannable within two lines",
   ).toBeLessThanOrEqual(42);
+  const desktopFactsColumns = await firstProposal
+    .getByText("Stage", { exact: true })
+    .locator("xpath=../..")
+    .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+  expect(
+    desktopFactsColumns.trim().split(/\s+/),
+    "narrow worklist items should stack record facts from their own container",
+  ).toHaveLength(1);
 
   await testInfo.attach("risk-impact-decision-workspace-desktop", {
     body: await page.screenshot({ fullPage: true }),
