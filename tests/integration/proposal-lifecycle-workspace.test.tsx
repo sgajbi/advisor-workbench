@@ -773,6 +773,140 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not publish an older implementation window after a later selection refresh", async () => {
+    const firstProposal = { ...proposalListFixture.items[1] };
+    const secondProposal = {
+      ...proposalListFixture.items[1],
+      proposal_id: "PRP-INCOME",
+      title: "Income mandate implementation",
+    };
+    const initialWindow = {
+      items: [firstProposal, secondProposal],
+      next_cursor: null,
+    };
+    const olderWindow = {
+      items: [
+        firstProposal,
+        { ...secondProposal, title: "Superseded income implementation" },
+      ],
+      next_cursor: null,
+    };
+    const currentWindow = {
+      items: [
+        firstProposal,
+        { ...secondProposal, title: "Current income implementation" },
+      ],
+      next_cursor: null,
+    };
+    listProposalsMock
+      .mockResolvedValueOnce(initialWindow)
+      .mockResolvedValueOnce(olderWindow)
+      .mockResolvedValueOnce(currentWindow);
+
+    let firstProposalReads = 0;
+    let resolveOlderRefresh:
+      | ((value: ReturnType<typeof implementationStatusFixture>) => void)
+      | undefined;
+    getProposalExecutionStatusMock.mockImplementation(
+      async (proposalId: string, _portfolioId: string, versionNo: number) => {
+        if (proposalId === "PRP-READY") {
+          firstProposalReads += 1;
+          if (firstProposalReads === 2) {
+            return await new Promise<
+              ReturnType<typeof implementationStatusFixture>
+            >((resolve) => {
+              resolveOlderRefresh = resolve;
+            });
+          }
+        }
+        return implementationStatusFixture(proposalId, versionNo);
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+    );
+    await waitFor(() => expect(firstProposalReads).toBe(2));
+
+    fireEvent.click(
+      screen.getByRole("option", { name: /Income mandate implementation/ }),
+    );
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+    );
+
+    expect(
+      await screen.findByRole("option", {
+        name: /Current income implementation/,
+      }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveOlderRefresh?.(implementationStatusFixture("PRP-READY", 5));
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /Current income implementation/ }),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByRole("option", {
+        name: /Superseded income implementation/,
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("recovers implementation evidence when a missing proposal version becomes available", async () => {
+    const { current_version_no: _currentVersionNo, ...unversionedProposal } =
+      proposalListFixture.items[1];
+    listProposalsMock
+      .mockResolvedValueOnce({ items: [unversionedProposal], next_cursor: null })
+      .mockResolvedValueOnce({
+        items: [proposalListFixture.items[1]],
+        next_cursor: null,
+      });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Proposal version is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalExecutionStatusMock).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Recheck proposal version" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Accepted for implementation",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalExecutionStatusMock).toHaveBeenCalledWith(
+      "PRP-READY",
+      "PB_SG_GLOBAL_BAL_001",
+      5,
+      "EXECUTION_READY",
+    );
+  });
+
   it("renders a selected proposal decision workspace from Gateway risk and impact evidence", async () => {
     renderWithQueryClient(
       <ProposalLifecycleWorkspace

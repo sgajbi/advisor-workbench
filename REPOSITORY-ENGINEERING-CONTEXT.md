@@ -594,7 +594,9 @@ Current repository posture:
     capability posture, freshness, and lineage before presentation. Advise owns advisory handoff and
     reconciliation; the named downstream provider owns execution truth. Keep order/fill/settlement
     detail explicitly unsupported, treat missing references as partial and historical-version
-    evidence as distinct, and confirm refresh only after the list and selected record reconcile. Do
+    evidence as distinct, and confirm refresh only after the list and selected record reconcile.
+    Fence the visible worklist commit against a newer refresh, selection, portfolio, or cursor, and
+    keep a retry action available when the list omits the selected proposal version. Do
     not mutate implementation status or invent owner, SLA, priority, order, fill, allocation,
     settlement, custody, or accounting completion.
 21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.

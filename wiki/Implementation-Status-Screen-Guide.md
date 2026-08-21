@@ -60,10 +60,14 @@ These roles describe business use. They do not create browser-owned roles or ent
   proposal event; v1 invents no freshness threshold.
 - Distinguishes current-version, earlier-version, and uncorrelated evidence.
 - Keeps missing request, provider, version, or event references explicitly partial.
+- Lets the advisor recheck an unversioned proposal in place; evidence remains withheld until the
+  refreshed worklist supplies a version that can be correlated safely.
 - Shows the latest source event and correlation evidence in progressive disclosure.
 - Preserves visible confirmed evidence when a refresh fails, without relabelling it current.
 - Announces success only after the worklist and selected evidence both refresh and still identify
   the same proposal, portfolio, version, and lifecycle state.
+- Discards a late refresh transaction when a newer refresh, selection, portfolio, or source window
+  has superseded it, so an older worklist cannot replace newer selected evidence.
 - Reflows worklist before evidence at compact and 200%-zoom-equivalent widths without page overflow.
 
 ## Decisions And Actions
@@ -98,6 +102,7 @@ See [API Surface](API-Surface) and [Integrations](Integrations) for shared contr
 | Ready | Source-confirmed handoff, version, currentness, references, and next action | Review or open the full proposal |
 | Partial | Handoff status remains visible, but missing source references are named | Confirm the missing evidence with the owning workflow |
 | Earlier version | Handoff evidence is visibly tied to a prior proposal version | Do not assume the current version is implemented |
+| Proposal version unavailable | Detail evidence is withheld because it cannot be correlated safely | Recheck the proposal version in place; do not reload or infer status |
 | Not requested | No handoff reference is expected and no execution progress is inferred | Request handoff only through the governed full record |
 | Refreshing | Prior confirmed evidence remains visible under its prior context | Wait for both reads to reconcile |
 | Refresh failed | Prior evidence remains visible but is not relabelled current | Retry the same selected evidence |
@@ -156,7 +161,8 @@ superiority.
 - `tests/unit/proposal-implementation-status-view-model.test.ts` proves business language,
   earlier-version warning, partial evidence, and non-ownership boundaries.
 - `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only reads, no N+1,
-  permission and partial states, context-preserving detail, and atomic refresh confirmation.
+  permission and partial states, context-preserving detail, atomic refresh confirmation,
+  superseded-transaction fencing, and unversioned-proposal recovery.
 - `tests/e2e/proposal-workflow-context.spec.ts` proves optimized-production rendering, Gateway/BFF
   use, focus-stable refresh, 1440/1280/1024/720/390 reflow, and zero horizontal overflow.
 - Canonical runtime uses `PB_SG_GLOBAL_BAL_001`; route screenshots alone are not source proof.

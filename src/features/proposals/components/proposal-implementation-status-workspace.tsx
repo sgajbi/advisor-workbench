@@ -138,6 +138,16 @@ export default function ProposalImplementationStatusWorkspace({
             kind="partial"
             title="Proposal version is not available"
             body="Implementation evidence cannot be correlated safely because the proposal list did not identify the selected version."
+            action={
+              <SourceRefreshAction
+                ref={refreshActionRef}
+                refreshScope={`${portfolioId}:${selectedProposal.proposalId}:version`}
+                idleLabel="Recheck proposal version"
+                busyLabel="Rechecking proposal version…"
+                isRefreshing={isRefreshing}
+                onRefresh={refresh}
+              />
+            }
             surface="default"
           />
         ) : isPermissionBlocked ? (

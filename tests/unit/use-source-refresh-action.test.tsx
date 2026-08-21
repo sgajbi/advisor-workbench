@@ -86,6 +86,40 @@ describe("useSourceRefreshAction", () => {
     expect(result.current.refreshState).toBeNull();
   });
 
+  it("discards a superseded result even when the same source identity returns", async () => {
+    let resolveRefresh!: (value: unknown) => void;
+    const onRefresh = vi.fn(
+      async () =>
+        await new Promise<unknown>((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+    const { result, rerender } = renderHook(
+      ({ identity }: { identity: string }) =>
+        useSourceRefreshAction({
+          identity,
+          isRefreshing: false,
+          hasRefreshFailure: false,
+          onRefresh,
+        }),
+      { initialProps: { identity: "proposal-a:3" } },
+    );
+
+    let refreshPromise!: Promise<unknown>;
+    act(() => {
+      refreshPromise = result.current.refresh();
+      result.current.reset();
+    });
+    rerender({ identity: "proposal-b:5" });
+    rerender({ identity: "proposal-a:3" });
+
+    await act(async () => {
+      resolveRefresh({ data: "superseded-proposal-a" });
+      await refreshPromise;
+    });
+    expect(result.current.refreshState).toBeNull();
+  });
+
   it("projects background refresh and refresh-failure posture", async () => {
     const onRefresh = vi.fn(async () => ({ data: "unused" }));
     const { result, rerender } = renderHook(
