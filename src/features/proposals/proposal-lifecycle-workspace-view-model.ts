@@ -30,6 +30,7 @@ export type ProposalLifecycleRow = {
   posture: string;
   version: string;
   versionNo: number | null;
+  creator: string;
   createdOn: string;
   href: string;
 };
@@ -191,6 +192,7 @@ export function buildProposalLifecycleWorkspaceModel({
       typeof proposal.current_version_no === "number"
         ? proposal.current_version_no
         : null,
+    creator: proposal.created_by || "Creator not reported",
     createdOn: formatDateValue(proposal.created_at, {
       nullDisplay: "Date not reported",
     }),

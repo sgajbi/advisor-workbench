@@ -114,13 +114,168 @@
 
 .selectedProposalFacts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   margin: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-control, 6px);
   background: var(--border);
+}
+
+.approvalDecisionBrief,
+.approvalRegister,
+.workflowEvidence,
+.approvalEvidenceConflict {
+  min-width: 0;
+}
+
+.approvalDecisionBrief {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-highlight);
+  border-radius: var(--radius-control, 6px);
+  background: var(--panel-alt);
+}
+
+.approvalDecisionHeading,
+.approvalSectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.approvalDecisionHeading h4,
+.approvalSectionHeading h4 {
+  margin: 3px 0 0;
+}
+
+.approvalSummary,
+.approvalEmpty,
+.workflowEvidence > p,
+.evidenceBoundary {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.approvalNextAction {
+  display: grid;
+  gap: 4px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+
+.approvalNextAction strong {
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.3rem;
+}
+
+.approvalRegister {
+  display: grid;
+  gap: 10px;
+}
+
+.approvalRecords,
+.workflowEvidence ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--border);
+}
+
+.approvalRecords li,
+.workflowEvidence li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.approvalRecords li:last-child,
+.workflowEvidence li:last-child {
+  border-bottom: 0;
+}
+
+.approvalRecords li > div,
+.workflowEvidence li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.approvalRecords li > div:last-child,
+.workflowEvidence li > div:last-child {
+  justify-items: end;
+  text-align: right;
+}
+
+.approvalRecords strong,
+.workflowEvidence strong {
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+
+.approvalRecords span,
+.workflowEvidence li span,
+.workflowEvidence summary span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.05rem;
+}
+
+.approvalEmpty {
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control, 6px);
+  background: var(--panel-alt);
+}
+
+.workflowEvidence {
+  border-block: 1px solid var(--border);
+}
+
+.workflowEvidence summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.workflowEvidence summary:focus-visible {
+  outline: 2px solid var(--brand-highlight);
+  outline-offset: 3px;
+}
+
+.workflowEvidence[open] {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.approvalEvidenceConflict {
+  display: grid;
+  gap: 8px;
+}
+
+.approvalEvidenceConflict .evidenceBoundary {
+  padding-left: 11px;
+  border-left: 3px solid var(--danger, #b42318);
 }
 
 .selectedProposalFacts > div {
@@ -297,7 +452,9 @@
   }
 
   .selectedProposalHeader,
-  .selectedProposalActions {
+  .selectedProposalActions,
+  .approvalDecisionHeading,
+  .approvalSectionHeading {
     align-items: stretch;
     flex-direction: column;
   }
@@ -309,6 +466,18 @@
 
   .selectedProposalFacts {
     grid-template-columns: 1fr;
+  }
+
+  .approvalRecords li,
+  .workflowEvidence li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .approvalRecords li > div:last-child,
+  .workflowEvidence li > div:last-child {
+    justify-items: start;
+    text-align: left;
   }
 
   .reviewProposalLink {

@@ -21,7 +21,11 @@ import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
   AdvisoryPolicyWorkflowData,
+  ProposalApprovalsData,
+  ProposalDetailData,
+  ProposalLineageData,
   ProposalSummary,
+  ProposalWorkflowEventsData,
 } from "../../src/features/proposals/types";
 
 const proposalListFixture: {
@@ -89,6 +93,82 @@ const getProposalRiskImpactMock = vi.fn(
     _versionNo: number,
     _currentState: string,
   ) => proposalRiskImpactFixture(),
+);
+function selectedProposalEvidence(proposalId: string) {
+  const proposal = proposalListFixture.items.find(
+    (item) => item.proposal_id === proposalId,
+  ) ?? proposalListFixture.items[0];
+  const versionNo = proposal.current_version_no ?? 1;
+  const detail: ProposalDetailData = { proposal: { ...proposal } };
+  const workflow: ProposalWorkflowEventsData = {
+    proposal_id: proposalId,
+    current_state: proposal.current_state,
+    events: [
+      {
+        event_id: `event-${proposalId}`,
+        event_type:
+          proposal.current_state === "EXECUTION_READY"
+            ? "COMPLIANCE_APPROVED"
+            : "RISK_REVIEW_REQUESTED",
+        from_state:
+          proposal.current_state === "EXECUTION_READY"
+            ? "AWAITING_CLIENT_CONSENT"
+            : "DRAFT",
+        to_state: proposal.current_state,
+        actor_id: "advisor-1",
+        occurred_at: "2026-08-21T09:00:00Z",
+      },
+    ],
+  };
+  const approvals: ProposalApprovalsData = {
+    proposal_id: proposalId,
+    current_state: proposal.current_state,
+    approvals:
+      proposal.current_state === "EXECUTION_READY"
+        ? [
+            {
+              approval_id: `risk-${proposalId}`,
+              approval_type: "RISK",
+              approved: true,
+              actor_id: "risk-officer-1",
+              occurred_at: "2026-08-20T10:00:00Z",
+            },
+            {
+              approval_id: `compliance-${proposalId}`,
+              approval_type: "COMPLIANCE",
+              approved: true,
+              actor_id: "compliance-officer-1",
+              occurred_at: "2026-08-21T09:00:00Z",
+            },
+          ]
+        : [
+            {
+              approval_id: `risk-${proposalId}`,
+              approval_type: "RISK",
+              approved: false,
+              actor_id: "risk-officer-1",
+              occurred_at: "2026-08-21T09:00:00Z",
+            },
+          ],
+  };
+  const lineage: ProposalLineageData = {
+    proposal_id: proposalId,
+    versions: [{ version_no: versionNo, created_at: proposal.created_at }],
+  };
+  return { approvals, detail, lineage, workflow };
+}
+const getProposalMock = vi.fn(
+  async (proposalId: string, _includeEvidence = false) =>
+    selectedProposalEvidence(proposalId).detail,
+);
+const getProposalWorkflowEventsMock = vi.fn(async (proposalId: string) =>
+  selectedProposalEvidence(proposalId).workflow,
+);
+const getProposalApprovalsMock = vi.fn(async (proposalId: string) =>
+  selectedProposalEvidence(proposalId).approvals,
+);
+const getProposalLineageMock = vi.fn(async (proposalId: string) =>
+  selectedProposalEvidence(proposalId).lineage,
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
@@ -168,6 +248,14 @@ vi.mock("../../src/features/proposals/api", () => ({
     currentState: string,
   ) =>
     getProposalRiskImpactMock(proposalId, portfolioId, versionNo, currentState),
+  getProposal: (proposalId: string, includeEvidence?: boolean) =>
+    getProposalMock(proposalId, includeEvidence),
+  getProposalWorkflowEvents: (proposalId: string) =>
+    getProposalWorkflowEventsMock(proposalId),
+  getProposalApprovals: (proposalId: string) =>
+    getProposalApprovalsMock(proposalId),
+  getProposalLineage: (proposalId: string) =>
+    getProposalLineageMock(proposalId),
   listProposals: (filters: unknown) => listProposalsMock(filters),
   recordAdvisoryPolicySignOffDecision: (
     evaluationId: string,
@@ -211,6 +299,24 @@ describe("ProposalLifecycleWorkspace", () => {
         _versionNo: number,
         _currentState: string,
       ) => proposalRiskImpactFixture(),
+    );
+    getProposalMock.mockReset();
+    getProposalMock.mockImplementation(
+      async (proposalId: string, _includeEvidence = false) =>
+        selectedProposalEvidence(proposalId).detail,
+    );
+    getProposalWorkflowEventsMock.mockReset();
+    getProposalWorkflowEventsMock.mockImplementation(
+      async (proposalId: string) =>
+        selectedProposalEvidence(proposalId).workflow,
+    );
+    getProposalApprovalsMock.mockReset();
+    getProposalApprovalsMock.mockImplementation(async (proposalId: string) =>
+      selectedProposalEvidence(proposalId).approvals,
+    );
+    getProposalLineageMock.mockReset();
+    getProposalLineageMock.mockImplementation(async (proposalId: string) =>
+      selectedProposalEvidence(proposalId).lineage,
     );
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
@@ -968,14 +1074,19 @@ describe("ProposalLifecycleWorkspace", () => {
       </ProposalWorkflowContextProvider>,
     );
 
+    const railHeading = await screen.findByRole("heading", {
+      level: 2,
+      name: "1 decision is not approved",
+    });
+    const workflowRail = railHeading.closest("article");
+    expect(workflowRail).not.toBeNull();
+    expect(within(workflowRail!).getByText("Approval exception")).toBeInTheDocument();
+    expect(within(workflowRail!).getByText("PRP-RISK")).toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "1 need attention" }),
+      screen.getByText(
+        "Gateway-backed proposal detail, workflow, approvals, and lineage",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText("2 proposals in view")).toBeInTheDocument();
-    expect(
-      screen.getByText("1 proposal needs advisor action."),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Advisory proposal lifecycle")).toBeInTheDocument();
     expect(
       screen.queryByText(/kyc validity verified/i),
     ).not.toBeInTheDocument();
@@ -1007,11 +1118,14 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      within(selectedProposal).getByText("Risk officer approval needed"),
+      await within(selectedProposal).findByRole("heading", {
+        name: "1 decision is not approved",
+      }),
     ).toBeInTheDocument();
+    expect(within(selectedProposal).getByText("Approval exception")).toBeInTheDocument();
     expect(
       within(selectedProposal).getByRole("link", {
-        name: "Open proposal review",
+        name: "Open full proposal review",
       }),
     ).toHaveAttribute(
       "href",
@@ -1027,8 +1141,15 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      within(selectedProposal).getByText("Ready for execution handoff"),
+      await within(selectedProposal).findByRole("heading", {
+        name: "2 approval records confirmed",
+      }),
     ).toBeInTheDocument();
+    expect(within(selectedProposal).getByText("Approval evidence recorded")).toBeInTheDocument();
+    expect(getProposalMock).toHaveBeenCalledTimes(2);
+    expect(getProposalWorkflowEventsMock).toHaveBeenCalledTimes(2);
+    expect(getProposalApprovalsMock).toHaveBeenCalledTimes(2);
+    expect(getProposalLineageMock).toHaveBeenCalledTimes(2);
   });
 
   it("resets selected proposal identity when the source window changes", async () => {
@@ -1590,7 +1711,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "1 proposal needs attention in this view",
+        name: "1 decision is not approved",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Proposal view 2")).toBeInTheDocument();
