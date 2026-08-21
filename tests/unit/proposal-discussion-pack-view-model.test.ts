@@ -269,4 +269,29 @@ describe("proposal discussion pack view model", () => {
       tone: "warn",
     });
   });
+
+  it.each(["proposal_identity", "disclosure_policy"] as const)(
+    "keeps unsupported %s capability out of aggregate success",
+    (key) => {
+      const envelope = proposalDiscussionPackFixture();
+      envelope.data.overall_state = "supported";
+      envelope.data.attention_required = false;
+      const capability = envelope.data.capabilities.find(
+        (item) => item.key === key,
+      )!;
+      capability.state = "restricted";
+
+      const model = buildProposalDiscussionPackModel(envelope);
+
+      expect(model.posture.label).toBe("Review required");
+      if (key === "disclosure_policy") {
+        expect(model.disclosurePolicy).toMatchObject({
+          isSupported: false,
+          status: "Restricted",
+          tone: "danger",
+        });
+        expect(model.disclosures).toEqual([]);
+      }
+    },
+  );
 });
