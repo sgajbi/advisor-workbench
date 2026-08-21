@@ -138,7 +138,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | Business screen | Route or mode | Posture | Guide status | Source authority |
 | --- | --- | --- | --- | --- |
 | [Proposal Builder](Proposal-Builder-Screen-Guide) | `/proposals/simulate` | Capability-disabled | Guide available | Gateway, Advise, and Core |
-| Approval Queue | `/proposals?mode=approval-queue` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| [Approval Queue](Approval-Queue-Screen-Guide) | `/proposals?mode=approval-queue` | Capability-disabled | Guide available | Gateway and Advise |
 | Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |

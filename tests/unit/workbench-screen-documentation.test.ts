@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 18,
-      coverageExceptions: 18,
-      unmappedGuides: 18,
+      mappedGuides: 19,
+      coverageExceptions: 17,
+      unmappedGuides: 17,
     });
   });
 
@@ -85,7 +85,39 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("persistent **Review and retain** rail");
     expect(guide).toContain("evaluation without a proposal identity is not described as retained");
-    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(guide.replaceAll("\r\n", "\n")).toContain(
+      "not a claim of bank approval or competitor\nsuperiority",
+    );
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Approval Queue to its exception-led selected-record guide", () => {
+    const registry = loadRegistry();
+    const approvalQueue = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "approval-queue",
+    );
+
+    expect(approvalQueue).toMatchObject({
+      routePattern: "/proposals",
+      mode: "approval-queue",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Approval-Queue-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/components/proposal-lifecycle-decision-workspace.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs.readFileSync(
+      path.join(rootDirectory, "wiki", "Approval-Queue-Screen-Guide.md"),
+      "utf8",
+    );
+    expect(guide).toContain("one selected proposal");
+    expect(guide).toContain("number shown is **in this view**");
+    expect(guide).toContain("route context does not replace source proposal identity");
     expect(validate(registry).errors).toEqual([]);
   });
 

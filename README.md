@@ -137,7 +137,8 @@ Current route posture:
   durable-storage posture, supported-feature promotion posture, and source-owned candidate action
   recording through Gateway
 - `/proposals`
-  direct Gateway-backed proposal queue for advisor follow-up
+  Gateway-backed Approval Queue with bounded source-window truth, keyboard-operable proposal
+  selection, simultaneous selected-record posture, and portfolio-preserving detail handoff
 - `/proposals/[proposalId]`
   direct Gateway-backed proposal detail with RFC-0023 advisor narrative review and delivery
   posture

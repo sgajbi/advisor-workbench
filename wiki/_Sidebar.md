@@ -14,6 +14,7 @@
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
+- [Approval Queue](Approval-Queue-Screen-Guide)
 - [Performance Summary](Performance-Summary-Screen-Guide)
 - [Performance Analysis](Performance-Analysis-Screen-Guide)
 - [Risk Review](Risk-Review-Screen-Guide)
