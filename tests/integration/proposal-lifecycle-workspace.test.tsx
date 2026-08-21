@@ -543,6 +543,46 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.queryByText("Source current")).not.toBeInTheDocument();
   });
 
+  it("withholds unusable source sections while retaining response lineage", async () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.allocation.state = "unavailable";
+    envelope.data.risk.state = "unavailable";
+    envelope.data.workflow_gate.state = "unavailable";
+    getProposalRiskImpactMock.mockResolvedValueOnce(envelope);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Allocation comparison is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Risk evidence is not confirmed" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Workflow gate is not confirmed",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("68%")).not.toBeInTheDocument();
+    expect(screen.queryByText("USD 850,000.00 · 12 positions"))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText("Risk Review Required"))
+      .not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Evidence scope and lineage"));
+    expect(screen.getByText("Response contract")).toBeInTheDocument();
+    expect(
+      screen.getByText("proposal-risk-impact.v1"),
+    ).toBeInTheDocument();
+  });
+
   it("names expected allocation views missing from partial source evidence", async () => {
     const envelope = proposalRiskImpactFixture();
     envelope.data.overall_state = "partial";

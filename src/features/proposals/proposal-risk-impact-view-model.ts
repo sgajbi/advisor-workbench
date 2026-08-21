@@ -30,6 +30,11 @@ export function buildProposalRiskImpactModel(
 ) {
   const { data } = envelope;
   const decisionIsAvailable = data.decision.state === "ready";
+  const allocationIsAvailable =
+    data.allocation.state === "ready" || data.allocation.state === "partial";
+  const riskIsAvailable =
+    data.risk.state === "ready" || data.risk.state === "partial";
+  const workflowGateIsAvailable = data.workflow_gate.state === "ready";
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
     : [];
@@ -112,43 +117,56 @@ export function buildProposalRiskImpactModel(
         : null,
     },
     risk: {
+      isAvailable: riskIsAvailable,
       state: supportabilityPresentation(data.risk.state),
       source: data.risk.source_service ?? "Source not reported",
       summary:
-        data.risk.summary ||
-        "The source has not supplied a proposal risk summary.",
-      highlights: data.risk.highlights,
+        (riskIsAvailable && data.risk.summary) ||
+        "The source has not confirmed proposal risk evidence.",
+      highlights: riskIsAvailable ? data.risk.highlights : [],
     },
     allocation: {
+      isAvailable: allocationIsAvailable,
       state: supportabilityPresentation(data.allocation.state),
       source: allocationSourceLabel(data),
       contractVersion: data.allocation.contract_version ?? "Not reported",
       calculatorVersion: data.allocation.calculator_version ?? "Not reported",
       expectedDimensions:
         data.allocation.expected_dimensions.map(businessLabel),
-      missingExpectedDimensions: data.allocation.expected_dimensions
-        .filter(
-          (dimension) =>
-            !data.allocation.views.some((view) => view.dimension === dimension),
-        )
-        .map(businessLabel),
-      views: data.allocation.views.map((view) => ({
-        dimension: view.dimension,
-        label: businessLabel(view.dimension),
-        currentTotal: formatMoney(view.current?.total_value),
-        proposedTotal: formatMoney(view.proposed?.total_value),
-        rows: allocationRows(view.current, view.proposed),
-      })),
+      missingExpectedDimensions: allocationIsAvailable
+        ? data.allocation.expected_dimensions
+            .filter(
+              (dimension) =>
+                !data.allocation.views.some(
+                  (view) => view.dimension === dimension,
+                ),
+            )
+            .map(businessLabel)
+        : [],
+      views: (allocationIsAvailable ? data.allocation.views : []).map(
+        (view) => ({
+          dimension: view.dimension,
+          label: businessLabel(view.dimension),
+          currentTotal: formatMoney(view.current?.total_value),
+          proposedTotal: formatMoney(view.proposed?.total_value),
+          rows: allocationRows(view.current, view.proposed),
+        }),
+      ),
     },
     workflowGate: {
+      isAvailable: workflowGateIsAvailable,
       state: supportabilityPresentation(data.workflow_gate.state),
-      gate: data.workflow_gate.gate
+      gate: workflowGateIsAvailable && data.workflow_gate.gate
         ? businessLabel(data.workflow_gate.gate)
-        : "Gate not available",
-      nextStep: data.workflow_gate.recommended_next_step
-        ? businessLabel(data.workflow_gate.recommended_next_step)
-        : "Source next step not available",
-      reasons: data.workflow_gate.reasons.map((reason) => ({
+        : "Gate not confirmed",
+      nextStep:
+        workflowGateIsAvailable && data.workflow_gate.recommended_next_step
+          ? businessLabel(data.workflow_gate.recommended_next_step)
+          : "Source next step not confirmed",
+      reasons: (workflowGateIsAvailable
+        ? data.workflow_gate.reasons
+        : []
+      ).map((reason) => ({
         reason: businessLabel(reason.reason_code),
         source: businessLabel(reason.source),
         severity: businessLabel(reason.severity),
@@ -165,6 +183,7 @@ export function buildProposalRiskImpactModel(
     })),
     lineage: {
       correlationId: envelope.correlation_id,
+      contractVersion: envelope.contract_version,
       decisionSupportReference: data.decision.support_reference,
       workflowGateSupportReference: data.workflow_gate.support_reference,
       capabilitySupportReferences: data.capabilities

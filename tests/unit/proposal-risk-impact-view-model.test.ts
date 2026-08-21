@@ -23,6 +23,7 @@ describe("proposal risk and impact view model", () => {
     });
     expect(model.workflowGate.disclaimer).toContain("does not prove");
     expect(model.lineage.correlationId).toBe("corr-proposal-risk-impact-001");
+    expect(model.lineage.contractVersion).toBe("proposal-risk-impact.v1");
     expect(model.lineage.decisionSupportReference).toBe(
       "current_version.proposal_result.proposal_decision_summary",
     );
@@ -67,6 +68,43 @@ describe("proposal risk and impact view model", () => {
       proposedValue: "USD 775,000.00",
     });
     expect(equity).not.toHaveProperty("delta");
+  });
+
+  it("withholds exact allocation figures when the section is unusable", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.allocation.state = "unavailable";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.allocation.isAvailable).toBe(false);
+    expect(model.allocation.views).toEqual([]);
+  });
+
+  it("withholds workflow conclusions when the gate is not ready", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.workflow_gate.state = "unavailable";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.workflowGate.isAvailable).toBe(false);
+    expect(model.workflowGate.gate).toBe("Gate not confirmed");
+    expect(model.workflowGate.nextStep).toBe(
+      "Source next step not confirmed",
+    );
+    expect(model.workflowGate.reasons).toEqual([]);
+  });
+
+  it("withholds risk conclusions when risk evidence is unusable", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.risk.state = "not_supported";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.risk.isAvailable).toBe(false);
+    expect(model.risk.highlights).toEqual([]);
+    expect(model.risk.summary).toBe(
+      "The source has not confirmed proposal risk evidence.",
+    );
   });
 
   it("names expected allocation dimensions that the source did not return", () => {
