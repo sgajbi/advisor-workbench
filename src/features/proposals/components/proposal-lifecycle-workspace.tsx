@@ -26,7 +26,6 @@ import {
   getAdvisoryPolicyWorkflow,
   getProposal,
   getProposalApprovals,
-  getProposalExecutionStatus,
   getProposalLineage,
   getProposalRiskImpact,
   getProposalWorkflowEvents,
@@ -41,7 +40,6 @@ import {
   buildProposalApprovalEvidenceModel,
   confirmRefreshedProposalApprovalEvidence,
 } from "../proposal-approval-evidence-view-model";
-import { buildProposalImplementationStatusModel } from "../proposal-implementation-status-view-model";
 import {
   buildPolicyEvaluationEvidenceModel,
   buildPolicyReviewQueueModel,
@@ -49,6 +47,7 @@ import {
 } from "../proposal-policy-review-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
 import { useProposalSourceWindow } from "../use-proposal-source-window";
+import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
 import PolicyReviewWorkspace from "./policy-review-workspace";
 import ProposalLifecycleDecisionWorkspace from "./proposal-lifecycle-decision-workspace";
 import ProposalImplementationStatusWorkspace from "./proposal-implementation-status-workspace";
@@ -79,10 +78,6 @@ export default function ProposalLifecycleWorkspace({
     proposalId: string;
   } | null>(null);
   const [approvalSelection, setApprovalSelection] = useState<{
-    portfolioId: string;
-    proposalId: string;
-  } | null>(null);
-  const [implementationSelection, setImplementationSelection] = useState<{
     portfolioId: string;
     proposalId: string;
   } | null>(null);
@@ -152,21 +147,6 @@ export default function ProposalLifecycleWorkspace({
     ) ??
     model.rows[0] ??
     null;
-  const implementationSelectionIsCurrent =
-    implementationSelection?.portfolioId === portfolioId &&
-    model.rows.some(
-      (row) => row.proposalId === implementationSelection.proposalId,
-    );
-  const selectedImplementationProposal =
-    model.rows.find(
-      (row) =>
-        row.proposalId ===
-        (implementationSelectionIsCurrent
-          ? implementationSelection.proposalId
-          : null),
-    ) ??
-    model.rows[0] ??
-    null;
   const approvalEvidenceQueryKey = [
     "proposal-approval-evidence",
     portfolioId,
@@ -224,27 +204,13 @@ export default function ProposalLifecycleWorkspace({
       selectedRiskProposal?.versionNo !== null,
     ...workbenchStrictQueryDefaults,
   });
-  const implementationStatusQuery = useQuery({
-    queryKey: [
-      "proposal-implementation-status",
-      portfolioId,
-      selectedImplementationProposal?.proposalId,
-      selectedImplementationProposal?.versionNo,
-      selectedImplementationProposal?.currentState,
-    ],
-    queryFn: async () =>
-      await getProposalExecutionStatus(
-        selectedImplementationProposal?.proposalId ?? "",
-        portfolioId,
-        selectedImplementationProposal?.versionNo ?? 0,
-        selectedImplementationProposal?.currentState ?? "",
-      ),
-    enabled:
-      mode === "implementation" &&
-      Boolean(selectedImplementationProposal) &&
-      selectedImplementationProposal?.versionNo !== null,
-    ...workbenchStrictQueryDefaults,
-  });
+  const {
+    query: implementationStatusQuery,
+    selectedProposal: selectedImplementationProposal,
+    selectProposal: selectImplementationProposal,
+    sourcePosture: implementationStatusPosture,
+    workflowContext: selectedImplementationWorkflowContext,
+  } = useProposalImplementationStatus({ portfolioId, mode, rows: model.rows });
   const policyReviewModel = useMemo(
     () =>
       buildPolicyReviewQueueModel({
@@ -363,15 +329,6 @@ export default function ProposalLifecycleWorkspace({
     hasError: Boolean(riskImpactQuery.error),
     isPermissionBlocked: isWorkbenchPermissionBlockedError(
       riskImpactQuery.error,
-    ),
-  });
-  const implementationStatusPosture = projectQuerySourcePosture({
-    hasData: Boolean(implementationStatusQuery.data),
-    isLoading: implementationStatusQuery.isLoading,
-    isFetching: implementationStatusQuery.isFetching,
-    hasError: Boolean(implementationStatusQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(
-      implementationStatusQuery.error,
     ),
   });
   const approvalDetailPosture = projectQuerySourcePosture({
@@ -501,49 +458,6 @@ export default function ProposalLifecycleWorkspace({
       hasEvidenceGap: posture.state === "empty" || posture.state === "conflict",
     };
   }, [approvalEvidenceModel, mode]);
-  const selectedImplementationWorkflowContext = useMemo(() => {
-    if (mode !== "implementation" || !implementationStatusQuery.data) {
-      return undefined;
-    }
-    const implementation = buildProposalImplementationStatusModel(
-      implementationStatusQuery.data,
-    );
-    return {
-      proposalId: implementation.identity.proposalId,
-      title: implementation.handoff.label,
-      summary: implementation.handoff.summary,
-      currentPosture: implementation.evidence.label,
-      nextAction: implementation.handoff.nextAction,
-      blockers: implementation.handoff.attentionRequired
-        ? [implementation.handoff.summary]
-        : implementation.evidence.isPartial
-          ? [implementation.evidence.summary]
-          : [],
-      facts: [
-        {
-          label: "Proposal",
-          value: implementation.identity.proposalId,
-        },
-        {
-          label: "Handoff",
-          value: implementation.handoff.label,
-        },
-        {
-          label: "Version evidence",
-          value: implementation.version.label,
-        },
-        {
-          label: "Observed",
-          value: implementation.lineage.freshness,
-        },
-      ],
-      sourceLabel: "Gateway-backed advisory implementation handoff",
-      boundaryNote: implementation.boundary,
-      hasEvidenceGap:
-        implementation.evidence.isPartial ||
-        implementation.version.label === "Earlier version",
-    };
-  }, [implementationStatusQuery.data, mode]);
   const requestMoreEvidenceMutation = useMutation({
     mutationFn: async ({
       evaluationId,
@@ -1010,9 +924,7 @@ export default function ProposalLifecycleWorkspace({
           portfolioId={portfolioId}
           rows={model.rows}
           selectedProposal={selectedImplementationProposal}
-          onSelectProposal={(proposalId) =>
-            setImplementationSelection({ portfolioId, proposalId })
-          }
+          onSelectProposal={selectImplementationProposal}
           evidence={implementationStatusQuery.data ?? null}
           isLoading={implementationStatusPosture.isInitialLoading}
           isRefreshing={implementationStatusPosture.isRefreshing}
