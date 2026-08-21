@@ -358,7 +358,7 @@ function toActionRow(
 ): AdvisorCockpitActionRow {
   const acknowledged = Boolean(action.acknowledgement_state?.acknowledged);
   const externalOwner = action.owner_role !== "ADVISOR";
-  const proposalId = action.proposal_id?.trim() ?? "";
+  const proposalId = stringValue(action.proposal_id) ?? "";
   const sourceHandoff = isValidProposalId(proposalId)
     ? {
         href: `/proposals/${encodeURIComponent(proposalId)}`,

@@ -269,25 +269,68 @@ describe("advisor cockpit view model", () => {
     expect(model.actionPosture).toBe("actionable");
   });
 
-  it("exposes only a valid supported proposal handoff", () => {
-    const invalidProposalPage: AdvisorCockpitActionPageData = {
+  it.each([
+    ["number", 42],
+    ["object", { id: "proposal_sg_001" }],
+    ["array", ["proposal_sg_001"]],
+    ["blank", "   "],
+    ["malformed path", "proposal/unsupported-path"],
+    ["null", null],
+    ["missing", undefined],
+  ])(
+    "fails closed when the runtime proposal reference is %s",
+    (_case, proposalId) => {
+      const invalidProposalPage = {
+        ...actionPage,
+        items: actionPage.items?.map((action) => ({
+          ...action,
+          proposal_id: proposalId,
+          policy_evaluation_id: "policy_eval_sg_001",
+          report_ref: "report_sg_001",
+        })),
+      } as unknown as AdvisorCockpitActionPageData;
+
+      const model = buildAdvisorCockpitModel({
+        snapshot,
+        actionPage: invalidProposalPage,
+        preparationPage,
+        supportability,
+      });
+
+      expect(model.actionRows).toHaveLength(1);
+      expect(model.actionRows[0]).toMatchObject({
+        title: "Policy review required",
+        sourceHandoff: null,
+        canAcknowledge: true,
+      });
+      expect(model.actionRows[0].evidenceSummary).toBe(
+        "Policy evaluation requires compliance review.",
+      );
+    },
+  );
+
+  it("normalizes a valid runtime proposal reference into the exact supported handoff", () => {
+    const normalizedProposalPage: AdvisorCockpitActionPageData = {
       ...actionPage,
       items: actionPage.items?.map((action) => ({
         ...action,
-        proposal_id: "proposal/unsupported-path",
-        policy_evaluation_id: "policy_eval_sg_001",
-        report_ref: "report_sg_001",
+        proposal_id: "  proposal_sg_001  ",
       })),
     };
 
     const model = buildAdvisorCockpitModel({
       snapshot,
-      actionPage: invalidProposalPage,
+      actionPage: normalizedProposalPage,
       preparationPage,
       supportability,
     });
 
-    expect(model.actionRows[0].sourceHandoff).toBeNull();
+    expect(model.actionRows[0].sourceHandoff).toEqual({
+      href: "/proposals/proposal_sg_001",
+      label: "Open proposal",
+      accessibleLabel: "Open proposal proposal_sg_001",
+      recordLabel: "Proposal proposal_sg_001",
+    });
   });
 
   it("keeps a non-zero preparation scope partial when no packet detail is loaded", () => {
