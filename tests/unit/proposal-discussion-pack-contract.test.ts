@@ -253,6 +253,34 @@ describe("proposal discussion pack contract", () => {
     },
   );
 
+  it.each([
+    ["advisor_narrative", "lotus-report"],
+    ["report_package", "lotus-advise"],
+    ["client_release", "lotus-advise"],
+  ] as const)("rejects the wrong source owner for %s", (key, owner) => {
+    const fixture = proposalDiscussionPackFixture();
+    const capability = fixture.data.capabilities.find(
+      (item) => item.key === key,
+    )!;
+    capability.source_service = owner;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("capability source owner does not match its evidence family");
+  });
+
+  it("requires the owning service for a supported capability", () => {
+    const fixture = proposalDiscussionPackFixture();
+    const narrativeCapability = fixture.data.capabilities.find(
+      ({ key }) => key === "advisor_narrative",
+    )!;
+    narrativeCapability.source_service = null;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("capability source owner does not match its evidence family");
+  });
+
   it("requires a complete source record for an available report package", () => {
     const fixture = proposalDiscussionPackFixture();
     fixture.data.package = {
