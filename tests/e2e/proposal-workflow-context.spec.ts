@@ -395,13 +395,21 @@ test("keeps proposal evaluation inside construction without persisted workflow a
     waitUntil: "domcontentloaded",
   });
 
-  await expect(page.getByRole("heading", { level: 2, name: "Draft not yet persisted" })).toBeVisible();
+  const workflowRail = page.getByTestId("proposal-builder-workflow-rail");
+  await expect(workflowRail).toBeVisible();
+  await expect(workflowRail).toHaveAttribute("data-workflow-admission", "blocked");
+  await expect(
+    workflowRail.getByRole("heading", { name: "Review and retain" })
+  ).toBeVisible();
+  await expect(workflowRail.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+  await expect(workflowRail.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
   await expect(page.getByText("No persisted advisory workflow record")).toBeVisible();
   await expect(
     page.getByText(
       "Simulation does not imply suitability review, approval, client consent, publication, or execution readiness."
     )
   ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Advisor Workflow" })).toHaveCount(0);
   await expect(page.getByText("KYC validity verified")).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
@@ -429,10 +437,12 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
   await expect(page.getByText("Portfolio evidence confirmed")).toBeVisible();
   await expect(page.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Save Advisor Draft" })).toBeEnabled();
-  for (const headingName of ["Advisor Workflow", "Draft Order Blotter"]) {
-    const panel = page.locator("section").filter({
-      has: page.getByRole("heading", { name: headingName }),
-    }).first();
+  const workflowRail = page.getByTestId("proposal-builder-workflow-rail");
+  const blotterPanel = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Draft Order Blotter" }),
+  }).first();
+  for (const panel of [workflowRail, blotterPanel]) {
+    await expect(panel).toBeVisible();
     expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   }
   await testInfo.attach("proposal-evidence-recovery", {
