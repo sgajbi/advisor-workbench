@@ -210,7 +210,7 @@ export function buildProposalRiskImpactModel(
             : capability.key === "decision_posture"
               ? decisionState
               : capability.key === "workflow_gate"
-                ? workflowGateState
+                ? effectiveWorkflowGateState
                 : capability.state;
       return {
         key: capability.key,
