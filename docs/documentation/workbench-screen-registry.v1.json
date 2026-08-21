@@ -1003,16 +1003,21 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "wikiSlug": "Discussion-Pack-Review-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-report"],
+      "implementationEvidence": [
+        "src/features/proposals/proposal-discussion-pack-contract.ts",
+        "src/features/proposals/proposal-discussion-pack-view-model.ts",
+        "src/features/proposals/use-proposal-discussion-pack.ts",
+        "src/features/proposals/components/proposal-discussion-pack-workspace.tsx",
+        "src/features/proposals/components/proposal-lifecycle-worklist.tsx"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/proposal-workflow-context.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "proposal-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "implementation-status",

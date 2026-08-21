@@ -317,6 +317,12 @@ promote dormant labels into product ownership just because historical route file
   `proposal-implementation-status.v1`, always through browser path `/api/bff/api/v1/...`. The
   response describes advisory handoff and reconciliation only. It is not a mutation contract and
   provides no order, fill, allocation, settlement, custody-booking, or accounting authority.
+- Discussion Pack Review reads one selected record from
+  `GET /api/v1/proposals/{proposal_id}/discussion-pack-review?portfolio_id={portfolio_id}&version_no={version_no}`
+  with discriminator `proposal-discussion-pack-review.v1`, always through browser path
+  `/api/bff/api/v1/...`. Gateway composes Advise narrative, memo, disclosure, approval/consent,
+  and Report package evidence. Workbench keeps internal advisor review separate from client
+  release, publication, delivery, communication, and lifecycle mutation.
 - RFC-0024 advisor memo and evidence-pack posture is implemented on `/proposals/{proposalId}`
   through Gateway proposal memo endpoints. Workbench can create or replay an advisor-use memo with
   `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo`, record advisor-use review with
