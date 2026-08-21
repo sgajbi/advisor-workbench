@@ -213,14 +213,14 @@ describe("proposal risk and impact contract", () => {
         evidence_type: "client:context",
         reason_code: "missing",
         summary: "Current context must be confirmed.",
-        blocking: true,
+        blocking: false,
         evidence_refs: [],
       },
       {
         evidence_type: "client",
         reason_code: "context:missing",
         summary: "Current context must be confirmed.",
-        blocking: true,
+        blocking: false,
         evidence_refs: [],
       },
     ];
@@ -312,6 +312,66 @@ describe("proposal risk and impact contract", () => {
         "RISK_REVIEW",
       ),
     ).toThrow(/decision status does not match the recommended next action/);
+  });
+
+  it("rejects a decision status that contradicts the workflow gate", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.workflow_gate.gate = "EXECUTION_READY";
+    payload.data.workflow_gate.recommended_next_step = "EXECUTE";
+    payload.data.workflow_gate.reasons = [];
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/decision status does not match the workflow gate/);
+  });
+
+  it("accepts an insufficient-evidence decision beside a distinct review gate", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.decision.decision_status = "INSUFFICIENT_EVIDENCE";
+    payload.data.decision.recommended_next_action = "REVISE_PROPOSAL";
+    payload.data.decision.missing_evidence = [
+      {
+        evidence_type: "CLIENT_CONTEXT",
+        reason_code: "MISSING_CLIENT_CONTEXT",
+        summary: "Current client context must be confirmed.",
+        blocking: true,
+        evidence_refs: [],
+      },
+    ];
+
+    expect(
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ).data.workflow_gate.gate,
+    ).toBe("RISK_REVIEW_REQUIRED");
+  });
+
+  it("rejects an insufficient-evidence decision without a blocking gap", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.decision.decision_status = "INSUFFICIENT_EVIDENCE";
+    payload.data.decision.recommended_next_action = "REVISE_PROPOSAL";
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(
+      /insufficient-evidence decision requires blocking missing evidence/,
+    );
   });
 
   it.each([

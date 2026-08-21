@@ -147,6 +147,25 @@ const DECISION_STATUS_NEXT_ACTIONS = {
   readonly (typeof NEXT_ACTIONS)[number][]
 >;
 
+const DECISION_STATUS_WORKFLOW_GATES = {
+  READY_FOR_CLIENT_REVIEW: ["EXECUTION_READY", "NONE"],
+  REQUIRES_RISK_REVIEW: ["RISK_REVIEW_REQUIRED"],
+  REQUIRES_COMPLIANCE_REVIEW: ["COMPLIANCE_REVIEW_REQUIRED"],
+  REQUIRES_CLIENT_CONSENT: ["CLIENT_CONSENT_REQUIRED"],
+  BLOCKED_REMEDIATION_REQUIRED: ["BLOCKED"],
+  INSUFFICIENT_EVIDENCE: [
+    "RISK_REVIEW_REQUIRED",
+    "COMPLIANCE_REVIEW_REQUIRED",
+    "CLIENT_CONSENT_REQUIRED",
+    "EXECUTION_READY",
+    "NONE",
+  ],
+  REVISION_RECOMMENDED: ["EXECUTION_READY", "NONE"],
+} as const satisfies Record<
+  (typeof DECISION_STATUSES)[number],
+  readonly (typeof GATES)[number][]
+>;
+
 export type ProposalRiskImpactSectionState = (typeof SECTION_STATES)[number];
 export type ProposalRiskImpactOverallState = (typeof OVERALL_STATES)[number];
 export type ProposalRiskImpactAllocationDimension =
@@ -387,6 +406,17 @@ function parseData(value: unknown): ProposalRiskImpactData {
   const risk = parseRisk(item.risk);
   const decision = parseDecision(item.decision);
   const workflowGate = parseWorkflowGate(item.workflow_gate);
+  if (
+    decision.state === "ready" &&
+    workflowGate.state === "ready" &&
+    decision.decision_status &&
+    workflowGate.gate &&
+    !DECISION_STATUS_WORKFLOW_GATES[decision.decision_status].some(
+      (gate) => gate === workflowGate.gate,
+    )
+  ) {
+    invalid("decision status does not match the workflow gate");
+  }
   for (const [capabilityKey, sectionState] of [
     ["allocation_comparison", allocation.state],
     ["proposal_risk_lens", risk.state],
@@ -690,6 +720,37 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
     )
   ) {
     invalid("decision status does not match the recommended next action");
+  }
+  const hasBlockingMissingEvidence = decision.missing_evidence.some(
+    ({ blocking }) => blocking,
+  );
+  if (
+    state === "ready" &&
+    decision.decision_status === "INSUFFICIENT_EVIDENCE" &&
+    !hasBlockingMissingEvidence
+  ) {
+    invalid(
+      "insufficient-evidence decision requires blocking missing evidence",
+    );
+  }
+  if (
+    state === "ready" &&
+    hasBlockingMissingEvidence &&
+    decision.decision_status &&
+    !["INSUFFICIENT_EVIDENCE", "BLOCKED_REMEDIATION_REQUIRED"].includes(
+      decision.decision_status,
+    )
+  ) {
+    invalid("blocking missing evidence contradicts the decision status");
+  }
+  if (
+    state === "ready" &&
+    decision.decision_status === "READY_FOR_CLIENT_REVIEW" &&
+    decision.approval_requirements.some(
+      ({ blocking_until_approved }) => blocking_until_approved,
+    )
+  ) {
+    invalid("client-review-ready decision cannot retain blocking approvals");
   }
   return decision;
 }
