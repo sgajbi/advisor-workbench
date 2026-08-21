@@ -481,6 +481,19 @@ function validateSemantics(data: ProposalImplementationStatusData): void {
   if (data.reason_code !== expectedReason)
     invalid("evidence reason does not match supportability");
   if (
+    data.handoff_status === "NOT_REQUESTED" &&
+    [
+      data.execution_request_id,
+      data.execution_provider,
+      data.external_execution_id,
+      data.related_version_no,
+      data.handoff_requested_at,
+      data.executed_at,
+    ].some((value) => value !== null)
+  ) {
+    invalid("not-requested handoff contains downstream request evidence");
+  }
+  if (
     data.latest_workflow_event?.event_type !==
     (semantics.eventType ?? undefined)
   ) {

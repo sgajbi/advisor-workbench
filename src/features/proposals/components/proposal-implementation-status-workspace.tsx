@@ -52,7 +52,7 @@ export default function ProposalImplementationStatusWorkspace({
     [evidence],
   );
   const selectionIdentity = selectedProposal
-    ? `${portfolioId}:${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
+    ? `${portfolioId}:${selectedProposal.proposalId}`
     : null;
   const {
     actionRef: refreshActionRef,
