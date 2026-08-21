@@ -41,6 +41,7 @@ import {
   getProposalOperation,
   getProposalOperationByCorrelation,
   getProposalOperationReplayEvidence,
+  getProposalRiskImpact,
   getProposalVersion,
   getProposalVersionReplayEvidence,
   getProposalWorkflowEvents,
@@ -65,6 +66,7 @@ import {
   reviewProposalNarrative,
   submitProposal,
 } from "../../src/features/proposals/api";
+import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
@@ -243,6 +245,31 @@ describe("proposal api", () => {
     );
   });
 
+  it("loads selected proposal risk and impact only through the BFF and validates identity", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(proposalRiskImpactFixture()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
+    );
+
+    const data = await getProposalRiskImpact(
+      "PRP-RISK",
+      "PB_SG_GLOBAL_BAL_001",
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/PRP-RISK/risk-impact`,
+      { cache: "no-store" },
+    );
+    expect(data.proposal_id).toBe("PRP-RISK");
+    expect(data.portfolio_id).toBe("PB_SG_GLOBAL_BAL_001");
+  });
+
   it.each([
     {
       label: "missing proposal-list data",
@@ -268,18 +295,25 @@ describe("proposal api", () => {
         data: { items: [], next_cursor: 2 },
       },
     },
-  ])("rejects $label instead of confirming an empty worklist", async ({ envelope }) => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        new Response(JSON.stringify(envelope), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        })),
-    );
+  ])(
+    "rejects $label instead of confirming an empty worklist",
+    async ({ envelope }) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () =>
+            new Response(JSON.stringify(envelope), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+        ),
+      );
 
-    await expect(listProposals()).rejects.toThrow("Proposal list response was incomplete.");
-  });
+      await expect(listProposals()).rejects.toThrow(
+        "Proposal list response was incomplete.",
+      );
+    },
+  );
 
   it("loads the Gateway-backed advisory policy review queue", async () => {
     vi.stubGlobal(
