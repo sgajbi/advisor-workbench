@@ -628,6 +628,18 @@ function RiskImpactEvidence({
               <dt>Response contract</dt>
               <dd>{model.lineage.contractVersion}</dd>
             </div>
+            {model.allocation.contractVersion !== "Not reported" ? (
+              <div>
+                <dt>Allocation contract</dt>
+                <dd>{model.allocation.contractVersion}</dd>
+              </div>
+            ) : null}
+            {model.allocation.calculatorVersion !== "Not reported" ? (
+              <div>
+                <dt>Allocation calculator</dt>
+                <dd>{model.allocation.calculatorVersion}</dd>
+              </div>
+            ) : null}
             {model.lineage.decisionSupportReference ? (
               <div>
                 <dt>Decision support reference</dt>
