@@ -1396,6 +1396,18 @@ describe("ProposalLifecycleWorkspace", () => {
       "data-state",
       "failed",
     );
+    const restrictedRailHeading = screen.getByRole("heading", {
+      name: "Supporting evidence is restricted",
+    });
+    const restrictedRail = restrictedRailHeading.closest("article");
+    expect(restrictedRail).not.toBeNull();
+    expect(within(restrictedRail!).queryByText("PRP-RISK")).not.toBeInTheDocument();
+    expect(
+      within(restrictedRail!).queryByText("Approval records"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(restrictedRail!).queryByText("Active version"),
+    ).not.toBeInTheDocument();
   });
 
   it("announces confirmation only after all selected approval sources refresh", async () => {

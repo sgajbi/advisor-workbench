@@ -233,4 +233,49 @@ describe("proposal workflow context view model", () => {
       /portfolio's entire|workflow details are hidden/i,
     );
   });
+
+  it.each([
+    { permissionBlocked: true, hasRestrictedEvidence: false },
+    { permissionBlocked: false, hasRestrictedEvidence: true },
+  ])(
+    "omits cached selected facts across permission boundaries",
+    (permissionState) => {
+      const model = buildProposalQueueWorkflowContext({
+        ...baseQueueInput,
+        ...permissionState,
+        selectedEvidence: {
+          proposalId: "PRP-RESTRICTED",
+          title: "Cached selected decision",
+          summary: "Cached evidence summary",
+          currentPosture: "Cached approval posture",
+          nextAction: "Cached selected action",
+          blockers: ["Cached selected blocker"],
+          facts: [
+            { label: "Proposal", value: "PRP-RESTRICTED" },
+            { label: "Approval records", value: "2" },
+            { label: "Active version", value: "4" },
+          ],
+          sourceLabel: "Cached selected evidence",
+          boundaryNote: "Cached selected boundary",
+          hasEvidenceGap: false,
+        },
+      });
+
+      expect(model.facts).not.toEqual(
+        expect.arrayContaining([
+          { label: "Proposal", value: "PRP-RESTRICTED" },
+        ]),
+      );
+      expect(model.facts.map((fact) => fact.label)).not.toContain(
+        "Approval records",
+      );
+      expect(model.facts.map((fact) => fact.label)).not.toContain(
+        "Active version",
+      );
+      expect(model.sourceLabel).toBe("Advisory proposal lifecycle");
+      expect(`${model.title} ${model.summary} ${model.currentPosture}`).not.toMatch(
+        /cached/i,
+      );
+    },
+  );
 });
