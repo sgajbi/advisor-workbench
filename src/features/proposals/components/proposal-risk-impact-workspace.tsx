@@ -90,8 +90,6 @@ export default function ProposalRiskImpactWorkspace({
               }
             : null,
         );
-      } else {
-        setRefreshOutcome(null);
       }
       return result;
     } catch (error) {
@@ -512,9 +510,7 @@ function RiskImpactEvidence({
                   aria-label="Workflow gate reasons"
                 >
                   {model.workflowGate.reasons.map((reason) => (
-                    <li
-                      key={`${reason.source}:${reason.reason}:${reason.severity}`}
-                    >
+                    <li key={reason.id}>
                       <strong>{reason.reason}</strong> · {reason.source} ·{" "}
                       {reason.severity}
                     </li>
@@ -586,7 +582,7 @@ function RiskImpactEvidence({
               title="Missing evidence"
               empty="No missing evidence is reported."
               items={model.decision.missingEvidence.map((evidence) => ({
-                key: `${evidence.type}:${evidence.summary}`,
+                key: evidence.id,
                 label: evidence.type,
                 summary: evidence.summary,
                 badge: evidence.blocking ? "Blocking" : "Follow-up",
@@ -752,7 +748,9 @@ function refreshResultHasError(result: unknown): boolean {
     typeof result === "object" &&
     result !== null &&
     (("isError" in result && result.isError === true) ||
-      ("error" in result && result.error !== null && result.error !== undefined))
+      ("error" in result &&
+        result.error !== null &&
+        result.error !== undefined))
   );
 }
 

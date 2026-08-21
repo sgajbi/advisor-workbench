@@ -90,9 +90,7 @@ describe("proposal risk and impact view model", () => {
 
     expect(model.workflowGate.isAvailable).toBe(false);
     expect(model.workflowGate.gate).toBe("Gate not confirmed");
-    expect(model.workflowGate.nextStep).toBe(
-      "Source next step not confirmed",
-    );
+    expect(model.workflowGate.nextStep).toBe("Source next step not confirmed");
     expect(model.workflowGate.reasons).toEqual([]);
   });
 
@@ -125,9 +123,7 @@ describe("proposal risk and impact view model", () => {
     expect(model.risk.state.label).toBe("Source evidence unavailable");
     expect(model.risk.highlights).toEqual([]);
     expect(model.workflowGate.isAvailable).toBe(false);
-    expect(model.workflowGate.state.label).toBe(
-      "Source evidence unavailable",
-    );
+    expect(model.workflowGate.state.label).toBe("Source evidence unavailable");
     expect(model.workflowGate.reasons).toEqual([]);
     expect(
       model.capabilities
@@ -196,6 +192,7 @@ describe("proposal risk and impact view model", () => {
     expect(model.supportability.label).toBe("Partial source evidence");
     expect(model.decision.blockingCount).toBe(2);
     expect(model.decision.missingEvidence[0]).toMatchObject({
+      id: '["CLIENT_CONTEXT","CLIENT_CONTEXT_MISSING"]',
       type: "Client Context",
       blocking: true,
     });
