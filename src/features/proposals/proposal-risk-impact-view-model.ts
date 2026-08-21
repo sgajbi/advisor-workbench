@@ -126,6 +126,12 @@ export function buildProposalRiskImpactModel(
       calculatorVersion: data.allocation.calculator_version ?? "Not reported",
       expectedDimensions:
         data.allocation.expected_dimensions.map(businessLabel),
+      missingExpectedDimensions: data.allocation.expected_dimensions
+        .filter(
+          (dimension) =>
+            !data.allocation.views.some((view) => view.dimension === dimension),
+        )
+        .map(businessLabel),
       views: data.allocation.views.map((view) => ({
         dimension: view.dimension,
         label: businessLabel(view.dimension),

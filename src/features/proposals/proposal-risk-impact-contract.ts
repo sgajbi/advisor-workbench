@@ -434,6 +434,14 @@ function parseRisk(value: unknown): ProposalRiskImpactRiskEvidence {
 
 function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
   const item = record(value, "decision");
+  const materialChanges = array(
+    item.material_changes,
+    "decision.material_changes",
+  ).map(parseMaterialChange);
+  unique(
+    materialChanges.map(({ change_id }) => change_id),
+    "decision material change identifiers",
+  );
   return {
     state: literal(item.state, SECTION_STATES, "decision.state"),
     reason_code: requiredString(item.reason_code, "decision.reason_code"),
@@ -495,10 +503,7 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
       item.approval_requirements,
       "decision.approval_requirements",
     ).map(parseRequirement),
-    material_changes: array(
-      item.material_changes,
-      "decision.material_changes",
-    ).map(parseMaterialChange),
+    material_changes: materialChanges,
     missing_evidence: array(
       item.missing_evidence,
       "decision.missing_evidence",

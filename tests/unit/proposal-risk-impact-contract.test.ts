@@ -72,6 +72,14 @@ describe("proposal risk and impact contract", () => {
       },
     ],
     [
+      "duplicate material-change identifier",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.material_changes.push({
+          ...payload.data.decision.material_changes[0]!,
+        });
+      },
+    ],
+    [
       "unknown lifecycle vocabulary",
       (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
         payload.data.current_state = "UNKNOWN" as never;
