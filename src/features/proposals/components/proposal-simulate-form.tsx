@@ -345,6 +345,7 @@ export default function ProposalSimulateForm({
   }
 
   async function refreshPortfolioEvidence() {
+    setEvaluatedDraftFingerprint(null);
     await portfolioBookQuery.refetch({ cancelRefetch: true });
   }
 
