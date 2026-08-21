@@ -802,6 +802,17 @@ export default function ProposalLifecycleWorkspace({
               approvalsResult,
               lineageResult,
             ] = results;
+            const failedResult = results.find(
+              (result) => result.isError || result.error !== null,
+            );
+            if (failedResult) {
+              throw (
+                failedResult.error ??
+                new Error(
+                  "The selected proposal evidence refresh did not complete.",
+                )
+              );
+            }
             const refreshedProposal = proposalResult.data?.items.find(
               (proposal) =>
                 proposal.proposal_id === selectedApprovalProposal?.proposalId,

@@ -92,6 +92,8 @@ These roles describe business use, not authenticated production entitlement.
   only after the worklist and every selected evidence source refresh and reconcile successfully.
   A version advance for the same selected proposal carries confirmation onto the reconciled new
   version; changing the selected proposal still fences the earlier completion.
+- Rejects a failed compound refresh before cache promotion; if access is revoked, cached approval
+  records are hidden and the selected posture becomes restricted rather than source-current.
 - Keeps the selected decision pane beside the worklist at desktop and after it at compact widths.
 - Preserves portfolio and originating lifecycle mode when entering Proposal Detail.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;
