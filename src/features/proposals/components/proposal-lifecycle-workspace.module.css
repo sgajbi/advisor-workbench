@@ -424,7 +424,12 @@
   margin-top: 5px;
 }
 
-@media (max-width: 1100px) {
+/*
+ * The proposal workspace sits between the persistent portfolio rail and the
+ * workflow context rail. Stack the master/detail panes before either pane is
+ * forced into a narrow, table-like column on standard 1280/1366px desktops.
+ */
+@media (max-width: 1399px) {
   .decisionWorkspace {
     grid-template-columns: minmax(0, 1fr);
   }
