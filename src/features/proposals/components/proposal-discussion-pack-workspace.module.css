@@ -1,4 +1,13 @@
+.workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.discussionWorklist {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .selectedPane {
+  position: static;
   gap: 16px;
 }
 
@@ -389,6 +398,12 @@
   }
 
   .lineage div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .discussionWorklist {
     grid-template-columns: minmax(0, 1fr);
   }
 }

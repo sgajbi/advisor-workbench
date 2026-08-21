@@ -22,6 +22,23 @@ const items = [
 ] as const;
 
 describe("WorkbenchRecordSelector", () => {
+  it("exposes the reusable grid presentation without changing listbox semantics", () => {
+    render(
+      <WorkbenchRecordSelector
+        ariaLabel="Proposal worklist"
+        items={items}
+        selectedKey="review-1"
+        onSelectionChange={() => undefined}
+        layout="grid"
+      />,
+    );
+
+    expect(
+      screen.getByRole("listbox", { name: "Proposal worklist" }),
+    ).toHaveAttribute("data-layout", "grid");
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+  });
+
   it("exposes a visible and semantic single-record selection", () => {
     render(
       <WorkbenchRecordSelector
@@ -29,11 +46,13 @@ describe("WorkbenchRecordSelector", () => {
         items={[...items]}
         selectedKey="review-1"
         onSelectionChange={() => undefined}
-      />
+      />,
     );
 
     const options = screen.getAllByRole("option");
-    expect(screen.getByRole("listbox", { name: "Suitability reviews" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("listbox", { name: "Suitability reviews" }),
+    ).toBeInTheDocument();
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(options[0]).toHaveTextContent("Selected");
     expect(
@@ -51,7 +70,7 @@ describe("WorkbenchRecordSelector", () => {
         items={[...items]}
         selectedKey="review-1"
         onSelectionChange={onSelectionChange}
-      />
+      />,
     );
 
     const options = screen.getAllByRole("option");
@@ -64,7 +83,7 @@ describe("WorkbenchRecordSelector", () => {
         items={[...items]}
         selectedKey="review-2"
         onSelectionChange={onSelectionChange}
-      />
+      />,
     );
 
     fireEvent.keyDown(options[0], { key: "ArrowDown" });

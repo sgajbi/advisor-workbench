@@ -66,7 +66,7 @@ export default function ProposalDiscussionPackWorkspace({
 
   return (
     <div
-      className={lifecycleStyles.decisionWorkspace}
+      className={`${lifecycleStyles.decisionWorkspace} ${styles.workspace}`}
       data-testid="proposal-discussion-pack-workspace"
     >
       <ProposalLifecycleWorklist
@@ -87,6 +87,8 @@ export default function ProposalDiscussionPackWorkspace({
               }
             : undefined
         }
+        className={styles.discussionWorklist}
+        layout="grid"
       />
 
       <section

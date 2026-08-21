@@ -103,6 +103,20 @@
   color: var(--text);
 }
 
+.list[data-layout="grid"] .heading {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.list[data-layout="grid"] .posture {
+  justify-content: flex-start;
+}
+
+.list[data-layout="grid"] .facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

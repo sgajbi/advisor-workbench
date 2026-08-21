@@ -798,16 +798,20 @@ export default function ProposalLifecycleWorkspace({
       title={
         mode === "approval-queue"
           ? "Review desk"
-          : mode === "implementation"
-            ? "Implementation follow-up desk"
-            : model.title
+          : mode === "discussion-pack"
+            ? "Conversation preparation desk"
+            : mode === "implementation"
+              ? "Implementation follow-up desk"
+              : model.title
       }
       subtitle={
         mode === "approval-queue"
           ? "Select a proposal, confirm its source posture, and continue to the full review record."
-          : mode === "implementation"
-            ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
-            : model.subtitle
+          : mode === "discussion-pack"
+            ? "Select a proposal, verify advisor-use material, and resolve every client-control boundary before the meeting."
+            : mode === "implementation"
+              ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
+              : model.subtitle
       }
       actions={
         <Link
