@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
+import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
@@ -123,7 +124,10 @@ async function mockProposalBuilderEvaluation(page: Page) {
 
 async function mockProposalQueue(
   page: Page,
-  { includeSecondRisk = false }: { includeSecondRisk?: boolean } = {},
+  {
+    includeSecondRisk = false,
+    includeDiscussionPack = false,
+  }: { includeSecondRisk?: boolean; includeDiscussionPack?: boolean } = {},
 ) {
   await page.route(
     "**/api/bff/api/v1/platform/capabilities?**",
@@ -170,11 +174,58 @@ async function mockProposalQueue(
                     },
                   ]
                 : []),
+              ...(includeDiscussionPack
+                ? [
+                    {
+                      proposal_id: "proposal-1",
+                      portfolio_id: portfolioId,
+                      current_state: "AWAITING_CLIENT_CONSENT",
+                      current_version_no: 2,
+                      created_by: "advisor_sg_07",
+                      created_at: "2026-08-21T08:30:00Z",
+                      title: "Rebalance concentrated technology exposure",
+                    },
+                    {
+                      proposal_id: "proposal-2",
+                      portfolio_id: portfolioId,
+                      current_state: "AWAITING_CLIENT_CONSENT",
+                      current_version_no: 1,
+                      created_by: "advisor_sg_09",
+                      created_at: "2026-08-21T10:00:00Z",
+                      title: "Income mandate adjustment",
+                    },
+                  ]
+                : []),
             ],
             next_cursor: null,
           },
         },
       });
+    },
+  );
+}
+
+async function mockProposalDiscussionPack(
+  page: Page,
+  requestedProposalIds: string[],
+) {
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/discussion-pack-review\?.+/,
+    async (route) => {
+      const url = new URL(route.request().url());
+      const proposalId = url.pathname.split("/").at(-2) ?? "";
+      const versionNo = Number(url.searchParams.get("version_no"));
+      requestedProposalIds.push(proposalId);
+      const envelope = proposalDiscussionPackFixture();
+      envelope.data.proposal_id = proposalId;
+      envelope.data.title =
+        proposalId === "proposal-2"
+          ? "Income mandate adjustment"
+          : "Rebalance concentrated technology exposure";
+      envelope.data.version_no = versionNo;
+      envelope.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
+      envelope.data.lineage.proposal_version_id = `${proposalId}:${versionNo}`;
+      await route.fulfill({ json: envelope });
     },
   );
 }
@@ -893,6 +944,146 @@ test("presents source-backed implementation handoff evidence without execution o
   }
 
   await testInfo.attach("implementation-status-workspace-mobile", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+  expect(browserErrors).toEqual([]);
+});
+
+test("presents an advisor-grade discussion review without client-release overclaim", async ({
+  page,
+}, testInfo) => {
+  const browserErrors: string[] = [];
+  const requestedProposalIds: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await mockProposalQueue(page, { includeDiscussionPack: true });
+  await mockProposalDiscussionPack(page, requestedProposalIds);
+  await page.goto(
+    `/proposals?portfolioId=${portfolioId}&mode=discussion-pack`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  const workspace = page.getByTestId("proposal-discussion-pack-workspace");
+  const worklist = page.getByRole("listbox", {
+    name: "Discussion Pack Review proposals",
+  });
+  const selectedEvidence = page.getByRole("region", {
+    name: "Selected proposal conversation review",
+  });
+  await expect(workspace).toBeVisible();
+  await expect(worklist.getByRole("option")).toHaveCount(2);
+  await expect(
+    selectedEvidence.getByRole("heading", {
+      name: "Conversation controls still need advisor attention",
+    }),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByRole("heading", {
+      name: "Conversation control ledger",
+    }),
+  ).toBeVisible();
+  await expect(selectedEvidence.getByText("AI-assisted draft")).toBeVisible();
+  await expect(
+    selectedEvidence.getByText(
+      "No client consent is recorded for this version.",
+    ),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("Client release and delivery"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByRole("button", {
+      name: /publish|deliver|contact client/i,
+    }),
+  ).toHaveCount(0);
+  expect(requestedProposalIds).toEqual(["proposal-1"]);
+
+  await testInfo.attach("discussion-pack-review-workspace-desktop-default", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  const firstOption = worklist.getByRole("option").first();
+  await firstOption.focus();
+  await firstOption.press("ArrowDown");
+  await expect(
+    worklist.getByRole("option", { name: /Income mandate adjustment/i }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    selectedEvidence.getByRole("heading", {
+      name: "Income mandate adjustment",
+    }),
+  ).toBeVisible();
+  expect(requestedProposalIds).toEqual(["proposal-1", "proposal-2"]);
+
+  const refresh = selectedEvidence.getByRole("button", {
+    name: "Refresh evidence",
+  });
+  await refresh.focus();
+  await refresh.click();
+  const refreshStatus = selectedEvidence.getByTestId(
+    "workbench-refresh-status",
+  );
+  await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+  await expect(refreshStatus).toContainText(
+    "Selected proposal evidence confirmed",
+  );
+  await expect(refresh).toBeFocused();
+
+  await selectedEvidence.getByText("Evidence capability and lineage").click();
+  await expect(
+    selectedEvidence.getByText("proposal-discussion-pack-review.v1"),
+  ).toBeVisible();
+
+  await testInfo.attach("discussion-pack-review-workspace-desktop", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  for (const viewport of [
+    { width: 1440, height: 1100 },
+    { width: 1280, height: 1100 },
+    { width: 1024, height: 1200 },
+    { width: 720, height: 1100 },
+    { width: 390, height: 844 },
+  ] as const) {
+    await page.setViewportSize(viewport);
+    const [worklistBox, selectedBox] = await Promise.all([
+      worklist.boundingBox(),
+      selectedEvidence.boundingBox(),
+    ]);
+    expect(worklistBox).not.toBeNull();
+    expect(selectedBox).not.toBeNull();
+    const sideBySide =
+      (selectedBox?.x ?? 0) >=
+      (worklistBox?.x ?? 0) + (worklistBox?.width ?? 0);
+    const stacked =
+      (selectedBox?.y ?? 0) >=
+      (worklistBox?.y ?? 0) + (worklistBox?.height ?? 0);
+    expect(
+      stacked && !sideBySide,
+      `discussion worklist must lead the evidence pane at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await workspace.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+  }
+
+  await testInfo.attach("discussion-pack-review-workspace-mobile", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });

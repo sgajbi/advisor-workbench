@@ -28,20 +28,27 @@ export default function WorkbenchRecordSelector<T extends string>({
   selectedKey,
   onSelectionChange,
   className,
+  layout = "list",
 }: {
   ariaLabel: string;
   items: ReadonlyArray<WorkbenchRecordSelectorItem<T>>;
   selectedKey: T | null;
   onSelectionChange: (key: T) => void;
   className?: string;
+  layout?: "list" | "grid";
 }) {
   const optionRefs = useRef(new Map<T, HTMLButtonElement>());
   const enabledItems = items.filter((item) => !item.disabled);
-  const selectedIndex = items.findIndex((item) => item.key === selectedKey && !item.disabled);
+  const selectedIndex = items.findIndex(
+    (item) => item.key === selectedKey && !item.disabled,
+  );
   const fallbackIndex = items.findIndex((item) => !item.disabled);
   const tabStopIndex = selectedIndex >= 0 ? selectedIndex : fallbackIndex;
 
-  function moveSelection(event: KeyboardEvent<HTMLButtonElement>, currentKey: T) {
+  function moveSelection(
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentKey: T,
+  ) {
     if (!["ArrowDown", "ArrowUp", "End", "Home"].includes(event.key)) {
       return;
     }
@@ -50,14 +57,18 @@ export default function WorkbenchRecordSelector<T extends string>({
     if (enabledItems.length === 0) return;
 
     const navigationKey = event.key as NavigationKey;
-    const currentIndex = enabledItems.findIndex((item) => item.key === currentKey);
+    const currentIndex = enabledItems.findIndex(
+      (item) => item.key === currentKey,
+    );
     const nextItem =
       navigationKey === "Home"
         ? enabledItems[0]
         : navigationKey === "End"
           ? enabledItems.at(-1)
           : enabledItems[
-              (currentIndex + (navigationKey === "ArrowUp" ? -1 : 1) + enabledItems.length) %
+              (currentIndex +
+                (navigationKey === "ArrowUp" ? -1 : 1) +
+                enabledItems.length) %
                 enabledItems.length
             ];
 
@@ -73,6 +84,7 @@ export default function WorkbenchRecordSelector<T extends string>({
       aria-label={ariaLabel}
       aria-orientation="vertical"
       data-workbench-record-selector
+      data-layout={layout}
     >
       {items.map((item, index) => {
         const selected = item.key === selectedKey;
@@ -91,7 +103,8 @@ export default function WorkbenchRecordSelector<T extends string>({
             className={cx(styles.item, selected && styles.selected)}
             data-state={selected ? "selected" : "unselected"}
             onClick={() => {
-              if (!item.disabled && item.key !== selectedKey) onSelectionChange(item.key);
+              if (!item.disabled && item.key !== selectedKey)
+                onSelectionChange(item.key);
             }}
             onKeyDown={(event) => moveSelection(event, item.key)}
           >
@@ -102,7 +115,9 @@ export default function WorkbenchRecordSelector<T extends string>({
               </span>
               <span className={styles.posture}>
                 {item.status}
-                <span className={styles.selectionLabel}>{selected ? "Selected" : "Review"}</span>
+                <span className={styles.selectionLabel}>
+                  {selected ? "Selected" : "Review"}
+                </span>
               </span>
             </span>
             {item.facts?.length ? (

@@ -14,6 +14,8 @@ export default function ProposalLifecycleWorklist({
   onSelectProposal,
   defaultNextAction,
   selectedPresentation,
+  className,
+  layout,
 }: {
   ariaLabel: string;
   rows: ProposalLifecycleRow[];
@@ -25,6 +27,8 @@ export default function ProposalLifecycleWorklist({
     tone: "default" | "success" | "warn" | "danger";
     nextAction: string;
   };
+  className?: string;
+  layout?: "list" | "grid";
 }) {
   const titleId = useId();
 
@@ -42,7 +46,8 @@ export default function ProposalLifecycleWorklist({
 
       <WorkbenchRecordSelector
         ariaLabel={ariaLabel}
-        className={styles.approvalWorklist}
+        className={`${styles.approvalWorklist} ${className ?? ""}`}
+        layout={layout}
         selectedKey={selectedProposalId}
         onSelectionChange={onSelectProposal}
         items={rows.map((row) => {
