@@ -8,12 +8,9 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Advisor Book, Portfolio Review, Positions,
-Transactions, Income And Activity, Projected Cash Movement, Portfolio Intake, Portfolio Allocation,
-Advisory Overview, Performance Summary,
-Performance Analysis, Risk Review, Performance Evidence, Performance Advisor Brief, Report Centre,
-and Data Product Catalogue are the 16 surfaces that have passed the complete guide standard. The
-remaining 20 dedicated guides are explicit work under
+screens or modes, and two compatibility aliases**. Twenty-one active surfaces now have one
+implementation-backed guide that passes the complete guide standard. The remaining 15 dedicated
+guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
 screen marked “guide planned” is implemented, but its complete business operating guide has not
@@ -143,7 +140,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | [Risk and Impact](Risk-And-Impact-Screen-Guide) | `/proposals?mode=risk-impact` | Capability-disabled | Guide available | Gateway, Advise, Core, and Risk |
 | Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
-| Proposal Detail | `/proposals/{proposalId}` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| [Proposal Detail](Proposal-Detail-Screen-Guide) | `/proposals/{proposalId}` | Capability-disabled | Guide available | Gateway, Advise, Report, and Lotus AI |
 
 Simulation is an in-screen Proposal Builder result state, not a separately addressable mode, so it
 belongs in the Proposal Builder guide. Each proposal guide must explain what is only evaluated,

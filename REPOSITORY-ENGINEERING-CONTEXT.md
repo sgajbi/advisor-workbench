@@ -489,12 +489,17 @@ Current repository posture:
     the superseded MUI action panel or add this workflow to global CSS.
     Approval Queue is an exception-led selected-record review desk over one cursor-bounded Gateway
     proposal window. Keep worklist selection and the selected proposal's source-supported stage,
-    version, recorded date, posture, and next action visible together at desktop; stack them in the
-    same document order for tablet, narrow, and zoomed layouts. Preserve source-window uncertainty,
-    restricted/unavailable failure boundaries, and originating portfolio/mode in the detail handoff.
-    Do not describe proposal stage as maker-checker proof, expose raw creator ids as human identity,
-    invent owner/SLA/client/priority facts, or duplicate Proposal Detail's approval and evidence
-    actions into the queue.
+    version, creator-record presence, recorded date, and next action visible together at desktop;
+    stack them in the same document order for tablet, narrow, and zoomed layouts. Load detail,
+    workflow, approvals, and lineage for the selected proposal only and reconcile proposal identity,
+    workflow state, and active version before publishing maker-checker posture. An empty approval
+    register is unconfirmed requirements, not approval-not-required. Preserve source-window
+    uncertainty, restricted/unavailable/conflict failure boundaries, and originating portfolio/mode
+    in the detail handoff. Use the shared source-refresh lifecycle so compound-query failure,
+    late-response fencing, confirmation, and conditional focus restoration remain consistent with
+    Risk and Impact. Do not describe proposal stage as maker-checker proof, expose raw creator ids as
+    human identity, invent owner/SLA/client/priority facts, fan detail reads across the worklist, or
+    duplicate Proposal Detail's approval and evidence actions into the queue.
     The detail route records advisor-use narrative
     review and reviewed report-package requests through Gateway proposal endpoints only. It settles
     primary proposal detail independently from workflow, approval, and lineage reads, keeps

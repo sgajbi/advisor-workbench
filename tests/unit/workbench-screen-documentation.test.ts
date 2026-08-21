@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 20,
-      coverageExceptions: 16,
-      unmappedGuides: 16,
+      mappedGuides: 21,
+      coverageExceptions: 15,
+      unmappedGuides: 15,
     });
   });
 
@@ -117,7 +117,47 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("one selected proposal");
     expect(guide).toContain("number shown is **in this view**");
+    expect(guide).toContain("Derives maker-checker posture from the complete selected evidence set");
+    expect(guide).toContain("empty approval register as unconfirmed requirements");
     expect(guide).toContain("route context does not replace source proposal identity");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Proposal Detail to its decision, evidence, action, and return-context guide", () => {
+    const registry = loadRegistry();
+    const proposalDetail = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "proposal-detail",
+    );
+
+    expect(proposalDetail).toMatchObject({
+      routePattern: "/proposals/{proposalId}",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Proposal-Detail-Screen-Guide",
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-advise",
+        "lotus-report",
+        "lotus-ai",
+      ],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/components/proposal-detail-view.tsx",
+        "src/features/proposals/proposal-action-evidence.ts",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+        "tests/e2e/proposal-memo-posture.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Proposal-Detail-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("Gateway persistence and the owning source reads reconcile");
+    expect(guide).toContain("routine/restricted/unavailable/not-found return context");
+    expect(guide).toContain("does not:\n\n- calculate suitability");
     expect(validate(registry).errors).toEqual([]);
   });
 
