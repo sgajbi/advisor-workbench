@@ -552,6 +552,12 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
     selectedEvidence.getByText("corr-proposal-risk-impact-001"),
   ).toBeVisible();
   await expect(
+    selectedEvidence.getByText("advisory-simulation.v1"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("lotus-core.allocation-calculator.v1"),
+  ).toBeVisible();
+  await expect(
     selectedEvidence.getByText("Benchmark and limits"),
   ).toBeVisible();
   await expect(selectedEvidence.getByText("Scenario analysis")).toBeVisible();

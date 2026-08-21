@@ -685,6 +685,12 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByText("proposal-risk-impact.v1"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Allocation contract")).toBeInTheDocument();
+    expect(screen.getByText("advisory-simulation.v1")).toBeInTheDocument();
+    expect(screen.getByText("Allocation calculator")).toBeInTheDocument();
+    expect(
+      screen.getByText("lotus-core.allocation-calculator.v1"),
+    ).toBeInTheDocument();
   });
 
   it("names expected allocation views missing from partial source evidence", async () => {
