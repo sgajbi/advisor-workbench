@@ -721,5 +721,13 @@ for (const viewport of [
       body: await page.screenshot({ fullPage: true }),
       contentType: "image/png",
     });
+
+    await page.getByLabel("Additional Cash Assumption").fill("12500");
+    await expect(
+      page.getByRole("status", { name: "Proposal evaluation status" })
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("status", { name: "Proposal evaluation summary" })
+    ).toHaveCount(0);
   });
 }
