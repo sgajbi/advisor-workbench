@@ -257,7 +257,7 @@ describe("proposal api", () => {
       ),
     );
 
-    const data = await getProposalRiskImpact(
+    const envelope = await getProposalRiskImpact(
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
     );
@@ -266,8 +266,9 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/proposals/PRP-RISK/risk-impact`,
       { cache: "no-store" },
     );
-    expect(data.proposal_id).toBe("PRP-RISK");
-    expect(data.portfolio_id).toBe("PB_SG_GLOBAL_BAL_001");
+    expect(envelope.correlation_id).toBe("corr-proposal-risk-impact-001");
+    expect(envelope.data.proposal_id).toBe("PRP-RISK");
+    expect(envelope.data.portfolio_id).toBe("PB_SG_GLOBAL_BAL_001");
   });
 
   it.each([

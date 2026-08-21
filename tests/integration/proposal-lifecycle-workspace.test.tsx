@@ -80,7 +80,7 @@ const listProposalsMock = vi.fn(
 );
 const getProposalRiskImpactMock = vi.fn(
   async (_proposalId: string, _portfolioId: string) =>
-    proposalRiskImpactFixture().data,
+    proposalRiskImpactFixture(),
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
@@ -193,7 +193,7 @@ describe("ProposalLifecycleWorkspace", () => {
     getProposalRiskImpactMock.mockReset();
     getProposalRiskImpactMock.mockImplementation(
       async (_proposalId: string, _portfolioId: string) =>
-        proposalRiskImpactFixture().data,
+        proposalRiskImpactFixture(),
     );
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
@@ -285,6 +285,9 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("listbox", { name: "Risk and Impact proposals" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("region", { name: "Proposals in this view" }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByText("Current and proposed allocation"),
     ).toBeInTheDocument();
     expect(
@@ -295,6 +298,12 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText("Risk review is required before client discussion."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Workflow gate reasons")).toHaveTextContent(
+      "Material Concentration Change · Rule Engine · High",
+    );
+    expect(
+      screen.getByText("corr-proposal-risk-impact-001"),
     ).toBeInTheDocument();
     expect(screen.getByText("Benchmark and limits")).toBeInTheDocument();
     expect(screen.getAllByText("Not supported")).toHaveLength(3);
@@ -307,7 +316,7 @@ describe("ProposalLifecycleWorkspace", () => {
   it("shows an explicit no-fallback error and restores retry focus after source recovery", async () => {
     getProposalRiskImpactMock
       .mockRejectedValueOnce(new Error("Gateway unavailable"))
-      .mockResolvedValueOnce(proposalRiskImpactFixture().data);
+      .mockResolvedValueOnce(proposalRiskImpactFixture());
 
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
@@ -353,13 +362,13 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     getProposalRiskImpactMock.mockImplementation(
       async (proposalId: string, _portfolioId: string) => {
-        const data = proposalRiskImpactFixture().data;
-        data.proposal_id = proposalId;
-        data.title =
+        const envelope = proposalRiskImpactFixture();
+        envelope.data.proposal_id = proposalId;
+        envelope.data.title =
           proposalId === "PRP-RISK-INCOME"
             ? "Income allocation review"
             : "Technology concentration trim";
-        return data;
+        return envelope;
       },
     );
 
@@ -393,6 +402,69 @@ describe("ProposalLifecycleWorkspace", () => {
       "PRP-RISK-INCOME",
       "PB_SG_GLOBAL_BAL_001",
     );
+  });
+
+  it("does not move focus back to a refresh control after the advisor changes selection", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        proposalListFixture.items[0],
+        {
+          ...proposalListFixture.items[0],
+          proposal_id: "PRP-RISK-INCOME",
+          title: "Income allocation review",
+        },
+      ],
+      next_cursor: null,
+    });
+    let settleRefresh:
+      | ((value: ReturnType<typeof proposalRiskImpactFixture>) => void)
+      | undefined;
+    getProposalRiskImpactMock
+      .mockResolvedValueOnce(proposalRiskImpactFixture())
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof proposalRiskImpactFixture>>(
+            (resolve) => {
+              settleRefresh = resolve;
+            },
+          ),
+      )
+      .mockImplementationOnce(async (proposalId: string) => {
+        const envelope = proposalRiskImpactFixture();
+        envelope.data.proposal_id = proposalId;
+        envelope.data.title = "Income allocation review";
+        return envelope;
+      });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    const refresh = await screen.findByRole("button", {
+      name: "Refresh source evidence",
+    });
+    refresh.focus();
+    fireEvent.click(refresh);
+
+    const nextProposal = screen.getByRole("option", {
+      name: /Income allocation review/,
+    });
+    nextProposal.focus();
+    fireEvent.click(nextProposal);
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Income allocation review",
+      }),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      settleRefresh?.(proposalRiskImpactFixture());
+    });
+    await waitFor(() => expect(nextProposal).toHaveFocus());
   });
 
   it("keeps permission-blocked evidence distinct from service failure", async () => {

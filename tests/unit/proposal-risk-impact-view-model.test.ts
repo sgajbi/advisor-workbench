@@ -5,9 +5,7 @@ import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 
 describe("proposal risk and impact view model", () => {
   it("presents source-owned evidence as a decision brief without inferring approval", () => {
-    const model = buildProposalRiskImpactModel(
-      proposalRiskImpactFixture().data,
-    );
+    const model = buildProposalRiskImpactModel(proposalRiskImpactFixture());
 
     expect(model.identity).toMatchObject({
       title: "Technology concentration trim",
@@ -24,12 +22,11 @@ describe("proposal risk and impact view model", () => {
       severity: "High",
     });
     expect(model.workflowGate.disclaimer).toContain("does not prove");
+    expect(model.lineage.correlationId).toBe("corr-proposal-risk-impact-001");
   });
 
   it("keeps current and proposed source values separate without calculating a delta", () => {
-    const model = buildProposalRiskImpactModel(
-      proposalRiskImpactFixture().data,
-    );
+    const model = buildProposalRiskImpactModel(proposalRiskImpactFixture());
     const equity = model.allocation.views[0]?.rows[0];
 
     expect(equity).toMatchObject({
@@ -43,9 +40,7 @@ describe("proposal risk and impact view model", () => {
   });
 
   it("makes unsupported capability boundaries visible", () => {
-    const model = buildProposalRiskImpactModel(
-      proposalRiskImpactFixture().data,
-    );
+    const model = buildProposalRiskImpactModel(proposalRiskImpactFixture());
 
     expect(model.capabilities).toEqual(
       expect.arrayContaining([
@@ -70,9 +65,9 @@ describe("proposal risk and impact view model", () => {
   });
 
   it("preserves partial evidence and blocking missing-evidence posture", () => {
-    const data = proposalRiskImpactFixture().data;
-    data.overall_state = "partial";
-    data.decision.missing_evidence = [
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.overall_state = "partial";
+    envelope.data.decision.missing_evidence = [
       {
         evidence_type: "CLIENT_CONTEXT",
         reason_code: "CLIENT_CONTEXT_MISSING",
@@ -82,7 +77,7 @@ describe("proposal risk and impact view model", () => {
       },
     ];
 
-    const model = buildProposalRiskImpactModel(data);
+    const model = buildProposalRiskImpactModel(envelope);
     expect(model.supportability.label).toBe("Partial source evidence");
     expect(model.decision.blockingCount).toBe(2);
     expect(model.decision.missingEvidence[0]).toMatchObject({

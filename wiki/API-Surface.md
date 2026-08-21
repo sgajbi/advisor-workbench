@@ -82,11 +82,13 @@ promote dormant labels into product ownership just because historical route file
   ordering, lifecycle handoffs, and recovery apply only to the returned source window; a retry
   repeats the same query identity and never calls Advise directly.
 - Risk and Impact reads one selected proposal through Gateway
-  `GET /api/v1/proposals/{proposal_id}/risk-impact?portfolio_id={portfolio_id}` using the browser's
-  `/api/bff/api/v1/...` boundary. The `proposal-risk-impact.v1` projection composes source-owned
-  proposal, current/proposed allocation, risk, workflow-gate, capability, and lineage evidence.
-  Workbench never fans this detail read across the worklist and does not calculate risk, allocation
-  delta, suitability, mandate compliance, approval, or execution posture.
+  `GET /api/v1/proposals/{proposal_id}/risk-impact` using the browser's `/api/bff/api/v1/...`
+  boundary. The route has no portfolio query parameter; Workbench validates the source-returned
+  portfolio against the selected portfolio before rendering. The `proposal-risk-impact.v1`
+  projection composes source-owned proposal, current/proposed allocation, risk, workflow-gate,
+  capability, and lineage evidence. Workbench never fans this detail read across the worklist and
+  does not calculate risk, allocation delta, suitability, mandate compliance, approval, or
+  execution posture.
 - Risk Review is currently served through `/performance` route mode selection, not a separate
   top-level URL
 - Performance Summary composes Gateway
