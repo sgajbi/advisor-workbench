@@ -510,6 +510,35 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("names expected allocation views missing from partial source evidence", async () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.overall_state = "partial";
+    envelope.data.allocation.state = "partial";
+    envelope.data.allocation.expected_dimensions.push("currency", "sector");
+    getProposalRiskImpactMock.mockResolvedValueOnce(envelope);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Some allocation views are unavailable",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "The source expected Currency, Sector but did not return those comparisons. Available views remain visible; no missing allocation is inferred.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Asset Class allocation comparison"),
+    ).toBeInTheDocument();
+  });
+
   it("does not request evidence when the selected proposal version is missing", async () => {
     const { current_version_no: _currentVersionNo, ...proposalWithoutVersion } =
       proposalListFixture.items[0];

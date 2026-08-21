@@ -281,6 +281,13 @@ function RiskImpactEvidence({
 
         {model.allocation.views.length > 0 && allocationView ? (
           <>
+            {model.allocation.missingExpectedDimensions.length > 0 ? (
+              <ScreenStatePanel
+                kind="partial"
+                title="Some allocation views are unavailable"
+                body={`The source expected ${model.allocation.missingExpectedDimensions.join(", ")} but did not return those comparisons. Available views remain visible; no missing allocation is inferred.`}
+              />
+            ) : null}
             <div className={styles.dimensionControl}>
               <label htmlFor="risk-impact-dimension">Allocation view</label>
               <select

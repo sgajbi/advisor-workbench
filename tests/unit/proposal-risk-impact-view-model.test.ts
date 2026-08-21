@@ -69,6 +69,17 @@ describe("proposal risk and impact view model", () => {
     expect(equity).not.toHaveProperty("delta");
   });
 
+  it("names expected allocation dimensions that the source did not return", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.allocation.state = "partial";
+    envelope.data.allocation.expected_dimensions.push("currency", "sector");
+
+    expect(
+      buildProposalRiskImpactModel(envelope).allocation
+        .missingExpectedDimensions,
+    ).toEqual(["Currency", "Sector"]);
+  });
+
   it("makes unsupported capability boundaries visible", () => {
     const model = buildProposalRiskImpactModel(proposalRiskImpactFixture());
 

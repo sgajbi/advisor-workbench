@@ -79,6 +79,8 @@ decision, clear a gate, approve suitability, or create an order.
   version, decimal transport, vocabulary, capability registry, and duplicate identifiers before
   rendering evidence.
 - Keeps exact current and proposed allocation values separate and aligns only their display rows.
+- Names expected allocation dimensions that are absent from a partial source response before showing
+  the available comparisons.
 - Presents risk observations, workflow gates, exceptions, limitations, capability posture, and
   lineage without promoting them into browser-authored conclusions.
 - Preserves selection identity, refresh focus, and proposal-detail route context.
