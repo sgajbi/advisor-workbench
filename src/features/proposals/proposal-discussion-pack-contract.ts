@@ -387,6 +387,33 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("client release and delivery capabilities must remain unsupported");
   }
+  const capabilityOwners: Record<
+    (typeof PROPOSAL_DISCUSSION_CAPABILITY_KEYS)[number],
+    "lotus-advise" | "lotus-report" | null
+  > = {
+    proposal_identity: "lotus-advise",
+    advisor_narrative: "lotus-advise",
+    advisor_memo: "lotus-advise",
+    disclosure_policy: "lotus-advise",
+    report_package: "lotus-report",
+    approval_and_consent_records: "lotus-advise",
+    client_release: null,
+    client_delivery: null,
+  };
+  if (
+    data.capabilities.some((capability) => {
+      const expectedOwner = capabilityOwners[capability.key];
+      return (
+        (capability.source_service !== null &&
+          capability.source_service !== expectedOwner) ||
+        (capability.state === "supported" &&
+          capability.source_service !== expectedOwner) ||
+        (expectedOwner === null && capability.source_service !== null)
+      );
+    })
+  ) {
+    invalid("capability source owner does not match its evidence family");
+  }
 
   return {
     correlation_id: correlationId,
