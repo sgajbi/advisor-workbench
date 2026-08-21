@@ -37,8 +37,18 @@ describe("app route wrappers", () => {
   });
 
   it("mounts the proposal detail route for gateway-backed advisory posture", async () => {
-    await expect(
-      ProposalDetailPage({ params: Promise.resolve({ proposalId: "PR_1001" }) })
-    ).resolves.toBeTruthy();
+    const route = await ProposalDetailPage({
+      params: Promise.resolve({ proposalId: "PR_1001" }),
+      searchParams: Promise.resolve({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        fromMode: "risk-impact",
+      }),
+    });
+
+    expect(route.props).toMatchObject({
+      proposalId: "PR_1001",
+      returnPortfolioId: "PB_SG_GLOBAL_BAL_001",
+      returnMode: "risk-impact",
+    });
   });
 });

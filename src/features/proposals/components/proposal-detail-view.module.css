@@ -30,6 +30,31 @@
   text-align: right;
 }
 
+.returnLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.38rem 0.7rem;
+  border: 1px solid var(--portfolio-ui-border, #d7dde7);
+  border-radius: 6px;
+  background: var(--portfolio-ui-surface-container-lowest, #fff);
+  color: var(--portfolio-ui-ink, #0f172a);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-decoration: none;
+}
+
+.returnLink:hover {
+  border-color: var(--brand-accent, #57799d);
+  background: var(--portfolio-ui-surface-container-low, #f8fafc);
+}
+
+.returnLink:focus-visible {
+  outline: 2px solid var(--brand-accent, #57799d);
+  outline-offset: 2px;
+}
+
 .workspaceGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(330px, 380px);
