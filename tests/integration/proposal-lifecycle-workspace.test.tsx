@@ -318,6 +318,17 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByText("Risk review is required before client discussion."),
     ).toBeInTheDocument();
+    const decisionBrief = screen
+      .getByRole("heading", { level: 4, name: "Requires Risk Review" })
+      .closest("section");
+    expect(decisionBrief).not.toBeNull();
+    expect(
+      within(decisionBrief!).getByText("Workflow gate"),
+    ).toBeInTheDocument();
+    expect(
+      within(decisionBrief!).getByText("Risk Review Required"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 blocking in register")).toBeInTheDocument();
     expect(screen.getByLabelText("Workflow gate reasons")).toHaveTextContent(
       "Material Concentration Change · Rule Engine · High",
     );
@@ -717,8 +728,17 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Decision not confirmed")).toBeInTheDocument();
-    expect(screen.getByText("Not confirmed")).toBeInTheDocument();
-    expect(screen.queryByText("0 blocking")).not.toBeInTheDocument();
+    const decisionBrief = screen
+      .getByRole("heading", { level: 4, name: "Decision not confirmed" })
+      .closest("section");
+    expect(decisionBrief).not.toBeNull();
+    expect(
+      within(decisionBrief!).getByText("Workflow gate"),
+    ).toBeInTheDocument();
+    expect(
+      within(decisionBrief!).getByText("Risk Review Required"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/blocking in register/)).not.toBeInTheDocument();
     expect(
       screen.queryByText("No active approval requirement is reported."),
     ).not.toBeInTheDocument();

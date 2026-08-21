@@ -250,6 +250,12 @@ describe("proposal risk and impact contract", () => {
       },
     ],
     [
+      "top-level status",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.top_level_status = null;
+      },
+    ],
+    [
       "recommended next action",
       (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
         payload.data.decision.recommended_next_action = null;
@@ -274,6 +280,38 @@ describe("proposal risk and impact contract", () => {
         "RISK_REVIEW",
       ),
     ).toThrow(/ready decision requires/);
+  });
+
+  it("rejects a decision status that contradicts the top-level status", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.decision.decision_status = "READY_FOR_CLIENT_REVIEW";
+    payload.data.decision.top_level_status = "BLOCKED";
+    payload.data.decision.recommended_next_action = "DISCUSS_WITH_CLIENT";
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/decision status does not match the top-level status/);
+  });
+
+  it("rejects a decision status that contradicts its next action", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.decision.recommended_next_action = "DISCUSS_WITH_CLIENT";
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/decision status does not match the recommended next action/);
   });
 
   it.each([
@@ -379,6 +417,29 @@ describe("proposal risk and impact contract", () => {
       ),
     ).toThrow(/ready workflow gate requires/);
   });
+
+  it.each([
+    ["BLOCKED", "RISK_REVIEW"],
+    ["RISK_REVIEW_REQUIRED", "FIX_INPUT"],
+    ["EXECUTION_READY", "NONE"],
+  ] as const)(
+    "rejects a ready %s gate paired with %s",
+    (gate, recommendedNextStep) => {
+      const payload = proposalRiskImpactFixture();
+      payload.data.workflow_gate.gate = gate;
+      payload.data.workflow_gate.recommended_next_step = recommendedNextStep;
+
+      expect(() =>
+        parseProposalRiskImpactEnvelope(
+          payload,
+          "PRP-RISK",
+          "PB_SG_GLOBAL_BAL_001",
+          3,
+          "RISK_REVIEW",
+        ),
+      ).toThrow(/workflow gate does not match the recommended next step/);
+    },
+  );
 
   it.each([
     [
@@ -501,6 +562,14 @@ describe("proposal risk and impact contract", () => {
   ] as const)("rejects a ready %s gate without reasons", (gate) => {
     const payload = proposalRiskImpactFixture();
     payload.data.workflow_gate.gate = gate;
+    payload.data.workflow_gate.recommended_next_step = (
+      {
+        BLOCKED: "FIX_INPUT",
+        RISK_REVIEW_REQUIRED: "RISK_REVIEW",
+        COMPLIANCE_REVIEW_REQUIRED: "COMPLIANCE_REVIEW",
+        CLIENT_CONSENT_REQUIRED: "REQUEST_CLIENT_CONSENT",
+      } as const
+    )[gate];
     payload.data.workflow_gate.reasons = [];
 
     expect(() =>

@@ -105,6 +105,48 @@ const GATE_REASON_SOURCES = [
   "DATA_QUALITY",
 ] as const;
 
+const WORKFLOW_GATE_NEXT_STEP = {
+  BLOCKED: "FIX_INPUT",
+  RISK_REVIEW_REQUIRED: "RISK_REVIEW",
+  COMPLIANCE_REVIEW_REQUIRED: "COMPLIANCE_REVIEW",
+  CLIENT_CONSENT_REQUIRED: "REQUEST_CLIENT_CONSENT",
+  EXECUTION_READY: "EXECUTE",
+  NONE: "NONE",
+} as const satisfies Record<
+  (typeof GATES)[number],
+  (typeof GATE_NEXT_STEPS)[number]
+>;
+
+const DECISION_STATUS_TOP_LEVELS = {
+  READY_FOR_CLIENT_REVIEW: ["READY"],
+  REQUIRES_RISK_REVIEW: ["READY", "PENDING_REVIEW"],
+  REQUIRES_COMPLIANCE_REVIEW: ["READY", "PENDING_REVIEW"],
+  REQUIRES_CLIENT_CONSENT: ["READY", "PENDING_REVIEW"],
+  BLOCKED_REMEDIATION_REQUIRED: ["BLOCKED"],
+  INSUFFICIENT_EVIDENCE: ["READY", "PENDING_REVIEW"],
+  REVISION_RECOMMENDED: ["PENDING_REVIEW"],
+} as const satisfies Record<
+  (typeof DECISION_STATUSES)[number],
+  readonly (typeof TOP_LEVEL_STATUSES)[number][]
+>;
+
+const DECISION_STATUS_NEXT_ACTIONS = {
+  READY_FOR_CLIENT_REVIEW: ["DISCUSS_WITH_CLIENT"],
+  REQUIRES_RISK_REVIEW: ["REVIEW_RISK"],
+  REQUIRES_COMPLIANCE_REVIEW: ["REVIEW_COMPLIANCE"],
+  REQUIRES_CLIENT_CONSENT: ["DISCUSS_WITH_CLIENT"],
+  BLOCKED_REMEDIATION_REQUIRED: ["FIX_INPUT"],
+  INSUFFICIENT_EVIDENCE: [
+    "REQUEST_CLIENT_CONTEXT",
+    "REQUEST_MANDATE_CONTEXT",
+    "REVISE_PROPOSAL",
+  ],
+  REVISION_RECOMMENDED: ["REVISE_PROPOSAL"],
+} as const satisfies Record<
+  (typeof DECISION_STATUSES)[number],
+  readonly (typeof NEXT_ACTIONS)[number][]
+>;
+
 export type ProposalRiskImpactSectionState = (typeof SECTION_STATES)[number];
 export type ProposalRiskImpactOverallState = (typeof OVERALL_STATES)[number];
 export type ProposalRiskImpactAllocationDimension =
@@ -620,13 +662,34 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
   if (
     state === "ready" &&
     (!decision.decision_status ||
+      !decision.top_level_status ||
       !decision.primary_summary ||
       !decision.recommended_next_action ||
       !decision.confidence)
   ) {
     invalid(
-      "ready decision requires decision_status, primary_summary, recommended_next_action, and confidence",
+      "ready decision requires decision_status, top_level_status, primary_summary, recommended_next_action, and confidence",
     );
+  }
+  if (
+    state === "ready" &&
+    decision.decision_status &&
+    decision.top_level_status &&
+    !DECISION_STATUS_TOP_LEVELS[decision.decision_status].some(
+      (status) => status === decision.top_level_status,
+    )
+  ) {
+    invalid("decision status does not match the top-level status");
+  }
+  if (
+    state === "ready" &&
+    decision.decision_status &&
+    decision.recommended_next_action &&
+    !DECISION_STATUS_NEXT_ACTIONS[decision.decision_status].some(
+      (action) => action === decision.recommended_next_action,
+    )
+  ) {
+    invalid("decision status does not match the recommended next action");
   }
   return decision;
 }
@@ -741,6 +804,15 @@ function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
     (!workflowGate.gate || !workflowGate.recommended_next_step)
   ) {
     invalid("ready workflow gate requires gate and recommended_next_step");
+  }
+  if (
+    state === "ready" &&
+    workflowGate.gate &&
+    workflowGate.recommended_next_step &&
+    WORKFLOW_GATE_NEXT_STEP[workflowGate.gate] !==
+      workflowGate.recommended_next_step
+  ) {
+    invalid("workflow gate does not match the recommended next step");
   }
   if (
     state === "ready" &&
