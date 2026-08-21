@@ -76,6 +76,10 @@ import {
   type ProposalImplementationStatusEnvelope,
 } from "./proposal-implementation-status-contract";
 import {
+  parseProposalDiscussionPackEnvelope,
+  type ProposalDiscussionPackEnvelope,
+} from "./proposal-discussion-pack-contract";
+import {
   fetchWorkbenchJson,
   observeWorkbenchMutation,
 } from "@/features/workbench/api-client";
@@ -640,6 +644,29 @@ export async function getProposalRiskImpact(
     "proposal risk and impact",
   );
   return parseProposalRiskImpactEnvelope(
+    envelope,
+    proposalId,
+    portfolioId,
+    versionNo,
+    currentState,
+  );
+}
+
+export async function getProposalDiscussionPack(
+  proposalId: string,
+  portfolioId: string,
+  versionNo: number,
+  currentState: string,
+): Promise<ProposalDiscussionPackEnvelope> {
+  const query = new URLSearchParams({
+    portfolio_id: portfolioId,
+    version_no: String(versionNo),
+  });
+  const envelope = await fetchWorkbenchJson<unknown>(
+    `${BFF_PROXY_BASE}/proposals/${encodeURIComponent(proposalId)}/discussion-pack-review?${query}`,
+    "proposal discussion pack review",
+  );
+  return parseProposalDiscussionPackEnvelope(
     envelope,
     proposalId,
     portfolioId,
