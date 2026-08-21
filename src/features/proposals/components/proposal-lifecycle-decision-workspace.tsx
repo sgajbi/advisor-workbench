@@ -44,7 +44,12 @@ export default function ProposalLifecycleDecisionWorkspace({
   const selectionIdentity = selectedProposal
     ? `${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
     : null;
-  const sourceRefresh = useSourceRefreshAction({
+  const {
+    actionRef: refreshActionRef,
+    refresh,
+    refreshState,
+    reset: resetRefresh,
+  } = useSourceRefreshAction({
     identity: selectionIdentity,
     isRefreshing,
     hasRefreshFailure,
@@ -65,7 +70,7 @@ export default function ProposalLifecycleDecisionWorkspace({
         rows={rows}
         selectedProposalId={selectedProposal.proposalId}
         onSelectProposal={(proposalId) => {
-          sourceRefresh.reset();
+          resetRefresh();
           onSelectProposal(proposalId);
         }}
       />
@@ -96,9 +101,9 @@ export default function ProposalLifecycleDecisionWorkspace({
           </SemanticBadge>
         </div>
 
-        {sourceRefresh.refreshState ? (
+        {refreshState ? (
           <ApprovalEvidenceRefreshStatus
-            state={sourceRefresh.refreshState}
+            state={refreshState}
             requestedContext={contextLabel}
             confirmedContext={evidence ? contextLabel : "Not confirmed"}
             hasConfirmedEvidence={Boolean(evidence)}
@@ -127,12 +132,12 @@ export default function ProposalLifecycleDecisionWorkspace({
             body="The selected proposal's source evidence could not be confirmed. Lifecycle state alone is not shown as maker-checker readiness."
             action={
               <SourceRefreshAction
-                ref={sourceRefresh.actionRef}
+                ref={refreshActionRef}
                 refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                 idleLabel="Retry approval evidence"
                 busyLabel="Retrying approval evidence…"
                 isRefreshing={isRefreshing}
-                onRefresh={sourceRefresh.refresh}
+                onRefresh={refresh}
               />
             }
             surface="default"
@@ -144,12 +149,12 @@ export default function ProposalLifecycleDecisionWorkspace({
             body="Gateway did not return one complete selected-proposal evidence set. Refresh before relying on this review."
             action={
               <SourceRefreshAction
-                ref={sourceRefresh.actionRef}
+                ref={refreshActionRef}
                 refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                 idleLabel="Refresh approval evidence"
                 busyLabel="Refreshing approval evidence…"
                 isRefreshing={isRefreshing}
-                onRefresh={sourceRefresh.refresh}
+                onRefresh={refresh}
               />
             }
             surface="default"
@@ -162,12 +167,12 @@ export default function ProposalLifecycleDecisionWorkspace({
               body={evidence.posture.summary}
               action={
                 <SourceRefreshAction
-                  ref={sourceRefresh.actionRef}
+                  ref={refreshActionRef}
                   refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                   idleLabel="Recheck source evidence"
                   busyLabel="Rechecking source evidence…"
                   isRefreshing={isRefreshing}
-                  onRefresh={sourceRefresh.refresh}
+                  onRefresh={refresh}
                 />
               }
               surface="default"
@@ -182,8 +187,8 @@ export default function ProposalLifecycleDecisionWorkspace({
             evidence={evidence}
             proposalHref={selectedProposal.href}
             isRefreshing={isRefreshing}
-            onRefresh={sourceRefresh.refresh}
-            refreshActionRef={sourceRefresh.actionRef}
+            onRefresh={refresh}
+            refreshActionRef={refreshActionRef}
           />
         )}
       </section>

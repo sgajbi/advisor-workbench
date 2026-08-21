@@ -53,7 +53,12 @@ export default function ProposalRiskImpactWorkspace({
   const selectionIdentity = selectedProposal
     ? `${portfolioId}:${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
     : null;
-  const sourceRefresh = useSourceRefreshAction({
+  const {
+    actionRef: refreshActionRef,
+    refresh,
+    refreshState,
+    reset: resetRefresh,
+  } = useSourceRefreshAction({
     identity: selectionIdentity,
     isRefreshing,
     hasRefreshFailure,
@@ -61,7 +66,7 @@ export default function ProposalRiskImpactWorkspace({
   });
 
   function selectProposal(proposalId: string) {
-    sourceRefresh.reset();
+    resetRefresh();
     onSelectProposal(proposalId);
   }
 
@@ -121,18 +126,18 @@ export default function ProposalRiskImpactWorkspace({
                 body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
                 action={
                   <SourceRefreshAction
-                    ref={sourceRefresh.actionRef}
+                    ref={refreshActionRef}
                     refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
                     idleLabel="Retry source evidence"
                     busyLabel="Retrying source evidence"
                     isRefreshing={isRefreshing}
-                    onRefresh={sourceRefresh.refresh}
+                    onRefresh={refresh}
                   />
                 }
               />
-              {sourceRefresh.refreshState ? (
+              {refreshState ? (
                 <RiskEvidenceRefreshStatus
-                  state={sourceRefresh.refreshState}
+                  state={refreshState}
                   requestedContext={selectedRefreshContext}
                   confirmedContext="No confirmed evidence"
                   hasConfirmedEvidence={false}
@@ -145,9 +150,9 @@ export default function ProposalRiskImpactWorkspace({
               model={model}
               proposalHref={selectedProposal.href}
               refreshing={isRefreshing}
-              refreshState={sourceRefresh.refreshState}
-              onRefresh={sourceRefresh.refresh}
-              refreshActionRef={sourceRefresh.actionRef}
+              refreshState={refreshState}
+              onRefresh={refresh}
+              refreshActionRef={refreshActionRef}
             />
           )}
         </section>
