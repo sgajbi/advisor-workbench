@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 19,
-      coverageExceptions: 17,
-      unmappedGuides: 17,
+      mappedGuides: 20,
+      coverageExceptions: 16,
+      unmappedGuides: 16,
     });
   });
 
@@ -118,6 +118,41 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("one selected proposal");
     expect(guide).toContain("number shown is **in this view**");
     expect(guide).toContain("route context does not replace source proposal identity");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Risk and Impact to selected source-owned decision evidence", () => {
+    const registry = loadRegistry();
+    const riskAndImpact = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "risk-and-impact",
+    );
+
+    expect(riskAndImpact).toMatchObject({
+      businessName: "Risk and Impact",
+      routePattern: "/proposals",
+      mode: "risk-impact",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Risk-And-Impact-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise", "lotus-core", "lotus-risk"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/proposal-risk-impact-contract.ts",
+        "src/features/proposals/components/proposal-risk-impact-workspace.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Risk-And-Impact-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("never fans out risk-impact reads across the whole worklist");
+    expect(guide).toContain("allocation delta, mandate compliance");
+    expect(guide).toContain("Container-aware reflow responds to the actual centre workspace");
+    expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

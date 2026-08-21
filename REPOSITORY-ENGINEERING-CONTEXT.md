@@ -567,6 +567,19 @@ Current repository posture:
     policy queries settle; a failed refresh retains prior evidence with an explicit partial
     posture. Proposal simulation publishes persisted workflow context only after the advisory
     handoff response returns a proposal id.
+    Risk and Impact is a source-backed exception to the earlier filter-only posture: its worklist
+    requests `RISK_REVIEW` through the Gateway proposal list and reads
+    `/api/v1/proposals/{proposal_id}/risk-impact` for one selected proposal only. The browser uses
+    the BFF, validates the full `proposal-risk-impact.v1` identity and capability registry, retains
+    exact decimal strings, and never fans selected-detail calls across the worklist. Gateway owns
+    the experience projection; Advise owns proposal, workflow gate, and lineage truth; Core or the
+    bounded source-declared fallback owns allocation evidence; and the source-named risk service
+    owns risk measures. Workbench may align returned current/proposed rows and draw
+    non-authoritative relative bars, but it must not calculate allocation delta, risk, suitability,
+    mandate compliance, approval, or execution posture. Keep selected identity fenced across
+    portfolio, cursor-window, selection, refresh, and late response changes. Keep worklist before
+    evidence in DOM order, use the shared lifecycle worklist, and reflow from the centre
+    workspace's container width rather than viewport assumptions.
 21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
     Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
     while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be

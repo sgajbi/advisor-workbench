@@ -38,6 +38,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Proposal Builder](Proposal-Builder-Screen-Guide)
 - Portfolio-scoped proposal triage, selected review posture, and context-preserving drill-in:
   [Approval Queue](Approval-Queue-Screen-Guide)
+- Exact current-versus-proposed allocation, risk exceptions, workflow gates, and source lineage:
+  [Risk and Impact](Risk-And-Impact-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -110,6 +112,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
+- [Risk and Impact](Risk-And-Impact-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

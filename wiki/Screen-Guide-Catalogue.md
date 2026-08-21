@@ -140,7 +140,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | [Proposal Builder](Proposal-Builder-Screen-Guide) | `/proposals/simulate` | Capability-disabled | Guide available | Gateway, Advise, and Core |
 | [Approval Queue](Approval-Queue-Screen-Guide) | `/proposals?mode=approval-queue` | Capability-disabled | Guide available | Gateway and Advise |
 | Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
-| Risk And Impact | `/proposals?mode=risk-impact` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| [Risk and Impact](Risk-And-Impact-Screen-Guide) | `/proposals?mode=risk-impact` | Capability-disabled | Guide available | Gateway, Advise, Core, and Risk |
 | Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | Proposal Detail | `/proposals/{proposalId}` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
