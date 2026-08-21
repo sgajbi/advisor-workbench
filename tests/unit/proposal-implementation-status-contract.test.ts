@@ -72,6 +72,15 @@ describe("proposal implementation status contract", () => {
     ).toBe("partial");
   });
 
+  it("rejects supported post-request evidence without a handoff timestamp", () => {
+    const payload = proposalImplementationStatusFixture();
+    payload.data.handoff_requested_at = null;
+
+    expect(() =>
+      parseProposalImplementationStatusEnvelope(payload, ...SELECTED_IDENTITY),
+    ).toThrow(/evidence state does not match/i);
+  });
+
   it.each([
     [
       "proposal identity drift",

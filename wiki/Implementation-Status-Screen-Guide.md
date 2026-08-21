@@ -59,13 +59,15 @@ These roles describe business use. They do not create browser-owned roles or ent
 - Shows source observation time and whether it comes from the latest implementation event or latest
   proposal event; v1 invents no freshness threshold.
 - Distinguishes current-version, earlier-version, and uncorrelated evidence.
-- Keeps missing request, provider, version, or event references explicitly partial.
+- Keeps missing request, request time, provider, version, or event references explicitly partial.
 - Lets the advisor recheck an unversioned proposal in place; evidence remains withheld until the
   refreshed worklist supplies a version that can be correlated safely.
 - Shows the latest source event and correlation evidence in progressive disclosure.
 - Preserves visible confirmed evidence when a refresh fails, without relabelling it current.
 - Announces success only after the worklist and selected evidence both refresh and still identify
   the same proposal, portfolio, version, and lifecycle state.
+- Keeps the refresh action, status announcement, and shared workflow rail in the same pending or
+  failed posture for the complete worklist-plus-detail transaction, including version changes.
 - Discards a late refresh transaction when a newer refresh, selection, portfolio, or source window
   has superseded it, so an older worklist cannot replace newer selected evidence.
 - Reflows worklist before evidence at compact and 200%-zoom-equivalent widths without page overflow.

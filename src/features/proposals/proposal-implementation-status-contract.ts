@@ -544,6 +544,7 @@ function validateCapabilities(data: ProposalImplementationStatusData): void {
       data.execution_request_id &&
       data.execution_provider &&
       data.related_version_no &&
+      data.handoff_requested_at &&
       data.latest_workflow_event,
     )
       ? "supported"
