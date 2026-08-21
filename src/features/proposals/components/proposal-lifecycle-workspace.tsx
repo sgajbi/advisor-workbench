@@ -40,6 +40,7 @@ import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-
 import { useProposalSourceWindow } from "../use-proposal-source-window";
 import PolicyReviewWorkspace from "./policy-review-workspace";
 import ProposalLifecycleDecisionWorkspace from "./proposal-lifecycle-decision-workspace";
+import ProposalRiskImpactWorkspace from "./proposal-risk-impact-workspace";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
@@ -63,9 +64,18 @@ export default function ProposalLifecycleWorkspace({
   } | null>(null);
   const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQuery = useQuery({
-    queryKey: ["proposal-lifecycle-workspace", portfolioId, mode, sourceWindow.cursor],
+    queryKey: [
+      "proposal-lifecycle-workspace",
+      portfolioId,
+      mode,
+      sourceWindow.cursor,
+    ],
     queryFn: async () =>
-      await listProposals({ portfolioId, cursor: sourceWindow.cursor }),
+      await listProposals({
+        portfolioId,
+        cursor: sourceWindow.cursor,
+        ...(mode === "risk-impact" ? { state: "RISK_REVIEW" } : {}),
+      }),
     ...workbenchStrictQueryDefaults,
   });
   const { data, isLoading } = proposalQuery;
@@ -90,48 +100,73 @@ export default function ProposalLifecycleWorkspace({
         hasMoreResults: Boolean(data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
       }),
-    [data?.next_cursor, mode, portfolioId, proposals, sourceWindow.hasPrevious]
+    [data?.next_cursor, mode, portfolioId, proposals, sourceWindow.hasPrevious],
   );
   const policyReviewModel = useMemo(
-    () => buildPolicyReviewQueueModel({ records: policyQueueQuery.data?.items ?? [] }),
-    [policyQueueQuery.data?.items]
+    () =>
+      buildPolicyReviewQueueModel({
+        records: policyQueueQuery.data?.items ?? [],
+      }),
+    [policyQueueQuery.data?.items],
   );
   const resolvedPolicyEvaluationId = resolvePolicyReviewSelection({
     rows: policyReviewModel.rows,
     preferredEvaluationId:
-      policySelection?.portfolioId === portfolioId ? policySelection.evaluationId : null,
+      policySelection?.portfolioId === portfolioId
+        ? policySelection.evaluationId
+        : null,
   });
   const policySelectionIsCurrent =
     policySelection?.portfolioId === portfolioId &&
-    policyReviewModel.rows.some((row) => row.evaluationId === policySelection.evaluationId);
+    policyReviewModel.rows.some(
+      (row) => row.evaluationId === policySelection.evaluationId,
+    );
   if (
     mode === "suitability" &&
     resolvedPolicyEvaluationId &&
     !policySelectionIsCurrent
   ) {
-    setPolicySelection({ portfolioId, evaluationId: resolvedPolicyEvaluationId });
+    setPolicySelection({
+      portfolioId,
+      evaluationId: resolvedPolicyEvaluationId,
+    });
   }
   const selectedPolicyEvaluationId = policySelectionIsCurrent
     ? policySelection.evaluationId
     : resolvedPolicyEvaluationId;
   const selectedPolicyReview = policyReviewModel.rows.find(
-    (row) => row.evaluationId === selectedPolicyEvaluationId
+    (row) => row.evaluationId === selectedPolicyEvaluationId,
   );
   const policyEvaluationQuery = useQuery({
-    queryKey: ["advisory-policy-evaluation", portfolioId, selectedPolicyEvaluationId],
-    queryFn: async () => await getAdvisoryPolicyEvaluation(selectedPolicyEvaluationId ?? ""),
+    queryKey: [
+      "advisory-policy-evaluation",
+      portfolioId,
+      selectedPolicyEvaluationId,
+    ],
+    queryFn: async () =>
+      await getAdvisoryPolicyEvaluation(selectedPolicyEvaluationId ?? ""),
     enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
     ...workbenchStrictQueryDefaults,
   });
   const policySignOffPackageQuery = useQuery({
-    queryKey: ["advisory-policy-sign-off-package", portfolioId, selectedPolicyEvaluationId],
-    queryFn: async () => await getAdvisoryPolicySignOffPackage(selectedPolicyEvaluationId ?? ""),
+    queryKey: [
+      "advisory-policy-sign-off-package",
+      portfolioId,
+      selectedPolicyEvaluationId,
+    ],
+    queryFn: async () =>
+      await getAdvisoryPolicySignOffPackage(selectedPolicyEvaluationId ?? ""),
     enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
     ...workbenchStrictQueryDefaults,
   });
   const policyWorkflowQuery = useQuery({
-    queryKey: ["advisory-policy-workflow", portfolioId, selectedPolicyEvaluationId],
-    queryFn: async () => await getAdvisoryPolicyWorkflow(selectedPolicyEvaluationId ?? ""),
+    queryKey: [
+      "advisory-policy-workflow",
+      portfolioId,
+      selectedPolicyEvaluationId,
+    ],
+    queryFn: async () =>
+      await getAdvisoryPolicyWorkflow(selectedPolicyEvaluationId ?? ""),
     enabled: mode === "suitability" && Boolean(selectedPolicyEvaluationId),
     ...workbenchStrictQueryDefaults,
   });
@@ -147,28 +182,36 @@ export default function ProposalLifecycleWorkspace({
     isLoading: policyQueueQuery.isLoading,
     isFetching: policyQueueQuery.isFetching,
     hasError: Boolean(policyQueueQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyQueueQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      policyQueueQuery.error,
+    ),
   });
   const policyEvaluationPosture = projectQuerySourcePosture({
     hasData: Boolean(policyEvaluationQuery.data),
     isLoading: policyEvaluationQuery.isLoading,
     isFetching: policyEvaluationQuery.isFetching,
     hasError: Boolean(policyEvaluationQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyEvaluationQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      policyEvaluationQuery.error,
+    ),
   });
   const policySignOffPackagePosture = projectQuerySourcePosture({
     hasData: Boolean(policySignOffPackageQuery.data),
     isLoading: policySignOffPackageQuery.isLoading,
     isFetching: policySignOffPackageQuery.isFetching,
     hasError: Boolean(policySignOffPackageQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(policySignOffPackageQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      policySignOffPackageQuery.error,
+    ),
   });
   const policyWorkflowPosture = projectQuerySourcePosture({
     hasData: Boolean(policyWorkflowQuery.data),
     isLoading: policyWorkflowQuery.isLoading,
     isFetching: policyWorkflowQuery.isFetching,
     hasError: Boolean(policyWorkflowQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(policyWorkflowQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      policyWorkflowQuery.error,
+    ),
   });
   const policySourcePosture = combineQuerySourcePostures([
     policyQueuePosture,
@@ -183,12 +226,12 @@ export default function ProposalLifecycleWorkspace({
   ]);
   const policyEvidenceModel = useMemo(() => {
     const evidenceModel = buildPolicyEvaluationEvidenceModel({
-        evaluation: policyEvaluationQuery.data,
-        signOffPackage: policySignOffPackageQuery.data,
-        workflow: policyWorkflowQuery.data,
-        selectedReview: selectedPolicyReview,
-        portfolioId,
-      });
+      evaluation: policyEvaluationQuery.data,
+      signOffPackage: policySignOffPackageQuery.data,
+      workflow: policyWorkflowQuery.data,
+      selectedReview: selectedPolicyReview,
+      portfolioId,
+    });
     return evidenceModel;
   }, [
     policyEvaluationQuery.data,
@@ -215,16 +258,24 @@ export default function ProposalLifecycleWorkspace({
             },
           },
         },
-        `ui-policy-review-request-${evaluationId}-${Date.now()}`
+        `ui-policy-review-request-${evaluationId}-${Date.now()}`,
       );
     },
     onSuccess: async (_data, request) => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["advisory-policy-workflow", request.portfolioId, request.evaluationId],
+          queryKey: [
+            "advisory-policy-workflow",
+            request.portfolioId,
+            request.evaluationId,
+          ],
         }),
         queryClient.invalidateQueries({
-          queryKey: ["advisory-policy-evaluation", request.portfolioId, request.evaluationId],
+          queryKey: [
+            "advisory-policy-evaluation",
+            request.portfolioId,
+            request.evaluationId,
+          ],
         }),
         queryClient.invalidateQueries({
           queryKey: [
@@ -241,8 +292,10 @@ export default function ProposalLifecycleWorkspace({
   });
   const reviewRequestMatchesSelection =
     requestMoreEvidenceMutation.variables?.portfolioId === portfolioId &&
-    requestMoreEvidenceMutation.variables.evaluationId === selectedPolicyEvaluationId;
-  const policyEvidenceIdentityMismatch = policyEvidenceModel?.sourceIdentityAligned === false;
+    requestMoreEvidenceMutation.variables.evaluationId ===
+      selectedPolicyEvaluationId;
+  const policyEvidenceIdentityMismatch =
+    policyEvidenceModel?.sourceIdentityAligned === false;
   const workflowContextModel = useMemo(() => {
     const policySourcesActive = mode === "suitability";
 
@@ -337,20 +390,22 @@ export default function ProposalLifecycleWorkspace({
     >
       {proposalSourcePosture.isUnavailable ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Proposal lifecycle is unavailable. No fallback proposal queue is shown.
+          Proposal lifecycle is unavailable. No fallback proposal queue is
+          shown.
         </Alert>
       ) : null}
       {proposalSourcePosture.hasRefreshFailure ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          The proposal view could not be refreshed. Previously retrieved rows remain visible while
-          the source is rechecked.
+          The proposal view could not be refreshed. Previously retrieved rows
+          remain visible while the source is rechecked.
         </Alert>
       ) : null}
       {mode === "suitability" &&
       policyQueuePosture.isUnavailable &&
       !policyQueuePosture.isPermissionBlocked ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Policy review queue is unavailable. No fallback suitability policy queue is shown.
+          Policy review queue is unavailable. No fallback suitability policy
+          queue is shown.
         </Alert>
       ) : null}
 
@@ -362,7 +417,10 @@ export default function ProposalLifecycleWorkspace({
           </Text>
           <Text variant="secondary">{model.recommendedAction}</Text>
         </div>
-        <div className={styles.countStrip} aria-label="Proposal lifecycle counts">
+        <div
+          className={styles.countStrip}
+          aria-label="Proposal lifecycle counts"
+        >
           <div>
             <span>{model.totalCount}</span>
             <strong>In view</strong>
@@ -395,18 +453,22 @@ export default function ProposalLifecycleWorkspace({
           evidenceError={policyEvidencePosture.isUnavailable}
           evidenceRefreshFailure={policyEvidencePosture.hasRefreshFailure}
           reviewRequestPending={
-            reviewRequestMatchesSelection && requestMoreEvidenceMutation.isPending
+            reviewRequestMatchesSelection &&
+            requestMoreEvidenceMutation.isPending
           }
           reviewRequestSucceeded={
-            reviewRequestMatchesSelection && requestMoreEvidenceMutation.isSuccess
+            reviewRequestMatchesSelection &&
+            requestMoreEvidenceMutation.isSuccess
           }
           reviewRequestFailed={
-            reviewRequestMatchesSelection && Boolean(requestMoreEvidenceMutation.error)
+            reviewRequestMatchesSelection &&
+            Boolean(requestMoreEvidenceMutation.error)
           }
           onRequestMoreEvidence={() => {
             if (
               selectedPolicyEvaluationId &&
-              policyEvidenceModel?.evaluationId === selectedPolicyEvaluationId &&
+              policyEvidenceModel?.evaluationId ===
+                selectedPolicyEvaluationId &&
               policyEvidenceModel.sourceIdentityAligned &&
               policyEvidenceModel.sourceEvaluationHash
             ) {
@@ -447,6 +509,12 @@ export default function ProposalLifecycleWorkspace({
           key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
           rows={model.rows}
         />
+      ) : mode === "risk-impact" ? (
+        <ProposalRiskImpactWorkspace
+          key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
+          portfolioId={portfolioId}
+          rows={model.rows}
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.lifecycleTable}>
@@ -469,10 +537,14 @@ export default function ProposalLifecycleWorkspace({
                   </td>
                   <td>{row.portfolio}</td>
                   <td>
-                    <SemanticBadge tone={row.stageTone}>{row.stage}</SemanticBadge>
+                    <SemanticBadge tone={row.stageTone}>
+                      {row.stage}
+                    </SemanticBadge>
                   </td>
                   <td>
-                    <SemanticBadge tone={row.readinessTone}>{row.readiness}</SemanticBadge>
+                    <SemanticBadge tone={row.readinessTone}>
+                      {row.readiness}
+                    </SemanticBadge>
                   </td>
                   <td>{row.posture}</td>
                   <td>{row.nextAction}</td>
