@@ -8,8 +8,8 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Twenty-one active surfaces now have one
-implementation-backed guide that passes the complete guide standard. The remaining 15 dedicated
+screens or modes, and two compatibility aliases**. Twenty-two active surfaces now have one
+implementation-backed guide that passes the complete guide standard. The remaining 14 dedicated
 guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
@@ -139,7 +139,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | Suitability Review | `/proposals?mode=suitability` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
 | [Risk and Impact](Risk-And-Impact-Screen-Guide) | `/proposals?mode=risk-impact` | Capability-disabled | Guide available | Gateway, Advise, Core, and Risk |
 | Discussion Pack Review | `/proposals?mode=discussion-pack` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
-| Implementation Status | `/proposals?mode=implementation` | Capability-disabled | Guide planned — #605 | Gateway and Advise |
+| [Implementation Status](Implementation-Status-Screen-Guide) | `/proposals?mode=implementation` | Capability-disabled | Guide available | Gateway and Advise |
 | [Proposal Detail](Proposal-Detail-Screen-Guide) | `/proposals/{proposalId}` | Capability-disabled | Guide available | Gateway, Advise, Report, and Lotus AI |
 
 Simulation is an in-screen Proposal Builder result state, not a separately addressable mode, so it

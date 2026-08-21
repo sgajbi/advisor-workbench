@@ -139,6 +139,9 @@ Current route posture:
 - `/proposals`
   Gateway-backed Approval Queue with bounded source-window truth, keyboard-operable proposal
   selection, simultaneous selected-record posture, and portfolio-preserving detail handoff
+- `/proposals?mode=implementation`
+  Gateway-backed selected-proposal implementation handoff, exception, version-correlation, and
+  source-currentness review without order, fill, or settlement claims
 - `/proposals/[proposalId]`
   direct Gateway-backed proposal detail with RFC-0023 advisor narrative review and delivery
   posture
@@ -384,6 +387,11 @@ Important current product and route truths:
    `/proposals/{proposalId}` are direct Gateway-backed advisory routes, but the `Proposal` shell
    navigation item remains capability-disabled and should not be documented as a promoted
    top-level shell app.
+   `/proposals?mode=implementation` reads `proposal-implementation-status.v1` through Gateway for
+   one selected proposal in handoff, completion, or exception follow-up. Advise owns advisory
+   handoff and reconciliation; the named downstream provider remains the execution system of
+   record. Workbench does not mutate the status or infer order, fill, settlement, custody-booking,
+   or accounting completion.
 4. the internal `/api/bff/*` route proxies to `lotus-gateway` and preserves gateway-first
    integration posture
 5. `/data-products` consumes only gateway domain-product discovery and trust-certification

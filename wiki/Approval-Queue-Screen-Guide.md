@@ -69,7 +69,7 @@ These roles describe business use, not authenticated production entitlement.
 | Inbound | Advisor Book, Advisory Overview, or Proposal Builder | Selected portfolio |
 | Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, and Approval Queue origin |
 | Return | Approval Queue through **Return to Approval Queue** | Source proposal portfolio where available and Approval Queue mode |
-| Later lifecycle | Suitability, Risk and Impact, Discussion Pack, or Implementation | Portfolio only; each workspace must prove its own source-backed decision evidence |
+| Later lifecycle | Suitability, Risk and Impact, Discussion Pack, or [Implementation Status](Implementation-Status-Screen-Guide) | Portfolio only; each workspace must prove its own source-backed decision evidence |
 
 ## Implemented Capabilities
 

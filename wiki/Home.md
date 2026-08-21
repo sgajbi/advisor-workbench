@@ -42,6 +42,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Proposal Detail](Proposal-Detail-Screen-Guide)
 - Exact current-versus-proposed allocation, risk exceptions, workflow gates, and source lineage:
   [Risk and Impact](Risk-And-Impact-Screen-Guide)
+- Selected proposal implementation handoff, exception, version, and source-currentness review:
+  [Implementation Status](Implementation-Status-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -116,6 +118,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Approval Queue](Approval-Queue-Screen-Guide)
 - [Proposal Detail](Proposal-Detail-Screen-Guide)
 - [Risk and Impact](Risk-And-Impact-Screen-Guide)
+- [Implementation Status](Implementation-Status-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

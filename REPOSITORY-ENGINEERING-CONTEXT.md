@@ -563,8 +563,8 @@ Current repository posture:
     Persistent context remains visible when the shell stacks. Supplementary context may remove its
     repeated decision/window panel at tablet and compact widths only when the main workspace owns
     the same source-backed posture and the source-and-scope boundary remains visible.
-    `/proposals?mode=suitability`, `/proposals?mode=risk-impact`,
-    `/proposals?mode=discussion-pack`, and `/proposals?mode=implementation` are focused
+    `/proposals?mode=suitability`, `/proposals?mode=risk-impact`, and
+    `/proposals?mode=discussion-pack` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
     states for advisor navigation but does not calculate suitability, risk impact, consent, or
     implementation truth locally. Proposal queue counts apply only to the current Gateway source
@@ -588,6 +588,15 @@ Current repository posture:
     portfolio, cursor-window, selection, refresh, and late response changes. Keep worklist before
     evidence in DOM order, use the shared lifecycle worklist, and reflow from the centre
     workspace's container width rather than viewport assumptions.
+    Implementation Status is also source-backed: its cursor-bounded worklist retains handoff,
+    completion, and exception lifecycle states and reads `proposal-implementation-status.v1` for one
+    selected proposal only. Validate proposal, portfolio, state, version, status semantics,
+    capability posture, freshness, and lineage before presentation. Advise owns advisory handoff and
+    reconciliation; the named downstream provider owns execution truth. Keep order/fill/settlement
+    detail explicitly unsupported, treat missing references as partial and historical-version
+    evidence as distinct, and confirm refresh only after the list and selected record reconcile. Do
+    not mutate implementation status or invent owner, SLA, priority, order, fill, allocation,
+    settlement, custody, or accounting completion.
 21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
     Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
     while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be

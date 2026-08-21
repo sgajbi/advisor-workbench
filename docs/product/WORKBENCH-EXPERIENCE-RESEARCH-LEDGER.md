@@ -5491,3 +5491,63 @@ proposal handoff, no generic workflow rail, boundary reading order, focus-stable
 and zero page overflow. Reviewed evidence is stored under `output/issue-736/`. No Gateway/Advise
 contract, source calculation, identity, entitlement, dependency, global CSS, or runtime topology
 changes. Protected PR, exact-main, wiki publication, and strict parity evidence remain required.
+
+## Proposal Implementation Handoff And Exception Follow-Up
+
+### Business job
+
+An advisor needs one bounded worklist that answers whether a proposal handoff has been requested,
+accepted, partially implemented, completed, rejected, cancelled, or expired; whether that evidence
+belongs to the current proposal version; what needs follow-up; and what the current source cannot
+prove. The screen must remain an advisory reconciliation surface rather than an execution system.
+
+### Current-product research
+
+Research was reviewed on 2026-08-22 from official product, industry-protocol, post-trade, and
+accessibility sources:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   places implementation after identification, construction, and delivery and hands execution to
+   an OMS. Lotus adopts the connected lifecycle and explicit handoff, not competitor layout or
+   unsupported OMS capability.
+2. [Salesforce Financial Services action plans](https://help.salesforce.com/s/articleView?id=sf.fsc_admin_action_plans_overview.htm&language=en_US&type=5)
+   supports explicit task status and accountable handoffs. Lotus rejects owner and deadline fields
+   until a source contract supplies them.
+3. [FIX Trading Community](https://fixtrading.org/standards/fix-protocol/) separates order and
+   execution-report state from advisory proposal state.
+4. [Swift settlement and reconciliation](https://www.swift.com/securities/settlement-and-reconciliation)
+   confirms settlement is a distinct post-trade chain and cannot be inferred from a handoff event.
+5. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) governs reflow, focus order, target size, and
+   programmatically determinable asynchronous status.
+
+### Adopted decisions
+
+1. Use a compact selected-record worklist and decision pane; read status only for the selected
+   proposal and never fan out across the returned window.
+2. Lead with business posture, attention, next action, version correlation, and observation time;
+   keep provider, request, event, and correlation identifiers secondary.
+3. Distinguish partial evidence and earlier-version evidence instead of omitting missing facts or
+   presenting them as current.
+4. Announce refresh success only after the source window and exact selected status both succeed and
+   reconcile; preserve prior evidence without relabelling it current on failure.
+5. Reuse the Proposal lifecycle worklist, selected-record layout, design-system source action,
+   semantic badges, CSS Module ownership, and existing React Query stack.
+
+### Rejected decisions
+
+1. Deriving execution posture from `EXECUTION_READY` or showing route access as source proof.
+2. Inventing owner, assignee, SLA, due date, urgency, priority, or whole-book totals.
+3. Treating a provider or external reference as an order, fill, allocation, or settlement record.
+4. Treating terminal handoff status as settlement, reconciliation, custody booking, or accounting
+   completion.
+5. Calling Advise, an OMS, broker, or settlement provider directly from the browser.
+6. Adding decorative timelines, KPIs, cards, dependencies, or global CSS without source evidence.
+
+### Validation and publication decision
+
+Workbench #750 owns the screen and Gateway #560 owns the contract. Focused parser, view-model, and
+integration tests prove the eight statuses, fail-closed identity and semantics, partial and
+historical evidence, selected-only reads, permission handling, and atomic refresh. Optimized
+Playwright proves the BFF request, source boundary, focus-stable confirmation, and zero-overflow
+reflow at 1440, 1280, 1024, 720, and 390 pixels. Protected PR, exact-main validation, canonical
+source proof, wiki publication, strict parity, issue closure, and branch hygiene remain required.

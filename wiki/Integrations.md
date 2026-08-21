@@ -228,6 +228,11 @@ must travel through Gateway-shaped contracts.
     publication boundaries, and does not construct proof packs, classify claims, approve sign-off,
     promote client-ready publication, contact clients, create orders, or claim OMS/fill/settlement
     truth. Canonical Workbench proof classifies `advisory.bank_demo_proof` as `lotus-advise` owned.
+21. Implementation Status reads `proposal-implementation-status.v1` through Gateway for one
+    selected proposal. Gateway owns the validated experience projection, Advise owns advisory
+    handoff and reconciliation, and the named downstream provider remains the execution system of
+    record. Workbench never calls Advise or an execution provider directly and does not reinterpret
+    downstream references as orders, fills, allocations, settlement, custody, or accounting proof.
 
 ## Ownership Diagram
 
