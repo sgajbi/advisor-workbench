@@ -324,7 +324,7 @@ describe("app route entrypoints", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Risk And Impact" }),
+      screen.getByRole("heading", { name: "Risk and Impact" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Proposal Lifecycle Workspace" }),

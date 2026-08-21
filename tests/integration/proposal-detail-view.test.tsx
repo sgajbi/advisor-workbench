@@ -342,7 +342,7 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
 
-    const returnLink = await screen.findByRole("link", { name: "Return to Risk And Impact" });
+    const returnLink = await screen.findByRole("link", { name: "Return to Risk and Impact" });
     expect(returnLink).toHaveAttribute(
       "href",
       "/proposals?portfolioId=pf_1&mode=risk-impact"
