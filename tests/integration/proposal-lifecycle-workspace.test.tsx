@@ -3478,6 +3478,7 @@ describe("ProposalLifecycleWorkspace", () => {
     restricted.data.overall_state = "partial";
     restricted.data.memo.state = "restricted";
     restricted.data.memo.reason_code = "advisor_memo_restricted";
+    restricted.data.memo.memo_status = "READY";
     getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
 
     renderWithQueryClient(
@@ -3493,6 +3494,47 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.queryByText("Advisor-use rationale is recorded for the selected version."),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Restricted").length).toBeGreaterThan(0);
+  });
+
+  it("withholds AI provenance when narrative support is restricted", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          title: "Rebalance concentrated technology exposure",
+        },
+      ],
+      next_cursor: null,
+    });
+    const restricted = proposalDiscussionPackFixture();
+    restricted.data.overall_state = "partial";
+    restricted.data.narrative.state = "restricted";
+    restricted.data.narrative.reason_code = "advisor_narrative_restricted";
+    restricted.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
+    const hiddenNarrative = restricted.data.narrative.sections[0]!.text;
+    const hiddenReviewer = restricted.data.narrative.reviewed_by!;
+    getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Advisor narrative is not confirmed"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("AI-assisted draft")).not.toBeInTheDocument();
+    expect(screen.queryByText("How this was prepared")).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenNarrative)).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenReviewer)).not.toBeInTheDocument();
   });
 
   it("withholds policy text when disclosure support is restricted", async () => {

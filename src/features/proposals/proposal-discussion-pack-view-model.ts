@@ -45,6 +45,17 @@ export function buildProposalDiscussionPackModel(
   const policyBoundaryMessage =
     "Policy disclosure evidence is not available for this proposal version.";
   const narrativeArtifactIsComplete = hasCompleteNarrativeArtifact(data.narrative);
+  const narrativeIsAvailable =
+    data.narrative.state === "supported" && narrativeArtifactIsComplete;
+  const memoArtifactIsComplete = hasCompleteMemoArtifact(data.memo);
+  const memoIsAvailable =
+    data.memo.state === "supported" && memoArtifactIsComplete;
+  const narrativeBoundaryMessage =
+    "Narrative evidence and preparation provenance are not available for this proposal version.";
+  const narrativeControlStatus = controls.find(
+    ({ key }) => key === "narrative",
+  )!.status;
+  const memoControlStatus = controls.find(({ key }) => key === "memo")!.status;
   const narrativeReviewIsRecorded = hasRecordedAudit({
     id: data.narrative.review_id,
     actor: data.narrative.reviewed_by,
@@ -72,11 +83,13 @@ export function buildProposalDiscussionPackModel(
     posture: overallPosture(envelope, controls),
     controls,
     narrative: {
-      isAvailable:
-        data.narrative.state === "supported" && narrativeArtifactIsComplete,
-      isAiAssisted: data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
-      generationLabel:
-        data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
+      isAvailable: narrativeIsAvailable,
+      isAiAssisted:
+        narrativeIsAvailable &&
+        data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
+      generationLabel: !narrativeIsAvailable
+        ? narrativeControlStatus
+        : data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
           ? "AI-assisted draft"
           : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
             ? "Deterministic source narrative"
@@ -84,73 +97,84 @@ export function buildProposalDiscussionPackModel(
       aiDisclosure: createAiAssistanceDisclosure({
         scopeLabel: "Advisor conversation narrative",
         preparation:
-          data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
+          !narrativeIsAvailable
+            ? "unavailable"
+            : data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
             ? "ai-assisted"
             : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
               ? "deterministic"
               : "unavailable",
-        availability:
-          data.narrative.state === "supported" && narrativeArtifactIsComplete
-            ? "live"
-            : data.narrative.state === "partial"
-              ? "partial"
-              : "unavailable",
+        availability: narrativeIsAvailable ? "live" : "unavailable",
         evidence: {
-          state:
-            data.narrative.state === "supported" && narrativeArtifactIsComplete
-              ? narrativeSourceCount > 0
-                ? "supported"
-                : "missing"
-              : data.narrative.state === "partial"
-                ? "limited"
-                : "missing",
-          sourceCount: narrativeSourceCount,
+          state: narrativeIsAvailable
+            ? narrativeSourceCount > 0
+              ? "supported"
+              : "missing"
+            : "missing",
+          sourceCount: narrativeIsAvailable ? narrativeSourceCount : 0,
         },
         humanReview: {
-          state: narrativeReviewState,
-          sourceRecorded: narrativeReviewIsRecorded,
-          ...(data.narrative.reviewed_by
+          state: narrativeIsAvailable ? narrativeReviewState : "unavailable",
+          sourceRecorded: narrativeIsAvailable && narrativeReviewIsRecorded,
+          ...(narrativeIsAvailable && data.narrative.reviewed_by
             ? { actor: data.narrative.reviewed_by }
             : {}),
-          ...(data.narrative.reviewed_at
+          ...(narrativeIsAvailable && data.narrative.reviewed_at
             ? { occurredAt: data.narrative.reviewed_at }
             : {}),
         },
         clientUse: "blocked",
         freshness: { state: "not-reported" },
-        limitations: disclosurePolicyIsSupported
+        limitations: !narrativeIsAvailable
+          ? [narrativeBoundaryMessage]
+          : disclosurePolicyIsSupported
           ? [
               ...data.narrative.client_ready_blockers,
               ...data.narrative.limitations.map(({ message }) => message),
             ]
           : [policyBoundaryMessage],
       }),
-      sections: data.narrative.sections.map((section) => ({
-        key: section.section_key,
-        title: section.title,
-        text: section.text,
-        sourceCount: section.source_refs.length,
-        limitationCount: section.limitation_refs.length,
-      })),
-      reviewedBy: data.narrative.reviewed_by ?? "Not recorded",
-      reviewedAt: formatDateValue(data.narrative.reviewed_at),
+      sections: narrativeIsAvailable
+        ? data.narrative.sections.map((section) => ({
+            key: section.section_key,
+            title: section.title,
+            text: section.text,
+            sourceCount: section.source_refs.length,
+            limitationCount: section.limitation_refs.length,
+          }))
+        : [],
+      reviewedBy: narrativeIsAvailable
+        ? (data.narrative.reviewed_by ?? "Not recorded")
+        : "Not available",
+      reviewedAt: narrativeIsAvailable
+        ? formatDateValue(data.narrative.reviewed_at)
+        : "Not available",
     },
     memo: {
-      isAvailable:
-        data.memo.state === "supported" && hasCompleteMemoArtifact(data.memo),
-      status: businessLabel(data.memo.memo_status ?? data.memo.state),
-      reviewedBy: data.memo.reviewed_by ?? "Not recorded",
-      reviewedAt: formatDateValue(data.memo.reviewed_at),
-      sections: data.memo.sections.map((section) => ({
-        key: section.section_id,
-        title: section.title,
-        status: businessLabel(section.status),
-        tone:
-          section.status === "READY" ? ("success" as const) : ("warn" as const),
-        summary: section.summary,
-        owner: businessLabel(section.owner_role),
-        reviewRequired: section.review_required,
-      })),
+      isAvailable: memoIsAvailable,
+      status: memoIsAvailable
+        ? businessLabel(data.memo.memo_status ?? data.memo.state)
+        : memoControlStatus,
+      reviewedBy: memoIsAvailable
+        ? (data.memo.reviewed_by ?? "Not recorded")
+        : "Not available",
+      reviewedAt: memoIsAvailable
+        ? formatDateValue(data.memo.reviewed_at)
+        : "Not available",
+      sections: memoIsAvailable
+        ? data.memo.sections.map((section) => ({
+            key: section.section_id,
+            title: section.title,
+            status: businessLabel(section.status),
+            tone:
+              section.status === "READY"
+                ? ("success" as const)
+                : ("warn" as const),
+            summary: section.summary,
+            owner: businessLabel(section.owner_role),
+            reviewRequired: section.review_required,
+          }))
+        : [],
     },
     disclosurePolicy: {
       isSupported: disclosurePolicyIsSupported,
@@ -198,13 +222,8 @@ export function buildProposalDiscussionPackModel(
       requestHash: data.lineage.request_hash,
       artifactHash: data.lineage.artifact_hash,
       narrativeHash:
-        data.narrative.state === "supported" && narrativeArtifactIsComplete
-          ? data.lineage.narrative_hash
-          : null,
-      memoHash:
-        data.memo.state === "supported" && hasCompleteMemoArtifact(data.memo)
-          ? data.lineage.memo_hash
-          : null,
+        narrativeIsAvailable ? data.lineage.narrative_hash : null,
+      memoHash: memoIsAvailable ? data.lineage.memo_hash : null,
     },
   };
 }
