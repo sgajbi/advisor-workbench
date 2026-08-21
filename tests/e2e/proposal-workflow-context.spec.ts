@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
+import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
@@ -178,6 +179,31 @@ async function mockProposalQueue(
   );
 }
 
+async function mockProposalImplementationStatus(
+  page: Page,
+  requestedProposalIds: string[],
+) {
+  await page.route(
+    /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/execution-status$/,
+    async (route) => {
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      requestedProposalIds.push(proposalId);
+      const envelope = proposalImplementationStatusFixture();
+      envelope.data.proposal_id = proposalId;
+      envelope.data.portfolio_id = portfolioId;
+      envelope.data.title = "Execution handoff review";
+      envelope.data.current_version_no = 5;
+      envelope.data.related_version_no = 5;
+      envelope.data.latest_workflow_event!.related_version_no = 5;
+      envelope.data.lineage.proposal_id = proposalId;
+      envelope.data.lineage.portfolio_id = portfolioId;
+      envelope.data.lineage.related_version_no = 5;
+      await route.fulfill({ json: envelope });
+    },
+  );
+}
+
 async function mockProposalApprovalEvidence(page: Page) {
   const proposal = (proposalId: string) => {
     const executionReady = proposalId === "PRP-READY-001";
@@ -199,7 +225,8 @@ async function mockProposalApprovalEvidence(page: Page) {
   await page.route(
     /\/api\/bff\/api\/v1\/proposals\/[^/?]+\?include_evidence=(?:true|false)$/,
     async (route) => {
-      const proposalId = new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
       await route.fulfill({
         json: {
           correlation_id: `corr-detail-${proposalId}`,
@@ -217,7 +244,8 @@ async function mockProposalApprovalEvidence(page: Page) {
   await page.route(
     /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/workflow-events$/,
     async (route) => {
-      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
       const record = proposal(proposalId);
       await route.fulfill({
         json: {
@@ -229,12 +257,14 @@ async function mockProposalApprovalEvidence(page: Page) {
             events: [
               {
                 event_id: `event-${proposalId}`,
-                event_type: record.current_state === "EXECUTION_READY"
-                  ? "COMPLIANCE_APPROVED"
-                  : "RISK_REVIEW_REQUESTED",
-                from_state: record.current_state === "EXECUTION_READY"
-                  ? "AWAITING_CLIENT_CONSENT"
-                  : "DRAFT",
+                event_type:
+                  record.current_state === "EXECUTION_READY"
+                    ? "COMPLIANCE_APPROVED"
+                    : "RISK_REVIEW_REQUESTED",
+                from_state:
+                  record.current_state === "EXECUTION_READY"
+                    ? "AWAITING_CLIENT_CONSENT"
+                    : "DRAFT",
                 to_state: record.current_state,
                 actor_id: "advisor_sg_01",
                 occurred_at: "2026-08-21T09:00:00Z",
@@ -248,7 +278,8 @@ async function mockProposalApprovalEvidence(page: Page) {
   await page.route(
     /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/approvals$/,
     async (route) => {
-      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
       const record = proposal(proposalId);
       await route.fulfill({
         json: {
@@ -274,7 +305,8 @@ async function mockProposalApprovalEvidence(page: Page) {
   await page.route(
     /\/api\/bff\/api\/v1\/proposals\/[^/?]+\/lineage$/,
     async (route) => {
-      const proposalId = new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const proposalId =
+        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
       const record = proposal(proposalId);
       await route.fulfill({
         json: {
@@ -324,7 +356,10 @@ async function mockProposalApprovalEvidence(page: Page) {
             memo_status: "APPROVED_FOR_ADVISOR_USE",
             memo_hash: "sha256:memo-PRP-READY-001",
             review_posture: { advisor_use: "APPROVED_FOR_ADVISOR_USE" },
-            report_package_posture: { status: "NOT_REQUESTED", archive_refs: [] },
+            report_package_posture: {
+              status: "NOT_REQUESTED",
+              archive_refs: [],
+            },
             ai_commentary_posture: {
               status: "NOT_REQUESTED",
               authority: "NON_AUTHORITATIVE",
@@ -571,7 +606,9 @@ test("shows source-backed queue posture without invented advisory evidence", asy
   ).toBeVisible();
   const lifecycleCounts = page.getByLabel("Proposal lifecycle counts");
   await expect(lifecycleCounts.getByText("2", { exact: true })).toBeVisible();
-  await expect(lifecycleCounts.getByText("In view", { exact: true })).toBeVisible();
+  await expect(
+    lifecycleCounts.getByText("In view", { exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole("region", { name: "Selected proposal decision" })
@@ -726,6 +763,127 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   await expect(
     page.getByRole("listbox", { name: "Approval Queue proposals" }),
   ).toBeVisible();
+  expect(browserErrors).toEqual([]);
+});
+
+test("presents source-backed implementation handoff evidence without execution overclaim", async ({
+  page,
+}, testInfo) => {
+  const browserErrors: string[] = [];
+  const requestedProposalIds: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await mockProposalQueue(page);
+  await mockProposalImplementationStatus(page, requestedProposalIds);
+  await page.goto(`/proposals?portfolioId=${portfolioId}&mode=implementation`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const workspace = page.getByTestId(
+    "proposal-implementation-status-workspace",
+  );
+  const worklist = page.getByRole("listbox", {
+    name: "Implementation follow-up proposals",
+  });
+  const selectedEvidence = page.getByRole("region", {
+    name: "Selected proposal implementation status",
+  });
+  await expect(workspace).toBeVisible();
+  await expect(worklist.getByRole("option")).toHaveCount(1);
+  await expect(
+    selectedEvidence.getByRole("heading", {
+      name: "Accepted for implementation",
+    }),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("Current version · Version 5"),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText(
+      "Advisory implementation handoff through Gateway",
+    ),
+  ).toBeVisible();
+  expect(requestedProposalIds).toEqual(["PRP-READY-001"]);
+
+  await selectedEvidence
+    .getByText("Source event and evidence boundary")
+    .click();
+  await expect(
+    selectedEvidence.getByText(
+      /Order, fill, allocation, settlement, custody-booking, and accounting detail are not supported/,
+    ),
+  ).toBeVisible();
+  await expect(
+    selectedEvidence.getByText("corr-implementation-1"),
+  ).toBeVisible();
+
+  const refresh = selectedEvidence.getByRole("button", {
+    name: "Refresh implementation evidence",
+  });
+  await refresh.focus();
+  await refresh.click();
+  const refreshStatus = selectedEvidence.getByTestId(
+    "workbench-refresh-status",
+  );
+  await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+  await expect(refreshStatus).toContainText(
+    "Selected proposal handoff confirmed",
+  );
+  await expect(refresh).toBeFocused();
+  expect(requestedProposalIds).toEqual(["PRP-READY-001", "PRP-READY-001"]);
+
+  await testInfo.attach("implementation-status-workspace-desktop", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  for (const viewport of [
+    { width: 1440, height: 1100 },
+    { width: 1280, height: 1100 },
+    { width: 1024, height: 1200 },
+    { width: 720, height: 1100 },
+    { width: 390, height: 844 },
+  ] as const) {
+    await page.setViewportSize(viewport);
+    const [worklistBox, selectedBox] = await Promise.all([
+      worklist.boundingBox(),
+      selectedEvidence.boundingBox(),
+    ]);
+    expect(worklistBox).not.toBeNull();
+    expect(selectedBox).not.toBeNull();
+    const sideBySide =
+      (selectedBox?.x ?? 0) >=
+      (worklistBox?.x ?? 0) + (worklistBox?.width ?? 0);
+    const stacked =
+      (selectedBox?.y ?? 0) >=
+      (worklistBox?.y ?? 0) + (worklistBox?.height ?? 0);
+    expect(
+      sideBySide || stacked,
+      `implementation worklist and evidence must not overlap at ${viewport.width}px`,
+    ).toBe(true);
+    if (viewport.width === 1440) expect(sideBySide).toBe(true);
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await workspace.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+  }
+
+  await testInfo.attach("implementation-status-workspace-mobile", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
   expect(browserErrors).toEqual([]);
 });
 
