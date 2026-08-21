@@ -34,6 +34,12 @@ const proposals: ProposalSummary[] = [
     current_state: "EXECUTION_READY",
     title: "Execution handoff",
   },
+  {
+    proposal_id: "PRP-REJECTED",
+    portfolio_id: "PB_SG_GLOBAL_BAL_001",
+    current_state: "REJECTED",
+    title: "Rejected implementation handoff",
+  },
 ];
 
 describe("proposal lifecycle workspace view model", () => {
@@ -82,7 +88,7 @@ describe("proposal lifecycle workspace view model", () => {
     });
   });
 
-  it("filters implementation mode to execution-ready proposals", () => {
+  it("retains implementation handoff, completion, and exception states", () => {
     const model = buildProposalLifecycleWorkspaceModel({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       mode: "implementation",
@@ -90,14 +96,19 @@ describe("proposal lifecycle workspace view model", () => {
     });
 
     expect(model.title).toBe("Implementation Status");
-    expect(model.totalCount).toBe(1);
-    expect(model.attentionCount).toBe(0);
+    expect(model.totalCount).toBe(2);
+    expect(model.attentionCount).toBe(1);
     expect(model.rows[0]).toMatchObject({
       proposalId: "PRP-READY",
       readiness: "Ready",
       nextAction: "Ready for execution handoff",
       posture:
         "Source lifecycle marks this proposal ready for execution handoff.",
+    });
+    expect(model.rows[1]).toMatchObject({
+      proposalId: "PRP-REJECTED",
+      currentState: "REJECTED",
+      readiness: "Review",
     });
   });
 

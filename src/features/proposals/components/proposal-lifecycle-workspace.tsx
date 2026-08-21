@@ -95,9 +95,7 @@ export default function ProposalLifecycleWorkspace({
         cursor: sourceWindow.cursor,
         ...(mode === "risk-impact"
           ? { state: "RISK_REVIEW" }
-          : mode === "implementation"
-            ? { state: "EXECUTION_READY" }
-            : {}),
+          : {}),
       }),
     ...workbenchStrictQueryDefaults,
   });

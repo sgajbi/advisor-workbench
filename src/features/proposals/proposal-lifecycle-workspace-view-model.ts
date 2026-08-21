@@ -115,9 +115,16 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
       "What is the latest source-confirmed implementation posture?",
     recommendedAction:
       "Follow provider exceptions without inferring order, fill, or settlement progress.",
-    emptyTitle: "No implementation follow-up is pending",
-    emptyBody: "There are no proposals currently ready for execution handoff.",
-    includedStates: ["EXECUTION_READY"],
+    emptyTitle: "No implementation records in this source window",
+    emptyBody:
+      "There are no proposals currently in handoff, completion, or exception follow-up.",
+    includedStates: [
+      "EXECUTION_READY",
+      "EXECUTED",
+      "REJECTED",
+      "CANCELLED",
+      "EXPIRED",
+    ],
   },
 };
 

@@ -439,7 +439,6 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(listProposalsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
         cursor: undefined,
-        state: "EXECUTION_READY",
       }),
     );
     expect(
@@ -520,6 +519,65 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Tactical liquidity reserve",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps terminal implementation exceptions available for selected source review", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        proposalListFixture.items[1],
+        {
+          proposal_id: "PRP-REJECTED",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "REJECTED",
+          current_version_no: 5,
+          created_at: "2026-08-21T10:00:00Z",
+          title: "Rejected implementation handoff",
+        },
+      ],
+      next_cursor: null,
+    });
+    getProposalExecutionStatusMock.mockImplementation(
+      async (proposalId: string, _portfolioId: string, versionNo: number) => {
+        const fixture = implementationStatusFixture(proposalId, versionNo);
+        if (proposalId === "PRP-REJECTED") {
+          fixture.data.current_state = "REJECTED";
+          fixture.data.handoff_status = "REJECTED";
+          fixture.data.status_family = "attention";
+          fixture.data.next_action = "INVESTIGATE_REJECTION";
+          fixture.data.attention_required = true;
+          fixture.data.terminal = true;
+          fixture.data.reason_code = "implementation_rejected";
+          fixture.data.latest_workflow_event!.event_type =
+            "EXECUTION_REJECTED";
+        }
+        return fixture;
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    fireEvent.click(
+      screen.getByRole("option", { name: /Rejected implementation handoff/ }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Handoff rejected" }),
+    ).toBeInTheDocument();
+    expect(getProposalExecutionStatusMock).toHaveBeenLastCalledWith(
+      "PRP-REJECTED",
+      "PB_SG_GLOBAL_BAL_001",
+      5,
+      "REJECTED",
+    );
+    expect(screen.getAllByText(/Investigate the rejection reason/)).toHaveLength(
+      2,
+    );
   });
 
   it("keeps implementation evidence permission failure distinct and does not infer progress", async () => {
