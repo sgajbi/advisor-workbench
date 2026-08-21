@@ -232,6 +232,26 @@ describe("ProposalSimulateForm", () => {
     expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
   });
 
+  it("withdraws evaluation confirmation when the advisor materially changes the draft", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Advise Evaluation Summary" })
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Additional Cash Assumption"), {
+      target: { value: "12500" },
+    });
+
+    expect(screen.queryByText("Evaluation confirmed")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Advise Evaluation Summary" })
+    ).not.toBeInTheDocument();
+  });
+
   it("applies the admitted cash assumption to proposed impact while preserving current value", async () => {
     renderForm();
     await waitForPortfolioEvidence();
