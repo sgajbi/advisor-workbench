@@ -57,6 +57,13 @@ describe("proposal discussion pack view model", () => {
       contractVersion: "proposal-discussion-pack-review.v1",
       proposalVersionId: "proposal-version-2",
     });
+    expect(model.narrative.aiDisclosure).toMatchObject({
+      preparation: "deterministic",
+      availability: "live",
+      clientUse: "blocked",
+      evidence: { state: "supported", sourceCount: 1 },
+      humanReview: { state: "reviewed", sourceRecorded: true },
+    });
   });
 
   it("does not relabel an available report package as released or delivered", () => {
@@ -107,5 +114,24 @@ describe("proposal discussion pack view model", () => {
       source: "Source not confirmed",
     });
     expect(model.controls.filter(({ tone }) => tone === "success")).toHaveLength(2);
+  });
+
+  it("projects AI-assisted narrative through the governed disclosure model", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.narrative.isAiAssisted).toBe(true);
+    expect(model.narrative.aiDisclosure).toMatchObject({
+      scopeLabel: "Advisor conversation narrative",
+      preparation: "ai-assisted",
+      availability: "live",
+      clientUse: "blocked",
+      freshness: { state: "current", asOf: "2026-08-21T08:30:00Z" },
+    });
+    expect(model.narrative.aiDisclosure.limitations).toContain(
+      "Client-ready publication is not supported.",
+    );
   });
 });

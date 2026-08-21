@@ -1,5 +1,8 @@
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
-import type { SemanticBadgeTone } from "@/design-system";
+import {
+  createAiAssistanceDisclosure,
+  type SemanticBadgeTone,
+} from "@/design-system";
 
 import type {
   ProposalDiscussionCapabilityState,
@@ -23,6 +26,23 @@ export function buildProposalDiscussionPackModel(
   envelope: ProposalDiscussionPackEnvelope,
 ) {
   const { data } = envelope;
+  const narrativeSourceCount = data.narrative.sections.reduce(
+    (count, section) => count + section.source_refs.length,
+    0,
+  );
+  const narrativeReviewState =
+    data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE"
+      ? "reviewed"
+      : ["REJECTED", "REGENERATION_REQUESTED"].includes(
+            data.narrative.review_state,
+          )
+        ? "rejected"
+        : "review-required";
+  const narrativeReviewIsRecorded = Boolean(
+    data.narrative.review_id &&
+    data.narrative.reviewed_by &&
+    data.narrative.reviewed_at,
+  );
   return {
     identity: {
       proposalId: data.proposal_id,
@@ -42,12 +62,58 @@ export function buildProposalDiscussionPackModel(
     ] satisfies ControlPresentation[],
     narrative: {
       isAvailable: data.narrative.state === "supported",
+      isAiAssisted: data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
       generationLabel:
         data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
           ? "AI-assisted draft"
           : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
             ? "Deterministic source narrative"
             : "Generation method not reported",
+      aiDisclosure: createAiAssistanceDisclosure({
+        scopeLabel: "Advisor conversation narrative",
+        preparation:
+          data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
+            ? "ai-assisted"
+            : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
+              ? "deterministic"
+              : "unavailable",
+        availability:
+          data.narrative.state === "supported"
+            ? "live"
+            : data.narrative.state === "partial"
+              ? "partial"
+              : "unavailable",
+        evidence: {
+          state:
+            data.narrative.state === "supported"
+              ? narrativeSourceCount > 0
+                ? "supported"
+                : "missing"
+              : data.narrative.state === "partial"
+                ? "limited"
+                : "missing",
+          sourceCount: narrativeSourceCount,
+        },
+        humanReview: {
+          state: narrativeReviewState,
+          sourceRecorded: narrativeReviewIsRecorded,
+          ...(data.narrative.reviewed_by
+            ? { actor: data.narrative.reviewed_by }
+            : {}),
+          ...(data.narrative.reviewed_at
+            ? { occurredAt: data.narrative.reviewed_at }
+            : {}),
+        },
+        clientUse: "blocked",
+        freshness: {
+          state: "current",
+          asOf: data.version_created_at,
+        },
+        limitations: [
+          ...data.narrative.client_ready_blockers,
+          ...data.narrative.limitations.map(({ message }) => message),
+        ],
+      }),
       sections: data.narrative.sections.map((section) => ({
         key: section.section_key,
         title: section.title,
