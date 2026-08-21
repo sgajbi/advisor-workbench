@@ -143,6 +143,29 @@ describe("proposal risk and impact contract", () => {
     ).toThrow(/capability registry is incomplete/);
   });
 
+  it("keeps approval requirement identities distinct when fields contain delimiters", () => {
+    const payload = proposalRiskImpactFixture();
+    const firstRequirement = payload.data.decision.approval_requirements[0]!;
+    firstRequirement.policy_version = "policy:a";
+    firstRequirement.reason_code = "reason";
+    payload.data.decision.approval_requirements.push({
+      ...firstRequirement,
+      policy_version: "policy",
+      reason_code: "a:reason",
+      summary: "A structurally distinct source requirement.",
+    });
+
+    expect(
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ).data.decision.approval_requirements,
+    ).toHaveLength(2);
+  });
+
   it.each([
     [
       "decision status",

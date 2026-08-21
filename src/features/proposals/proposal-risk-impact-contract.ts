@@ -166,6 +166,19 @@ export type ProposalRiskImpactRequirement = {
   policy_version: string;
 };
 
+export function proposalRiskImpactRequirementIdentity(
+  requirement: Pick<
+    ProposalRiskImpactRequirement,
+    "approval_type" | "policy_version" | "reason_code"
+  >,
+): string {
+  return JSON.stringify([
+    requirement.approval_type,
+    requirement.policy_version,
+    requirement.reason_code,
+  ]);
+}
+
 export type ProposalRiskImpactMaterialChange = {
   change_id: string;
   family: (typeof MATERIAL_CHANGE_FAMILIES)[number];
@@ -503,10 +516,7 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
     "decision.approval_requirements",
   ).map(parseRequirement);
   unique(
-    approvalRequirements.map(
-      ({ approval_type, policy_version, reason_code }) =>
-        `${approval_type}:${policy_version}:${reason_code}`,
-    ),
+    approvalRequirements.map(proposalRiskImpactRequirementIdentity),
     "approval requirement identities",
   );
   const materialChanges = array(
