@@ -509,10 +509,18 @@ describe("ProposalLifecycleWorkspace", () => {
     getProposalRiskImpactMock.mockResolvedValueOnce(envelope);
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace
-        portfolioId="PB_SG_GLOBAL_BAL_001"
-        mode="risk-impact"
-      />,
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="risk-impact"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
@@ -526,6 +534,13 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.queryByText("No active approval requirement is reported."),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Partial evidence")).toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
   });
 
   it("names expected allocation views missing from partial source evidence", async () => {
@@ -638,10 +653,18 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace
-        portfolioId="PB_SG_GLOBAL_BAL_001"
-        mode="risk-impact"
-      />,
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="risk-impact"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
@@ -651,6 +674,22 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Retry source evidence" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Supporting evidence is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Supporting decision evidence in this view is restricted by source entitlements.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Proposals in this view" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Proposal posture is restricted" }),
     ).not.toBeInTheDocument();
   });
 
@@ -1083,7 +1122,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Proposal posture is restricted",
+        name: "Supporting evidence is restricted",
       }),
     ).toBeInTheDocument();
     expect(

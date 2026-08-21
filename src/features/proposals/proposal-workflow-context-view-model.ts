@@ -165,6 +165,7 @@ export function buildProposalQueueWorkflowContext({
   isLoading,
   isRefreshing,
   permissionBlocked,
+  hasRestrictedEvidence,
   hasError,
   hasUnavailableEvidence,
   hasProposalRefreshFailure,
@@ -183,6 +184,7 @@ export function buildProposalQueueWorkflowContext({
   isLoading: boolean;
   isRefreshing: boolean;
   permissionBlocked: boolean;
+  hasRestrictedEvidence: boolean;
   hasError: boolean;
   hasUnavailableEvidence: boolean;
   hasProposalRefreshFailure: boolean;
@@ -269,6 +271,7 @@ export function buildProposalQueueWorkflowContext({
 
   const hasPartialQueueWindow = hasMoreResults || hasPreviousResults;
   const hasPartialEvidence =
+    hasRestrictedEvidence ||
     hasUnavailableEvidence ||
     hasProposalRefreshFailure ||
     hasSupportingEvidenceRefreshFailure ||
@@ -278,6 +281,11 @@ export function buildProposalQueueWorkflowContext({
     const blockers = [
       ...(hasProposalRefreshFailure
         ? ["The latest proposal view could not be confirmed."]
+        : []),
+      ...(hasRestrictedEvidence
+        ? [
+            "Supporting decision evidence in this view is restricted by source entitlements.",
+          ]
         : []),
       ...(hasUnavailableEvidence
         ? ["One or more supporting decision-evidence sources are unavailable."]
@@ -293,12 +301,15 @@ export function buildProposalQueueWorkflowContext({
         : []),
     ];
     const title =
+      hasRestrictedEvidence ||
       hasUnavailableEvidence ||
       hasProposalRefreshFailure ||
       hasSupportingEvidenceRefreshFailure
         ? hasPartialQueueWindow || hasProposalRefreshFailure
           ? "Proposal view is incomplete"
-          : "Supporting evidence is incomplete"
+          : hasRestrictedEvidence
+            ? "Supporting evidence is restricted"
+            : "Supporting evidence is incomplete"
         : attentionCount > 0
           ? `${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} attention in this view`
           : hasMoreResults
@@ -315,11 +326,15 @@ export function buildProposalQueueWorkflowContext({
             ? "No proposals match the current view; earlier proposals remain available."
             : "No proposals are visible while supporting decision evidence remains incomplete.";
     const nextAction = hasProposalRefreshFailure
-      ? hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
-        ? "Retry the proposal view and restore supporting decision evidence before relying on the current workflow posture."
-        : "Retry the proposal view before relying on the current queue posture."
-      : hasUnavailableEvidence
-        ? "Restore the unavailable decision-evidence source before relying on the current workflow posture."
+      ? hasRestrictedEvidence
+        ? "Retry the proposal view, then use an entitled role or request access to the required supporting decision evidence."
+        : hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
+          ? "Retry the proposal view and restore supporting decision evidence before relying on the current workflow posture."
+          : "Retry the proposal view before relying on the current queue posture."
+      : hasRestrictedEvidence
+        ? "Use an entitled role or request access to the required supporting decision evidence."
+        : hasUnavailableEvidence
+          ? "Restore the unavailable decision-evidence source before relying on the current workflow posture."
       : hasSupportingEvidenceRefreshFailure
         ? "Retry the supporting-evidence refresh before relying on the current workflow posture."
         : totalCount === 0 && hasMoreResults
