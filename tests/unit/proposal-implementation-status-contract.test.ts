@@ -108,6 +108,33 @@ describe("proposal implementation status contract", () => {
     ).toThrow(/evidence state does not match/i);
   });
 
+  it("rejects an executed posture without its source completion time", () => {
+    const payload = proposalImplementationStatusFixture();
+    Object.assign(payload.data, {
+      handoff_status: "EXECUTED",
+      status_family: "completed",
+      next_action: "NO_ACTION",
+      reason_code: "implementation_executed",
+      attention_required: false,
+      terminal: true,
+      executed_at: null,
+    });
+    payload.data.latest_workflow_event!.event_type = "EXECUTED";
+
+    expect(() =>
+      parseProposalImplementationStatusEnvelope(payload, ...SELECTED_IDENTITY),
+    ).toThrow(/executed handoff does not contain a completion timestamp/i);
+  });
+
+  it("rejects a completion time on a handoff that is not executed", () => {
+    const payload = proposalImplementationStatusFixture();
+    payload.data.executed_at = "2026-08-20T09:05:00Z";
+
+    expect(() =>
+      parseProposalImplementationStatusEnvelope(payload, ...SELECTED_IDENTITY),
+    ).toThrow(/non-executed handoff contains a completion timestamp/i);
+  });
+
   it.each([
     [
       "proposal identity drift",

@@ -493,6 +493,12 @@ function validateSemantics(data: ProposalImplementationStatusData): void {
   ) {
     invalid("not-requested handoff contains downstream request evidence");
   }
+  if (data.handoff_status === "EXECUTED" && data.executed_at === null) {
+    invalid("executed handoff does not contain a completion timestamp");
+  }
+  if (data.handoff_status !== "EXECUTED" && data.executed_at !== null) {
+    invalid("non-executed handoff contains a completion timestamp");
+  }
   if (
     data.latest_workflow_event?.event_type !==
     (semantics.eventType ?? undefined)
