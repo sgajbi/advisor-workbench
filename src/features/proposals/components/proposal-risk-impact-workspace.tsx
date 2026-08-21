@@ -279,7 +279,9 @@ function RiskImpactEvidence({
           </SemanticBadge>
         </div>
 
-        {model.allocation.views.length > 0 && allocationView ? (
+        {model.allocation.isAvailable &&
+        model.allocation.views.length > 0 &&
+        allocationView ? (
           <>
             {model.allocation.missingExpectedDimensions.length > 0 ? (
               <ScreenStatePanel
@@ -364,7 +366,7 @@ function RiskImpactEvidence({
           <ScreenStatePanel
             kind="partial"
             title="Allocation comparison is not available"
-            body="The proposal source did not provide a current and proposed allocation view. No comparison is inferred."
+            body="The proposal source did not provide a usable current and proposed allocation view. No comparison is inferred."
           />
         )}
       </section>
@@ -382,17 +384,27 @@ function RiskImpactEvidence({
               {model.risk.state.label}
             </SemanticBadge>
           </div>
-          <p className={styles.businessSummary}>{model.risk.summary}</p>
-          {model.risk.highlights.length > 0 ? (
-            <ul className={styles.evidenceList}>
-              {model.risk.highlights.map((highlight) => (
-                <li key={highlight}>{highlight}</li>
-              ))}
-            </ul>
+          {model.risk.isAvailable ? (
+            <>
+              <p className={styles.businessSummary}>{model.risk.summary}</p>
+              {model.risk.highlights.length > 0 ? (
+                <ul className={styles.evidenceList}>
+                  {model.risk.highlights.map((highlight) => (
+                    <li key={highlight}>{highlight}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.muted}>
+                  No risk highlights were supplied by the source.
+                </p>
+              )}
+            </>
           ) : (
-            <p className={styles.muted}>
-              No risk highlights were supplied by the source.
-            </p>
+            <ScreenStatePanel
+              kind="partial"
+              title="Risk evidence is not confirmed"
+              body="The source did not return usable proposal risk evidence. No risk conclusion is inferred."
+            />
           )}
           <p className={styles.sourceLine}>
             Risk authority: {model.risk.source}
@@ -411,31 +423,41 @@ function RiskImpactEvidence({
               {model.workflowGate.state.label}
             </SemanticBadge>
           </div>
-          <dl className={styles.gateFacts}>
-            <div>
-              <dt>Current gate</dt>
-              <dd>{model.workflowGate.gate}</dd>
-            </div>
-            <div>
-              <dt>Required next step</dt>
-              <dd>{model.workflowGate.nextStep}</dd>
-            </div>
-          </dl>
-          {model.workflowGate.reasons.length > 0 ? (
-            <ul
-              className={styles.evidenceList}
-              aria-label="Workflow gate reasons"
-            >
-              {model.workflowGate.reasons.map((reason) => (
-                <li
-                  key={`${reason.source}:${reason.reason}:${reason.severity}`}
+          {model.workflowGate.isAvailable ? (
+            <>
+              <dl className={styles.gateFacts}>
+                <div>
+                  <dt>Current gate</dt>
+                  <dd>{model.workflowGate.gate}</dd>
+                </div>
+                <div>
+                  <dt>Required next step</dt>
+                  <dd>{model.workflowGate.nextStep}</dd>
+                </div>
+              </dl>
+              {model.workflowGate.reasons.length > 0 ? (
+                <ul
+                  className={styles.evidenceList}
+                  aria-label="Workflow gate reasons"
                 >
-                  <strong>{reason.reason}</strong> · {reason.source} ·{" "}
-                  {reason.severity}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+                  {model.workflowGate.reasons.map((reason) => (
+                    <li
+                      key={`${reason.source}:${reason.reason}:${reason.severity}`}
+                    >
+                      <strong>{reason.reason}</strong> · {reason.source} ·{" "}
+                      {reason.severity}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
+          ) : (
+            <ScreenStatePanel
+              kind="partial"
+              title="Workflow gate is not confirmed"
+              body="The source did not return a ready workflow gate. No gate or required next step is inferred."
+            />
+          )}
           <p className={styles.muted}>{model.workflowGate.disclaimer}</p>
         </section>
       </div>
@@ -530,6 +552,10 @@ function RiskImpactEvidence({
             <div>
               <dt>Correlation ID</dt>
               <dd>{model.lineage.correlationId}</dd>
+            </div>
+            <div>
+              <dt>Response contract</dt>
+              <dd>{model.lineage.contractVersion}</dd>
             </div>
             {model.lineage.decisionSupportReference ? (
               <div>
