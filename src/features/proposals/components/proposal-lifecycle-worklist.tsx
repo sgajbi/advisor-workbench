@@ -47,7 +47,7 @@ export default function ProposalLifecycleWorklist({
             </SemanticBadge>
           ),
           facts: [
-            { label: "Created by", value: row.creator },
+            { label: "Creator record", value: row.creator },
             { label: "Recorded", value: row.createdOn },
           ],
           nextAction: row.nextAction,

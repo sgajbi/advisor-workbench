@@ -54,7 +54,7 @@ describe("proposal lifecycle workspace view model", () => {
         readiness: "Blocked",
         version: "Version 3",
         versionNo: 3,
-        creator: "advisor_1",
+        creator: "Recorded by source",
         createdOn: "19 Aug 2026",
         nextAction: "Risk officer approval needed",
         href: "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=risk-impact",
