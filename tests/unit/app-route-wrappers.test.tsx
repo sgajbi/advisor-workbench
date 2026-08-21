@@ -51,4 +51,20 @@ describe("app route wrappers", () => {
       returnMode: "risk-impact",
     });
   });
+
+  it("falls back safely when proposal return context is repeated", async () => {
+    const route = await ProposalDetailPage({
+      params: Promise.resolve({ proposalId: "PR_1001" }),
+      searchParams: Promise.resolve({
+        portfolioId: ["PB_DUPLICATE", "PB_OTHER"],
+        fromMode: ["risk-impact", "implementation"],
+      }),
+    });
+
+    expect(route.props).toMatchObject({
+      proposalId: "PR_1001",
+      returnPortfolioId: "PB_SG_GLOBAL_BAL_001",
+      returnMode: "approval-queue",
+    });
+  });
 });
