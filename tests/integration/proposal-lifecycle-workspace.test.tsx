@@ -18,6 +18,7 @@ import {
 import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
+import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
 import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
@@ -123,6 +124,14 @@ const getProposalExecutionStatusMock = vi.fn(
     versionNo: number,
     _currentState: string,
   ) => implementationStatusFixture(proposalId, versionNo),
+);
+const getProposalDiscussionPackMock = vi.fn(
+  async (
+    _proposalId: string,
+    _portfolioId: string,
+    _versionNo: number,
+    _currentState: string,
+  ) => proposalDiscussionPackFixture(),
 );
 function selectedProposalEvidence(proposalId: string) {
   const proposal =
@@ -290,6 +299,18 @@ vi.mock("../../src/features/proposals/api", () => ({
       versionNo,
       currentState,
     ),
+  getProposalDiscussionPack: (
+    proposalId: string,
+    portfolioId: string,
+    versionNo: number,
+    currentState: string,
+  ) =>
+    getProposalDiscussionPackMock(
+      proposalId,
+      portfolioId,
+      versionNo,
+      currentState,
+    ),
   getProposal: (proposalId: string, includeEvidence?: boolean) =>
     getProposalMock(proposalId, includeEvidence),
   getProposalWorkflowEvents: (proposalId: string) =>
@@ -350,6 +371,15 @@ describe("ProposalLifecycleWorkspace", () => {
         versionNo: number,
         _currentState: string,
       ) => implementationStatusFixture(proposalId, versionNo),
+    );
+    getProposalDiscussionPackMock.mockReset();
+    getProposalDiscussionPackMock.mockImplementation(
+      async (
+        _proposalId: string,
+        _portfolioId: string,
+        _versionNo: number,
+        _currentState: string,
+      ) => proposalDiscussionPackFixture(),
     );
     getProposalMock.mockReset();
     getProposalMock.mockImplementation(
@@ -553,8 +583,7 @@ describe("ProposalLifecycleWorkspace", () => {
           fixture.data.attention_required = true;
           fixture.data.terminal = true;
           fixture.data.reason_code = "implementation_rejected";
-          fixture.data.latest_workflow_event!.event_type =
-            "EXECUTION_REJECTED";
+          fixture.data.latest_workflow_event!.event_type = "EXECUTION_REJECTED";
         }
         return fixture;
       },
@@ -581,9 +610,9 @@ describe("ProposalLifecycleWorkspace", () => {
       5,
       "REJECTED",
     );
-    expect(screen.getAllByText(/Investigate the rejection reason/)).toHaveLength(
-      2,
-    );
+    expect(
+      screen.getAllByText(/Investigate the rejection reason/),
+    ).toHaveLength(2);
   });
 
   it("keeps implementation evidence permission failure distinct and does not infer progress", async () => {
@@ -873,7 +902,10 @@ describe("ProposalLifecycleWorkspace", () => {
       | ((value: ReturnType<typeof implementationStatusFixture>) => void)
       | undefined;
     listProposalsMock
-      .mockResolvedValueOnce({ items: [unversionedProposal], next_cursor: null })
+      .mockResolvedValueOnce({
+        items: [unversionedProposal],
+        next_cursor: null,
+      })
       .mockResolvedValueOnce({
         items: [proposalListFixture.items[1]],
         next_cursor: null,
@@ -3168,5 +3200,181 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByText("Policy review queue unavailable"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
+  });
+
+  it("renders a source-backed discussion worklist and keeps client controls independent", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          created_by: "advisor-7",
+          title: "Rebalance concentrated technology exposure",
+        },
+        {
+          proposal_id: "proposal-2",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 1,
+          created_at: "2026-08-21T10:00:00Z",
+          created_by: "advisor-9",
+          title: "Income mandate adjustment",
+        },
+      ],
+      next_cursor: null,
+    });
+    getProposalDiscussionPackMock.mockImplementation(
+      async (proposalId: string, _portfolioId: string, versionNo: number) => {
+        const fixture = proposalDiscussionPackFixture();
+        fixture.data.proposal_id = proposalId;
+        fixture.data.version_no = versionNo;
+        fixture.data.title =
+          proposalId === "proposal-2"
+            ? "Income mandate adjustment"
+            : fixture.data.title;
+        fixture.data.lineage.proposal_version_id = `${proposalId}:${versionNo}`;
+        return fixture;
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Conversation controls still need advisor attention",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Approved for advisor use")).toHaveLength(2);
+    expect(
+      screen.getByText("No client consent is recorded for this version."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Client release and delivery")).toBeInTheDocument();
+    expect(screen.getByText("Conversation opening")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /publish|deliver|contact client/i }),
+    ).not.toBeInTheDocument();
+    expect(listProposalsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        state: "AWAITING_CLIENT_CONSENT",
+      }),
+    );
+    expect(getProposalDiscussionPackMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole("option", { name: /Income mandate adjustment/i }),
+    );
+
+    await waitFor(() => {
+      expect(getProposalDiscussionPackMock).toHaveBeenLastCalledWith(
+        "proposal-2",
+        "PB_SG_GLOBAL_BAL_001",
+        1,
+        "AWAITING_CLIENT_CONSENT",
+      );
+    });
+    expect(getProposalDiscussionPackMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps source refresh pending until the selected evidence succeeds and restores focus", async () => {
+    listProposalsMock.mockResolvedValue({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          title: "Rebalance concentrated technology exposure",
+        },
+      ],
+      next_cursor: null,
+    });
+    let completeRefresh:
+      | ((value: ReturnType<typeof proposalDiscussionPackFixture>) => void)
+      | undefined;
+    getProposalDiscussionPackMock
+      .mockResolvedValueOnce(proposalDiscussionPackFixture())
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof proposalDiscussionPackFixture>>(
+            (resolve) => {
+              completeRefresh = resolve;
+            },
+          ),
+      );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    const refresh = await screen.findByRole("button", {
+      name: "Refresh evidence",
+    });
+    refresh.focus();
+    fireEvent.click(refresh);
+
+    expect(
+      await screen.findByText("Reconfirming the selected proposal"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Selected proposal evidence confirmed"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      completeRefresh?.(proposalDiscussionPackFixture());
+    });
+
+    expect(
+      await screen.findByText("Selected proposal evidence confirmed"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(refresh).toHaveFocus());
+  });
+
+  it("shows an explicit failure instead of inferring discussion readiness", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          title: "Rebalance concentrated technology exposure",
+        },
+      ],
+      next_cursor: null,
+    });
+    getProposalDiscussionPackMock.mockRejectedValueOnce(
+      new Error("Gateway unavailable"),
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Conversation evidence is unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry conversation evidence" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Advisor-use conversation evidence is confirmed"),
+    ).not.toBeInTheDocument();
   });
 });
