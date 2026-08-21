@@ -87,6 +87,14 @@
   background: #fbfcfd;
 }
 
+.workflowFacts div:first-child {
+  grid-column: 1 / -1;
+}
+
+.workflowFacts div:last-child:nth-child(even) {
+  grid-column: 1 / -1;
+}
+
 .workflowFacts dt {
   color: #5f6670;
   font-size: 10px;

@@ -21,12 +21,16 @@ const proposalListFixture = {
       proposal_id: "PRP-RISK",
       portfolio_id: "PB_SG_GLOBAL_BAL_001",
       current_state: "RISK_REVIEW",
+      current_version_no: 3,
+      created_at: "2026-08-19T09:30:00Z",
       title: "Technology concentration trim",
     },
     {
       proposal_id: "PRP-READY",
       portfolio_id: "PB_SG_GLOBAL_BAL_001",
       current_state: "EXECUTION_READY",
+      current_version_no: 5,
+      created_at: "2026-08-20T11:15:00Z",
       title: "Execution handoff",
     },
   ],
@@ -231,6 +235,68 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
   });
 
+  it("keeps the selected proposal posture beside the keyboard-operable worklist", async () => {
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+    );
+
+    const worklist = await screen.findByRole("listbox", { name: "Approval Queue proposals" });
+    const options = within(worklist).getAllByRole("option");
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(options[0]).toHaveTextContent("Version 3");
+    expect(options[0]).toHaveTextContent("19 Aug 2026");
+
+    const selectedProposal = screen.getByRole("region", { name: "Selected proposal decision" });
+    expect(within(selectedProposal).getByRole("heading", { name: "Technology concentration trim" })).toBeInTheDocument();
+    expect(within(selectedProposal).getByText("Risk officer approval needed")).toBeInTheDocument();
+    expect(within(selectedProposal).getByRole("link", { name: "Open proposal review" })).toHaveAttribute(
+      "href",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=approval-queue"
+    );
+
+    fireEvent.keyDown(options[0], { key: "ArrowDown" });
+    expect(options[1]).toHaveFocus();
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(within(selectedProposal).getByRole("heading", { name: "Execution handoff" })).toBeInTheDocument();
+    expect(within(selectedProposal).getByText("Ready for execution handoff")).toBeInTheDocument();
+  });
+
+  it("resets selected proposal identity when the source window changes", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({ ...proposalListFixture, next_cursor: "cursor-window-2" })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "PRP-CONSENT",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "AWAITING_CLIENT_CONSENT",
+            current_version_no: 2,
+            created_at: "2026-08-21T08:15:00Z",
+            title: "Consent evidence review",
+          },
+        ],
+        next_cursor: null,
+      });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+    );
+
+    const worklist = await screen.findByRole("listbox", { name: "Approval Queue proposals" });
+    const firstWindowOptions = within(worklist).getAllByRole("option");
+    fireEvent.keyDown(firstWindowOptions[0], { key: "ArrowDown" });
+    expect(firstWindowOptions[1]).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
+
+    const nextWindowProposal = await screen.findByRole("option", {
+      name: /Consent evidence review/,
+    });
+    expect(nextWindowProposal).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByRole("option", { name: /Execution handoff/ })).not.toBeInTheDocument();
+  });
+
   it("keeps suitability posture loading until the policy queue and selected evidence settle", async () => {
     let resolvePolicyQueue: ((value: typeof policyReviewQueueFixture) => void) | undefined;
     let resolvePolicyEvaluation:
@@ -422,7 +488,9 @@ describe("ProposalLifecycleWorkspace", () => {
       </ProposalWorkflowContextProvider>
     );
 
-    expect(await screen.findByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: /Technology concentration trim/ })
+    ).toBeInTheDocument();
     listProposalsMock.mockRejectedValueOnce(new Error("proposal refresh unavailable"));
 
     await act(async () => {
@@ -625,7 +693,9 @@ describe("ProposalLifecycleWorkspace", () => {
         cursor: "cursor-window-2",
       });
     });
-    expect(await screen.findByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: /Technology concentration trim/ })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "1 proposal needs attention in this view" })
     ).toBeInTheDocument();

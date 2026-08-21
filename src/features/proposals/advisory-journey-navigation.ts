@@ -142,13 +142,13 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
   {
     key: "approval-queue",
     label: "Approvals",
-    detail: "Maker-checker",
+    detail: "Review worklist",
     title: "Approval Queue",
     description:
-      "Advisor, risk, compliance, and maker-checker approval posture.",
+      "Advisor review posture, supporting evidence, and governed next actions.",
     primaryDecision:
       "Which proposals are ready, blocked, or waiting for review?",
-    nextAction: "Approve, reject, or return the proposal for revision.",
+    nextAction: "Open a proposal to verify evidence and determine the governed next step.",
     dataSources: ["lotus-gateway", "lotus-advise"],
     shellVisible: true,
   },
