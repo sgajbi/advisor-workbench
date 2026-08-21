@@ -226,6 +226,41 @@ describe("AdvisorCockpitWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the source action usable when an optional proposal reference is malformed", async () => {
+    listAdvisorCockpitActionsMock.mockResolvedValueOnce({
+      total_count: 1,
+      items: [
+        {
+          ...advisorAction,
+          proposal_id: 42 as unknown as string,
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <AdvisorCockpitWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+    );
+
+    const actionRecords = within(
+      await screen.findByTestId("advisor-cockpit-action-records"),
+    );
+    expect(
+      actionRecords.getByRole("heading", {
+        level: 3,
+        name: "Policy review required",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByText("Policy evaluation requires compliance review."),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("button", { name: "Acknowledge review" }),
+    ).toBeEnabled();
+    expect(
+      actionRecords.queryByRole("link", { name: /Open proposal/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps unknown readiness neutral and discloses raw values only as support detail", async () => {
     getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
       snapshot_id: "cockpit_snapshot_unknown",
