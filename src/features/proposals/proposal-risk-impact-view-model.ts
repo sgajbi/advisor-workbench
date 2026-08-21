@@ -105,6 +105,7 @@ export function buildProposalRiskImpactModel(
         (decisionIsAvailable && data.decision.decision_policy_version) ||
         "Not reported",
       activeRequirements: activeRequirements.map((requirement) => ({
+        id: `${requirement.approval_type}:${requirement.policy_version}:${requirement.reason_code}`,
         type: businessLabel(requirement.approval_type),
         summary: requirement.summary,
         severity: businessLabel(requirement.severity),

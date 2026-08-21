@@ -102,8 +102,8 @@ decision, clear a gate, approve suitability, or create an order.
 | --- | --- | --- |
 | Proposal worklist, portfolio, lifecycle state, version, creator, and recorded time | Parsed from the cursor-bounded proposal-list contract using server-side `RISK_REVIEW` filtering | Gateway over Advise proposal lifecycle |
 | Current and proposed allocation | Exact source decimal strings aligned by dimension member; missing sides remain explicitly unavailable | Gateway projection composing Advise proposal evidence with Core allocation authority or a bounded Advise fallback declared by the source |
-| Risk observations and supportability | Source measures, labels, units, status, scope, limitations, and support references | Gateway over the risk authority named in the response, normally Lotus Risk |
-| Workflow gates | Source gate state, owner, required evidence, and next step | Gateway over Advise workflow authority |
+| Risk observations and supportability | Source-provided summary and highlights, section supportability, and named source | Gateway over the risk authority named in the response, normally Lotus Risk |
+| Workflow gates | Source gate state, coded reasons with severity and source, and recommended next step | Gateway over Advise workflow authority |
 | Capability and lineage evidence | Contract support, provenance, fallback, correlation, and source references | Gateway projection over Advise, Core, and Risk evidence |
 | Visual allocation bars | Relative display aid within the returned allocation set | Workbench presentation only; exact source values remain authoritative |
 

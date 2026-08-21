@@ -97,6 +97,15 @@ describe("proposal risk and impact contract", () => {
       },
     ],
     [
+      "duplicate approval-requirement identity",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.approval_requirements.push({
+          ...payload.data.decision.approval_requirements[0]!,
+          summary: "A second summary must not share the same source identity.",
+        });
+      },
+    ],
+    [
       "unknown lifecycle vocabulary",
       (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
         payload.data.current_state = "UNKNOWN" as never;
