@@ -242,14 +242,21 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("approved narrative has no complete source review record");
   }
+  const narrativeArtifactIsComplete = Boolean(
+    data.narrative.narrative_id &&
+    data.narrative.source_narrative_hash &&
+    data.narrative.status &&
+    data.narrative.generation_mode &&
+    data.narrative.sections.length > 0 &&
+    data.narrative.sections.every(({ source_refs }) => source_refs.length > 0),
+  );
+  if (data.narrative.state === "supported" && !narrativeArtifactIsComplete)
+    invalid("supported narrative has no complete source artifact");
   if (
     data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
-    (!data.narrative.narrative_id ||
-      !data.narrative.source_narrative_hash ||
-      data.narrative.sections.length === 0 ||
-      data.narrative.sections.some(({ source_refs }) => source_refs.length === 0))
+    data.narrative.status !== "READY_FOR_ADVISOR_REVIEW"
   ) {
-    invalid("approved narrative has no complete source artifact");
+    invalid("approved narrative is not ready for advisor review");
   }
   if (
     data.memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
@@ -257,17 +264,26 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("approved memo has no complete source review record");
   }
+  const memoArtifactIsComplete = Boolean(
+    data.memo.memo_id &&
+    data.memo.memo_version &&
+    data.memo.memo_status &&
+    data.memo.lifecycle_status &&
+    data.memo.source_input_hash &&
+    data.memo.memo_hash &&
+    data.memo.sections.length > 0,
+  );
+  if (data.memo.state === "supported" && !memoArtifactIsComplete)
+    invalid("supported memo has no complete source artifact");
   if (
     data.memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
-    (!data.memo.memo_id ||
-      !data.memo.memo_version ||
-      !data.memo.memo_status ||
-      !data.memo.lifecycle_status ||
-      !data.memo.source_input_hash ||
-      !data.memo.memo_hash ||
-      data.memo.sections.length === 0)
+    (data.memo.memo_status !== "READY" ||
+      data.memo.lifecycle_status !== "FINALIZED" ||
+      data.memo.sections.some(
+        ({ status, review_required }) => status !== "READY" || review_required,
+      ))
   ) {
-    invalid("approved memo has no complete source artifact");
+    invalid("approved memo is not finalized for advisor use");
   }
   if (
     data.narrative.source_narrative_hash !== data.lineage.narrative_hash &&
@@ -348,6 +364,22 @@ export function parseProposalDiscussionPackEnvelope(
     )
   ) {
     invalid("capability registry is incomplete");
+  }
+  const capabilityStates = new Map(
+    data.capabilities.map(({ key, state }) => [key, state]),
+  );
+  const evidenceCapabilityStates = [
+    ["advisor_narrative", data.narrative.state],
+    ["advisor_memo", data.memo.state],
+    ["report_package", data.package.state],
+    ["approval_and_consent_records", data.consent.state],
+  ] as const;
+  if (
+    evidenceCapabilityStates.some(
+      ([key, state]) => capabilityStates.get(key) !== state,
+    )
+  ) {
+    invalid("capability registry does not match source evidence");
   }
 
   return {

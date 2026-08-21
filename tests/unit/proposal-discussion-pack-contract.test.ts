@@ -196,7 +196,7 @@ describe("proposal discussion pack contract", () => {
 
     expect(() =>
       parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
-    ).toThrow("approved narrative has no complete source artifact");
+    ).toThrow("supported narrative has no complete source artifact");
   });
 
   it("requires a complete memo artifact before accepting memo approval", () => {
@@ -205,7 +205,37 @@ describe("proposal discussion pack contract", () => {
 
     expect(() =>
       parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
-    ).toThrow("approved memo has no complete source artifact");
+    ).toThrow("supported memo has no complete source artifact");
+  });
+
+  it("rejects approved narrative that is not ready for advisor review", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.narrative.status = "BLOCKED_POLICY_INCOMPLETE";
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("approved narrative is not ready for advisor review");
+  });
+
+  it("rejects approved memo whose source sections are not finalized", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.memo.sections[0]!.review_required = true;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("approved memo is not finalized for advisor use");
+  });
+
+  it("rejects capability posture that contradicts source evidence", () => {
+    const fixture = proposalDiscussionPackFixture();
+    const narrativeCapability = fixture.data.capabilities.find(
+      ({ key }) => key === "advisor_narrative",
+    )!;
+    narrativeCapability.state = "partial";
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("capability registry does not match source evidence");
   });
 
   it("requires a complete source record for an available report package", () => {
