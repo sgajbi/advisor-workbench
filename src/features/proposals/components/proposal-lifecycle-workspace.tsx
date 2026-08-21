@@ -206,6 +206,7 @@ export default function ProposalLifecycleWorkspace({
     query: implementationStatusQuery,
     selectedProposal: selectedImplementationProposal,
     selectProposal: selectImplementationProposal,
+    refreshForProposal: refreshImplementationStatusForProposal,
     sourcePosture: implementationStatusPosture,
     workflowContext: selectedImplementationWorkflowContext,
   } = useProposalImplementationStatus({ portfolioId, mode, rows: model.rows });
@@ -938,42 +939,32 @@ export default function ProposalLifecycleWorkspace({
           hasError={implementationStatusPosture.isUnavailable}
           hasRefreshFailure={implementationStatusPosture.hasRefreshFailure}
           onRefresh={async () => {
-            const [proposalResult, statusResult] = await Promise.all([
-              proposalQuery.refetch(),
-              implementationStatusQuery.refetch(),
-            ]);
-            const failedResult = [proposalResult, statusResult].find(
-              (result) => result.isError || result.error !== null,
-            );
-            if (failedResult) {
+            const proposalResult = await proposalQuery.refetch();
+            if (proposalResult.isError || proposalResult.error !== null) {
               throw (
-                failedResult.error ??
-                new Error("Implementation evidence refresh did not complete.")
+                proposalResult.error ??
+                new Error("Implementation worklist refresh did not complete.")
               );
             }
-            const refreshedProposal = proposalResult.data?.items.find(
-              (proposal) =>
-                proposal.proposal_id ===
-                selectedImplementationProposal?.proposalId,
+            const refreshedModel = buildProposalLifecycleWorkspaceModel({
+              portfolioId,
+              mode,
+              proposals: proposalResult.data?.items ?? [],
+              hasMoreResults: Boolean(proposalResult.data?.next_cursor),
+              hasPreviousResults: sourceWindow.hasPrevious,
+            });
+            const refreshedProposal = refreshedModel.rows.find(
+              (row) =>
+                row.proposalId === selectedImplementationProposal?.proposalId,
             );
-            const refreshedEvidence = statusResult.data?.data;
-            if (
-              !refreshedProposal ||
-              refreshedProposal.portfolio_id !== portfolioId ||
-              !refreshedEvidence ||
-              refreshedEvidence.proposal_id !== refreshedProposal.proposal_id ||
-              refreshedEvidence.portfolio_id !==
-                refreshedProposal.portfolio_id ||
-              refreshedEvidence.current_version_no !==
-                refreshedProposal.current_version_no ||
-              refreshedEvidence.current_state !==
-                refreshedProposal.current_state
-            ) {
+            if (!refreshedProposal || refreshedProposal.versionNo === null) {
               throw new Error(
-                "The refreshed worklist and implementation evidence do not identify the same proposal state.",
+                "The selected proposal is no longer available for implementation follow-up.",
               );
             }
-            return [proposalResult, statusResult];
+            return await refreshImplementationStatusForProposal(
+              refreshedProposal,
+            );
           }}
         />
       ) : (
