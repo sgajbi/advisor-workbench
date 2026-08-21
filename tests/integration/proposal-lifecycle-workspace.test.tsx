@@ -912,6 +912,7 @@ describe("ProposalLifecycleWorkspace", () => {
     const recheck = screen.getByRole("button", {
       name: "Recheck proposal version",
     });
+    recheck.focus();
     fireEvent.click(recheck);
 
     const pendingRecheck = await screen.findByRole("button", {
@@ -941,6 +942,17 @@ describe("ProposalLifecycleWorkspace", () => {
       "PB_SG_GLOBAL_BAL_001",
       5,
       "EXECUTION_READY",
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Refresh implementation evidence",
+        }),
+      ).toHaveFocus(),
+    );
+    expect(screen.getByTestId("workbench-refresh-status")).toHaveAttribute(
+      "data-state",
+      "confirmed",
     );
   });
 

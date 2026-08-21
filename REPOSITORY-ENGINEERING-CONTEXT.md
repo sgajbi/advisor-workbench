@@ -599,7 +599,8 @@ Current repository posture:
     keep a retry action available when the list omits the selected proposal version. Drive the
     action and shared workflow rail from the complete worklist-plus-detail refresh transaction, not
     only the currently observed detail query. Treat a missing post-request handoff timestamp as
-    partial evidence. Do
+    partial evidence, reject request/downstream references for `NOT_REQUESTED`, and preserve focus
+    across an unversioned-to-versioned recovery for the same selected proposal. Do
     not mutate implementation status or invent owner, SLA, priority, order, fill, allocation,
     settlement, custody, or accounting completion.
 21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.

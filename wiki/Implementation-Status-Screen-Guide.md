@@ -61,7 +61,8 @@ These roles describe business use. They do not create browser-owned roles or ent
 - Distinguishes current-version, earlier-version, and uncorrelated evidence.
 - Keeps missing request, request time, provider, version, or event references explicitly partial.
 - Lets the advisor recheck an unversioned proposal in place; evidence remains withheld until the
-  refreshed worklist supplies a version that can be correlated safely.
+  refreshed worklist supplies a version that can be correlated safely, then focus returns to the
+  same proposal's newly mounted evidence-refresh control.
 - Shows the latest source event and correlation evidence in progressive disclosure.
 - Preserves visible confirmed evidence when a refresh fails, without relabelling it current.
 - Announces success only after the worklist and selected evidence both refresh and still identify
@@ -105,7 +106,7 @@ See [API Surface](API-Surface) and [Integrations](Integrations) for shared contr
 | Partial | Handoff status remains visible, but missing source references are named | Confirm the missing evidence with the owning workflow |
 | Earlier version | Handoff evidence is visibly tied to a prior proposal version | Do not assume the current version is implemented |
 | Proposal version unavailable | Detail evidence is withheld because it cannot be correlated safely | Recheck the proposal version in place; do not reload or infer status |
-| Not requested | No handoff reference is expected and no execution progress is inferred | Request handoff only through the governed full record |
+| Not requested | Request, provider, downstream, version, time, and event references must be absent; no execution progress is inferred | Request handoff only through the governed full record |
 | Refreshing | Prior confirmed evidence remains visible under its prior context | Wait for both reads to reconcile |
 | Refresh failed | Prior evidence remains visible but is not relabelled current | Retry the same selected evidence |
 | Restricted | Handoff evidence is hidden and no retry bypass is offered | Use the bank's access process |

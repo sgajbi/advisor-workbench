@@ -31,9 +31,11 @@ describe("proposal implementation status contract", () => {
       reason_code: "implementation_handoff_not_requested",
       execution_request_id: null,
       execution_provider: null,
+      external_execution_id: null,
       related_version_no: null,
       version_posture: "not_correlated",
       handoff_requested_at: null,
+      executed_at: null,
       latest_workflow_event: null,
     });
     payload.data.freshness = {
@@ -53,6 +55,31 @@ describe("proposal implementation status contract", () => {
       parseProposalImplementationStatusEnvelope(payload, ...SELECTED_IDENTITY)
         .data.evidence_state,
     ).toBe("supported");
+  });
+
+  it("rejects a not-requested posture with downstream request evidence", () => {
+    const payload = proposalImplementationStatusFixture();
+    Object.assign(payload.data, {
+      handoff_status: "NOT_REQUESTED",
+      status_family: "not_started",
+      next_action: "REQUEST_HANDOFF",
+      reason_code: "implementation_handoff_not_requested",
+      latest_workflow_event: null,
+    });
+    payload.data.lineage.latest_event_id = null;
+    payload.data.freshness = {
+      observed_at: "2026-08-20T08:55:00Z",
+      basis: "PROPOSAL_LAST_EVENT",
+    };
+    payload.data.capabilities = payload.data.capabilities.map((capability) =>
+      capability.key === "event_lineage"
+        ? { ...capability, state: "not_available", source_service: null }
+        : capability,
+    );
+
+    expect(() =>
+      parseProposalImplementationStatusEnvelope(payload, ...SELECTED_IDENTITY),
+    ).toThrow(/not-requested handoff contains downstream request evidence/i);
   });
 
   it("accepts partial handoff evidence without upgrading unavailable references", () => {
