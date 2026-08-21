@@ -54,10 +54,12 @@ portfolio ownership, or production identity posture.
 3. Confirm the advisor decision and source-reported action counts.
 4. Review each action's status, priority, owner, review window, evidence, source gaps,
    dependencies, and next business action.
-5. Record an acknowledgement only when the source evidence is current and the action permits it.
-6. Confirm preparation readiness and the explicit client-publication, communication, and order
+5. When an action carries a valid proposal reference, open the proposal through the action's
+   supported Workbench handoff for deeper lifecycle review.
+6. Record an acknowledgement only when the source evidence is current and the action permits it.
+7. Confirm preparation readiness and the explicit client-publication, communication, and order
    boundaries.
-7. Continue to a source record, proposal workflow, or approved support process when deeper review
+8. Continue to a source record, proposal workflow, or approved support process when deeper review
    is required.
 
 ## Implemented Capabilities
@@ -72,6 +74,11 @@ portfolio ownership, or production identity posture.
   complete operational records when workstation rails or compact devices reduce its canvas.
 - Keeps evidence and the next business action together in both presentations; no required action
   is hidden behind horizontal scrolling.
+- Uses the full advisor work canvas for Cockpit actions and retains the unique source-and-scope
+  boundary as a compact inline evidence band instead of an unrelated empty workflow rail.
+- Shows **Open proposal** only when the action carries a valid proposal identity with an existing
+  supported Workbench destination; unsupported policy, memo, report, and execution references do
+  not become invented links.
 - Records a bounded acknowledgement with the action version and an idempotency key.
 - Scopes pending, confirmed, partial, and failed acknowledgement feedback to the selected action;
   another action never inherits that transaction state.
@@ -106,6 +113,7 @@ authorize publication, contact a client, create an order, or claim execution.
 | Readiness, supportability, and unsupported-use boundaries | Translates source posture into bounded business language | Gateway `GET /api/v1/advisor-cockpit/supportability` over Advise |
 | Review acknowledgement | Sends action version and idempotency evidence; strips browser authority | Gateway `POST /api/v1/advisor-cockpit/actions/{action_item_id}/acknowledgements` over Advise |
 | Pending and selected-action feedback | Owns browser transaction presentation while source refresh settles | Workbench over the matching Gateway transaction |
+| Proposal source handoff | Validates the action's proposal identity and links to the existing proposal-detail route; does not infer lifecycle posture | Workbench over the Gateway/Advise action reference and proposal-detail contract |
 
 Workbench does not call Advise or Core directly. Shared contract detail remains in
 [API Surface](API-Surface), and ownership flow remains in [Integrations](Integrations).
@@ -141,6 +149,7 @@ Advisor Cockpit deliberately does not:
   production principal authority,
 - aggregate an advisor, team, household, or multi-portfolio book,
 - replace source reason codes, versions, ids, or dependency posture with browser-authored truth.
+- manufacture navigation for source-reference types that have no supported Workbench destination.
 
 Official wealth-platform and enterprise-design research informed the exception-first workflow and
 capacity-aware presentation. Lotus does not copy another product's layout, language, visual
@@ -151,6 +160,8 @@ identity, data, or unsupported capability.
 - [Advisor Book](Advisor-Book-Workflow) owns source-backed own-book portfolio selection.
 - [Advisory Overview](Advisory-Overview-Screen-Guide) owns proposal pipeline orientation and active
   proposal review.
+- Proposal detail owns source-backed proposal lifecycle review when a Cockpit action provides the
+  supported proposal handoff.
 - Opportunities and Ideas owns Idea-backed opportunity triage when that capability is available.
 - Proposal workflows own suitability, risk impact, approval posture, client discussion packs, and
   implementation tracking within their supported boundaries.
@@ -166,8 +177,9 @@ identity, data, or unsupported capability.
 - `tests/e2e/advisor-cockpit-business-readiness.spec.ts` proves source-backed rendering, selected
   action persistence, reconciliation, focus stability, 44-pixel minimum action targets,
   capacity-driven table/record presentation at the exact 64rem boundary and one pixel below,
-  readiness-label separation, compact measure density, and zero page overflow at 1800, 1440, 1024,
-  and 519 pixels.
+  one visible valid proposal handoff, absence of fabricated reference routes, inline source
+  boundary, removal of duplicate generic context, readiness-label separation, compact measure
+  density, and zero page overflow at 1800, 1440, 1024, and 519 pixels.
 - Canonical validation uses `PB_SG_GLOBAL_BAL_001`, verifies the Gateway contract family and
   idempotent acknowledgement, and captures the governed Advisor Cockpit screenshot only after
   source validation passes.

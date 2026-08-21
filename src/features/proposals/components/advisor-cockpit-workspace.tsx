@@ -247,10 +247,7 @@ export default function AdvisorCockpitWorkspace({
   }
 
   return (
-    <SectionBlock
-      title={model.title}
-      subtitle="Advisor operating priorities, preparation evidence, client-use boundaries, and review acknowledgement."
-    >
+    <SectionBlock>
       {evidencePresentation.state === "refreshing" ? (
         <Alert severity="info" role="status" aria-live="polite" sx={{ mb: 1 }}>
           <AlertTitle>{evidencePresentation.title}</AlertTitle>

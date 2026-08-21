@@ -295,8 +295,8 @@ test("keeps advisor action evidence and review controls visible by module capaci
     const proposalHandoffs = page.getByRole("link", {
       name: "Open proposal proposal_sg_001",
     });
-    await expect(proposalHandoffs).toHaveCount(2);
-    await expect(proposalHandoffs.first()).toHaveAttribute(
+    await expect(proposalHandoffs).toHaveCount(1);
+    await expect(proposalHandoffs).toHaveAttribute(
       "href",
       "/proposals/proposal_sg_001",
     );
@@ -377,7 +377,7 @@ test("keeps advisor action evidence and review controls visible by module capaci
 
     if (process.env.LOTUS_CAPTURE_DIAGNOSTIC_SCREENSHOTS === "1") {
       await page.screenshot({
-        path: `output/playwright/issue-733-advisor-cockpit-${viewport.name}.png`,
+        path: `output/issue-736/advisor-cockpit-${viewport.name}.png`,
         fullPage: true,
       });
     }

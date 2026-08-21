@@ -99,7 +99,6 @@ export type AdvisorCockpitSupportDetail = {
 };
 
 export type AdvisorCockpitModel = {
-  title: string;
   primaryDecision: string;
   recommendedAction: string;
   metrics: AdvisorCockpitMetric[];
@@ -279,7 +278,6 @@ export function buildAdvisorCockpitModel({
   const topAction = actions[0];
 
   return {
-    title: "Advisor Cockpit",
     primaryDecision:
       topAction?.title ??
       (actionPosture === "details-unavailable"

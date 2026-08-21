@@ -5318,3 +5318,66 @@ Advisor Cockpit guide, screen registry/catalogue,
 repository context, research ledger, and review ledger change. Gateway/API/OpenAPI, Advise contracts,
 source calculations, dependencies, global CSS, identity, entitlement, and runtime topology do not
 change. Protected PR, exact-main, wiki publication, and strict parity evidence remain required.
+
+## Advisor Cockpit Source Context And Supported Handoffs
+
+### Business job
+
+An advisor should move from a source-owned Cockpit action into the next implemented business
+workflow without losing the evidence, owner, review window, or operating boundary that justified
+the action. Generic empty context must not consume the workstation canvas or force tablet users to
+scroll through an unrelated proposal prompt after completing the action worklist.
+
+### Current-product research
+
+Research was reviewed on 2026-08-21 from official product and accessibility sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   positions book insights, advisor nudges, next-best action, proposal generation, and whole-
+   portfolio review as connected advisor workflows. Lotus adopts the connected exception-to-action
+   principle, not BlackRock's layout, language, visual identity, data, or unsupported capability.
+2. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   connects guided proposal work from identification through implementation while retaining firm
+   and client criteria. Lotus exposes only the already implemented proposal-detail handoff.
+3. [W3C WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html)
+   supports relocating secondary information at narrow widths while keeping information and
+   functionality available without two-dimensional page scrolling.
+4. [W3C WCAG 2.2 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires programmatically determinable asynchronous feedback without moving focus. Existing
+   selected-action acknowledgement feedback remains mounted and scoped to the matching action.
+
+### Adopted decisions
+
+1. Replace Cockpit's neutral `Select a source record` workflow rail with the reusable source-and-
+   scope boundary rendered inline before the action workspace, recovering the main decision canvas.
+2. Keep action evidence self-contained instead of adding a second selected-action panel that would
+   duplicate the complete worklist record and appear after the full screen on compact devices.
+3. Preserve and validate `proposal_id` in the action view model, then expose **Open proposal** in
+   both table and operational-record presentations through `/proposals/{proposalId}`.
+4. Render no navigation for policy-evaluation, memo, report, execution, or malformed proposal
+   references because no supported Workbench destination is proven for them.
+5. Remove the redundant inner `Advisor Cockpit` heading and dead view-model title so the canonical
+   page heading leads directly to source scope, decision, measures, and actions.
+6. Reuse existing React, semantic HTML, CSS Modules, design-system primitives, Vitest, and
+   Playwright; add no dependency or global CSS.
+
+### Rejected decisions
+
+1. Calling the first action selected without an advisor interaction or adding local selection state
+   solely to populate a duplicate context panel.
+2. Linking raw source references to guessed routes, direct service URLs, or technical support pages.
+3. Hiding the source-and-scope boundary, repeating portfolio/action counts, or moving required
+   action evidence behind a disclosure.
+4. Adding decorative dashboard cards, inferred urgency, recommendation, approval, suitability,
+   publication, delivery, or execution posture not published by the source contract.
+
+### Validation and publication decision
+
+Workbench #736 owns this slice. Focused model, context, route, worklist, and workspace tests prove
+valid and invalid handoff behavior, one business model across both presentations, Cockpit-only
+inline context, and unchanged proposal-shell defaults. Optimized-production browser proof measures
+1800, 1440, 1024, and 519 pixel layouts plus the exact 64rem module boundary, one visible supported
+proposal handoff, no generic workflow rail, boundary reading order, focus-stable acknowledgements,
+and zero page overflow. Reviewed evidence is stored under `output/issue-736/`. No Gateway/Advise
+contract, source calculation, identity, entitlement, dependency, global CSS, or runtime topology
+changes. Protected PR, exact-main, wiki publication, and strict parity evidence remain required.
