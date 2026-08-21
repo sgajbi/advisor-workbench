@@ -285,13 +285,41 @@ describe("proposal discussion pack view model", () => {
 
       expect(model.posture.label).toBe("Review required");
       if (key === "disclosure_policy") {
+        const sourceBlocker = envelope.data.narrative.client_ready_blockers[0]!;
+        const sourceLimitation = envelope.data.narrative.limitations[0]!.message;
         expect(model.disclosurePolicy).toMatchObject({
           isSupported: false,
           status: "Restricted",
           tone: "danger",
         });
         expect(model.disclosures).toEqual([]);
+        expect(model.blockers).toEqual([
+          "Policy disclosure evidence is not available for this proposal version.",
+        ]);
+        expect(model.limitations).toEqual([]);
+        expect(model.narrative.aiDisclosure.limitations).not.toContain(
+          sourceBlocker,
+        );
+        expect(model.narrative.aiDisclosure.limitations).not.toContain(
+          sourceLimitation,
+        );
       }
+    },
+  );
+
+  it.each(["narrative", "memo"] as const)(
+    "withholds %s lineage hash when source evidence is restricted",
+    (key) => {
+      const envelope = proposalDiscussionPackFixture();
+      envelope.data[key].state = "restricted";
+
+      const model = buildProposalDiscussionPackModel(envelope);
+
+      expect(
+        key === "narrative"
+          ? model.lineage.narrativeHash
+          : model.lineage.memoHash,
+      ).toBeNull();
     },
   );
 });

@@ -40,6 +40,10 @@ export function buildProposalDiscussionPackModel(
   const disclosurePolicyCapability = data.capabilities.find(
     ({ key }) => key === "disclosure_policy",
   )!;
+  const disclosurePolicyIsSupported =
+    disclosurePolicyCapability.state === "supported";
+  const policyBoundaryMessage =
+    "Policy disclosure evidence is not available for this proposal version.";
   const narrativeArtifactIsComplete = hasCompleteNarrativeArtifact(data.narrative);
   const narrativeReviewIsRecorded = hasRecordedAudit({
     id: data.narrative.review_id,
@@ -114,10 +118,12 @@ export function buildProposalDiscussionPackModel(
         },
         clientUse: "blocked",
         freshness: { state: "not-reported" },
-        limitations: [
-          ...data.narrative.client_ready_blockers,
-          ...data.narrative.limitations.map(({ message }) => message),
-        ],
+        limitations: disclosurePolicyIsSupported
+          ? [
+              ...data.narrative.client_ready_blockers,
+              ...data.narrative.limitations.map(({ message }) => message),
+            ]
+          : [policyBoundaryMessage],
       }),
       sections: data.narrative.sections.map((section) => ({
         key: section.section_key,
@@ -147,12 +153,12 @@ export function buildProposalDiscussionPackModel(
       })),
     },
     disclosurePolicy: {
-      isSupported: disclosurePolicyCapability.state === "supported",
+      isSupported: disclosurePolicyIsSupported,
       status: supportabilityLabel(disclosurePolicyCapability.state),
       tone: supportabilityTone(disclosurePolicyCapability.state),
     },
     disclosures:
-      disclosurePolicyCapability.state === "supported"
+      disclosurePolicyIsSupported
         ? data.narrative.disclosures.map((disclosure) => ({
             key: disclosure.disclosure_id,
             audience:
@@ -166,13 +172,17 @@ export function buildProposalDiscussionPackModel(
             policyVersion: disclosure.policy_version,
           }))
         : [],
-    blockers: data.narrative.client_ready_blockers,
-    limitations: data.narrative.limitations.map((limitation, index) => ({
-      key: `${limitation.evidence_key}:${index}`,
-      area: businessLabel(limitation.evidence_key),
-      purpose: businessLabel(limitation.required_for),
-      message: limitation.message,
-    })),
+    blockers: disclosurePolicyIsSupported
+      ? data.narrative.client_ready_blockers
+      : [policyBoundaryMessage],
+    limitations: disclosurePolicyIsSupported
+      ? data.narrative.limitations.map((limitation, index) => ({
+          key: `${limitation.evidence_key}:${index}`,
+          area: businessLabel(limitation.evidence_key),
+          purpose: businessLabel(limitation.required_for),
+          message: limitation.message,
+        }))
+      : [],
     capabilities: data.capabilities.map((capability) => ({
       key: capability.key,
       name: businessLabel(capability.key),
@@ -187,8 +197,14 @@ export function buildProposalDiscussionPackModel(
       proposalVersionId: data.lineage.proposal_version_id,
       requestHash: data.lineage.request_hash,
       artifactHash: data.lineage.artifact_hash,
-      narrativeHash: data.lineage.narrative_hash,
-      memoHash: data.lineage.memo_hash,
+      narrativeHash:
+        data.narrative.state === "supported" && narrativeArtifactIsComplete
+          ? data.lineage.narrative_hash
+          : null,
+      memoHash:
+        data.memo.state === "supported" && hasCompleteMemoArtifact(data.memo)
+          ? data.lineage.memo_hash
+          : null,
     },
   };
 }
