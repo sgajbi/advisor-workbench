@@ -221,6 +221,10 @@ concurrency group.
   before recording the mainline-source posture. Its manifests and Idea capacity-seed evidence are written to a per-run Local AppData
   directory outside checked source worktrees, so generated evidence cannot make the source preflight
   appear dirty. Standard and `-LocalApps` runtime runs remain branch-local development evidence.
+  When the shared Workbench checkout is owned by another agent, platform automation may pass an
+  isolated Workbench mainline checkout to the same preflight. The override must still identify a
+  `lotus-workbench` Git origin, be clean, and point exactly at `origin/main`; a clean checkout of
+  another Lotus repository is rejected instead of being labeled as Workbench proof.
 - Lotus Idea capacity integration proof must use Idea-owned seed and workload automation after Idea
   and Advise readiness. The validator matches Idea `/version` to the checked-out commit and branch,
   requires the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace, and accepts exactly one

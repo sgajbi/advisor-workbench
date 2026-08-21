@@ -15,6 +15,11 @@ export function evaluateRepository(input: {
   runGit: (path: string, args: string[]) => string;
 }): SourceRepositoryProvenance;
 
+export function repositoryOriginMatchesName(input: {
+  name: string;
+  originUrl: string;
+}): boolean;
+
 export function canonicalRepositoryPath(input: {
   name: string;
   projectsRoot: string;

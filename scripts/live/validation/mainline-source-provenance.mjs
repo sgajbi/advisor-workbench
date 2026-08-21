@@ -12,9 +12,21 @@ function git(repoPath, args, runGit) {
   return runGit(repoPath, args).trim();
 }
 
+export function repositoryOriginMatchesName({ name, originUrl }) {
+  const normalizedOrigin = originUrl.trim().toLowerCase().replace(/\.git$/, "");
+  return (
+    normalizedOrigin.endsWith(`/${name.toLowerCase()}`) ||
+    normalizedOrigin.endsWith(`:${name.toLowerCase()}`)
+  );
+}
+
 export function evaluateRepository({ name, path, runGit }) {
   try {
     git(path, ["fetch", "origin", "--prune"], runGit);
+    const originUrl = git(path, ["config", "--get", "remote.origin.url"], runGit);
+    if (!repositoryOriginMatchesName({ name, originUrl })) {
+      return { repository: name, branch: null, headSha: null, expectedMainSha: null, passed: false, reason: "repository_identity_mismatch" };
+    }
     const dirty = git(path, ["status", "--porcelain"], runGit).length > 0;
     const headSha = git(path, ["rev-parse", "HEAD"], runGit);
     const expectedMainSha = git(path, ["rev-parse", "refs/remotes/origin/main"], runGit);

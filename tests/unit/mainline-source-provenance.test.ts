@@ -1,15 +1,33 @@
 import { describe, expect, it } from "vitest";
 
-import { CANONICAL_REPOSITORIES, bindMainlineSourceManifestToRuntime, buildMainlineSourceManifest, canonicalRepositoryPath, evaluateRepository, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
+import { CANONICAL_REPOSITORIES, bindMainlineSourceManifestToRuntime, buildMainlineSourceManifest, canonicalRepositoryPath, evaluateRepository, repositoryOriginMatchesName, validateMainlineSourceManifest } from "../../scripts/live/validation/mainline-source-provenance.mjs";
+
+function repositoryNameFromPath(path: string) {
+  if (path === "unused") {
+    return "lotus-idea";
+  }
+  if (path.includes("lotus-workbench-mainline")) {
+    return "lotus-workbench";
+  }
+  return path.split(/[\\/]/).at(-1) ?? "lotus-idea";
+}
 
 function gitFixture(values: Record<string, string>) {
-  return (_path: string, args: string[]) => values[args.join(" ")] ?? "";
+  return (path: string, args: string[]) => {
+    if (args.join(" ") === "config --get remote.origin.url") {
+      return values[args.join(" ")] ?? `https://github.com/sgajbi/${repositoryNameFromPath(path)}.git`;
+    }
+    return values[args.join(" ")] ?? "";
+  };
 }
 
 function recordingGitFixture(values: Record<string, string>, paths: string[]) {
   return (path: string, args: string[]) => {
     if (args.join(" ") === "fetch origin --prune") {
       paths.push(path);
+    }
+    if (args.join(" ") === "config --get remote.origin.url") {
+      return values[args.join(" ")] ?? `https://github.com/sgajbi/${repositoryNameFromPath(path)}.git`;
     }
     return values[args.join(" ")] ?? "";
   };
@@ -49,6 +67,21 @@ describe("canonical mainline source provenance", () => {
     })).toMatch(/lotus-idea$/);
   });
 
+  it("accepts only paths whose Git origin matches the evaluated canonical repository", () => {
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
+      originUrl: "https://github.com/sgajbi/lotus-workbench.git",
+    })).toBe(true);
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
+      originUrl: "git@github.com:sgajbi/lotus-workbench.git",
+    })).toBe(true);
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
+      originUrl: "https://github.com/sgajbi/lotus-idea.git",
+    })).toBe(false);
+  });
+
   it("evaluates lotus-workbench from the isolated path while preserving sibling repo paths", () => {
     const paths: string[] = [];
     const manifest = buildMainlineSourceManifest("C:/projects", recordingGitFixture({
@@ -63,6 +96,28 @@ describe("canonical mainline source provenance", () => {
     expect(paths).toContain("C:/projects/_qa_worktrees/lotus-workbench-mainline");
     expect(paths.some((path) => /lotus-idea$/.test(path))).toBe(true);
     expect(paths.some((path) => /lotus-workbench$/.test(path))).toBe(false);
+  });
+
+  it("rejects an isolated Workbench override that points at another clean Lotus repository", () => {
+    const runGit = (path: string, args: string[]) => {
+      if (args.join(" ") === "config --get remote.origin.url") {
+        return `https://github.com/sgajbi/${repositoryNameFromPath(path)}.git`;
+      }
+      return gitFixture({
+        "fetch origin --prune": "",
+        "status --porcelain": "",
+        "rev-parse HEAD": "abc",
+        "rev-parse refs/remotes/origin/main": "abc",
+        "branch --show-current": "main",
+      })(path, args);
+    };
+    const manifest = buildMainlineSourceManifest("C:/projects", runGit, { workbenchRepoPath: "C:/projects/lotus-idea" });
+
+    expect(manifest.passed).toBe(false);
+    expect(manifest.repositories.find((repository) => repository.repository === "lotus-workbench")).toMatchObject({
+      passed: false,
+      reason: "repository_identity_mismatch",
+    });
   });
 
   it("rejects incomplete, failed, or arbitrary manifests before certification is asserted", () => {
