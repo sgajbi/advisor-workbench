@@ -106,7 +106,7 @@ export default function WorkbenchRecordSelector<T extends string>({
               </span>
             </span>
             {item.facts?.length ? (
-              <span className={styles.facts}>
+              <span className={styles.facts} data-workbench-record-facts>
                 {item.facts.map((fact) => (
                   <span className={styles.fact} key={fact.label}>
                     <span>{fact.label}</span>
