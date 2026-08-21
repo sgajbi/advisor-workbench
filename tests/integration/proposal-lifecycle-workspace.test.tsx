@@ -3517,6 +3517,9 @@ describe("ProposalLifecycleWorkspace", () => {
     policyCapability.state = "restricted";
     policyCapability.reason_code = "disclosure_policy_restricted";
     const hiddenPolicyText = restricted.data.narrative.disclosures[0]!.text;
+    const hiddenPolicyBlocker = restricted.data.narrative.client_ready_blockers[0]!;
+    const hiddenPolicyLimitation =
+      restricted.data.narrative.limitations[0]!.message;
     getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
 
     renderWithQueryClient(
@@ -3538,6 +3541,8 @@ describe("ProposalLifecycleWorkspace", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(hiddenPolicyText)).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenPolicyBlocker)).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenPolicyLimitation)).not.toBeInTheDocument();
   });
 
   it("shows an explicit failure instead of inferring discussion readiness", async () => {
