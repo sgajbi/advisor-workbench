@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type Ref } from "react";
+import { useMemo, useState, type Ref } from "react";
 
 import {
   ScreenStatePanel,
@@ -9,6 +9,8 @@ import {
   SourceRefreshAction,
   Text,
   WorkbenchRefreshStatus,
+  useSourceRefreshAction,
+  type SourceRefreshState,
 } from "@/design-system";
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
 import type { ProposalRiskImpactEnvelope } from "../proposal-risk-impact-contract";
@@ -18,11 +20,6 @@ import {
 } from "../proposal-risk-impact-view-model";
 import ProposalLifecycleWorklist from "./proposal-lifecycle-worklist";
 import styles from "./proposal-risk-impact-workspace.module.css";
-
-type RiskEvidenceRefreshOutcome = {
-  selectionIdentity: string;
-  state: "pending" | "confirmed" | "failed";
-};
 
 export default function ProposalRiskImpactWorkspace({
   portfolioId,
@@ -53,84 +50,22 @@ export default function ProposalRiskImpactWorkspace({
     () => (evidence ? buildProposalRiskImpactModel(evidence) : null),
     [evidence],
   );
-  const refreshActionRef = useRef<HTMLButtonElement>(null);
   const selectionIdentity = selectedProposal
     ? `${portfolioId}:${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
     : null;
-  const selectionIdentityRef = useRef(selectionIdentity);
-  const [refreshOutcome, setRefreshOutcome] =
-    useState<RiskEvidenceRefreshOutcome | null>(null);
-  useEffect(() => {
-    selectionIdentityRef.current = selectionIdentity;
-  }, [selectionIdentity]);
+  const sourceRefresh = useSourceRefreshAction({
+    identity: selectionIdentity,
+    isRefreshing,
+    hasRefreshFailure,
+    onRefresh,
+  });
 
   function selectProposal(proposalId: string) {
-    setRefreshOutcome(null);
+    sourceRefresh.reset();
     onSelectProposal(proposalId);
   }
 
-  async function refreshEvidence() {
-    const initiatingElement = refreshActionRef.current;
-    const initiatingSelectionIdentity = selectionIdentity;
-    const shouldRestoreFocus = document.activeElement === initiatingElement;
-    if (initiatingSelectionIdentity) {
-      setRefreshOutcome({
-        selectionIdentity: initiatingSelectionIdentity,
-        state: "pending",
-      });
-    }
-    try {
-      const result = await onRefresh();
-      if (selectionIdentityRef.current === initiatingSelectionIdentity) {
-        setRefreshOutcome(
-          initiatingSelectionIdentity
-            ? {
-                selectionIdentity: initiatingSelectionIdentity,
-                state: refreshResultHasError(result) ? "failed" : "confirmed",
-              }
-            : null,
-        );
-      }
-      return result;
-    } catch (error) {
-      if (selectionIdentityRef.current === initiatingSelectionIdentity) {
-        setRefreshOutcome(
-          initiatingSelectionIdentity
-            ? {
-                selectionIdentity: initiatingSelectionIdentity,
-                state: "failed",
-              }
-            : null,
-        );
-      }
-      throw error;
-    } finally {
-      if (shouldRestoreFocus) {
-        window.setTimeout(() => {
-          const focusDidNotMove =
-            document.activeElement === initiatingElement ||
-            document.activeElement === document.body;
-          if (
-            selectionIdentityRef.current === initiatingSelectionIdentity &&
-            focusDidNotMove
-          ) {
-            refreshActionRef.current?.focus();
-          }
-        }, 0);
-      }
-    }
-  }
-
   if (!selectedProposal) return null;
-  const matchingRefreshOutcome =
-    refreshOutcome?.selectionIdentity === selectionIdentity
-      ? refreshOutcome.state
-      : null;
-  const activeRefreshState = resolveRefreshState({
-    outcome: matchingRefreshOutcome,
-    refreshing: isRefreshing,
-    failed: hasRefreshFailure,
-  });
   const selectedRefreshContext = `${selectedProposal.proposalId} · Version ${selectedProposal.versionNo ?? "not reported"}`;
 
   return (
@@ -186,18 +121,18 @@ export default function ProposalRiskImpactWorkspace({
                 body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
                 action={
                   <SourceRefreshAction
-                    ref={refreshActionRef}
+                    ref={sourceRefresh.actionRef}
                     refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
                     idleLabel="Retry source evidence"
                     busyLabel="Retrying source evidence"
                     isRefreshing={isRefreshing}
-                    onRefresh={refreshEvidence}
+                    onRefresh={sourceRefresh.refresh}
                   />
                 }
               />
-              {activeRefreshState ? (
+              {sourceRefresh.refreshState ? (
                 <RiskEvidenceRefreshStatus
-                  state={activeRefreshState}
+                  state={sourceRefresh.refreshState}
                   requestedContext={selectedRefreshContext}
                   confirmedContext="No confirmed evidence"
                   hasConfirmedEvidence={false}
@@ -210,10 +145,9 @@ export default function ProposalRiskImpactWorkspace({
               model={model}
               proposalHref={selectedProposal.href}
               refreshing={isRefreshing}
-              refreshFailed={hasRefreshFailure}
-              refreshOutcome={matchingRefreshOutcome}
-              onRefresh={refreshEvidence}
-              refreshActionRef={refreshActionRef}
+              refreshState={sourceRefresh.refreshState}
+              onRefresh={sourceRefresh.refresh}
+              refreshActionRef={sourceRefresh.actionRef}
             />
           )}
         </section>
@@ -226,16 +160,14 @@ function RiskImpactEvidence({
   model,
   proposalHref,
   refreshing,
-  refreshFailed,
-  refreshOutcome,
+  refreshState,
   onRefresh,
   refreshActionRef,
 }: {
   model: ProposalRiskImpactModel;
   proposalHref: string;
   refreshing: boolean;
-  refreshFailed: boolean;
-  refreshOutcome: RiskEvidenceRefreshOutcome["state"] | null;
+  refreshState: SourceRefreshState | null;
   onRefresh: () => Promise<unknown>;
   refreshActionRef: Ref<HTMLButtonElement>;
 }) {
@@ -248,11 +180,6 @@ function RiskImpactEvidence({
     ) ??
     model.allocation.views[0] ??
     null;
-  const effectiveRefreshState = resolveRefreshState({
-    outcome: refreshOutcome,
-    refreshing,
-    failed: refreshFailed,
-  });
   const refreshContext = `${model.identity.proposalId} · ${model.identity.version}`;
 
   return (
@@ -284,9 +211,9 @@ function RiskImpactEvidence({
         </div>
       </header>
 
-      {effectiveRefreshState ? (
+      {refreshState ? (
         <RiskEvidenceRefreshStatus
-          state={effectiveRefreshState}
+          state={refreshState}
           requestedContext={refreshContext}
           confirmedContext={refreshContext}
           hasConfirmedEvidence
@@ -692,7 +619,7 @@ function RiskEvidenceRefreshStatus({
   confirmedContext,
   hasConfirmedEvidence,
 }: {
-  state: RiskEvidenceRefreshOutcome["state"];
+  state: SourceRefreshState;
   requestedContext: string;
   confirmedContext: string;
   hasConfirmedEvidence: boolean;
@@ -737,31 +664,6 @@ function RiskEvidenceRefreshStatus({
       confirmedContext={confirmedContext}
     />
   );
-}
-
-function refreshResultHasError(result: unknown): boolean {
-  return (
-    typeof result === "object" &&
-    result !== null &&
-    (("isError" in result && result.isError === true) ||
-      ("error" in result &&
-        result.error !== null &&
-        result.error !== undefined))
-  );
-}
-
-function resolveRefreshState({
-  outcome,
-  refreshing,
-  failed,
-}: {
-  outcome: RiskEvidenceRefreshOutcome["state"] | null;
-  refreshing: boolean;
-  failed: boolean;
-}): RiskEvidenceRefreshOutcome["state"] | null {
-  if (outcome === "pending" || refreshing) return "pending";
-  if (outcome === "failed" || failed) return "failed";
-  return outcome;
 }
 
 function DecisionRegisterList({

@@ -78,6 +78,10 @@ export { modePanelId, modeTabId } from "./components/mode-tabs";
 export { default as ScreenStatePanel } from "./components/screen-state-panel";
 export type { ScreenStateKind, ScreenStateSurface } from "./components/screen-state-panel";
 export { default as SourceRefreshAction } from "./components/source-refresh-action";
+export {
+  useSourceRefreshAction,
+  type SourceRefreshState,
+} from "./hooks/use-source-refresh-action";
 export { default as SourceWindowNavigation } from "./components/source-window-navigation";
 export { default as SectionHeader } from "./components/section-header";
 export { default as SectionBlock } from "./components/section-block";
