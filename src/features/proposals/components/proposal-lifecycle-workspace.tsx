@@ -675,10 +675,18 @@ export default function ProposalLifecycleWorkspace({
 
   return (
     <SectionBlock
-      title={mode === "approval-queue" ? "Review desk" : model.title}
+      title={
+        mode === "approval-queue"
+          ? "Review desk"
+          : mode === "implementation"
+            ? "Implementation follow-up desk"
+            : model.title
+      }
       subtitle={
         mode === "approval-queue"
           ? "Select a proposal, confirm its source posture, and continue to the full review record."
+          : mode === "implementation"
+            ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
           : model.subtitle
       }
       actions={

@@ -792,6 +792,7 @@ test("presents source-backed implementation handoff evidence without execution o
   const selectedEvidence = page.getByRole("region", {
     name: "Selected proposal implementation status",
   });
+  const selectedFacts = selectedEvidence.locator("dl").first();
   await expect(workspace).toBeVisible();
   await expect(worklist.getByRole("option")).toHaveCount(1);
   await expect(
@@ -878,6 +879,17 @@ test("presents source-backed implementation handoff evidence without execution o
         (element) => element.scrollWidth <= element.clientWidth,
       ),
     ).toBe(true);
+    const factColumnWidths = await selectedFacts.evaluate((element) =>
+      getComputedStyle(element)
+        .gridTemplateColumns.split(" ")
+        .filter(Boolean)
+        .map((value) => Number.parseFloat(value)),
+    );
+    expect(
+      Math.min(...factColumnWidths),
+      `implementation facts must retain readable column width at ${viewport.width}px`,
+    ).toBeGreaterThanOrEqual(120);
+    if (viewport.width === 390) expect(factColumnWidths).toHaveLength(1);
   }
 
   await testInfo.attach("implementation-status-workspace-mobile", {

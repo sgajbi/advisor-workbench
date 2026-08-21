@@ -447,6 +447,12 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Accepted for implementation",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Implementation follow-up desk",
+      }),
+    ).toBeInTheDocument();
     expect(getProposalExecutionStatusMock).toHaveBeenCalledTimes(1);
     expect(getProposalExecutionStatusMock).toHaveBeenCalledWith(
       "PRP-READY",

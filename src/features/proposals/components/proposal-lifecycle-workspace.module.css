@@ -98,6 +98,7 @@
 .selectedProposalPane {
   position: sticky;
   top: 16px;
+  container: selected-proposal / inline-size;
   display: grid;
   gap: 14px;
   padding: 16px;
@@ -121,6 +122,18 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-control, 6px);
   background: var(--border);
+}
+
+@container selected-proposal (max-width: 42rem) {
+  .selectedProposalFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container selected-proposal (max-width: 18rem) {
+  .selectedProposalFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .approvalDecisionBrief,
@@ -467,10 +480,6 @@
   .paneHeader > p {
     max-width: none;
     text-align: left;
-  }
-
-  .selectedProposalFacts {
-    grid-template-columns: 1fr;
   }
 
   .approvalRecords li,
