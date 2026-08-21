@@ -144,7 +144,7 @@ describe("proposal workflow context view model", () => {
     expect(model.title).toBe("Supporting evidence is incomplete");
     expect(model.currentPosture).toBe("0 proposals in current view");
     expect(model.blockers).toEqual([
-      "One or more supporting policy-evidence sources are unavailable.",
+      "One or more supporting decision-evidence sources are unavailable.",
     ]);
     expect(model.boundaryNote).toContain("do not establish complete queue posture");
   });
@@ -203,7 +203,7 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe("partial");
     expect(model.title).toBe("Supporting evidence is incomplete");
-    expect(model.blockers).toContain("The latest policy-evidence refresh did not complete.");
-    expect(model.nextAction).toContain("policy-evidence refresh");
+    expect(model.blockers).toContain("The latest supporting-evidence refresh did not complete.");
+    expect(model.nextAction).toContain("supporting-evidence refresh");
   });
 });

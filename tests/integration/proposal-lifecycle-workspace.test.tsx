@@ -21,9 +21,13 @@ import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
   AdvisoryPolicyWorkflowData,
+  ProposalSummary,
 } from "../../src/features/proposals/types";
 
-const proposalListFixture = {
+const proposalListFixture: {
+  items: ProposalSummary[];
+  next_cursor: string | null;
+} = {
   items: [
     {
       proposal_id: "PRP-RISK",
@@ -42,7 +46,7 @@ const proposalListFixture = {
       title: "Execution handoff",
     },
   ],
-  next_cursor: null as string | null,
+  next_cursor: null,
 };
 const policyReviewQueueFixture = {
   items: [
@@ -79,7 +83,7 @@ const listProposalsMock = vi.fn(
   async (_filters?: unknown) => proposalListFixture,
 );
 const getProposalRiskImpactMock = vi.fn(
-  async (_proposalId: string, _portfolioId: string) =>
+  async (_proposalId: string, _portfolioId: string, _versionNo: number) =>
     proposalRiskImpactFixture(),
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
@@ -153,8 +157,11 @@ vi.mock("../../src/features/proposals/api", () => ({
     getAdvisoryPolicySignOffPackageMock(evaluationId),
   getAdvisoryPolicyWorkflow: (evaluationId: string) =>
     getAdvisoryPolicyWorkflowMock(evaluationId),
-  getProposalRiskImpact: (proposalId: string, portfolioId: string) =>
-    getProposalRiskImpactMock(proposalId, portfolioId),
+  getProposalRiskImpact: (
+    proposalId: string,
+    portfolioId: string,
+    versionNo: number,
+  ) => getProposalRiskImpactMock(proposalId, portfolioId, versionNo),
   listProposals: (filters: unknown) => listProposalsMock(filters),
   recordAdvisoryPolicySignOffDecision: (
     evaluationId: string,
@@ -280,6 +287,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(getProposalRiskImpactMock).toHaveBeenCalledWith(
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
+      3,
     );
     expect(
       screen.getByRole("listbox", { name: "Risk and Impact proposals" }),
@@ -304,6 +312,12 @@ describe("ProposalLifecycleWorkspace", () => {
     );
     expect(
       screen.getByText("corr-proposal-risk-impact-001"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Correlation ID")).toBeInTheDocument();
+    expect(
+      within(
+        screen.getByText("Decision support reference").closest("div")!,
+      ).getByText("current_version.proposal_result.proposal_decision_summary"),
     ).toBeInTheDocument();
     expect(screen.getByText("Benchmark and limits")).toBeInTheDocument();
     expect(screen.getAllByText("Not supported")).toHaveLength(3);
@@ -401,6 +415,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(getProposalRiskImpactMock).toHaveBeenLastCalledWith(
       "PRP-RISK-INCOME",
       "PB_SG_GLOBAL_BAL_001",
+      3,
     );
   });
 
@@ -465,6 +480,94 @@ describe("ProposalLifecycleWorkspace", () => {
       settleRefresh?.(proposalRiskImpactFixture());
     });
     await waitFor(() => expect(nextProposal).toHaveFocus());
+  });
+
+  it("keeps a non-ready decision register explicitly unknown", async () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.decision.state = "unavailable";
+    envelope.data.decision.approval_requirements = [];
+    envelope.data.decision.material_changes = [];
+    envelope.data.decision.missing_evidence = [];
+    getProposalRiskImpactMock.mockResolvedValueOnce(envelope);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Decision register is not confirmed",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Decision not confirmed")).toBeInTheDocument();
+    expect(screen.getByText("Not confirmed")).toBeInTheDocument();
+    expect(screen.queryByText("0 blocking")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No active approval requirement is reported."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not request evidence when the selected proposal version is missing", async () => {
+    const { current_version_no: _currentVersionNo, ...proposalWithoutVersion } =
+      proposalListFixture.items[0];
+    listProposalsMock.mockResolvedValueOnce({
+      items: [proposalWithoutVersion],
+      next_cursor: null,
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Proposal version is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalRiskImpactMock).not.toHaveBeenCalled();
+  });
+
+  it("publishes selected risk evidence failure to the shared workflow rail", async () => {
+    getProposalRiskImpactMock.mockRejectedValueOnce(
+      new Error("Gateway unavailable"),
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="risk-impact"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "One or more supporting decision-evidence sources are unavailable.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Restore the unavailable decision-evidence source before relying on the current workflow posture.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("keeps permission-blocked evidence distinct from service failure", async () => {
@@ -785,7 +888,9 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("The latest policy-evidence refresh did not complete."),
+      screen.getByText(
+        "The latest supporting-evidence refresh did not complete.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

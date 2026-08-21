@@ -9,6 +9,7 @@ describe("proposal risk and impact contract", () => {
       proposalRiskImpactFixture(),
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
+      3,
     );
 
     expect(envelope.contract_version).toBe("proposal-risk-impact.v1");
@@ -19,6 +20,17 @@ describe("proposal risk and impact contract", () => {
       envelope.data.decision.approval_requirements[0]?.blocking_until_approved,
     ).toBe(true);
     expect(envelope.data.workflow_gate.gate).toBe("RISK_REVIEW_REQUIRED");
+  });
+
+  it("fails closed when the source version differs from the selected proposal version", () => {
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        proposalRiskImpactFixture(),
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        4,
+      ),
+    ).toThrow(/version_no does not match the selected proposal version/);
   });
 
   it.each([

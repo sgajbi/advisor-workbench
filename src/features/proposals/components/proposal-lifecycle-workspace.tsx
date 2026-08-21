@@ -24,6 +24,7 @@ import {
   getAdvisoryPolicyReviewQueue,
   getAdvisoryPolicySignOffPackage,
   getAdvisoryPolicyWorkflow,
+  getProposalRiskImpact,
   listProposals,
   recordAdvisoryPolicySignOffDecision,
 } from "../api";
@@ -61,6 +62,10 @@ export default function ProposalLifecycleWorkspace({
   const [policySelection, setPolicySelection] = useState<{
     portfolioId: string;
     evaluationId: string;
+  } | null>(null);
+  const [riskSelection, setRiskSelection] = useState<{
+    portfolioId: string;
+    proposalId: string;
   } | null>(null);
   const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQuery = useQuery({
@@ -102,6 +107,36 @@ export default function ProposalLifecycleWorkspace({
       }),
     [data?.next_cursor, mode, portfolioId, proposals, sourceWindow.hasPrevious],
   );
+  const riskSelectionIsCurrent =
+    riskSelection?.portfolioId === portfolioId &&
+    model.rows.some((row) => row.proposalId === riskSelection.proposalId);
+  const selectedRiskProposal =
+    model.rows.find(
+      (row) =>
+        row.proposalId ===
+        (riskSelectionIsCurrent ? riskSelection.proposalId : null),
+    ) ??
+    model.rows[0] ??
+    null;
+  const riskImpactQuery = useQuery({
+    queryKey: [
+      "proposal-risk-impact",
+      portfolioId,
+      selectedRiskProposal?.proposalId,
+      selectedRiskProposal?.versionNo,
+    ],
+    queryFn: async () =>
+      await getProposalRiskImpact(
+        selectedRiskProposal?.proposalId ?? "",
+        portfolioId,
+        selectedRiskProposal?.versionNo ?? 0,
+      ),
+    enabled:
+      mode === "risk-impact" &&
+      Boolean(selectedRiskProposal) &&
+      selectedRiskProposal?.versionNo !== null,
+    ...workbenchStrictQueryDefaults,
+  });
   const policyReviewModel = useMemo(
     () =>
       buildPolicyReviewQueueModel({
@@ -213,6 +248,15 @@ export default function ProposalLifecycleWorkspace({
       policyWorkflowQuery.error,
     ),
   });
+  const riskImpactPosture = projectQuerySourcePosture({
+    hasData: Boolean(riskImpactQuery.data),
+    isLoading: riskImpactQuery.isLoading,
+    isFetching: riskImpactQuery.isFetching,
+    hasError: Boolean(riskImpactQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      riskImpactQuery.error,
+    ),
+  });
   const policySourcePosture = combineQuerySourcePostures([
     policyQueuePosture,
     policyEvaluationPosture,
@@ -298,26 +342,37 @@ export default function ProposalLifecycleWorkspace({
     policyEvidenceModel?.sourceIdentityAligned === false;
   const workflowContextModel = useMemo(() => {
     const policySourcesActive = mode === "suitability";
+    const riskSourceActive =
+      mode === "risk-impact" && Boolean(selectedRiskProposal);
+    const riskVersionUnavailable =
+      riskSourceActive && selectedRiskProposal?.versionNo === null;
 
     return buildProposalQueueWorkflowContext({
       portfolioId,
       modeLabel: model.title,
       isLoading:
         proposalSourcePosture.isInitialLoading ||
-        (policySourcesActive && policySourcePosture.isInitialLoading),
+        (policySourcesActive && policySourcePosture.isInitialLoading) ||
+        (riskSourceActive && riskImpactPosture.isInitialLoading),
       isRefreshing:
         proposalSourcePosture.isRefreshing ||
-        (policySourcesActive && policySourcePosture.isRefreshing),
+        (policySourcesActive && policySourcePosture.isRefreshing) ||
+        (riskSourceActive && riskImpactPosture.isRefreshing),
       permissionBlocked:
         proposalSourcePosture.isPermissionBlocked ||
-        (policySourcesActive && policySourcePosture.isPermissionBlocked),
+        (policySourcesActive && policySourcePosture.isPermissionBlocked) ||
+        (riskSourceActive && riskImpactPosture.isPermissionBlocked),
       hasError: proposalSourcePosture.isUnavailable,
       hasUnavailableEvidence:
-        policySourcesActive &&
-        (policySourcePosture.isUnavailable || policyEvidenceIdentityMismatch),
+        (policySourcesActive &&
+          (policySourcePosture.isUnavailable ||
+            policyEvidenceIdentityMismatch)) ||
+        (riskSourceActive &&
+          (riskImpactPosture.isUnavailable || riskVersionUnavailable)),
       hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,
       hasSupportingEvidenceRefreshFailure:
-        policySourcesActive && policySourcePosture.hasRefreshFailure,
+        (policySourcesActive && policySourcePosture.hasRefreshFailure) ||
+        (riskSourceActive && riskImpactPosture.hasRefreshFailure),
       hasMoreResults: Boolean(data?.next_cursor),
       hasPreviousResults: sourceWindow.hasPrevious,
       windowNumber: sourceWindow.windowNumber,
@@ -342,6 +397,12 @@ export default function ProposalLifecycleWorkspace({
     proposalSourcePosture.isPermissionBlocked,
     proposalSourcePosture.isRefreshing,
     proposalSourcePosture.isUnavailable,
+    riskImpactPosture.hasRefreshFailure,
+    riskImpactPosture.isInitialLoading,
+    riskImpactPosture.isPermissionBlocked,
+    riskImpactPosture.isRefreshing,
+    riskImpactPosture.isUnavailable,
+    selectedRiskProposal,
     sourceWindow.hasPrevious,
     sourceWindow.windowNumber,
   ]);
@@ -514,6 +575,17 @@ export default function ProposalLifecycleWorkspace({
           key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
           portfolioId={portfolioId}
           rows={model.rows}
+          selectedProposal={selectedRiskProposal}
+          onSelectProposal={(proposalId) =>
+            setRiskSelection({ portfolioId, proposalId })
+          }
+          evidence={riskImpactQuery.data ?? null}
+          isLoading={riskImpactPosture.isInitialLoading}
+          isRefreshing={riskImpactPosture.isRefreshing}
+          isPermissionBlocked={riskImpactPosture.isPermissionBlocked}
+          hasError={riskImpactPosture.isUnavailable}
+          hasRefreshFailure={riskImpactPosture.hasRefreshFailure}
+          onRefresh={async () => await riskImpactQuery.refetch()}
         />
       ) : (
         <div className={styles.tableWrap}>
