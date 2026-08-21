@@ -539,6 +539,13 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
   });
   await refreshAction.click();
   await expect(refreshAction).toBeFocused();
+  const refreshStatus = selectedEvidence.getByTestId(
+    "workbench-refresh-status",
+  );
+  await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+  await expect(refreshStatus).toContainText(
+    "Selected proposal evidence confirmed",
+  );
 
   await selectedEvidence.getByText("Evidence scope and lineage").click();
   await expect(
