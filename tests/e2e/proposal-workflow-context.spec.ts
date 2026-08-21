@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 
@@ -113,6 +114,9 @@ async function mockProposalBuilderEvaluation(page: Page) {
 }
 
 async function mockProposalQueue(page: Page) {
+  await page.route("**/api/bff/api/v1/platform/capabilities?**", async (route) => {
+    await route.fulfill({ json: buildPlatformCapabilitiesFixture() });
+  });
   await page.route("**/api/bff/api/v1/proposals?portfolio_id=**", async (route) => {
     await route.fulfill({
       json: {
@@ -124,13 +128,17 @@ async function mockProposalQueue(page: Page) {
               proposal_id: "PRP-RISK-001",
               portfolio_id: portfolioId,
               current_state: "RISK_REVIEW",
+              current_version_no: 3,
+              created_at: "2026-08-19T09:30:00Z",
               title: "Concentration risk review",
             },
             {
               proposal_id: "PRP-READY-001",
               portfolio_id: portfolioId,
               current_state: "EXECUTION_READY",
-              title: "Approved allocation handoff",
+              current_version_no: 5,
+              created_at: "2026-08-20T11:15:00Z",
+              title: "Execution handoff review",
             },
           ],
           next_cursor: null,
@@ -279,6 +287,83 @@ test("shows source-backed queue posture without invented advisory evidence", asy
   await expect(page.getByText("Evidence pack: advisor-use review in progress")).toHaveCount(0);
   await expect(page.getByText("Client Readiness")).toHaveCount(0);
   await expect(page.getByRole("checkbox")).toHaveCount(0);
+});
+
+test("keeps an exception-led Approval Queue worklist and selected decision context", async ({
+  page,
+}, testInfo) => {
+  const browserErrors: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalQueue(page);
+  await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  const workspace = page.getByTestId("proposal-approval-decision-workspace");
+  const worklist = page.getByRole("listbox", { name: "Approval Queue proposals" });
+  const selectedDecision = page.getByRole("region", { name: "Selected proposal decision" });
+  const firstProposal = worklist.getByRole("option", { name: /Concentration risk review/ });
+  const secondProposal = worklist.getByRole("option", { name: /Execution handoff review/ });
+
+  await expect(workspace).toBeVisible();
+  await expect(firstProposal).toHaveAttribute("aria-selected", "true");
+  await expect(selectedDecision.getByRole("heading", { name: "Concentration risk review" })).toBeVisible();
+  await expect(firstProposal).toContainText("Version 3");
+  await expect(firstProposal).toContainText("19 Aug 2026");
+
+  await firstProposal.press("ArrowDown");
+  await expect(secondProposal).toBeFocused();
+  await expect(secondProposal).toHaveAttribute("aria-selected", "true");
+  await expect(selectedDecision.getByRole("heading", { name: "Execution handoff review" })).toBeVisible();
+  await expect(selectedDecision.getByRole("link", { name: "Open proposal review" })).toHaveAttribute(
+    "href",
+    `/proposals/PRP-READY-001?portfolioId=${portfolioId}&fromMode=approval-queue`
+  );
+  await testInfo.attach("approval-queue-review-desk-desktop", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+
+  for (const viewport of [
+    { width: 1440, height: 1000, layout: "split" },
+    { width: 1280, height: 1000, layout: "split" },
+    { width: 1024, height: 1100, layout: "stacked" },
+    { width: 720, height: 1000, layout: "stacked" },
+    { width: 390, height: 844, layout: "stacked" },
+  ] as const) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expect(workspace).toBeVisible();
+    const [worklistBox, selectedBox] = await Promise.all([
+      worklist.boundingBox(),
+      selectedDecision.boundingBox(),
+    ]);
+    expect(worklistBox).not.toBeNull();
+    expect(selectedBox).not.toBeNull();
+    if (viewport.layout === "split") {
+      expect(selectedBox?.x ?? 0).toBeGreaterThan(worklistBox?.x ?? 0);
+    } else {
+      expect(selectedBox?.y ?? 0).toBeGreaterThan(worklistBox?.y ?? 0);
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+      )
+    ).toBe(true);
+    expect(await workspace.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+      true
+    );
+  }
+
+  await testInfo.attach("approval-queue-review-desk-mobile", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+  expect(browserErrors).toEqual([]);
 });
 
 test("keeps workflow context readable without horizontal overflow at stacked-shell width", async ({
