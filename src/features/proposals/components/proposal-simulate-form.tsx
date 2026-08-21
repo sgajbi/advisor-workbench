@@ -160,6 +160,8 @@ export default function ProposalSimulateForm({
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
   const [evaluatedWorkspaceId, setEvaluatedWorkspaceId] = useState<string | null>(null);
   const [evaluatedDraftFingerprint, setEvaluatedDraftFingerprint] = useState<string | null>(null);
+  const [evaluatedPortfolioEvidenceUpdatedAt, setEvaluatedPortfolioEvidenceUpdatedAt] =
+    useState<number | null>(null);
   const [savedDraft, setSavedDraft] = useState<{
     proposalId: string;
     portfolioId: string;
@@ -196,8 +198,6 @@ export default function ProposalSimulateForm({
       trades,
     ]
   );
-  const isEvaluationCurrent =
-    Boolean(result) && evaluatedDraftFingerprint === draftFingerprint;
   const scenarioCashAdmission = useMemo(
     () => assessProposalScenarioCashInput(cashAmount),
     [cashAmount]
@@ -258,6 +258,13 @@ export default function ProposalSimulateForm({
       scenarioCashAdmission,
     ]
   );
+  const isEvaluationCurrent =
+    Boolean(result) &&
+    portfolioEvidence.status === "ready" &&
+    evaluatedDraftFingerprint === draftFingerprint &&
+    evaluatedPortfolioEvidenceUpdatedAt !== null &&
+    !portfolioBookQuery.isFetching &&
+    evaluatedPortfolioEvidenceUpdatedAt === portfolioBookQuery.dataUpdatedAt;
   const tradablePositions = portfolioEvidence.positions.items;
   const sourceCashAmount = portfolioEvidence.cash.amount;
   const currentCashAmount =
@@ -346,6 +353,7 @@ export default function ProposalSimulateForm({
 
   async function refreshPortfolioEvidence() {
     setEvaluatedDraftFingerprint(null);
+    setEvaluatedPortfolioEvidenceUpdatedAt(null);
     await portfolioBookQuery.refetch({ cancelRefetch: true });
   }
 
@@ -401,6 +409,7 @@ export default function ProposalSimulateForm({
   async function createEvaluatedWorkspace(values: FormInput): Promise<AdvisoryWorkspaceEnvelopeResponse> {
     setEvaluatedWorkspaceId(null);
     setEvaluatedDraftFingerprint(null);
+    setEvaluatedPortfolioEvidenceUpdatedAt(null);
     setWorkspaceEnvelope(null);
     setResult(null);
     const mandateId = values.mandateId?.trim();
@@ -471,11 +480,13 @@ export default function ProposalSimulateForm({
       return;
     }
     setLoading(true);
+    const portfolioEvidenceUpdatedAt = portfolioBookQuery.dataUpdatedAt;
     try {
       await createEvaluatedWorkspace(values);
       setEvaluatedDraftFingerprint(
         buildProposalDraftFingerprint({ values, cashFlows, trades })
       );
+      setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -498,6 +509,7 @@ export default function ProposalSimulateForm({
       return;
     }
     const values = parsedValues.data;
+    const portfolioEvidenceUpdatedAt = portfolioBookQuery.dataUpdatedAt;
     setError(null);
     setSavingDraft(true);
     try {
@@ -505,6 +517,7 @@ export default function ProposalSimulateForm({
       setEvaluatedDraftFingerprint(
         buildProposalDraftFingerprint({ values, cashFlows, trades })
       );
+      setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
       const workspaceId = extractAdvisoryWorkspaceId(evaluatedWorkspace);
       if (!workspaceId) {
         throw new Error("Advisory workspace cannot be handed off without a workspace identifier.");

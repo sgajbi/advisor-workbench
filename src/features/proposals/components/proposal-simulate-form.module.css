@@ -48,14 +48,14 @@
   --workstation-side-width: 300px;
   --workstation-shell-gap: 14px;
   align-items: start;
-  container-name: proposal-workspace;
-  container-type: inline-size;
 }
 
 .mainLane {
   display: grid;
   gap: 12px;
   min-width: 0;
+  container-name: proposal-main-lane;
+  container-type: inline-size;
 }
 
 .panel,
@@ -308,14 +308,14 @@
   background: #fbfcfd;
 }
 
-@container proposal-workspace (max-width: 780px) {
+@container proposal-main-lane (max-width: 780px) {
   .cashRow,
   .tradeRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@container proposal-workspace (max-width: 520px) {
+@container proposal-main-lane (max-width: 520px) {
   .cashRow,
   .tradeRow,
   .evidenceGrid {

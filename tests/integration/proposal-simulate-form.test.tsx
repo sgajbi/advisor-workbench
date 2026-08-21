@@ -139,7 +139,7 @@ function deferred<T>() {
 function renderForm(initialPortfolioId?: string) {
   const queryClient = new QueryClient();
   const portfolioId = initialPortfolioId ?? "PB_SG_GLOBAL_BAL_001";
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <ProposalWorkflowContextProvider
         initialModel={buildSimulationProposalWorkflowContext({ portfolioId })}
@@ -150,6 +150,7 @@ function renderForm(initialPortfolioId?: string) {
       </ProposalWorkflowContextProvider>
     </QueryClientProvider>
   );
+  return { ...view, queryClient };
 }
 
 describe("ProposalSimulateForm", () => {
@@ -266,6 +267,81 @@ describe("ProposalSimulateForm", () => {
       screen.queryByRole("heading", { name: "Advise Evaluation Summary" })
     ).not.toBeInTheDocument();
     await waitForPortfolioEvidence();
+  });
+
+  it("withdraws evaluation confirmation after an automatic cached-evidence refresh", async () => {
+    let originalContextReads = 0;
+    portfolioApiMocks.getRequiredPortfolioBook.mockImplementation(
+      async (
+        portfolioId: string,
+        params: { asOfDate?: string; reportingCurrency?: string } = {}
+      ) => {
+        if (params.asOfDate === "2026-04-10") {
+          originalContextReads += 1;
+          if (originalContextReads > 1) {
+            return portfolioBook(
+              [
+                {
+                  security_id: "MSFT",
+                  instrument_name: "Microsoft Corp.",
+                  asset_class: "Equities",
+                  quantity: 80,
+                  market_price: 420,
+                  market_value_base: 33600,
+                  weight_pct: 33.6,
+                },
+              ],
+              {
+                portfolioId,
+                asOfDate: params.asOfDate,
+                currency: params.reportingCurrency,
+              }
+            );
+          }
+        }
+        return portfolioBook(undefined, {
+          portfolioId,
+          asOfDate: params.asOfDate,
+          currency: params.reportingCurrency,
+        });
+      }
+    );
+    const { queryClient } = renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
+      target: { value: "2026-04-11" },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-portfolio-evidence")).toHaveAttribute(
+        "data-effective-as-of-date",
+        "2026-04-11"
+      )
+    );
+    await act(async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "proposal-position-builder-book",
+          "PB_SG_GLOBAL_BAL_001",
+          "2026-04-10",
+          "USD",
+        ],
+        refetchType: "none",
+      });
+    });
+    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
+      target: { value: "2026-04-10" },
+    });
+
+    expect(await screen.findByText("Microsoft Corp.")).toBeInTheDocument();
+    expect(originalContextReads).toBe(2);
+    expect(screen.queryByText("Evaluation confirmed")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Advise Evaluation Summary" })
+    ).not.toBeInTheDocument();
   });
 
   it("prevents source evidence refresh while evaluation is pending", async () => {
