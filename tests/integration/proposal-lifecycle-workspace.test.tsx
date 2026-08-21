@@ -339,6 +339,62 @@ describe("ProposalLifecycleWorkspace", () => {
     });
   });
 
+  it("reads detail only for the selected proposal instead of fanning out across the worklist", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        proposalListFixture.items[0],
+        {
+          ...proposalListFixture.items[0],
+          proposal_id: "PRP-RISK-INCOME",
+          title: "Income allocation review",
+        },
+      ],
+      next_cursor: null,
+    });
+    getProposalRiskImpactMock.mockImplementation(
+      async (proposalId: string, _portfolioId: string) => {
+        const data = proposalRiskImpactFixture().data;
+        data.proposal_id = proposalId;
+        data.title =
+          proposalId === "PRP-RISK-INCOME"
+            ? "Income allocation review"
+            : "Technology concentration trim";
+        return data;
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Technology concentration trim",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalRiskImpactMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole("option", { name: /Income allocation review/ }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Income allocation review",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalRiskImpactMock).toHaveBeenCalledTimes(2);
+    expect(getProposalRiskImpactMock).toHaveBeenLastCalledWith(
+      "PRP-RISK-INCOME",
+      "PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
   it("keeps permission-blocked evidence distinct from service failure", async () => {
     getProposalRiskImpactMock.mockRejectedValueOnce(
       new Error("Proposal risk and impact failed (403): forbidden"),
