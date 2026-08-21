@@ -57,10 +57,36 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 17,
-      coverageExceptions: 19,
-      unmappedGuides: 19,
+      mappedGuides: 18,
+      coverageExceptions: 18,
+      unmappedGuides: 18,
     });
+  });
+
+  it("maps Proposal Builder to its ordered source-confirmed workflow guide", () => {
+    const registry = loadRegistry();
+    const proposalBuilder = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "proposal-builder",
+    );
+
+    expect(proposalBuilder).toMatchObject({
+      routePattern: "/proposals/simulate",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Proposal-Builder-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise", "lotus-core"],
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs.readFileSync(
+      path.join(rootDirectory, "wiki", "Proposal-Builder-Screen-Guide.md"),
+      "utf8",
+    );
+    expect(guide).toContain("persistent **Review and retain** rail");
+    expect(guide).toContain("evaluation without a proposal identity is not described as retained");
+    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(validate(registry).errors).toEqual([]);
   });
 
   it("maps Data Product Catalogue to independent source and recovery evidence", () => {

@@ -909,16 +909,18 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Proposal-Builder-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core"],
-      "implementationEvidence": ["src/app/proposals/simulate/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/app/proposals/simulate/page.tsx",
+        "src/features/proposals/components/proposal-builder-workflow-rail.tsx"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/proposal-workflow-context.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "proposal-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "approval-queue",
