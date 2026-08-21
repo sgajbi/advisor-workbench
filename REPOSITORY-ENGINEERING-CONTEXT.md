@@ -295,7 +295,12 @@ Current repository posture:
     hunting. Acknowledgement feedback is scoped to the exact selected action id, while conflicting
     actions remain locked until reconciliation settles. Cockpit summary, readiness, preparation,
     boundary, and support grids respond to available module capacity rather than assuming viewport
-    width. It must not reconstruct advisory policy semantics,
+    width. The Cockpit uses the full main canvas rather than rendering the neutral proposal-context
+    rail; unique source-and-scope truth remains in a reusable inline boundary before the action
+    workspace. A Cockpit action may link to `/proposals/{proposalId}` only when Gateway/Advise
+    supplies a valid proposal identity and that supported Workbench destination exists. Do not
+    manufacture routes for policy evaluation, memo, report, execution, or other references. It
+    must not reconstruct advisory policy semantics,
     clear blockers, infer client-ready release, contact clients, route orders, or call
     `lotus-advise` directly. `/recommendations?mode=copilot` renders Gateway-backed RFC-0027
     advisor-use copilot actions over Advise-owned proposal-version source projection, action runs,

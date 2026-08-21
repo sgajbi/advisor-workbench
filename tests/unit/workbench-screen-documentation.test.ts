@@ -198,6 +198,9 @@ describe("Workbench screen documentation governance", () => {
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("one action model with a capacity-aware comparison table");
     expect(guide).toContain("Scopes pending, confirmed, partial, and failed acknowledgement");
+    expect(guide).toContain("compact inline evidence band");
+    expect(guide).toContain("Shows **Open proposal** only when the action carries a valid proposal identity");
+    expect(guide).toContain("manufacture navigation for source-reference types");
     expect(guide).toContain("does not:\n\n- evaluate policy");
     expect(guide).toContain("does not copy another product's layout");
     expect(validate(registry).errors).toEqual([]);
