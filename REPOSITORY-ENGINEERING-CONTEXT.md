@@ -874,7 +874,11 @@ Important validation expectations:
    and upload the machine-readable evidence,
 4. canonical live validation matters when a change affects integrated product flows,
 5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
-   `-LocalApps` runs are useful branch-local development evidence, not certification evidence,
+   `-LocalApps` runs are useful branch-local development evidence, not certification evidence.
+   When another agent owns the shared Workbench checkout, platform automation may supply an
+   isolated Workbench mainline checkout to the source-provenance preflight. That override is valid
+   only when the path is a clean `lotus-workbench` Git origin at exact `origin/main`; a clean path
+   to another Lotus repository must fail closed as a repository-identity mismatch.
 6. canonical startup must use the reusable, fail-closed Compose project/path ownership predicate
    for Docker port owners. `npm run live:stack:preflight` audits an existing stack without mutation,
    and `npm run test:runtime-ownership` executes the equivalent/foreign path matrix in feature, PR,
