@@ -309,6 +309,21 @@ function parseData(value: unknown): ProposalRiskImpactData {
   ) {
     invalid("capability registry is incomplete");
   }
+  const allocation = parseAllocation(item.allocation);
+  const risk = parseRisk(item.risk);
+  const decision = parseDecision(item.decision);
+  const workflowGate = parseWorkflowGate(item.workflow_gate);
+  for (const [capabilityKey, sectionState] of [
+    ["allocation_comparison", allocation.state],
+    ["proposal_risk_lens", risk.state],
+    ["decision_posture", decision.state],
+    ["workflow_gate", workflowGate.state],
+  ] as const) {
+    const capability = capabilities.find(({ key }) => key === capabilityKey);
+    if (capability?.state !== sectionState) {
+      invalid(`${capabilityKey} capability state does not match its evidence`);
+    }
+  }
   return {
     proposal_id: requiredString(item.proposal_id, "proposal_id"),
     portfolio_id: requiredString(item.portfolio_id, "portfolio_id"),
@@ -324,10 +339,10 @@ function parseData(value: unknown): ProposalRiskImpactData {
       "version_created_at",
     ),
     overall_state: literal(item.overall_state, OVERALL_STATES, "overall_state"),
-    allocation: parseAllocation(item.allocation),
-    risk: parseRisk(item.risk),
-    decision: parseDecision(item.decision),
-    workflow_gate: parseWorkflowGate(item.workflow_gate),
+    allocation,
+    risk,
+    decision,
+    workflow_gate: workflowGate,
     capabilities,
     lineage: parseLineage(item.lineage),
   };
@@ -335,6 +350,7 @@ function parseData(value: unknown): ProposalRiskImpactData {
 
 function parseAllocation(value: unknown): ProposalRiskImpactAllocationEvidence {
   const item = record(value, "allocation");
+  const state = literal(item.state, SECTION_STATES, "allocation.state");
   const expectedDimensions = enumArray(
     item.expected_dimensions,
     ALLOCATION_DIMENSIONS,
@@ -346,8 +362,8 @@ function parseAllocation(value: unknown): ProposalRiskImpactAllocationEvidence {
     views.map(({ dimension }) => dimension),
     "allocation view dimensions",
   );
-  return {
-    state: literal(item.state, SECTION_STATES, "allocation.state"),
+  const allocation = {
+    state,
     reason_code: requiredString(item.reason_code, "allocation.reason_code"),
     source_service: nullableLiteral(
       item.source_service,
@@ -370,6 +386,20 @@ function parseAllocation(value: unknown): ProposalRiskImpactAllocationEvidence {
     expected_dimensions: expectedDimensions,
     views,
   };
+  if (
+    state === "ready" &&
+    (expectedDimensions.length === 0 ||
+      views.length === 0 ||
+      expectedDimensions.some(
+        (dimension) => !views.some((view) => view.dimension === dimension),
+      ) ||
+      views.some((view) => !view.current || !view.proposed))
+  ) {
+    invalid(
+      "ready allocation requires every expected current and proposed comparison",
+    );
+  }
+  return allocation;
 }
 
 function parseAllocationView(value: unknown): ProposalRiskImpactAllocationView {
@@ -424,13 +454,21 @@ function parseMoney(value: unknown): ProposalRiskImpactMoney {
 
 function parseRisk(value: unknown): ProposalRiskImpactRiskEvidence {
   const item = record(value, "risk");
-  return {
-    state: literal(item.state, SECTION_STATES, "risk.state"),
+  const state = literal(item.state, SECTION_STATES, "risk.state");
+  const risk = {
+    state,
     reason_code: requiredString(item.reason_code, "risk.reason_code"),
     source_service: nullableString(item.source_service, "risk.source_service"),
     summary: requiredString(item.summary, "risk.summary", true),
     highlights: stringArray(item.highlights, "risk.highlights"),
   };
+  if (
+    state === "ready" &&
+    (!risk.source_service || risk.summary.trim().length === 0)
+  ) {
+    invalid("ready risk evidence requires source_service and summary");
+  }
+  return risk;
 }
 
 function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
@@ -592,8 +630,9 @@ function parseMissingEvidence(
 
 function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
   const item = record(value, "workflow gate");
-  return {
-    state: literal(item.state, SECTION_STATES, "workflow_gate.state"),
+  const state = literal(item.state, SECTION_STATES, "workflow_gate.state");
+  const workflowGate = {
+    state,
     reason_code: requiredString(item.reason_code, "workflow_gate.reason_code"),
     support_reference: nullableString(
       item.support_reference,
@@ -625,6 +664,13 @@ function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
       };
     }),
   };
+  if (
+    state === "ready" &&
+    (!workflowGate.gate || !workflowGate.recommended_next_step)
+  ) {
+    invalid("ready workflow gate requires gate and recommended_next_step");
+  }
+  return workflowGate;
 }
 
 function parseCapability(value: unknown): ProposalRiskImpactCapability {

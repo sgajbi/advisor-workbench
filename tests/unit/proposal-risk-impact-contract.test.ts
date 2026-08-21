@@ -173,4 +173,136 @@ describe("proposal risk and impact contract", () => {
       ),
     ).toThrow(/ready decision requires/);
   });
+
+  it.each([
+    [
+      "allocation_comparison",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.capabilities.find(
+          ({ key }) => key === "allocation_comparison",
+        )!.state = "unavailable";
+      },
+    ],
+    [
+      "proposal_risk_lens",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.capabilities.find(
+          ({ key }) => key === "proposal_risk_lens",
+        )!.state = "unavailable";
+      },
+    ],
+    [
+      "decision_posture",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.capabilities.find(
+          ({ key }) => key === "decision_posture",
+        )!.state = "unavailable";
+      },
+    ],
+    [
+      "workflow_gate",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.capabilities.find(
+          ({ key }) => key === "workflow_gate",
+        )!.state = "unavailable";
+      },
+    ],
+  ])("rejects %s capability and evidence disagreement", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/capability state does not match its evidence/);
+  });
+
+  it.each([
+    [
+      "current snapshot",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.views[0]!.current = null;
+      },
+    ],
+    [
+      "proposed snapshot",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.views[0]!.proposed = null;
+      },
+    ],
+  ])("rejects ready allocation without a %s", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/ready allocation requires/);
+  });
+
+  it.each([
+    [
+      "gate",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.workflow_gate.gate = null;
+      },
+    ],
+    [
+      "recommended next step",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.workflow_gate.recommended_next_step = null;
+      },
+    ],
+  ])("rejects a ready workflow gate without %s", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/ready workflow gate requires/);
+  });
+
+  it.each([
+    [
+      "source service",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.risk.source_service = null;
+      },
+    ],
+    [
+      "summary",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.risk.summary = "";
+      },
+    ],
+  ])("rejects ready risk evidence without %s", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/ready risk evidence requires/);
+  });
 });
