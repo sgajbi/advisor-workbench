@@ -29,12 +29,14 @@ import {
 } from "@/features/platform-runtime/query-source-posture";
 import {
   ModeTabs,
+  ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
   Text,
   modePanelId,
   modeTabId,
 } from "@/design-system";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 import {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -508,15 +510,43 @@ function ProposalDetailWorkspace({
   }
 
   if (queryError && !detailQuery.data?.proposal) {
+    const permissionBlocked = isWorkbenchPermissionBlockedError(queryError);
     return (
-      <Alert severity="error">
-        The proposal could not be loaded. Try again later.
-      </Alert>
+      <SectionBlock title={permissionBlocked ? "Proposal Access Restricted" : "Proposal Unavailable"}>
+        <ScreenStatePanel
+          kind={permissionBlocked ? "permission_blocked" : "error"}
+          title={
+            permissionBlocked
+              ? "Proposal review is restricted"
+              : "Proposal review could not be loaded"
+          }
+          body={
+            permissionBlocked
+              ? "Your current role cannot view this proposal record. No approval or workflow posture is inferred."
+              : "The source proposal record is unavailable. Return to the originating worklist and retry when Gateway recovers."
+          }
+          action={
+            <Link href={fallbackReturnHref} className="nav-link">
+              {returnLabel}
+            </Link>
+          }
+          surface="default"
+        />
+      </SectionBlock>
     );
   }
 
   if (!detailQuery.data?.proposal) {
-    return <Text variant="body">Proposal not found.</Text>;
+    return (
+      <SectionBlock title="Proposal Not Found">
+        <Text variant="secondary">
+          This proposal record is not available in the active advisory pipeline.
+        </Text>
+        <Link href={fallbackReturnHref} className="nav-link">
+          {returnLabel}
+        </Link>
+      </SectionBlock>
+    );
   }
 
   const data = detailQuery.data as ProposalDetailData;

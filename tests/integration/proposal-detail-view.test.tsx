@@ -349,6 +349,89 @@ describe("ProposalDetailView", () => {
     );
   });
 
+  it("preserves the originating worklist when proposal detail is unavailable", async () => {
+    getProposalMock.mockRejectedValueOnce(
+      new Error("Proposal detail failed (503): gateway unavailable"),
+    );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-1"
+          returnPortfolioId="PB_SG_GLOBAL_BAL_001"
+          returnMode="approval-queue"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Proposal review could not be loaded",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Return to Approval Queue" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
+  it("keeps restricted proposal detail distinct and preserves return context", async () => {
+    getProposalMock.mockRejectedValueOnce(
+      new Error("Proposal detail failed (403): forbidden"),
+    );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-1"
+          returnPortfolioId="PB_SG_GLOBAL_BAL_001"
+          returnMode="approval-queue"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Proposal review is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no approval or workflow posture is inferred/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Return to Approval Queue" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
+  it("preserves the originating worklist when a proposal is not found", async () => {
+    getProposalMock.mockRejectedValueOnce(
+      new Error("Proposal detail failed (404): not found"),
+    );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-missing"
+          returnPortfolioId="PB_SG_GLOBAL_BAL_001"
+          returnMode="approval-queue"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Proposal Not Found" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Return to Approval Queue" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
   it("submits draft to risk review", async () => {
     prepareCoherentActionRefresh("RISK_REVIEW");
     getProposalMock
