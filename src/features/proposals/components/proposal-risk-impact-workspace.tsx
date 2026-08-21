@@ -314,12 +314,8 @@ function RiskImpactEvidence({
             <dd>{model.decision.nextAction}</dd>
           </div>
           <div>
-            <dt>Blocking items</dt>
-            <dd>
-              {model.decision.isAvailable
-                ? model.decision.blockingCount
-                : "Not confirmed"}
-            </dd>
+            <dt>Workflow gate</dt>
+            <dd>{model.workflowGate.gate}</dd>
           </div>
           <div>
             <dt>Evidence confidence</dt>
@@ -546,7 +542,7 @@ function RiskImpactEvidence({
           </div>
           {model.decision.isAvailable ? (
             <span className={styles.blockingCount}>
-              {model.decision.blockingCount} blocking
+              {model.decision.blockingCount} blocking in register
             </span>
           ) : (
             <SemanticBadge tone={model.decision.state.tone}>
