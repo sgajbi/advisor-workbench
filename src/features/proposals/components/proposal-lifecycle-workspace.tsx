@@ -91,6 +91,8 @@ export default function ProposalLifecycleWorkspace({
   } | null>(null);
   const implementationRefreshGenerationRef = useRef(0);
   const implementationRefreshScopeRef = useRef("");
+  const discussionRefreshGenerationRef = useRef(0);
+  const discussionRefreshScopeRef = useRef("");
   const [
     implementationRefreshTransaction,
     setImplementationRefreshTransaction,
@@ -231,7 +233,8 @@ export default function ProposalLifecycleWorkspace({
   const {
     query: discussionPackQuery,
     selectedProposal: selectedDiscussionProposal,
-    selectProposal: selectDiscussionProposal,
+    selectProposal: setSelectedDiscussionProposal,
+    refreshForProposal: refreshDiscussionPackForProposal,
     sourcePosture: discussionPackPosture,
     workflowContext: selectedDiscussionWorkflowContext,
   } = useProposalDiscussionPack({ portfolioId, mode, rows: model.rows });
@@ -249,6 +252,15 @@ export default function ProposalLifecycleWorkspace({
     implementationRefreshTransaction?.scope === implementationRefreshScope
       ? implementationRefreshTransaction.state
       : null;
+  const discussionRefreshScope = `${portfolioId}:${mode}:${sourceWindow.cursor ?? "first"}:${selectedDiscussionProposal?.proposalId ?? "none"}:${selectedDiscussionProposal?.versionNo ?? "unknown"}`;
+  useEffect(() => {
+    discussionRefreshGenerationRef.current += 1;
+    discussionRefreshScopeRef.current = discussionRefreshScope;
+  }, [discussionRefreshScope]);
+  const selectDiscussionProposal = (proposalId: string) => {
+    discussionRefreshGenerationRef.current += 1;
+    setSelectedDiscussionProposal(proposalId);
+  };
   const policyReviewModel = useMemo(
     () =>
       buildPolicyReviewQueueModel({
@@ -769,6 +781,36 @@ export default function ProposalLifecycleWorkspace({
     }
   }
 
+  async function refreshDiscussionPack() {
+    const refreshGeneration = ++discussionRefreshGenerationRef.current;
+    const refreshScope = discussionRefreshScope;
+    const refreshedWindow = await readProposalWindow();
+    const refreshedModel = buildProposalLifecycleWorkspaceModel({
+      portfolioId,
+      mode,
+      proposals: refreshedWindow.items,
+      hasMoreResults: Boolean(refreshedWindow.next_cursor),
+      hasPreviousResults: sourceWindow.hasPrevious,
+    });
+    const refreshedProposal = refreshedModel.rows.find(
+      (row) => row.proposalId === selectedDiscussionProposal?.proposalId,
+    );
+    if (!refreshedProposal || refreshedProposal.versionNo === null) {
+      throw new Error(
+        "The selected proposal is no longer available for conversation preparation.",
+      );
+    }
+    const refreshedEvidence =
+      await refreshDiscussionPackForProposal(refreshedProposal);
+    const transactionIsCurrent =
+      discussionRefreshGenerationRef.current === refreshGeneration &&
+      discussionRefreshScopeRef.current === refreshScope;
+    if (transactionIsCurrent) {
+      queryClient.setQueryData(proposalQueryKey, refreshedWindow);
+    }
+    return refreshedEvidence;
+  }
+
   if (isLoading) {
     return (
       <SectionBlock>
@@ -1060,22 +1102,7 @@ export default function ProposalLifecycleWorkspace({
           isPermissionBlocked={discussionPackPosture.isPermissionBlocked}
           hasError={discussionPackPosture.isUnavailable}
           hasRefreshFailure={discussionPackPosture.hasRefreshFailure}
-          onRefresh={async () => {
-            const results = await Promise.all([
-              proposalQuery.refetch(),
-              discussionPackQuery.refetch(),
-            ]);
-            const failedResult = results.find(
-              (result) => result.isError || result.error !== null,
-            );
-            if (failedResult) {
-              throw (
-                failedResult.error ??
-                new Error("Conversation evidence refresh did not complete.")
-              );
-            }
-            return results;
-          }}
+          onRefresh={refreshDiscussionPack}
         />
       ) : mode === "implementation" ? (
         <ProposalImplementationStatusWorkspace

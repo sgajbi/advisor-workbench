@@ -3342,6 +3342,67 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() => expect(refresh).toHaveFocus());
   });
 
+  it("reconciles a refreshed proposal version before confirming conversation evidence", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "proposal-1",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "AWAITING_CLIENT_CONSENT",
+            current_version_no: 2,
+            created_at: "2026-08-21T08:30:00Z",
+            title: "Rebalance concentrated technology exposure",
+          },
+        ],
+        next_cursor: null,
+      })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "proposal-1",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "AWAITING_CLIENT_CONSENT",
+            current_version_no: 3,
+            created_at: "2026-08-21T08:30:00Z",
+            title: "Rebalance concentrated technology exposure",
+          },
+        ],
+        next_cursor: null,
+      });
+    getProposalDiscussionPackMock.mockImplementation(
+      async (_proposalId: string, _portfolioId: string, versionNo: number) => {
+        const fixture = proposalDiscussionPackFixture();
+        fixture.data.version_no = versionNo;
+        fixture.data.lineage.proposal_version_id = `proposal-1:${versionNo}`;
+        return fixture;
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    const refresh = await screen.findByRole("button", {
+      name: "Refresh evidence",
+    });
+    fireEvent.click(refresh);
+
+    expect(
+      await screen.findByText("Selected proposal evidence confirmed"),
+    ).toBeInTheDocument();
+    expect(getProposalDiscussionPackMock).toHaveBeenLastCalledWith(
+      "proposal-1",
+      "PB_SG_GLOBAL_BAL_001",
+      3,
+      "AWAITING_CLIENT_CONSENT",
+    );
+    expect(screen.getAllByText("Version 3").length).toBeGreaterThan(0);
+  });
+
   it("shows an explicit failure instead of inferring discussion readiness", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [
