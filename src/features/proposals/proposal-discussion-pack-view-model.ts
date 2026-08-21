@@ -37,19 +37,22 @@ export function buildProposalDiscussionPackModel(
     (count, section) => count + section.source_refs.length,
     0,
   );
+  const narrativeArtifactIsComplete = hasCompleteNarrativeArtifact(data.narrative);
+  const narrativeReviewIsRecorded = hasRecordedAudit({
+    id: data.narrative.review_id,
+    actor: data.narrative.reviewed_by,
+    occurredAt: data.narrative.reviewed_at,
+  });
   const narrativeReviewState =
-    data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE"
+    data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
+    narrativeReviewIsRecorded &&
+    narrativeArtifactIsComplete
       ? "reviewed"
       : ["REJECTED", "REGENERATION_REQUESTED"].includes(
             data.narrative.review_state,
           )
         ? "rejected"
         : "review-required";
-  const narrativeReviewIsRecorded = hasRecordedAudit({
-    id: data.narrative.review_id,
-    actor: data.narrative.reviewed_by,
-    occurredAt: data.narrative.reviewed_at,
-  });
   return {
     identity: {
       proposalId: data.proposal_id,
@@ -62,7 +65,8 @@ export function buildProposalDiscussionPackModel(
     posture: overallPosture(envelope, controls),
     controls,
     narrative: {
-      isAvailable: data.narrative.state === "supported",
+      isAvailable:
+        data.narrative.state === "supported" && narrativeArtifactIsComplete,
       isAiAssisted: data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
       generationLabel:
         data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
@@ -79,14 +83,14 @@ export function buildProposalDiscussionPackModel(
               ? "deterministic"
               : "unavailable",
         availability:
-          data.narrative.state === "supported"
+          data.narrative.state === "supported" && narrativeArtifactIsComplete
             ? "live"
             : data.narrative.state === "partial"
               ? "partial"
               : "unavailable",
         evidence: {
           state:
-            data.narrative.state === "supported"
+            data.narrative.state === "supported" && narrativeArtifactIsComplete
               ? narrativeSourceCount > 0
                 ? "supported"
                 : "missing"
@@ -123,7 +127,8 @@ export function buildProposalDiscussionPackModel(
       reviewedAt: formatDateValue(data.narrative.reviewed_at),
     },
     memo: {
-      isAvailable: data.memo.state === "supported",
+      isAvailable:
+        data.memo.state === "supported" && hasCompleteMemoArtifact(data.memo),
       status: businessLabel(data.memo.memo_status ?? data.memo.state),
       reviewedBy: data.memo.reviewed_by ?? "Not recorded",
       reviewedAt: formatDateValue(data.memo.reviewed_at),
@@ -235,10 +240,15 @@ function narrativeControl(
     actor: narrative.reviewed_by,
     occurredAt: narrative.reviewed_at,
   });
+  const artifactIsComplete = hasCompleteNarrativeArtifact(narrative);
   const approvalIsIncomplete =
-    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" && !reviewIsRecorded;
+    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
+    (!reviewIsRecorded || !artifactIsComplete);
   const approved =
-    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" && reviewIsRecorded;
+    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
+    reviewIsRecorded &&
+    artifactIsComplete &&
+    narrative.status === "READY_FOR_ADVISOR_REVIEW";
   const rejected = ["REJECTED", "REGENERATION_REQUESTED"].includes(
     narrative.review_state,
   );
@@ -279,10 +289,21 @@ function memoControl(
     actor: memo.reviewed_by,
     occurredAt: memo.reviewed_at,
   });
+  const artifactIsComplete = hasCompleteMemoArtifact(memo);
+  const finalizedForAdvisorUse =
+    memo.memo_status === "READY" &&
+    memo.lifecycle_status === "FINALIZED" &&
+    memo.sections.every(
+      ({ status, review_required }) => status === "READY" && !review_required,
+    );
   const approvalIsIncomplete =
-    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" && !reviewIsRecorded;
+    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
+    (!reviewIsRecorded || !artifactIsComplete || !finalizedForAdvisorUse);
   const approved =
-    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" && reviewIsRecorded;
+    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
+    reviewIsRecorded &&
+    artifactIsComplete &&
+    finalizedForAdvisorUse;
   const rejected = ["REQUEST_CHANGES", "REJECT"].includes(
     memo.latest_review_action ?? "",
   );
@@ -317,6 +338,20 @@ function packageControl(
       evidence.state,
       "Report-package evidence cannot be confirmed.",
     );
+  }
+  if (evidence.package_state === "available" && !evidence.includes_reviewed_narrative) {
+    return {
+      key: "package",
+      label: "Report package",
+      status: "Narrative review missing",
+      tone: "warn",
+      summary:
+        "The report package is available but does not include the reviewed advisor narrative.",
+      source:
+        evidence.source_service === "lotus-report"
+          ? "Lotus Report"
+          : "Not recorded",
+    };
   }
   const presentation = {
     available: [
@@ -435,6 +470,33 @@ function hasRecordedAudit({
   occurredAt: string | null;
 }): boolean {
   return Boolean(id && actor && occurredAt);
+}
+
+function hasCompleteNarrativeArtifact(
+  narrative: ProposalDiscussionPackEnvelope["data"]["narrative"],
+): boolean {
+  return Boolean(
+    narrative.narrative_id &&
+    narrative.source_narrative_hash &&
+    narrative.status &&
+    narrative.generation_mode &&
+    narrative.sections.length > 0 &&
+    narrative.sections.every(({ source_refs }) => source_refs.length > 0),
+  );
+}
+
+function hasCompleteMemoArtifact(
+  memo: ProposalDiscussionPackEnvelope["data"]["memo"],
+): boolean {
+  return Boolean(
+    memo.memo_id &&
+    memo.memo_version &&
+    memo.memo_status &&
+    memo.lifecycle_status &&
+    memo.source_input_hash &&
+    memo.memo_hash &&
+    memo.sections.length > 0,
+  );
 }
 
 function unsupportedControl(

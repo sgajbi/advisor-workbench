@@ -228,4 +228,45 @@ describe("proposal discussion pack view model", () => {
       title: "Conversation controls still need advisor attention",
     });
   });
+
+  it("does not confirm an available package that omits the reviewed narrative", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.package = {
+      state: "supported",
+      reason_code: "report_package_available",
+      package_state: "available",
+      report_request_id: "report-request-2",
+      report_reference_id: "report-2",
+      generated_at: "2026-08-21T09:30:00Z",
+      related_version_no: 2,
+      includes_reviewed_narrative: false,
+      source_service: "lotus-report",
+    };
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.controls.find(({ key }) => key === "package")).toMatchObject({
+      status: "Narrative review missing",
+      tone: "warn",
+      source: "Lotus Report",
+    });
+    expect(model.posture.label).toBe("Review required");
+  });
+
+  it("does not present incomplete approved narrative as available or reviewed", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.narrative.narrative_id = null;
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.narrative.isAvailable).toBe(false);
+    expect(model.narrative.aiDisclosure).toMatchObject({
+      availability: "unavailable",
+      humanReview: { state: "review-required", sourceRecorded: true },
+    });
+    expect(model.controls.find(({ key }) => key === "narrative")).toMatchObject({
+      status: "Review evidence incomplete",
+      tone: "warn",
+    });
+  });
 });
