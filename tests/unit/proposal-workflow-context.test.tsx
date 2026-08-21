@@ -5,11 +5,13 @@ import {
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextPublisher,
   ProposalWorkflowContextRail,
+  ProposalWorkflowContextBoundary,
   ProposalWorkflowBoundary,
 } from "@/features/proposals/components/proposal-workflow-context";
 import {
   buildAdvisorCockpitWorkflowContext,
   buildNeutralProposalWorkflowContext,
+  buildPersistedProposalDraftWorkflowContext,
   buildProposalQueueWorkflowContext,
 } from "@/features/proposals/proposal-workflow-context-view-model";
 
@@ -84,6 +86,28 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.getByText("Source current")).toBeInTheDocument();
     expect(screen.getByText("3 proposals in view")).toBeInTheDocument();
     expect(screen.getByText("2 proposals need advisor action.")).toBeInTheDocument();
+  });
+
+  it("renders the current published source boundary instead of the initial model", async () => {
+    const persistedModel = buildPersistedProposalDraftWorkflowContext({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      proposalId: "pp_test_001",
+    });
+
+    render(
+      <ProposalWorkflowContextProvider initialModel={neutralModel}>
+        <ProposalWorkflowContextPublisher model={persistedModel} />
+        <ProposalWorkflowContextBoundary presentation="inline" />
+      </ProposalWorkflowContextProvider>
+    );
+
+    const boundary = screen.getByText("Source and scope").closest("article");
+    expect(boundary).toHaveAttribute("data-context-presentation", "inline");
+    expect(await screen.findByText("Advisory proposal lifecycle")).toBeInTheDocument();
+    expect(boundary).toHaveTextContent(
+      "A saved draft does not imply suitability completion"
+    );
+    expect(boundary).not.toHaveTextContent("No persisted advisory workflow record");
   });
 
   it("marks supplementary workflow posture without removing source and scope evidence", () => {

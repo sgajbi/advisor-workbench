@@ -9,7 +9,7 @@ import {
 import styles from "./proposal-builder-workflow-rail.module.css";
 
 type ProposalBuilderWorkflowRailProps = {
-  portfolioId: string;
+  queuePortfolioId: string;
   canRunWorkflow: boolean;
   isPortfolioEvidenceConfirmed: boolean;
   actionReason: string;
@@ -44,7 +44,7 @@ function buildActionLabel({
 }
 
 export default function ProposalBuilderWorkflowRail({
-  portfolioId,
+  queuePortfolioId,
   canRunWorkflow,
   isPortfolioEvidenceConfirmed,
   actionReason,
@@ -74,7 +74,7 @@ export default function ProposalBuilderWorkflowRail({
     pendingLabel: "Retaining draft…",
     readyLabel: "Save Advisor Draft",
   });
-  const queueHref = `/proposals?portfolioId=${encodeURIComponent(portfolioId)}`;
+  const queueHref = `/proposals?portfolioId=${encodeURIComponent(queuePortfolioId)}`;
 
   return (
     <section
