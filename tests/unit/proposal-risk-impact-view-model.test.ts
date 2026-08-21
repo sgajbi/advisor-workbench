@@ -17,7 +17,7 @@ describe("proposal risk and impact view model", () => {
       "Review the proposed reduction in concentrated equity exposure.",
     );
     expect(model.decision.activeRequirements[0]).toMatchObject({
-      id: "RISK_REVIEW:proposal-decision.2026-04:MATERIAL_CONCENTRATION_CHANGE",
+      id: '["RISK_REVIEW","proposal-decision.2026-04","MATERIAL_CONCENTRATION_CHANGE"]',
       type: "Risk Review",
       blocking: true,
       severity: "High",
