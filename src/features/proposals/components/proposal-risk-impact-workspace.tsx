@@ -128,11 +128,11 @@ export default function ProposalRiskImpactWorkspace({
     refreshOutcome?.selectionIdentity === selectionIdentity
       ? refreshOutcome.state
       : null;
-  const activeRefreshState = hasRefreshFailure
-    ? "failed"
-    : isRefreshing
-      ? "pending"
-      : matchingRefreshOutcome;
+  const activeRefreshState = resolveRefreshState({
+    outcome: matchingRefreshOutcome,
+    refreshing: isRefreshing,
+    failed: hasRefreshFailure,
+  });
   const selectedRefreshContext = `${selectedProposal.proposalId} · Version ${selectedProposal.versionNo ?? "not reported"}`;
 
   return (
@@ -250,11 +250,11 @@ function RiskImpactEvidence({
     ) ??
     model.allocation.views[0] ??
     null;
-  const effectiveRefreshState = refreshFailed
-    ? "failed"
-    : refreshing
-      ? "pending"
-      : refreshOutcome;
+  const effectiveRefreshState = resolveRefreshState({
+    outcome: refreshOutcome,
+    refreshing,
+    failed: refreshFailed,
+  });
   const refreshContext = `${model.identity.proposalId} · ${model.identity.version}`;
 
   return (
@@ -742,6 +742,20 @@ function refreshResultHasError(result: unknown): boolean {
     (("isError" in result && result.isError === true) ||
       ("error" in result && result.error !== null && result.error !== undefined))
   );
+}
+
+function resolveRefreshState({
+  outcome,
+  refreshing,
+  failed,
+}: {
+  outcome: RiskEvidenceRefreshOutcome["state"] | null;
+  refreshing: boolean;
+  failed: boolean;
+}): RiskEvidenceRefreshOutcome["state"] | null {
+  if (outcome === "pending" || refreshing) return "pending";
+  if (outcome === "failed" || failed) return "failed";
+  return outcome;
 }
 
 function DecisionRegisterList({

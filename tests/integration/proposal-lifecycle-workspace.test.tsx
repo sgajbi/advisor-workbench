@@ -385,9 +385,20 @@ describe("ProposalLifecycleWorkspace", () => {
   });
 
   it("keeps prior evidence visible and announces a failed manual refresh", async () => {
+    let settleRetry:
+      | ((value: ReturnType<typeof proposalRiskImpactFixture>) => void)
+      | undefined;
     getProposalRiskImpactMock
       .mockResolvedValueOnce(proposalRiskImpactFixture())
-      .mockRejectedValueOnce(new Error("Gateway unavailable"));
+      .mockRejectedValueOnce(new Error("Gateway unavailable"))
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof proposalRiskImpactFixture>>(
+            (resolve) => {
+              settleRetry = resolve;
+            },
+          ),
+      );
 
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
@@ -415,6 +426,23 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Requires Risk Review",
       }),
     ).toBeInTheDocument();
+
+    fireEvent.click(refresh);
+    await waitFor(() => {
+      expect(refreshStatus).toHaveAttribute("data-state", "pending");
+    });
+    expect(
+      within(refreshStatus).getByText(
+        "Reconfirming selected proposal evidence",
+      ),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      settleRetry?.(proposalRiskImpactFixture());
+    });
+    await waitFor(() => {
+      expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+    });
   });
 
   it("announces a failed retry when no cached evidence is available", async () => {
