@@ -82,21 +82,21 @@ export default function ProposalLifecycleWorkspace({
     proposalId: string;
   } | null>(null);
   const sourceWindow = useProposalSourceWindow(portfolioId);
-  const proposalQuery = useQuery({
-    queryKey: [
-      "proposal-lifecycle-workspace",
+  const proposalQueryKey = [
+    "proposal-lifecycle-workspace",
+    portfolioId,
+    mode,
+    sourceWindow.cursor,
+  ] as const;
+  const readProposalWindow = async () =>
+    await listProposals({
       portfolioId,
-      mode,
-      sourceWindow.cursor,
-    ],
-    queryFn: async () =>
-      await listProposals({
-        portfolioId,
-        cursor: sourceWindow.cursor,
-        ...(mode === "risk-impact"
-          ? { state: "RISK_REVIEW" }
-          : {}),
-      }),
+      cursor: sourceWindow.cursor,
+      ...(mode === "risk-impact" ? { state: "RISK_REVIEW" } : {}),
+    });
+  const proposalQuery = useQuery({
+    queryKey: proposalQueryKey,
+    queryFn: readProposalWindow,
     ...workbenchStrictQueryDefaults,
   });
   const { data, isLoading } = proposalQuery;
@@ -939,18 +939,12 @@ export default function ProposalLifecycleWorkspace({
           hasError={implementationStatusPosture.isUnavailable}
           hasRefreshFailure={implementationStatusPosture.hasRefreshFailure}
           onRefresh={async () => {
-            const proposalResult = await proposalQuery.refetch();
-            if (proposalResult.isError || proposalResult.error !== null) {
-              throw (
-                proposalResult.error ??
-                new Error("Implementation worklist refresh did not complete.")
-              );
-            }
+            const refreshedWindow = await readProposalWindow();
             const refreshedModel = buildProposalLifecycleWorkspaceModel({
               portfolioId,
               mode,
-              proposals: proposalResult.data?.items ?? [],
-              hasMoreResults: Boolean(proposalResult.data?.next_cursor),
+              proposals: refreshedWindow.items,
+              hasMoreResults: Boolean(refreshedWindow.next_cursor),
               hasPreviousResults: sourceWindow.hasPrevious,
             });
             const refreshedProposal = refreshedModel.rows.find(
@@ -962,9 +956,12 @@ export default function ProposalLifecycleWorkspace({
                 "The selected proposal is no longer available for implementation follow-up.",
               );
             }
-            return await refreshImplementationStatusForProposal(
-              refreshedProposal,
-            );
+            const refreshedEvidence =
+              await refreshImplementationStatusForProposal(
+                refreshedProposal,
+              );
+            queryClient.setQueryData(proposalQueryKey, refreshedWindow);
+            return refreshedEvidence;
           }}
         />
       ) : (
