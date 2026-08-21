@@ -1,7 +1,10 @@
 import type { SemanticBadgeTone } from "@/design-system";
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
 
-import { evaluateProposalActionEvidence } from "./proposal-action-evidence";
+import {
+  evaluateProposalActionEvidence,
+  type ProposalActionEvidenceIssue,
+} from "./proposal-action-evidence";
 import {
   businessEventLabel,
   proposalNextAction,
@@ -18,23 +21,45 @@ export type ProposalApprovalEvidenceModel = ReturnType<
   typeof buildProposalApprovalEvidenceModel
 >;
 
+export type ProposalApprovalEvidenceIssue =
+  | ProposalActionEvidenceIssue
+  | "portfolio-mismatch"
+  | "selected-state-mismatch"
+  | "selected-version-mismatch";
+
+export type ProposalApprovalEvidenceAgreement =
+  | { issue: null; currentState: string }
+  | { issue: ProposalApprovalEvidenceIssue; currentState?: string };
+
+type ProposalApprovalEvidenceExpectation = {
+  expectedPortfolioId: string;
+  expectedProposalId: string;
+  expectedState: string;
+  expectedVersionNo: number | null;
+};
+
 export function buildProposalApprovalEvidenceModel({
   approvals,
   detail,
+  expectedPortfolioId,
   expectedProposalId,
+  expectedState,
+  expectedVersionNo,
   lineage,
   workflow,
-}: {
+}: ProposalApprovalEvidenceExpectation & {
   approvals: ProposalApprovalsData;
   detail: ProposalDetailData;
-  expectedProposalId: string;
   lineage: ProposalLineageData;
   workflow: ProposalWorkflowEventsData;
 }) {
-  const agreement = evaluateProposalActionEvidence({
+  const agreement = evaluateProposalApprovalEvidence({
     approvals,
     detail,
+    expectedPortfolioId,
     expectedProposalId,
+    expectedState,
+    expectedVersionNo,
     lineage,
     workflow,
   });
@@ -110,13 +135,79 @@ export function buildProposalApprovalEvidenceModel({
   };
 }
 
+export function evaluateProposalApprovalEvidence({
+  approvals,
+  detail,
+  expectedPortfolioId,
+  expectedProposalId,
+  expectedState,
+  expectedVersionNo,
+  lineage,
+  workflow,
+}: ProposalApprovalEvidenceExpectation & {
+  approvals?: ProposalApprovalsData;
+  detail?: ProposalDetailData;
+  lineage?: ProposalLineageData;
+  workflow?: ProposalWorkflowEventsData;
+}): ProposalApprovalEvidenceAgreement {
+  const sourceAgreement = evaluateProposalActionEvidence({
+    approvals,
+    detail,
+    expectedProposalId,
+    lineage,
+    workflow,
+  });
+  if (sourceAgreement.issue) {
+    return sourceAgreement;
+  }
+  const proposal = detail?.proposal;
+  if (!proposal || proposal.portfolio_id !== expectedPortfolioId) {
+    return {
+      issue: "portfolio-mismatch",
+      currentState: sourceAgreement.currentState,
+    };
+  }
+  if (proposal.current_state !== expectedState) {
+    return {
+      issue: "selected-state-mismatch",
+      currentState: sourceAgreement.currentState,
+    };
+  }
+  if (
+    expectedVersionNo === null ||
+    proposal.current_version_no !== expectedVersionNo
+  ) {
+    return {
+      issue: "selected-version-mismatch",
+      currentState: sourceAgreement.currentState,
+    };
+  }
+  return sourceAgreement;
+}
+
+export function confirmRefreshedProposalApprovalEvidence(
+  expectation: ProposalApprovalEvidenceExpectation & {
+    approvals?: ProposalApprovalsData;
+    detail?: ProposalDetailData;
+    lineage?: ProposalLineageData;
+    workflow?: ProposalWorkflowEventsData;
+  },
+): void {
+  const agreement = evaluateProposalApprovalEvidence(expectation);
+  if (agreement.issue) {
+    throw new Error(
+      "The refreshed approval evidence does not agree with the current worklist record. Refresh the queue before relying on this proposal posture.",
+    );
+  }
+}
+
 function approvalPosture({
   issue,
   approvalCount,
   notApprovedCount,
   currentState,
 }: {
-  issue: ReturnType<typeof evaluateProposalActionEvidence>["issue"];
+  issue: ProposalApprovalEvidenceIssue | null;
   approvalCount: number;
   notApprovedCount: number;
   currentState: string;
@@ -129,15 +220,21 @@ function approvalPosture({
   nextAction: string;
 } {
   if (issue) {
+    const selectedRecordConflict =
+      issue === "portfolio-mismatch" ||
+      issue === "selected-state-mismatch" ||
+      issue === "selected-version-mismatch";
     return {
       state: "conflict",
       label: "Evidence conflict",
       tone: "danger",
       title: evidenceConflictTitle(issue),
-      summary:
-        "The selected proposal's detail, workflow, approvals, and active-version lineage do not form one current source record.",
-      nextAction:
-        "Refresh the selected proposal evidence before relying on maker-checker posture.",
+      summary: selectedRecordConflict
+        ? "The selected worklist record no longer agrees with the current proposal detail, workflow, approvals, and lineage."
+        : "The selected proposal's detail, workflow, approvals, and active-version lineage do not form one current source record.",
+      nextAction: selectedRecordConflict
+        ? "Refresh the proposal queue before relying on maker-checker posture."
+        : "Refresh the selected proposal evidence before relying on maker-checker posture.",
     };
   }
   if (notApprovedCount > 0) {
@@ -176,10 +273,7 @@ function approvalPosture({
 }
 
 function evidenceConflictTitle(
-  issue: Exclude<
-    ReturnType<typeof evaluateProposalActionEvidence>["issue"],
-    null
-  >,
+  issue: ProposalApprovalEvidenceIssue,
 ): string {
   if (issue === "proposal-mismatch") {
     return "Proposal identity does not agree";
@@ -189,6 +283,15 @@ function evidenceConflictTitle(
   }
   if (issue === "active-version-mismatch") {
     return "Active version lineage is not confirmed";
+  }
+  if (issue === "portfolio-mismatch") {
+    return "Portfolio identity does not agree";
+  }
+  if (issue === "selected-state-mismatch") {
+    return "Worklist stage is no longer current";
+  }
+  if (issue === "selected-version-mismatch") {
+    return "Worklist version is no longer current";
   }
   return "Required approval evidence is incomplete";
 }

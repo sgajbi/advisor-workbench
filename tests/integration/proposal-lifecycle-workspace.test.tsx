@@ -1206,6 +1206,52 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("fails closed when agreeing detail sources have advanced beyond the selected worklist record", async () => {
+    const advanced = selectedProposalEvidence("PRP-RISK");
+    advanced.detail.proposal.current_state = "COMPLIANCE_REVIEW";
+    advanced.detail.proposal.current_version_no = 4;
+    advanced.workflow.current_state = "COMPLIANCE_REVIEW";
+    advanced.approvals.current_state = "COMPLIANCE_REVIEW";
+    advanced.lineage.versions = [{ version_no: 4 }];
+    getProposalMock.mockResolvedValueOnce(advanced.detail);
+    getProposalWorkflowEventsMock.mockResolvedValueOnce(advanced.workflow);
+    getProposalApprovalsMock.mockResolvedValueOnce(advanced.approvals);
+    getProposalLineageMock.mockResolvedValueOnce(advanced.lineage);
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Worklist stage is no longer current",
+      }),
+    ).toBeInTheDocument();
+    const selectedProposal = screen.getByRole("region", {
+      name: "Selected proposal decision",
+    });
+    expect(
+      within(selectedProposal).getByText(
+        /selected worklist record no longer agrees/i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Recorded approval decisions" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps restricted approval evidence distinct in the selected pane and shared rail", async () => {
     getProposalApprovalsMock.mockRejectedValueOnce(
       new Error("Proposal approvals failed (403): forbidden"),
@@ -1329,6 +1375,46 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       within(refreshStatus).getByText("Selected proposal evidence confirmed"),
     ).toBeInTheDocument();
+  });
+
+  it("rejects a transport-success refresh whose compound approval evidence conflicts", async () => {
+    getProposalWorkflowEventsMock
+      .mockImplementationOnce(
+        async (proposalId: string) =>
+          selectedProposalEvidence(proposalId).workflow,
+      )
+      .mockImplementationOnce(async (proposalId: string) => ({
+        ...selectedProposalEvidence(proposalId).workflow,
+        current_state: "DRAFT",
+      }));
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    await screen.findByRole("heading", {
+      name: "1 decision is not approved",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh evidence" }));
+
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "failed"),
+    );
+    expect(
+      within(refreshStatus).getByText("Source refresh failed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Workflow state does not agree" }),
+    ).toBeInTheDocument();
+    expect(
+      within(refreshStatus).queryByText(
+        "Selected proposal evidence confirmed",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("resets selected proposal identity when the source window changes", async () => {
