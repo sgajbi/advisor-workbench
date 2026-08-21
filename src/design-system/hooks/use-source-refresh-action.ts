@@ -22,15 +22,20 @@ export function useSourceRefreshAction({
 }) {
   const actionRef = useRef<HTMLButtonElement>(null);
   const identityRef = useRef(identity);
+  const requestGenerationRef = useRef(0);
   const [outcome, setOutcome] = useState<SourceRefreshOutcome | null>(null);
 
   useEffect(() => {
     identityRef.current = identity;
   }, [identity]);
 
-  const reset = useCallback(() => setOutcome(null), []);
+  const reset = useCallback(() => {
+    requestGenerationRef.current += 1;
+    setOutcome(null);
+  }, []);
 
   const refresh = useCallback(async () => {
+    const requestGeneration = ++requestGenerationRef.current;
     const initiatingElement = actionRef.current;
     const initiatingIdentity = identity;
     const shouldRestoreFocus = document.activeElement === initiatingElement;
@@ -41,7 +46,11 @@ export function useSourceRefreshAction({
 
     try {
       const result = await onRefresh();
-      if (identityRef.current === initiatingIdentity && initiatingIdentity) {
+      if (
+        requestGenerationRef.current === requestGeneration &&
+        identityRef.current === initiatingIdentity &&
+        initiatingIdentity
+      ) {
         setOutcome({
           identity: initiatingIdentity,
           state: refreshResultHasError(result) ? "failed" : "confirmed",
@@ -49,7 +58,11 @@ export function useSourceRefreshAction({
       }
       return result;
     } catch (error) {
-      if (identityRef.current === initiatingIdentity && initiatingIdentity) {
+      if (
+        requestGenerationRef.current === requestGeneration &&
+        identityRef.current === initiatingIdentity &&
+        initiatingIdentity
+      ) {
         setOutcome({ identity: initiatingIdentity, state: "failed" });
       }
       throw error;
@@ -60,6 +73,7 @@ export function useSourceRefreshAction({
             document.activeElement === initiatingElement ||
             document.activeElement === document.body;
           if (
+            requestGenerationRef.current === requestGeneration &&
             identityRef.current === initiatingIdentity &&
             focusDidNotMove
           ) {

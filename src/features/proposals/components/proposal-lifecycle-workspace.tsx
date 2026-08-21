@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
@@ -81,6 +81,8 @@ export default function ProposalLifecycleWorkspace({
     portfolioId: string;
     proposalId: string;
   } | null>(null);
+  const implementationRefreshGenerationRef = useRef(0);
+  const implementationRefreshScopeRef = useRef("");
   const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQueryKey = [
     "proposal-lifecycle-workspace",
@@ -205,11 +207,20 @@ export default function ProposalLifecycleWorkspace({
   const {
     query: implementationStatusQuery,
     selectedProposal: selectedImplementationProposal,
-    selectProposal: selectImplementationProposal,
+    selectProposal: setSelectedImplementationProposal,
     refreshForProposal: refreshImplementationStatusForProposal,
     sourcePosture: implementationStatusPosture,
     workflowContext: selectedImplementationWorkflowContext,
   } = useProposalImplementationStatus({ portfolioId, mode, rows: model.rows });
+  const implementationRefreshScope = `${portfolioId}:${mode}:${sourceWindow.cursor ?? "first"}:${selectedImplementationProposal?.proposalId ?? "none"}`;
+  useEffect(() => {
+    implementationRefreshGenerationRef.current += 1;
+    implementationRefreshScopeRef.current = implementationRefreshScope;
+  }, [implementationRefreshScope]);
+  const selectImplementationProposal = (proposalId: string) => {
+    implementationRefreshGenerationRef.current += 1;
+    setSelectedImplementationProposal(proposalId);
+  };
   const policyReviewModel = useMemo(
     () =>
       buildPolicyReviewQueueModel({
@@ -939,6 +950,9 @@ export default function ProposalLifecycleWorkspace({
           hasError={implementationStatusPosture.isUnavailable}
           hasRefreshFailure={implementationStatusPosture.hasRefreshFailure}
           onRefresh={async () => {
+            const refreshGeneration =
+              ++implementationRefreshGenerationRef.current;
+            const refreshScope = implementationRefreshScope;
             const refreshedWindow = await readProposalWindow();
             const refreshedModel = buildProposalLifecycleWorkspaceModel({
               portfolioId,
@@ -960,6 +974,13 @@ export default function ProposalLifecycleWorkspace({
               await refreshImplementationStatusForProposal(
                 refreshedProposal,
               );
+            if (
+              implementationRefreshGenerationRef.current !==
+                refreshGeneration ||
+              implementationRefreshScopeRef.current !== refreshScope
+            ) {
+              return refreshedEvidence;
+            }
             queryClient.setQueryData(proposalQueryKey, refreshedWindow);
             return refreshedEvidence;
           }}
