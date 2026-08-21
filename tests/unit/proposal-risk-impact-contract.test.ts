@@ -305,4 +305,87 @@ describe("proposal risk and impact contract", () => {
       ),
     ).toThrow(/ready risk evidence requires/);
   });
+
+  it.each([
+    [
+      "missing source",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.source_service = null;
+        payload.data.allocation.source_mode = null;
+      },
+    ],
+    [
+      "contradictory source",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.source_service = "lotus-advise";
+        payload.data.allocation.source_mode = "LOTUS_CORE";
+      },
+    ],
+    [
+      "missing contract version",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.contract_version = null;
+      },
+    ],
+    [
+      "missing calculator version",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.allocation.calculator_version = null;
+      },
+    ],
+  ])("rejects displayable allocation with %s", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/displayable allocation requires coherent source/);
+  });
+
+  it("rejects displayed partial risk observations without a named source", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.overall_state = "partial";
+    payload.data.risk.state = "partial";
+    payload.data.risk.source_service = null;
+    payload.data.capabilities.find(
+      ({ key }) => key === "proposal_risk_lens",
+    )!.state = "partial";
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/displayable partial risk evidence requires source_service/);
+  });
+
+  it.each([
+    "BLOCKED",
+    "RISK_REVIEW_REQUIRED",
+    "COMPLIANCE_REVIEW_REQUIRED",
+    "CLIENT_CONSENT_REQUIRED",
+  ] as const)("rejects a ready %s gate without reasons", (gate) => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.workflow_gate.gate = gate;
+    payload.data.workflow_gate.reasons = [];
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/ready blocking workflow gate requires at least one reason/);
+  });
 });

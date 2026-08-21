@@ -193,12 +193,24 @@ export function buildProposalRiskImpactModel(
       disclaimer:
         "Workflow gate evidence controls progression. It does not prove that an approval was recorded.",
     },
-    capabilities: data.capabilities.map((capability) => ({
-      key: capability.key,
-      name: capability.label,
-      status: supportabilityLabel(capability.state),
-      tone: supportabilityTone(capability.state),
-    })),
+    capabilities: data.capabilities.map((capability) => {
+      const reconciledCoreState =
+        capability.key === "allocation_comparison"
+          ? allocationState
+          : capability.key === "proposal_risk_lens"
+            ? riskState
+            : capability.key === "decision_posture"
+              ? decisionState
+              : capability.key === "workflow_gate"
+                ? workflowGateState
+                : capability.state;
+      return {
+        key: capability.key,
+        name: capability.label,
+        status: supportabilityLabel(reconciledCoreState),
+        tone: supportabilityTone(reconciledCoreState),
+      };
+    }),
     lineage: {
       correlationId: envelope.correlation_id,
       contractVersion: envelope.contract_version,
