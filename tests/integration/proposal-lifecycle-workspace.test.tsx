@@ -736,7 +736,7 @@ describe("ProposalLifecycleWorkspace", () => {
       within(decisionBrief!).getByText("Workflow gate"),
     ).toBeInTheDocument();
     expect(
-      within(decisionBrief!).getByText("Risk Review Required"),
+      within(decisionBrief!).getByText("Gate not confirmed"),
     ).toBeInTheDocument();
     expect(screen.queryByText(/blocking in register/)).not.toBeInTheDocument();
     expect(

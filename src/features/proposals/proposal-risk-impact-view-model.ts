@@ -51,10 +51,13 @@ export function buildProposalRiskImpactModel(
     data.workflow_gate.state,
   );
   const decisionIsAvailable = decisionState === "ready";
+  const effectiveWorkflowGateState = decisionIsAvailable
+    ? workflowGateState
+    : decisionState;
   const allocationIsAvailable =
     allocationState === "ready" || allocationState === "partial";
   const riskIsAvailable = riskState === "ready" || riskState === "partial";
-  const workflowGateIsAvailable = workflowGateState === "ready";
+  const workflowGateIsAvailable = effectiveWorkflowGateState === "ready";
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
     : [];
@@ -177,7 +180,7 @@ export function buildProposalRiskImpactModel(
     },
     workflowGate: {
       isAvailable: workflowGateIsAvailable,
-      state: supportabilityPresentation(workflowGateState),
+      state: supportabilityPresentation(effectiveWorkflowGateState),
       gate:
         workflowGateIsAvailable && data.workflow_gate.gate
           ? businessLabel(data.workflow_gate.gate)

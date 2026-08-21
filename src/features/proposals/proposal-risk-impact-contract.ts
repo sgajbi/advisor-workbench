@@ -416,7 +416,6 @@ function parseData(value: unknown): ProposalRiskImpactData {
     invalid("decision status does not match the workflow gate");
   }
   if (
-    decision.state === "ready" &&
     workflowGate.state === "ready" &&
     workflowGate.gate &&
     ["EXECUTION_READY", "NONE"].includes(workflowGate.gate) &&

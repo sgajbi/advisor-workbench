@@ -390,6 +390,30 @@ describe("proposal risk and impact contract", () => {
     },
   );
 
+  it("rejects retained partial blockers beside an executable gate", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.overall_state = "partial";
+    payload.data.decision.state = "partial";
+    payload.data.capabilities.find(
+      ({ key }) => key === "decision_posture",
+    )!.state = "partial";
+    payload.data.workflow_gate.gate = "EXECUTION_READY";
+    payload.data.workflow_gate.recommended_next_step = "EXECUTE";
+    payload.data.workflow_gate.reasons = [];
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(
+      /executable workflow gate cannot retain blocking decision evidence/,
+    );
+  });
+
   it.each([
     ["EXECUTION_READY", "EXECUTE"],
     ["NONE", "NONE"],
