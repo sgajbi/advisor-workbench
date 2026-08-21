@@ -5,6 +5,7 @@ import { vi } from "vitest";
 
 import ProposalSimulateForm from "../../src/features/proposals/components/proposal-simulate-form";
 import {
+  ProposalWorkflowContextBoundary,
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextRail,
 } from "../../src/features/proposals/components/proposal-workflow-context";
@@ -144,6 +145,7 @@ function renderForm(initialPortfolioId?: string) {
         initialModel={buildSimulationProposalWorkflowContext({ portfolioId })}
       >
         <ProposalSimulateForm initialPortfolioId={initialPortfolioId} />
+        <ProposalWorkflowContextBoundary presentation="inline" />
         <ProposalWorkflowContextRail />
       </ProposalWorkflowContextProvider>
     </QueryClientProvider>
@@ -442,7 +444,31 @@ describe("ProposalSimulateForm", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Draft retained for review")).toBeInTheDocument();
     expect(screen.getAllByText("pp_test_001").length).toBeGreaterThan(0);
+    const inlineBoundary = document.querySelector(
+      '[data-context-presentation="inline"]'
+    );
+    expect(inlineBoundary).toHaveTextContent("Advisory proposal lifecycle");
+    expect(inlineBoundary).not.toHaveTextContent(
+      "No persisted advisory workflow record"
+    );
     expect(screen.queryByText("Draft not yet persisted")).not.toBeInTheDocument();
+  });
+
+  it("keeps the retained-draft queue link scoped to the portfolio that was saved", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+
+    await waitForPortfolioEvidence();
+    fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
+    await screen.findByText("Advisor draft retained");
+
+    fireEvent.change(screen.getByLabelText("Portfolio ID"), {
+      target: { value: "PB_SG_NEW_DRAFT_001" },
+    });
+
+    expect(screen.getByRole("link", { name: "View proposal queue" })).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001"
+    );
   });
 
   it("submits the schema-normalized portfolio identifier when saving a draft", async () => {

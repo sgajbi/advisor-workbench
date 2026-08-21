@@ -744,7 +744,7 @@ export default function ProposalSimulateForm({
           }
           side={
             <ProposalBuilderWorkflowRail
-              portfolioId={portfolioId}
+              queuePortfolioId={savedDraft?.portfolioId ?? portfolioId}
               canRunWorkflow={canRunProposalWorkflow}
               isPortfolioEvidenceConfirmed={portfolioEvidence.canEvaluateAndHandoff}
               actionReason={workflowActionReason}

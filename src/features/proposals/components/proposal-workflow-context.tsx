@@ -142,6 +142,16 @@ export function ProposalWorkflowContextRail() {
   );
 }
 
+export function ProposalWorkflowContextBoundary({
+  presentation = "rail",
+}: {
+  presentation?: "rail" | "inline";
+}) {
+  const { model } = useProposalWorkflowContext();
+
+  return <ProposalWorkflowBoundary model={model} presentation={presentation} />;
+}
+
 export function ProposalWorkflowBoundary({
   model,
   presentation = "rail",

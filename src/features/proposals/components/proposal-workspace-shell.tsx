@@ -19,7 +19,7 @@ import {
   type ProposalWorkflowContextModel,
 } from "../proposal-workflow-context-view-model";
 import {
-  ProposalWorkflowBoundary,
+  ProposalWorkflowContextBoundary,
   ProposalWorkflowContextProvider,
   ProposalWorkflowContextRail,
 } from "./proposal-workflow-context";
@@ -90,10 +90,7 @@ export default function ProposalWorkspaceShell({
               >
                 <WorkbenchSectionStack className="proposal-page-sections">
                   {workflowContextPresentation === "inline-boundary" ? (
-                    <ProposalWorkflowBoundary
-                      model={initialWorkflowContext}
-                      presentation="inline"
-                    />
+                    <ProposalWorkflowContextBoundary presentation="inline" />
                   ) : null}
                   {children}
                 </WorkbenchSectionStack>
