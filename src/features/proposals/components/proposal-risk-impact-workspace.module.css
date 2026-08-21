@@ -1,0 +1,616 @@
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.72fr) minmax(0, 1.58fr);
+  align-items: start;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.decisionPane {
+  min-width: 0;
+  border: 1px solid var(--border-strong);
+  border-top: 3px solid var(--brand-highlight);
+  border-radius: var(--radius-tile, 8px);
+  background: var(--panel);
+  box-shadow: var(--elevation-subtle);
+}
+
+.evidence {
+  display: grid;
+  gap: 0;
+}
+
+.recordHeader,
+.decisionBrief,
+.analysisSection,
+.provenance,
+.actionBar {
+  padding: 1rem 1.125rem;
+}
+
+.recordHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(115deg, var(--panel) 0%, var(--panel-alt) 100%);
+}
+
+.recordHeader h3 {
+  margin: 0.2rem 0 0.25rem;
+  color: var(--text);
+}
+
+.headerStatus {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.refreshFailure,
+.refreshing {
+  margin: 0;
+  border-bottom: 1px solid #ead7a4;
+  background: #fff9e9;
+  color: #624b11;
+}
+
+.refreshFailure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.125rem;
+}
+
+.refreshFailure div {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.refreshFailure span,
+.refreshing {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+}
+
+.refreshing {
+  padding: 0.625rem 1.125rem;
+}
+
+.decisionBrief {
+  display: grid;
+  grid-template-columns: 0.3rem minmax(0, 1fr) minmax(15rem, 0.72fr);
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.decisionMarker {
+  border-radius: 999px;
+  background: var(--brand-highlight);
+}
+
+.decisionLead h4,
+.sectionHeading h4 {
+  margin: 0.2rem 0 0;
+}
+
+.decisionLead > p {
+  margin: 0.45rem 0 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.35rem;
+}
+
+.decisionLead .supportabilityNote {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+}
+
+.decisionFacts,
+.gateFacts,
+.lineageList {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 6px);
+  background: var(--border);
+}
+
+.decisionFacts > div,
+.gateFacts > div,
+.lineageList > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  background: var(--panel-alt);
+}
+
+.decisionFacts dt,
+.gateFacts dt,
+.lineageList dt {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.decisionFacts dd,
+.gateFacts dd,
+.lineageList dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+}
+
+.analysisSection {
+  display: grid;
+  gap: 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dimensionControl {
+  display: grid;
+  grid-template-columns: auto minmax(10rem, 15rem) 1fr;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.dimensionControl label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dimensionControl select {
+  min-height: 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control, 6px);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0 2rem 0 0.75rem;
+}
+
+.dimensionControl select:focus-visible,
+.primaryAction:focus-visible,
+.provenance summary:focus-visible {
+  outline: 2px solid var(--brand-highlight);
+  outline-offset: 3px;
+}
+
+.dimensionControl > span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.comparisonLegend,
+.allocationLedger li {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.42fr) repeat(2, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+
+.comparisonLegend {
+  padding: 0 0.75rem 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.comparisonLegend span:first-child {
+  grid-column: 2;
+}
+
+.allocationLedger,
+.evidenceList,
+.registerGroup ul,
+.capabilityList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allocationLedger {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 6px);
+}
+
+.allocationLedger li {
+  align-items: center;
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+}
+
+.allocationLedger li + li {
+  border-top: 1px solid var(--border);
+}
+
+.allocationLedger > li > strong {
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+}
+
+.allocationSide {
+  display: grid;
+  grid-template-columns: minmax(3.25rem, auto) minmax(4rem, 1fr);
+  align-items: center;
+  gap: 0.3rem 0.625rem;
+  min-width: 0;
+}
+
+.allocationSide small {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1rem;
+}
+
+.allocationValue {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.track {
+  display: block;
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf1;
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #536a79;
+}
+
+.proposed .track span {
+  background: var(--brand-highlight);
+}
+
+.allocationTotals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.allocationTotals strong {
+  margin-left: 0.25rem;
+  color: var(--text);
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.evidenceGrid > .analysisSection:first-child {
+  border-right: 1px solid var(--border);
+}
+
+.businessSummary,
+.muted,
+.sourceLine {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.businessSummary {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.muted,
+.sourceLine {
+  color: var(--text-muted);
+}
+
+.sourceLine {
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.6875rem;
+}
+
+.evidenceList {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.evidenceList li {
+  position: relative;
+  padding-left: 0.9rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+  line-height: 1.2rem;
+}
+
+.evidenceList li::before {
+  position: absolute;
+  top: 0.5rem;
+  left: 0;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--brand-highlight);
+  content: "";
+}
+
+.gateFacts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.blockingCount {
+  border-radius: 999px;
+  background: #f9e9e7;
+  color: #8c2820;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.3rem 0.6rem;
+}
+
+.registerColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 6px);
+  background: var(--border);
+}
+
+.registerGroup {
+  min-width: 0;
+  padding: 0.75rem;
+  background: var(--panel);
+}
+
+.registerGroup h5 {
+  margin: 0 0 0.625rem;
+  color: var(--text);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.registerGroup ul {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.registerGroup li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.registerGroup li div {
+  min-width: 0;
+}
+
+.registerGroup li strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  line-height: 1.05rem;
+}
+
+.registerGroup li p {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  line-height: 1.05rem;
+}
+
+.provenance {
+  border-bottom: 1px solid var(--border);
+}
+
+.provenance summary {
+  min-height: 2.75rem;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  line-height: 2.75rem;
+}
+
+.provenanceBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr);
+  gap: 1rem;
+  padding-top: 0.75rem;
+}
+
+.capabilityList {
+  display: grid;
+  gap: 1px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 6px);
+  background: var(--border);
+}
+
+.capabilityList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--panel-alt);
+  font-size: 0.75rem;
+}
+
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #f5f7f8;
+}
+
+.actionBar > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.actionBar strong {
+  color: var(--text);
+  font-size: 0.8125rem;
+}
+
+.actionBar span {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+}
+
+.primaryAction {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius-control, 6px);
+  background: var(--brand-strong);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  line-height: 1.3rem;
+  text-decoration: none;
+}
+
+.primaryAction:hover {
+  background: var(--brand);
+}
+
+@media (max-width: 1180px) {
+  .workspace {
+    grid-template-columns: minmax(15rem, 0.62fr) minmax(0, 1.38fr);
+  }
+
+  .decisionBrief {
+    grid-template-columns: 0.3rem minmax(0, 1fr);
+  }
+
+  .decisionFacts {
+    grid-column: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .registerColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .evidenceGrid,
+  .provenanceBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .evidenceGrid > .analysisSection:first-child {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .recordHeader,
+  .sectionHeading,
+  .refreshFailure,
+  .actionBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerStatus {
+    justify-content: flex-start;
+  }
+
+  .decisionBrief {
+    grid-template-columns: 0.25rem minmax(0, 1fr);
+    padding-inline: 0.875rem;
+  }
+
+  .decisionFacts {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dimensionControl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dimensionControl > span {
+    text-align: left;
+  }
+
+  .comparisonLegend {
+    display: none;
+  }
+
+  .allocationLedger li {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .allocationLedger > li > strong {
+    grid-column: 1 / -1;
+  }
+
+  .allocationSide::before {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    content: "Current";
+  }
+
+  .allocationSide.proposed::before {
+    content: "Proposed";
+  }
+
+  .gateFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .primaryAction {
+    text-align: center;
+  }
+}

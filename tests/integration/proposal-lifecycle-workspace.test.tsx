@@ -1,5 +1,12 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +16,7 @@ import {
   ProposalWorkflowContextRail,
 } from "../../src/features/proposals/components/proposal-workflow-context";
 import { buildNeutralProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
+import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
@@ -47,7 +55,9 @@ const policyReviewQueueFixture = {
       policy_version: "2026.05",
       evaluation_status: "PENDING_REVIEW",
       approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
-      disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+      disclosure_requirements: [
+        "advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+      ],
       source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
     },
   ],
@@ -65,23 +75,34 @@ const secondPolicyReviewFixture = {
   consent_requirements: ["client_consent:SG_INCOME_MANDATE"],
   source_gaps: [],
 };
-const listProposalsMock = vi.fn(async (_filters?: unknown) => proposalListFixture);
+const listProposalsMock = vi.fn(
+  async (_filters?: unknown) => proposalListFixture,
+);
+const getProposalRiskImpactMock = vi.fn(
+  async (_proposalId: string, _portfolioId: string) =>
+    proposalRiskImpactFixture().data,
+);
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
-    policyReviewQueueFixture
+    policyReviewQueueFixture,
 );
 const getAdvisoryPolicyEvaluationMock = vi.fn(
   async (_evaluationId: string): Promise<AdvisoryPolicyEvaluationData> => ({
     ...policyReviewQueueFixture.items[0],
     evaluation_hash: "sha256:policy-evaluation-1",
-    source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+    source_refs: [
+      "lotus-core:core_product_eligibility_target_market_complexity",
+    ],
     evaluation_json: {
       rule_results: [
-        { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+        {
+          rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW",
+          status: "PENDING_REVIEW",
+        },
         { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
       ],
     },
-  })
+  }),
 );
 const getAdvisoryPolicySignOffPackageMock = vi.fn(
   async (_evaluationId: string): Promise<AdvisoryPolicySignOffPackageData> => ({
@@ -93,7 +114,7 @@ const getAdvisoryPolicySignOffPackageMock = vi.fn(
       audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
       lineage_posture: { client_ready_publication: "BLOCKED" },
     },
-  })
+  }),
 );
 const policyWorkflowFixture: AdvisoryPolicyWorkflowData = {
   sign_off_status: "PENDING_REVIEW",
@@ -106,15 +127,19 @@ const policyWorkflowFixture: AdvisoryPolicyWorkflowData = {
 };
 const getAdvisoryPolicyWorkflowMock = vi.fn(
   async (_evaluationId: string): Promise<AdvisoryPolicyWorkflowData> =>
-    policyWorkflowFixture
+    policyWorkflowFixture,
 );
 const recordAdvisoryPolicySignOffDecisionMock = vi.fn(
-  async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
+  async (
+    _evaluationId: string,
+    _payload: unknown,
+    _idempotencyKey?: string,
+  ) => ({
     workflow: {
       sign_off_status: "PENDING_REVIEW",
       client_ready_publication: "BLOCKED",
     },
-  })
+  }),
 );
 
 vi.mock("../../src/features/proposals/api", () => ({
@@ -128,12 +153,19 @@ vi.mock("../../src/features/proposals/api", () => ({
     getAdvisoryPolicySignOffPackageMock(evaluationId),
   getAdvisoryPolicyWorkflow: (evaluationId: string) =>
     getAdvisoryPolicyWorkflowMock(evaluationId),
+  getProposalRiskImpact: (proposalId: string, portfolioId: string) =>
+    getProposalRiskImpactMock(proposalId, portfolioId),
   listProposals: (filters: unknown) => listProposalsMock(filters),
   recordAdvisoryPolicySignOffDecision: (
     evaluationId: string,
     payload: unknown,
-    idempotencyKey?: string
-  ) => recordAdvisoryPolicySignOffDecisionMock(evaluationId, payload, idempotencyKey),
+    idempotencyKey?: string,
+  ) =>
+    recordAdvisoryPolicySignOffDecisionMock(
+      evaluationId,
+      payload,
+      idempotencyKey,
+    ),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -145,7 +177,9 @@ function renderWithQueryClient(ui: React.ReactElement) {
     },
   });
   return {
-    ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
+    ...render(
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+    ),
     queryClient,
   };
 }
@@ -153,66 +187,178 @@ function renderWithQueryClient(ui: React.ReactElement) {
 describe("ProposalLifecycleWorkspace", () => {
   beforeEach(() => {
     listProposalsMock.mockReset();
-    listProposalsMock.mockImplementation(async (_filters?: unknown) => proposalListFixture);
+    listProposalsMock.mockImplementation(
+      async (_filters?: unknown) => proposalListFixture,
+    );
+    getProposalRiskImpactMock.mockReset();
+    getProposalRiskImpactMock.mockImplementation(
+      async (_proposalId: string, _portfolioId: string) =>
+        proposalRiskImpactFixture().data,
+    );
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
       async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
-        policyReviewQueueFixture
+        policyReviewQueueFixture,
     );
     getAdvisoryPolicyEvaluationMock.mockReset();
-    getAdvisoryPolicyEvaluationMock.mockImplementation(async (_evaluationId: string) => ({
-      ...policyReviewQueueFixture.items[0],
-      evaluation_hash: "sha256:policy-evaluation-1",
-      source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
-      evaluation_json: {
-        rule_results: [
-          { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
-          { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+    getAdvisoryPolicyEvaluationMock.mockImplementation(
+      async (_evaluationId: string) => ({
+        ...policyReviewQueueFixture.items[0],
+        evaluation_hash: "sha256:policy-evaluation-1",
+        source_refs: [
+          "lotus-core:core_product_eligibility_target_market_complexity",
         ],
-      },
-    }));
+        evaluation_json: {
+          rule_results: [
+            {
+              rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW",
+              status: "PENDING_REVIEW",
+            },
+            { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
+          ],
+        },
+      }),
+    );
     getAdvisoryPolicySignOffPackageMock.mockReset();
-    getAdvisoryPolicySignOffPackageMock.mockImplementation(async (_evaluationId: string) => ({
-      package_posture: {
-        sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
-        client_ready_publication: "BLOCKED",
-      },
-      lineage: {
-        audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
-        lineage_posture: { client_ready_publication: "BLOCKED" },
-      },
-    }));
+    getAdvisoryPolicySignOffPackageMock.mockImplementation(
+      async (_evaluationId: string) => ({
+        package_posture: {
+          sign_off_source_package: "SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API",
+          client_ready_publication: "BLOCKED",
+        },
+        lineage: {
+          audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+          lineage_posture: { client_ready_publication: "BLOCKED" },
+        },
+      }),
+    );
     getAdvisoryPolicyWorkflowMock.mockReset();
     getAdvisoryPolicyWorkflowMock.mockImplementation(
-      async (_evaluationId: string) => policyWorkflowFixture
+      async (_evaluationId: string) => policyWorkflowFixture,
     );
     recordAdvisoryPolicySignOffDecisionMock.mockReset();
     recordAdvisoryPolicySignOffDecisionMock.mockImplementation(
-      async (_evaluationId: string, _payload: unknown, _idempotencyKey?: string) => ({
+      async (
+        _evaluationId: string,
+        _payload: unknown,
+        _idempotencyKey?: string,
+      ) => ({
         workflow: {
           sign_off_status: "PENDING_REVIEW",
           client_ready_publication: "BLOCKED",
         },
-      })
+      }),
     );
   });
 
-  it("renders a focused risk and impact screen from proposal lifecycle data", async () => {
+  it("renders a selected proposal decision workspace from Gateway risk and impact evidence", async () => {
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="risk-impact" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
     );
 
     await waitFor(() => {
       expect(listProposalsMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: undefined,
+        state: "RISK_REVIEW",
       });
     });
 
-    expect(await screen.findByRole("heading", { level: 2, name: "Risk And Impact" })).toBeInTheDocument();
-    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Risk And Impact" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        level: 4,
+        name: "Requires Risk Review",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalRiskImpactMock).toHaveBeenCalledTimes(1);
+    expect(getProposalRiskImpactMock).toHaveBeenCalledWith(
+      "PRP-RISK",
+      "PB_SG_GLOBAL_BAL_001",
+    );
+    expect(
+      screen.getByRole("listbox", { name: "Risk and Impact proposals" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Current and proposed allocation"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("USD 850,000.00 · 12 positions"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("USD 775,000.00 · 13 positions"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Risk review is required before client discussion."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Benchmark and limits")).toBeInTheDocument();
+    expect(screen.getAllByText("Not supported")).toHaveLength(3);
     expect(screen.queryByText("Execution handoff")).not.toBeInTheDocument();
-    expect(screen.getByText("Risk officer approval needed")).toBeInTheDocument();
-    expect(screen.getByLabelText("Proposal lifecycle counts")).toHaveTextContent(/1\s*In view/);
+    expect(
+      screen.getByLabelText("Proposal lifecycle counts"),
+    ).toHaveTextContent(/1\s*In view/);
+  });
+
+  it("shows an explicit no-fallback error and restores retry focus after source recovery", async () => {
+    getProposalRiskImpactMock
+      .mockRejectedValueOnce(new Error("Gateway unavailable"))
+      .mockResolvedValueOnce(proposalRiskImpactFixture().data);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Risk and impact evidence is unavailable",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Requires Risk Review")).not.toBeInTheDocument();
+    const retry = screen.getByRole("button", { name: "Retry source evidence" });
+    retry.focus();
+    fireEvent.click(retry);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 4,
+        name: "Requires Risk Review",
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Refresh source evidence" }),
+      ).toHaveFocus();
+    });
+  });
+
+  it("keeps permission-blocked evidence distinct from service failure", async () => {
+    getProposalRiskImpactMock.mockRejectedValueOnce(
+      new Error("Proposal risk and impact failed (403): forbidden"),
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Risk and impact access is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry source evidence" }),
+    ).not.toBeInTheDocument();
   });
 
   it("publishes the Gateway-backed queue summary to the shared workflow rail", async () => {
@@ -223,48 +369,83 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
-    expect(await screen.findByRole("heading", { name: "1 need attention" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "1 need attention" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("2 proposals in view")).toBeInTheDocument();
-    expect(screen.getByText("1 proposal needs advisor action.")).toBeInTheDocument();
+    expect(
+      screen.getByText("1 proposal needs advisor action."),
+    ).toBeInTheDocument();
     expect(screen.getByText("Advisory proposal lifecycle")).toBeInTheDocument();
-    expect(screen.queryByText(/kyc validity verified/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/kyc validity verified/i),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the selected proposal posture beside the keyboard-operable worklist", async () => {
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
     );
 
-    const worklist = await screen.findByRole("listbox", { name: "Approval Queue proposals" });
+    const worklist = await screen.findByRole("listbox", {
+      name: "Approval Queue proposals",
+    });
     const options = within(worklist).getAllByRole("option");
     expect(options).toHaveLength(2);
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(options[0]).toHaveTextContent("Version 3");
     expect(options[0]).toHaveTextContent("19 Aug 2026");
 
-    const selectedProposal = screen.getByRole("region", { name: "Selected proposal decision" });
-    expect(within(selectedProposal).getByRole("heading", { name: "Technology concentration trim" })).toBeInTheDocument();
-    expect(within(selectedProposal).getByText("Risk officer approval needed")).toBeInTheDocument();
-    expect(within(selectedProposal).getByRole("link", { name: "Open proposal review" })).toHaveAttribute(
+    const selectedProposal = screen.getByRole("region", {
+      name: "Selected proposal decision",
+    });
+    expect(
+      within(selectedProposal).getByRole("heading", {
+        name: "Technology concentration trim",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByText("Risk officer approval needed"),
+    ).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByRole("link", {
+        name: "Open proposal review",
+      }),
+    ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=approval-queue"
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=approval-queue",
     );
 
     fireEvent.keyDown(options[0], { key: "ArrowDown" });
     expect(options[1]).toHaveFocus();
     expect(options[1]).toHaveAttribute("aria-selected", "true");
-    expect(within(selectedProposal).getByRole("heading", { name: "Execution handoff" })).toBeInTheDocument();
-    expect(within(selectedProposal).getByText("Ready for execution handoff")).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByRole("heading", {
+        name: "Execution handoff",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(selectedProposal).getByText("Ready for execution handoff"),
+    ).toBeInTheDocument();
   });
 
   it("resets selected proposal identity when the source window changes", async () => {
     listProposalsMock
-      .mockResolvedValueOnce({ ...proposalListFixture, next_cursor: "cursor-window-2" })
+      .mockResolvedValueOnce({
+        ...proposalListFixture,
+        next_cursor: "cursor-window-2",
+      })
       .mockResolvedValueOnce({
         items: [
           {
@@ -280,10 +461,15 @@ describe("ProposalLifecycleWorkspace", () => {
       });
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
     );
 
-    const worklist = await screen.findByRole("listbox", { name: "Approval Queue proposals" });
+    const worklist = await screen.findByRole("listbox", {
+      name: "Approval Queue proposals",
+    });
     const firstWindowOptions = within(worklist).getAllByRole("option");
     fireEvent.keyDown(firstWindowOptions[0], { key: "ArrowDown" });
     expect(firstWindowOptions[1]).toHaveAttribute("aria-selected", "true");
@@ -294,27 +480,32 @@ describe("ProposalLifecycleWorkspace", () => {
       name: /Consent evidence review/,
     });
     expect(nextWindowProposal).toHaveAttribute("aria-selected", "true");
-    expect(screen.queryByRole("option", { name: /Execution handoff/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /Execution handoff/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps suitability posture loading until the policy queue and selected evidence settle", async () => {
-    let resolvePolicyQueue: ((value: typeof policyReviewQueueFixture) => void) | undefined;
+    let resolvePolicyQueue:
+      ((value: typeof policyReviewQueueFixture) => void) | undefined;
     let resolvePolicyEvaluation:
-      | ((value: Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>) => void)
+      | ((
+          value: Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>,
+        ) => void)
       | undefined;
     getAdvisoryPolicyReviewQueueMock.mockImplementationOnce(
       async () =>
         await new Promise<typeof policyReviewQueueFixture>((resolve) => {
           resolvePolicyQueue = resolve;
-        })
+        }),
     );
     getAdvisoryPolicyEvaluationMock.mockImplementationOnce(
       async () =>
-        await new Promise<Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>>(
-          (resolve) => {
-            resolvePolicyEvaluation = resolve;
-          }
-        )
+        await new Promise<
+          Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>
+        >((resolve) => {
+          resolvePolicyEvaluation = resolve;
+        }),
     );
 
     renderWithQueryClient(
@@ -324,12 +515,17 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
-    expect(await screen.findByRole("heading", { name: "Loading proposal posture" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Loading proposal posture" }),
+    ).toBeInTheDocument();
 
     await act(async () => {
       resolvePolicyQueue?.(policyReviewQueueFixture);
@@ -337,26 +533,34 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() => {
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
     });
-    expect(screen.getByRole("heading", { name: "Loading proposal posture" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Loading proposal posture" }),
+    ).toBeInTheDocument();
 
     await act(async () => {
       resolvePolicyEvaluation?.({
         ...policyReviewQueueFixture.items[0],
         evaluation_hash: "sha256:policy-evaluation-1",
-        source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+        source_refs: [
+          "lotus-core:core_product_eligibility_target_market_complexity",
+        ],
         evaluation_json: { rule_results: [] },
       });
     });
 
     expect(
-      await screen.findByRole("heading", { name: /need attention|queue ready for review/i })
+      await screen.findByRole("heading", {
+        name: /need attention|queue ready for review/i,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Source current")).toBeInTheDocument();
   });
 
   it("keeps cached policy evidence visible while its source refreshes", async () => {
     let resolveWorkflowRefresh:
-      | ((value: Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>) => void)
+      | ((
+          value: Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>,
+        ) => void)
       | undefined;
 
     renderWithQueryClient(
@@ -366,32 +570,41 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
-
-    expect(await screen.findByText("Request more evidence")).toBeInTheDocument();
-    getAdvisoryPolicyWorkflowMock.mockImplementationOnce(
-      async () =>
-        await new Promise<Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>>(
-          (resolve) => {
-            resolveWorkflowRefresh = resolve;
-          }
-        )
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Request more evidence" }));
 
     expect(
-      await screen.findByRole("heading", { name: "Refreshing proposal evidence" })
+      await screen.findByText("Request more evidence"),
+    ).toBeInTheDocument();
+    getAdvisoryPolicyWorkflowMock.mockImplementationOnce(
+      async () =>
+        await new Promise<
+          Awaited<ReturnType<typeof getAdvisoryPolicyWorkflowMock>>
+        >((resolve) => {
+          resolveWorkflowRefresh = resolve;
+        }),
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Request more evidence" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Refreshing proposal evidence",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Refreshing")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 4,
         name: "PRP-RISK · ppv_001",
-      })
+      }),
     ).toBeInTheDocument();
 
     await act(async () => {
@@ -405,7 +618,9 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { name: /need attention|queue ready for review/i })
+      await screen.findByRole("heading", {
+        name: /need attention|queue ready for review/i,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Source current")).toBeInTheDocument();
   });
@@ -418,29 +633,42 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
-    expect(await screen.findByText("Request more evidence")).toBeInTheDocument();
-    getAdvisoryPolicyWorkflowMock.mockRejectedValueOnce(new Error("refresh unavailable"));
-    fireEvent.click(screen.getByRole("button", { name: "Request more evidence" }));
+    expect(
+      await screen.findByText("Request more evidence"),
+    ).toBeInTheDocument();
+    getAdvisoryPolicyWorkflowMock.mockRejectedValueOnce(
+      new Error("refresh unavailable"),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Request more evidence" }),
+    );
 
     expect(
-      await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
+      await screen.findByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText("The latest policy-evidence refresh did not complete.")).toBeInTheDocument();
+    expect(
+      screen.getByText("The latest policy-evidence refresh did not complete."),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The selected policy evidence could not be refreshed. The prior source package remains visible but is not confirmed current."
-      )
+        "The selected policy evidence could not be refreshed. The prior source package remains visible but is not confirmed current.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 4,
         name: "PRP-RISK · ppv_001",
-      })
+      }),
     ).toBeInTheDocument();
   });
 
@@ -453,13 +681,20 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
-    expect(await screen.findByText("No policy evaluations need review")).toBeInTheDocument();
-    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(new Error("policy refresh unavailable"));
+    expect(
+      await screen.findByText("No policy evaluations need review"),
+    ).toBeInTheDocument();
+    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
+      new Error("policy refresh unavailable"),
+    );
 
     await act(async () => {
       await queryClient.refetchQueries({
@@ -467,9 +702,17 @@ describe("ProposalLifecycleWorkspace", () => {
       });
     });
 
-    expect(await screen.findByText("Policy review queue is unconfirmed")).toBeInTheDocument();
-    expect(screen.getByText(/Retry before concluding that no evaluations need review/)).toBeInTheDocument();
-    expect(screen.queryByText("No policy evaluations need review")).not.toBeInTheDocument();
+    expect(
+      await screen.findByText("Policy review queue is unconfirmed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Retry before concluding that no evaluations need review/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No policy evaluations need review"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps a failed proposal refresh distinct from supporting policy evidence", async () => {
@@ -485,13 +728,17 @@ describe("ProposalLifecycleWorkspace", () => {
           mode="approval-queue"
         />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByRole("option", { name: /Technology concentration trim/ })
+      await screen.findByRole("option", {
+        name: /Technology concentration trim/,
+      }),
     ).toBeInTheDocument();
-    listProposalsMock.mockRejectedValueOnce(new Error("proposal refresh unavailable"));
+    listProposalsMock.mockRejectedValueOnce(
+      new Error("proposal refresh unavailable"),
+    );
 
     await act(async () => {
       await queryClient.refetchQueries({
@@ -500,16 +747,28 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { name: "Proposal view is incomplete" })
+      await screen.findByRole("heading", {
+        name: "Proposal view is incomplete",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText("The latest proposal view could not be confirmed.")).toBeInTheDocument();
-    expect(screen.getByText(/Retry the proposal view before relying/)).toBeInTheDocument();
-    expect(screen.queryByText("The latest policy-evidence refresh did not complete.")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("The latest proposal view could not be confirmed."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Retry the proposal view before relying/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "The latest policy-evidence refresh did not complete.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps policy evidence hidden when its source denies access", async () => {
     getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
-      new Error("Policy queue failed (403): {\"detail\":\"portfolio access denied\"}")
+      new Error(
+        'Policy queue failed (403): {"detail":"portfolio access denied"}',
+      ),
     );
 
     renderWithQueryClient(
@@ -519,15 +778,22 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Proposal posture is restricted" })
+      await screen.findByRole("heading", {
+        name: "Proposal posture is restricted",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Policy review access is not available")).toBeInTheDocument();
+    expect(
+      screen.getByText("Policy review access is not available"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
 
@@ -548,22 +814,29 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed")
+      await screen.findByText("Selected policy evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The selected proposal and its supporting policy evidence do not agree. No review request is available until the source package is refreshed."
-      )
+        "The selected proposal and its supporting policy evidence do not agree. No review request is available until the source package is refreshed.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
+      screen.queryByRole("button", { name: "Request more evidence" }),
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -581,17 +854,24 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed")
+      await screen.findByText("Selected policy evidence is unconfirmed"),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "Supporting evidence is incomplete" })
+      screen.queryByRole("button", { name: "Request more evidence" }),
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -611,13 +891,18 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed")
+      await screen.findByText("Selected policy evidence is unconfirmed"),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Request more evidence" }),
+    ).not.toBeInTheDocument();
     expect(recordAdvisoryPolicySignOffDecisionMock).not.toHaveBeenCalled();
   });
 
@@ -645,17 +930,22 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed")
+      await screen.findByText("Selected policy evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /PRP-RISK/i })).toHaveAttribute(
       "aria-selected",
-      "true"
+      "true",
     );
-    expect(screen.queryByRole("button", { name: "Request more evidence" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Request more evidence" }),
+    ).not.toBeInTheDocument();
     expect(recordAdvisoryPolicySignOffDecisionMock).not.toHaveBeenCalled();
   });
 
@@ -674,17 +964,24 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByRole("heading", { name: "More proposals available" })
+      await screen.findByRole("heading", { name: "More proposals available" }),
     ).toBeInTheDocument();
     expect(screen.getByText("0 proposals in current view")).toBeInTheDocument();
-    expect(screen.getByText("No matching proposals in this view")).toBeInTheDocument();
-    expect(screen.queryByText("No proposals in the approval queue")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("No matching proposals in this view"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No proposals in the approval queue"),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
 
     await waitFor(() => {
@@ -694,14 +991,22 @@ describe("ProposalLifecycleWorkspace", () => {
       });
     });
     expect(
-      await screen.findByRole("option", { name: /Technology concentration trim/ })
+      await screen.findByRole("option", {
+        name: /Technology concentration trim/,
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "1 proposal needs attention in this view" })
+      screen.getByRole("heading", {
+        name: "1 proposal needs attention in this view",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Proposal view 2")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Previous proposals" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Next proposals" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Previous proposals" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Next proposals" }),
+    ).toBeDisabled();
   });
 
   it("allows return to the prior proposal window after a later window fails", async () => {
@@ -716,25 +1021,34 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
     expect(
-      await screen.findByRole("heading", { name: "Proposal posture is unavailable" })
+      await screen.findByRole("heading", {
+        name: "Proposal posture is unavailable",
+      }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous proposals" }));
 
     expect(
-      await screen.findByRole("heading", { name: "More proposals available" })
+      await screen.findByRole("heading", { name: "More proposals available" }),
     ).toBeInTheDocument();
   });
 
   it("publishes restricted posture for proposal API authorization responses with response detail", async () => {
     listProposalsMock.mockRejectedValueOnce(
-      new Error("Proposal list failed (403): {\"detail\":\"portfolio access denied\"}")
+      new Error(
+        'Proposal list failed (403): {"detail":"portfolio access denied"}',
+      ),
     );
 
     renderWithQueryClient(
@@ -744,35 +1058,54 @@ describe("ProposalLifecycleWorkspace", () => {
           surfaceLabel: "Proposal lifecycle",
         })}
       >
-        <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
         <ProposalWorkflowContextRail />
-      </ProposalWorkflowContextProvider>
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Proposal posture is restricted" })
+      await screen.findByRole("heading", {
+        name: "Proposal posture is restricted",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Restricted")).toBeInTheDocument();
-    expect(screen.queryByText("Proposal posture is unavailable")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Proposal posture is unavailable"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not show fallback rows when lifecycle data is unavailable", async () => {
     listProposalsMock.mockRejectedValueOnce(new Error("gateway unavailable"));
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="approval-queue" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
     );
 
     expect(
-      await screen.findByText("Proposal lifecycle is unavailable. No fallback proposal queue is shown.")
+      await screen.findByText(
+        "Proposal lifecycle is unavailable. No fallback proposal queue is shown.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Proposal lifecycle unavailable")).toBeInTheDocument();
-    expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Proposal lifecycle unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Technology concentration trim"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders Gateway-backed suitability policy evaluations without raw policy payload language", async () => {
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
     );
 
     await waitFor(() => {
@@ -781,75 +1114,114 @@ describe("ProposalLifecycleWorkspace", () => {
         portfolioId: "PB_SG_GLOBAL_BAL_001",
       });
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
-      expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith("pev_001");
+      expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith(
+        "pev_001",
+      );
       expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledWith("pev_001");
     });
 
-    expect(await screen.findByRole("heading", { level: 3, name: "Policy evaluations needing review" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 4, name: "PRP-RISK · ppv_001" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Policy evaluations needing review",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 4, name: "PRP-RISK · ppv_001" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Review required")).toHaveLength(3);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();
-    expect(screen.getByText("1 approval dependency, 1 disclosure review")).toBeInTheDocument();
-    expect(screen.getAllByText("Complete required approval review.")).toHaveLength(2);
+    expect(
+      screen.getByText("1 approval dependency, 1 disclosure review"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Complete required approval review."),
+    ).toHaveLength(2);
     expect(screen.getByText("Source package available")).toBeInTheDocument();
     expect(screen.getByText("Client publication blocked")).toBeInTheDocument();
-    expect(screen.getByText("Independent checker required")).toBeInTheDocument();
+    expect(
+      screen.getByText("Independent checker required"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Within review SLA, 2 open")).toBeInTheDocument();
     expect(screen.getByText("Request more evidence")).toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
-    expect(screen.queryByText("advisor_reviewed_disclosure:SG_STRUCTURED_NOTE")).not.toBeInTheDocument();
-    expect(screen.queryByText("advisory-policy-evaluations")).not.toBeInTheDocument();
-    expect(screen.queryByText("SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API")).not.toBeInTheDocument();
-    expect(screen.queryByText("DISCLOSURE_REQUIREMENT_OPEN")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("advisory-policy-evaluations"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("SUPPORTED_BY_RFC0025_SLICE8_ADVISE_API"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("DISCLOSURE_REQUIREMENT_OPEN"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps evidence and actions bound to the explicitly selected review", async () => {
     let resolveFirstEvaluation:
-      | ((value: Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>) => void)
+      | ((
+          value: Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>,
+        ) => void)
       | undefined;
     getAdvisoryPolicyReviewQueueMock.mockResolvedValueOnce({
       items: [...policyReviewQueueFixture.items, secondPolicyReviewFixture],
     });
-    getAdvisoryPolicyEvaluationMock.mockImplementation(async (evaluationId: string) => {
-      if (evaluationId === "pev_001") {
-        return await new Promise<Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>>(
-          (resolve) => {
+    getAdvisoryPolicyEvaluationMock.mockImplementation(
+      async (evaluationId: string) => {
+        if (evaluationId === "pev_001") {
+          return await new Promise<
+            Awaited<ReturnType<typeof getAdvisoryPolicyEvaluationMock>>
+          >((resolve) => {
             resolveFirstEvaluation = resolve;
-          }
-        );
-      }
-      return {
-        ...secondPolicyReviewFixture,
-        evaluation_hash: "sha256:policy-evaluation-2",
-        source_refs: ["lotus-core:client_mandate_income_objective"],
-        evaluation_json: { rule_results: [{ rule_id: "INCOME_OBJECTIVE", status: "READY" }] },
-      };
-    });
-    getAdvisoryPolicySignOffPackageMock.mockImplementation(async (evaluationId: string) => ({
-      package_posture: {
-        sign_off_source_package: "AVAILABLE",
-        client_ready_publication: "BLOCKED",
+          });
+        }
+        return {
+          ...secondPolicyReviewFixture,
+          evaluation_hash: "sha256:policy-evaluation-2",
+          source_refs: ["lotus-core:client_mandate_income_objective"],
+          evaluation_json: {
+            rule_results: [{ rule_id: "INCOME_OBJECTIVE", status: "READY" }],
+          },
+        };
       },
-      lineage: {
+    );
+    getAdvisoryPolicySignOffPackageMock.mockImplementation(
+      async (evaluationId: string) => ({
+        package_posture: {
+          sign_off_source_package: "AVAILABLE",
+          client_ready_publication: "BLOCKED",
+        },
+        lineage: {
+          evaluation_id: evaluationId,
+          audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
+          lineage_posture: { client_ready_publication: "BLOCKED" },
+        },
+      }),
+    );
+    getAdvisoryPolicyWorkflowMock.mockImplementation(
+      async (evaluationId: string) => ({
         evaluation_id: evaluationId,
-        audit_events: [{ event_type: "POLICY_EVALUATION_FINALIZED" }],
-        lineage_posture: { client_ready_publication: "BLOCKED" },
-      },
-    }));
-    getAdvisoryPolicyWorkflowMock.mockImplementation(async (evaluationId: string) => ({
-      evaluation_id: evaluationId,
-      sign_off_status: "PENDING_REVIEW",
-      sign_off_blockers: evaluationId === "pev_002" ? ["CLIENT_CONSENT_REQUIRED"] : [],
-      maker_checker_required: true,
-      sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
-      client_ready_publication: "BLOCKED",
-    }));
-
-    renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+        sign_off_status: "PENDING_REVIEW",
+        sign_off_blockers:
+          evaluationId === "pev_002" ? ["CLIENT_CONSENT_REQUIRED"] : [],
+        maker_checker_required: true,
+        sla_posture: { status: "WITHIN_SLA", open_requirement_count: 1 },
+        client_ready_publication: "BLOCKED",
+      }),
     );
 
-    const firstReview = await screen.findByRole("option", { name: /PRP-RISK/i });
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
+    );
+
+    const firstReview = await screen.findByRole("option", {
+      name: /PRP-RISK/i,
+    });
     const secondReview = screen.getByRole("option", { name: /PRP-INCOME/i });
     expect(firstReview).toHaveAttribute("aria-selected", "true");
 
@@ -858,14 +1230,22 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() => {
       expect(secondReview).toHaveAttribute("aria-selected", "true");
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_002");
-      expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith("pev_002");
+      expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledWith(
+        "pev_002",
+      );
       expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledWith("pev_002");
     });
-    const selectedReview = screen.getByRole("region", { name: "Selected suitability review" });
+    const selectedReview = screen.getByRole("region", {
+      name: "Selected suitability review",
+    });
     expect(
-      await within(selectedReview).findByRole("heading", { name: "PRP-INCOME · ppv_002" })
+      await within(selectedReview).findByRole("heading", {
+        name: "PRP-INCOME · ppv_002",
+      }),
     ).toBeInTheDocument();
-    expect(within(selectedReview).getByText("Source evidence complete")).toBeInTheDocument();
+    expect(
+      within(selectedReview).getByText("Source evidence complete"),
+    ).toBeInTheDocument();
 
     await act(async () => {
       resolveFirstEvaluation?.({
@@ -877,11 +1257,19 @@ describe("ProposalLifecycleWorkspace", () => {
       });
     });
     expect(
-      within(selectedReview).getByRole("heading", { name: "PRP-INCOME · ppv_002" })
+      within(selectedReview).getByRole("heading", {
+        name: "PRP-INCOME · ppv_002",
+      }),
     ).toBeInTheDocument();
-    expect(within(selectedReview).queryByText("1 evidence gap")).not.toBeInTheDocument();
+    expect(
+      within(selectedReview).queryByText("1 evidence gap"),
+    ).not.toBeInTheDocument();
 
-    fireEvent.click(within(selectedReview).getByRole("button", { name: "Request more evidence" }));
+    fireEvent.click(
+      within(selectedReview).getByRole("button", {
+        name: "Request more evidence",
+      }),
+    );
     await waitFor(() => {
       expect(recordAdvisoryPolicySignOffDecisionMock).toHaveBeenCalledWith(
         "pev_002",
@@ -891,7 +1279,7 @@ describe("ProposalLifecycleWorkspace", () => {
             source_evaluation_hash: "sha256:policy-evaluation-2",
           }),
         }),
-        expect.stringMatching(/^ui-policy-review-request-pev_002-\d+$/)
+        expect.stringMatching(/^ui-policy-review-request-pev_002-\d+$/),
       );
     });
   });
@@ -904,20 +1292,29 @@ describe("ProposalLifecycleWorkspace", () => {
       .mockResolvedValueOnce({
         items: [secondPolicyReviewFixture, ...policyReviewQueueFixture.items],
       });
-    getAdvisoryPolicyEvaluationMock.mockImplementation(async (evaluationId: string) => {
-      const record =
-        evaluationId === "pev_002" ? secondPolicyReviewFixture : policyReviewQueueFixture.items[0];
-      return {
-        ...record,
-        evaluation_hash: `sha256:policy-evaluation-${evaluationId}`,
-      };
-    });
-
-    const { queryClient } = renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    getAdvisoryPolicyEvaluationMock.mockImplementation(
+      async (evaluationId: string) => {
+        const record =
+          evaluationId === "pev_002"
+            ? secondPolicyReviewFixture
+            : policyReviewQueueFixture.items[0];
+        return {
+          ...record,
+          evaluation_hash: `sha256:policy-evaluation-${evaluationId}`,
+        };
+      },
     );
 
-    const firstReview = await screen.findByRole("option", { name: /PRP-RISK/i });
+    const { queryClient } = renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
+    );
+
+    const firstReview = await screen.findByRole("option", {
+      name: /PRP-RISK/i,
+    });
     expect(firstReview).toHaveAttribute("aria-selected", "true");
 
     await act(async () => {
@@ -928,54 +1325,73 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(screen.getByRole("option", { name: /PRP-RISK/i })).toHaveAttribute(
       "aria-selected",
-      "true"
+      "true",
     );
     expect(screen.getByRole("option", { name: /PRP-INCOME/i })).toHaveAttribute(
       "aria-selected",
-      "false"
+      "false",
     );
     expect(getAdvisoryPolicyEvaluationMock).not.toHaveBeenCalledWith("pev_002");
   });
 
   it("does not publish a completed request against a newly selected review", async () => {
     let resolveFirstRequest:
-      | ((value: Awaited<ReturnType<typeof recordAdvisoryPolicySignOffDecisionMock>>) => void)
+      | ((
+          value: Awaited<
+            ReturnType<typeof recordAdvisoryPolicySignOffDecisionMock>
+          >,
+        ) => void)
       | undefined;
     getAdvisoryPolicyReviewQueueMock.mockResolvedValueOnce({
       items: [...policyReviewQueueFixture.items, secondPolicyReviewFixture],
     });
-    getAdvisoryPolicyEvaluationMock.mockImplementation(async (evaluationId: string) => {
-      const record =
-        evaluationId === "pev_002" ? secondPolicyReviewFixture : policyReviewQueueFixture.items[0];
-      return {
-        ...record,
-        evaluation_hash: `sha256:policy-evaluation-${evaluationId === "pev_002" ? "2" : "1"}`,
-        source_refs: ["lotus-core:governed_policy_source"],
-        evaluation_json: {
-          rule_results: [{ rule_id: "MANDATE_ALIGNMENT", status: "READY" }],
-        },
-      };
-    });
+    getAdvisoryPolicyEvaluationMock.mockImplementation(
+      async (evaluationId: string) => {
+        const record =
+          evaluationId === "pev_002"
+            ? secondPolicyReviewFixture
+            : policyReviewQueueFixture.items[0];
+        return {
+          ...record,
+          evaluation_hash: `sha256:policy-evaluation-${evaluationId === "pev_002" ? "2" : "1"}`,
+          source_refs: ["lotus-core:governed_policy_source"],
+          evaluation_json: {
+            rule_results: [{ rule_id: "MANDATE_ALIGNMENT", status: "READY" }],
+          },
+        };
+      },
+    );
     recordAdvisoryPolicySignOffDecisionMock.mockImplementationOnce(
       async () =>
         await new Promise<
           Awaited<ReturnType<typeof recordAdvisoryPolicySignOffDecisionMock>>
         >((resolve) => {
           resolveFirstRequest = resolve;
-        })
+        }),
     );
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Request more evidence" }));
-    expect(await screen.findByRole("button", { name: "Recording request..." })).toBeDisabled();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Request more evidence" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Recording request..." }),
+    ).toBeDisabled();
 
     fireEvent.click(screen.getByRole("option", { name: /PRP-INCOME/i }));
-    const selectedReview = screen.getByRole("region", { name: "Selected suitability review" });
+    const selectedReview = screen.getByRole("region", {
+      name: "Selected suitability review",
+    });
     expect(
-      await within(selectedReview).findByRole("heading", { name: "PRP-INCOME · ppv_002" })
+      await within(selectedReview).findByRole("heading", {
+        name: "PRP-INCOME · ppv_002",
+      }),
     ).toBeInTheDocument();
 
     await act(async () => {
@@ -989,22 +1405,27 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       within(selectedReview).queryByText(
-        "Evidence review request recorded through the advisory policy workflow."
-      )
+        "Evidence review request recorded through the advisory policy workflow.",
+      ),
     ).not.toBeInTheDocument();
     expect(
       within(selectedReview).getByText(
-        "Records a review request only; it does not approve sign-off or client publication."
-      )
+        "Records a review request only; it does not approve sign-off or client publication.",
+      ),
     ).toBeInTheDocument();
   });
 
   it("records bounded policy evidence review requests through Gateway only", async () => {
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Request more evidence" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Request more evidence" }),
+    );
 
     await waitFor(() => {
       expect(recordAdvisoryPolicySignOffDecisionMock).toHaveBeenCalledWith(
@@ -1016,27 +1437,40 @@ describe("ProposalLifecycleWorkspace", () => {
             source_evaluation_hash: "sha256:policy-evaluation-1",
           }),
         }),
-        expect.stringMatching(/^ui-policy-review-request-pev_001-\d+$/)
+        expect.stringMatching(/^ui-policy-review-request-pev_001-\d+$/),
       );
     });
 
     expect(
       await screen.findByText(
-        "Evidence review request recorded through the advisory policy workflow."
-      )
+        "Evidence review request recorded through the advisory policy workflow.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.queryByText("APPROVE_FOR_POLICY_SIGN_OFF")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("APPROVE_FOR_POLICY_SIGN_OFF"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not show fallback policy evaluations when the suitability queue is unavailable", async () => {
-    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(new Error("gateway unavailable"));
-
-    renderWithQueryClient(
-      <ProposalLifecycleWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" mode="suitability" />
+    getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
+      new Error("gateway unavailable"),
     );
 
-    expect(await screen.findByText("Policy review queue is unavailable. No fallback suitability policy queue is shown.")).toBeInTheDocument();
-    expect(screen.getByText("Policy review queue unavailable")).toBeInTheDocument();
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
+    );
+
+    expect(
+      await screen.findByText(
+        "Policy review queue is unavailable. No fallback suitability policy queue is shown.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Policy review queue unavailable"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
 });
