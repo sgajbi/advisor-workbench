@@ -25,7 +25,8 @@ Approval Queue helps an advisor answer four questions without opening every prop
 
 1. Which proposals are present in the current source window?
 2. What maker-checker evidence is recorded for the selected proposal?
-3. Do proposal identity, workflow state, approval register, and active-version lineage agree?
+3. Do the selected worklist record, portfolio identity, lifecycle state, workflow evidence,
+   approval register, and active-version lineage agree?
 4. Which exception or next business action requires the full proposal record?
 
 At wide desktop widths the worklist and selected proposal remain visible together. The worklist
@@ -81,10 +82,13 @@ These roles describe business use, not authenticated production entitlement.
 - Loads detail, workflow, approval records, and lineage for the selected proposal only; it does not
   fan detail requests across the visible worklist.
 - Derives maker-checker posture from the complete selected evidence set, not lifecycle stage.
-- Hides approval records when proposal identity, workflow state, or active-version lineage conflicts.
+- Reconciles the selected worklist portfolio, lifecycle state, and version with current proposal
+  detail before publishing maker-checker posture.
+- Hides approval records when the worklist record, proposal identity, workflow state, or
+  active-version lineage conflicts.
 - Treats an empty approval register as unconfirmed requirements, never as approval not required.
 - Keeps prior confirmed evidence under its prior context when refresh fails, and announces success
-  only after every selected source refresh succeeds.
+  only after the worklist and every selected evidence source refresh and reconcile successfully.
 - Keeps the selected decision pane beside the worklist at desktop and after it at compact widths.
 - Preserves portfolio and originating lifecycle mode when entering Proposal Detail.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;
@@ -100,7 +104,7 @@ These roles describe business use, not authenticated production entitlement.
 | Select a proposal | Proposal is present in the current source window | None; changes the visible decision context only |
 | Move to next or previous proposal window | Source supplies a cursor or a prior window is retained | None; reads another bounded Gateway window |
 | Build Proposal | Selected portfolio context | Opens Proposal Builder; nothing is approved or executed |
-| Refresh evidence | Selected proposal identity and the four Gateway-backed evidence reads | None; replaces posture only after the complete refresh succeeds |
+| Refresh evidence | Selected worklist record plus the four Gateway-backed selected-evidence reads | None; replaces posture only after every refreshed source agrees |
 | Open full proposal review | Selected proposal identity and supported detail route | None; opens the full source-backed review record |
 | Return to Approval Queue | Source proposal portfolio where available, otherwise bounded route context | None; restores the originating queue route |
 
@@ -113,7 +117,7 @@ These roles describe business use, not authenticated production entitlement.
 | In-view and attention counts | Count only rows in the current source window | Workbench view model over Gateway rows |
 | More or earlier proposals | Shown only from source cursor and retained window history | Gateway cursor plus Workbench navigation history |
 | Selected proposal | Advisor's current browser selection within the returned window | Workbench interaction state; not a source mutation |
-| Selected detail, workflow, approvals, and active-version lineage | Reconciled as one selected-record maker-checker evidence set | Gateway over Advise detail and evidence contracts |
+| Selected worklist record, detail, workflow, approvals, and active-version lineage | Portfolio, proposal, lifecycle state, and active version are reconciled as one maker-checker evidence set | Gateway over Advise list, detail, and evidence contracts |
 | Proposed changes, allocation impact, narrative, memo, and governed actions | Available only after opening Proposal Detail | Gateway over Advise detail, review, and evidence contracts |
 
 The queue does not receive client name, household, assignee, due date, SLA, urgency, materiality,
@@ -129,8 +133,8 @@ whole-book count, or global sort authority. Workbench does not invent them.
 | Partial source window | The visible count remains bounded and more/earlier proposals are disclosed | Continue window navigation before concluding the queue is clear |
 | Selected evidence checking | Worklist remains visible while detail, workflow, approvals, and lineage settle | Wait; no state-derived maker-checker posture is substituted |
 | Empty approval register | Explicit **No approval records** posture and boundary note | Open the full review to confirm the required maker-checker step |
-| Evidence conflict | Conflicting evidence is named and approval records are hidden | Recheck the same source set before relying on posture |
-| Refreshing | Earlier confirmed evidence remains under its confirmed proposal context | Wait for all four source reads to settle |
+| Evidence conflict | A stale worklist record or conflicting selected evidence is named and approval records are hidden | Recheck the queue and selected source set before relying on posture |
+| Refreshing | Earlier confirmed evidence remains under its confirmed proposal context | Wait for the worklist and four selected-source reads to settle |
 | Refresh failed | Earlier evidence remains visible but is not relabelled as refreshed | Retry the exact selected evidence set |
 | Restricted | Selected approval evidence is hidden and the shared rail remains restricted | Use the bank's access process; no retry bypass is offered |
 | Unavailable | Worklist remains, selected maker-checker posture is withheld, and exact retry is offered | Retry after the source recovers |
@@ -185,12 +189,14 @@ private-banking vocabulary, access boundaries, and validation evidence.
 - `tests/unit/proposal-lifecycle-workspace-view-model.test.ts` proves source metadata, business
   projection, filtering, bounded-empty wording, and context-preserving proposal links.
 - `tests/unit/proposal-approval-evidence-view-model.test.ts` proves empty, approval-exception,
-  ready, proposal-mismatch, workflow-mismatch, active-version-mismatch, and incomplete posture.
+  ready, worklist portfolio/state/version drift, proposal-mismatch, workflow-mismatch,
+  active-version-mismatch, incomplete posture, and refresh reconciliation.
 - `tests/unit/use-source-refresh-action.test.tsx` proves source completion, compound-query failure,
   background refresh posture, and late-result fencing for the shared refresh lifecycle.
 - `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only reads, worklist
-  selection, keyboard focus, approval-register truth, empty/conflict/restricted/failure states,
-  refresh confirmation, source-window transitions, and shared-rail consistency.
+  selection, keyboard focus, approval-register truth, stale-worklist and selected-source conflict,
+  restricted/failure states, refresh confirmation only after compound agreement, source-window
+  transitions, and shared-rail consistency.
 - `tests/integration/proposal-detail-view.test.tsx` proves routine return context uses the
   source-owned proposal portfolio rather than trusting the incoming query.
 - `tests/e2e/proposal-workflow-context.spec.ts` runs against an optimized production Workbench and

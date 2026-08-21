@@ -491,8 +491,11 @@ Current repository posture:
     proposal window. Keep worklist selection and the selected proposal's source-supported stage,
     version, creator-record presence, recorded date, and next action visible together at desktop;
     stack them in the same document order for tablet, narrow, and zoomed layouts. Load detail,
-    workflow, approvals, and lineage for the selected proposal only and reconcile proposal identity,
-    workflow state, and active version before publishing maker-checker posture. An empty approval
+    workflow, approvals, and lineage for the selected proposal only and reconcile the selected
+    worklist portfolio/state/version, proposal identity, workflow state, and active version before
+    publishing maker-checker posture. A refresh confirms only after the queue record and all four
+    selected-evidence reads succeed and agree; transport success alone is not business confirmation.
+    An empty approval
     register is unconfirmed requirements, not approval-not-required. Preserve source-window
     uncertainty, restricted/unavailable/conflict failure boundaries, and originating portfolio/mode
     in the detail handoff. Use the shared source-refresh lifecycle so compound-query failure,

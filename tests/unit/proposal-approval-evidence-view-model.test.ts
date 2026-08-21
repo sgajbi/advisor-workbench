@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildProposalApprovalEvidenceModel } from "../../src/features/proposals/proposal-approval-evidence-view-model";
+import {
+  buildProposalApprovalEvidenceModel,
+  confirmRefreshedProposalApprovalEvidence,
+} from "../../src/features/proposals/proposal-approval-evidence-view-model";
 import type {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -9,6 +12,12 @@ import type {
 } from "../../src/features/proposals/types";
 
 const proposalId = "PRP-APPROVAL-001";
+const selectedWorklistRecord = {
+  expectedPortfolioId: "PB_SG_GLOBAL_BAL_001",
+  expectedProposalId: proposalId,
+  expectedState: "COMPLIANCE_REVIEW",
+  expectedVersionNo: 3,
+} as const;
 
 function evidenceFixture() {
   const detail: ProposalDetailData = {
@@ -59,7 +68,7 @@ describe("proposal approval evidence view model", () => {
   it("derives recorded maker-checker posture from agreeing source records", () => {
     const model = buildProposalApprovalEvidenceModel({
       ...evidenceFixture(),
-      expectedProposalId: proposalId,
+      ...selectedWorklistRecord,
     });
 
     expect(model.agreement.issue).toBeNull();
@@ -85,7 +94,7 @@ describe("proposal approval evidence view model", () => {
 
     const model = buildProposalApprovalEvidenceModel({
       ...fixture,
-      expectedProposalId: proposalId,
+      ...selectedWorklistRecord,
     });
 
     expect(model.posture).toMatchObject({
@@ -104,7 +113,7 @@ describe("proposal approval evidence view model", () => {
 
     const model = buildProposalApprovalEvidenceModel({
       ...fixture,
-      expectedProposalId: proposalId,
+      ...selectedWorklistRecord,
     });
 
     expect(model.posture).toMatchObject({
@@ -131,10 +140,54 @@ describe("proposal approval evidence view model", () => {
 
     const model = buildProposalApprovalEvidenceModel({
       ...fixture,
-      expectedProposalId: proposalId,
+      ...selectedWorklistRecord,
     });
 
     expect(model.agreement.issue).toBe(issue);
     expect(model.posture).toMatchObject({ state: "conflict", title });
+  });
+
+  it.each([
+    ["portfolio", (fixture: ReturnType<typeof evidenceFixture>) => {
+      fixture.detail.proposal.portfolio_id = "PB_SG_OTHER_001";
+    }, "portfolio-mismatch", "Portfolio identity does not agree"],
+    ["stage", (fixture: ReturnType<typeof evidenceFixture>) => {
+      fixture.detail.proposal.current_state = "AWAITING_CLIENT_CONSENT";
+      fixture.workflow.current_state = "AWAITING_CLIENT_CONSENT";
+      fixture.approvals.current_state = "AWAITING_CLIENT_CONSENT";
+    }, "selected-state-mismatch", "Worklist stage is no longer current"],
+    ["version", (fixture: ReturnType<typeof evidenceFixture>) => {
+      fixture.detail.proposal.current_version_no = 4;
+      fixture.lineage.versions = [{ version_no: 4 }];
+    }, "selected-version-mismatch", "Worklist version is no longer current"],
+  ])(
+    "fails closed when source evidence has advanced beyond the selected %s",
+    (_name, mutate, issue, title) => {
+      const fixture = evidenceFixture();
+      mutate(fixture);
+
+      const model = buildProposalApprovalEvidenceModel({
+        ...fixture,
+        ...selectedWorklistRecord,
+      });
+
+      expect(model.agreement.issue).toBe(issue);
+      expect(model.posture).toMatchObject({ state: "conflict", title });
+      expect(model.posture.nextAction).toContain("proposal queue");
+    },
+  );
+
+  it("rejects transport-success refreshes whose compound evidence conflicts", () => {
+    const fixture = evidenceFixture();
+    fixture.detail.proposal.current_state = "AWAITING_CLIENT_CONSENT";
+    fixture.workflow.current_state = "RISK_REVIEW";
+    fixture.approvals.current_state = "AWAITING_CLIENT_CONSENT";
+
+    expect(() =>
+      confirmRefreshedProposalApprovalEvidence({
+        ...fixture,
+        ...selectedWorklistRecord,
+      }),
+    ).toThrow("does not agree with the current worklist record");
   });
 });

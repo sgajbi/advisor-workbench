@@ -36,7 +36,10 @@ import {
   buildProposalLifecycleWorkspaceModel,
   type ProposalLifecycleMode,
 } from "../proposal-lifecycle-workspace-view-model";
-import { buildProposalApprovalEvidenceModel } from "../proposal-approval-evidence-view-model";
+import {
+  buildProposalApprovalEvidenceModel,
+  confirmRefreshedProposalApprovalEvidence,
+} from "../proposal-approval-evidence-view-model";
 import {
   buildPolicyEvaluationEvidenceModel,
   buildPolicyReviewQueueModel,
@@ -399,7 +402,10 @@ export default function ProposalLifecycleWorkspace({
     return buildProposalApprovalEvidenceModel({
       approvals: approvalRecordsQuery.data,
       detail: approvalDetailQuery.data,
+      expectedPortfolioId: portfolioId,
       expectedProposalId: selectedApprovalProposal.proposalId,
+      expectedState: selectedApprovalProposal.currentState,
+      expectedVersionNo: selectedApprovalProposal.versionNo,
       lineage: approvalLineageQuery.data,
       workflow: approvalWorkflowQuery.data,
     });
@@ -408,6 +414,7 @@ export default function ProposalLifecycleWorkspace({
     approvalLineageQuery.data,
     approvalRecordsQuery.data,
     approvalWorkflowQuery.data,
+    portfolioId,
     selectedApprovalProposal,
   ]);
   const selectedApprovalWorkflowContext = useMemo(() => {
@@ -781,14 +788,47 @@ export default function ProposalLifecycleWorkspace({
           isPermissionBlocked={approvalEvidencePosture.isPermissionBlocked}
           hasError={approvalEvidencePosture.isUnavailable}
           hasRefreshFailure={approvalEvidencePosture.hasRefreshFailure}
-          onRefresh={async () =>
-            await Promise.all([
+          onRefresh={async () => {
+            const results = await Promise.all([
+              proposalQuery.refetch(),
               approvalDetailQuery.refetch(),
               approvalWorkflowQuery.refetch(),
               approvalRecordsQuery.refetch(),
               approvalLineageQuery.refetch(),
-            ])
-          }
+            ]);
+            const [
+              proposalResult,
+              detailResult,
+              workflowResult,
+              approvalsResult,
+              lineageResult,
+            ] = results;
+            const refreshedProposal = proposalResult.data?.items.find(
+              (proposal) =>
+                proposal.proposal_id === selectedApprovalProposal?.proposalId,
+            );
+            if (
+              !refreshedProposal ||
+              (refreshedProposal.portfolio_id !== undefined &&
+                refreshedProposal.portfolio_id !== portfolioId)
+            ) {
+              throw new Error(
+                "The selected proposal is no longer present in the current portfolio worklist.",
+              );
+            }
+            confirmRefreshedProposalApprovalEvidence({
+              approvals: approvalsResult.data,
+              detail: detailResult.data,
+              expectedPortfolioId: portfolioId,
+              expectedProposalId: refreshedProposal.proposal_id,
+              expectedState: refreshedProposal.current_state,
+              expectedVersionNo:
+                refreshedProposal.current_version_no ?? null,
+              lineage: lineageResult.data,
+              workflow: workflowResult.data,
+            });
+            return results;
+          }}
         />
       ) : mode === "risk-impact" ? (
         <ProposalRiskImpactWorkspace
