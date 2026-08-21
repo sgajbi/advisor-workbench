@@ -5,6 +5,62 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Proposal Builder: evidence before persistent action
+
+### Business job
+
+A client advisor constructs portfolio changes, reviews the indicative portfolio effect, requests a
+source-owned evaluation, and decides whether to retain an advisor-use draft. The long construction
+record must keep final controls available without putting them before the holdings, liquidity,
+orders, and draft identity that govern the decision.
+
+The reading order is selected portfolio and source boundary, setup measures, source evidence,
+portfolio context, positions, cash movements, draft orders, indicative impact, draft identity,
+evaluation evidence, and final workflow controls.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-21 from official sources:
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/products/aladdin-wealth)
+   describes a connected identify, construct, deliver, and implement journey with whole-portfolio
+   analytics and controlled proposal generation.
+2. [W3C WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html)
+   requires focus order to preserve meaning and operability.
+3. [W3C technique C27](https://www.w3.org/WAI/WCAG22/Techniques/css/C27.html) keeps DOM order
+   aligned with the meaningful visual sequence.
+
+### Adopted
+
+- Keep construction and evidence before the final action rail in DOM and keyboard order.
+- Keep a persistent, subordinate desktop review rail so a long record does not force an advisor to
+  scroll back to act.
+- Stack the rail after construction at the shared tablet boundary and preserve 44-pixel actions.
+- Fence evaluation and handoff as one source-transaction family and announce success only after a
+  usable source response.
+- Keep evaluation evidence distinct from retained-draft identity and preserve portfolio scope when
+  continuing to the queue.
+- Reuse Workbench shell, rail-card, action, badge, typography, and semantic-token patterns.
+
+### Rejected
+
+- Actions before evidence in DOM order, a floating mobile overlay, or a permanently fixed footer
+  that obscures form content.
+- Decorative proposal scores, suitability conclusions, approval posture, client readiness, or
+  execution authority not returned by a governed source.
+- Browser-created fallback holdings, FX conversion, evaluation success, or proposal identity.
+- A one-off global CSS expansion, new UI library, competitor visual imitation, or technical service
+  names as the advisor's primary confirmation language.
+
+### Implementation and validation
+
+Workbench issue #745 extracts `ProposalBuilderWorkflowRail`, replaces the disappearing action panel
+with the shared workstation side-rail layout, removes the duplicate outer workflow rail, and keeps
+source progress, failure, evaluation confirmation, and retained-draft confirmation beside both
+fenced actions. Focused integration proof covers order, scope, pending and failure behavior;
+optimized production-browser proof covers 1440, 1024, 720, and 390 pixel layouts with no horizontal
+overflow. The global Proposal workspace remains capability-disabled.
+
 ## Advisory Overview: recoverable proposal prioritisation
 
 ### Business job

@@ -142,7 +142,8 @@ Current route posture:
   direct Gateway-backed proposal detail with RFC-0023 advisor narrative review and delivery
   posture
 - `/proposals/simulate`
-  Gateway-backed advisory proposal draft entry backed by `lotus-advise` proposal simulation
+  Gateway-backed Proposal Builder for source-confirmed portfolio evidence, advisor draft intent,
+  Advise workspace evaluation, and governed draft handoff
 
 Key code areas:
 

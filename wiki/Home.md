@@ -34,6 +34,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Advisory Overview](Advisory-Overview-Screen-Guide)
 - Source-backed advisor actions, evidence readiness, review acknowledgement, and operating boundaries:
   [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
+- Source-backed proposal construction, indicative impact, evaluation, and governed draft retention:
+  [Proposal Builder](Proposal-Builder-Screen-Guide)
 - Benchmark-aware return, horizon, and contributor review:
   [Performance Summary](Performance-Summary-Screen-Guide)
 - Source-backed contribution, attribution, and historical-evidence review:
@@ -104,6 +106,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
+- [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Positions](Positions-Screen-Guide)
 - [Transactions](Transactions-Screen-Guide)
 - [Income And Activity](Income-And-Activity-Screen-Guide)

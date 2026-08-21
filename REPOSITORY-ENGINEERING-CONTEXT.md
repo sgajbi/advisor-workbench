@@ -479,7 +479,15 @@ Current repository posture:
     its response carries a non-empty source-owned `status` and `proposal_run_id`; a 2xx response
     without that usable evidence is an explicit, retryable evaluation failure and cannot authorize
     proposal handoff. Every fresh evaluation attempt clears prior result evidence first. The
-    detail route records advisor-use narrative
+    Proposal Builder is a long governed construction workflow: keep portfolio evidence, business
+    inputs, indicative impact, and draft identity before final actions in DOM and keyboard order;
+    use the shared workstation side-rail layout for persistent desktop controls and stack those
+    controls at the exact 1200-pixel shell boundary. Fence evaluation and handoff as one source
+    transaction family, keep their pending/failure/success evidence beside the actions, preserve
+    portfolio scope in the queue handoff, and never let workflow-wide admission relabel a separately
+    confirmed portfolio-evidence fact. Feature presentation belongs in a CSS Module; do not restore
+    the superseded MUI action panel or add this workflow to global CSS.
+    The detail route records advisor-use narrative
     review and reviewed report-package requests through Gateway proposal endpoints only. It settles
     primary proposal detail independently from workflow, approval, and lineage reads, keeps
     available decision evidence visible when an ancillary source is unavailable, presents
