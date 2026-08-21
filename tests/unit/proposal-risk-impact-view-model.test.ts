@@ -78,6 +78,7 @@ describe("proposal risk and impact view model", () => {
 
     expect(model.allocation.isAvailable).toBe(false);
     expect(model.allocation.views).toEqual([]);
+    expect(model.supportability.label).toBe("Partial source evidence");
   });
 
   it("withholds workflow conclusions when the gate is not ready", () => {

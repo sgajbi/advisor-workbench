@@ -372,11 +372,49 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Requires Risk Review",
       }),
     ).toBeInTheDocument();
+    const refreshStatus = screen.getByTestId("workbench-refresh-status");
+    expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
+    expect(
+      within(refreshStatus).getByText("Selected proposal evidence confirmed"),
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: "Refresh source evidence" }),
       ).toHaveFocus();
     });
+  });
+
+  it("keeps prior evidence visible and announces a failed manual refresh", async () => {
+    getProposalRiskImpactMock
+      .mockResolvedValueOnce(proposalRiskImpactFixture())
+      .mockRejectedValueOnce(new Error("Gateway unavailable"));
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    const refresh = await screen.findByRole("button", {
+      name: "Refresh source evidence",
+    });
+    fireEvent.click(refresh);
+
+    const refreshStatus = await screen.findByTestId(
+      "workbench-refresh-status",
+    );
+    await waitFor(() => {
+      expect(refreshStatus).toHaveAttribute("data-state", "failed");
+    });
+    expect(within(refreshStatus).getByText("Source refresh failed"))
+      .toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 4,
+        name: "Requires Risk Review",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("reads detail only for the selected proposal instead of fanning out across the worklist", async () => {
@@ -498,6 +536,8 @@ describe("ProposalLifecycleWorkspace", () => {
       settleRefresh?.(proposalRiskImpactFixture());
     });
     await waitFor(() => expect(nextProposal).toHaveFocus());
+    expect(screen.queryByTestId("workbench-refresh-status"))
+      .not.toBeInTheDocument();
   });
 
   it("keeps a non-ready decision register explicitly unknown", async () => {
@@ -562,6 +602,12 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Allocation comparison is not available",
       }),
     ).toBeInTheDocument();
+    const recordHeader = screen
+      .getByText("Partial source evidence")
+      .closest("header");
+    expect(recordHeader).not.toBeNull();
+    expect(within(recordHeader!).queryByText("Source evidence ready"))
+      .not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Risk evidence is not confirmed" }),
     ).toBeInTheDocument();

@@ -8,6 +8,7 @@ import {
   SemanticBadge,
   SourceRefreshAction,
   Text,
+  WorkbenchRefreshStatus,
 } from "@/design-system";
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
 import type { ProposalRiskImpactEnvelope } from "../proposal-risk-impact-contract";
@@ -17,6 +18,11 @@ import {
 } from "../proposal-risk-impact-view-model";
 import ProposalLifecycleWorklist from "./proposal-lifecycle-worklist";
 import styles from "./proposal-risk-impact-workspace.module.css";
+
+type RiskEvidenceRefreshOutcome = {
+  selectionIdentity: string;
+  state: "pending" | "confirmed" | "failed";
+};
 
 export default function ProposalRiskImpactWorkspace({
   portfolioId,
@@ -48,30 +54,73 @@ export default function ProposalRiskImpactWorkspace({
     [evidence],
   );
   const refreshActionRef = useRef<HTMLButtonElement>(null);
-  const selectedProposalIdRef = useRef(selectedProposal?.proposalId ?? null);
+  const selectionIdentity = selectedProposal
+    ? `${portfolioId}:${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
+    : null;
+  const selectionIdentityRef = useRef(selectionIdentity);
+  const [refreshOutcome, setRefreshOutcome] =
+    useState<RiskEvidenceRefreshOutcome | null>(null);
   useEffect(() => {
-    selectedProposalIdRef.current = selectedProposal?.proposalId ?? null;
-  }, [selectedProposal?.proposalId]);
+    selectionIdentityRef.current = selectionIdentity;
+  }, [selectionIdentity]);
+
+  function selectProposal(proposalId: string) {
+    setRefreshOutcome(null);
+    onSelectProposal(proposalId);
+  }
 
   async function refreshEvidence() {
     const initiatingElement = refreshActionRef.current;
-    const initiatingProposalId = selectedProposal?.proposalId ?? null;
+    const initiatingSelectionIdentity = selectionIdentity;
     const shouldRestoreFocus = document.activeElement === initiatingElement;
-    const result = await onRefresh();
-    if (shouldRestoreFocus) {
-      window.setTimeout(() => {
-        const focusDidNotMove =
-          document.activeElement === initiatingElement ||
-          document.activeElement === document.body;
-        if (
-          selectedProposalIdRef.current === initiatingProposalId &&
-          focusDidNotMove
-        ) {
-          refreshActionRef.current?.focus();
-        }
-      }, 0);
+    if (initiatingSelectionIdentity) {
+      setRefreshOutcome({
+        selectionIdentity: initiatingSelectionIdentity,
+        state: "pending",
+      });
     }
-    return result;
+    try {
+      const result = await onRefresh();
+      if (selectionIdentityRef.current === initiatingSelectionIdentity) {
+        setRefreshOutcome(
+          initiatingSelectionIdentity
+            ? {
+                selectionIdentity: initiatingSelectionIdentity,
+                state: refreshResultHasError(result) ? "failed" : "confirmed",
+              }
+            : null,
+        );
+      } else {
+        setRefreshOutcome(null);
+      }
+      return result;
+    } catch (error) {
+      if (selectionIdentityRef.current === initiatingSelectionIdentity) {
+        setRefreshOutcome(
+          initiatingSelectionIdentity
+            ? {
+                selectionIdentity: initiatingSelectionIdentity,
+                state: "failed",
+              }
+            : null,
+        );
+      }
+      throw error;
+    } finally {
+      if (shouldRestoreFocus) {
+        window.setTimeout(() => {
+          const focusDidNotMove =
+            document.activeElement === initiatingElement ||
+            document.activeElement === document.body;
+          if (
+            selectionIdentityRef.current === initiatingSelectionIdentity &&
+            focusDidNotMove
+          ) {
+            refreshActionRef.current?.focus();
+          }
+        }, 0);
+      }
+    }
   }
 
   if (!selectedProposal) return null;
@@ -86,7 +135,7 @@ export default function ProposalRiskImpactWorkspace({
           ariaLabel="Risk and Impact proposals"
           rows={rows}
           selectedProposalId={selectedProposal.proposalId}
-          onSelectProposal={onSelectProposal}
+          onSelectProposal={selectProposal}
         />
 
         <section
@@ -144,6 +193,11 @@ export default function ProposalRiskImpactWorkspace({
               proposalHref={selectedProposal.href}
               refreshing={isRefreshing}
               refreshFailed={hasRefreshFailure}
+              refreshOutcome={
+                refreshOutcome?.selectionIdentity === selectionIdentity
+                  ? refreshOutcome.state
+                  : null
+              }
               onRefresh={refreshEvidence}
               refreshActionRef={refreshActionRef}
             />
@@ -159,6 +213,7 @@ function RiskImpactEvidence({
   proposalHref,
   refreshing,
   refreshFailed,
+  refreshOutcome,
   onRefresh,
   refreshActionRef,
 }: {
@@ -166,6 +221,7 @@ function RiskImpactEvidence({
   proposalHref: string;
   refreshing: boolean;
   refreshFailed: boolean;
+  refreshOutcome: RiskEvidenceRefreshOutcome["state"] | null;
   onRefresh: () => Promise<unknown>;
   refreshActionRef: Ref<HTMLButtonElement>;
 }) {
@@ -178,6 +234,12 @@ function RiskImpactEvidence({
     ) ??
     model.allocation.views[0] ??
     null;
+  const effectiveRefreshState = refreshFailed
+    ? "failed"
+    : refreshing
+      ? "pending"
+      : refreshOutcome;
+  const refreshContext = `${model.identity.proposalId} · ${model.identity.version}`;
 
   return (
     <div className={styles.evidence}>
@@ -208,20 +270,31 @@ function RiskImpactEvidence({
         </div>
       </header>
 
-      {refreshFailed ? (
-        <div className={styles.refreshFailure} role="alert">
-          <div>
-            <strong>Source refresh failed</strong>
-            <span>
-              Previously retrieved evidence remains visible and is not
-              re-confirmed.
-            </span>
-          </div>
-        </div>
-      ) : refreshing ? (
-        <p className={styles.refreshing} role="status" aria-live="polite">
-          Reconfirming source evidence…
-        </p>
+      {effectiveRefreshState === "failed" ? (
+        <WorkbenchRefreshStatus
+          kind="failed"
+          eyebrow="Source evidence not updated"
+          title="Source refresh failed"
+          message="Previously retrieved evidence remains visible and is not re-confirmed."
+          requestedContext={refreshContext}
+          confirmedContext={refreshContext}
+        />
+      ) : effectiveRefreshState === "pending" ? (
+        <WorkbenchRefreshStatus
+          kind="pending"
+          eyebrow="Updating source evidence"
+          title="Reconfirming selected proposal evidence"
+          message="The current source-confirmed evidence remains visible while Gateway refreshes."
+          requestedContext={refreshContext}
+          confirmedContext={refreshContext}
+        />
+      ) : effectiveRefreshState === "confirmed" ? (
+        <WorkbenchRefreshStatus
+          kind="confirmed"
+          eyebrow="Source evidence updated"
+          title="Selected proposal evidence confirmed"
+          confirmedContext={refreshContext}
+        />
       ) : null}
 
       <section
@@ -608,6 +681,15 @@ function RiskImpactEvidence({
         </Link>
       </footer>
     </div>
+  );
+}
+
+function refreshResultHasError(result: unknown): boolean {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    (("isError" in result && result.isError === true) ||
+      ("error" in result && result.error !== null && result.error !== undefined))
   );
 }
 
