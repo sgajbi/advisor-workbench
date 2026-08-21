@@ -26,6 +26,7 @@ import {
   getAdvisoryPolicyWorkflow,
   getProposal,
   getProposalApprovals,
+  getProposalExecutionStatus,
   getProposalLineage,
   getProposalRiskImpact,
   getProposalWorkflowEvents,
@@ -40,6 +41,7 @@ import {
   buildProposalApprovalEvidenceModel,
   confirmRefreshedProposalApprovalEvidence,
 } from "../proposal-approval-evidence-view-model";
+import { buildProposalImplementationStatusModel } from "../proposal-implementation-status-view-model";
 import {
   buildPolicyEvaluationEvidenceModel,
   buildPolicyReviewQueueModel,
@@ -49,6 +51,7 @@ import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-
 import { useProposalSourceWindow } from "../use-proposal-source-window";
 import PolicyReviewWorkspace from "./policy-review-workspace";
 import ProposalLifecycleDecisionWorkspace from "./proposal-lifecycle-decision-workspace";
+import ProposalImplementationStatusWorkspace from "./proposal-implementation-status-workspace";
 import ProposalRiskImpactWorkspace from "./proposal-risk-impact-workspace";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-lifecycle-workspace.module.css";
@@ -79,6 +82,10 @@ export default function ProposalLifecycleWorkspace({
     portfolioId: string;
     proposalId: string;
   } | null>(null);
+  const [implementationSelection, setImplementationSelection] = useState<{
+    portfolioId: string;
+    proposalId: string;
+  } | null>(null);
   const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQuery = useQuery({
     queryKey: [
@@ -91,7 +98,11 @@ export default function ProposalLifecycleWorkspace({
       await listProposals({
         portfolioId,
         cursor: sourceWindow.cursor,
-        ...(mode === "risk-impact" ? { state: "RISK_REVIEW" } : {}),
+        ...(mode === "risk-impact"
+          ? { state: "RISK_REVIEW" }
+          : mode === "implementation"
+            ? { state: "EXECUTION_READY" }
+            : {}),
       }),
     ...workbenchStrictQueryDefaults,
   });
@@ -132,14 +143,27 @@ export default function ProposalLifecycleWorkspace({
     null;
   const approvalSelectionIsCurrent =
     approvalSelection?.portfolioId === portfolioId &&
-    model.rows.some(
-      (row) => row.proposalId === approvalSelection.proposalId,
-    );
+    model.rows.some((row) => row.proposalId === approvalSelection.proposalId);
   const selectedApprovalProposal =
     model.rows.find(
       (row) =>
         row.proposalId ===
         (approvalSelectionIsCurrent ? approvalSelection.proposalId : null),
+    ) ??
+    model.rows[0] ??
+    null;
+  const implementationSelectionIsCurrent =
+    implementationSelection?.portfolioId === portfolioId &&
+    model.rows.some(
+      (row) => row.proposalId === implementationSelection.proposalId,
+    );
+  const selectedImplementationProposal =
+    model.rows.find(
+      (row) =>
+        row.proposalId ===
+        (implementationSelectionIsCurrent
+          ? implementationSelection.proposalId
+          : null),
     ) ??
     model.rows[0] ??
     null;
@@ -198,6 +222,27 @@ export default function ProposalLifecycleWorkspace({
       mode === "risk-impact" &&
       Boolean(selectedRiskProposal) &&
       selectedRiskProposal?.versionNo !== null,
+    ...workbenchStrictQueryDefaults,
+  });
+  const implementationStatusQuery = useQuery({
+    queryKey: [
+      "proposal-implementation-status",
+      portfolioId,
+      selectedImplementationProposal?.proposalId,
+      selectedImplementationProposal?.versionNo,
+      selectedImplementationProposal?.currentState,
+    ],
+    queryFn: async () =>
+      await getProposalExecutionStatus(
+        selectedImplementationProposal?.proposalId ?? "",
+        portfolioId,
+        selectedImplementationProposal?.versionNo ?? 0,
+        selectedImplementationProposal?.currentState ?? "",
+      ),
+    enabled:
+      mode === "implementation" &&
+      Boolean(selectedImplementationProposal) &&
+      selectedImplementationProposal?.versionNo !== null,
     ...workbenchStrictQueryDefaults,
   });
   const policyReviewModel = useMemo(
@@ -318,6 +363,15 @@ export default function ProposalLifecycleWorkspace({
     hasError: Boolean(riskImpactQuery.error),
     isPermissionBlocked: isWorkbenchPermissionBlockedError(
       riskImpactQuery.error,
+    ),
+  });
+  const implementationStatusPosture = projectQuerySourcePosture({
+    hasData: Boolean(implementationStatusQuery.data),
+    isLoading: implementationStatusQuery.isLoading,
+    isFetching: implementationStatusQuery.isFetching,
+    hasError: Boolean(implementationStatusQuery.error),
+    isPermissionBlocked: isWorkbenchPermissionBlockedError(
+      implementationStatusQuery.error,
     ),
   });
   const approvalDetailPosture = projectQuerySourcePosture({
@@ -444,10 +498,52 @@ export default function ProposalLifecycleWorkspace({
         "Gateway-backed proposal detail, workflow, approvals, and lineage",
       boundaryNote:
         "Recorded approval evidence is shown only when proposal identity, workflow state, and active-version lineage agree. Source-current evidence does not by itself prove every required gate is complete.",
-      hasEvidenceGap:
-        posture.state === "empty" || posture.state === "conflict",
+      hasEvidenceGap: posture.state === "empty" || posture.state === "conflict",
     };
   }, [approvalEvidenceModel, mode]);
+  const selectedImplementationWorkflowContext = useMemo(() => {
+    if (mode !== "implementation" || !implementationStatusQuery.data) {
+      return undefined;
+    }
+    const implementation = buildProposalImplementationStatusModel(
+      implementationStatusQuery.data,
+    );
+    return {
+      proposalId: implementation.identity.proposalId,
+      title: implementation.handoff.label,
+      summary: implementation.handoff.summary,
+      currentPosture: implementation.evidence.label,
+      nextAction: implementation.handoff.nextAction,
+      blockers: implementation.handoff.attentionRequired
+        ? [implementation.handoff.summary]
+        : implementation.evidence.isPartial
+          ? [implementation.evidence.summary]
+          : [],
+      facts: [
+        {
+          label: "Proposal",
+          value: implementation.identity.proposalId,
+        },
+        {
+          label: "Handoff",
+          value: implementation.handoff.label,
+        },
+        {
+          label: "Version evidence",
+          value: implementation.version.label,
+        },
+        {
+          label: "Observed",
+          value: implementation.lineage.freshness,
+        },
+      ],
+      sourceLabel: "Gateway-backed advisory implementation handoff",
+      boundaryNote: implementation.boundary,
+      hasEvidenceGap:
+        implementation.evidence.isPartial ||
+        implementation.version.label === "Earlier version",
+    };
+  }, [implementationStatusQuery.data, mode]);
   const requestMoreEvidenceMutation = useMutation({
     mutationFn: async ({
       evaluationId,
@@ -510,6 +606,14 @@ export default function ProposalLifecycleWorkspace({
       mode === "approval-queue" && Boolean(selectedApprovalProposal);
     const riskSourceActive =
       mode === "risk-impact" && Boolean(selectedRiskProposal);
+    const implementationSourceActive =
+      mode === "implementation" && Boolean(selectedImplementationProposal);
+    const implementationVersionUnavailable =
+      implementationSourceActive &&
+      selectedImplementationProposal?.versionNo === null;
+    const implementationEvidenceIncomplete =
+      implementationSourceActive &&
+      implementationStatusQuery.data?.data.evidence_state === "partial";
     const riskVersionUnavailable =
       riskSourceActive && selectedRiskProposal?.versionNo === null;
     const riskEvidenceIncomplete =
@@ -532,26 +636,31 @@ export default function ProposalLifecycleWorkspace({
           !approvalEvidenceModel &&
           approvalEvidencePosture.isInitialLoading) ||
         (policySourcesActive && policySourcePosture.isInitialLoading) ||
-        (riskSourceActive && riskImpactPosture.isInitialLoading),
+        (riskSourceActive && riskImpactPosture.isInitialLoading) ||
+        (implementationSourceActive &&
+          implementationStatusPosture.isInitialLoading),
       isRefreshing:
         proposalSourcePosture.isRefreshing ||
         (approvalSourcesActive && approvalEvidencePosture.isRefreshing) ||
         (policySourcesActive && policySourcePosture.isRefreshing) ||
-        (riskSourceActive && riskImpactPosture.isRefreshing),
-      permissionBlocked:
-        proposalSourcePosture.isPermissionBlocked,
+        (riskSourceActive && riskImpactPosture.isRefreshing) ||
+        (implementationSourceActive &&
+          implementationStatusPosture.isRefreshing),
+      permissionBlocked: proposalSourcePosture.isPermissionBlocked,
       hasRestrictedEvidence:
         (approvalSourcesActive &&
           approvalEvidencePosture.isPermissionBlocked) ||
         (policySourcesActive && policySourcePosture.isPermissionBlocked) ||
-        (riskSourceActive && riskImpactPosture.isPermissionBlocked),
+        (riskSourceActive && riskImpactPosture.isPermissionBlocked) ||
+        (implementationSourceActive &&
+          implementationStatusPosture.isPermissionBlocked),
       hasError:
         proposalSourcePosture.isUnavailable &&
         !proposalSourcePosture.isPermissionBlocked,
       hasUnavailableEvidence:
         (approvalSourcesActive &&
-          ((approvalEvidencePosture.isUnavailable &&
-            !approvalEvidencePosture.isPermissionBlocked))) ||
+          approvalEvidencePosture.isUnavailable &&
+          !approvalEvidencePosture.isPermissionBlocked) ||
         (policySourcesActive &&
           ((policySourcePosture.isUnavailable &&
             !policySourcePosture.isPermissionBlocked) ||
@@ -560,13 +669,19 @@ export default function ProposalLifecycleWorkspace({
           ((riskImpactPosture.isUnavailable &&
             !riskImpactPosture.isPermissionBlocked) ||
             riskVersionUnavailable ||
-            riskEvidenceIncomplete)),
+            riskEvidenceIncomplete)) ||
+        (implementationSourceActive &&
+          ((implementationStatusPosture.isUnavailable &&
+            !implementationStatusPosture.isPermissionBlocked) ||
+            implementationVersionUnavailable ||
+            implementationEvidenceIncomplete)),
       hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,
       hasSupportingEvidenceRefreshFailure:
-        (approvalSourcesActive &&
-          approvalEvidencePosture.hasRefreshFailure) ||
+        (approvalSourcesActive && approvalEvidencePosture.hasRefreshFailure) ||
         (policySourcesActive && policySourcePosture.hasRefreshFailure) ||
-        (riskSourceActive && riskImpactPosture.hasRefreshFailure),
+        (riskSourceActive && riskImpactPosture.hasRefreshFailure) ||
+        (implementationSourceActive &&
+          implementationStatusPosture.hasRefreshFailure),
       hasMoreResults: Boolean(data?.next_cursor),
       hasPreviousResults: sourceWindow.hasPrevious,
       windowNumber: sourceWindow.windowNumber,
@@ -574,7 +689,9 @@ export default function ProposalLifecycleWorkspace({
       attentionCount: model.attentionCount,
       primaryDecision: model.primaryDecision,
       recommendedAction: model.recommendedAction,
-      selectedEvidence: selectedApprovalWorkflowContext,
+      selectedEvidence:
+        selectedApprovalWorkflowContext ??
+        selectedImplementationWorkflowContext,
     });
   }, [
     data?.next_cursor,
@@ -584,6 +701,12 @@ export default function ProposalLifecycleWorkspace({
     approvalEvidencePosture.isPermissionBlocked,
     approvalEvidencePosture.isRefreshing,
     approvalEvidencePosture.isUnavailable,
+    implementationStatusPosture.hasRefreshFailure,
+    implementationStatusPosture.isInitialLoading,
+    implementationStatusPosture.isPermissionBlocked,
+    implementationStatusPosture.isRefreshing,
+    implementationStatusPosture.isUnavailable,
+    implementationStatusQuery.data,
     mode,
     model,
     policySourcePosture.hasRefreshFailure,
@@ -606,6 +729,8 @@ export default function ProposalLifecycleWorkspace({
     riskImpactQuery.data,
     selectedApprovalProposal,
     selectedApprovalWorkflowContext,
+    selectedImplementationProposal,
+    selectedImplementationWorkflowContext,
     selectedRiskProposal,
     sourceWindow.hasPrevious,
     sourceWindow.windowNumber,
@@ -690,14 +815,16 @@ export default function ProposalLifecycleWorkspace({
             <span>{model.totalCount}</span>
             <strong>In view</strong>
           </div>
-          <div>
-            <span>{model.attentionCount}</span>
-            <strong>
-              {mode === "approval-queue"
-                ? "Not execution-ready"
-                : "Need action"}
-            </strong>
-          </div>
+          {mode === "implementation" ? null : (
+            <div>
+              <span>{model.attentionCount}</span>
+              <strong>
+                {mode === "approval-queue"
+                  ? "Not execution-ready"
+                  : "Need action"}
+              </strong>
+            </div>
+          )}
         </div>
       </div>
 
@@ -831,8 +958,7 @@ export default function ProposalLifecycleWorkspace({
               expectedPortfolioId: refreshedProposal.portfolio_id,
               expectedProposalId: refreshedProposal.proposal_id,
               expectedState: refreshedProposal.current_state,
-              expectedVersionNo:
-                refreshedProposal.current_version_no ?? null,
+              expectedVersionNo: refreshedProposal.current_version_no ?? null,
               lineage: lineageResult.data,
               workflow: workflowResult.data,
             });
@@ -877,6 +1003,60 @@ export default function ProposalLifecycleWorkspace({
           hasError={riskImpactPosture.isUnavailable}
           hasRefreshFailure={riskImpactPosture.hasRefreshFailure}
           onRefresh={async () => await riskImpactQuery.refetch()}
+        />
+      ) : mode === "implementation" ? (
+        <ProposalImplementationStatusWorkspace
+          key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
+          portfolioId={portfolioId}
+          rows={model.rows}
+          selectedProposal={selectedImplementationProposal}
+          onSelectProposal={(proposalId) =>
+            setImplementationSelection({ portfolioId, proposalId })
+          }
+          evidence={implementationStatusQuery.data ?? null}
+          isLoading={implementationStatusPosture.isInitialLoading}
+          isRefreshing={implementationStatusPosture.isRefreshing}
+          isPermissionBlocked={implementationStatusPosture.isPermissionBlocked}
+          hasError={implementationStatusPosture.isUnavailable}
+          hasRefreshFailure={implementationStatusPosture.hasRefreshFailure}
+          onRefresh={async () => {
+            const [proposalResult, statusResult] = await Promise.all([
+              proposalQuery.refetch(),
+              implementationStatusQuery.refetch(),
+            ]);
+            const failedResult = [proposalResult, statusResult].find(
+              (result) => result.isError || result.error !== null,
+            );
+            if (failedResult) {
+              throw (
+                failedResult.error ??
+                new Error("Implementation evidence refresh did not complete.")
+              );
+            }
+            const refreshedProposal = proposalResult.data?.items.find(
+              (proposal) =>
+                proposal.proposal_id ===
+                selectedImplementationProposal?.proposalId,
+            );
+            const refreshedEvidence = statusResult.data?.data;
+            if (
+              !refreshedProposal ||
+              refreshedProposal.portfolio_id !== portfolioId ||
+              !refreshedEvidence ||
+              refreshedEvidence.proposal_id !== refreshedProposal.proposal_id ||
+              refreshedEvidence.portfolio_id !==
+                refreshedProposal.portfolio_id ||
+              refreshedEvidence.current_version_no !==
+                refreshedProposal.current_version_no ||
+              refreshedEvidence.current_state !==
+                refreshedProposal.current_state
+            ) {
+              throw new Error(
+                "The refreshed worklist and implementation evidence do not identify the same proposal state.",
+              );
+            }
+            return [proposalResult, statusResult];
+          }}
         />
       ) : (
         <div className={styles.tableWrap}>

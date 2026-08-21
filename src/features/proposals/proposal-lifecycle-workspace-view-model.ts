@@ -110,10 +110,11 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
   implementation: {
     title: "Implementation Status",
     subtitle:
-      "Execution handoff, implementation status, and post-trade follow-up.",
-    primaryDecision: "Has the approved proposal been implemented as intended?",
+      "Implementation handoff, provider response, exceptions, and proposal-version correlation.",
+    primaryDecision:
+      "What is the latest source-confirmed implementation posture?",
     recommendedAction:
-      "Track execution handoff evidence and follow up exceptions.",
+      "Follow provider exceptions without inferring order, fill, or settlement progress.",
     emptyTitle: "No implementation follow-up is pending",
     emptyBody: "There are no proposals currently ready for execution handoff.",
     includedStates: ["EXECUTION_READY"],

@@ -12,11 +12,19 @@ export default function ProposalLifecycleWorklist({
   rows,
   selectedProposalId,
   onSelectProposal,
+  defaultNextAction,
+  selectedPresentation,
 }: {
   ariaLabel: string;
   rows: ProposalLifecycleRow[];
   selectedProposalId: string;
   onSelectProposal: (proposalId: string) => void;
+  defaultNextAction?: string;
+  selectedPresentation?: {
+    label: string;
+    tone: "default" | "success" | "warn" | "danger";
+    nextAction: string;
+  };
 }) {
   const titleId = useId();
 
@@ -37,21 +45,28 @@ export default function ProposalLifecycleWorklist({
         className={styles.approvalWorklist}
         selectedKey={selectedProposalId}
         onSelectionChange={onSelectProposal}
-        items={rows.map((row) => ({
-          key: row.proposalId,
-          title: row.title,
-          subtitle: `${row.proposalId} · ${row.version}`,
-          status: (
-            <SemanticBadge tone={row.stageTone}>
-              {row.stage}
-            </SemanticBadge>
-          ),
-          facts: [
-            { label: "Creator record", value: row.creator },
-            { label: "Recorded", value: row.createdOn },
-          ],
-          nextAction: row.nextAction,
-        }))}
+        items={rows.map((row) => {
+          const presentation =
+            row.proposalId === selectedProposalId
+              ? selectedPresentation
+              : undefined;
+          return {
+            key: row.proposalId,
+            title: row.title,
+            subtitle: `${row.proposalId} · ${row.version}`,
+            status: (
+              <SemanticBadge tone={presentation?.tone ?? row.stageTone}>
+                {presentation?.label ?? row.stage}
+              </SemanticBadge>
+            ),
+            facts: [
+              { label: "Creator record", value: row.creator },
+              { label: "Recorded", value: row.createdOn },
+            ],
+            nextAction:
+              presentation?.nextAction ?? defaultNextAction ?? row.nextAction,
+          };
+        })}
       />
     </section>
   );
