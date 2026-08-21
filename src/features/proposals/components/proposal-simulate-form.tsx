@@ -28,6 +28,7 @@ import {
 } from "../proposal-draft-preview";
 import { formatProposalMinorUnits } from "../proposal-money";
 import { buildProposalDraftImpactModel } from "../proposal-draft-currency-authority";
+import { buildProposalDraftFingerprint } from "../proposal-draft-evaluation";
 import {
   assessProposalScenarioCashInput,
   PROPOSAL_SCENARIO_CASH_HELP,
@@ -158,6 +159,7 @@ export default function ProposalSimulateForm({
   const [workspaceEnvelope, setWorkspaceEnvelope] =
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
   const [evaluatedWorkspaceId, setEvaluatedWorkspaceId] = useState<string | null>(null);
+  const [evaluatedDraftFingerprint, setEvaluatedDraftFingerprint] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState<{
     proposalId: string;
     portfolioId: string;
@@ -167,6 +169,35 @@ export default function ProposalSimulateForm({
   const asOfDate = useWatch({ control: form.control, name: "asOfDate" });
   const baseCurrency = useWatch({ control: form.control, name: "baseCurrency" });
   const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
+  const proposalTitle = useWatch({ control: form.control, name: "proposalTitle" });
+  const mandateId = useWatch({ control: form.control, name: "mandateId" });
+  const draftFingerprint = useMemo(
+    () =>
+      buildProposalDraftFingerprint({
+        values: {
+          proposalTitle,
+          portfolioId,
+          asOfDate,
+          mandateId,
+          baseCurrency,
+          cashAmount,
+        },
+        cashFlows,
+        trades,
+      }),
+    [
+      asOfDate,
+      baseCurrency,
+      cashAmount,
+      cashFlows,
+      mandateId,
+      portfolioId,
+      proposalTitle,
+      trades,
+    ]
+  );
+  const isEvaluationCurrent =
+    Boolean(result) && evaluatedDraftFingerprint === draftFingerprint;
   const scenarioCashAdmission = useMemo(
     () => assessProposalScenarioCashInput(cashAmount),
     [cashAmount]
@@ -440,6 +471,9 @@ export default function ProposalSimulateForm({
     setLoading(true);
     try {
       await createEvaluatedWorkspace(values);
+      setEvaluatedDraftFingerprint(
+        buildProposalDraftFingerprint({ values, cashFlows, trades })
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -466,6 +500,9 @@ export default function ProposalSimulateForm({
     setSavingDraft(true);
     try {
       const evaluatedWorkspace = await createEvaluatedWorkspace(values);
+      setEvaluatedDraftFingerprint(
+        buildProposalDraftFingerprint({ values, cashFlows, trades })
+      );
       const workspaceId = extractAdvisoryWorkspaceId(evaluatedWorkspace);
       if (!workspaceId) {
         throw new Error("Advisory workspace cannot be handed off without a workspace identifier.");
@@ -727,7 +764,7 @@ export default function ProposalSimulateForm({
                 )}
               />
             </section>
-            {result ? (
+            {isEvaluationCurrent && result ? (
               <AdviseEvaluationSummaryPanel
                 result={result}
                 highlights={simulationHighlights(result)}
@@ -755,9 +792,9 @@ export default function ProposalSimulateForm({
               }
               readyTradeCount={validTradeCount()}
               cappedTradeCount={cappedTradeCount}
-              evaluatedWorkspaceId={evaluatedWorkspaceId}
+              evaluatedWorkspaceId={isEvaluationCurrent ? evaluatedWorkspaceId : null}
               savedProposalId={savedDraft?.proposalId ?? null}
-              evaluationAvailable={Boolean(result)}
+              evaluationAvailable={isEvaluationCurrent}
               isHydrated={isHydrated}
               isEvaluating={loading}
               isSaving={savingDraft}
