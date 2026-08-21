@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
@@ -24,6 +24,7 @@ export function useProposalImplementationStatus({
   mode: ProposalLifecycleMode;
   rows: ProposalLifecycleRow[];
 }) {
+  const queryClient = useQueryClient();
   const [selection, setSelection] = useState<{
     portfolioId: string;
     proposalId: string;
@@ -39,20 +40,9 @@ export function useProposalImplementationStatus({
     rows[0] ??
     null;
   const query = useQuery({
-    queryKey: [
-      "proposal-implementation-status",
-      portfolioId,
-      selectedProposal?.proposalId,
-      selectedProposal?.versionNo,
-      selectedProposal?.currentState,
-    ],
+    queryKey: implementationStatusQueryKey(portfolioId, selectedProposal),
     queryFn: async () =>
-      await getProposalExecutionStatus(
-        selectedProposal?.proposalId ?? "",
-        portfolioId,
-        selectedProposal?.versionNo ?? 0,
-        selectedProposal?.currentState ?? "",
-      ),
+      await readImplementationStatus(portfolioId, selectedProposal),
     enabled:
       mode === "implementation" &&
       Boolean(selectedProposal) &&
@@ -101,7 +91,40 @@ export function useProposalImplementationStatus({
     selectedProposal,
     selectProposal: (proposalId: string) =>
       setSelection({ portfolioId, proposalId }),
+    refreshForProposal: async (proposal: ProposalLifecycleRow) =>
+      await queryClient.fetchQuery({
+        queryKey: implementationStatusQueryKey(portfolioId, proposal),
+        queryFn: async () =>
+          await readImplementationStatus(portfolioId, proposal),
+        ...workbenchStrictQueryDefaults,
+        staleTime: 0,
+      }),
     sourcePosture,
     workflowContext,
   };
+}
+
+function implementationStatusQueryKey(
+  portfolioId: string,
+  proposal: ProposalLifecycleRow | null,
+) {
+  return [
+    "proposal-implementation-status",
+    portfolioId,
+    proposal?.proposalId,
+    proposal?.versionNo,
+    proposal?.currentState,
+  ] as const;
+}
+
+async function readImplementationStatus(
+  portfolioId: string,
+  proposal: ProposalLifecycleRow | null,
+) {
+  return await getProposalExecutionStatus(
+    proposal?.proposalId ?? "",
+    portfolioId,
+    proposal?.versionNo ?? 0,
+    proposal?.currentState ?? "",
+  );
 }

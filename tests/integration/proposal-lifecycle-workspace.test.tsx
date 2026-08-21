@@ -693,6 +693,70 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() => expect(refresh).toHaveFocus());
   });
 
+  it("refreshes implementation evidence against an advanced source lifecycle identity", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce(proposalListFixture)
+      .mockResolvedValueOnce({
+        items: [
+          proposalListFixture.items[0],
+          {
+            ...proposalListFixture.items[1],
+            current_state: "EXECUTED",
+          },
+        ],
+        next_cursor: null,
+      });
+    getProposalExecutionStatusMock.mockImplementation(
+      async (
+        proposalId: string,
+        _portfolioId: string,
+        versionNo: number,
+        currentState: string,
+      ) => {
+        const fixture = implementationStatusFixture(proposalId, versionNo);
+        if (currentState === "EXECUTED") {
+          fixture.data.current_state = "EXECUTED";
+          fixture.data.handoff_status = "EXECUTED";
+          fixture.data.status_family = "completed";
+          fixture.data.next_action = "NO_ACTION";
+          fixture.data.attention_required = false;
+          fixture.data.terminal = true;
+          fixture.data.reason_code = "implementation_executed";
+          fixture.data.executed_at = "2026-08-20T09:05:00Z";
+          fixture.data.latest_workflow_event!.event_type = "EXECUTED";
+        }
+        return fixture;
+      },
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="implementation"
+      />,
+    );
+
+    await screen.findByRole("heading", { name: "Accepted for implementation" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Implementation reported complete",
+      }),
+    ).toBeInTheDocument();
+    expect(getProposalExecutionStatusMock).toHaveBeenLastCalledWith(
+      "PRP-READY",
+      "PB_SG_GLOBAL_BAL_001",
+      5,
+      "EXECUTED",
+    );
+    expect(
+      await screen.findByText("Selected proposal handoff confirmed"),
+    ).toBeInTheDocument();
+  });
+
   it("renders a selected proposal decision workspace from Gateway risk and impact evidence", async () => {
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
