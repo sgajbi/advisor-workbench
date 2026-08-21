@@ -316,7 +316,7 @@ export function buildProposalQueueWorkflowContext({
             : "No proposals are visible while supporting decision evidence remains incomplete.";
     const nextAction = hasProposalRefreshFailure
       ? hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
-        ? "Retry the proposal view and restore supporting policy evidence before relying on the current workflow posture."
+        ? "Retry the proposal view and restore supporting decision evidence before relying on the current workflow posture."
         : "Retry the proposal view before relying on the current queue posture."
       : hasUnavailableEvidence
         ? "Restore the unavailable decision-evidence source before relying on the current workflow posture."

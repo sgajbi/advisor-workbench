@@ -10,6 +10,7 @@ describe("proposal risk and impact contract", () => {
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
       3,
+      "RISK_REVIEW",
     );
 
     expect(envelope.contract_version).toBe("proposal-risk-impact.v1");
@@ -29,8 +30,24 @@ describe("proposal risk and impact contract", () => {
         "PRP-RISK",
         "PB_SG_GLOBAL_BAL_001",
         4,
+        "RISK_REVIEW",
       ),
     ).toThrow(/version_no does not match the selected proposal version/);
+  });
+
+  it("fails closed when evidence has advanced beyond the selected lifecycle state", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.current_state = "COMPLIANCE_REVIEW";
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/current_state does not match the selected proposal lifecycle state/);
   });
 
   it.each([
@@ -94,6 +111,8 @@ describe("proposal risk and impact contract", () => {
         payload,
         "PRP-RISK",
         "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
       ),
     ).toThrow(/Proposal risk and impact response was invalid/);
   });
@@ -109,6 +128,8 @@ describe("proposal risk and impact contract", () => {
         payload,
         "PRP-RISK",
         "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
       ),
     ).toThrow(/capability registry is incomplete/);
   });

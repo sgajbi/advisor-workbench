@@ -49,6 +49,7 @@ describe("proposal lifecycle workspace view model", () => {
     expect(model.rows).toEqual([
       expect.objectContaining({
         proposalId: "PRP-RISK",
+        currentState: "RISK_REVIEW",
         readiness: "Blocked",
         version: "Version 3",
         versionNo: 3,

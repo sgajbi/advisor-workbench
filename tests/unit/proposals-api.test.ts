@@ -261,6 +261,7 @@ describe("proposal api", () => {
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
       3,
+      "RISK_REVIEW",
     );
 
     expect(global.fetch).toHaveBeenCalledWith(
