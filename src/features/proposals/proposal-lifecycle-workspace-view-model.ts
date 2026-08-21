@@ -19,6 +19,7 @@ export type ProposalLifecycleMode =
 
 export type ProposalLifecycleRow = {
   proposalId: string;
+  currentState: string;
   title: string;
   portfolio: string;
   stage: string;
@@ -170,6 +171,7 @@ export function buildProposalLifecycleWorkspaceModel({
   const definition = MODE_DEFINITIONS[mode];
   const rows = filterByMode(proposals, mode).map((proposal) => ({
     proposalId: proposal.proposal_id,
+    currentState: proposal.current_state,
     title: proposal.title || proposal.proposal_id,
     portfolio: proposal.portfolio_id ?? "Not reported",
     stage: proposalStageLabel(proposal.current_state),

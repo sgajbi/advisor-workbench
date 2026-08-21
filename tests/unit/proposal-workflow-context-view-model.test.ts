@@ -206,4 +206,15 @@ describe("proposal workflow context view model", () => {
     expect(model.blockers).toContain("The latest supporting-evidence refresh did not complete.");
     expect(model.nextAction).toContain("supporting-evidence refresh");
   });
+
+  it("keeps combined queue and decision-evidence recovery source-neutral", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      hasProposalRefreshFailure: true,
+      hasUnavailableEvidence: true,
+    });
+
+    expect(model.nextAction).toContain("supporting decision evidence");
+    expect(model.nextAction).not.toMatch(/policy|suitability/i);
+  });
 });

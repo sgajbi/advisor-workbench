@@ -124,12 +124,14 @@ export default function ProposalLifecycleWorkspace({
       portfolioId,
       selectedRiskProposal?.proposalId,
       selectedRiskProposal?.versionNo,
+      selectedRiskProposal?.currentState,
     ],
     queryFn: async () =>
       await getProposalRiskImpact(
         selectedRiskProposal?.proposalId ?? "",
         portfolioId,
         selectedRiskProposal?.versionNo ?? 0,
+        selectedRiskProposal?.currentState ?? "",
       ),
     enabled:
       mode === "risk-impact" &&

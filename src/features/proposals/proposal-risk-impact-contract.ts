@@ -258,8 +258,9 @@ const ISO_CURRENCY = /^[A-Z]{3}$/;
 export function parseProposalRiskImpactEnvelope(
   value: unknown,
   expectedProposalId: string,
-  expectedPortfolioId?: string,
-  expectedVersionNo?: number,
+  expectedPortfolioId: string,
+  expectedVersionNo: number,
+  expectedCurrentState: string,
 ): ProposalRiskImpactEnvelope {
   const envelope = record(value, "proposal risk and impact response");
   const correlationId = requiredString(
@@ -275,14 +276,14 @@ export function parseProposalRiskImpactEnvelope(
   if (data.proposal_id !== expectedProposalId) {
     invalid("proposal_id does not match the selected proposal");
   }
-  if (expectedPortfolioId && data.portfolio_id !== expectedPortfolioId) {
+  if (data.portfolio_id !== expectedPortfolioId) {
     invalid("portfolio_id does not match the selected portfolio");
   }
-  if (
-    expectedVersionNo !== undefined &&
-    data.version_no !== expectedVersionNo
-  ) {
+  if (data.version_no !== expectedVersionNo) {
     invalid("version_no does not match the selected proposal version");
+  }
+  if (data.current_state !== expectedCurrentState) {
+    invalid("current_state does not match the selected proposal lifecycle state");
   }
   return {
     correlation_id: correlationId,

@@ -83,7 +83,12 @@ const listProposalsMock = vi.fn(
   async (_filters?: unknown) => proposalListFixture,
 );
 const getProposalRiskImpactMock = vi.fn(
-  async (_proposalId: string, _portfolioId: string, _versionNo: number) =>
+  async (
+    _proposalId: string,
+    _portfolioId: string,
+    _versionNo: number,
+    _currentState: string,
+  ) =>
     proposalRiskImpactFixture(),
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
@@ -161,7 +166,14 @@ vi.mock("../../src/features/proposals/api", () => ({
     proposalId: string,
     portfolioId: string,
     versionNo: number,
-  ) => getProposalRiskImpactMock(proposalId, portfolioId, versionNo),
+    currentState: string,
+  ) =>
+    getProposalRiskImpactMock(
+      proposalId,
+      portfolioId,
+      versionNo,
+      currentState,
+    ),
   listProposals: (filters: unknown) => listProposalsMock(filters),
   recordAdvisoryPolicySignOffDecision: (
     evaluationId: string,
@@ -199,8 +211,12 @@ describe("ProposalLifecycleWorkspace", () => {
     );
     getProposalRiskImpactMock.mockReset();
     getProposalRiskImpactMock.mockImplementation(
-      async (_proposalId: string, _portfolioId: string) =>
-        proposalRiskImpactFixture(),
+      async (
+        _proposalId: string,
+        _portfolioId: string,
+        _versionNo: number,
+        _currentState: string,
+      ) => proposalRiskImpactFixture(),
     );
     getAdvisoryPolicyReviewQueueMock.mockReset();
     getAdvisoryPolicyReviewQueueMock.mockImplementation(
@@ -288,6 +304,7 @@ describe("ProposalLifecycleWorkspace", () => {
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
       3,
+      "RISK_REVIEW",
     );
     expect(
       screen.getByRole("listbox", { name: "Risk and Impact proposals" }),
@@ -416,6 +433,7 @@ describe("ProposalLifecycleWorkspace", () => {
       "PRP-RISK-INCOME",
       "PB_SG_GLOBAL_BAL_001",
       3,
+      "RISK_REVIEW",
     );
   });
 

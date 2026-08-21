@@ -629,6 +629,7 @@ export async function getProposalRiskImpact(
   proposalId: string,
   portfolioId: string,
   versionNo: number,
+  currentState: string,
 ): Promise<ProposalRiskImpactEnvelope> {
   const envelope = await fetchWorkbenchJson<unknown>(
     `${BFF_PROXY_BASE}/proposals/${encodeURIComponent(proposalId)}/risk-impact`,
@@ -639,6 +640,7 @@ export async function getProposalRiskImpact(
     proposalId,
     portfolioId,
     versionNo,
+    currentState,
   );
 }
 
