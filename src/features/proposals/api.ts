@@ -69,7 +69,7 @@ import {
 import { parseProposalListEnvelope } from "./proposal-list-contract";
 import {
   parseProposalRiskImpactEnvelope,
-  type ProposalRiskImpactData,
+  type ProposalRiskImpactEnvelope,
 } from "./proposal-risk-impact-contract";
 import {
   fetchWorkbenchJson,
@@ -628,13 +628,12 @@ export async function getProposal(
 export async function getProposalRiskImpact(
   proposalId: string,
   portfolioId: string,
-): Promise<ProposalRiskImpactData> {
+): Promise<ProposalRiskImpactEnvelope> {
   const envelope = await fetchWorkbenchJson<unknown>(
     `${BFF_PROXY_BASE}/proposals/${encodeURIComponent(proposalId)}/risk-impact`,
     "proposal risk and impact",
   );
-  return parseProposalRiskImpactEnvelope(envelope, proposalId, portfolioId)
-    .data;
+  return parseProposalRiskImpactEnvelope(envelope, proposalId, portfolioId);
 }
 
 export async function getProposalVersion(

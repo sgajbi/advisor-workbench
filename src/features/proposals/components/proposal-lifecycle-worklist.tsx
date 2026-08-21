@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { SemanticBadge, Text, WorkbenchRecordSelector } from "@/design-system";
 
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
@@ -16,15 +18,14 @@ export default function ProposalLifecycleWorklist({
   selectedProposalId: string;
   onSelectProposal: (proposalId: string) => void;
 }) {
+  const titleId = useId();
+
   return (
-    <section
-      className={styles.worklistPane}
-      aria-labelledby={`${ariaLabel}-title`}
-    >
+    <section className={styles.worklistPane} aria-labelledby={titleId}>
       <div className={styles.paneHeader}>
         <div>
           <Text variant="microLabel">Review worklist</Text>
-          <Text variant="subsectionTitle" as="h3" id={`${ariaLabel}-title`}>
+          <Text variant="subsectionTitle" as="h3" id={titleId}>
             Proposals in this view
           </Text>
         </div>

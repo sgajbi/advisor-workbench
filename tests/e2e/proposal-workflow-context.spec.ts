@@ -183,8 +183,9 @@ async function mockProposalRiskImpact(
   await page.route(
     "**/api/bff/api/v1/proposals/*/risk-impact",
     async (route) => {
-      const proposalId =
-        new URL(route.request().url()).pathname.split("/").at(-2) ?? "";
+      const url = new URL(route.request().url());
+      expect(url.search).toBe("");
+      const proposalId = url.pathname.split("/").at(-2) ?? "";
       requestedProposalIds.push(proposalId);
       const payload = proposalRiskImpactFixture();
       payload.data.proposal_id = proposalId;
@@ -514,6 +515,9 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
       "Risk review is required before client discussion.",
     ),
   ).toBeVisible();
+  await expect(
+    selectedEvidence.getByRole("list", { name: "Workflow gate reasons" }),
+  ).toContainText("Material Concentration Change · Rule Engine · High");
   expect(requestedProposalIds).toEqual(["PRP-RISK-001"]);
 
   await firstProposal.press("ArrowDown");
@@ -537,6 +541,9 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
   await expect(refreshAction).toBeFocused();
 
   await selectedEvidence.getByText("Evidence scope and lineage").click();
+  await expect(
+    selectedEvidence.getByText("corr-proposal-risk-impact-001"),
+  ).toBeVisible();
   await expect(
     selectedEvidence.getByText("Benchmark and limits"),
   ).toBeVisible();

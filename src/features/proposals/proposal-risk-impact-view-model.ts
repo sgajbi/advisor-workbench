@@ -3,6 +3,7 @@ import type { SemanticBadgeTone } from "@/design-system";
 import type {
   ProposalRiskImpactAllocationSnapshot,
   ProposalRiskImpactData,
+  ProposalRiskImpactEnvelope,
   ProposalRiskImpactSectionState,
   ProposalRiskImpactSeverity,
 } from "./proposal-risk-impact-contract";
@@ -24,7 +25,10 @@ export type ProposalRiskImpactModel = ReturnType<
   typeof buildProposalRiskImpactModel
 >;
 
-export function buildProposalRiskImpactModel(data: ProposalRiskImpactData) {
+export function buildProposalRiskImpactModel(
+  envelope: ProposalRiskImpactEnvelope,
+) {
+  const { data } = envelope;
   const activeRequirements = data.decision.approval_requirements.filter(
     ({ required }) => required,
   );
@@ -138,6 +142,7 @@ export function buildProposalRiskImpactModel(data: ProposalRiskImpactData) {
       tone: supportabilityTone(capability.state),
     })),
     lineage: {
+      correlationId: envelope.correlation_id,
       proposalVersionId: data.lineage.proposal_version_id,
       requestHash: data.lineage.request_hash ?? "Not reported",
       artifactHash: data.lineage.artifact_hash ?? "Not reported",
@@ -181,7 +186,8 @@ function supportabilityPresentation(state: ProposalRiskImpactSectionState) {
 
 function supportabilityLabel(
   state:
-    ProposalRiskImpactSectionState | ProposalRiskImpactData["overall_state"],
+    | ProposalRiskImpactSectionState
+    | ProposalRiskImpactEnvelope["data"]["overall_state"],
 ) {
   switch (state) {
     case "ready":

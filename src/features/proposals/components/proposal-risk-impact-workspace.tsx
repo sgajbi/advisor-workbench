@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, type Ref } from "react";
+import { useEffect, useMemo, useRef, useState, type Ref } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -68,13 +68,28 @@ export default function ProposalRiskImpactWorkspace({
     [riskImpactQuery.data],
   );
   const refreshActionRef = useRef<HTMLButtonElement>(null);
+  const selectedProposalIdRef = useRef(selectedProposal?.proposalId ?? null);
+  useEffect(() => {
+    selectedProposalIdRef.current = selectedProposal?.proposalId ?? null;
+  }, [selectedProposal?.proposalId]);
 
   async function refreshEvidence() {
-    const shouldRestoreFocus =
-      document.activeElement === refreshActionRef.current;
+    const initiatingElement = refreshActionRef.current;
+    const initiatingProposalId = selectedProposal?.proposalId ?? null;
+    const shouldRestoreFocus = document.activeElement === initiatingElement;
     const result = await riskImpactQuery.refetch();
     if (shouldRestoreFocus) {
-      window.setTimeout(() => refreshActionRef.current?.focus(), 0);
+      window.setTimeout(() => {
+        const focusDidNotMove =
+          document.activeElement === initiatingElement ||
+          document.activeElement === document.body;
+        if (
+          selectedProposalIdRef.current === initiatingProposalId &&
+          focusDidNotMove
+        ) {
+          refreshActionRef.current?.focus();
+        }
+      }, 0);
     }
     return result;
   }
@@ -407,6 +422,21 @@ function RiskImpactEvidence({
               <dd>{model.workflowGate.nextStep}</dd>
             </div>
           </dl>
+          {model.workflowGate.reasons.length > 0 ? (
+            <ul
+              className={styles.evidenceList}
+              aria-label="Workflow gate reasons"
+            >
+              {model.workflowGate.reasons.map((reason) => (
+                <li
+                  key={`${reason.source}:${reason.reason}:${reason.severity}`}
+                >
+                  <strong>{reason.reason}</strong> · {reason.source} ·{" "}
+                  {reason.severity}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <p className={styles.muted}>{model.workflowGate.disclaimer}</p>
         </section>
       </div>
@@ -484,6 +514,10 @@ function RiskImpactEvidence({
             </ul>
           </div>
           <dl className={styles.lineageList}>
+            <div>
+              <dt>Support reference</dt>
+              <dd>{model.lineage.correlationId}</dd>
+            </div>
             <div>
               <dt>Proposal version</dt>
               <dd>{model.lineage.proposalVersionId}</dd>

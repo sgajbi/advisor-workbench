@@ -105,10 +105,12 @@ decision, clear a gate, approve suitability, or create an order.
 | Visual allocation bars | Relative display aid within the returned allocation set | Workbench presentation only; exact source values remain authoritative |
 
 The browser calls Gateway only through
-`/api/bff/api/v1/proposals/{proposal_id}/risk-impact?portfolio_id={portfolio_id}`. It requests one
-selected record and never fans out risk-impact reads across the whole worklist. Workbench does not
-calculate risk, allocation delta, mandate compliance, suitability, recommendation priority, or a
-portfolio-level conclusion.
+`/api/bff/api/v1/proposals/{proposal_id}/risk-impact`. The Gateway contract does not accept a
+portfolio query parameter; Workbench instead requires the source-returned portfolio identity to
+match the advisor's selected portfolio before it renders evidence. It requests one selected record
+and never fans out risk-impact reads across the whole worklist. Workbench does not calculate risk,
+allocation delta, mandate compliance, suitability, recommendation priority, or a portfolio-level
+conclusion.
 
 ## Screen States And Recovery
 
